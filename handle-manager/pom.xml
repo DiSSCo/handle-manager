@@ -71,8 +71,12 @@
 		<dependency>
       		<groupId>io.github.openfeign</groupId>
       		<artifactId>feign-okhttp</artifactId>
-      		<version>11.8</version>
       	</dependency>
+      	<dependency>
+  			<groupId>io.github.openfeign</groupId>
+   			<artifactId>feign-httpclient</artifactId>
+		</dependency>
+      	
 		
 		<!-- 3. Handle Client Dependencies -->
 		<dependency>
