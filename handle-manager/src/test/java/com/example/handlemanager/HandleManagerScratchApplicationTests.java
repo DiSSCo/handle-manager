@@ -1,57 +1,67 @@
 package com.example.handlemanager;
 
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 
+import org.junit.Before;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import com.example.handlemanager.model.*;
-import com.example.handlemanager.repository.HandleObjectRepository;
+import com.example.handlemanager.model.DigitalSpecimen;
+import com.example.handlemanager.model.HandleRecord;
+import com.example.handlemanager.model.HandleRecordSpecimen;
+import com.example.handlemanager.model.Handles;
 import com.example.handlemanager.security.HandleSessionsAuthenticator;
-import com.example.handlemanager.service.*;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.handlemanager.service.HandleService;
 
-import net.handle.hdllib.AbstractMessage;
-import net.handle.hdllib.AbstractResponse;
-import net.handle.hdllib.HandleException;
-import net.handle.hdllib.HandleResolver;
-import net.handle.hdllib.HandleValue;
-import net.handle.hdllib.ResolutionRequest;
-import net.handle.hdllib.ResolutionResponse;
-import net.handle.hdllib.Util;
+import feign.Feign;
+import feign.FeignException;
 
 //@SpringBootTest
 class HandleManagerScratchApplicationTests {
-	HandleService service = new HandleService();
 	PrivateKey privkey;
 	
-	void testRecordStr() {
-		DigitalSpecimen sample = DigitalSpecimen.testDigitalSpecimen();
-		String now = Instant.ofEpochSecond(System.currentTimeMillis()).toString();
-		System.out.println(sample.toHandleRecordString(now));
+	@Autowired
+	HandleService service = new HandleService();
+	
+	HandleFactory hf = new HandleFactory();
+	
+	
+	//@Test
+	public void handleRecordCreationTest() {
+		//public HandleRecord(String handle, String url, String digType, String institute)
+		HandleRecord record = new HandleRecordSpecimen("123".getBytes(), "dissco.tech", "DigitalObject", "Naturalis");		
 	}
 	
+	public void creationTest() {
+		//service.setHandleList();
+		assert service.getHandles().isEmpty();
+		
+		//System.out.println(service.getHandles());
+		
+		//List<Handles> h = service.createHandle(hf.newHandle(), "dissco.tech", "naturalis");
+		//String hStr = h.get(1).getHandle();
+		//assert service.handleExists(hStr.getBytes());
+		//assert !service.handleExists("blahblah".getBytes());
+	}
 	
-	@Test void testNonce() throws IOException, GeneralSecurityException {
-		HandleSessionsAuthenticator auth  = new HandleSessionsAuthenticator(null, null);
-		byte[] a = auth.generateCnonceBytes();
+	@Test
+	public void handleGen() {
 		
-		String nonceStr = auth.encodeToString(a);
-		HandleSessionsAuthenticator auth2  = new HandleSessionsAuthenticator(null, nonceStr);
-		String authStr = auth2.createAuthHeader();
 		
-		System.out.println(authStr);
-		
+	}
+	
+	private String byteToStr(byte[] b) {
+		return Base64.getEncoder().encodeToString(b);
+	}
+	
 
-	}
-} 
+}
 	
 

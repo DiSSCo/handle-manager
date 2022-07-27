@@ -1,148 +1,226 @@
 package com.example.handlemanager.service;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
+import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.handlemanager.HandleFactory;
-import com.example.handlemanager.model.DigitalSpecimen;
-import com.example.handlemanager.repository.HandleObjectRepository;
-import com.example.handlemanager.repository.HandleObjectRepositorySDK;
-import com.example.handlemanager.repository.HandleObjectRepositoryWeb;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.handlemanager.model.HandleIdx;
+import com.example.handlemanager.model.HandleRecord;
+import com.example.handlemanager.model.HandleRecordReserve;
+import com.example.handlemanager.model.HandleRecordSpecimen;
+import com.example.handlemanager.model.Handles;
+import com.example.handlemanager.repository.HandleRepository;
+
+import java.util.logging.*;
 
 //import net.handle.hdllib.HandleException;
 //import net.handle.hdllib.HandleValue;
 import lombok.RequiredArgsConstructor;
-import net.handle.hdllib.HandleException;
-import net.handle.hdllib.HandleValue;
 
-
+// Postgres value in (value1, value2)..
+// Generate all handles before posting...
 
 @Service
 @RequiredArgsConstructor
 public class HandleService {
 	
-	//Ugh this is hardcoded but I'll deal with it later
-	private List<String> typeList = Arrays.asList(new String[] {
-			"URL",
-			"OBJECT_TYPE",
-			"CURATED_OBJECT_ID",
-			"CURATED_OBJECT_ID_TYPE",
-			"SPECIMEN_NAME",
-			"ORGANIZATION_CODE",
-			"RECORD_ID"
-	});
-	
 	@Autowired
-	public HandleObjectRepositoryWeb repositoryWeb;
-	public HandleObjectRepositorySDK repositorySDK;
-	public HandleFactory handleFactory = new HandleFactory();
+	public HandleRepository handleRep;
+	private HandleFactory hf = new HandleFactory();
+	Logger logger =  Logger.getLogger(HandleService.class.getName());	
 	
 	
-	// API Methods
+	// Return all handle identifiers
 	
-	public String resolveHandleWeb(String handle) throws JsonMappingException, JsonProcessingException {
-		//return ("Handle = " + handle);
-		return repositoryWeb.resolveHandleWeb(handle);		
-		
-	}
-	
-	public String createHandleWeb() {
-		
-		//String handle = handleFactory.newHandle();
-		String handle = "20.5000.1025/test-abcd";
-		
-		return repositoryWeb.createHandle(handle, "");
-		
+	public List<String> getHandles(){
+		return getStrList(handleRep.getHandles());
 	}
 	
 	
+	// Create Handle
 	
-	/*
-	
-	public String createHandle() throws IOException, InterruptedException, URISyntaxException {
-		//HandleValue [] values = toHandleValueList(digSpeg);
-		String handle = handleFactory.newHandle();		
-		return repository.createHandle(handle);
-
-	}*/
-	
-	// SDK Methods
-	
-	// Resolve handle: supply handle (and maybe types/indexes), returns handle record
-	
-	public DigitalSpecimen resolveHandle(String handle, String[] types, int[] indexes) throws IOException, InterruptedException, HandleException {	
-		if (types!= null && !checkTypes(Arrays.asList(types))) {
-			//return("Error: Invalid type parameters");  //TODO Should identify which values are not found here
-		}
-		byte[][] typeBs = (types == null ? null: typeBytes(types)); // Convert to list of bytes[] so we can run this through the resolver (if types is null don't do this)
+	public List<Handles> createHandle(String url, String digType, String institute) {
+		byte[] h = genHandleList(1).get(0); // TODO fix this? Make an individual function for single handles?
 		
-		return repositorySDK.resolveHandle(handle, typeBs, indexes);
+		HandleRecord newRecord = new HandleRecordSpecimen(h, url, digType, institute);
+		
+		// add new handle record to local list of handles
+		return handleRep.saveAll(newRecord.getEntries());	
 	}
 	
-
-	public String createHandle(HandleValue[] hvArr) {
+	
+	// Reserve handles
+	
+	public List<String> reserveHandle(int reserves) {
+		List<Handles> reservedRecords = new ArrayList<Handles>();  
+		List<byte[]> handleList = genHandleList(reserves); // Mint new handles
 		
-		for (int i=0;i<hvArr.length;i++) {
-			System.out.println(hvArr[i].getTypeAsString() + ":" + hvArr[i].getDataAsString());
+		// Create list of records to be posted
+		for (byte[] h : handleList) {
+			reservedRecords.addAll(newReservedHandle(h));
 		}
 		
-		
-		return null;
-	}
-	
-	private boolean checkTypes(List<String> types) { // returns false if there is an incorrect type included
-		if (types == null) return true;
-		return types.stream().allMatch(element -> typeList.contains(element));
-	}
-	
-	public byte[][] typeBytes(String[] types){
-		byte typeByte[][] = new byte[types.length][];
-		for (int i = 0; i<types.length; i++) {
-			typeByte[i] = types[i].getBytes();	
+		// post the list of handle entries
+		List<Handles> saved = handleRep.saveAll(reservedRecords);
+		List<String> savedStr = new ArrayList<String>();
+		for (Handles h : saved) {
+			savedStr.add(h.getHandle());
 		}
-		return typeByte;
+		
+		return savedStr;
 	}
- 
-
-	/**
 	
-	private ObjectMapper mapper;
-	private HandleFactory handleFactory = new HandleFactory();
-
-	// Create Handle Record
-	public void createHandle(DigitalSpecimen digSpeg) throws HandleException {
-		HandleValue [] values = toHandleValueList(digSpeg);
-		String handle = handleFactory.newHandle();
-		repository.createHandle(handle, values);
-
+	private List<Handles> newReservedHandle(byte[] h) {
+		HandleRecord reserveRecord = new HandleRecordReserve(h);		
+		//Add new handle string to our record	
+		return reserveRecord.sortByIdx().getEntries();
 	}
 
-	//Update Handle Record (Full)
-	public void updateHandle(String handle, DigitalSpecimen digSpec) throws HandleException{
-		HandleValue[] values = toHandleValueList(digSpec);
-		repository.updateHandle(handle, values);
-
+	
+	
+	// Resolve handle
+	
+	public String resolveHandle(String handle){		
+		
+		List<Handles> hList = handleRep.resolveHandle(handle.getBytes()); 
+		HandleRecordSpecimen record = new HandleRecordSpecimen(hList, handle.getBytes());
+		
+		return record.sortByIdx().toString();
+	}	
+	
+	//Update Handle
+	
+	public void updateHandle(String handle, int[] idxs, String[] newData) {
+		for (int i = 0; i<idxs.length; i++) {
+			handleRep.updateHandleRecordData(newData[i].getBytes(), handle.getBytes(), idxs[i]);
+		}
 	}
-
-
-
-
-	public void deleteHandle(String handle) throws HandleException{
-		repository.deleteHandle(handle);
-	} */
-
-
-
-
-
-
+	
+	
+	// Delete Handle
+	
+	public void deleteHandle(String handle) {
+		handleRep.deleteHandleRecord(handle.getBytes());
+	}
+	
+	private List<String> getStrList(List<byte[]> byteList){
+		// It's crazy that ArrayList doesn't have a native type converter (especially from byte[] to str?
+		// If there's a better way to do this that would be cool
+		
+		int l = byteList.size();
+		List<String> strList = new ArrayList<>(l);
+		String s;
+		for(byte[] b : byteList){
+			s = byteToString(b);
+			strList.add(s);
+		}
+		return strList;
+	}
+	
+	private String byteToString(byte[] b) {
+		String str = new String(b, Charset.forName("UTF-8"));
+		return str;
+	}
+	
+	// Minting Handles
+	
+	// Mint a single handle
+	private byte[] genHandle() {
+		byte[] newHandle = hf.newHandleBytes();
+		
+		return newHandle;
+	}
+	
+	// Mint a list of handles
+	private List<byte[]> genHandleList(int h){
+		return unwrapBytes(genHandleHash(h));
+	}
+	
+	
+	private HashSet<ByteBuffer> genHandleHash(int h){	
+		/* Generates a HashSet of minted handles of size h
+		 * Calls the handlefactory object for random strings (8 alphanum characters with a dash in the middle)
+		 * Checks list of random strings against database, replaces duplicates with new strings
+		 * Finally, checks for collisions within the list 
+		 * */
+		
+		// Generate h number of bytes and wrap it into a HashSet<ByteBuffer>
+		List<byte[]> handleList = hf.newHandle(h); 
+		HashSet<ByteBuffer> handleHash = wrapBytes(handleList); 		
+		
+		// Check for duplicates from repository and wrap the duplicates
+		HashSet<ByteBuffer> duplicates = wrapBytes(handleRep.checkDuplicateHandles(handleList)); 		
+		
+		// If a duplicate was found, recursively call this function
+		// Generate new handles for every duplicate found and add it to our hash list
+		if (!duplicates.isEmpty()) { 
+			boolean b = handleHash.removeAll(duplicates);						
+			b = handleHash.addAll(genHandleHash(duplicates.size())); 
+		}
+		
+		/* It's possible we have a collision within our list now
+		 * i.e. on two different recursive calls to this function, we generate the same
+		 * If this occurs, we will not have our expected number of handles 
+		 * */
+		while (h>handleHash.size()) {
+			handleHash.addAll(genHandleHash(h-handleHash.size()));
+		}
+	
+		return handleHash;
+	}	
+	
+	// For testing
+	private void logHandles(HashSet<ByteBuffer> handles) {
+		logger.log(Level.INFO,"Logging "+ String.valueOf(handles.size())+" handles");
+		String byteStr;
+		
+		Iterator<ByteBuffer> itr = handles.iterator();
+		
+		while(itr.hasNext()){
+			byteStr = StandardCharsets.UTF_8.decode(itr.next()).toString();
+			logger.log(Level.INFO, "\t" + byteStr);
+		}
+	}
+	
+	
+	/* List<byte[]> <----> HashSet<ByteBuffer>
+	 * HashSets are useful for preventing collisions within the list
+	 * List<byte[]> is used to interface with repository layer
+	*/
+	
+	//Converts List<byte[]> --> HashSet<ByteBuffer>
+	private HashSet<ByteBuffer> wrapBytes(List<byte[]> byteList){
+		HashSet<ByteBuffer> byteHash = new HashSet<ByteBuffer>();
+		for(Iterator<byte[]> itr = byteList.iterator(); itr.hasNext();) {
+			byteHash.add(ByteBuffer.wrap(itr.next()));
+		}	
+		return byteHash;
+	}
+	
+	//HashSet<ByteBuffer> --> List<byte[]>
+	 private List<byte[]> unwrapBytes(HashSet<ByteBuffer> handleHash){
+		 List<byte[]> handleList = new ArrayList<byte[]>();
+		 Iterator<ByteBuffer> itr = handleHash.iterator();
+		 while(itr.hasNext()) {
+			 handleList.add(itr.next().array());	 
+		 }
+		 return handleList;
+		}
+	 
 }

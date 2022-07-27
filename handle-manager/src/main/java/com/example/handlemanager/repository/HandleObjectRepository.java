@@ -68,8 +68,6 @@ public abstract class HandleObjectRepository {
 	abstract DigitalSpecimen resolveHandle(String handle, String[] types, int[] indexes); 
 	abstract DigitalSpecimen resolveHandle(String handle, byte[][] types, int[] indexes) throws HandleException, JsonMappingException, JsonProcessingException;
 	
-	
-	
 	// Other operations
 	protected DigitalSpecimen mapToDS(String hdlStr) throws JsonMappingException, JsonProcessingException {
 		DigitalSpecimen digSpec = mapper.readValue(hdlStr, DigitalSpecimen.class);

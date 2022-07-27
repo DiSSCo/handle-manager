@@ -1,27 +1,22 @@
 package com.example.handlemanager.controller;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.handlemanager.model.DigitalSpecimen;
+import com.example.handlemanager.model.Handles;
 import com.example.handlemanager.service.HandleService;
 
 import net.handle.hdllib.HandleException;
@@ -38,69 +33,67 @@ public class HandleController {
 	private HandleService service;
 	
 	@GetMapping(value="/hello") 
-	public Response hello() throws HandleException{
+	public Response hello() {
 		return Response
 				.status(Response.Status.OK)
 				.entity("Hello")
 				.build();
 	}
 	
-	// ** HTTP Methods **
+	// ** Repository Methods **
 	
-	// Resolve handle
-		@GetMapping(value="/record/**")
-		public String resolveHandle(HttpServletRequest request,
-				@RequestParam(value="types", defaultValue="-1") String[] types,
-				@RequestParam(value="indexes", defaultValue="-1") int[] indexes) throws IOException, InterruptedException, HandleException {
-			
-			// Extract handle value from argument
-			String handle = getHandleFromArg(request);
-			
-			
-			// Set undeclared values to null. I don't think we can do this earlier but I'll check
-			types = (types[0].equals("-1")) ? null : types;
-			indexes = (indexes[0] == -1 || indexes.length>7) ? null: indexes; // If no indexes are specified or if there's more than the max, just assume they want everything
-			
-			return service.resolveHandleWeb(handle);
-			//DigitalSpecimen digSpec = service.resolveHandle(handle,types,indexes);
-			//return (ResponseEntity<DigitalSpecimen>) ResponseEntity.ok(digSpec);
-		}
-	
-	// Create handle record
-	// Should accept body in the form of a Digital Specimen which would be transformed into something json-injestible and 
-	@PostMapping(value="/record")
-	public String createHandle() {
-		return service.createHandleWeb();
+	// List all handle values
+	@GetMapping(value="/all")
+	public List<String> getAllHandles(){
+		return service.getHandles();
 	}
-
 	
+	// Resolve a handle
+	@GetMapping(value="/**")
+	public String resolveHandle(@RequestParam(name="handle") String handle){
+		return service.resolveHandle(handle);
+		//TODO: might be nice to allow users to select which parts of the handle record they want to resolve		
+	}
 	
-	// ** SDK Methods **
+	// Reserve a set number of handles
+	@PostMapping(value="/reserve")
+	public List<String> reserveHandles(@RequestParam(name="reserves") int reserves) {
+		return service.reserveHandle(reserves);
+	}
 	
-	// Resolve handle: accept handle, return handle record
-	// Optional: supply index or type to narrow return value
-	// Currently, if an incorrect type or index is submitted, it is ignored
+	//Create Handle
+	@PostMapping(value="/**")
+	public List<Handles> createHandle(
+			@RequestParam(name="url") String url,
+			@RequestParam(name="digType") String digType,
+			@RequestParam(name="institute") String institute) {	
+		return service.createHandle(url, digType, institute);
+	}
 	
-	@GetMapping(value="/sdk/record/**")
-	public ResponseEntity<DigitalSpecimen> resolveHandleSDK(HttpServletRequest request,
-			@RequestParam(value="types", defaultValue="-1") String[] types,
-			@RequestParam(value="indexes", defaultValue="-1") int[] indexes) throws IOException, InterruptedException, HandleException {
+	@PostMapping(value="/update/**")
+	public String updateHandle(
+			@RequestParam(name="handle") String handle,
+			@RequestParam(name="idxs") int[] idxs,
+			@RequestParam(name="newVals") String[] newData){
 		
-		// Extract handle value from argument
-		String handle = getHandleFromArg(request);
+		// TODO: Assert all arrays are the same length		
+		service.updateHandle(handle, idxs, newData);
 		
-		// Set undeclared values to null. I don't think we can do this earlier but I'll check
-		types = (types[0].equals("-1")) ? null : types;
-		indexes = (indexes[0] == -1 || indexes.length>7) ? null: indexes; // If no indexes are specified or if there's more than the max, just assume they want everything
+		return service.resolveHandle(handle);
 		
-		DigitalSpecimen digSpec = service.resolveHandle(handle,types,indexes);
-		return (ResponseEntity<DigitalSpecimen>) ResponseEntity.ok(digSpec);
 	}
 	
 	
-	private String getHandleFromArg(HttpServletRequest r) {
-		String requestUrl = r.getRequestURL().toString();
-		return requestUrl.split("/api/record/")[1];
+	@GetMapping(value="/testdup")
+	public void checkDuplicate(){
+		//service.checkTest();
 	}
+	
+	@DeleteMapping(value="/**")
+	public void deleteHandle(@RequestParam(name="handle") String handle){
+		service.deleteHandle(handle);
+	}
+			
+	
 	
 }

@@ -15,20 +15,20 @@ public class HandleSessionsAuthenticator {
 	
 	// Here's how authentication of a session works:
 	/** 
-	 * Client sends unauthenticated post reques
-	 * Server returns a serverId (must be kept secret) and a nonce used once to verify client's identity
+	 * Client sends unauthenticated request (create, update, delete)
+	 * Server returns a sessionId (must be kept secret) and a nonce used once to verify client's identity
 	 * Client generates a 16-byte random string (cnonce), uses the private key to sign that cnonce with server's nonce
-	 * Re-submits that
+	 * Re-submits that request
 	 * That sessionId can be used to then authenticate subsequent requests
-	*/
+	*/ 
 	// These should be pulled from a 401 unauthorized response (json?)
 	private final String sessionId; 
 	private final String nonceStr; 
 	
 	
 	private SecureRandom secRand = new SecureRandom();
-	public byte [] cnonceBytes;
-	public String cnonceStr;
+	private byte [] cnonceBytes;
+	private String cnonceStr;
 	
 	private Signature sig = Signature.getInstance("SHA256withRSA"); 
 	private String signatureString;
@@ -40,11 +40,12 @@ public class HandleSessionsAuthenticator {
 		sessionId = sId;
 		nonceStr = nStr;
 		admin = new HandleAdmin();
+		createAuthHeader();
 	}
 	
 	
 	// HandleSessionInterceptor will call this function to authorize a session
-	public String createAuthHeader() throws IOException, GeneralSecurityException {
+	private void createAuthHeader() throws IOException, GeneralSecurityException {
 		// Decode server-assigned nonce
 		byte[] nonceBytes = Base64.getDecoder().decode(nonceStr);
 		
@@ -59,21 +60,21 @@ public class HandleSessionsAuthenticator {
 		signatureString = encodeToString(signatureBytes);
 		
 		authStr = buildAuthHeader();
-		return authStr;
 	}
 	
-	public byte[] generateCnonceBytes() {
+	// Generate random 16 bytes with which to sign the server nonce
+	private byte[] generateCnonceBytes() {
 		final byte[] cNonce = new byte[16];
 		secRand.nextBytes(cNonce);
 		return cNonce;
 	}
 	
 	// shortcut for byte->string conversion
-	public String encodeToString(byte[] bytearr) {
+	private String encodeToString(byte[] bytearr) {
 		return Base64.getEncoder().encodeToString(bytearr);
 	}
 	
-	public byte[] concatBytes(byte [] a, byte[] b) throws IOException {
+	private byte[] concatBytes(byte [] a, byte[] b) throws IOException {
 		// Concatenates two byte arrays 
 		byte[] c = new byte[a.length + b.length];
 		System.arraycopy(a, 0, c, 0, a.length);
@@ -119,6 +120,7 @@ public class HandleSessionsAuthenticator {
 		return authString;
 	}
 	
+	// Getters
 	public String getSessionId() {
 		return sessionId;
 	}

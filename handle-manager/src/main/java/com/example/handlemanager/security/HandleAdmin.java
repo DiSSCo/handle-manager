@@ -43,8 +43,6 @@ public class HandleAdmin {
 		setKeys();
 	}
 	
-	
-	
 	private void setKeys() throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
 		setPrivKeyStr();
 		setPubKeyStr();
