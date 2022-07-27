@@ -3,7 +3,7 @@ package com.example.handlemanager.model;
 import java.util.ArrayList;
 
 // Collection of Handles, reserved records
-
+//
 public class HandleRecordReserve extends HandleRecord{
 	
 	

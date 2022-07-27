@@ -10,6 +10,7 @@ import com.example.handlemanager.HandleFactory;
 public class HandleRecordSpecimen extends HandleRecord {
 	
 	// Digital-specimen specific data
+	//
 	private String url;
 	private String digType;
 	private String institute;

@@ -12,6 +12,7 @@ import org.hibernate.annotations.Type;
 
 // Composite Primary Key for Handles table
 
+
 @Embeddable
 public class HandleIdx implements Serializable{
 	

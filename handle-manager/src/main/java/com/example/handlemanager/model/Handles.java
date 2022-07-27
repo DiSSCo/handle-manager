@@ -17,7 +17,7 @@ import java.sql.SQLException;
 import java.util.Base64;
 
 // This class is used to interface with the Handle Server Database
-
+//
 @Entity
 @Table(name="handles")
 @IdClass(HandleIdx.class)

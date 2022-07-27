@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.List;
 
 // This class is a tidy collection of Handles (i.e. a collection of the objects to be published to the server)
-
+//
 public abstract class HandleRecord {
 	
 	protected final byte[] handle;
