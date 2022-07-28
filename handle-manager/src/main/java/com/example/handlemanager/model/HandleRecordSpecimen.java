@@ -72,6 +72,7 @@ public class HandleRecordSpecimen extends HandleRecord {
 		entries.add(new Handles(handle, 6, "pidStatus", "TEST"));
 		entries.add(new Handles(handle, 7, "pidKernelMetadataLicense", "Creative Commons Zero"));
 		entries.add(new Handles(handle, 8, "referent", getReferentStr()));
+		setAdminHandle();
 	}
 	
 	

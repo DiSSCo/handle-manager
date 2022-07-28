@@ -55,13 +55,15 @@ public class HandleService {
 	
 	// Create Handle
 	
-	public List<Handles> createHandle(String url, String digType, String institute) {
+	public String createHandle(String url, String digType, String institute) {
 		byte[] h = genHandleList(1).get(0); // TODO fix this? Make an individual function for single handles?
 		
 		HandleRecord newRecord = new HandleRecordSpecimen(h, url, digType, institute);
 		
 		// add new handle record to local list of handles
-		return handleRep.saveAll(newRecord.getEntries());	
+		HandleRecordSpecimen postedRecord = new HandleRecordSpecimen(handleRep.saveAll(newRecord.getEntries()), h);
+		return postedRecord.toString();
+		
 	}
 	
 	

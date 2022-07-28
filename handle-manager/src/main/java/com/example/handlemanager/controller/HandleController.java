@@ -63,7 +63,7 @@ public class HandleController {
 	
 	//Create Handle
 	@PostMapping(value="/**")
-	public List<Handles> createHandle(
+	public String createHandle(
 			@RequestParam(name="url") String url,
 			@RequestParam(name="digType") String digType,
 			@RequestParam(name="institute") String institute) {	
