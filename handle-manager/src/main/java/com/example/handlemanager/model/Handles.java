@@ -38,6 +38,7 @@ public class Handles implements Serializable, Comparable<Handles>{
 	@Type(type="org.hibernate.type.BinaryType")
 	private byte[] data;
 	
+	private long timestamp;
 	private int ttl = 86400;
 	
 	// Default permissions
@@ -50,19 +51,21 @@ public class Handles implements Serializable, Comparable<Handles>{
 	}
 	
 	// String constructor
-	public Handles(byte[] handle, int idx, String type, String data) {
+	public Handles(byte[] handle, int idx, String type, String data, long timestamp) {
 		this.handle = handle;
 		this.idx = idx;
 		this.type = type.getBytes();
 		this.data = data.getBytes();
+		this.timestamp = timestamp;
 	}
 	
 	// Bytes constructor
-	public Handles(byte[] handle, int idx, byte[] type, byte[] data) {
+	public Handles(byte[] handle, int idx, byte[] type, byte[] data, long timestamp) {
 		this.handle = handle;
 		this.idx = idx;
 		this.type = type;
 		this.data = data;
+		this.timestamp = timestamp;
 	}
 	
 	
@@ -86,6 +89,10 @@ public class Handles implements Serializable, Comparable<Handles>{
 		
 		String str = new String(handle, StandardCharsets.UTF_8);
 		return str;
+	}
+	
+	public byte[] getHandleBytes() {
+		return handle;
 	}
 	
 	public int getIdx() {
@@ -116,5 +123,6 @@ public class Handles implements Serializable, Comparable<Handles>{
 	private String shrinkString(String s) {
 		if (s.length() <= 30) return s;
 		return s.substring(0, 30)+"...";
-	}
+	}	
+	
 }

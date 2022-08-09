@@ -26,10 +26,12 @@ public class HandleFactory {
 	private final String prefix = "20.5000.1025/";
 	private final int maxHandles = 1000;
 	
+	// Structure of handle: ABC-123-DEF
+	
 	Logger logger = Logger.getLogger(HandleFactory.class.getName());
 
 	public HandleFactory() {  
-		this(9, new Random(), alphaNum);
+		this(11, new Random(), alphaNum);
 	}
 
 	private HandleFactory(int length, Random random, String symbols) {
@@ -42,7 +44,7 @@ public class HandleFactory {
 	
 	private String newSuffix(){
 		for (int idx = 0; idx < buf.length; ++idx) {
-			if (idx == 4) { //
+			if (idx == 3 || idx ==7) { //
 				buf[idx] = '-'; // Sneak a lil dash in the middle
 			}
 			else buf[idx] = symbols[random.nextInt(symbols.length)];
@@ -61,14 +63,22 @@ public class HandleFactory {
 	}
 	
 	public List<byte[]> newHandle(int h) { // Generates h number of handles
+		if (h < 1) {
+			logger.warning("Invalid number of handles to be generated");
+			return new ArrayList<byte[]>();
+		}
 		if (h > maxHandles) {
 			logger.warning("Max number of handles exceeded. Generating maximum " + String.valueOf(maxHandles) + " handles");
 			h = maxHandles;
 		}
-		logger.warning("Handles to be generated: "+String.valueOf(h));
 		
-		HashSet<ByteBuffer> handleHash = new HashSet<ByteBuffer>(); // We'll use this to make sure we're not duplicating results
-		List<byte[]> handleList = new ArrayList<byte[]>(); // This is the object we'll actually return 	
+		// We'll use this to make sure we're not duplicating results
+		// It's of type ByteBuffer and not byte[] because ByteBuffer has equality testing
+		// byte[] is too primitive for our needs
+		HashSet<ByteBuffer> handleHash = new HashSet<ByteBuffer>(); 
+		
+		// This is the object we'll actually return 	
+		List<byte[]> handleList = new ArrayList<byte[]>(); 
 		byte[] hdl;
 		
 		for (int i=0; i<h; i++) {

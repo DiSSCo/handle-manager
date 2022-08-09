@@ -18,6 +18,10 @@ public interface HandleRepository extends JpaRepository<Handles, HandleIdx> {
 	// Get all handles	
 	@Query(value="select distinct handle from handles h", nativeQuery=true)
 	List<byte[]> getHandles();	
+
+	@Query(value="select distinct handle from handles h where data = ?1", nativeQuery=true)
+	List<byte[]> getHandles(byte[] pidStatus);	
+	
 	
 	// Resolve single handle
 	@Query(value="select * from handles where handle = ?1", nativeQuery=true)
@@ -31,13 +35,13 @@ public interface HandleRepository extends JpaRepository<Handles, HandleIdx> {
 	@Modifying
 	@Transactional
 	@Query(value= "delete from handles where handle = ?1", nativeQuery=true)
-	void deleteHandleRecord(byte[] handle);
+	int deleteHandleRecord(byte[] handle);
 	
 	// Given handle and index to modify, update handle record with supplied data
 	@Modifying
 	@Transactional
-	@Query(value="update handles h set data=:data where h.handle=:hdl and h.idx=:i",nativeQuery=true)
-	void updateHandleRecordData(byte[] data, byte[] hdl, int i);
+	@Query(value="update handles h set data=:data, timestamp=:ts where h.handle=:hdl and h.idx=:i",nativeQuery=true)
+	void updateHandleRecordData(byte[] data, long ts, byte[] hdl, int i);
 	
 }
 

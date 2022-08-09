@@ -4,10 +4,11 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -24,6 +25,9 @@ import com.example.handlemanager.model.HandleIdx;
 import com.example.handlemanager.model.HandleRecord;
 import com.example.handlemanager.model.HandleRecordReserve;
 import com.example.handlemanager.model.HandleRecordSpecimen;
+import com.example.handlemanager.model.HandleRecordSpecimenMerged;
+import com.example.handlemanager.model.HandleRecordSpecimenSplit;
+import com.example.handlemanager.model.HandleRecordTombstone;
 import com.example.handlemanager.model.Handles;
 import com.example.handlemanager.repository.HandleRepository;
 
@@ -52,24 +56,44 @@ public class HandleService {
 		return getStrList(handleRep.getHandles());
 	}
 	
+	public List<String> getHandles(String pidStatus){
+		return getStrList(handleRep.getHandles(pidStatus.getBytes()));
+	}
 	
 	// Create Handle
-	
-	public String createHandle(String url, String digType, String institute) {
+	public HandleRecord createHandleSpecimen(String url, String digType, String institute) {
 		byte[] h = genHandleList(1).get(0); // TODO fix this? Make an individual function for single handles?
 		
-		HandleRecord newRecord = new HandleRecordSpecimen(h, url, digType, institute);
+		//byte[] h = "20.5000.1025/123-abc".getBytes();
+		HandleRecordSpecimen newRecord = new HandleRecordSpecimen(h, url, digType, institute);
 		
 		// add new handle record to local list of handles
 		HandleRecordSpecimen postedRecord = new HandleRecordSpecimen(handleRep.saveAll(newRecord.getEntries()), h);
-		return postedRecord.toString();
+		logger.info("New Handle Posted: " + postedRecord.getHandleStr());
 		
+		return postedRecord;
+	}
+	
+	public List<Handles> createTestHandle(String handle) {
+		/*String handle = "20.5000.1025/123-abc";
+		byte[] h = handle.getBytes(); */
+		handle = handle.toUpperCase();
+		deleteHandleSafe(handle);
+		
+		String url = hf.newHandle(); // this is to show things change
+		url = url.substring(url.length()-9, url.length());
+		
+		HandleRecord testRecord = new HandleRecordSpecimen(handle.getBytes(), url, "AstronomySpecimen", "NASA");
+		handleRep.saveAll(testRecord.getEntries());
+		return resolveHandle(handle);
+		
+		//return resolveHandle(handle);		
 	}
 	
 	
 	// Reserve handles
 	
-	public List<String> reserveHandle(int reserves) {
+	public HashSet<String>reserveHandle(int reserves) {
 		List<Handles> reservedRecords = new ArrayList<Handles>();  
 		List<byte[]> handleList = genHandleList(reserves); // Mint new handles
 		
@@ -79,10 +103,10 @@ public class HandleService {
 		}
 		
 		// post the list of handle entries
-		List<Handles> saved = handleRep.saveAll(reservedRecords);
-		List<String> savedStr = new ArrayList<String>();
-		for (Handles h : saved) {
-			savedStr.add(h.getHandle());
+		handleRep.saveAll(reservedRecords);
+		HashSet<String> savedStr = new HashSet<String>();
+		for (byte[] h : handleList) {
+			savedStr.add(byteToString(h));
 		}
 		
 		return savedStr;
@@ -94,31 +118,88 @@ public class HandleService {
 		return reserveRecord.sortByIdx().getEntries();
 	}
 
-	
-	
 	// Resolve handle
+
+	public HandleRecord resolveHandleRecord(String handle) {
+		List<Handles> hList = resolveHandle(handle);
+		if (hList.isEmpty()) {
+			return new HandleRecord(handle.getBytes());
+		}
+		return getRecord(handle.getBytes(), hList);
+	}
 	
-	public String resolveHandle(String handle){		
+	private List<Handles> resolveHandle(String handle){					
+		return handleRep.resolveHandle(handle.getBytes()); 
+	}
+	
+	// Given a list of Handles (of unknown pidStatus), return HandleRecord
+	
+	private HandleRecord getRecord(byte[] handle, List<Handles> hList) {	
 		
-		List<Handles> hList = handleRep.resolveHandle(handle.getBytes()); 
-		HandleRecordSpecimen record = new HandleRecordSpecimen(hList, handle.getBytes());
+		// Get PID status and relation status
 		
-		return record.sortByIdx().toString();
-	}	
+		String pidStatus = getDataFromType("pidStatus", hList);
+		String relationStatus = getDataFromType("pidRelation", hList);
+		
+		// Use pid Status and relation to extrapolate 
+		
+		if (pidStatus.equals("RESERVED")) {
+			return new HandleRecordReserve(handle);
+		}
+		if (pidStatus.equals("OBSOLETE")) {
+			return new HandleRecordTombstone(handle, hList);
+		}
+		if ((pidStatus.equals("TEST") | pidStatus.equals("ACTIVE")) && relationStatus.equals("")){
+			return new HandleRecordSpecimen(hList, handle);
+		}
+		if ((pidStatus.equals("TEST") | pidStatus.equals("ACTIVE")) && relationStatus.equals("MERGED")){
+			return new HandleRecordSpecimenMerged(hList, handle);
+		}
+		
+		
+		logger.warning("Handle pidStatus not been set. Returning best-guess");
+		return new HandleRecord(handle, hList); // In case no PID status has been set
+	}
+	
+	// Search list of handle records for the appropriate value
+	private String getDataFromType(String type, List<Handles> hList) {
+		String data = "";
+		for (Handles h: hList) {
+			if (h.getType().equals(type)) {
+				data = h.getData();
+			}
+		}
+		return data;
+	}
+	
 	
 	//Update Handle
 	
 	public void updateHandle(String handle, int[] idxs, String[] newData) {
+		long timestamp = Instant.now().getEpochSecond();
 		for (int i = 0; i<idxs.length; i++) {
-			handleRep.updateHandleRecordData(newData[i].getBytes(), handle.getBytes(), idxs[i]);
+			
+			handleRep.updateHandleRecordData(newData[i].getBytes(), timestamp, handle.getBytes(), idxs[i]);
 		}
 	}
 	
+	// Delete Handle	
+	public void deleteHandleSafe(String handle) {
+		handleRep.deleteAll(resolveHandle(handle));
+	}
 	
-	// Delete Handle
+	public HandleRecordTombstone createTombstone(byte[] handleB, String tombstone) {
+		//handleRep.flush();
+		HandleRecordTombstone tombstoneRecord = new HandleRecordTombstone(handleB, tombstone);
+		handleRep.saveAll(tombstoneRecord.sortByIdx().getEntries());		
+		return tombstoneRecord;
+	}
 	
-	public void deleteHandle(String handle) {
-		handleRep.deleteHandleRecord(handle.getBytes());
+	public HandleRecordTombstone createTombstoneMerged(byte[] handleB, String tombstone, String relatedPid) {
+		HandleRecordTombstone tombstoneRecord = new HandleRecordTombstone(handleB, tombstone);
+		tombstoneRecord.setRelationStatusMerged(relatedPid);
+		handleRep.saveAll(tombstoneRecord.sortByIdx().getEntries());
+		return tombstoneRecord;
 	}
 	
 	private List<String> getStrList(List<byte[]> byteList){
@@ -139,6 +220,94 @@ public class HandleService {
 		String str = new String(b, Charset.forName("UTF-8"));
 		return str;
 	}
+	
+	// Merge Handle
+	
+	public HandleRecordSpecimenMerged mergeHandle(List<String> handles, String url, String digitalObjectType, String institute) {
+		List<HandleRecordSpecimen> legacyRecord = new ArrayList<HandleRecordSpecimen>();
+		String mergedTombstoneText = "This record was merged with other records.";
+		
+		byte[] handle = genHandleList(1).get(0);
+
+		
+		// Resolve handles to be merged, create tombstone records for them. 
+		for (String h : handles) {
+			try {
+				legacyRecord.add((HandleRecordSpecimen) resolveHandleRecord(h));
+			}
+			catch(java.lang.ClassCastException e) {
+				logger.severe("One of the digital objects to be merged is not viable");
+				return null;
+			}
+
+			deleteHandleSafe(h);
+			createTombstoneMerged(h.getBytes(), mergedTombstoneText, byteToString(handle)); // this might be a problem...
+		}
+		
+		HandleRecordSpecimenMerged mergedRecord = new HandleRecordSpecimenMerged(handle, url, digitalObjectType, institute, legacyRecord);
+		handleRep.saveAll(mergedRecord.sortByIdx().getEntries());
+		return mergedRecord;
+		
+	}
+	
+	// Split Handle
+	
+	
+	public List<HandleRecordSpecimenSplit> splitHandle(String handle, 
+			String urlA, String urlB,
+			String digTypeA, String digTypeB){
+		HandleRecordSpecimen parent = (HandleRecordSpecimen) resolveHandleRecord(handle);
+		String parentHandle = parent.getHandleStr();
+		String childHandleA = parentHandle+"-A";
+		String childHandleB = parentHandle+"-B";
+		
+		
+		
+		List<String> siblingHandles = new ArrayList<String>(); 
+		siblingHandles.add(childHandleA);
+		siblingHandles.add(childHandleB);
+		
+		digTypeA = setDigType(parent, digTypeA);
+		digTypeB = setDigType(parent, digTypeB);
+		
+		HandleRecordSpecimenSplit childA = new HandleRecordSpecimenSplit(
+				childHandleA.getBytes(),
+				urlA,
+				digTypeA,
+				parent.getInstitute(),
+				siblingHandles);
+		
+		HandleRecordSpecimenSplit childB = new HandleRecordSpecimenSplit(
+				childHandleB.getBytes(),
+				urlB,
+				digTypeB,
+				parent.getInstitute(),
+				siblingHandles);
+		
+		List<HandleRecordSpecimenSplit> splitHandles = new ArrayList<HandleRecordSpecimenSplit>();
+		splitHandles.add(childA);
+		splitHandles.add(childB);
+		
+		// Kill the parent (...That's kind of dark)
+		deleteHandleSafe(parentHandle);
+		HandleRecordTombstone parentTombstone = createTombstone(parentHandle.getBytes(), "The handle was split.");
+		parentTombstone.setRelationStatusSplit(siblingHandles);
+		
+		return splitHandles;
+	}
+	
+	private String setDigType(HandleRecordSpecimen parent, String digType) {
+		if (digType.equals("")) return parent.getDigitalObjectType();
+		if (!(parent.getDigTypeList().contains(digType))) {
+			logger.warning("Invalid digital object type provided. Using parent digital object type");
+			return parent.getDigitalObjectType();
+		}
+		
+		return digType;
+	}
+	
+	
+	
 	
 	// Minting Handles
 	
@@ -177,7 +346,7 @@ public class HandleService {
 		}
 		
 		/* It's possible we have a collision within our list now
-		 * i.e. on two different recursive calls to this function, we generate the same
+		 * i.e. on two different recursive cal)ls to this function, we generate the same
 		 * If this occurs, we will not have our expected number of handles 
 		 * */
 		while (h>handleHash.size()) {
