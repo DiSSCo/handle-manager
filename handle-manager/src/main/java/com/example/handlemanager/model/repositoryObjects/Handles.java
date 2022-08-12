@@ -1,4 +1,4 @@
-package com.example.handlemanager.model;
+package com.example.handlemanager.model.repositoryObjects;
 
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;

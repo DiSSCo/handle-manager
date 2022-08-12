@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import org.junit.jupiter.api.Test;
 
-import com.example.handlemanager.model.HandleRecordSpecimen;
+import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordSpecimen;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

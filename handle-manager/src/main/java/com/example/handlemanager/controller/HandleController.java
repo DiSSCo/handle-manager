@@ -24,10 +24,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.handlemanager.model.HandleRecord;
-import com.example.handlemanager.model.HandleRecordSpecimen;
-import com.example.handlemanager.model.HandleRecordSpecimenMerged;
-import com.example.handlemanager.model.Handles;
+import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecord;
+import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordSpecimen;
+import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordSpecimenMerged;
+import com.example.handlemanager.model.repositoryObjects.Handles;
 import com.example.handlemanager.service.HandleService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;

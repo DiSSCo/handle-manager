@@ -1,8 +1,9 @@
-package com.example.handlemanager.model;
+package com.example.handlemanager.model.HandleRecordSpecimen;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import com.example.handlemanager.model.repositoryObjects.Handles;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 

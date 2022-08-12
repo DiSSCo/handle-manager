@@ -4,8 +4,8 @@ import java.security.PrivateKey;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.example.handlemanager.model.HandleRecord;
-import com.example.handlemanager.model.HandleRecordSpecimen;
+import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecord;
+import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordSpecimen;
 import com.example.handlemanager.service.HandleService;
 
 import com.fasterxml.jackson.core.JsonProcessingException;

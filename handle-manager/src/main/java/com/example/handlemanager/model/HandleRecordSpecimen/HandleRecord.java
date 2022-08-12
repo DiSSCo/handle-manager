@@ -1,4 +1,4 @@
-package com.example.handlemanager.model;
+package com.example.handlemanager.model.HandleRecordSpecimen;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import com.example.handlemanager.HandleFactory;
+import com.example.handlemanager.model.repositoryObjects.Handles;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 

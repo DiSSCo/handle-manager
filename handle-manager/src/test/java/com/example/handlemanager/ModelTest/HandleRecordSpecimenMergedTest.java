@@ -6,8 +6,8 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.example.handlemanager.model.HandleRecordSpecimen;
-import com.example.handlemanager.model.HandleRecordSpecimenMerged;
+import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordSpecimen;
+import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordSpecimenMerged;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import static org.junit.Assert.assertEquals;

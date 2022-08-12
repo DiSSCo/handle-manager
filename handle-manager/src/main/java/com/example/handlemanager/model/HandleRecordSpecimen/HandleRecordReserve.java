@@ -1,4 +1,4 @@
-package com.example.handlemanager.model;
+package com.example.handlemanager.model.HandleRecordSpecimen;
 
 import java.util.ArrayList;
 import java.util.List;

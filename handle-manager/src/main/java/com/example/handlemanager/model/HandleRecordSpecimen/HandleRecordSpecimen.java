@@ -1,4 +1,4 @@
-package com.example.handlemanager.model;
+package com.example.handlemanager.model.HandleRecordSpecimen;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 
 import com.example.handlemanager.HandleFactory;
 import com.example.handlemanager.model.recordMetadataObjects.DigitalObjectSubtype;
+import com.example.handlemanager.model.repositoryObjects.Handles;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;

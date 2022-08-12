@@ -2,8 +2,8 @@ package com.example.handlemanager.ModelTest;
 
 import org.junit.jupiter.api.Test;
 
-import com.example.handlemanager.model.HandleRecordSpecimen;
-import com.example.handlemanager.model.HandleRecordTombstone;
+import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordSpecimen;
+import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordTombstone;
 
 public class HandleRecordTombstoneTest {
 

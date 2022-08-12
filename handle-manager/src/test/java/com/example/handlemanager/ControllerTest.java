@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.example.handlemanager.controller.HandleController;
-import com.example.handlemanager.model.HandleRecord;
+import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecord;
 import com.example.handlemanager.service.HandleService;
 
 @SpringBootTest

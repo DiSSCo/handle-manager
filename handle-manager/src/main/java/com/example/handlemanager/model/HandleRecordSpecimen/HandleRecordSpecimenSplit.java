@@ -1,7 +1,8 @@
-package com.example.handlemanager.model;
+package com.example.handlemanager.model.HandleRecordSpecimen;
 
 import java.util.List;
 
+import com.example.handlemanager.model.repositoryObjects.Handles;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 

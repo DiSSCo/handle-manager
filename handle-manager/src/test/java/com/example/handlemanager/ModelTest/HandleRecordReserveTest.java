@@ -6,8 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import org.junit.jupiter.api.Test;
 
-import com.example.handlemanager.model.HandleRecord;
-import com.example.handlemanager.model.HandleRecordReserve;
+import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecord;
+import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordReserve;
 
 public class HandleRecordReserveTest {
 	HandleRecordReserve reserve;

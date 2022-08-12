@@ -1,4 +1,4 @@
-package com.example.handlemanager.model;
+package com.example.handlemanager.model.repositoryObjects;
 
 import java.io.Serializable;
 import java.util.Base64;

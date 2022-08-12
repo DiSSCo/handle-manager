@@ -10,8 +10,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.handlemanager.model.HandleIdx;
-import com.example.handlemanager.model.Handles;
+import com.example.handlemanager.model.repositoryObjects.HandleIdx;
+import com.example.handlemanager.model.repositoryObjects.Handles;
 
 @Repository
 public interface HandleRepository extends JpaRepository<Handles, HandleIdx> {
