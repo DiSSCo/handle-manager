@@ -13,9 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class HandleRecordSpecimenTest {
 	
 	HandleRecordSpecimen specimen;
-	String digType = "BotanySpecimen";
+	String digType = "ZoologyVertebrateSpecimen";
 	
-	public HandleRecordSpecimen genTestRecord(String dt) {
+	public HandleRecordSpecimen genTestRecord(String dt) throws JsonProcessingException {
 		byte[] handle = "20.5000.1025/ABC-123".getBytes();
 		String url = "dissco.eu";
 		String institute = "DiSSCo";
@@ -26,14 +26,14 @@ public class HandleRecordSpecimenTest {
 	
 	// "Inverse record creation" = creating object based on List<Handles> instead of by fields (as seen in testRecord()
 	@Test
-	public void testInverseRecordCreation() {
+	public void testInverseRecordCreation() throws JsonProcessingException {
 		specimen = genTestRecord("BotanySpecimen");
-		HandleRecordSpecimen specimen2 = new HandleRecordSpecimen(specimen.getEntries(), specimen.getHandle());		
+		HandleRecordSpecimen specimen2 = new HandleRecordSpecimen(specimen.getEntries(), specimen.getHandle());
 		assert(specimen.equals(specimen2));
 	}
 	
 	@Test
-	public void testIsEmpty() {
+	public void testIsEmpty() throws JsonProcessingException {
 		HandleRecordSpecimen specimen = genTestRecord(digType);
 		assertFalse(specimen.isEmpty());
 		specimen.clearEntries();
@@ -41,9 +41,9 @@ public class HandleRecordSpecimenTest {
 	}
 	
 	@Test
-	public void testInvalidDigType() {
+	public void testInvalidDigType() throws JsonProcessingException {
 		specimen = genTestRecord("Bleugh");
-		assertEquals(specimen.getDigType(), "");
+		assertEquals(specimen.getDigSubtype(), "");
 	}
 	
 	

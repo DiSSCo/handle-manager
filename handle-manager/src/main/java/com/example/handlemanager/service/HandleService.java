@@ -30,6 +30,8 @@ import com.example.handlemanager.model.HandleRecordSpecimenSplit;
 import com.example.handlemanager.model.HandleRecordTombstone;
 import com.example.handlemanager.model.Handles;
 import com.example.handlemanager.repository.HandleRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
 import java.util.logging.*;
 
@@ -61,20 +63,20 @@ public class HandleService {
 	}
 	
 	// Create Handle
-	public HandleRecord createHandleSpecimen(String url, String digType, String institute) {
+	public HandleRecord createHandleSpecimen(String url, String digType, String institute) throws JsonProcessingException {
 		byte[] h = genHandleList(1).get(0); // TODO fix this? Make an individual function for single handles?
 		
 		//byte[] h = "20.5000.1025/123-abc".getBytes();
 		HandleRecordSpecimen newRecord = new HandleRecordSpecimen(h, url, digType, institute);
 		
 		// add new handle record to local list of handles
-		HandleRecordSpecimen postedRecord = new HandleRecordSpecimen(handleRep.saveAll(newRecord.getEntries()), h);
+		HandleRecordSpecimen postedRecord = new HandleRecordSpecimen(handleRep.saveAll(newRecord.sortByIdx().getEntries()), h);
 		logger.info("New Handle Posted: " + postedRecord.getHandleStr());
 		
 		return postedRecord;
 	}
 	
-	public List<Handles> createTestHandle(String handle) {
+	public List<Handles> createTestHandle(String handle) throws JsonProcessingException {
 		/*String handle = "20.5000.1025/123-abc";
 		byte[] h = handle.getBytes(); */
 		handle = handle.toUpperCase();
@@ -120,11 +122,13 @@ public class HandleService {
 
 	// Resolve handle
 
-	public HandleRecord resolveHandleRecord(String handle) {
-		List<Handles> hList = resolveHandle(handle);
+	public HandleRecord resolveHandleRecord(String handle) throws JsonMappingException, JsonProcessingException {
+		List<Handles> hList = resolveHandle(handle); // Need to catch this if the timestamp is null
 		if (hList.isEmpty()) {
 			return new HandleRecord(handle.getBytes());
 		}
+		
+		
 		return getRecord(handle.getBytes(), hList);
 	}
 	
@@ -134,7 +138,8 @@ public class HandleService {
 	
 	// Given a list of Handles (of unknown pidStatus), return HandleRecord
 	
-	private HandleRecord getRecord(byte[] handle, List<Handles> hList) {	
+	private HandleRecord getRecord(byte[] handle, List<Handles> hList) throws JsonMappingException, JsonProcessingException {	
+		logger.info("Determining handle record type");
 		
 		// Get PID status and relation status
 		
@@ -223,7 +228,7 @@ public class HandleService {
 	
 	// Merge Handle
 	
-	public HandleRecordSpecimenMerged mergeHandle(List<String> handles, String url, String digitalObjectType, String institute) {
+	public HandleRecordSpecimenMerged mergeHandle(List<String> handles, String url, String digitalObjectType, String institute) throws JsonProcessingException {
 		List<HandleRecordSpecimen> legacyRecord = new ArrayList<HandleRecordSpecimen>();
 		String mergedTombstoneText = "This record was merged with other records.";
 		
@@ -255,30 +260,29 @@ public class HandleService {
 	
 	public List<HandleRecordSpecimenSplit> splitHandle(String handle, 
 			String urlA, String urlB,
-			String digTypeA, String digTypeB){
+			String digTypeA, String digTypeB) throws JsonProcessingException{
 		HandleRecordSpecimen parent = (HandleRecordSpecimen) resolveHandleRecord(handle);
+		logger.info("Service started");
 		String parentHandle = parent.getHandleStr();
-		String childHandleA = parentHandle+"-A";
-		String childHandleB = parentHandle+"-B";
+		List<byte[]> handleList = genHandleList(2);
+		byte[] childHandleA = handleList.get(0);
+		byte[] childHandleB = handleList.get(1);
 		
+		List<String> siblingHandles = getStrList(handleList);
 		
-		
-		List<String> siblingHandles = new ArrayList<String>(); 
-		siblingHandles.add(childHandleA);
-		siblingHandles.add(childHandleB);
 		
 		digTypeA = setDigType(parent, digTypeA);
 		digTypeB = setDigType(parent, digTypeB);
 		
 		HandleRecordSpecimenSplit childA = new HandleRecordSpecimenSplit(
-				childHandleA.getBytes(),
+				childHandleA,
 				urlA,
 				digTypeA,
 				parent.getInstitute(),
 				siblingHandles);
 		
 		HandleRecordSpecimenSplit childB = new HandleRecordSpecimenSplit(
-				childHandleB.getBytes(),
+				childHandleB,
 				urlB,
 				digTypeB,
 				parent.getInstitute(),
@@ -288,6 +292,9 @@ public class HandleService {
 		splitHandles.add(childA);
 		splitHandles.add(childB);
 		
+		saveChildren(splitHandles);
+		
+		
 		// Kill the parent (...That's kind of dark)
 		deleteHandleSafe(parentHandle);
 		HandleRecordTombstone parentTombstone = createTombstone(parentHandle.getBytes(), "The handle was split.");
@@ -296,11 +303,21 @@ public class HandleService {
 		return splitHandles;
 	}
 	
+	private void saveChildren(List<HandleRecordSpecimenSplit> children) {
+		List<Handles> recordsToSave = new ArrayList<>();
+		for (HandleRecordSpecimenSplit c : children) {
+			recordsToSave.addAll(c.getEntries());
+		}
+		
+		handleRep.saveAll(recordsToSave);
+	}
+	
+	
 	private String setDigType(HandleRecordSpecimen parent, String digType) {
-		if (digType.equals("")) return parent.getDigitalObjectType();
+		if (digType.equals("")) return parent.getDigitalObjectSubtype();
 		if (!(parent.getDigTypeList().contains(digType))) {
 			logger.warning("Invalid digital object type provided. Using parent digital object type");
-			return parent.getDigitalObjectType();
+			return parent.getDigitalObjectSubtype();
 		}
 		
 		return digType;

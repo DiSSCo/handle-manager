@@ -23,7 +23,7 @@ public class HandleRecord {
 	@JsonIgnore
 	protected List<Handles> entries;
 	@JsonIgnore
-	protected long timestamp;
+	protected Long timestamp;
 	
 	protected String pidStatus;
 	

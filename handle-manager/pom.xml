@@ -122,6 +122,10 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+    		<groupId>junit</groupId>
+		    <artifactId>junit</artifactId>
+		</dependency>
+        <dependency>
 			<groupId>org.projectlombok</groupId> <!-- Quality of Life Annotations (e.g. @Data) -->
 			<artifactId>lombok</artifactId>
 			<scope>provided</scope>

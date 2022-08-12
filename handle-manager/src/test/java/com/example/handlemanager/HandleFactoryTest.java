@@ -1,6 +1,6 @@
 package com.example.handlemanager;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.List;
 
@@ -17,12 +17,12 @@ public class HandleFactoryTest {
 	}
 	
 	@Test
-	void basicHandleGeneration() {
+	public void basicHandleGeneration() {
 		String newHandle = hf.newHandle();
 		testHandleProperties(newHandle);	
 	}
 	
-	void testHandleProperties(String newHandle) {
+	public void testHandleProperties(String newHandle) {
 		assertEquals(24, newHandle.length()); // Correct length
 		assertEquals('-', newHandle.charAt(16)); // Dashes are going in right place
 		assertEquals('-', newHandle.charAt(20));
@@ -33,7 +33,7 @@ public class HandleFactoryTest {
 	}
 	
 	@Test 
-	void batchHandleGeneration() {
+	public void batchHandleGeneration() {
 		List<byte[]> handleList = hf.newHandle(10);
 		String handle;
 		
@@ -44,7 +44,7 @@ public class HandleFactoryTest {
 	}
 	
 	@Test 
-	void invalidHandleGenerationParams(){
+	public void invalidHandleGenerationParams(){
 		List<byte[]> handleListLong = hf.newHandle(1001);
 		assertEquals(handleListLong.size(), 1000);
 		List<byte[]> handleListShort = hf.newHandle(-1);

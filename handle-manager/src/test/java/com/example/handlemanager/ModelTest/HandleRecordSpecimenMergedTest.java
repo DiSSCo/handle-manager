@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import com.example.handlemanager.model.HandleRecordSpecimen;
 import com.example.handlemanager.model.HandleRecordSpecimenMerged;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -30,12 +31,12 @@ public class HandleRecordSpecimenMergedTest {
 	String url = "dissco.eu";
 	String institute = "DiSSCo";
 	
-	private HandleRecordSpecimen genTestRecord(String dt, byte[] h) {		
+	private HandleRecordSpecimen genTestRecord(String dt, byte[] h) throws JsonProcessingException {		
 		return new HandleRecordSpecimen(h, url, dt, institute);
 	}
 	
 	@BeforeEach
-	private void setup() {
+	private void setup() throws JsonProcessingException {
 		specimen1 = genTestRecord("BotanySpecimen", handle);
 		specimen2 = genTestRecord("MycologySpecimen", handle);
 		specimen3 = genTestRecord("AnthropologySpecimen", handle2);
@@ -61,7 +62,7 @@ public class HandleRecordSpecimenMergedTest {
 	}
 	
 	@Test 
-	public void testEquality() {
+	public void testEquality() throws JsonProcessingException {
 		assertTrue(merged1.equals(merged2));
 		merged3 = new HandleRecordSpecimenMerged(handle, url, "BotanySpecimen", institute, genSpecList(specimen1, specimen3));
 		assertFalse(merged1.equals(merged3));

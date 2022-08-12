@@ -7,6 +7,8 @@ import java.util.logging.Logger;
 import com.example.handlemanager.HandleFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -25,14 +27,14 @@ public class HandleRecordSpecimenMerged extends HandleRecordSpecimen {
 	
 	// Constructor from inputs (usually called when record is being constructed for the first time)
 	public HandleRecordSpecimenMerged(byte[] handle, String url, String digitalObjectType, 
-			String institute, List<HandleRecordSpecimen> legacyRecords) {
+			String institute, List<HandleRecordSpecimen> legacyRecords) throws JsonProcessingException {
 		super(handle, url, digitalObjectType, institute);
 		setLegacyHandlesFromSpecimenRecord(legacyRecords);
 		setRelationRecord();
 	}
 	
 	// Constructor from Handle Record retrievable (usually called when a handle record is resolved)
-	public HandleRecordSpecimenMerged(List<Handles> entries, byte[] handle) {
+	public HandleRecordSpecimenMerged(List<Handles> entries, byte[] handle) throws JsonMappingException, JsonProcessingException {
 		super(entries, handle);
 		setLegacyHandlesFromHandleRecord(entries);
 	}
@@ -56,7 +58,6 @@ public class HandleRecordSpecimenMerged extends HandleRecordSpecimen {
 		
 		for (HandleRecordSpecimen specimen : records) {
 			legacyHandles.add(specimen.getHandleStr());
-			logger.info("Legacy handle: "+specimen.getHandleStr());
 		}
 		setLegacyString();
 		this.entries.add(new Handles(handle, entries.size()+1, legacyStringName, legacyHandleString, timestamp));

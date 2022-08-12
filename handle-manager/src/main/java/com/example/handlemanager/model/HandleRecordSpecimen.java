@@ -8,7 +8,11 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import com.example.handlemanager.HandleFactory;
+import com.example.handlemanager.model.recordMetadataObjects.DigitalObjectSubtype;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.Data;
 
@@ -18,13 +22,19 @@ public class HandleRecordSpecimen extends HandleRecord {
 	// DiSSCo PID Kernel
 	protected String url;
 	protected String pidIssuer;
-	protected String digitalObjectType;
-	protected String loc = "";
+	protected String digitalObjectSubtype;
+	protected String digitalObjectSubtypeString;
+	protected String digitalObjectTypeString = setDigitalObjectTypeString();
 	protected String issueDate;
 	protected String institute;
 	protected String issueNumber = "1";
 	protected  final String pidKernelMetadataLicense = "Creative Commons Zero";
 	protected String referent;
+	protected final String digitalOrPhysical = "physical";
+	
+	
+	@JsonIgnore
+	ObjectMapper objectMapper = new ObjectMapper();
 
 	// Other
 	@JsonIgnore
@@ -32,7 +42,7 @@ public class HandleRecordSpecimen extends HandleRecord {
 	
 
 	@JsonIgnore
-	public final List<String> digTypes = new ArrayList<String>() {
+	public final List<String> digSubtypes = new ArrayList<String>() {
 		private static final long serialVersionUID = 1L;
 
 		{
@@ -56,25 +66,21 @@ public class HandleRecordSpecimen extends HandleRecord {
 		}
 	};
 	
-	public HandleRecordSpecimen(byte[] handle, String url, String digitalObjectType, String institute) {
+	public HandleRecordSpecimen(byte[] handle, String url, String subtype, String institute) throws JsonProcessingException {
 		super(handle);
 		this.pidStatus = "TEST";
 		this.url = url;
 		this.institute = institute;
-		if (this.digTypes.contains(digitalObjectType)) {
-			this.digitalObjectType = digitalObjectType;
-		}
-		else {
-			this.digitalObjectType="";
-			logger.warning("Digital object type invalid");
-		}
+		
+		setDigitalObjectSubtype(subtype);
+		setDigSubtypeStr();
 		setDate();
-		setReferent(institute);
+		setReferent();
 		setPidIssuer(); 
 		setEntries();
 	}	
 	
-	public HandleRecordSpecimen(List<Handles> entries, byte[] handle) {
+	public HandleRecordSpecimen(List<Handles> entries, byte[] handle) throws JsonMappingException, JsonProcessingException {
 		super(handle);
 		this.entries = entries;
 		
@@ -90,8 +96,11 @@ public class HandleRecordSpecimen extends HandleRecord {
 					this.pidIssuer = h.getData();
 					break;
 				case "digitalObjectType":
-					this.digitalObjectType = h.getData();
+					this.digitalObjectTypeString = h.getData();
 					break;
+				case "digitalObjectSubtype":
+					this.digitalObjectSubtypeString = h.getData();
+					parseDigitalObjectSubtypeStr(digitalObjectSubtypeString);
 				case "issueDate":
 					this.issueDate = h.getData();
 					break;
@@ -113,16 +122,61 @@ public class HandleRecordSpecimen extends HandleRecord {
 	@Override
 	protected void setEntries() {
 		entries = new ArrayList<Handles>();
+		int i = 0;
 		
-		entries.add(new Handles(handle, 1, "URL", url, timestamp));
-		entries.add(new Handles(handle, 2, "pidIssuer", pidIssuer, timestamp));  // Subject to change
-		entries.add(new Handles(handle, 3, "digitalObjectType", digitalObjectType, timestamp));  // TODO: Verify digType
-		entries.add(new Handles(handle, 4, "issueDate", issueDate, timestamp));
-		entries.add(new Handles(handle, 5, "issueNumber", "1", timestamp));
-		entries.add(new Handles(handle, 6, "pidStatus", "TEST", timestamp));
-		entries.add(new Handles(handle, 7, "pidKernelMetadataLicense", "Creative Commons Zero", timestamp));
-		entries.add(new Handles(handle, 8, "referent", referent, timestamp));
+		entries.add(new Handles(handle, i++, "URL", url, timestamp));
+		entries.add(new Handles(handle, i++, "pidIssuer", pidIssuer, timestamp)); 
+		entries.add(new Handles(handle, i++, "digitalObjectType", digitalObjectTypeString, timestamp)); 
+		entries.add(new Handles(handle, i++, "digitalObjectSubtype", digitalObjectSubtypeString, timestamp)); 
+		entries.add(new Handles(handle, i++, "issueDate", issueDate, timestamp));
+		entries.add(new Handles(handle, i++, "issueNumber", "1", timestamp));
+		entries.add(new Handles(handle, i++, "pidStatus", "TEST", timestamp));
+		entries.add(new Handles(handle, i++, "pidKernelMetadataLicense", pidKernelMetadataLicense, timestamp));
+		entries.add(new Handles(handle, i++, "referent", referent, timestamp));		
 		setAdminHandle();
+	}
+	
+	
+	private void parseDigitalObjectSubtypeStr(String subtypeStr) throws JsonMappingException, JsonProcessingException {
+		DigitalObjectSubtype subtype = objectMapper.readValue(subtypeStr, DigitalObjectSubtype.class);
+		logger.info("subtype String: " + subtypeStr + " \t subtype: " + subtype.getPrimaryNameFromPid());
+		
+		setDigitalObjectSubtype(subtype.getPrimaryNameFromPid());
+	}
+	
+	private void setDigitalObjectSubtype(String subtype) throws JsonProcessingException {
+		logger.info("Subtype = " + subtype);
+		if (this.digSubtypes.contains(subtype)) {
+			this.digitalObjectSubtype = subtype;
+		}
+		else {
+			this.digitalObjectSubtype="";
+			logger.warning("Digital object type invalid");
+		}
+	}
+	
+	private void setDigSubtypeStr() throws JsonProcessingException {
+		DigitalObjectSubtype digSubType = new DigitalObjectSubtype(); 
+		digSubType.setPrimaryNameFromPid(digitalObjectSubtype);
+		
+		switch (digitalObjectSubtype) {
+		case "ZoologyVertebrateSpecimen":
+			digSubType.setPid("21.T11148/ccdb8cda8a785230257e");
+		case "AstronomySpecimen":
+			digSubType.setPid("21.T11148/894b1e6cad57e921764e");
+		default:
+			digSubType.setPid("");
+		}
+		
+		digitalObjectSubtypeString = objectMapper.writeValueAsString(digSubType);
+	}
+	
+	private String setDigitalObjectTypeString() {
+		return "{\n"
+				+ "  \"pid\": \"21.T11148/894b1e6cad57e921764e \",  \n"
+				+ "  \"pidType\": \"Handle\",  \n"
+				+ "  \"primaryNameFromPid\": \"Digital Specimen\",\n"
+				+ "}";		
 	}
 	
 	
@@ -133,7 +187,7 @@ public class HandleRecordSpecimen extends HandleRecord {
 		
 	}
 	
-	private void setReferent(String institute) {
+	private void setReferent() {
 		// This is going to change when we develop a new DOI schema!!!
 		referent = "{\"referentIdentifiers\": \"\", "
 				+ "\"primaryReferentType\": \"creation\", "
@@ -156,8 +210,10 @@ public class HandleRecordSpecimen extends HandleRecord {
 		return "";
 	}
 	
-	public String getDigType(){
-		return digitalObjectType;
+	
+	
+	public String getDigSubtype(){
+		return digitalObjectSubtype;
 	}
 	
 	
@@ -177,11 +233,8 @@ public class HandleRecordSpecimen extends HandleRecord {
 	
 	@JsonIgnore
 	public List<String> getDigTypeList(){
-		return digTypes;
+		return digSubtypes;
 	}
-
-
-	
 	
 /*
  * private String url;
@@ -201,8 +254,7 @@ public class HandleRecordSpecimen extends HandleRecord {
 		return (getHandleStr().equals(spec2.getHandleStr()) &&
 				url.equals(spec2.getUrl()) &&
 				pidIssuer.equals(spec2.getPidIssuer()) &&
-				digitalObjectType.equals(spec2.getDigitalObjectType())&&
-				loc.equals(spec2.getLoc())&&
+				digitalObjectSubtype.equals(spec2.getDigitalObjectSubtype())&&
 				issueDate.equals(spec2.getIssueDate())&&
 				issueNumber.equals(spec2.getIssueNumber())&&
 				pidStatus.equals(spec2.getPidStatus())&&

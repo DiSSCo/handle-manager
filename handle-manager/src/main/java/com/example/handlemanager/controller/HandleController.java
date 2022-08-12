@@ -29,6 +29,8 @@ import com.example.handlemanager.model.HandleRecordSpecimen;
 import com.example.handlemanager.model.HandleRecordSpecimenMerged;
 import com.example.handlemanager.model.Handles;
 import com.example.handlemanager.service.HandleService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
 import net.handle.hdllib.HandleException;
 import java.util.logging.*;
@@ -72,7 +74,7 @@ public class HandleController {
 	
 	// Resolve a handle
 	@GetMapping(value="/**")
-	public ResponseEntity<?> resolveHandle(@RequestParam(name="handle") String handle){
+	public ResponseEntity<?> resolveHandle(@RequestParam(name="handle") String handle) throws JsonMappingException, JsonProcessingException{
 		HandleRecord record = service.resolveHandleRecord(handle);
 		if (record.isEmpty()) {
 			return new ResponseEntity<>("Handle record does not exist", HttpStatus.NOT_FOUND);
@@ -104,7 +106,7 @@ public class HandleController {
 	public ResponseEntity<?> createHandle(
 			@RequestParam(name="url") String url,
 			@RequestParam(name="digType") String digType,
-			@RequestParam(name="institute") String institute) {	
+			@RequestParam(name="institute") String institute) throws JsonProcessingException {	
 		HandleRecord newRecord = service.createHandleSpecimen(url, digType, institute);
 		if (newRecord.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -117,7 +119,7 @@ public class HandleController {
 	public ResponseEntity<?> updateHandle(
 			@RequestParam(name="handle") String handle,
 			@RequestParam(name="idxs") int[] idxs,
-			@RequestParam(name="newVals") String[] newData){
+			@RequestParam(name="newVals") String[] newData) throws JsonMappingException, JsonProcessingException{
 		
 		// TODO: Assert all arrays are the same length		
 		service.updateHandle(handle, idxs, newData);
@@ -136,7 +138,7 @@ public class HandleController {
 			@RequestParam(name="url") String url,
 			@RequestParam(name="digType") String digType,
 			@RequestParam(name="institute") String institute,
-			@RequestBody List<String> handles) {
+			@RequestBody List<String> handles) throws JsonProcessingException {
 		if (handles.size() < 2) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please list 2 or more handles to be merged");
 		}
@@ -161,10 +163,11 @@ public class HandleController {
 	@PutMapping(value="/split")
 	public ResponseEntity<?> splitHandle(
 			@RequestParam(name="handle") String handle,
-			@RequestParam(name="url") String urlA,
+			@RequestParam(name="urlA") String urlA,
 			@RequestParam(name="urlB")String urlB,
 			@RequestParam(name="digTypeA", defaultValue = "") String digTypeA,
-			@RequestParam(name="digTypeB", defaultValue = "") String digTypeB){
+			@RequestParam(name="digTypeB", defaultValue = "") String digTypeB) throws JsonProcessingException{
+		logger.info("Conroller called");
 		HandleRecord record = service.resolveHandleRecord(handle);
 		if (record.isEmpty()) {
 			return new ResponseEntity<>("Handle record does not exist", HttpStatus.NOT_FOUND);
@@ -179,7 +182,7 @@ public class HandleController {
 	@DeleteMapping(value="/**")
 	public ResponseEntity<?> deleteHandle(
 			@RequestParam(name="handle") String handleStr,
-			@RequestBody(required=false) String tombstone){
+			@RequestBody(required=false) String tombstone) throws JsonMappingException, JsonProcessingException{
 		
 		if (service.resolveHandleRecord(handleStr).isEmpty()) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Handle not found");

@@ -22,7 +22,7 @@ class HandleManagerScratchApplicationTests {
 	
 	
 	//@Test
-	public void handleRecordCreationTest() {
+	public void handleRecordCreationTest() throws JsonProcessingException {
 		//public HandleRecord(String handle, String url, String digType, String institute)
 		HandleRecord record = new HandleRecordSpecimen("123".getBytes(), "dissco.tech", "DigitalObject", "Naturalis");		
 	}
