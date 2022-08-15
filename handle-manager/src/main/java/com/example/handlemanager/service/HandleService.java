@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.handlemanager.HandleFactory;
+import com.example.handlemanager.model.DigitalSpecimenInput;
 import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecord;
 import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordReserve;
 import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordSpecimen;
@@ -74,6 +75,16 @@ public class HandleService {
 		logger.info("New Handle Posted: " + postedRecord.getHandleStr());
 		
 		return postedRecord;
+	}
+	
+	public HandleRecord createHandleSpecimen(DigitalSpecimenInput ds) throws JsonMappingException, JsonProcessingException {
+		byte[] h = genHandleList(1).get(0); 
+		HandleRecordSpecimen newRecord = new HandleRecordSpecimen(ds, h);
+		HandleRecordSpecimen postedRecord = new HandleRecordSpecimen(handleRep.saveAll(newRecord.sortByIdx().getEntries()), h);
+		logger.info("New Handle Posted: " + postedRecord.getHandleStr());
+		
+		return postedRecord;
+		
 	}
 	
 	public List<Handles> createTestHandle(String handle) throws JsonProcessingException {

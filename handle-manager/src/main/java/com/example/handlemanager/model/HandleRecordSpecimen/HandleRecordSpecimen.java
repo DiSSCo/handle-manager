@@ -8,7 +8,9 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import com.example.handlemanager.HandleFactory;
-import com.example.handlemanager.model.recordMetadataObjects.DigitalObjectSubtype;
+import com.example.handlemanager.model.DigitalSpecimenInput;
+import com.example.handlemanager.model.recordMetadataObjects.NameIdTypeTriplet;
+import com.example.handlemanager.model.recordMetadataObjects.Referent;
 import com.example.handlemanager.model.repositoryObjects.Handles;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -30,9 +32,9 @@ public class HandleRecordSpecimen extends HandleRecord {
 	protected String institute;
 	protected String issueNumber = "1";
 	protected  final String pidKernelMetadataLicense = "Creative Commons Zero";
-	protected String referent;
+	protected Referent referent;
+	protected String referentStr;
 	protected final String digitalOrPhysical = "physical";
-	
 	
 	@JsonIgnore
 	ObjectMapper objectMapper = new ObjectMapper();
@@ -66,6 +68,11 @@ public class HandleRecordSpecimen extends HandleRecord {
 			add("ExperimentalMaterialSpecimen");
 		}
 	};
+	
+	
+	
+	
+	
 	
 	public HandleRecordSpecimen(byte[] handle, String url, String subtype, String institute) throws JsonProcessingException {
 		super(handle);
@@ -102,6 +109,7 @@ public class HandleRecordSpecimen extends HandleRecord {
 				case "digitalObjectSubtype":
 					this.digitalObjectSubtypeString = h.getData();
 					parseDigitalObjectSubtypeStr(digitalObjectSubtypeString);
+					break;
 				case "issueDate":
 					this.issueDate = h.getData();
 					break;
@@ -113,17 +121,33 @@ public class HandleRecordSpecimen extends HandleRecord {
 					break;
 				case "referent":
 					this.referent = h.getData();
-					break;				
+					break;	
 				default:
 					
 				}	
 		}
 	}
 	
+	
+	public HandleRecordSpecimen(DigitalSpecimenInput ds, byte[] handle) throws JsonProcessingException {
+		super(handle);
+		url = ds.getUrl();
+		pidIssuer = ds.getPidIssuer().toString();
+		digitalObjectSubtypeString = ds.getDigitalObjectSubtype().toString();
+		digitalObjectSubtype = ds.getDigitalObjectSubtype().getPrimaryNameFromPid();
+		digitalObjectTypeString = ds.getDigitalObjectType().toString();
+		
+		setReferentPojo(ds);
+		setDate();
+		setEntries();
+	}
+	
+	
+	
 	@Override
 	protected void setEntries() {
 		entries = new ArrayList<Handles>();
-		int i = 0;
+		int i = 1;
 		
 		entries.add(new Handles(handle, i++, "URL", url, timestamp));
 		entries.add(new Handles(handle, i++, "pidIssuer", pidIssuer, timestamp)); 
@@ -133,20 +157,20 @@ public class HandleRecordSpecimen extends HandleRecord {
 		entries.add(new Handles(handle, i++, "issueNumber", "1", timestamp));
 		entries.add(new Handles(handle, i++, "pidStatus", "TEST", timestamp));
 		entries.add(new Handles(handle, i++, "pidKernelMetadataLicense", pidKernelMetadataLicense, timestamp));
-		entries.add(new Handles(handle, i++, "referent", referent, timestamp));		
+		entries.add(new Handles(handle, i++, "referent", referent, timestamp));
+		entries.add(new Handles(handle, i++, "digitalOrPhysical", digitalOrPhysical, timestamp));
 		setAdminHandle();
 	}
 	
 	
 	private void parseDigitalObjectSubtypeStr(String subtypeStr) throws JsonMappingException, JsonProcessingException {
-		DigitalObjectSubtype subtype = objectMapper.readValue(subtypeStr, DigitalObjectSubtype.class);
+		NameIdTypeTriplet subtype = objectMapper.readValue(subtypeStr, NameIdTypeTriplet.class);
 		logger.info("subtype String: " + subtypeStr + " \t subtype: " + subtype.getPrimaryNameFromPid());
 		
 		setDigitalObjectSubtype(subtype.getPrimaryNameFromPid());
 	}
 	
 	private void setDigitalObjectSubtype(String subtype) throws JsonProcessingException {
-		logger.info("Subtype = " + subtype);
 		if (this.digSubtypes.contains(subtype)) {
 			this.digitalObjectSubtype = subtype;
 		}
@@ -157,19 +181,23 @@ public class HandleRecordSpecimen extends HandleRecord {
 	}
 	
 	private void setDigSubtypeStr() throws JsonProcessingException {
-		DigitalObjectSubtype digSubType = new DigitalObjectSubtype(); 
+		NameIdTypeTriplet digSubType = new NameIdTypeTriplet(); 
 		digSubType.setPrimaryNameFromPid(digitalObjectSubtype);
 		
 		switch (digitalObjectSubtype) {
 		case "ZoologyVertebrateSpecimen":
 			digSubType.setPid("21.T11148/ccdb8cda8a785230257e");
+			break;
 		case "AstronomySpecimen":
 			digSubType.setPid("21.T11148/894b1e6cad57e921764e");
+			break;
 		default:
 			digSubType.setPid("");
 		}
 		
-		digitalObjectSubtypeString = objectMapper.writeValueAsString(digSubType);
+		logger.info("Subtype PID: " + digSubType.getPid());		
+		digitalObjectSubtypeString = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(digSubType);
+		logger.info("Subtype String: "+ digitalObjectSubtypeString);
 	}
 	
 	private String setDigitalObjectTypeString() {
@@ -186,6 +214,15 @@ public class HandleRecordSpecimen extends HandleRecord {
 		SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-YYYY");
 		issueDate = dateFormat.format(d);
 		
+	}
+	
+	private void setReferentPojo(DigitalSpecimenInput ds) throws JsonProcessingException {
+		Referent ref = new Referent();
+		
+		ref.setMaterialSampleName(ds.getMaterialSampleName());
+		ref.setPrincipalAgent(ds.getPrincipalAgent());
+		ref.setIdentifier(ds.getIdentifier());
+		referent = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(ref);
 	}
 	
 	private void setReferent() {
@@ -209,9 +246,7 @@ public class HandleRecordSpecimen extends HandleRecord {
 		// TODO: Lookup ror
 		// This might be obtained through Keycloak
 		return "";
-	}
-	
-	
+	}	
 	
 	public String getDigSubtype(){
 		return digitalObjectSubtype;
@@ -237,17 +272,6 @@ public class HandleRecordSpecimen extends HandleRecord {
 		return digSubtypes;
 	}
 	
-/*
- * private String url;
-	private String pidIssuer;
-	private String digitalObjectType;
-	private String loc = "";
-	private String issueDate;
-	private String issueNumber = "1";
-	private  String pidStatus = "TEST"; 
-	private final String pidKernelMetadataLicense = "Creative Commons Zero";
-	private String referent;
- */
 	
 	public boolean equals(HandleRecordSpecimen spec2) {
 		// Not sure if I should also test times

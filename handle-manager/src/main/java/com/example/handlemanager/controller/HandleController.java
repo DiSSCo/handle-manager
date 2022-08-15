@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.handlemanager.model.DigitalSpecimenInput;
 import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecord;
 import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordSpecimen;
 import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordSpecimenMerged;
@@ -113,6 +114,14 @@ public class HandleController {
 					.body("Unable to create handle record");
 		}
 		return ResponseEntity.ok(newRecord);
+	}
+	
+	@PostMapping(value="/specify")
+	public ResponseEntity<?> createHandleWithBody(
+			@RequestBody DigitalSpecimenInput ds) throws JsonMappingException, JsonProcessingException {
+		HandleRecord newRecord = service.createHandleSpecimen(ds);
+		return ResponseEntity.ok(newRecord);
+		
 	}
 	
 	@PostMapping(value="/update/**")
