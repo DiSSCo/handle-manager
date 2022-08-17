@@ -21,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.handlemanager.HandleFactory;
-import com.example.handlemanager.model.DigitalSpecimenInput;
 import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecord;
 import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordReserve;
 import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordSpecimen;
@@ -64,6 +63,7 @@ public class HandleService {
 	}
 	
 	// Create Handle
+	/*
 	public HandleRecord createHandleSpecimen(String url, String digType, String institute) throws JsonProcessingException {
 		byte[] h = genHandleList(1).get(0); // TODO fix this? Make an individual function for single handles?
 		
@@ -75,8 +75,9 @@ public class HandleService {
 		logger.info("New Handle Posted: " + postedRecord.getHandleStr());
 		
 		return postedRecord;
-	}
+	} */
 	
+	/*
 	public HandleRecord createHandleSpecimen(DigitalSpecimenInput ds) throws JsonMappingException, JsonProcessingException {
 		byte[] h = genHandleList(1).get(0); 
 		HandleRecordSpecimen newRecord = new HandleRecordSpecimen(ds, h);
@@ -85,11 +86,24 @@ public class HandleService {
 		
 		return postedRecord;
 		
+	}*/
+	
+	public HandleRecordSpecimen createHandleSpecimen(HandleRecordSpecimen specimen) throws JsonMappingException, JsonProcessingException {
+		byte[] h = genHandleList(1).get(0); 
+		specimen.setDigitalSpecimenRecord(h);
+		logger.info("Referent String: " + specimen.getReferentStr());
+		logger.info("Material Sample: " + specimen.getMaterialSampleName().toString());
+		HandleRecordSpecimen postedRecord = new HandleRecordSpecimen(h, handleRep.saveAll(specimen.sortByIdx().getEntries()));
+		logger.info("New Handle Posted: " + postedRecord.getHandleStr());
+		
+		return postedRecord;
 	}
 	
+	
+	/**
 	public List<Handles> createTestHandle(String handle) throws JsonProcessingException {
 		/*String handle = "20.5000.1025/123-abc";
-		byte[] h = handle.getBytes(); */
+		byte[] h = handle.getBytes(); 
 		handle = handle.toUpperCase();
 		deleteHandleSafe(handle);
 		
@@ -101,7 +115,7 @@ public class HandleService {
 		return resolveHandle(handle);
 		
 		//return resolveHandle(handle);		
-	}
+	} */
 	
 	
 	// Reserve handles
@@ -134,13 +148,12 @@ public class HandleService {
 	// Resolve handle
 
 	public HandleRecord resolveHandleRecord(String handle) throws JsonMappingException, JsonProcessingException {
-		List<Handles> hList = resolveHandle(handle); // Need to catch this if the timestamp is null
+		List<Handles> hList = resolveHandle(handle); // Get list of handle records from repository
 		if (hList.isEmpty()) {
-			return new HandleRecord(handle.getBytes());
+			return new HandleRecord(handle.getBytes()); // Return empty HandleRecord if handle record does not exist
 		}
-		
-		
-		return getRecord(handle.getBytes(), hList);
+
+		return getRecord(handle.getBytes(), hList); // Determines type of handleRecord and returns appropriate data
 	}
 	
 	private List<Handles> resolveHandle(String handle){					
@@ -149,8 +162,7 @@ public class HandleService {
 	
 	// Given a list of Handles (of unknown pidStatus), return HandleRecord
 	
-	private HandleRecord getRecord(byte[] handle, List<Handles> hList) throws JsonMappingException, JsonProcessingException {	
-		logger.info("Determining handle record type");
+	private HandleRecord getRecord(byte[] handle, List<Handles> hList) throws JsonMappingException, JsonProcessingException {
 		
 		// Get PID status and relation status
 		
@@ -166,12 +178,14 @@ public class HandleService {
 			return new HandleRecordTombstone(handle, hList);
 		}
 		if ((pidStatus.equals("TEST") | pidStatus.equals("ACTIVE")) && relationStatus.equals("")){
-			return new HandleRecordSpecimen(hList, handle);
+			return new HandleRecordSpecimen(handle, hList);
 		}
 		if ((pidStatus.equals("TEST") | pidStatus.equals("ACTIVE")) && relationStatus.equals("MERGED")){
-			return new HandleRecordSpecimenMerged(hList, handle);
+			return new HandleRecordSpecimenMerged(handle, hList);
 		}
-		
+		if ((pidStatus.equals("TEST") | pidStatus.equals("ACTIVE")) && relationStatus.equals("SPLIT")){
+			return new HandleRecordSpecimenSplit(handle, hList);
+		}
 		
 		logger.warning("Handle pidStatus not been set. Returning best-guess");
 		return new HandleRecord(handle, hList); // In case no PID status has been set
@@ -193,11 +207,32 @@ public class HandleService {
 	
 	public void updateHandle(String handle, int[] idxs, String[] newData) {
 		long timestamp = Instant.now().getEpochSecond();
+		
 		for (int i = 0; i<idxs.length; i++) {
-			
+
 			handleRep.updateHandleRecordData(newData[i].getBytes(), timestamp, handle.getBytes(), idxs[i]);
 		}
 	}
+	
+	
+	public void updateHandle(String handle, HandleRecordSpecimen updates) {
+		//updates.initializeEntriesNotNull();
+		
+		//HandleRecordSpecimen oldRecord = resolveHandleRecord(handle);
+		
+		
+		
+	}
+	
+	private int getIdxFromType(List<Handles> handleRecords, String type) {
+		for (Handles h: handleRecords) {
+			if (type.equals(h.getType())) {
+				return h.getIdx();
+			}
+		}
+		return -1;
+	}
+	
 	
 	// Delete Handle	
 	public void deleteHandleSafe(String handle) {
@@ -211,10 +246,16 @@ public class HandleService {
 		return tombstoneRecord;
 	}
 	
-	public HandleRecordTombstone createTombstoneMerged(byte[] handleB, String tombstone, String relatedPid) {
+	public HandleRecordTombstone createTombstoneMerged(byte[] handleB, String tombstone, String siblingPids, String childPid) {
 		HandleRecordTombstone tombstoneRecord = new HandleRecordTombstone(handleB, tombstone);
-		tombstoneRecord.setRelationStatusMerged(relatedPid);
-		handleRep.saveAll(tombstoneRecord.sortByIdx().getEntries());
+		tombstoneRecord.setRelationStatusMerged(siblingPids, childPid);
+		List<Handles> ts = handleRep.saveAll(tombstoneRecord.sortByIdx().getEntries());
+		logger.info("TS is empty: " +  String.valueOf(ts.isEmpty()));
+		
+		for (Handles h : ts) {
+			logger.info(h.getType() + ": " + h.getData());
+		}
+		
 		return tombstoneRecord;
 	}
 	
@@ -238,8 +279,34 @@ public class HandleService {
 	}
 	
 	// Merge Handle
+	public HandleRecordSpecimenMerged mergeHandle(HandleRecordSpecimenMerged mergeRecord) throws JsonProcessingException {
+		byte[] handle = genHandleList(1).get(0);
+		mergeRecord.setDigitalSpecimenRecordMerged(handle);
+		logger.info(byteToString(handle));
+		logger.info(mergeRecord.getHandleStr());
+		String tombstoneStr = "This handle was merged";		
+		
+		List<HandleRecordSpecimen> legacyRecord = new ArrayList<HandleRecordSpecimen>();
+		
+		for (String h : mergeRecord.getLegacyHandles()) {
+			try {
+				legacyRecord.add((HandleRecordSpecimen) resolveHandleRecord(h));
+			}
+			catch(java.lang.ClassCastException e) {
+				logger.severe("One of the digital objects to be merged is not viable");
+				return null;
+			}
+			deleteHandleSafe(h);
+			createTombstoneMerged(h.getBytes(), tombstoneStr, mergeRecord.getLegacyHandleString(), byteToString(handle));
+		}
+		
+		return new HandleRecordSpecimenMerged(handle, handleRep.saveAll(mergeRecord.sortByIdx().getEntries()));		
+	}
 	
-	public HandleRecordSpecimenMerged mergeHandle(List<String> handles, String url, String digitalObjectType, String institute) throws JsonProcessingException {
+	/*
+	public HandleRecordSpecimenMerged mergeHandle(HandleRecordSpecimenMerged mergeRecord) throws JsonProcessingException {
+		
+		
 		List<HandleRecordSpecimen> legacyRecord = new ArrayList<HandleRecordSpecimen>();
 		String mergedTombstoneText = "This record was merged with other records.";
 		
@@ -264,11 +331,48 @@ public class HandleService {
 		handleRep.saveAll(mergedRecord.sortByIdx().getEntries());
 		return mergedRecord;
 		
-	}
+	}*/
 	
 	// Split Handle
 	
+	public List<HandleRecordSpecimenSplit> splitHandleRecord(List<HandleRecordSpecimenSplit> newRecords, String parent) throws JsonProcessingException{
+		
+		List<byte[]> siblingHandleBytes = genHandleList(newRecords.size());
+		String siblingHandleStrings= genSiblingString(getStrList(siblingHandleBytes));
+		
+		List<HandleRecordSpecimenSplit> postedRecords = new ArrayList<>();
+		byte[] h;
+		
+		for (HandleRecordSpecimenSplit record : newRecords) {
+			h = siblingHandleBytes.remove(0);
+			record.setDigitalSpecimenRecordSplit(h, parent, siblingHandleStrings);
+			postedRecords.add(new HandleRecordSpecimenSplit(h, handleRep.saveAll(record.sortByIdx().getEntries())));
+		}
+		String tombstone = "this handle record was split";
+		createTombstoneSplit(parent.getBytes(), tombstone, siblingHandleStrings);
+		return postedRecords;
+	}
 	
+	public HandleRecordTombstone createTombstoneSplit(byte[] handleB, String tombstone, String childPid) {
+		HandleRecordTombstone tombstoneRecord = new HandleRecordTombstone(handleB, tombstone);
+		tombstoneRecord.setRelationStatusSplit(childPid);
+		deleteHandleSafe(byteToString(handleB));
+		
+		handleRep.saveAll(tombstoneRecord.sortByIdx().getEntries());
+		return tombstoneRecord;
+	}
+	
+	private String genSiblingString (List<String> siblingPidsList){
+		String siblingPids = "{\n";
+		for (String sib : siblingPidsList) {
+			siblingPids += " \"" + sib + "\",\n";
+		}
+		siblingPids = siblingPids.substring(0, siblingPids.length()-2) + "\n}";
+		
+		return siblingPids;
+	}
+	
+	/*
 	public List<HandleRecordSpecimenSplit> splitHandle(String handle, 
 			String urlA, String urlB,
 			String digTypeA, String digTypeB) throws JsonProcessingException{
@@ -312,7 +416,7 @@ public class HandleService {
 		parentTombstone.setRelationStatusSplit(siblingHandles);
 		
 		return splitHandles;
-	}
+	} */
 	
 	private void saveChildren(List<HandleRecordSpecimenSplit> children) {
 		List<Handles> recordsToSave = new ArrayList<>();
@@ -323,7 +427,7 @@ public class HandleService {
 		handleRep.saveAll(recordsToSave);
 	}
 	
-	
+	/*
 	private String setDigType(HandleRecordSpecimen parent, String digType) {
 		if (digType.equals("")) return parent.getDigitalObjectSubtype();
 		if (!(parent.getDigTypeList().contains(digType))) {
@@ -332,7 +436,7 @@ public class HandleService {
 		}
 		
 		return digType;
-	}
+	} */
 	
 	
 	

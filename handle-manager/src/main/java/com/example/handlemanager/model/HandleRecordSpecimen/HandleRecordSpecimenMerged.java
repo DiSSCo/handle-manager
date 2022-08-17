@@ -5,17 +5,25 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import com.example.handlemanager.HandleFactory;
+import com.example.handlemanager.model.recordMetadataObjects.MaterialSampleName;
+import com.example.handlemanager.model.recordMetadataObjects.NameIdTypeTriplet;
 import com.example.handlemanager.model.repositoryObjects.Handles;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
+@NoArgsConstructor
+@Data
 public class HandleRecordSpecimenMerged extends HandleRecordSpecimen {
-	private final String legacyStringName = "Legacy Handle";
+	
+	//private final String legacyStringName = "Legacy Handle";
 	private String relationStatus = "MERGED";
 	//private List<ByteBuffer> legacyHandles;
 	private List<String> legacyHandles;
@@ -27,79 +35,63 @@ public class HandleRecordSpecimenMerged extends HandleRecordSpecimen {
 	
 	
 	// Constructor from inputs (usually called when record is being constructed for the first time)
-	public HandleRecordSpecimenMerged(byte[] handle, String url, String digitalObjectType, 
-			String institute, List<HandleRecordSpecimen> legacyRecords) throws JsonProcessingException {
-		super(handle, url, digitalObjectType, institute);
-		setLegacyHandlesFromSpecimenRecord(legacyRecords);
-		setRelationRecord();
+	public HandleRecordSpecimenMerged(byte[] handle, String url, 
+			NameIdTypeTriplet digitalObjectType,
+			NameIdTypeTriplet pidIssuer, 
+			NameIdTypeTriplet digitalObjectSubtype, 
+			String digitalOrPhysical,
+			// for referent
+			MaterialSampleName materialSampleName,
+			NameIdTypeTriplet principalAgent,
+			List<NameIdTypeTriplet> identifier,
+			// Related Pids
+			List<String> legacyHandles) throws JsonProcessingException {
+		
+		super(url, digitalOrPhysical, pidIssuer, digitalObjectSubtype, digitalObjectType, materialSampleName, principalAgent, identifier);
+		this.legacyHandles = legacyHandles;
+		setLegacyString();
+		intitializeEntriesMerged();
 	}
 	
 	// Constructor from Handle Record retrievable (usually called when a handle record is resolved)
-	public HandleRecordSpecimenMerged(List<Handles> entries, byte[] handle) throws JsonMappingException, JsonProcessingException {
-		super(entries, handle);
-		setLegacyHandlesFromHandleRecord(entries);
+		public HandleRecordSpecimenMerged(byte[] handle, List<Handles> entries) throws JsonMappingException, JsonProcessingException {
+			super(handle, entries);
+			setLegacyHandlesFromHandleRecord(entries);
+		}
+	
+	
+	public void setDigitalSpecimenRecordMerged(byte [] handle) throws JsonProcessingException {
+		super.setDigitalSpecimenRecord(handle);
+		setLegacyString();
+		intitializeEntriesMerged();
 	}
 	
 	
 	private void setLegacyHandlesFromHandleRecord(List<Handles> entries) {
-		legacyHandles = new ArrayList<String>();
-		
 		for (Handles h: entries) {
-			if (h.getType().equals(legacyStringName)){
-				legacyHandles.add(h.getData());
+			if (h.getType().equals("legacyPids")){
+				legacyHandleString = h.getData();
 			}
 		}
-		
-		setLegacyString();
-		this.entries.add(new Handles(handle, entries.size()+1, legacyStringName, legacyHandleString, timestamp));
-	}
-	
-	private void setLegacyHandlesFromSpecimenRecord(List<HandleRecordSpecimen> records) {
-		legacyHandles = new ArrayList<>();
-		
-		for (HandleRecordSpecimen specimen : records) {
-			legacyHandles.add(specimen.getHandleStr());
-		}
-		setLegacyString();
-		this.entries.add(new Handles(handle, entries.size()+1, legacyStringName, legacyHandleString, timestamp));
-		
 	}
 	
 	private void setLegacyString() {
 		legacyHandleString = "{";
 		for (String h: legacyHandles) {
-			legacyHandleString += "\"" + h + "\",";
+			legacyHandleString += "\"" + h + "\",\n";
 		}
-		legacyHandleString = legacyHandleString.substring(0, legacyHandleString.length()-1) + "}";
+		legacyHandleString = legacyHandleString.substring(0, legacyHandleString.length()-2) + "}";
 	}
 	
-	private void setRelationRecord() {
+	private void intitializeEntriesMerged() {
 		entries.add(new Handles(handle, entries.size()+1, "pidRelation", relationStatus, timestamp));
+		entries.add(new Handles(handle, entries.size()+1, "legacyPids", legacyHandleString, timestamp));
 	}
-	
-	public String getRelationStatus() {
-		return relationStatus;
-	}
-	
-	@JsonIgnore
-	public List<String> getLegacyHandles(){
-		return legacyHandles;
-	}
-	
-	@JsonProperty("Legacy Handles")
-	public String getLegacyHandlesStr(){
-		return legacyHandleString;
-	}
+
 	
 	public boolean equals(HandleRecordSpecimenMerged mergedRecord) {
 		if (!super.equals(mergedRecord)) return false; // If handleRecordSpecimen values do not match, no need to go further
 		return (legacyHandles.equals(mergedRecord.getLegacyHandles()));
-					
 	}
-	
-	public boolean isEmpty() {
-		return (entries.isEmpty());
-	}
-
 }
 

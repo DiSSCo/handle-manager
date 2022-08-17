@@ -1,5 +1,7 @@
 package com.example.handlemanager.model.recordMetadataObjects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -21,9 +23,33 @@ public class NameIdTypeTriplet {
 	}
 	
 	public NameIdTypeTriplet() {
-		pid = "123";
-		pidType="TestPid";
-		primaryNameFromPid="TestName";
+		pid = "";
+		pidType="";
+		primaryNameFromPid="";
+	}
+	
+	@Override
+	public String toString() {
+		return "{ \n"
+				+ "\"pid\": \"" + pid + "\", \n"
+				+ "\"pidType\": \"" + pidType + "\", \n"
+				+ "\"primaryNameFromPid\": \"" + primaryNameFromPid + "\" \n"
+				+ "}";
+	}
+	
+
+	public boolean equals(NameIdTypeTriplet obj2) {
+		return (pid.equals(obj2.getPid()) &&
+				pidType.equals(obj2.getPidType()) &&
+				primaryNameFromPid.equals(obj2.getPrimaryNameFromPid()));
+		
+	}
+	
+	@JsonIgnore
+	public boolean isNull() {
+		return (pid == null &&
+				pidType == null &&
+				primaryNameFromPid == null);
 	}
 	
 }

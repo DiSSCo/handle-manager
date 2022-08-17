@@ -10,7 +10,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class HandleRecordTombstone extends HandleRecord {
 	private String tombstoneText;
 	private String relationStatus;
-	private String relatedPid;
+	private String relatedPid = "";
+	private String childPids = "";
+	private String siblingPids = "";
 	
 	
 	public HandleRecordTombstone(byte[] handle, String tombstoneText) {
@@ -45,31 +47,35 @@ public class HandleRecordTombstone extends HandleRecord {
 					break;
 				case "relatedPid":
 					this.relatedPid = h.getData();
-					break;				
+					break;		
+				case "siblingPids":
+					this.siblingPids = h.getData();
+					break;
+				case "childPids":
+					this.childPids = h.getData();
+					break;
 				default:
 			}	
 		}
 	}
 	
-	public void setRelationStatusSplit(List<String> pid) {
+	public void setRelationStatusSplit(String childPids) {
 		relationStatus = "SPLIT";
-		relatedPid = "{";
-		for (String p: pid) {
-			relatedPid += "\"" + p + "\",";
-		}
-		relatedPid=relatedPid.substring(0, relatedPid.length()-1) + "}";
+		this.childPids = childPids;
 		setRelation();
 	}
 	
-	public void setRelationStatusMerged(String pid) {
+	public void setRelationStatusMerged(String siblings, String child) {
 		relationStatus = "MERGED";
-		relatedPid = pid;
+		siblingPids = siblings;
+		childPids = child;
 		setRelation();
 	}
 	
 	private void setRelation() {
 		entries.add(new Handles(handle, entries.size()+1, "pidRelation", relationStatus, timestamp));
-		entries.add(new Handles(handle, entries.size()+1, "relatedPid", relatedPid, timestamp));
+		entries.add(new Handles(handle, entries.size()+1, "siblingPids", siblingPids, timestamp));
+		entries.add(new Handles(handle, entries.size()+1, "childPids", childPids, timestamp));
 	}
 	
 	@JsonProperty("Tombstone Text")

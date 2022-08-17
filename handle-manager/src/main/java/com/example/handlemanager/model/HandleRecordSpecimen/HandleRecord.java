@@ -20,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class HandleRecord {
 	
 	@JsonIgnore
-	protected final byte[] handle;
+	protected byte[] handle;
 	@JsonIgnore
 	protected List<Handles> entries;
 	@JsonIgnore
@@ -36,11 +36,20 @@ public class HandleRecord {
 	@JsonIgnore
 	private String admin = "0fff000000153330303a302e4e412f32302e353030302e31303235000000c8";
 	
+	public HandleRecord() {
+		logger.info("Handle Record Constructor");
+		handle = "".getBytes(); // This will be filled out later
+		this.timestamp = Instant.now().getEpochSecond();
+		entries = new ArrayList<Handles>();
+	}
+	
 	public HandleRecord(byte[] handle) {
 		this.handle = handle;
 		this.timestamp = Instant.now().getEpochSecond();
 		entries = new ArrayList<Handles>();
 	}
+	
+	
 	
 	public HandleRecord(byte[] handle, List<Handles> entries) {
 		this.handle = handle;
@@ -51,7 +60,7 @@ public class HandleRecord {
 		entries.add(new Handles(handle, 100, "HS_ADMIN".getBytes(), decodeAdmin(), timestamp));
 	}
 	
-	
+	@JsonIgnore
 	public List<Handles> getEntries() {
 		return entries;
 	}
@@ -69,6 +78,7 @@ public class HandleRecord {
 		setAdminHandle();
 	}
 	
+	@JsonIgnore
 	public byte[] getHandle() {
 		return handle;
 	}
@@ -127,7 +137,7 @@ public class HandleRecord {
 		return this.entries.isEmpty();
 	}
 	
-	@JsonProperty("PID Status")
+	@JsonIgnore
 	public String getPidStatus() {
 		return pidStatus;
 	}

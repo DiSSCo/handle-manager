@@ -24,10 +24,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.handlemanager.model.DigitalSpecimenInput;
 import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecord;
 import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordSpecimen;
 import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordSpecimenMerged;
+import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordSpecimenSplit;
 import com.example.handlemanager.model.repositoryObjects.Handles;
 import com.example.handlemanager.service.HandleService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -71,8 +71,6 @@ public class HandleController {
 		return ResponseEntity.ok(handleList);
 	}
 	
-	
-	
 	// Resolve a handle
 	@GetMapping(value="/**")
 	public ResponseEntity<?> resolveHandle(@RequestParam(name="handle") String handle) throws JsonMappingException, JsonProcessingException{
@@ -103,6 +101,7 @@ public class HandleController {
 	}
 	
 	//Create Handle
+	/*
 	@PostMapping(value="/**")
 	public ResponseEntity<?> createHandle(
 			@RequestParam(name="url") String url,
@@ -114,16 +113,19 @@ public class HandleController {
 					.body("Unable to create handle record");
 		}
 		return ResponseEntity.ok(newRecord);
+	} */
+	
+	@PostMapping(value="/**")
+	public ResponseEntity<?> createSpecimenRecord(
+			@RequestBody HandleRecordSpecimen specimen) throws JsonMappingException, JsonProcessingException {
+		HandleRecordSpecimen postedSpecimen = service.createHandleSpecimen(specimen);
+		if (postedSpecimen.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unable to Post record");
+		}
+		return ResponseEntity.ok(postedSpecimen);
 	}
 	
-	@PostMapping(value="/specify")
-	public ResponseEntity<?> createHandleWithBody(
-			@RequestBody DigitalSpecimenInput ds) throws JsonMappingException, JsonProcessingException {
-		HandleRecord newRecord = service.createHandleSpecimen(ds);
-		return ResponseEntity.ok(newRecord);
-		
-	}
-	
+	// Update Handle
 	@PostMapping(value="/update/**")
 	public ResponseEntity<?> updateHandle(
 			@RequestParam(name="handle") String handle,
@@ -142,6 +144,7 @@ public class HandleController {
 		return ResponseEntity.ok(updatedRecord);	
 	}
 	
+	/*
 	@PutMapping(value="/merge")
 	public ResponseEntity<?> mergeHandle(
 			@RequestParam(name="url") String url,
@@ -162,6 +165,26 @@ public class HandleController {
 		}
 		
 		return ResponseEntity.ok(mergedHandle);
+	}*/
+	
+	@PutMapping(value="/merge")
+	public ResponseEntity<?> mergeHandle(
+			@RequestBody HandleRecordSpecimenMerged newRecord) throws JsonProcessingException {
+		if (newRecord.getLegacyHandles().size() < 2) {
+			
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please list 2 or more handles to be merged");
+		}
+		if(containsDuplicates(newRecord.getLegacyHandles())) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Merged handles must be distinct");
+		}
+		
+		HandleRecordSpecimenMerged mergedRecord = service.mergeHandle(newRecord);
+		
+		return ResponseEntity.ok(mergedRecord);
+		//HandleRecordSpecimenMerged mergedRecord = service.mergeRecord(newRecord);
+		
+		//record.setDigitalSpecimenRecordMerged("123".getBytes());
+		
 	}
 	
 	private boolean containsDuplicates(List<String> handles) {
@@ -169,6 +192,24 @@ public class HandleController {
 		return(set.size() < handles.size());
 	}
 	
+	
+	@PutMapping(value="/split")
+	public ResponseEntity<?> splitHandle(
+			@RequestParam String handle,
+			@RequestBody List<HandleRecordSpecimenSplit> newRecords) throws JsonMappingException, JsonProcessingException{
+		
+						
+		if (service.resolveHandleRecord(handle).isEmpty()) {
+			return new ResponseEntity<>("Handle record does not exist", HttpStatus.NOT_FOUND);
+		}
+		
+		List<HandleRecordSpecimenSplit> postedRecords = service.splitHandleRecord(newRecords, handle);
+		
+		return ResponseEntity.ok(postedRecords);
+		
+	}
+	
+	/*
 	@PutMapping(value="/split")
 	public ResponseEntity<?> splitHandle(
 			@RequestParam(name="handle") String handle,
@@ -185,7 +226,7 @@ public class HandleController {
 		return ResponseEntity.ok(service.splitHandle(handle, urlA, urlB, digTypeA, digTypeB));
 		
 		
-	}
+	} */
 	
 	
 	@DeleteMapping(value="/**")
