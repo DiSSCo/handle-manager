@@ -35,6 +35,7 @@ public class Referent {
 		this.identifier = identifier;
 	}
 	
+	
 	public void setMaterialSampleName(String val, String type, String lang) {
 		materialSampleName = new MaterialSampleName(val, type, lang);
 	}

@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
 
 import org.apache.http.client.HttpResponseException;
+import org.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -100,20 +101,6 @@ public class HandleController {
 		return ResponseEntity.ok(reservedHandles);
 	}
 	
-	//Create Handle
-	/*
-	@PostMapping(value="/**")
-	public ResponseEntity<?> createHandle(
-			@RequestParam(name="url") String url,
-			@RequestParam(name="digType") String digType,
-			@RequestParam(name="institute") String institute) throws JsonProcessingException {	
-		HandleRecord newRecord = service.createHandleSpecimen(url, digType, institute);
-		if (newRecord.isEmpty()) {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body("Unable to create handle record");
-		}
-		return ResponseEntity.ok(newRecord);
-	} */
 	
 	@PostMapping(value="/**")
 	public ResponseEntity<?> createSpecimenRecord(
@@ -125,48 +112,18 @@ public class HandleController {
 		return ResponseEntity.ok(postedSpecimen);
 	}
 	
-	// Update Handle
-	@PostMapping(value="/update/**")
-	public ResponseEntity<?> updateHandle(
-			@RequestParam(name="handle") String handle,
-			@RequestParam(name="idxs") int[] idxs,
-			@RequestParam(name="newVals") String[] newData) throws JsonMappingException, JsonProcessingException{
+	@PostMapping(value="/update/")
+	public ResponseEntity<?> updateHandleBody(
+			@RequestParam(name="handle") String handle, 
+			@RequestBody HandleRecordSpecimen specimen) throws JsonMappingException, JsonProcessingException, JSONException{
 		
-		// TODO: Assert all arrays are the same length		
-		service.updateHandle(handle, idxs, newData);
+		service.updateHandle(handle, specimen);
+		HandleRecord posted = service.resolveHandleRecord(handle);
 		
-		HandleRecord updatedRecord = service.resolveHandleRecord(handle);
-		if (updatedRecord.isEmpty()) {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body("Unable to update handle record");
-		}
-		
-		return ResponseEntity.ok(updatedRecord);	
+		return ResponseEntity.ok(posted);
 	}
 	
-	/*
-	@PutMapping(value="/merge")
-	public ResponseEntity<?> mergeHandle(
-			@RequestParam(name="url") String url,
-			@RequestParam(name="digType") String digType,
-			@RequestParam(name="institute") String institute,
-			@RequestBody List<String> handles) throws JsonProcessingException {
-		if (handles.size() < 2) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please list 2 or more handles to be merged");
-		}
-		
-		if(containsDuplicates(handles)) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Merged handles must be distinct");
-		}
-		
-		HandleRecordSpecimenMerged mergedHandle = service.mergeHandle(handles, url, digType, institute);
-		if (Objects.isNull(mergedHandle)) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("One of the digital objects to be merged is not viable");
-		}
-		
-		return ResponseEntity.ok(mergedHandle);
-	}*/
-	
+
 	@PutMapping(value="/merge")
 	public ResponseEntity<?> mergeHandle(
 			@RequestBody HandleRecordSpecimenMerged newRecord) throws JsonProcessingException {
@@ -208,25 +165,6 @@ public class HandleController {
 		return ResponseEntity.ok(postedRecords);
 		
 	}
-	
-	/*
-	@PutMapping(value="/split")
-	public ResponseEntity<?> splitHandle(
-			@RequestParam(name="handle") String handle,
-			@RequestParam(name="urlA") String urlA,
-			@RequestParam(name="urlB")String urlB,
-			@RequestParam(name="digTypeA", defaultValue = "") String digTypeA,
-			@RequestParam(name="digTypeB", defaultValue = "") String digTypeB) throws JsonProcessingException{
-		logger.info("Conroller called");
-		HandleRecord record = service.resolveHandleRecord(handle);
-		if (record.isEmpty()) {
-			return new ResponseEntity<>("Handle record does not exist", HttpStatus.NOT_FOUND);
-		}
-		
-		return ResponseEntity.ok(service.splitHandle(handle, urlA, urlB, digTypeA, digTypeB));
-		
-		
-	} */
 	
 	
 	@DeleteMapping(value="/**")

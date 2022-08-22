@@ -17,6 +17,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,11 +29,17 @@ import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordSpecimen
 import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordSpecimenMerged;
 import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordSpecimenSplit;
 import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordTombstone;
+import com.example.handlemanager.model.recordMetadataObjects.MaterialSampleName;
+import com.example.handlemanager.model.recordMetadataObjects.NameIdTypeTriplet;
+import com.example.handlemanager.model.recordMetadataObjects.Referent;
 import com.example.handlemanager.model.repositoryObjects.HandleIdx;
 import com.example.handlemanager.model.repositoryObjects.Handles;
 import com.example.handlemanager.repository.HandleRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.logging.*;
 
@@ -50,6 +58,7 @@ public class HandleService {
 	public HandleRepository handleRep;
 	private HandleFactory hf = new HandleFactory();
 	Logger logger =  Logger.getLogger(HandleService.class.getName());	
+	ObjectMapper mapper = new ObjectMapper();
 	
 	
 	// Return all handle identifiers
@@ -209,24 +218,115 @@ public class HandleService {
 		long timestamp = Instant.now().getEpochSecond();
 		
 		for (int i = 0; i<idxs.length; i++) {
-
 			handleRep.updateHandleRecordData(newData[i].getBytes(), timestamp, handle.getBytes(), idxs[i]);
 		}
 	}
 	
 	
-	public void updateHandle(String handle, HandleRecordSpecimen updates) {
-		//updates.initializeEntriesNotNull();
+	public void updateHandle(String handle, HandleRecordSpecimen updates) throws JsonMappingException, JsonProcessingException, JSONException {
 		
-		//HandleRecordSpecimen oldRecord = resolveHandleRecord(handle);
+		byte[] handleBytes = handle.getBytes();
 		
+		// Timestamp to be used in subsequent DB operations
+		Long timestamp = Instant.now().getEpochSecond();
 		
+		// Get original record
+		List<Handles> original = resolveHandle(handle);
 		
+		//Increment issueNumber field
+		incrementIssueNumber(handleBytes, original, timestamp);
+		
+		// Set up json parsing
+		JSONObject jsonObj = new JSONObject(mapper.writeValueAsString(updates));
+		Iterator<String> keys = jsonObj.keys();
+		
+		Map<String, String> referentParams = new HashMap<>();
+				
+		int idx;
+		
+		String type;
+		String data;
+		
+		while(keys.hasNext()) {
+			type = keys.next();
+			data = jsonObj.getString(type);
+			
+			//logger.info(type + " (type) :"+ data+ " (data)");
+			
+			if (type.equals("materialSampleName") |
+					type.equals("identifier") |
+					type.equals("principalAgent") |
+					type.equals("structuralType")) {
+				referentParams.put(type, data);
+			}
+			
+			else if (!type.equals("issueNumber")) { // Protection against updating issueNum? (Wouldn't that be something...)
+				idx = getIdxFromType(original, type);
+				handleRep.updateHandleRecordData(data.getBytes(),timestamp, handleBytes, idx);
+			}
+			
+		}
+		
+		if (!referentParams.isEmpty()) {
+			updateReferent(handleBytes, referentParams, original, timestamp);
+		}
 	}
+	
+	
+	private void incrementIssueNumber(byte[] handleBytes, List<Handles> original, long timestamp) {
+		// Increase issueNumber by 1
+		
+		String issueNum = String.valueOf(Integer.parseInt(getDataFromType("issueNumber", original)) + 1);
+		
+		int idx = getIdxFromType(original, "issueNumber");
+		
+		handleRep.updateHandleRecordData(issueNum.getBytes(),timestamp, handleBytes, idx);
+	}
+	
+	private void updateReferent(byte[] handle, Map<String, String> referentParams, List<Handles> original, long timestamp) throws JsonMappingException, JsonProcessingException {
+		String originalReferentStr = getDataFromType("referent", original);
+		Referent originalReferent = mapper.readValue(originalReferentStr, Referent.class);
+		int idx = getIdxFromType(original, "referent");
+		
+		MaterialSampleName msn;
+		List<NameIdTypeTriplet> ids;
+		NameIdTypeTriplet pa;
+		String struct;
+		
+		if (referentParams.containsKey("materialSampleName")) {
+		msn = mapper.readValue(referentParams.get("materialSampleName"), MaterialSampleName.class);
+		}
+		else {
+			msn = originalReferent.getMaterialSampleName();
+		}
+		if (referentParams.containsKey("identifier")) {
+			ids = mapper.readValue(referentParams.get("identifier"), new TypeReference<List<NameIdTypeTriplet>>(){});
+			}
+		else {
+				ids = originalReferent.getIdentifier();
+		}
+		if (referentParams.containsKey("principalAgent")) {
+			pa = mapper.readValue(referentParams.get("principalAgent"), NameIdTypeTriplet.class);
+		}
+		else {
+			pa = originalReferent.getPrincipalAgent();
+		}
+		if (referentParams.containsKey("structuralType")) {
+			struct = referentParams.get("structuralType");
+		}
+		else {
+			struct = originalReferent.getStructuralType();
+		}
+		
+		Referent newReferent = new Referent(msn, struct, pa, ids);
+		
+		handleRep.updateHandleRecordData(newReferent.toString().getBytes(),timestamp, handle, idx);		
+	}
+	
 	
 	private int getIdxFromType(List<Handles> handleRecords, String type) {
 		for (Handles h: handleRecords) {
-			if (type.equals(h.getType())) {
+			if (type.equalsIgnoreCase(h.getType())) {
 				return h.getIdx();
 			}
 		}
@@ -443,13 +543,6 @@ public class HandleService {
 	
 	// Minting Handles
 	
-	// Mint a single handle
-	private byte[] genHandle() {
-		byte[] newHandle = hf.newHandleBytes();
-		
-		return newHandle;
-	}
-	
 	// Mint a list of handles
 	private List<byte[]> genHandleList(int h){
 		return unwrapBytes(genHandleHash(h));
@@ -473,8 +566,8 @@ public class HandleService {
 		// If a duplicate was found, recursively call this function
 		// Generate new handles for every duplicate found and add it to our hash list
 		if (!duplicates.isEmpty()) { 
-			boolean b = handleHash.removeAll(duplicates);						
-			b = handleHash.addAll(genHandleHash(duplicates.size())); 
+			handleHash.removeAll(duplicates);						
+			handleHash.addAll(genHandleHash(duplicates.size())); 
 		}
 		
 		/* It's possible we have a collision within our list now
@@ -487,19 +580,6 @@ public class HandleService {
 	
 		return handleHash;
 	}	
-	
-	// For testing
-	private void logHandles(HashSet<ByteBuffer> handles) {
-		logger.log(Level.INFO,"Logging "+ String.valueOf(handles.size())+" handles");
-		String byteStr;
-		
-		Iterator<ByteBuffer> itr = handles.iterator();
-		
-		while(itr.hasNext()){
-			byteStr = StandardCharsets.UTF_8.decode(itr.next()).toString();
-			logger.log(Level.INFO, "\t" + byteStr);
-		}
-	}
 	
 	
 	/* List<byte[]> <----> HashSet<ByteBuffer>

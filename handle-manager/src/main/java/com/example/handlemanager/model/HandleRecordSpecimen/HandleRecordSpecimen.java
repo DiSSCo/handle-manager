@@ -13,6 +13,9 @@ import com.example.handlemanager.model.recordMetadataObjects.NameIdTypeTriplet;
 import com.example.handlemanager.model.recordMetadataObjects.Referent;
 import com.example.handlemanager.model.repositoryObjects.Handles;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -25,6 +28,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
+@JsonInclude(Include.NON_NULL)
 public class HandleRecordSpecimen extends HandleRecord {
 	
 	// From input
@@ -151,25 +155,12 @@ public class HandleRecordSpecimen extends HandleRecord {
 	}
 	
 	// For updating?
-	public void initializeEntriesNotNull() {
+	public void initializeEntriesList() {
 		entries = new ArrayList<Handles>();
-		int i = 1;
-		if (url != null) {
-			entries.add(new Handles(handle, i++, "URL", url, timestamp));
-		}
-		if (!pidIssuer.isNull()) {
-			entries.add(new Handles(handle, i++, "pidIssuer", pidIssuer.toString(), timestamp)); 
-		}
-		if (!digitalObjectType.isNull()) {
-			entries.add(new Handles(handle, i++, "digitalObjectType", digitalObjectType.toString(), timestamp));
-		}
-		if (!digitalObjectSubtype.isNull()) {
-			entries.add(new Handles(handle, i++, "digitalObjectSubtype", digitalObjectSubtype.toString(), timestamp)); 
-		}
-		if (digitalOrPhysical != null) {
-			entries.add(new Handles(handle, i++, "digitalOrPhysical", digitalOrPhysical, timestamp));
-		}
-		
+	}
+	
+	public void addEntry(int idx, String type, String data, long timestamp) {
+		entries.add(new Handles(handle, idx, type, data, timestamp));
 	}
 	
 	

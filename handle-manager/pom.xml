@@ -144,6 +144,11 @@
     		<groupId>org.glassfish.jersey.core</groupId> <!-- Response Package 2-->
     		<artifactId>jersey-server</artifactId>
 		</dependency>
+		<dependency> <!-- Json -->
+   			<groupId>org.json</groupId>
+   			<artifactId>json</artifactId>
+   			<version>20080701</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
