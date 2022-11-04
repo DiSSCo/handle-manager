@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import org.junit.jupiter.api.Test;
 
-import com.example.handlemanager.model.DigitalSpecimenInput;
+//import com.example.handlemanager.model.DigitalSpecimenInput;
 import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordSpecimen;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,7 +15,7 @@ public class HandleRecordSpecimenTest {
 	
 	HandleRecordSpecimen specimen;
 	String digType = "ZoologyVertebrateSpecimen";
-	
+	/*
 	DigitalSpecimenInput ds;
 	
 	public HandleRecordSpecimen genTestRecord(String dt) throws JsonProcessingException {
@@ -60,7 +60,7 @@ public class HandleRecordSpecimenTest {
 	public void testDsCreation() throws JsonProcessingException {
 		HandleRecordSpecimen spec = genTestRecordFromDs();
 	}
-	
+	*/
 	
 	
 

@@ -35,7 +35,7 @@ public class HandleServiceTest {
 	
 	Logger logger =  Logger.getLogger(HandleServiceTest.class.getName());
 	
-	
+	/*
 	@BeforeEach
 	public void setUp() throws JsonProcessingException {
 		HandleRecordSpecimen testSpec = genTestRecord("AstronomySpecimen");
@@ -51,7 +51,7 @@ public class HandleServiceTest {
 		
 		return new HandleRecordSpecimen(testHandleBytes, url, dt, institute);
 	}
-	
+	*/
 	@Test
 	public void ResolveHandleTest() throws JsonMappingException, JsonProcessingException {
 		HandleRecord retrievedSpecimen = service.resolveHandleRecord(testHandle);		

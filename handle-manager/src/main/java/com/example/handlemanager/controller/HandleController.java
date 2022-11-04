@@ -9,6 +9,8 @@ import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 
 import org.apache.http.client.HttpResponseException;
 import org.json.JSONException;
@@ -25,7 +27,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
+import com.example.handlemanager.domain.requests.DigitalSpecimenRequest;
+import com.example.handlemanager.domain.requests.DoiRecordRequest;
+import com.example.handlemanager.domain.requests.HandleRecordRequest;
 import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecord;
+import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordKernel;
 import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordSpecimen;
 import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordSpecimenMerged;
 import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordSpecimenSplit;
@@ -46,6 +53,41 @@ public class HandleController {
 	
 	@Autowired
 	private HandleService service;
+	
+	@PostMapping(value="/createHandle", params= "pidType=handle")
+	public ResponseEntity<?> createHandle(
+			@RequestBody HandleRecordRequest hdl) {
+		
+		//return service.resolveHandleRecord("20.5000.1025/PID-ISSUER");
+		
+		return ResponseEntity.ok(service.createHandleRecord(hdl, "hdl"));
+	}
+	
+	@PostMapping(value="/createHandle",  params= "pidType=doi")
+	public ResponseEntity<?> createHandle(
+			@RequestBody DoiRecordRequest doi){
+		return ResponseEntity.ok(service.createHandleRecord(doi, "doi"));
+	}
+	
+	@PostMapping(value="/createHandle",  params= "pidType=digitalSpecimen")
+	public ResponseEntity<?> createHandle(
+			@RequestBody DigitalSpecimenRequest ds) {
+		return ResponseEntity.ok(service.createHandleRecord(ds, "doi"));
+	}
+	
+	
+	@PostMapping(value="/createHandle",  params= "pidType=botanySpecimen")
+	public ResponseEntity<?> createHandle(
+			@RequestBody DigitalSpecimenBotanyRequest dsB) {
+		service.createHandleRecord(dsB, "ds");
+		return ResponseEntity.ok(dsB);
+	}
+	
+	/*
+	@PostMapping(value="/ds")
+	public List<Handles> HandleRecordSpe() throws JsonMappingException, JsonProcessingException {
+		return service.resolveHandle("20.5000.1025/PID-ISSUER");
+	}*/
 	
 	@GetMapping(value="/hello") 
 	public ResponseEntity<String> hello() {

@@ -11,13 +11,17 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import com.example.handlemanager.HandleFactory;
+import com.example.handlemanager.model.recordMetadataObjects.NameIdTypeTriplet;
 import com.example.handlemanager.model.repositoryObjects.Handles;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import lombok.Data;
+
 // This class is a tidy collection of Handles (i.e. a collection of the objects to be published to the server)
-//
-public class HandleRecord {
+
+@Data
+public class HandleRecord {	
 	
 	@JsonIgnore
 	protected byte[] handle;
@@ -27,8 +31,7 @@ public class HandleRecord {
 	protected Long timestamp;
 	
 	protected String pidStatus;
-	
-	protected Logger logger = Logger.getLogger(HandleFactory.class.getName());
+	//protected Logger logger = Logger.getLogger(HandleFactory.class.getName());
 	
 	// 07 f3         00 00 00 15    33 30 30 3a 30 2e 4e 41 2f 32 30 2e 35 30 30 30 2e 31 30 32 35  00 00 00 c8
 	//[permisions]	 [---???---]	[ ------------------300:0.NA/20.5000.1025300--------------------]  [--- 200---]
@@ -37,7 +40,6 @@ public class HandleRecord {
 	private String admin = "0fff000000153330303a302e4e412f32302e353030302e31303235000000c8";
 	
 	public HandleRecord() {
-		logger.info("Handle Record Constructor");
 		handle = "".getBytes(); // This will be filled out later
 		this.timestamp = Instant.now().getEpochSecond();
 		entries = new ArrayList<Handles>();
@@ -48,7 +50,6 @@ public class HandleRecord {
 		this.timestamp = Instant.now().getEpochSecond();
 		entries = new ArrayList<Handles>();
 	}
-	
 	
 	
 	public HandleRecord(byte[] handle, List<Handles> entries) {
@@ -65,7 +66,7 @@ public class HandleRecord {
 		return entries;
 	}
 	
-	// TODO: Security risk here
+	// TODO: Evaluate security risk here
 	public void setPermissions(boolean ar, boolean aw, boolean pr, boolean pw) {
 		for (Handles h: entries) {
 			h.setPermissions(ar, aw, pr, pw);
@@ -111,7 +112,7 @@ public class HandleRecord {
 	
 	
 	// Hex -> byte[] conversion 
-	// All of this to convert one opaque string??
+	// All of this to convert one opaque string?? You betcha
 	private byte[] decodeAdmin() {
 		byte[] adminByte = new byte[admin.length()/2];
 		for (int i = 0; i < admin.length(); i += 2) {

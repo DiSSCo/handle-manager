@@ -31,7 +31,7 @@ public class HandleRecordSpecimenMergedTest {
 	String url = "dissco.eu";
 	String institute = "DiSSCo";
 	
-	private HandleRecordSpecimen genTestRecord(String dt, byte[] h) throws JsonProcessingException {		
+	/*private HandleRecordSpecimen genTestRecord(String dt, byte[] h) throws JsonProcessingException {		
 		return new HandleRecordSpecimen(h, url, dt, institute);
 	}
 	
@@ -73,7 +73,7 @@ public class HandleRecordSpecimenMergedTest {
 		//merged3 = new HandleRecordSpecimenMerged(merged1.getEntries(), merged1.getHandle());
 		
 		
-	}
+	}*/
 	
 	
 	

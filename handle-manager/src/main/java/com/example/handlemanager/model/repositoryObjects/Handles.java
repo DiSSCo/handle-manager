@@ -68,6 +68,14 @@ public class Handles implements Serializable, Comparable<Handles>{
 		this.timestamp = timestamp;
 	}
 	
+	//String type, byte data constructor
+	public Handles(byte[] handle, int idx, String type, byte[] data, long timestamp) {
+		this.handle = handle;
+		this.idx = idx;
+		this.type = type.getBytes();
+		this.data = data;
+		this.timestamp = timestamp;
+	}
 	
 	public void setPermissions(boolean ar, boolean aw, boolean pr, boolean pw) {
 		admin_read = ar;
@@ -108,6 +116,10 @@ public class Handles implements Serializable, Comparable<Handles>{
 	public String getData() {
 		String str = new String(data, StandardCharsets.UTF_8);
 		return str;
+	}
+	
+	public byte[] getDataBytes() {
+		return data;
 	}
 	
 	public String toStringData() {

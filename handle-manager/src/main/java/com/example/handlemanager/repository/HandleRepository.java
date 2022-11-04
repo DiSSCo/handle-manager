@@ -22,7 +22,6 @@ public interface HandleRepository extends JpaRepository<Handles, HandleIdx> {
 	@Query(value="select distinct handle from handles h where data = ?1", nativeQuery=true)
 	List<byte[]> getHandles(byte[] pidStatus);	
 	
-	
 	// Resolve single handle
 	@Query(value="select * from handles where handle = ?1", nativeQuery=true)
 	List<Handles> resolveHandle(byte[] handle);

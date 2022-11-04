@@ -1,28 +1,24 @@
 package com.example.handlemanager.service;
 
-import java.io.UnsupportedEncodingException;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import javax.annotation.PostConstruct;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.handlemanager.HandleFactory;
+import com.example.handlemanager.domain.requests.*;
+import com.example.handlemanager.exceptions.PidResolutionException;
 import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecord;
 import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordReserve;
 import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordSpecimen;
@@ -32,13 +28,11 @@ import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordTombston
 import com.example.handlemanager.model.recordMetadataObjects.MaterialSampleName;
 import com.example.handlemanager.model.recordMetadataObjects.NameIdTypeTriplet;
 import com.example.handlemanager.model.recordMetadataObjects.Referent;
-import com.example.handlemanager.model.repositoryObjects.HandleIdx;
 import com.example.handlemanager.model.repositoryObjects.Handles;
 import com.example.handlemanager.repository.HandleRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.logging.*;
@@ -60,7 +54,9 @@ public class HandleService {
 	Logger logger =  Logger.getLogger(HandleService.class.getName());	
 	ObjectMapper mapper = new ObjectMapper();
 	
+	private String admin = "0fff000000153330303a302e4e412f32302e353030302e31303235000000c8";
 	
+
 	// Return all handle identifiers
 	
 	public List<String> getHandles(){
@@ -71,8 +67,204 @@ public class HandleService {
 		return getStrList(handleRep.getHandles(pidStatus.getBytes()));
 	}
 	
+	
+	// * old Method with verbose request objects *
+	public HandleRecordSpecimen createHandleSpecimen(HandleRecordSpecimen specimen) throws JsonMappingException, JsonProcessingException {
+		byte[] h = genHandleList(1).get(0); 
+		specimen.setDigitalSpecimenRecord(h);
+		logger.info("Referent String: " + specimen.getReferentStr());
+		logger.info("Material Sample: " + specimen.getMaterialSampleName().toString());
+		HandleRecordSpecimen postedRecord = new HandleRecordSpecimen(h, handleRep.saveAll(specimen.sortByIdx().getEntries()));
+		logger.info("New Handle Posted: " + postedRecord.getHandleStr());
+		
+		return postedRecord;
+	}
+	
+	
+	// ** New way **
+	public List<Handles> createHandleRecord(HandleRecordRequest request, String recordType) {
+		byte[] handle = genHandleList(1).get(0);
+		long timestamp = Instant.now().getEpochSecond();
+		List<Handles> handleRecord;
+		switch (recordType) {
+			case "hdl":
+				handleRecord = prepareHandleRecord(request, handle, timestamp);
+				break;
+			case "doi":
+				handleRecord = prepareDoiRecord((DoiRecordRequest)request, handle, timestamp);
+				break;
+			default:
+				handleRecord = new ArrayList<>(); // TODO should throw an error here
+		}
+		
+		return handleRep.saveAll(handleRecord);
+	}
+	
+	
+	// Prepare Record Lists
+	
+	private List<Handles> prepareHandleRecord(HandleRecordRequest request, byte[] handle, long timestamp){
+		List<Handles> handleRecord = new ArrayList<Handles>();
+		
+		// 100: Admin Handle
+		handleRecord.add(genAdminHandle(handle, timestamp));
+		
+		// 1: Pid
+		byte [] pid = null;
+		pid = concatBytes("https://hdl.handle.net/".getBytes(), handle); // TODO this should check if it's a DOI?
+		handleRecord.add(new Handles(handle, 1, "pid", pid, timestamp));		
+		
+		//2: PidIssuer
+		String pidIssuer = "";
+		try{
+			pidIssuer = resolveTypePid(request.getPidIssuerPid());
+		} catch (PidResolutionException e){
+			e.printStackTrace();
+		}
+		
+		handleRecord.add(new Handles(handle, 2, "pidIssuer", pidIssuer, timestamp));
+		
+		// 3: Digital Object Type
+		String digitalObjectType = "";
+		try{
+			digitalObjectType = resolveTypePid(request.getDigitalObjectTypePid());
+		} catch (PidResolutionException e){
+			e.printStackTrace();
+		}
+		
+		handleRecord.add(new Handles(handle, 3, "digitalObjectType", digitalObjectType, timestamp));
+		
+		return handleRecord;
+	}
+	
+	private List<Handles> prepareDoiRecord(DoiRecordRequest request, byte[] handle, long timestamp){
+		List<Handles> handleRecord = prepareHandleRecord(request.getHandleRecordRequest(), handle, timestamp);
+		
+		String referentDoiName= "";
+		try {
+			referentDoiName = resolveTypePid(request.getReferentDoiNamePid());
+		} catch (PidResolutionException e){
+			e.printStackTrace();
+		}
+		
+		handleRecord.add(new Handles (handle, 12, "referentDoiName", referentDoiName, timestamp));
+		
+		return handleRecord;
+	}
+		
+	
+	private List<Handles> prepareDsRecord(DigitalSpecimenRequest request){
+		
+		return null;
+	}
+	
+	private byte[] concatBytes(byte [] a, byte[] b) {
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		try {
+			outputStream.write(a);
+			outputStream.write(b);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return outputStream.toByteArray();
+	}
+	
+	private String resolveTypePid(String typePid) throws PidResolutionException {
+		
+		List<Handles> typeRecord = handleRep.resolveHandle(typePid.getBytes());
+		if (typeRecord.isEmpty()){
+			throw new PidResolutionException("Unable to resolve type PID");
+		}
+		
+		String pid = getDataFromType("pid", typeRecord);
+		logger.info("Pid: "+pid);
+		String primaryNameFromPid = getDataFromType("primaryNameFromPID", typeRecord); // TODO this should be lower case 
+		logger.info("primary name from pid:"+primaryNameFromPid);
+		
+		String pidType;
+		String registrationAgencyDoiName = "";
+		String typeJson = "";
+		
+		if (pid.contains("doi")) {
+			pidType = "doi";
+			registrationAgencyDoiName = getDataFromType("registrationAgencyDoiName", typeRecord);
+			
+			typeJson = "{ \n"
+			+ "\"pid\": \"" + pid + "\", \n"
+			+ "\"pidType\": \"" + pidType + "\", \n"
+			+ "\"primaryNameFromPid\": \"" + primaryNameFromPid + "\", \n"
+			+ "\"registrationAgencyDoiName\": \"" + registrationAgencyDoiName + "\" \n"
+			+ "}";
+			
+			
+		}
+		else if (pid.contains("handle")) {
+			pidType = "handle";
+			typeJson =  "{ \n"
+			+ "\"pid\": \"" + pid + "\", \n"
+			+ "\"pidType\": \"" + pidType + "\", \n"
+			+ "\"primaryNameFromPid\": \"" + primaryNameFromPid + "\" \n"
+			+ "}";
+		}
+		
+		else {
+			throw new PidResolutionException("One of the type PIDs provided resolves to an invalid record. Check handle "+typePid+" and try again");
+		}
+		
+		if (pidType == ""|| primaryNameFromPid == ""){ // If one of these were not resolvable
+			throw new PidResolutionException("One of the type PIDs provided resolves to an invalid record. Check handle "+typePid+" and try again");
+		} 
+		
+		return typeJson;
+	}
+	
+	
+	// Resolve Triplet (name, id, pid type)
+	private NameIdTypeTriplet resolveTripletPid(NameIdTypeTriplet trip) {
+		logger.info("postconstructor called");
+		if (!trip.isNull()) {
+			return trip;
+		}
+		
+		byte [] typePidByte = trip.getTypePid().getBytes();
+		logger.info("resolving handle");
+		List<Handles> typeRecord = handleRep.resolveHandle(typePidByte);
+		logger.info("resolved handle");
+		logger.info(String.valueOf(typeRecord.size()));
+		logger.info(":)");
+		String type;
+		
+		for (Handles h: typeRecord) {
+			type = h.getType();
+			switch(type) {
+				case "primaryNameFromPID":
+					trip.setPrimaryNameFromPid(h.getData());
+					break;
+				case "pid":
+					String pidStr = h.getData();
+					trip.setPid(pidStr);
+					if (pidStr.contains("handle")) {
+						trip.setPidType("handle");
+					}
+					else if (pidStr.contains("doi")) {
+						trip.setPidType("doi");
+					}
+					else {
+						trip.setPidType("unknown");
+					}
+					break;
+				default:
+					break;
+			}
+		}
+		logger.info(trip.toString());
+		return trip;
+	}
+	
+	
+	
 	// Create Handle
-	/*
+	/*Handl
 	public HandleRecord createHandleSpecimen(String url, String digType, String institute) throws JsonProcessingException {
 		byte[] h = genHandleList(1).get(0); // TODO fix this? Make an individual function for single handles?
 		
@@ -96,17 +288,7 @@ public class HandleService {
 		return postedRecord;
 		
 	}*/
-	
-	public HandleRecordSpecimen createHandleSpecimen(HandleRecordSpecimen specimen) throws JsonMappingException, JsonProcessingException {
-		byte[] h = genHandleList(1).get(0); 
-		specimen.setDigitalSpecimenRecord(h);
-		logger.info("Referent String: " + specimen.getReferentStr());
-		logger.info("Material Sample: " + specimen.getMaterialSampleName().toString());
-		HandleRecordSpecimen postedRecord = new HandleRecordSpecimen(h, handleRep.saveAll(specimen.sortByIdx().getEntries()));
-		logger.info("New Handle Posted: " + postedRecord.getHandleStr());
-		
-		return postedRecord;
-	}
+
 	
 	
 	/**
@@ -202,13 +384,13 @@ public class HandleService {
 	
 	// Search list of handle records for the appropriate value
 	private String getDataFromType(String type, List<Handles> hList) {
-		String data = "";
 		for (Handles h: hList) {
 			if (h.getType().equals(type)) {
-				data = h.getData();
+				return h.getData();
 			}
 		}
-		return data;
+		
+		return ""; // This should maybe return a warning? 
 	}
 	
 	
@@ -604,6 +786,33 @@ public class HandleService {
 			 handleList.add(itr.next().array());	 
 		 }
 		 return handleList;
+		}
+	 
+	 
+	 // Admin Handle Generation
+	 
+	 private Handles genAdminHandle(byte [] handle, long timestamp) {
+			return new Handles(handle, 100, "HS_ADMIN".getBytes(), decodeAdmin(), timestamp);
+		}
+	 
+	 private byte[] decodeAdmin() {
+			byte[] adminByte = new byte[admin.length()/2];
+			for (int i = 0; i < admin.length(); i += 2) {
+				adminByte[i / 2] = hexToByte(admin.substring(i, i + 2));
+		    }
+			return adminByte;		
+		}
+		
+		private byte hexToByte(String hexString) {
+		    int firstDigit = toDigit(hexString.charAt(0));
+		    int secondDigit = toDigit(hexString.charAt(1));
+		    return (byte) ((firstDigit << 4) + secondDigit);
+		}
+		
+
+		private int toDigit(char hexChar) {
+			int digit = Character.digit(hexChar, 16);
+			return digit;
 		}
 	 
 }
