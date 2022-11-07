@@ -79,8 +79,7 @@ public class HandleController {
 	@PostMapping(value="/createHandle",  params= "pidType=botanySpecimen")
 	public ResponseEntity<?> createHandle(
 			@RequestBody DigitalSpecimenBotanyRequest dsB) {
-		service.createHandleRecord(dsB, "ds");
-		return ResponseEntity.ok(dsB);
+		return ResponseEntity.ok(service.createHandleRecord(dsB, "dsB"));
 	}
 	
 	/*

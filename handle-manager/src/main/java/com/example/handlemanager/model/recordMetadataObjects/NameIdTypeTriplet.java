@@ -99,6 +99,49 @@ public class NameIdTypeTriplet {
 				pidType == null &&
 				primaryNameFromPid == null);
 	}
+	
+	
+	// Resolve Triplet (name, id, pid type)
+	private NameIdTypeTriplet resolveTripletPid(NameIdTypeTriplet trip) {
+		if (!trip.isNull()) {
+			return trip;
+		}
+		
+		byte [] typePidByte = trip.getTypePid().getBytes();
+		logger.info("resolving handle");
+		List<Handles> typeRecord = handleRep.resolveHandle(typePidByte);
+		logger.info("resolved handle");
+		logger.info(String.valueOf(typeRecord.size()));
+		logger.info(":)");
+		String type;
+		
+		for (Handles h: typeRecord) {
+			type = h.getType();
+			switch(type) {
+				case "primaryNameFromPID":
+					trip.setPrimaryNameFromPid(h.getData());
+					break;
+				case "pid":
+					String pidStr = h.getData();
+					trip.setPid(pidStr);
+					if (pidStr.contains("handle")) {
+						trip.setPidType("handle");
+					}
+					else if (pidStr.contains("doi")) {
+						trip.setPidType("doi");
+					}
+					else {
+						trip.setPidType("unknown");
+					}
+					break;
+				default:
+					break;
+			}
+		}
+		logger.info(trip.toString());
+		return trip;
+	}
+	
 
 	
 	

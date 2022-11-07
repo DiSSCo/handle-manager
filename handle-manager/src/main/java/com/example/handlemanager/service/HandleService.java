@@ -2,9 +2,13 @@ package com.example.handlemanager.service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,6 +19,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.w3c.dom.Document;
 
 import com.example.handlemanager.HandleFactory;
 import com.example.handlemanager.domain.requests.*;
@@ -36,6 +41,15 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.logging.*;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 //import net.handle.hdllib.HandleException;
 //import net.handle.hdllib.HandleValue;
@@ -93,6 +107,12 @@ public class HandleService {
 			case "doi":
 				handleRecord = prepareDoiRecord((DoiRecordRequest)request, handle, timestamp);
 				break;
+			case "ds":
+				handleRecord = prepareDigitalSpecimenRecord((DigitalSpecimenRequest)request, handle, timestamp);
+				break;
+			case "dsB":
+				handleRecord = prepareDigitalSpecimenBotanyRecord((DigitalSpecimenBotanyRequest)request, handle, timestamp);
+				break;
 			default:
 				handleRecord = new ArrayList<>(); // TODO should throw an error here
 		}
@@ -109,54 +129,100 @@ public class HandleService {
 		// 100: Admin Handle
 		handleRecord.add(genAdminHandle(handle, timestamp));
 		
+		int i = 1;
 		// 1: Pid
 		byte [] pid = null;
 		pid = concatBytes("https://hdl.handle.net/".getBytes(), handle); // TODO this should check if it's a DOI?
-		handleRecord.add(new Handles(handle, 1, "pid", pid, timestamp));		
+		handleRecord.add(new Handles(handle, i++, "pid", pid, timestamp));		
 		
 		//2: PidIssuer
-		String pidIssuer = "";
-		try{
-			pidIssuer = resolveTypePid(request.getPidIssuerPid());
-		} catch (PidResolutionException e){
-			e.printStackTrace();
-		}
-		
-		handleRecord.add(new Handles(handle, 2, "pidIssuer", pidIssuer, timestamp));
+		String pidIssuer = resolveTypePid(request.getPidIssuerPid());
+		handleRecord.add(new Handles(handle, i++, "pidIssuer", pidIssuer, timestamp));
 		
 		// 3: Digital Object Type
-		String digitalObjectType = "";
-		try{
-			digitalObjectType = resolveTypePid(request.getDigitalObjectTypePid());
-		} catch (PidResolutionException e){
+		String digitalObjectType = resolveTypePid(request.getDigitalObjectTypePid());
+		handleRecord.add(new Handles(handle, i++, "digitalObjectType", digitalObjectType, timestamp));
+		
+		// 4: Digital Object Subtype
+		String digitalObjectSubtype = resolveTypePid(request.getDigitalObjectSubtypePid());
+		handleRecord.add(new Handles(handle, i++, "digitalObjectSubtype", digitalObjectSubtype, timestamp));
+		
+		// 5: 10320/loc
+		byte [] loc = "".getBytes();
+		try {
+			loc = setLocations(request.getLocations());
+		} catch (TransformerException | ParserConfigurationException e) {
 			e.printStackTrace();
 		}
+		handleRecord.add(new Handles(handle, i++, "10320/loc", loc, timestamp));
 		
-		handleRecord.add(new Handles(handle, 3, "digitalObjectType", digitalObjectType, timestamp));
+		// 6: Issue Date
+		handleRecord.add((new Handles(handle, i++, "issueDate", getDate(), timestamp)));
 		
+		// 7: Issue number
+		handleRecord.add((new Handles(handle, i++, "issueNumber", "1", timestamp))); // TODO: Will every created handle have a 1 for the issue date?
+		
+		// 8: PidStatus
+		handleRecord.add((new Handles(handle, i++, "pidStatus", "TEST",timestamp))); //TODO: Can I keep this as test?	
+		
+		// 9, 10: tombstone text, tombstone pids -> Skip
+		i++;
+		i++;
+		// 11: PidKernelMetadataLicense: https://creativecommons.org/publicdomain/zero/1.0/
+		handleRecord.add((new Handles(handle, i++, "PidKernelMetadataLicense", "https://creativecommons.org/publicdomain/zero/1.0/", timestamp)));
+			
 		return handleRecord;
 	}
 	
 	private List<Handles> prepareDoiRecord(DoiRecordRequest request, byte[] handle, long timestamp){
 		List<Handles> handleRecord = prepareHandleRecord(request.getHandleRecordRequest(), handle, timestamp);
+		int i = 12;
 		
-		String referentDoiName= "";
-		try {
-			referentDoiName = resolveTypePid(request.getReferentDoiNamePid());
-		} catch (PidResolutionException e){
-			e.printStackTrace();
-		}
+		// 12: Referent DOI Name
+		String referentDoiName = resolveTypePid(request.getReferentDoiNamePid());		
+		handleRecord.add(new Handles (handle, i++, "referentDoiName", referentDoiName, timestamp));
 		
-		handleRecord.add(new Handles (handle, 12, "referentDoiName", referentDoiName, timestamp));
+		// 13: Referent -> NOTE: Referent is blank currently until we have a model for it
+		handleRecord.add(new Handles (handle, i++, "referent", request.getReferent(), timestamp));
 		
 		return handleRecord;
 	}
 		
 	
-	private List<Handles> prepareDsRecord(DigitalSpecimenRequest request){
+	private List<Handles> prepareDigitalSpecimenRecord(DigitalSpecimenRequest request, byte [] handle, long timestamp){
+		List<Handles> handleRecord = prepareDoiRecord(request.getDoiRecordRequest(), handle, timestamp);
 		
-		return null;
+		int i = 14;
+		
+		// 14: digitalOrPhysical
+		handleRecord.add(new Handles (handle, i++, "digitalOrPhysical", request.getDigitalOrPhysical(), timestamp));
+		
+		// 15: specimenHost
+		String specimenHost = resolveTypePid(request.getSpecimenHostPid());
+		handleRecord.add(new Handles (handle, i++, "specimenHost", specimenHost, timestamp));
+		
+		// 16: In collectionFacillity
+		String inCollectionFacillity = resolveTypePid(request.getInCollectionFacillityPid());
+		handleRecord.add(new Handles (handle, i++, "inCollectionFacillity", inCollectionFacillity, timestamp));
+		
+		return handleRecord;
 	}
+	
+	private List<Handles> prepareDigitalSpecimenBotanyRecord(DigitalSpecimenBotanyRequest request, byte[] handle, long timestamp){
+		List<Handles> handleRecord = prepareDigitalSpecimenRecord(request.getDigitalSpecimenRequest(), handle, timestamp);
+		
+		int i = 17;
+		
+		// 17: ObjectType
+		handleRecord.add(new Handles (handle, i++, "objectType", request.getObjectType(), timestamp));
+		
+		//18: preservedOrLiving
+		handleRecord.add(new Handles (handle, i++, "preservedOrLiving", request.getPreservedOrLiving(), timestamp));
+		
+		return handleRecord;
+	}
+	
+	
 	
 	private byte[] concatBytes(byte [] a, byte[] b) {
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -169,7 +235,19 @@ public class HandleService {
 		return outputStream.toByteArray();
 	}
 	
-	private String resolveTypePid(String typePid) throws PidResolutionException {
+	private String resolveTypePid(String typePid) {
+		String pidData = "";
+		try{
+			pidData = resolveTypePidVal(typePid);
+		} catch (PidResolutionException e){
+			e.printStackTrace();
+		}
+		return pidData;
+	}
+	
+	
+	// TODO: Make this cacheable
+	private String resolveTypePidVal(String typePid) throws PidResolutionException {
 		
 		List<Handles> typeRecord = handleRep.resolveHandle(typePid.getBytes());
 		if (typeRecord.isEmpty()){
@@ -177,10 +255,7 @@ public class HandleService {
 		}
 		
 		String pid = getDataFromType("pid", typeRecord);
-		logger.info("Pid: "+pid);
-		String primaryNameFromPid = getDataFromType("primaryNameFromPID", typeRecord); // TODO this should be lower case 
-		logger.info("primary name from pid:"+primaryNameFromPid);
-		
+		String primaryNameFromPid = getDataFromType("primaryNameFromPID", typeRecord); // TODO this should be lower case 		
 		String pidType;
 		String registrationAgencyDoiName = "";
 		String typeJson = "";
@@ -218,49 +293,44 @@ public class HandleService {
 		return typeJson;
 	}
 	
-	
-	// Resolve Triplet (name, id, pid type)
-	private NameIdTypeTriplet resolveTripletPid(NameIdTypeTriplet trip) {
-		logger.info("postconstructor called");
-		if (!trip.isNull()) {
-			return trip;
+	private byte[] setLocations(String[] objectLocations)  throws TransformerException, ParserConfigurationException {
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilder documentBuilder = dbf.newDocumentBuilder();
+		
+		
+		var doc = documentBuilder.newDocument();
+		var locations = doc.createElement("locations");
+		doc.appendChild(locations);
+		for (int i = 0; i < objectLocations.length; i++) {
+			
+			var locs = doc.createElement("location");  //Todo: can i add multiple elements with the same name
+			locs.setAttribute("id", String.valueOf(i));
+			locs.setAttribute("href", objectLocations[i]);
+			locs.setAttribute("weight", "0");
+			locations.appendChild(locs);
 		}
 		
-		byte [] typePidByte = trip.getTypePid().getBytes();
-		logger.info("resolving handle");
-		List<Handles> typeRecord = handleRep.resolveHandle(typePidByte);
-		logger.info("resolved handle");
-		logger.info(String.valueOf(typeRecord.size()));
-		logger.info(":)");
-		String type;
-		
-		for (Handles h: typeRecord) {
-			type = h.getType();
-			switch(type) {
-				case "primaryNameFromPID":
-					trip.setPrimaryNameFromPid(h.getData());
-					break;
-				case "pid":
-					String pidStr = h.getData();
-					trip.setPid(pidStr);
-					if (pidStr.contains("handle")) {
-						trip.setPidType("handle");
-					}
-					else if (pidStr.contains("doi")) {
-						trip.setPidType("doi");
-					}
-					else {
-						trip.setPidType("unknown");
-					}
-					break;
-				default:
-					break;
-			}
-		}
-		logger.info(trip.toString());
-		return trip;
+		return documentToString(doc).getBytes(StandardCharsets.UTF_8);
 	}
 	
+	
+	private String documentToString(Document document) throws TransformerException {
+	    var tf = TransformerFactory.newInstance();
+	    var transformer = tf.newTransformer();
+	    transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+	    StringWriter writer = new StringWriter();
+	    transformer.transform(new DOMSource(document), new StreamResult(writer));
+	    return writer.getBuffer().toString();
+	  }
+	
+	private String getDate() {
+		DateTimeFormatter dt = DateTimeFormatter.ofPattern("yyyy-mm-dd");
+		LocalDateTime now = LocalDateTime.now();
+		return dt.format(now);
+	}
+	
+	
+
 	
 	
 	// Create Handle
