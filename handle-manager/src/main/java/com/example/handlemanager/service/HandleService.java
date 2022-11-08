@@ -66,6 +66,10 @@ public class HandleService {
 	
 	@Autowired
 	public HandleRepository handleRep;
+	
+	@Autowired
+	PidTypeService pidTypeService;
+	
 	private HandleFactory hf = new HandleFactory();
 	Logger logger =  Logger.getLogger(HandleService.class.getName());	
 	ObjectMapper mapper = new ObjectMapper();
@@ -233,15 +237,15 @@ public class HandleService {
 		handleRecord.add(new Handles(handle, i++, "pid", pid, timestamp));		
 		
 		//2: PidIssuer
-		String pidIssuer = resolveTypePid(request.getPidIssuerPid());
+		String pidIssuer = pidTypeService.resolveTypePid(request.getPidIssuerPid());
 		handleRecord.add(new Handles(handle, i++, "pidIssuer", pidIssuer, timestamp));
 		
 		// 3: Digital Object Type
-		String digitalObjectType = resolveTypePid(request.getDigitalObjectTypePid());
+		String digitalObjectType = pidTypeService.resolveTypePid(request.getDigitalObjectTypePid());
 		handleRecord.add(new Handles(handle, i++, "digitalObjectType", digitalObjectType, timestamp));
 		
 		// 4: Digital Object Subtype
-		String digitalObjectSubtype = resolveTypePid(request.getDigitalObjectSubtypePid());
+		String digitalObjectSubtype = pidTypeService.resolveTypePid(request.getDigitalObjectSubtypePid());
 		handleRecord.add(new Handles(handle, i++, "digitalObjectSubtype", digitalObjectSubtype, timestamp));
 		
 		// 5: 10320/loc
@@ -276,7 +280,7 @@ public class HandleService {
 		int i = 12;
 		
 		// 12: Referent DOI Name
-		String referentDoiName = resolveTypePid(request.getReferentDoiNamePid());		
+		String referentDoiName = pidTypeService.resolveTypePid(request.getReferentDoiNamePid());		
 		handleRecord.add(new Handles (handle, i++, "referentDoiName", referentDoiName, timestamp));
 		
 		// 13: Referent -> NOTE: Referent is blank currently until we have a model for it
@@ -295,11 +299,11 @@ public class HandleService {
 		handleRecord.add(new Handles (handle, i++, "digitalOrPhysical", request.getDigitalOrPhysical(), timestamp));
 		
 		// 15: specimenHost
-		String specimenHost = resolveTypePid(request.getSpecimenHostPid());
+		String specimenHost = pidTypeService.resolveTypePid(request.getSpecimenHostPid());
 		handleRecord.add(new Handles (handle, i++, "specimenHost", specimenHost, timestamp));
 		
 		// 16: In collectionFacillity
-		String inCollectionFacillity = resolveTypePid(request.getInCollectionFacillityPid());
+		String inCollectionFacillity = pidTypeService.resolveTypePid(request.getInCollectionFacillityPid());
 		handleRecord.add(new Handles (handle, i++, "inCollectionFacillity", inCollectionFacillity, timestamp));
 		
 		return handleRecord;
@@ -330,62 +334,7 @@ public class HandleService {
 		return outputStream.toByteArray();
 	}
 	
-	@Cacheable("pidType")
-	private String resolveTypePid(String typePid) {
-		String pidData = "";
-		try{
-			pidData = resolveTypePidVal(typePid);
-		} catch (PidResolutionException e){
-			e.printStackTrace();
-		}
-		return pidData;
-	}
-	
-	private String resolveTypePidVal(String typePid) throws PidResolutionException {
-		
-		List<Handles> typeRecord = handleRep.resolveHandle(typePid.getBytes());
-		if (typeRecord.isEmpty()){
-			throw new PidResolutionException("Unable to resolve type PID");
-		}
-		
-		String pid = getDataFromType("pid", typeRecord);
-		String primaryNameFromPid = getDataFromType("primaryNameFromPID", typeRecord); // TODO this should be lower case 		
-		String pidType;
-		String registrationAgencyDoiName = "";
-		String typeJson = "";
-		
-		if (pid.contains("doi")) {
-			pidType = "doi";
-			registrationAgencyDoiName = getDataFromType("registrationAgencyDoiName", typeRecord);
-			
-			typeJson = "{ \n"
-			+ "\"pid\": \"" + pid + "\", \n"
-			+ "\"pidType\": \"" + pidType + "\", \n"
-			+ "\"primaryNameFromPid\": \"" + primaryNameFromPid + "\", \n"
-			+ "\"registrationAgencyDoiName\": \"" + registrationAgencyDoiName + "\" \n"
-			+ "}";
-			
-			
-		}
-		else if (pid.contains("handle")) {
-			pidType = "handle";
-			typeJson =  "{ \n"
-			+ "\"pid\": \"" + pid + "\", \n"
-			+ "\"pidType\": \"" + pidType + "\", \n"
-			+ "\"primaryNameFromPid\": \"" + primaryNameFromPid + "\" \n"
-			+ "}";
-		}
-		
-		else {
-			throw new PidResolutionException("One of the type PIDs provided resolves to an invalid record. Check handle "+typePid+" and try again");
-		}
-		
-		if (pidType == ""|| primaryNameFromPid == ""){ // If one of these were not resolvable
-			throw new PidResolutionException("One of the type PIDs provided resolves to an invalid record. Check handle "+typePid+" and try again");
-		} 
-		logger.info("this should be cached: " + typePid);
-		return typeJson;
-	}
+
 	
 	private byte[] setLocations(String[] objectLocations)  throws TransformerException, ParserConfigurationException {
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -883,7 +832,6 @@ public class HandleService {
 			
 			return postedRecord;
 		}
-		
 		
 		
 		private void saveChildren(List<HandleRecordSpecimenSplit> children) {

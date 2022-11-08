@@ -104,7 +104,7 @@ public class HandleController {
 	}
 	
 	
-	@PostMapping(value="/createRecord",  params= "pidType=botanySpecimen")
+	@PostMapping(value="/createRecord",  params= "pidType=digitalSpecimenBotany")
 	public ResponseEntity<?> createRecord(
 			@RequestBody DigitalSpecimenBotanyRequest dsB) {
 		try {
