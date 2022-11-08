@@ -1,23 +1,14 @@
 package com.example.handlemanager.controller;
 
-import java.io.UnsupportedEncodingException;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Response;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 
 import org.apache.http.client.HttpResponseException;
 import org.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.ResponseEntity.BodyBuilder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,17 +22,15 @@ import com.example.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
 import com.example.handlemanager.domain.requests.DigitalSpecimenRequest;
 import com.example.handlemanager.domain.requests.DoiRecordRequest;
 import com.example.handlemanager.domain.requests.HandleRecordRequest;
+import com.example.handlemanager.exceptions.PidCreationException;
 import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecord;
-import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordKernel;
 import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordSpecimen;
 import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordSpecimenMerged;
 import com.example.handlemanager.model.HandleRecordSpecimen.HandleRecordSpecimenSplit;
-import com.example.handlemanager.model.repositoryObjects.Handles;
 import com.example.handlemanager.service.HandleService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
-import net.handle.hdllib.HandleException;
 import java.util.logging.*;
 //import net.handle.hdllib.HandleException;
 //import net.handle.hdllib.HandleValue;
@@ -54,39 +43,81 @@ public class HandleController {
 	@Autowired
 	private HandleService service;
 	
-	@PostMapping(value="/createHandle", params= "pidType=handle")
-	public ResponseEntity<?> createHandle(
+	// ** Create Records: handle, doi, digital specimen, botany specimen **
+	
+	// Batch creation
+	
+	@PostMapping(value="/createRecordBatch", params= "pidType=handle")
+	public ResponseEntity<?> createHandleRecordBatch(@RequestBody List<HandleRecordRequest> hdl) {
+		return ResponseEntity.ok(service.createHandleRecordBatch(hdl));
+	}
+	
+	@PostMapping(value="/createRecordBatch", params= "pidType=doi")
+	public ResponseEntity<?> createDoiRecordBatch(@RequestBody List<DoiRecordRequest> doi) {
+		return ResponseEntity.ok(service.createDoiRecordBatch(doi));
+	}
+	
+	@PostMapping(value="/createRecordBatch", params= "pidType=digitalSpecimen")
+	public ResponseEntity<?> createDigitalSpecimenBatch(@RequestBody List<DigitalSpecimenRequest> ds) {
+		return ResponseEntity.ok(service.createDigitalSpecimenBatch(ds));
+	}
+	
+	@PostMapping(value="/createRecordBatch", params= "pidType=digitalSpecimenBotany")
+	public ResponseEntity<?> createDigitalSpecimenBotanyBatch(@RequestBody List<DigitalSpecimenBotanyRequest> dsB) {
+		return ResponseEntity.ok(service.createDigitalSpecimenBotanyBatch(dsB));
+	}
+	
+	
+	
+	// Create Single Record
+	@PostMapping(value="/createRecord", params= "pidType=handle")
+	public ResponseEntity<?> createRecord(
 			@RequestBody HandleRecordRequest hdl) {
-		
-		//return service.resolveHandleRecord("20.5000.1025/PID-ISSUER");
-		
-		return ResponseEntity.ok(service.createHandleRecord(hdl, "hdl"));
+		try {
+			return ResponseEntity.ok(service.createRecord(hdl, "hdl"));
+		} catch (PidCreationException e) {
+			e.printStackTrace();
+			return new ResponseEntity<>("Unable to create record", HttpStatus.INTERNAL_SERVER_ERROR);
+		}		
 	}
 	
-	@PostMapping(value="/createHandle",  params= "pidType=doi")
-	public ResponseEntity<?> createHandle(
-			@RequestBody DoiRecordRequest doi){
-		return ResponseEntity.ok(service.createHandleRecord(doi, "doi"));
+	@PostMapping(value="/createRecord",  params= "pidType=doi")
+	public ResponseEntity<?> createRecord(
+			@RequestBody DoiRecordRequest doi){		
+		try {
+			return ResponseEntity.ok(service.createRecord(doi, "doi"));
+		} catch (PidCreationException e) {
+			e.printStackTrace();
+			return new ResponseEntity<>("Unable to create record", HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 	}
 	
-	@PostMapping(value="/createHandle",  params= "pidType=digitalSpecimen")
-	public ResponseEntity<?> createHandle(
+	@PostMapping(value="/createRecord",  params= "pidType=digitalSpecimen")
+	public ResponseEntity<?> createRecord(
 			@RequestBody DigitalSpecimenRequest ds) {
-		return ResponseEntity.ok(service.createHandleRecord(ds, "doi"));
+		try {
+			return ResponseEntity.ok(service.createRecord(ds, "doi"));
+		} catch (PidCreationException e) {
+			e.printStackTrace();
+			return new ResponseEntity<>("Unable to create record", HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 	}
 	
 	
-	@PostMapping(value="/createHandle",  params= "pidType=botanySpecimen")
-	public ResponseEntity<?> createHandle(
+	@PostMapping(value="/createRecord",  params= "pidType=botanySpecimen")
+	public ResponseEntity<?> createRecord(
 			@RequestBody DigitalSpecimenBotanyRequest dsB) {
-		return ResponseEntity.ok(service.createHandleRecord(dsB, "dsB"));
+		try {
+			return ResponseEntity.ok(service.createRecord(dsB, "dsB"));
+		} catch (PidCreationException e) {
+			e.printStackTrace();
+			return new ResponseEntity<>("Unable to create record", HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+		
 	}
 	
-	/*
-	@PostMapping(value="/ds")
-	public List<Handles> HandleRecordSpe() throws JsonMappingException, JsonProcessingException {
-		return service.resolveHandle("20.5000.1025/PID-ISSUER");
-	}*/
+	
+	// Hellos and getters
 	
 	@GetMapping(value="/hello") 
 	public ResponseEntity<String> hello() {
@@ -114,6 +145,20 @@ public class HandleController {
 	}
 	
 	// Resolve a handle
+	
+	
+	
+	
+	public ResponseEntity<?> resolveHandle(@RequestParam(name="pid") String pid) throws JsonMappingException, JsonProcessingException{
+		HandleRecord record = service.resolveHandleRecord(pid);
+		if (record.isEmpty()) {
+			return new ResponseEntity<>("Handle record does not exist", HttpStatus.NOT_FOUND);
+		}
+		return ResponseEntity.ok(record);
+	}
+	
+	// Resolve a handle
+	/*
 	@GetMapping(value="/**")
 	public ResponseEntity<?> resolveHandle(@RequestParam(name="handle") String handle) throws JsonMappingException, JsonProcessingException{
 		HandleRecord record = service.resolveHandleRecord(handle);
@@ -124,7 +169,7 @@ public class HandleController {
 		
 		//TODO: might be nice to allow users to select which parts of the handle record they want to resolve		
 	}
-	
+	*/
 	// Reserve a set number of handles
 	@PostMapping(value="/reserve")
 	public ResponseEntity<?> reserveHandles(@RequestParam(name="reserves") int reserves) {
@@ -175,7 +220,6 @@ public class HandleController {
 		if(containsDuplicates(newRecord.getLegacyHandles())) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Merged handles must be distinct");
 		}
-		
 		HandleRecordSpecimenMerged mergedRecord = service.mergeHandle(newRecord);
 		
 		return ResponseEntity.ok(mergedRecord);

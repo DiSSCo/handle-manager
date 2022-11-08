@@ -30,6 +30,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @JsonInclude(Include.NON_NULL)
+@NoArgsConstructor
 public class NameIdTypeTriplet {
 	@Autowired
 	HandleRepository handleRep;
@@ -66,14 +67,7 @@ public class NameIdTypeTriplet {
 	}
 	
 	public NameIdTypeTriplet(String id) {
-		logger.info("constructor called");
 		this.typePid = id;
-	}
-	
-	public NameIdTypeTriplet() {
-		pid = "";
-		pidType="";
-		primaryNameFromPid="";
 	}
 	
 	@Override
@@ -87,6 +81,7 @@ public class NameIdTypeTriplet {
 	
 
 	public boolean equals(NameIdTypeTriplet obj2) {
+		
 		return (pid.equals(obj2.getPid()) &&
 				pidType.equals(obj2.getPidType()) &&
 				primaryNameFromPid.equals(obj2.getPrimaryNameFromPid()));
@@ -98,48 +93,6 @@ public class NameIdTypeTriplet {
 		return (pid == null &&
 				pidType == null &&
 				primaryNameFromPid == null);
-	}
-	
-	
-	// Resolve Triplet (name, id, pid type)
-	private NameIdTypeTriplet resolveTripletPid(NameIdTypeTriplet trip) {
-		if (!trip.isNull()) {
-			return trip;
-		}
-		
-		byte [] typePidByte = trip.getTypePid().getBytes();
-		logger.info("resolving handle");
-		List<Handles> typeRecord = handleRep.resolveHandle(typePidByte);
-		logger.info("resolved handle");
-		logger.info(String.valueOf(typeRecord.size()));
-		logger.info(":)");
-		String type;
-		
-		for (Handles h: typeRecord) {
-			type = h.getType();
-			switch(type) {
-				case "primaryNameFromPID":
-					trip.setPrimaryNameFromPid(h.getData());
-					break;
-				case "pid":
-					String pidStr = h.getData();
-					trip.setPid(pidStr);
-					if (pidStr.contains("handle")) {
-						trip.setPidType("handle");
-					}
-					else if (pidStr.contains("doi")) {
-						trip.setPidType("doi");
-					}
-					else {
-						trip.setPidType("unknown");
-					}
-					break;
-				default:
-					break;
-			}
-		}
-		logger.info(trip.toString());
-		return trip;
 	}
 	
 
