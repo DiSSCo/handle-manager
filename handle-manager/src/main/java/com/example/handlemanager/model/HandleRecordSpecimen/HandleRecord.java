@@ -10,9 +10,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
 
-import com.example.handlemanager.HandleFactory;
 import com.example.handlemanager.model.recordMetadataObjects.NameIdTypeTriplet;
 import com.example.handlemanager.model.repositoryObjects.Handles;
+import com.example.handlemanager.utils.HandleFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 

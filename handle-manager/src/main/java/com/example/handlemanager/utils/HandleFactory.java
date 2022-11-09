@@ -1,4 +1,4 @@
-package com.example.handlemanager;
+package com.example.handlemanager.utils;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;

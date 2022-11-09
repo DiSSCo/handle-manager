@@ -5,6 +5,9 @@ import static org.junit.Assert.*;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+
+import com.example.handlemanager.utils.HandleFactory;
+
 import org.junit.jupiter.api.BeforeEach;
 
 public class HandleFactoryTest {

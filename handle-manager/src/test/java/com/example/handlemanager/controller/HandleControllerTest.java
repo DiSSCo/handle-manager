@@ -6,6 +6,7 @@ import org.mockito.ArgumentMatchers;
 import static org.mockito.Mockito.when;
 
 import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,8 +27,6 @@ import com.example.handlemanager.domain.responses.*;
 import com.example.handlemanager.exceptions.PidCreationException;
 import com.example.handlemanager.service.HandleService;
 import com.fasterxml.jackson.databind.ObjectMapper; 
-
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(HandleController.class)
@@ -43,7 +42,15 @@ public class HandleControllerTest {
 	final String testVal = "abc";
 	final int requestLen = 3;
 	
+	HandleRecordRequest request;
+	HandleRecordResponse response;
 	
+	@BeforeEach
+	public void init() {
+		
+	}
+	
+	// Single Record Creation
 	@Test
 	public void handleRecordCreationTest() throws PidCreationException, Exception {
 		HandleRecordRequest request = new HandleRecordRequest();
@@ -57,7 +64,7 @@ public class HandleControllerTest {
 				.param("pidType", "handle")
 				.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
-				.andExpect(MockMvcResultMatchers.jsonPath("$.pid").value(testVal));
+				.andExpect(jsonPath("$.pid").value(testVal));
 	}
 	
 	@Test
@@ -73,7 +80,7 @@ public class HandleControllerTest {
 				.param("pidType", "doi")
 				.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
-				.andExpect(MockMvcResultMatchers.jsonPath("$.referent").value(testVal));
+				.andExpect(jsonPath("$.referent").value(testVal));
 	}
 	
 	@Test
@@ -89,7 +96,7 @@ public class HandleControllerTest {
 				.param("pidType", "digitalSpecimen")
 				.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
-				.andExpect(MockMvcResultMatchers.jsonPath("$.digitalOrPhysical").value(testVal));
+				.andExpect(jsonPath("$.digitalOrPhysical").value(testVal));
 	}
 	
 	@Test
@@ -105,9 +112,11 @@ public class HandleControllerTest {
 				.param("pidType", "digitalSpecimenBotany")
 				.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
-				.andExpect(MockMvcResultMatchers.jsonPath("$.objectType").value(testVal));
+				.andExpect(jsonPath("$.objectType").value(testVal));
 		
 	}
+	
+	// Batch Record Creation
 	
 	@Test
 	public void handleRecordBatchCreationTest() throws PidCreationException, Exception {
@@ -119,7 +128,8 @@ public class HandleControllerTest {
 				.param("pidType", "handle")
 				.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
-				.andExpect(MockMvcResultMatchers.jsonPath("$[0].pid").value(testVal));
+				.andExpect(jsonPath("$[0].pid").value(testVal))
+				.andExpect(jsonPath("$.length()").value(requestLen));
 	}
 	
 	@Test
@@ -132,7 +142,8 @@ public class HandleControllerTest {
 				.param("pidType", "doi")
 				.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
-				.andExpect(MockMvcResultMatchers.jsonPath("$[0].referentDoiName").value(testVal));
+				.andExpect(jsonPath("$[0].referentDoiName").value(testVal))
+				.andExpect(jsonPath("$.length()").value(requestLen));
 	}
 	
 	@Test
@@ -145,7 +156,8 @@ public class HandleControllerTest {
 				.param("pidType", "digitalSpecimen")
 				.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
-				.andExpect(MockMvcResultMatchers.jsonPath("$[0].specimenHost").value(testVal));
+				.andExpect(jsonPath("$[0].specimenHost").value(testVal))
+				.andExpect(jsonPath("$.length()").value(requestLen));
 	}
 	
 	@Test
@@ -158,7 +170,8 @@ public class HandleControllerTest {
 				.param("pidType", "digitalSpecimenBotany")
 				.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
-				.andExpect(MockMvcResultMatchers.jsonPath("$[0].objectType").value(testVal));
+				.andExpect(jsonPath("$[0].objectType").value(testVal))
+				.andExpect(jsonPath("$.length()").value(requestLen));
 	}
 	
 	
@@ -170,7 +183,7 @@ public class HandleControllerTest {
 	
 	
 	
-	// Build Lists
+	// Build Request and Response Lists
 	
 	// Handles
 	private List<HandleRecordRequest> buildHandleRequestList(){

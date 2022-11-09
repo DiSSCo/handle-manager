@@ -6,6 +6,7 @@ import java.io.StringWriter;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -18,11 +19,9 @@ import java.util.Map;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 
-import com.example.handlemanager.HandleFactory;
 import com.example.handlemanager.domain.requests.*;
 import com.example.handlemanager.domain.responses.*;
 import com.example.handlemanager.exceptions.*;
@@ -37,6 +36,7 @@ import com.example.handlemanager.model.recordMetadataObjects.NameIdTypeTriplet;
 import com.example.handlemanager.model.recordMetadataObjects.Referent;
 import com.example.handlemanager.model.repositoryObjects.Handles;
 import com.example.handlemanager.repository.HandleRepository;
+import com.example.handlemanager.utils.HandleFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -53,9 +53,10 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-//import net.handle.hdllib.HandleException;
-//import net.handle.hdllib.HandleValue;
 import lombok.RequiredArgsConstructor;
+import static com.example.handlemanager.utils.Resources.getDataFromType;
+import com.example.handlemanager.utils.Resources;
+
 
 // Postgres value in (value1, value2)..
 // Generate all handles before posting...
@@ -70,11 +71,12 @@ public class HandleService {
 	@Autowired
 	PidTypeService pidTypeService;
 	
+	@Autowired
+	private Clock clock;
+	
 	private HandleFactory hf = new HandleFactory();
 	Logger logger =  Logger.getLogger(HandleService.class.getName());	
 	ObjectMapper mapper = new ObjectMapper();
-	
-	private String admin = "0fff000000153330303a302e4e412f32302e353030302e31303235000000c8";
 	
 
 	// Return all handle identifiers, option to filter by status
@@ -228,12 +230,11 @@ public class HandleService {
 		List<Handles> handleRecord = new ArrayList<Handles>();
 		
 		// 100: Admin Handle
-		handleRecord.add(genAdminHandle(handle, timestamp));
+		handleRecord.add(Resources.genAdminHandle(handle, timestamp));
 		
 		int i = 1;
 		// 1: Pid
-		byte [] pid = null;
-		pid = concatBytes("https://hdl.handle.net/".getBytes(), handle); // TODO this should check if it's a DOI?
+		byte [] pid = concatBytes("https://hdl.handle.net/".getBytes(), handle); // TODO this should check if it's a DOI?
 		handleRecord.add(new Handles(handle, i++, "pid", pid, timestamp));		
 		
 		//2: PidIssuer
@@ -303,7 +304,7 @@ public class HandleService {
 		handleRecord.add(new Handles (handle, i++, "specimenHost", specimenHost, timestamp));
 		
 		// 16: In collectionFacillity
-		String inCollectionFacillity = pidTypeService.resolveTypePid(request.getInCollectionFacillityPid());
+		String inCollectionFacillity = pidTypeService.resolveTypePid(request.getInCollectionFacilityPid());
 		handleRecord.add(new Handles (handle, i++, "inCollectionFacillity", inCollectionFacillity, timestamp));
 		
 		return handleRecord;
@@ -333,8 +334,6 @@ public class HandleService {
 		}
 		return outputStream.toByteArray();
 	}
-	
-
 	
 	private byte[] setLocations(String[] objectLocations)  throws TransformerException, ParserConfigurationException {
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -368,7 +367,7 @@ public class HandleService {
 	
 	private String getDate() {
 		DateTimeFormatter dt = DateTimeFormatter.ofPattern("yyyy-mm-dd");
-		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime now = LocalDateTime.now(clock);
 		return dt.format(now);
 	}
 	
@@ -390,9 +389,6 @@ public class HandleService {
 		return handleRep.resolveHandle(h.getBytes());
 	}
 
-	
-	
-	
 
 	// Given a list of Handles (of unknown pidStatus), return HandleRecord
 	
@@ -466,46 +462,10 @@ public class HandleService {
 	 
 	 // Admin Handle Generation
 	 
-	 private Handles genAdminHandle(byte [] handle, long timestamp) {
-			return new Handles(handle, 100, "HS_ADMIN".getBytes(), decodeAdmin(), timestamp);
-		}
-	 
-	 private byte[] decodeAdmin() {
-			byte[] adminByte = new byte[admin.length()/2];
-			for (int i = 0; i < admin.length(); i += 2) {
-				adminByte[i / 2] = hexToByte(admin.substring(i, i + 2));
-		    }
-			return adminByte;		
-		}
-		
-	private byte hexToByte(String hexString) {
-		int firstDigit = toDigit(hexString.charAt(0));
-		int secondDigit = toDigit(hexString.charAt(1));
-		return (byte) ((firstDigit << 4) + secondDigit);
-	}
-		
-
-	private int toDigit(char hexChar) {
-		int digit = Character.digit(hexChar, 16);
-		return digit;
-	}
-	
-	
-	//public HandleRecordResponse
 	
 	
 	
-	
-	// Search list of handle records for the appropriate value
-	private String getDataFromType(String type, List<Handles> hList) {
-		for (Handles h: hList) {
-			if (h.getType().equals(type)) {
-				return h.getData();
-			}
-		}
-		return ""; // This should maybe return a warning? 
-	}
-			
+	//public HandleRecordResponse		
 	
 	
 	// LEGACY OBJECTS: BELOW THIS LINE SHOULD BE REDONE
@@ -842,8 +802,5 @@ public class HandleService {
 			
 			handleRep.saveAll(recordsToSave);
 		}	
-		
-
-		
 		
 }

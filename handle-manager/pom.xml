@@ -45,35 +45,6 @@
 			<artifactId>javax.annotation-api</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>	
-		    <exclusions>
-        		<exclusion>
-            	<groupId>com.vaadin.external.google</groupId>
-            	<artifactId>android-json</artifactId>
-        	</exclusion>
-    	</exclusions>
-		</dependency>
-		<dependency>
-   			<groupId>org.mockito</groupId>
-   			<artifactId>mockito-core</artifactId>
-   		</dependency>
-		 <dependency>
-		    <groupId>org.springframework.boot</groupId>
-    		<artifactId>spring-boot-starter-webflux</artifactId>
-		</dependency>
-		<!--
-		<dependency>
-    		<groupId>org.springframework</groupId>
-    		<artifactId>spring-context-support</artifactId>
-		</dependency> 
-
-		<dependency>
-    		<groupId>org.springframework</groupId>
-    		<artifactId>spring-context</artifactId>
-		</dependency>		-->
-		<dependency>
     		<groupId>org.springframework.boot</groupId>
     		<artifactId>spring-boot-starter-cache</artifactId>
 		</dependency> 
@@ -113,11 +84,6 @@
 		    <artifactId>h2</artifactId>
 		    <scope>test</scope>
 		</dependency>
-      	<!--
-      	<dependency>
-  			<groupId>io.github.openfeign</groupId>
-   			<artifactId>feign-httpclient</artifactId>
-		</dependency> -->
 		
 		<!-- 3. Handle Client Dependencies -->
 		<dependency>
@@ -153,6 +119,30 @@
         <dependency>
     		<groupId>junit</groupId>
 		    <artifactId>junit</artifactId>
+		</dependency>
+		<dependency>
+   			<groupId>org.mockito</groupId>
+   			<artifactId>mockito-core</artifactId>
+   		</dependency>
+		 <dependency>
+		    <groupId>org.springframework.boot</groupId>
+    		<artifactId>spring-boot-starter-webflux</artifactId>
+		</dependency>
+		<dependency>
+    		<groupId>org.mockito</groupId>
+		    <artifactId>mockito-inline</artifactId>
+		    <scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>	
+		    <exclusions>
+        		<exclusion>
+            	<groupId>com.vaadin.external.google</groupId>
+            	<artifactId>android-json</artifactId>
+        	</exclusion>
+    	</exclusions>
 		</dependency>
 		
 		<!--Other Library Dependencies -->
