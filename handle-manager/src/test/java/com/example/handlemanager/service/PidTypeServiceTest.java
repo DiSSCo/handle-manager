@@ -26,6 +26,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 @ExtendWith(MockitoExtension.class)
 @SpringBootTest
@@ -47,39 +48,80 @@ public class PidTypeServiceTest {
 	private long timestamp;
 	
 	// These are what the values are called in the handle record
-	private final String pid = PTR_PID;
-	private final String pidType = PTR_TYPE;
-	private final String primaryNameFromPid = PTR_PRIMARY_NAME;
+	private String pid;
+	private String pidType;
+	private String primaryNameFromPid;
+	private String registrationAgencyDoiName;
 	
-	private final byte[] recordPid = PID_ISSUER_PID.getBytes();
+	Logger logger =  Logger.getLogger(PidTypeServiceTest.class.getName());	
+	
+	private byte[] recordPid;
 	
 	private List<Handles> typeRecord;
 	
 	
 	@BeforeEach
 	public void init() {
-		timestamp = initTimestamp();
-		initTestPidTypeRecord();
-		
+		timestamp = initTimestamp();		
 	}
 	
 	@Test
-	public void testPidTypeRecordResolution() {
-		//when(handleRep.resolveHandle(eq(recordPid))).thenReturn(typeRecord);
-		when(handleRep.resolveHandle(any(byte[].class))).thenReturn(typeRecord);
-		String expected = PTR_PID_ISSUER;
-		String returned = pidTypeService.resolveTypePid(PID_ISSUER_PID);
+	public void testPidTypeRecordResolutionHandle() {
+		initTestPidTypeRecordHandle();
+		when(handleRep.resolveHandle(eq(recordPid))).thenReturn(typeRecord);
+		String expected = PTR_HANDLE_RECORD;
+		String returned = pidTypeService.resolveTypePid(PID_TYPE_RECORD_HANDLE);
 		
 		assert(expected.equals(returned));
 	}
 	
-	private void initTestPidTypeRecord() {		
-		typeRecord = new ArrayList<>();
-		int i = 1;
-		typeRecord.add(new Handles(recordPid, i++, "pid", pid, timestamp));
-		typeRecord.add(new Handles(recordPid, i++, "pidType", pidType, timestamp));
-		typeRecord.add(new Handles(recordPid, i++, "primaryNameFromPid", primaryNameFromPid, timestamp));
+	@Test
+	public void TestPidTypeRecordResolutionDoi() {
+		initTestPidTypeRecordDoi();
 		
+		when(handleRep.resolveHandle(eq(recordPid))).thenReturn(typeRecord);
+		String expected = PTR_DOI_RECORD;
+		String returned = pidTypeService.resolveTypePid(PID_TYPE_RECORD_DOI);
+		
+		logger.info("Expected: "  + expected);
+		logger.info("Returned: " + returned);
+		
+		assert(expected.equals(returned));
+	}
+	
+	
+	private void initTestPidTypeRecordHandle() {		
+		recordPid = PID_TYPE_RECORD_HANDLE.getBytes();
+		
+		pid = PTR_HANDLE_PID;
+		pidType = PTR_HANDLE_TYPE;
+		primaryNameFromPid = PTR_HANDLE_PRIMARY_NAME;
+		
+		typeRecord = initTestPidTypeRecord(false);
+	}
+	
+	private void initTestPidTypeRecordDoi() {		
+		recordPid = PID_TYPE_RECORD_DOI.getBytes();
+		pid = PTR_DOI_PID;
+		pidType = PTR_DOI_TYPE;
+		primaryNameFromPid = PTR_DOI_PRIMARY_NAME;
+		registrationAgencyDoiName = PTR_DOI_REGISTRATION_AGENCY_DOI_NAME;
+		
+		typeRecord = initTestPidTypeRecord(true);
+	}
+	
+	private List<Handles> initTestPidTypeRecord(boolean isDoi){
+		List<Handles> record = new ArrayList<>();
+		int i = 1;
+		record.add(new Handles(recordPid, i++, "pid", pid, timestamp));
+		record.add(new Handles(recordPid, i++, "pidType", pidType, timestamp));
+		record.add(new Handles(recordPid, i++, "primaryNameFromPid", primaryNameFromPid, timestamp));
+		
+		if (isDoi) {
+			registrationAgencyDoiName = PTR_DOI_REGISTRATION_AGENCY_DOI_NAME;
+			record.add(new Handles(recordPid, i++, "registrationAgencyDoiName", registrationAgencyDoiName, timestamp));
+		}
+		return record;
 	}
 	
 }

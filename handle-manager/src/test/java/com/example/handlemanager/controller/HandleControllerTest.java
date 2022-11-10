@@ -21,12 +21,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import com.example.handlemanager.domain.requests.*;
 import com.example.handlemanager.domain.responses.*;
 import com.example.handlemanager.exceptions.PidCreationException;
 import com.example.handlemanager.service.HandleService;
+import com.example.handlemanager.service.PidTypeServiceTest;
 import com.fasterxml.jackson.databind.ObjectMapper; 
+
+import static com.example.handlemanager.utils.TestUtils.*;
+
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(HandleController.class)
@@ -42,8 +47,7 @@ public class HandleControllerTest {
 	final String testVal = "abc";
 	final int requestLen = 3;
 	
-	HandleRecordRequest request;
-	HandleRecordResponse response;
+	Logger logger =  Logger.getLogger(PidTypeServiceTest.class.getName());
 	
 	@BeforeEach
 	public void init() {
@@ -53,124 +57,235 @@ public class HandleControllerTest {
 	// Single Record Creation
 	@Test
 	public void handleRecordCreationTest() throws PidCreationException, Exception {
-		HandleRecordRequest request = new HandleRecordRequest();
-		HandleRecordResponse response = new HandleRecordResponse();
-		response.setPid(testVal);
+		HandleRecordRequest request = generateTestHandleRequest();
+		HandleRecordResponse response = generateTestHandleResponse();
 		
-		when(service.createRecord(any(HandleRecordRequest.class), any(String.class))).thenReturn(response);
-		
+		when(service.createRecord(eq(request), eq("hdl"))).thenReturn(response);
+			
 		mockMvc.perform(post("/api/createRecord")
 				.content(mapper.writeValueAsString(request))
 				.param("pidType", "handle")
 				.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.pid").value(testVal));
+				.andExpect(jsonPath("$.pid").value(response.getPid()))
+				.andExpect(jsonPath("$.pidIssuer").value(response.getPidIssuer()))
+				.andExpect(jsonPath("$.digitalObjectType").value(response.getDigitalObjectType()))
+				.andExpect(jsonPath("$.digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
+				.andExpect(jsonPath("$.loc").value(response.getLoc()))
+				.andExpect(jsonPath("$.issueDate").value(response.getIssueDate()))
+				.andExpect(jsonPath("$.issueNumber").value(response.getIssueNumber()))
+				.andExpect(jsonPath("$.pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
+				.andExpect(jsonPath("$.hs_ADMIN").value(response.getHS_ADMIN()));
 	}
 	
 	@Test
 	public void doiRecordCreationTest() throws PidCreationException, Exception {
-		DoiRecordRequest request = new DoiRecordRequest(); 
-		DoiRecordResponse response = new DoiRecordResponse();
+		DoiRecordRequest request = generateTestDoiRequest();
+		DoiRecordResponse response = generateTestDoiResponse(); 
 		response.setReferent(testVal);
 		
-		when(service.createRecord(any(DoiRecordRequest.class), any(String.class))).thenReturn(response);
+		when(service.createRecord(eq(request), eq("doi"))).thenReturn(response);
 		
 		mockMvc.perform(post("/api/createRecord")
 				.content(mapper.writeValueAsString(request))
 				.param("pidType", "doi")
 				.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.referent").value(testVal));
+				.andExpect(jsonPath("$.pid").value(response.getPid()))
+				.andExpect(jsonPath("$.pidIssuer").value(response.getPidIssuer()))
+				.andExpect(jsonPath("$.digitalObjectType").value(response.getDigitalObjectType()))
+				.andExpect(jsonPath("$.digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
+				.andExpect(jsonPath("$.loc").value(response.getLoc()))
+				.andExpect(jsonPath("$.issueDate").value(response.getIssueDate()))
+				.andExpect(jsonPath("$.issueNumber").value(response.getIssueNumber()))
+				.andExpect(jsonPath("$.pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
+				.andExpect(jsonPath("$.hs_ADMIN").value(response.getHS_ADMIN()))
+				.andExpect(jsonPath("$.referentDoiName").value(response.getReferentDoiName()))
+				.andExpect(jsonPath("$.referent").value(response.getReferent()));
 	}
 	
 	@Test
 	public void digitalSpecimenCreationTest() throws PidCreationException, Exception {
-		DigitalSpecimenRequest request = new DigitalSpecimenRequest(); 
-		DigitalSpecimenResponse response = new DigitalSpecimenResponse();
-		response.setDigitalOrPhysical(testVal);
+		DigitalSpecimenRequest request = generateTestDigitalSpecimenRequest();
+		DigitalSpecimenResponse response = generateTestDigitalSpecimenResponse(); 
 		
-		when(service.createRecord(any(DigitalSpecimenRequest.class), any(String.class))).thenReturn(response);
+		when(service.createRecord(eq(request), eq("ds"))).thenReturn(response);
+		
 		
 		mockMvc.perform(post("/api/createRecord")
 				.content(mapper.writeValueAsString(request))
 				.param("pidType", "digitalSpecimen")
 				.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.digitalOrPhysical").value(testVal));
+				.andExpect(jsonPath("$.pid").value(response.getPid()))
+				.andExpect(jsonPath("$.pidIssuer").value(response.getPidIssuer()))
+				.andExpect(jsonPath("$.digitalObjectType").value(response.getDigitalObjectType()))
+				.andExpect(jsonPath("$.digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
+				.andExpect(jsonPath("$.loc").value(response.getLoc()))
+				.andExpect(jsonPath("$.issueDate").value(response.getIssueDate()))
+				.andExpect(jsonPath("$.issueNumber").value(response.getIssueNumber()))
+				.andExpect(jsonPath("$.pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
+				.andExpect(jsonPath("$.hs_ADMIN").value(response.getHS_ADMIN()))
+				.andExpect(jsonPath("$.referentDoiName").value(response.getReferentDoiName()))
+				.andExpect(jsonPath("$.referent").value(response.getReferent()))
+				.andExpect(jsonPath("$.digitalOrPhysical").value(response.getDigitalOrPhysical()))
+				.andExpect(jsonPath("$.specimenHost").value(response.getSpecimenHost()))
+				.andExpect(jsonPath("$.inCollectionFacility").value(response.getInCollectionFacility()));
+				//.andExpect(jsonPath("$.digitalOrPhysical").value(response.getDigitalOrPhysical()));
 	}
 	
 	@Test
 	public void digitalSpecimenBotanyCreationTest() throws PidCreationException, Exception {
-		DigitalSpecimenBotanyRequest request = new DigitalSpecimenBotanyRequest(); 
-		DigitalSpecimenBotanyResponse response = new DigitalSpecimenBotanyResponse();
-		response.setObjectType(testVal);
-		
-		when(service.createRecord(any(DigitalSpecimenRequest.class), any(String.class))).thenReturn(response);
+		DigitalSpecimenBotanyRequest request = generateTestDigitalSpecimenBotanyRequest(); 
+		DigitalSpecimenBotanyResponse response = generateTestDigitalSpecimenBotanyResponse();
+	
+		when(service.createRecord(eq(request), eq("dsB"))).thenReturn(response);
 		
 		mockMvc.perform(post("/api/createRecord")
 				.content(mapper.writeValueAsString(request))
 				.param("pidType", "digitalSpecimenBotany")
 				.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.objectType").value(testVal));
-		
+				.andExpect(jsonPath("$.pid").value(response.getPid()))
+				.andExpect(jsonPath("$.pidIssuer").value(response.getPidIssuer()))
+				.andExpect(jsonPath("$.digitalObjectType").value(response.getDigitalObjectType()))
+				.andExpect(jsonPath("$.digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
+				.andExpect(jsonPath("$.loc").value(response.getLoc()))
+				.andExpect(jsonPath("$.issueDate").value(response.getIssueDate()))
+				.andExpect(jsonPath("$.issueNumber").value(response.getIssueNumber()))
+				.andExpect(jsonPath("$.pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
+				.andExpect(jsonPath("$.hs_ADMIN").value(response.getHS_ADMIN()))
+				.andExpect(jsonPath("$.referentDoiName").value(response.getReferentDoiName()))
+				.andExpect(jsonPath("$.referent").value(response.getReferent()))
+				.andExpect(jsonPath("$.digitalOrPhysical").value(response.getDigitalOrPhysical()))
+				.andExpect(jsonPath("$.specimenHost").value(response.getSpecimenHost()))
+				.andExpect(jsonPath("$.inCollectionFacility").value(response.getInCollectionFacility()))
+				.andExpect(jsonPath("$.objectType").value(response.getObjectType()))
+				.andExpect(jsonPath("$.preservedOrLiving").value(response.getPreservedOrLiving()));
 	}
 	
 	// Batch Record Creation
 	
 	@Test
 	public void handleRecordBatchCreationTest() throws PidCreationException, Exception {
-		List<HandleRecordRequest> request = buildHandleRequestList();
-		List<HandleRecordResponse> response = buildHandleResponseList();
-		when(service.createHandleRecordBatch(ArgumentMatchers.<HandleRecordRequest>anyList())).thenReturn(response);
+		List<HandleRecordRequest> requestList = buildHandleRequestList();
+		List<HandleRecordResponse> responseList = buildHandleResponseList();
+		HandleRecordRequest request = requestList.get(0);
+		HandleRecordResponse response = responseList.get(0);
+		
+		when(service.createHandleRecordBatch(eq(requestList))).thenReturn(responseList);
+		
 		mockMvc.perform(post("/api/createRecordBatch")
-				.content(mapper.writeValueAsString(request))
+				.content(mapper.writeValueAsString(requestList))
 				.param("pidType", "handle")
 				.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$[0].pid").value(testVal))
+				.andExpect(jsonPath("$[0].pid").value(response.getPid()))
+				.andExpect(jsonPath("$[0].pid").value(response.getPid()))
+				.andExpect(jsonPath("$[0].pidIssuer").value(response.getPidIssuer()))
+				.andExpect(jsonPath("$[0].digitalObjectType").value(response.getDigitalObjectType()))
+				.andExpect(jsonPath("$[0].digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
+				.andExpect(jsonPath("$[0].loc").value(response.getLoc()))
+				.andExpect(jsonPath("$[0].issueDate").value(response.getIssueDate()))
+				.andExpect(jsonPath("$[0].issueNumber").value(response.getIssueNumber()))
+				.andExpect(jsonPath("$[0].pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
+				.andExpect(jsonPath("$[0].hs_ADMIN").value(response.getHS_ADMIN()))
 				.andExpect(jsonPath("$.length()").value(requestLen));
 	}
 	
 	@Test
 	public void doiRecordBatchCreationTest() throws PidCreationException, Exception {
-		List<DoiRecordRequest> request = buildDoiRequestList();
-		List<DoiRecordResponse> response = buildDoiResponseList();
-		when(service.createDoiRecordBatch(ArgumentMatchers.<DoiRecordRequest>anyList())).thenReturn(response);
+		List<DoiRecordRequest> requestList = buildDoiRequestList();
+		List<DoiRecordResponse> responseList = buildDoiResponseList();
+		DoiRecordRequest request = requestList.get(0);
+		DoiRecordResponse response = responseList.get(0);
+		
+		when(service.createDoiRecordBatch(eq(requestList))).thenReturn(responseList);
+		
 		mockMvc.perform(post("/api/createRecordBatch")
-				.content(mapper.writeValueAsString(request))
+				.content(mapper.writeValueAsString(requestList))
 				.param("pidType", "doi")
 				.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$[0].referentDoiName").value(testVal))
+				.andExpect(jsonPath("$[0].pid").value(response.getPid()))
+				.andExpect(jsonPath("$[0].pid").value(response.getPid()))
+				.andExpect(jsonPath("$[0].pidIssuer").value(response.getPidIssuer()))
+				.andExpect(jsonPath("$[0].digitalObjectType").value(response.getDigitalObjectType()))
+				.andExpect(jsonPath("$[0].digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
+				.andExpect(jsonPath("$[0].loc").value(response.getLoc()))
+				.andExpect(jsonPath("$[0].issueDate").value(response.getIssueDate()))
+				.andExpect(jsonPath("$[0].issueNumber").value(response.getIssueNumber()))
+				.andExpect(jsonPath("$[0].pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
+				.andExpect(jsonPath("$[0].hs_ADMIN").value(response.getHS_ADMIN()))
+				.andExpect(jsonPath("$[0].referentDoiName").value(response.getReferentDoiName()))
+				.andExpect(jsonPath("$[0].referent").value(response.getReferent()))
 				.andExpect(jsonPath("$.length()").value(requestLen));
 	}
 	
 	@Test
 	public void digitalSpecimenBatchCreationTest() throws PidCreationException, Exception {
-		List<DigitalSpecimenRequest> request = buildDigitalSpecimenRequestList();
-		List<DigitalSpecimenResponse> response = buildDigitalSpecimenResponseList();
-		when(service.createDigitalSpecimenBatch(ArgumentMatchers.<DigitalSpecimenRequest>anyList())).thenReturn(response);
+		List<DigitalSpecimenRequest> requestList = buildDigitalSpecimenRequestList();
+		List<DigitalSpecimenResponse> responseList = buildDigitalSpecimenResponseList();
+		DigitalSpecimenRequest request = requestList.get(0);
+		DigitalSpecimenResponse response = responseList.get(0);		
+		
+		when(service.createDigitalSpecimenBatch(eq(requestList))).thenReturn(responseList);
+		
 		mockMvc.perform(post("/api/createRecordBatch")
-				.content(mapper.writeValueAsString(request))
+				.content(mapper.writeValueAsString(requestList))
 				.param("pidType", "digitalSpecimen")
 				.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$[0].specimenHost").value(testVal))
+				.andExpect(jsonPath("$[0].pid").value(response.getPid()))
+				.andExpect(jsonPath("$[0].pid").value(response.getPid()))
+				.andExpect(jsonPath("$[0].pidIssuer").value(response.getPidIssuer()))
+				.andExpect(jsonPath("$[0].digitalObjectType").value(response.getDigitalObjectType()))
+				.andExpect(jsonPath("$[0].digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
+				.andExpect(jsonPath("$[0].loc").value(response.getLoc()))
+				.andExpect(jsonPath("$[0].issueDate").value(response.getIssueDate()))
+				.andExpect(jsonPath("$[0].issueNumber").value(response.getIssueNumber()))
+				.andExpect(jsonPath("$[0].pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
+				.andExpect(jsonPath("$[0].hs_ADMIN").value(response.getHS_ADMIN()))
+				.andExpect(jsonPath("$[0].referentDoiName").value(response.getReferentDoiName()))
+				.andExpect(jsonPath("$[0].referent").value(response.getReferent()))
+				.andExpect(jsonPath("$[0].digitalOrPhysical").value(response.getDigitalOrPhysical()))
+				.andExpect(jsonPath("$[0].specimenHost").value(response.getSpecimenHost()))
+				.andExpect(jsonPath("$[0].inCollectionFacility").value(response.getInCollectionFacility()))
 				.andExpect(jsonPath("$.length()").value(requestLen));
+			
 	}
 	
 	@Test
 	public void digitalSpecimenBotanyBatchCreationTest() throws PidCreationException, Exception {
-		List<DigitalSpecimenBotanyRequest> request = buildDigitalSpecimenBotanyRequestList();
-		List<DigitalSpecimenBotanyResponse> response = buildDigitalSpecimenBotanyResponseList();
-		when(service.createDigitalSpecimenBotanyBatch(ArgumentMatchers.<DigitalSpecimenBotanyRequest>anyList())).thenReturn(response);
+		List<DigitalSpecimenBotanyRequest> requestList = buildDigitalSpecimenBotanyRequestList();
+		List<DigitalSpecimenBotanyResponse> responseList = buildDigitalSpecimenBotanyResponseList();
+		DigitalSpecimenBotanyRequest request = requestList.get(0);
+		DigitalSpecimenBotanyResponse response = responseList.get(0);
+		
+		when(service.createDigitalSpecimenBotanyBatch(eq(requestList))).thenReturn(responseList);
+		
 		mockMvc.perform(post("/api/createRecordBatch")
-				.content(mapper.writeValueAsString(request))
+				.content(mapper.writeValueAsString(requestList))
 				.param("pidType", "digitalSpecimenBotany")
 				.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$[0].objectType").value(testVal))
+				.andExpect(jsonPath("$[0].pid").value(response.getPid()))
+				.andExpect(jsonPath("$[0].pid").value(response.getPid()))
+				.andExpect(jsonPath("$[0].pidIssuer").value(response.getPidIssuer()))
+				.andExpect(jsonPath("$[0].digitalObjectType").value(response.getDigitalObjectType()))
+				.andExpect(jsonPath("$[0].digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
+				.andExpect(jsonPath("$[0].loc").value(response.getLoc()))
+				.andExpect(jsonPath("$[0].issueDate").value(response.getIssueDate()))
+				.andExpect(jsonPath("$[0].issueNumber").value(response.getIssueNumber()))
+				.andExpect(jsonPath("$[0].pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
+				.andExpect(jsonPath("$[0].hs_ADMIN").value(response.getHS_ADMIN()))
+				.andExpect(jsonPath("$[0].referentDoiName").value(response.getReferentDoiName()))
+				.andExpect(jsonPath("$[0].referent").value(response.getReferent()))
+				.andExpect(jsonPath("$[0].digitalOrPhysical").value(response.getDigitalOrPhysical()))
+				.andExpect(jsonPath("$[0].specimenHost").value(response.getSpecimenHost()))
+				.andExpect(jsonPath("$[0].inCollectionFacility").value(response.getInCollectionFacility()))
+				.andExpect(jsonPath("$[0].objectType").value(response.getObjectType()))
+				.andExpect(jsonPath("$[0].preservedOrLiving").value(response.getPreservedOrLiving()))
 				.andExpect(jsonPath("$.length()").value(requestLen));
 	}
 	
@@ -188,15 +303,16 @@ public class HandleControllerTest {
 	// Handles
 	private List<HandleRecordRequest> buildHandleRequestList(){
 		List<HandleRecordRequest> requestList= new ArrayList<HandleRecordRequest>();
+		HandleRecordRequest request = generateTestHandleRequest();
+		
 		for (int i=0; i<requestLen; i++) {
-			requestList.add(new HandleRecordRequest());
+			requestList.add(request);
 		}
 		return requestList;
 	}
 	private List<HandleRecordResponse> buildHandleResponseList(){
 		List<HandleRecordResponse> responseList= new ArrayList<HandleRecordResponse>();
-		HandleRecordResponse response = new HandleRecordResponse();
-		response.setPid(testVal);
+		HandleRecordResponse response = generateTestHandleResponse();
 		
 		for (int i=0; i<requestLen; i++) {
 			responseList.add(response);
@@ -207,8 +323,9 @@ public class HandleControllerTest {
 	// DOIs
 	private List<DoiRecordRequest> buildDoiRequestList(){
 		List<DoiRecordRequest> requestList= new ArrayList<DoiRecordRequest>();
+		DoiRecordRequest request = generateTestDoiRequest();
 		for (int i=0; i<requestLen; i++) {
-			requestList.add(new DoiRecordRequest());
+			requestList.add(request);
 		}
 		return requestList;
 	}
@@ -226,8 +343,9 @@ public class HandleControllerTest {
 	// DigitalSpecimens
 	private List<DigitalSpecimenRequest> buildDigitalSpecimenRequestList(){
 		List<DigitalSpecimenRequest> requestList= new ArrayList<DigitalSpecimenRequest>();
+		DigitalSpecimenRequest request = generateTestDigitalSpecimenRequest();
 		for (int i=0; i<requestLen; i++) {
-			requestList.add(new DigitalSpecimenRequest());
+			requestList.add(request);
 		}
 		return requestList;
 	}
@@ -246,8 +364,9 @@ public class HandleControllerTest {
 	//DigitalSpecimenBotany
 	private List<DigitalSpecimenBotanyRequest> buildDigitalSpecimenBotanyRequestList(){
 		List<DigitalSpecimenBotanyRequest> responseList= new ArrayList<DigitalSpecimenBotanyRequest>();
+		DigitalSpecimenBotanyRequest request = generateTestDigitalSpecimenBotanyRequest();
 		for (int i=0; i<requestLen; i++) {
-			responseList.add(new DigitalSpecimenBotanyRequest());
+			responseList.add(request);
 		}
 		return responseList;
 	}
