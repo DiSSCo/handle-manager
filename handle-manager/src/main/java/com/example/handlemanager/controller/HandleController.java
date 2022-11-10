@@ -67,8 +67,6 @@ public class HandleController {
 		return ResponseEntity.ok(service.createDigitalSpecimenBotanyBatch(dsB));
 	}
 	
-	
-	
 	// Create Single Record
 	@PostMapping(value="/createRecord", params= "pidType=handle")
 	public ResponseEntity<?> createRecord(
@@ -96,7 +94,7 @@ public class HandleController {
 	public ResponseEntity<?> createRecord(
 			@RequestBody DigitalSpecimenRequest ds) {
 		try {
-			return ResponseEntity.ok(service.createRecord(ds, "doi"));
+			return ResponseEntity.ok(service.createRecord(ds, "ds"));
 		} catch (PidCreationException e) {
 			e.printStackTrace();
 			return new ResponseEntity<>("Unable to create record", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -144,10 +142,9 @@ public class HandleController {
 		return ResponseEntity.ok(handleList);
 	}
 	
-	// Resolve a handle
+
 	
-	
-	
+	/*
 	
 	public ResponseEntity<?> resolveHandle(@RequestParam(name="pid") String pid) throws JsonMappingException, JsonProcessingException{
 		HandleRecord record = service.resolveHandleRecord(pid);
@@ -158,18 +155,8 @@ public class HandleController {
 	}
 	
 	// Resolve a handle
-	/*
-	@GetMapping(value="/**")
-	public ResponseEntity<?> resolveHandle(@RequestParam(name="handle") String handle) throws JsonMappingException, JsonProcessingException{
-		HandleRecord record = service.resolveHandleRecord(handle);
-		if (record.isEmpty()) {
-			return new ResponseEntity<>("Handle record does not exist", HttpStatus.NOT_FOUND);
-		}
-		return ResponseEntity.ok(record);
-		
-		//TODO: might be nice to allow users to select which parts of the handle record they want to resolve		
-	}
-	*/
+	
+	
 	// Reserve a set number of handles
 	@PostMapping(value="/reserve")
 	public ResponseEntity<?> reserveHandles(@RequestParam(name="reserves") int reserves) {
@@ -266,6 +253,6 @@ public class HandleController {
 		service.deleteHandleSafe(handleStr);
 		
 		return ResponseEntity.ok(service.createTombstone(handle, tombstone));
-	}
+	} */
 	
 }
