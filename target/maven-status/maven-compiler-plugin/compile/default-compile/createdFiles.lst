@@ -1,0 +1,7 @@
+com/example/handlemanager/HandleManagerApplication.class
+com/example/handlemanager/HandleFactory.class
+com/example/handlemanager/security/HandleSessionsAuthenticator.class
+com/example/handlemanager/controller/HandleController.class
+com/example/handlemanager/service/HandleService.class
+com/example/handlemanager/repository/HandleRepository.class
+com/example/handlemanager/security/HandleAdmin.class
