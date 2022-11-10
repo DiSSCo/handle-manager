@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,9 +55,6 @@ public class HandleServiceTest {
 	
 	private MockedStatic<Instant> mockedStatic;
 	private List<Handles> handleRecord;
-	private String pidTypeRecord = PTR_PID_ISSUER;
-	final private String testVal = "abc";
-	private List<byte[]> handleList;
 	private final static LocalDate LOCAL_DATE = LocalDate.of(1989, 01, 13);
 	
 	
@@ -92,13 +90,7 @@ public class HandleServiceTest {
 	
 	private HandleRecordResponse initTestResponse() {
 		HandleRecordResponse response = new HandleRecordResponse();
-		response.setPid("20.5000.1025/abc");
-		response.setPidIssuer(testVal);
-		response.setDigitalObjectSubtype(testVal);
-		response.setDigitalObjectType(testVal);
-		response.setLoc(testVal);
-		response.setIssueDate(testVal);
-		response.setPidStatus(testVal);
+		
 		return response;	
 	}
 	
@@ -107,15 +99,20 @@ public class HandleServiceTest {
 		return null;
 	}
 		
+	/*
 	private void initDate() {
 		clock = Clock.fixed(LOCAL_DATE.atStartOfDay(ZoneId.of("UTC")).toInstant(), ZoneId.of("UTC"));
 	}
-	
+	*/
 	private void initTime() {
+		Clock clock = Clock.fixed(CREATED, ZoneOffset.UTC);
 		Instant instant = Instant.now(clock);
+		
+		
 		mockedStatic = mockStatic(Instant.class);
-		mockedStatic = mockStatic(Instant.class);
-		mockedStatic.when(Instant::now).thenReturn(instant); // Is this global?
+		mockedStatic.when(Instant::now).thenReturn(instant); 
+		
+		
 	}
 	
 	

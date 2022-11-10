@@ -44,7 +44,6 @@ public class HandleControllerTest {
 	private MockMvc mockMvc;
 
 	ObjectMapper mapper = new ObjectMapper();
-	final String testVal = "abc";
 	final int requestLen = 3;
 	
 	Logger logger =  Logger.getLogger(PidTypeServiceTest.class.getName());
@@ -82,7 +81,6 @@ public class HandleControllerTest {
 	public void doiRecordCreationTest() throws PidCreationException, Exception {
 		DoiRecordRequest request = generateTestDoiRequest();
 		DoiRecordResponse response = generateTestDoiResponse(); 
-		response.setReferent(testVal);
 		
 		when(service.createRecord(eq(request), eq("doi"))).thenReturn(response);
 		
@@ -331,8 +329,7 @@ public class HandleControllerTest {
 	}
 	private List<DoiRecordResponse> buildDoiResponseList(){
 		List<DoiRecordResponse> responseList= new ArrayList<DoiRecordResponse>();
-		DoiRecordResponse response = new DoiRecordResponse();
-		response.setReferentDoiName(testVal);
+		DoiRecordResponse response = generateTestDoiResponse();
 		
 		for (int i=0; i<requestLen; i++) {
 			responseList.add(response);
@@ -351,9 +348,8 @@ public class HandleControllerTest {
 	}
 	private List<DigitalSpecimenResponse> buildDigitalSpecimenResponseList(){
 		List<DigitalSpecimenResponse> responseList= new ArrayList<DigitalSpecimenResponse>();
-		DigitalSpecimenResponse response = new DigitalSpecimenResponse();
-		response.setSpecimenHost(testVal);
-		
+		DigitalSpecimenResponse response = generateTestDigitalSpecimenResponse();
+
 		for (int i=0; i<requestLen; i++) {
 			responseList.add(response);
 		}
@@ -372,8 +368,7 @@ public class HandleControllerTest {
 	}
 	private List<DigitalSpecimenBotanyResponse> buildDigitalSpecimenBotanyResponseList(){
 		List<DigitalSpecimenBotanyResponse> responseList= new ArrayList<DigitalSpecimenBotanyResponse>();
-		DigitalSpecimenBotanyResponse response = new DigitalSpecimenBotanyResponse();
-		response.setObjectType(testVal);
+		DigitalSpecimenBotanyResponse response = generateTestDigitalSpecimenBotanyResponse();
 		
 		for (int i=0; i<requestLen; i++) {
 			responseList.add(response);

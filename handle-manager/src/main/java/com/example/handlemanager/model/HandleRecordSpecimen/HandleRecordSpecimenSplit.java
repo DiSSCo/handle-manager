@@ -60,9 +60,7 @@ public class HandleRecordSpecimenSplit extends HandleRecordSpecimen {
 		setSiblingInfoFromRecords(entries);
 	                                            	
 	}
-	
-
-	
+		
 	private void setSiblingInfoFromRecords(List<Handles> entries) {
 		for (Handles h: entries) {
 			if (h.getType().equals("siblingPids")) {
