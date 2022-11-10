@@ -49,24 +49,22 @@ public class HandleServiceTest {
 	
 	@InjectMocks
 	private HandleService service; 
-	
-	private HandleRecordRequest request;
-	private HandleRecordResponse response;
-	
+		
 	private MockedStatic<Instant> mockedStatic;
+	
 	private List<Handles> handleRecord;
+	long timestamp;
+	byte [] handle;
+	
 	private final static LocalDate LOCAL_DATE = LocalDate.of(1989, 01, 13);
 	
 	
 	
 	@BeforeEach
 	public void init() {
-		request = generateTestHandleRequest();
-		handleRecord = initHandleRecord();
-		
-		handleList = generateByteHandleList();
-		
-		initDate();
+		timestamp = initTimestamp();
+		handle = HANDLE.getBytes();
+		handleRecord = generateHandleRecordList(handle, timestamp);
 		
 	}
 	
@@ -78,26 +76,22 @@ public class HandleServiceTest {
 	
 	@Test 
 	public void createHandleRecordTest() {
-		// Given handle, timestamp, date
+		HandleRecordRequest request = generateTestHandleRequest();
+		HandleRecordResponse response = generateTestHandleResponse();
 		
+		// mock handle factory
+		
+		// Given handle, timestamp, date
+		/*
 		when(pidTypeService.resolveTypePid(any(String.class))).thenReturn(pidTypeRecord);
 		when(handleRep.saveAll(ArgumentMatchers.<Handles>anyList())).thenReturn(handleRecord);
 		when(hf.newHandle(any(int.class))).thenReturn(handleList);
-		//when(now.)
+		//when(now.)*/
 		
 		
 	}
+
 	
-	private HandleRecordResponse initTestResponse() {
-		HandleRecordResponse response = new HandleRecordResponse();
-		
-		return response;	
-	}
-	
-	
-	private List<Handles> initHandleRecord(){
-		return null;
-	}
 		
 	/*
 	private void initDate() {
