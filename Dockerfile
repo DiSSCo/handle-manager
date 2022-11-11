@@ -15,5 +15,3 @@ COPY --chown=java:java --from=builder application/snapshot-dependencies/ ./
 RUN true
 COPY --chown=java:java --from=builder application/application/ ./
 USER 1000
-
-ENTRYPOINT ["java", "org.springframework.boot.loader.JarLauncher"]
