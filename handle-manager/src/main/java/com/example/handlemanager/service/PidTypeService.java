@@ -41,7 +41,7 @@ public class PidTypeService {
 		}
 
 		String pid = getDataFromType("pid", typeRecord);
-		String primaryNameFromPid = getDataFromType("primaryNameFromPID", typeRecord); // TODO this should be lower case
+		String primaryNameFromPid = getDataFromType("primaryNameFromPid", typeRecord); // TODO this should be lower case
 		String pidType;
 		String registrationAgencyDoiName = "";
 		String typeJson = "";
@@ -62,13 +62,13 @@ public class PidTypeService {
 
 		else {
 			throw new PidResolutionException(
-					"One of the type PIDs provided resolves to an invalid record. Check handle " + typePid
+					"One of the type PIDs provided resolves to an invalid record (reason: neither \"handle\" nor \"doi\" Check handle " + typePid
 							+ " and try again");
 		}
 
 		if (pidType == "" || primaryNameFromPid == "") { // If one of these were not resolvable
 			throw new PidResolutionException(
-					"One of the type PIDs provided resolves to an invalid record. Check handle " + typePid
+					"One of the type PIDs provided resolves to an invalid record. reason: pid type and/or primaryNameFromPid are empty. Check handle " + typePid
 							+ " and try again");
 		}
 

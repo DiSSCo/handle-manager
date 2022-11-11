@@ -1,12 +1,16 @@
-package utils;
+package com.example.handlemanager.testUtils;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.example.handlemanager.domain.requests.*;
+import com.example.handlemanager.domain.responses.*;
 import com.example.handlemanager.model.repositoryObjects.Handles;
 
 public class TestUtils {
+	
+	public static Instant CREATED = Instant.parse("2022-11-01T09:59:24.00Z");
 	
 	public static String HANDLE = "20.5000.1025/QRS-321-ABC";
 	public static String HANDLE_ALT = "20.5000.1025/QRS-123-ABC";
@@ -31,12 +35,22 @@ public class TestUtils {
 	public static String PTR_PID = "http://hdl.handle.net/"+PID_ISSUER_PID;
 	public static String PTR_TYPE = "handle";
 	public static String PTR_PRIMARY_NAME = "DiSSCo";
+	public static String PTR_PID_DOI = "http://doi.org/"+PID_ISSUER_PID;
+	public static String PTR_TYPE_DOI = "doi";
 	
+	public static String PTR_REGISTRATION_DOI_NAME = "Registration Agency";
 	
-	public static String PTR_PID_ISSUER = "{ \n"
+	public static String PTR_HANDLE_RECORD = "{ \n"
 			+ "\"pid\": \"" + PTR_PID + "\", \n"
 			+ "\"pidType\": \""+PTR_TYPE+"\", \n"
 			+ "\"primaryNameFromPid\": \""+ PTR_PRIMARY_NAME +"\" \n"
+			+ "}";
+	
+	public static String PTR_DOI_RECORD = "{ \n"
+			+ "\"pid\": \"" + PTR_PID_DOI + "\", \n"
+			+ "\"pidType\": \""+PTR_TYPE_DOI+"\", \n"
+			+ "\"primaryNameFromPid\": \""+ PTR_PRIMARY_NAME +"\", \n"
+			+ "\"registrationAgencyDoiName\": \""+ PTR_REGISTRATION_DOI_NAME +"\" \n"
 			+ "}";
 	
 	
@@ -48,6 +62,10 @@ public class TestUtils {
 				LOCATIONS);
 	}
 	
+	public static HandleRecordResponse generateTestHandleResponse() {
+		return null;
+	}
+	
 	public static DoiRecordRequest generateTestDoiRequest() {
 		return new DoiRecordRequest(
 				PID_ISSUER_PID,
@@ -55,6 +73,10 @@ public class TestUtils {
 				DIGITAL_OBJECT_SUBTYPE_PID,
 				LOCATIONS,
 				REFERENT_DOI_NAME_PID);				
+	}
+	
+	public static DoiRecordResponse generateTestDoiResponse() {
+		return null;
 	}
 	
 	public static DigitalSpecimenRequest generateTestDigitalSpecimenRequest() {
@@ -69,6 +91,11 @@ public class TestUtils {
 				IN_COLLECTION_FACILITY);
 	}
 	
+	public static DigitalSpecimenBotanyResponse generateTestDigitalSpecimenResponse() {
+		return null;
+	}
+	
+	
 	public static DigitalSpecimenBotanyRequest generateTestDigitalSpecimenBotanyRequest() {
 		return new DigitalSpecimenBotanyRequest(PID_ISSUER_PID,
 				DIGITAL_OBJECT_TYPE_PID,
@@ -80,6 +107,10 @@ public class TestUtils {
 				IN_COLLECTION_FACILITY,
 				OBJECT_TYPE,
 				PRESERVED_OR_LIVING);
+	}
+	
+	public static DigitalSpecimenBotanyResponse generateTestDigitalSpecimenBotanyResponse() {
+		return null;
 	}
 	
 	public static List<byte[]> generateByteHandleList() {

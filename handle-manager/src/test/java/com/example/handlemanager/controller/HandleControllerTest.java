@@ -1,5 +1,6 @@
 package com.example.handlemanager.controller;
 
+import static com.example.handlemanager.testUtils.TestUtils.*;
 import static org.mockito.ArgumentMatchers.*;
 import org.mockito.ArgumentMatchers;
 
@@ -28,9 +29,7 @@ import com.example.handlemanager.domain.responses.*;
 import com.example.handlemanager.exceptions.PidCreationException;
 import com.example.handlemanager.service.HandleService;
 import com.example.handlemanager.service.PidTypeServiceTest;
-import com.fasterxml.jackson.databind.ObjectMapper; 
-
-import static com.example.handlemanager.utils.TestUtils.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 @RunWith(SpringRunner.class)
@@ -70,7 +69,7 @@ public class HandleControllerTest {
 				.andExpect(jsonPath("$.pidIssuer").value(response.getPidIssuer()))
 				.andExpect(jsonPath("$.digitalObjectType").value(response.getDigitalObjectType()))
 				.andExpect(jsonPath("$.digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
-				.andExpect(jsonPath("$.loc").value(response.getLoc()))
+				.andExpect(jsonPath("$.loc").value(response.getLocs()))
 				.andExpect(jsonPath("$.issueDate").value(response.getIssueDate()))
 				.andExpect(jsonPath("$.issueNumber").value(response.getIssueNumber()))
 				.andExpect(jsonPath("$.pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
@@ -93,7 +92,7 @@ public class HandleControllerTest {
 				.andExpect(jsonPath("$.pidIssuer").value(response.getPidIssuer()))
 				.andExpect(jsonPath("$.digitalObjectType").value(response.getDigitalObjectType()))
 				.andExpect(jsonPath("$.digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
-				.andExpect(jsonPath("$.loc").value(response.getLoc()))
+				.andExpect(jsonPath("$.loc").value(response.getLocs()))
 				.andExpect(jsonPath("$.issueDate").value(response.getIssueDate()))
 				.andExpect(jsonPath("$.issueNumber").value(response.getIssueNumber()))
 				.andExpect(jsonPath("$.pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
@@ -119,7 +118,7 @@ public class HandleControllerTest {
 				.andExpect(jsonPath("$.pidIssuer").value(response.getPidIssuer()))
 				.andExpect(jsonPath("$.digitalObjectType").value(response.getDigitalObjectType()))
 				.andExpect(jsonPath("$.digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
-				.andExpect(jsonPath("$.loc").value(response.getLoc()))
+				.andExpect(jsonPath("$.loc").value(response.getLocs()))
 				.andExpect(jsonPath("$.issueDate").value(response.getIssueDate()))
 				.andExpect(jsonPath("$.issueNumber").value(response.getIssueNumber()))
 				.andExpect(jsonPath("$.pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
@@ -148,7 +147,7 @@ public class HandleControllerTest {
 				.andExpect(jsonPath("$.pidIssuer").value(response.getPidIssuer()))
 				.andExpect(jsonPath("$.digitalObjectType").value(response.getDigitalObjectType()))
 				.andExpect(jsonPath("$.digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
-				.andExpect(jsonPath("$.loc").value(response.getLoc()))
+				.andExpect(jsonPath("$.loc").value(response.getLocs()))
 				.andExpect(jsonPath("$.issueDate").value(response.getIssueDate()))
 				.andExpect(jsonPath("$.issueNumber").value(response.getIssueNumber()))
 				.andExpect(jsonPath("$.pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
@@ -183,7 +182,7 @@ public class HandleControllerTest {
 				.andExpect(jsonPath("$[0].pidIssuer").value(response.getPidIssuer()))
 				.andExpect(jsonPath("$[0].digitalObjectType").value(response.getDigitalObjectType()))
 				.andExpect(jsonPath("$[0].digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
-				.andExpect(jsonPath("$[0].loc").value(response.getLoc()))
+				.andExpect(jsonPath("$[0].loc").value(response.getLocs()))
 				.andExpect(jsonPath("$[0].issueDate").value(response.getIssueDate()))
 				.andExpect(jsonPath("$[0].issueNumber").value(response.getIssueNumber()))
 				.andExpect(jsonPath("$[0].pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
@@ -210,7 +209,7 @@ public class HandleControllerTest {
 				.andExpect(jsonPath("$[0].pidIssuer").value(response.getPidIssuer()))
 				.andExpect(jsonPath("$[0].digitalObjectType").value(response.getDigitalObjectType()))
 				.andExpect(jsonPath("$[0].digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
-				.andExpect(jsonPath("$[0].loc").value(response.getLoc()))
+				.andExpect(jsonPath("$[0].loc").value(response.getLocs()))
 				.andExpect(jsonPath("$[0].issueDate").value(response.getIssueDate()))
 				.andExpect(jsonPath("$[0].issueNumber").value(response.getIssueNumber()))
 				.andExpect(jsonPath("$[0].pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
@@ -239,7 +238,7 @@ public class HandleControllerTest {
 				.andExpect(jsonPath("$[0].pidIssuer").value(response.getPidIssuer()))
 				.andExpect(jsonPath("$[0].digitalObjectType").value(response.getDigitalObjectType()))
 				.andExpect(jsonPath("$[0].digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
-				.andExpect(jsonPath("$[0].loc").value(response.getLoc()))
+				.andExpect(jsonPath("$[0].loc").value(response.getLocs()))
 				.andExpect(jsonPath("$[0].issueDate").value(response.getIssueDate()))
 				.andExpect(jsonPath("$[0].issueNumber").value(response.getIssueNumber()))
 				.andExpect(jsonPath("$[0].pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
@@ -272,7 +271,7 @@ public class HandleControllerTest {
 				.andExpect(jsonPath("$[0].pidIssuer").value(response.getPidIssuer()))
 				.andExpect(jsonPath("$[0].digitalObjectType").value(response.getDigitalObjectType()))
 				.andExpect(jsonPath("$[0].digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
-				.andExpect(jsonPath("$[0].loc").value(response.getLoc()))
+				.andExpect(jsonPath("$[0].loc").value(response.getLocs()))
 				.andExpect(jsonPath("$[0].issueDate").value(response.getIssueDate()))
 				.andExpect(jsonPath("$[0].issueNumber").value(response.getIssueNumber()))
 				.andExpect(jsonPath("$[0].pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))

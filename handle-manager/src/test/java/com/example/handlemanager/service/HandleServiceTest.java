@@ -1,6 +1,6 @@
 package com.example.handlemanager.service;
 
-import static com.example.handlemanager.utils.TestUtils.*;
+import static com.example.handlemanager.testUtils.TestUtils.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
@@ -62,10 +62,11 @@ public class HandleServiceTest {
 	
 	@BeforeEach
 	public void init() {
+		/*
 		timestamp = initTimestamp();
 		handle = HANDLE.getBytes();
 		handleRecord = generateHandleRecordList(handle, timestamp);
-		
+		*/
 	}
 	
 	@AfterEach

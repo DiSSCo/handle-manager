@@ -281,7 +281,7 @@ public class HandleService {
 		int i = 12;
 
 		// 12: Referent DOI Name
-		String referentDoiName = pidTypeService.resolveTypePid(request.getReferentDoiNamePid());
+		String referentDoiName = pidTypeService.resolveTypePid(request.getReferentDoiName());
 		handleRecord.add(new Handles(handle, i++, "referentDoiName", referentDoiName, timestamp));
 
 		// 13: Referent -> NOTE: Referent is blank currently until we have a model for

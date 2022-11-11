@@ -14,7 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import com.example.handlemanager.model.repositoryObjects.Handles;
 import com.example.handlemanager.repository.HandleRepository;
 
-import static com.example.handlemanager.utils.TestUtils.*;
+import static com.example.handlemanager.testUtils.TestUtils.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mockStatic;
@@ -68,9 +68,14 @@ public class PidTypeServiceTest {
 	@Test
 	public void testPidTypeRecordResolutionHandle() {
 		initTestPidTypeRecordHandle();
+		
 		when(handleRep.resolveHandle(eq(recordPid))).thenReturn(typeRecord);
+		
 		String expected = PTR_HANDLE_RECORD;
-		String returned = pidTypeService.resolveTypePid(PID_TYPE_RECORD_HANDLE);
+		String returned = pidTypeService.resolveTypePid(PID_ISSUER_PID);
+		
+		logger.info("Expected: " + expected);
+		logger.info("Returned: " + returned);
 		
 		assert(expected.equals(returned));
 	}
@@ -81,7 +86,7 @@ public class PidTypeServiceTest {
 		
 		when(handleRep.resolveHandle(eq(recordPid))).thenReturn(typeRecord);
 		String expected = PTR_DOI_RECORD;
-		String returned = pidTypeService.resolveTypePid(PID_TYPE_RECORD_DOI);
+		String returned = pidTypeService.resolveTypePid(PID_ISSUER_PID);
 		
 		logger.info("Expected: "  + expected);
 		logger.info("Returned: " + returned);
@@ -91,23 +96,26 @@ public class PidTypeServiceTest {
 	
 	
 	private void initTestPidTypeRecordHandle() {		
-		recordPid = PID_TYPE_RECORD_HANDLE.getBytes();
+		recordPid = PID_ISSUER_PID.getBytes();
 		
-		pid = PTR_HANDLE_PID;
-		pidType = PTR_HANDLE_TYPE;
-		primaryNameFromPid = PTR_HANDLE_PRIMARY_NAME;
+		pid = PTR_PID;
+		pidType = PTR_TYPE;
+		primaryNameFromPid = PTR_PRIMARY_NAME;
 		
 		typeRecord = initTestPidTypeRecord(false);
 	}
 	
 	private void initTestPidTypeRecordDoi() {		
-		recordPid = PID_TYPE_RECORD_DOI.getBytes();
-		pid = PTR_DOI_PID;
-		pidType = PTR_DOI_TYPE;
-		primaryNameFromPid = PTR_DOI_PRIMARY_NAME;
-		registrationAgencyDoiName = PTR_DOI_REGISTRATION_AGENCY_DOI_NAME;
+		recordPid = PID_ISSUER_PID.getBytes();
+		
+		pid = PTR_PID_DOI;
+		pidType = PTR_TYPE_DOI;
+		primaryNameFromPid = PTR_PRIMARY_NAME;
+		
+		registrationAgencyDoiName = PTR_REGISTRATION_DOI_NAME;
 		
 		typeRecord = initTestPidTypeRecord(true);
+		
 	}
 	
 	private List<Handles> initTestPidTypeRecord(boolean isDoi){
@@ -118,10 +126,15 @@ public class PidTypeServiceTest {
 		record.add(new Handles(recordPid, i++, "primaryNameFromPid", primaryNameFromPid, timestamp));
 		
 		if (isDoi) {
-			registrationAgencyDoiName = PTR_DOI_REGISTRATION_AGENCY_DOI_NAME;
+			registrationAgencyDoiName = PTR_REGISTRATION_DOI_NAME;
 			record.add(new Handles(recordPid, i++, "registrationAgencyDoiName", registrationAgencyDoiName, timestamp));
 		}
 		return record;
+	}
+	
+	private long initTimestamp() {
+		//CREATED_INSTANT.getEpochSecond();
+		return CREATED.getEpochSecond();
 	}
 	
 }
