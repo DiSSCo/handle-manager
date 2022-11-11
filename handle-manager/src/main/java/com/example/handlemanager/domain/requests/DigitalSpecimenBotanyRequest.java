@@ -12,7 +12,7 @@ public class DigitalSpecimenBotanyRequest extends DigitalSpecimenRequest {
 			String pidIssuerPid, 
 			String digitalObjectTypePid,
 			String digitalObjectSubtypePid, 
-			String[] loc, 
+			String[] locations, 
 			// Referent
 			String referentDoiName,
 			// Digital Specimen
@@ -25,10 +25,22 @@ public class DigitalSpecimenBotanyRequest extends DigitalSpecimenRequest {
 			) {
 		
 		
-		super(pidIssuerPid, digitalObjectTypePid, digitalObjectSubtypePid, loc, referentDoiName, digitalOrPhysical,
+		super(pidIssuerPid, digitalObjectTypePid, digitalObjectSubtypePid, locations, referentDoiName, digitalOrPhysical,
 				specimenHostPid, inCollectionFacilityPid);
 		this.objectType = objectType;
 		this.preservedOrLiving = preservedOrLiving;
+	}
+	
+	public DigitalSpecimenRequest getDigitalSpecimenRequest() {
+		return new DigitalSpecimenRequest(
+				this.pidIssuerPid, 
+				this.digitalObjectTypePid, 
+				this.digitalObjectSubtypePid, 
+				this.locations,
+				this.referentDoiName, 
+				this.digitalOrPhysical, 
+				this.specimenHostPid, 
+				this.inCollectionFacilityPid);
 	}
 
 }

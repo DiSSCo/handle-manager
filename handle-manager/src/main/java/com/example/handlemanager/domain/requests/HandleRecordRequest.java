@@ -9,5 +9,5 @@ public class HandleRecordRequest {
 	final String pidIssuerPid;
 	final String digitalObjectTypePid;
 	final String digitalObjectSubtypePid;
-	final String [] loc;
+	final String [] locations;
 }

@@ -13,7 +13,7 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
 			String pidIssuerPid, 
 			String digitalObjectTypePid, 
 			String digitalObjectSubtypePid,
-			String[] loc, 
+			String[] locations, 
 			// Doi
 			String referentDoiName,
 			// Digital Specimen
@@ -21,11 +21,19 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
 			String specimenHostPid,
 			String inCollectionFacilityPid
 			) {
-		super(pidIssuerPid, digitalObjectTypePid, digitalObjectSubtypePid, loc, referentDoiName);
+		super(pidIssuerPid, digitalObjectTypePid, digitalObjectSubtypePid, locations, referentDoiName);
 		this.digitalOrPhysical = digitalOrPhysical;
 		this.specimenHostPid = specimenHostPid;
 		this.inCollectionFacilityPid = inCollectionFacilityPid;
-		
+	}
+	
+	public DoiRecordRequest getDoiRecordRequest() {
+		return new DoiRecordRequest(
+				this.pidIssuerPid, 
+				this.digitalObjectTypePid, 
+				this.digitalObjectSubtypePid, 
+				this.locations,
+				this.referentDoiName);
 	}
 
 }
