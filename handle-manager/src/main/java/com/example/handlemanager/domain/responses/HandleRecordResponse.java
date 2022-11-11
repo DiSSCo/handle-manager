@@ -3,7 +3,6 @@ package com.example.handlemanager.domain.responses;
 import java.util.List;
 
 import com.example.handlemanager.model.repositoryObjects.Handles;
-import static com.example.handlemanager.model.pidRecord.PidRecordAttributes.*;
 
 import lombok.Data;
 
@@ -17,6 +16,7 @@ public class HandleRecordResponse {
 	private String issueDate;
 	private String issueNumber;
 	private String pidKernelMetadataLicense;
+	private String HS_ADMIN;
 	
 	public HandleRecordResponse (List<Handles> entries) {
 		String type;
@@ -49,6 +49,9 @@ public class HandleRecordResponse {
 					break;
 				case "pidKernelMetadataLicense":
 					this.pidKernelMetadataLicense = data;
+					break;
+				case "HS_ADMIN":
+					this.HS_ADMIN = data;
 					break;
 				default:
 					break;
