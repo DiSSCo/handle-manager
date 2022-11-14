@@ -1,20 +1,10 @@
 package com.example.handlemanager.model.repositoryObjects;
 
-import javax.persistence.Column;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
-import javax.persistence.Lob;
-import javax.persistence.Table;
-
 import org.hibernate.annotations.Type;
 
+import javax.persistence.*;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
-import java.sql.Blob;
-import java.sql.SQLException;
-import java.util.Base64;
 
 // This class is used to interface with the Handle Server Database
 //
@@ -39,7 +29,7 @@ public class Handles implements Serializable, Comparable<Handles>{
 	private byte[] data;
 	
 	private long timestamp;
-	private int ttl = 86400;
+	private final int ttl = 86400;
 	
 	// Default permissions
 	private boolean admin_read = true;
@@ -125,7 +115,8 @@ public class Handles implements Serializable, Comparable<Handles>{
 	public String toStringData() {
 		return String.format("%5s", getIdx()) + " | " +
 				String.format("%-30s",shrinkString(getType().replace("\n", ""))) + " | " +
-				String.format("%-30s",getData()).replace("\n", "") ;
+				String.format("%-30s",getData()).replace("\n", "") + " | " +
+				String.format("%-30s", String.valueOf(timestamp));
 	}
 	
 	public String toString() {
@@ -135,6 +126,13 @@ public class Handles implements Serializable, Comparable<Handles>{
 	private String shrinkString(String s) {
 		if (s.length() <= 30) return s;
 		return s.substring(0, 30)+"...";
-	}	
+	}
+
+	@Override
+	public boolean equals(Object h){
+		if (h == this){ return true; }
+		return this.toString().equals(h.toString()); // This is a bit of a cheat here...
+
+	}
 	
 }
