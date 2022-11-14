@@ -1,7 +1,13 @@
 package com.example.handlemanager.service;
 
-import com.example.handlemanager.domain.requests.*;
-import com.example.handlemanager.domain.responses.*;
+import com.example.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
+import com.example.handlemanager.domain.requests.DigitalSpecimenRequest;
+import com.example.handlemanager.domain.requests.DoiRecordRequest;
+import com.example.handlemanager.domain.requests.HandleRecordRequest;
+import com.example.handlemanager.domain.responses.DigitalSpecimenBotanyResponse;
+import com.example.handlemanager.domain.responses.DigitalSpecimenResponse;
+import com.example.handlemanager.domain.responses.DoiRecordResponse;
+import com.example.handlemanager.domain.responses.HandleRecordResponse;
 import com.example.handlemanager.exceptions.PidCreationException;
 import com.example.handlemanager.model.repositoryObjects.Handles;
 import com.example.handlemanager.repository.HandleRepository;

@@ -88,10 +88,6 @@ public class HandleService {
 		}
 
 		// Save all records
-		System.out.println("GeneratedRecord");
-		for (Handles h: handleRecordsAll){
-			System.out.println(h.toString());
-		}
 
 		handleRep.saveAll(handleRecordsAll);
 		return response;

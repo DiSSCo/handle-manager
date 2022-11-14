@@ -29,7 +29,7 @@ public class HandleRecordResponse {
 				case "pid":
 					this.pid = data;
 					break;
-				case "pid_issuer":
+				case "pidIssuer":
 					this.pidIssuer = data;
 					break;
 				case "digitalObjectType":
