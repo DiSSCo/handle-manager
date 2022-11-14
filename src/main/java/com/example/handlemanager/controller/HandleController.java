@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+
 @RestController  //Controller, return value of methods will be returned as the response body for an API; handleService is injected as dependency using Autowired
 @RequestMapping("/api")  // Defines base URL for all REST APIs; followed by REST endpoints given to each controller methods
 public class HandleController {
@@ -119,6 +120,5 @@ public class HandleController {
 		}
 		return ResponseEntity.ok(handleList);
 	}
-
 
 }

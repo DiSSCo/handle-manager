@@ -36,6 +36,7 @@ import static com.example.handlemanager.utils.Resources.setLocations;
 // Postgres value in (value1, value2)..
 // Generate all handles before posting...
 
+
 @Service
 @RequiredArgsConstructor
 public class HandleService {
