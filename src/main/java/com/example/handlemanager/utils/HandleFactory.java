@@ -1,19 +1,8 @@
 package com.example.handlemanager.utils;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Random;
-import java.util.Set;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
-import com.example.handlemanager.repository.HandleRepository;
-
-import lombok.Data;
-import java.util.logging.*;
+import java.util.*;
+import java.util.logging.Logger;
 
 // This class generates new handles
 
@@ -23,9 +12,7 @@ public class HandleFactory {
 	private final Random random;
 	private final char[] symbols;
 	private final char[] buf;
-	private final String prefix = "20.5000.1025/";
-	private final int maxHandles = 1000;
-	
+
 	// Structure of handle: ABC-123-DEF
 	
 	Logger logger = Logger.getLogger(HandleFactory.class.getName());
@@ -55,6 +42,7 @@ public class HandleFactory {
 	
 
 	public String newHandle() { // Generates single handle
+		String prefix = "20.5000.1025/";
 		return prefix + newSuffix();
 	}
 	
@@ -65,8 +53,9 @@ public class HandleFactory {
 	public List<byte[]> newHandle(int h) { // Generates h number of handles
 		if (h < 1) {
 			logger.warning("Invalid number of handles to be generated");
-			return new ArrayList<byte[]>();
+			return new ArrayList<>();
 		}
+		int maxHandles = 1000;
 		if (h > maxHandles) {
 			logger.warning("Max number of handles exceeded. Generating maximum " + String.valueOf(maxHandles) + " handles");
 			h = maxHandles;
@@ -75,10 +64,10 @@ public class HandleFactory {
 		// We'll use this to make sure we're not duplicating results
 		// It's of type ByteBuffer and not byte[] because ByteBuffer has equality testing
 		// byte[] is too primitive for our needs
-		HashSet<ByteBuffer> handleHash = new HashSet<ByteBuffer>(); 
+		HashSet<ByteBuffer> handleHash = new HashSet<>();
 		
 		// This is the object we'll actually return 	
-		List<byte[]> handleList = new ArrayList<byte[]>(); 
+		List<byte[]> handleList = new ArrayList<>();
 		byte[] hdl;
 		
 		for (int i=0; i<h; i++) {

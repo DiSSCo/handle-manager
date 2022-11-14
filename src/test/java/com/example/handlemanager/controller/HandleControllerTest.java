@@ -1,35 +1,37 @@
 package com.example.handlemanager.controller;
 
-import static com.example.handlemanager.testUtils.TestUtils.*;
-import static org.mockito.ArgumentMatchers.*;
-import org.mockito.ArgumentMatchers;
-
-import static org.mockito.Mockito.when;
-
+import com.example.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
+import com.example.handlemanager.domain.requests.DigitalSpecimenRequest;
+import com.example.handlemanager.domain.requests.DoiRecordRequest;
+import com.example.handlemanager.domain.requests.HandleRecordRequest;
+import com.example.handlemanager.domain.responses.DigitalSpecimenBotanyResponse;
+import com.example.handlemanager.domain.responses.DigitalSpecimenResponse;
+import com.example.handlemanager.domain.responses.DoiRecordResponse;
+import com.example.handlemanager.domain.responses.HandleRecordResponse;
+import com.example.handlemanager.service.HandleService;
+import com.example.handlemanager.service.PidTypeServiceTest;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.runner.RunWith;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import com.example.handlemanager.domain.requests.*;
-import com.example.handlemanager.domain.responses.*;
-import com.example.handlemanager.exceptions.PidCreationException;
-import com.example.handlemanager.service.HandleService;
-import com.example.handlemanager.service.PidTypeServiceTest;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static com.example.handlemanager.testUtils.TestUtils.*;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
 @RunWith(SpringRunner.class)
@@ -54,9 +56,9 @@ public class HandleControllerTest {
 	
 	// Single Record Creation
 	@Test
-	public void handleRecordCreationTest() throws PidCreationException, Exception {
+	public void handleRecordCreationTest() throws Exception {
 		HandleRecordRequest request = generateTestHandleRequest();
-		HandleRecordResponse response = generateTestHandleResponse();
+		HandleRecordResponse response = generateTestHandleResponse(HANDLE.getBytes());
 		
 		when(service.createRecord(eq(request), eq("hdl"))).thenReturn(response);
 			
@@ -69,7 +71,7 @@ public class HandleControllerTest {
 				.andExpect(jsonPath("$.pidIssuer").value(response.getPidIssuer()))
 				.andExpect(jsonPath("$.digitalObjectType").value(response.getDigitalObjectType()))
 				.andExpect(jsonPath("$.digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
-				.andExpect(jsonPath("$.loc").value(response.getLocs()))
+				.andExpect(jsonPath("$.locs").value(response.getLocs()))
 				.andExpect(jsonPath("$.issueDate").value(response.getIssueDate()))
 				.andExpect(jsonPath("$.issueNumber").value(response.getIssueNumber()))
 				.andExpect(jsonPath("$.pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
@@ -77,9 +79,9 @@ public class HandleControllerTest {
 	}
 	
 	@Test
-	public void doiRecordCreationTest() throws PidCreationException, Exception {
+	public void doiRecordCreationTest() throws Exception {
 		DoiRecordRequest request = generateTestDoiRequest();
-		DoiRecordResponse response = generateTestDoiResponse(); 
+		DoiRecordResponse response = generateTestDoiResponse(HANDLE.getBytes());
 		
 		when(service.createRecord(eq(request), eq("doi"))).thenReturn(response);
 		
@@ -92,7 +94,7 @@ public class HandleControllerTest {
 				.andExpect(jsonPath("$.pidIssuer").value(response.getPidIssuer()))
 				.andExpect(jsonPath("$.digitalObjectType").value(response.getDigitalObjectType()))
 				.andExpect(jsonPath("$.digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
-				.andExpect(jsonPath("$.loc").value(response.getLocs()))
+				.andExpect(jsonPath("$.locs").value(response.getLocs()))
 				.andExpect(jsonPath("$.issueDate").value(response.getIssueDate()))
 				.andExpect(jsonPath("$.issueNumber").value(response.getIssueNumber()))
 				.andExpect(jsonPath("$.pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
@@ -102,9 +104,9 @@ public class HandleControllerTest {
 	}
 	
 	@Test
-	public void digitalSpecimenCreationTest() throws PidCreationException, Exception {
+	public void digitalSpecimenCreationTest() throws Exception {
 		DigitalSpecimenRequest request = generateTestDigitalSpecimenRequest();
-		DigitalSpecimenResponse response = generateTestDigitalSpecimenResponse(); 
+		DigitalSpecimenResponse response = generateTestDigitalSpecimenResponse(HANDLE.getBytes());
 		
 		when(service.createRecord(eq(request), eq("ds"))).thenReturn(response);
 		
@@ -118,7 +120,7 @@ public class HandleControllerTest {
 				.andExpect(jsonPath("$.pidIssuer").value(response.getPidIssuer()))
 				.andExpect(jsonPath("$.digitalObjectType").value(response.getDigitalObjectType()))
 				.andExpect(jsonPath("$.digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
-				.andExpect(jsonPath("$.loc").value(response.getLocs()))
+				.andExpect(jsonPath("$.locs").value(response.getLocs()))
 				.andExpect(jsonPath("$.issueDate").value(response.getIssueDate()))
 				.andExpect(jsonPath("$.issueNumber").value(response.getIssueNumber()))
 				.andExpect(jsonPath("$.pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
@@ -132,9 +134,9 @@ public class HandleControllerTest {
 	}
 	
 	@Test
-	public void digitalSpecimenBotanyCreationTest() throws PidCreationException, Exception {
+	public void digitalSpecimenBotanyCreationTest() throws Exception {
 		DigitalSpecimenBotanyRequest request = generateTestDigitalSpecimenBotanyRequest(); 
-		DigitalSpecimenBotanyResponse response = generateTestDigitalSpecimenBotanyResponse();
+		DigitalSpecimenBotanyResponse response = generateTestDigitalSpecimenBotanyResponse(HANDLE.getBytes());
 	
 		when(service.createRecord(eq(request), eq("dsB"))).thenReturn(response);
 		
@@ -147,7 +149,7 @@ public class HandleControllerTest {
 				.andExpect(jsonPath("$.pidIssuer").value(response.getPidIssuer()))
 				.andExpect(jsonPath("$.digitalObjectType").value(response.getDigitalObjectType()))
 				.andExpect(jsonPath("$.digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
-				.andExpect(jsonPath("$.loc").value(response.getLocs()))
+				.andExpect(jsonPath("$.locs").value(response.getLocs()))
 				.andExpect(jsonPath("$.issueDate").value(response.getIssueDate()))
 				.andExpect(jsonPath("$.issueNumber").value(response.getIssueNumber()))
 				.andExpect(jsonPath("$.pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
@@ -164,10 +166,9 @@ public class HandleControllerTest {
 	// Batch Record Creation
 	
 	@Test
-	public void handleRecordBatchCreationTest() throws PidCreationException, Exception {
+	public void handleRecordBatchCreationTest() throws Exception {
 		List<HandleRecordRequest> requestList = buildHandleRequestList();
 		List<HandleRecordResponse> responseList = buildHandleResponseList();
-		HandleRecordRequest request = requestList.get(0);
 		HandleRecordResponse response = responseList.get(0);
 		
 		when(service.createHandleRecordBatch(eq(requestList))).thenReturn(responseList);
@@ -182,7 +183,7 @@ public class HandleControllerTest {
 				.andExpect(jsonPath("$[0].pidIssuer").value(response.getPidIssuer()))
 				.andExpect(jsonPath("$[0].digitalObjectType").value(response.getDigitalObjectType()))
 				.andExpect(jsonPath("$[0].digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
-				.andExpect(jsonPath("$[0].loc").value(response.getLocs()))
+				.andExpect(jsonPath("$[0].locs").value(response.getLocs()))
 				.andExpect(jsonPath("$[0].issueDate").value(response.getIssueDate()))
 				.andExpect(jsonPath("$[0].issueNumber").value(response.getIssueNumber()))
 				.andExpect(jsonPath("$[0].pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
@@ -191,10 +192,9 @@ public class HandleControllerTest {
 	}
 	
 	@Test
-	public void doiRecordBatchCreationTest() throws PidCreationException, Exception {
+	public void doiRecordBatchCreationTest() throws Exception {
 		List<DoiRecordRequest> requestList = buildDoiRequestList();
 		List<DoiRecordResponse> responseList = buildDoiResponseList();
-		DoiRecordRequest request = requestList.get(0);
 		DoiRecordResponse response = responseList.get(0);
 		
 		when(service.createDoiRecordBatch(eq(requestList))).thenReturn(responseList);
@@ -209,7 +209,7 @@ public class HandleControllerTest {
 				.andExpect(jsonPath("$[0].pidIssuer").value(response.getPidIssuer()))
 				.andExpect(jsonPath("$[0].digitalObjectType").value(response.getDigitalObjectType()))
 				.andExpect(jsonPath("$[0].digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
-				.andExpect(jsonPath("$[0].loc").value(response.getLocs()))
+				.andExpect(jsonPath("$[0].locs").value(response.getLocs()))
 				.andExpect(jsonPath("$[0].issueDate").value(response.getIssueDate()))
 				.andExpect(jsonPath("$[0].issueNumber").value(response.getIssueNumber()))
 				.andExpect(jsonPath("$[0].pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
@@ -220,10 +220,9 @@ public class HandleControllerTest {
 	}
 	
 	@Test
-	public void digitalSpecimenBatchCreationTest() throws PidCreationException, Exception {
+	public void digitalSpecimenBatchCreationTest() throws Exception {
 		List<DigitalSpecimenRequest> requestList = buildDigitalSpecimenRequestList();
 		List<DigitalSpecimenResponse> responseList = buildDigitalSpecimenResponseList();
-		DigitalSpecimenRequest request = requestList.get(0);
 		DigitalSpecimenResponse response = responseList.get(0);		
 		
 		when(service.createDigitalSpecimenBatch(eq(requestList))).thenReturn(responseList);
@@ -238,7 +237,7 @@ public class HandleControllerTest {
 				.andExpect(jsonPath("$[0].pidIssuer").value(response.getPidIssuer()))
 				.andExpect(jsonPath("$[0].digitalObjectType").value(response.getDigitalObjectType()))
 				.andExpect(jsonPath("$[0].digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
-				.andExpect(jsonPath("$[0].loc").value(response.getLocs()))
+				.andExpect(jsonPath("$[0].locs").value(response.getLocs()))
 				.andExpect(jsonPath("$[0].issueDate").value(response.getIssueDate()))
 				.andExpect(jsonPath("$[0].issueNumber").value(response.getIssueNumber()))
 				.andExpect(jsonPath("$[0].pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
@@ -253,10 +252,9 @@ public class HandleControllerTest {
 	}
 	
 	@Test
-	public void digitalSpecimenBotanyBatchCreationTest() throws PidCreationException, Exception {
+	public void digitalSpecimenBotanyBatchCreationTest() throws Exception {
 		List<DigitalSpecimenBotanyRequest> requestList = buildDigitalSpecimenBotanyRequestList();
 		List<DigitalSpecimenBotanyResponse> responseList = buildDigitalSpecimenBotanyResponseList();
-		DigitalSpecimenBotanyRequest request = requestList.get(0);
 		DigitalSpecimenBotanyResponse response = responseList.get(0);
 		
 		when(service.createDigitalSpecimenBotanyBatch(eq(requestList))).thenReturn(responseList);
@@ -271,7 +269,7 @@ public class HandleControllerTest {
 				.andExpect(jsonPath("$[0].pidIssuer").value(response.getPidIssuer()))
 				.andExpect(jsonPath("$[0].digitalObjectType").value(response.getDigitalObjectType()))
 				.andExpect(jsonPath("$[0].digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
-				.andExpect(jsonPath("$[0].loc").value(response.getLocs()))
+				.andExpect(jsonPath("$[0].locs").value(response.getLocs()))
 				.andExpect(jsonPath("$[0].issueDate").value(response.getIssueDate()))
 				.andExpect(jsonPath("$[0].issueNumber").value(response.getIssueNumber()))
 				.andExpect(jsonPath("$[0].pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
@@ -299,7 +297,7 @@ public class HandleControllerTest {
 	
 	// Handles
 	private List<HandleRecordRequest> buildHandleRequestList(){
-		List<HandleRecordRequest> requestList= new ArrayList<HandleRecordRequest>();
+		List<HandleRecordRequest> requestList= new ArrayList<>();
 		HandleRecordRequest request = generateTestHandleRequest();
 		
 		for (int i=0; i<requestLen; i++) {
@@ -308,8 +306,8 @@ public class HandleControllerTest {
 		return requestList;
 	}
 	private List<HandleRecordResponse> buildHandleResponseList(){
-		List<HandleRecordResponse> responseList= new ArrayList<HandleRecordResponse>();
-		HandleRecordResponse response = generateTestHandleResponse();
+		List<HandleRecordResponse> responseList= new ArrayList<>();
+		HandleRecordResponse response = generateTestHandleResponse(HANDLE.getBytes());
 		
 		for (int i=0; i<requestLen; i++) {
 			responseList.add(response);
@@ -319,7 +317,7 @@ public class HandleControllerTest {
 	
 	// DOIs
 	private List<DoiRecordRequest> buildDoiRequestList(){
-		List<DoiRecordRequest> requestList= new ArrayList<DoiRecordRequest>();
+		List<DoiRecordRequest> requestList= new ArrayList<>();
 		DoiRecordRequest request = generateTestDoiRequest();
 		for (int i=0; i<requestLen; i++) {
 			requestList.add(request);
@@ -327,8 +325,8 @@ public class HandleControllerTest {
 		return requestList;
 	}
 	private List<DoiRecordResponse> buildDoiResponseList(){
-		List<DoiRecordResponse> responseList= new ArrayList<DoiRecordResponse>();
-		DoiRecordResponse response = generateTestDoiResponse();
+		List<DoiRecordResponse> responseList= new ArrayList<>();
+		DoiRecordResponse response = generateTestDoiResponse(HANDLE.getBytes());
 		
 		for (int i=0; i<requestLen; i++) {
 			responseList.add(response);
@@ -338,7 +336,7 @@ public class HandleControllerTest {
 	
 	// DigitalSpecimens
 	private List<DigitalSpecimenRequest> buildDigitalSpecimenRequestList(){
-		List<DigitalSpecimenRequest> requestList= new ArrayList<DigitalSpecimenRequest>();
+		List<DigitalSpecimenRequest> requestList= new ArrayList<>();
 		DigitalSpecimenRequest request = generateTestDigitalSpecimenRequest();
 		for (int i=0; i<requestLen; i++) {
 			requestList.add(request);
@@ -346,8 +344,8 @@ public class HandleControllerTest {
 		return requestList;
 	}
 	private List<DigitalSpecimenResponse> buildDigitalSpecimenResponseList(){
-		List<DigitalSpecimenResponse> responseList= new ArrayList<DigitalSpecimenResponse>();
-		DigitalSpecimenResponse response = generateTestDigitalSpecimenResponse();
+		List<DigitalSpecimenResponse> responseList= new ArrayList<>();
+		DigitalSpecimenResponse response = generateTestDigitalSpecimenResponse(HANDLE.getBytes());
 
 		for (int i=0; i<requestLen; i++) {
 			responseList.add(response);
@@ -358,7 +356,7 @@ public class HandleControllerTest {
 	
 	//DigitalSpecimenBotany
 	private List<DigitalSpecimenBotanyRequest> buildDigitalSpecimenBotanyRequestList(){
-		List<DigitalSpecimenBotanyRequest> responseList= new ArrayList<DigitalSpecimenBotanyRequest>();
+		List<DigitalSpecimenBotanyRequest> responseList= new ArrayList<>();
 		DigitalSpecimenBotanyRequest request = generateTestDigitalSpecimenBotanyRequest();
 		for (int i=0; i<requestLen; i++) {
 			responseList.add(request);
@@ -366,8 +364,8 @@ public class HandleControllerTest {
 		return responseList;
 	}
 	private List<DigitalSpecimenBotanyResponse> buildDigitalSpecimenBotanyResponseList(){
-		List<DigitalSpecimenBotanyResponse> responseList= new ArrayList<DigitalSpecimenBotanyResponse>();
-		DigitalSpecimenBotanyResponse response = generateTestDigitalSpecimenBotanyResponse();
+		List<DigitalSpecimenBotanyResponse> responseList= new ArrayList<>();
+		DigitalSpecimenBotanyResponse response = generateTestDigitalSpecimenBotanyResponse(HANDLE.getBytes());
 		
 		for (int i=0; i<requestLen; i++) {
 			responseList.add(response);

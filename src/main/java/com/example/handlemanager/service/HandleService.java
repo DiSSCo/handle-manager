@@ -1,54 +1,37 @@
 package com.example.handlemanager.service;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.time.Clock;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.w3c.dom.Document;
-
-import com.example.handlemanager.domain.requests.*;
-import com.example.handlemanager.domain.responses.*;
-import com.example.handlemanager.exceptions.*;
+import com.example.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
+import com.example.handlemanager.domain.requests.DigitalSpecimenRequest;
+import com.example.handlemanager.domain.requests.DoiRecordRequest;
+import com.example.handlemanager.domain.requests.HandleRecordRequest;
+import com.example.handlemanager.domain.responses.DigitalSpecimenBotanyResponse;
+import com.example.handlemanager.domain.responses.DigitalSpecimenResponse;
+import com.example.handlemanager.domain.responses.DoiRecordResponse;
+import com.example.handlemanager.domain.responses.HandleRecordResponse;
+import com.example.handlemanager.exceptions.PidCreationException;
 import com.example.handlemanager.model.repositoryObjects.Handles;
 import com.example.handlemanager.repository.HandleRepository;
 import com.example.handlemanager.utils.HandleFactory;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.util.logging.*;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
-import lombok.RequiredArgsConstructor;
-import static com.example.handlemanager.utils.Resources.getDataFromType;
-import static com.example.handlemanager.utils.Resources.setLocations;
-
 import com.example.handlemanager.utils.Resources;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.logging.Logger;
+
+import static com.example.handlemanager.utils.Resources.setLocations;
 
 // Postgres value in (value1, value2)..
 // Generate all handles before posting...
@@ -68,7 +51,7 @@ public class HandleService {
 
 	private HandleFactory hf = new HandleFactory();
 	Logger logger = Logger.getLogger(HandleService.class.getName());
-	ObjectMapper mapper = new ObjectMapper();
+	//ObjectMapper mapper = new ObjectMapper();
 
 	// Return all handle identifiers, option to filter by status
 	public List<String> getHandles() {
@@ -116,9 +99,9 @@ public class HandleService {
 	public List<DoiRecordResponse> createDoiRecordBatch(List<DoiRecordRequest> requests) {
 		List<byte[]> handles = genHandleList(requests.size());
 		long timestamp = clock.instant().getEpochSecond();
-		List<Handles> doiRecord = new ArrayList<Handles>();
-		List<Handles> doiRecordsAll = new ArrayList<Handles>();
-		List<DoiRecordResponse> response = new ArrayList<DoiRecordResponse>();
+		List<Handles> doiRecord;
+		List<Handles> doiRecordsAll = new ArrayList<>();
+		List<DoiRecordResponse> response = new ArrayList<>();
 		for (int i = 0; i < requests.size(); i++) {
 
 			// Prepare record as list of Handles
@@ -143,9 +126,9 @@ public class HandleService {
 	public List<DigitalSpecimenResponse> createDigitalSpecimenBatch(List<DigitalSpecimenRequest> requests) {
 		List<byte[]> handles = genHandleList(requests.size());
 		long timestamp = clock.instant().getEpochSecond();
-		List<Handles> digitalSpecimenRecord = new ArrayList<Handles>();
-		List<Handles> digitalSpecimenRecordsAll = new ArrayList<Handles>();
-		List<DigitalSpecimenResponse> response = new ArrayList<DigitalSpecimenResponse>();
+		List<Handles> digitalSpecimenRecord;
+		List<Handles> digitalSpecimenRecordsAll = new ArrayList<>();
+		List<DigitalSpecimenResponse> response = new ArrayList<>();
 		for (int i = 0; i < requests.size(); i++) {
 
 			// Prepare record as list of Handles
@@ -202,27 +185,27 @@ public class HandleService {
 		HandleRecordResponse response;
 
 		switch (recordType) {
-		case "hdl":
-			handleRecord = prepareHandleRecord(request, handle, timestamp);
-			response = new HandleRecordResponse(handleRep.saveAll(handleRecord));
-			break;
-		case "doi":
-			handleRecord = prepareDoiRecord((DoiRecordRequest) request, handle, timestamp);
-			response = new DoiRecordResponse(handleRep.saveAll(handleRecord));
-			break;
-		case "ds":
-			handleRecord = prepareDigitalSpecimenRecord((DigitalSpecimenRequest) request, handle, timestamp);
-			response = new DigitalSpecimenResponse(handleRep.saveAll(handleRecord));
-			logger.info("creating digital specimen");
-			break;
-		case "dsB":
-			handleRecord = prepareDigitalSpecimenBotanyRecord((DigitalSpecimenBotanyRequest) request, handle,
-					timestamp);
-			response = new DigitalSpecimenBotanyResponse(handleRep.saveAll(handleRecord));
-			break;
-		default:
-			// Not sure if this is the best way to do this. We should never get here.
-			throw new PidCreationException("An internal error has occured. Invalid pid record type.");
+			case "hdl" -> {
+				handleRecord = prepareHandleRecord(request, handle, timestamp);
+				response = new HandleRecordResponse(handleRep.saveAll(handleRecord));
+			}
+			case "doi" -> {
+				handleRecord = prepareDoiRecord((DoiRecordRequest) request, handle, timestamp);
+				response = new DoiRecordResponse(handleRep.saveAll(handleRecord));
+			}
+			case "ds" -> {
+				handleRecord = prepareDigitalSpecimenRecord((DigitalSpecimenRequest) request, handle, timestamp);
+				response = new DigitalSpecimenResponse(handleRep.saveAll(handleRecord));
+				logger.info("creating digital specimen");
+			}
+			case "dsB" -> {
+				handleRecord = prepareDigitalSpecimenBotanyRecord((DigitalSpecimenBotanyRequest) request, handle,
+						timestamp);
+				response = new DigitalSpecimenBotanyResponse(handleRep.saveAll(handleRecord));
+			}
+			default ->
+				// Not sure if this is the best way to do this. We should never get here.
+					throw new PidCreationException("An internal error has occured. Invalid pid record type.");
 		}
 		// TODO: Maybe check response has all the pid kernel entries we're expecting
 		return response;
@@ -352,7 +335,9 @@ public class HandleService {
 		return dt.format(now);
 	}
 
-	// TODO: Resolving is trickier than you'd think
+	// TODO: Resolving PID Records
+
+	/*
 
 	public List<HandleRecordResponse> resolve(String[] h) {
 		String type;
@@ -365,7 +350,7 @@ public class HandleService {
 
 	private List<Handles> resolveRecord(String h) {
 		return handleRep.resolveHandle(h.getBytes());
-	}
+	}*/
 
 	// Given a list of Handles (of unknown pidStatus), return HandleRecord
 
@@ -421,8 +406,8 @@ public class HandleService {
 	// Converts List<byte[]> --> HashSet<ByteBuffer>
 	private HashSet<ByteBuffer> wrapBytes(List<byte[]> byteList) {
 		HashSet<ByteBuffer> byteHash = new HashSet<ByteBuffer>();
-		for (Iterator<byte[]> itr = byteList.iterator(); itr.hasNext();) {
-			byteHash.add(ByteBuffer.wrap(itr.next()));
+		for (byte[] bytes : byteList) {
+			byteHash.add(ByteBuffer.wrap(bytes));
 		}
 		return byteHash;
 	}
@@ -430,9 +415,8 @@ public class HandleService {
 	// HashSet<ByteBuffer> --> List<byte[]>
 	private List<byte[]> unwrapBytes(HashSet<ByteBuffer> handleHash) {
 		List<byte[]> handleList = new ArrayList<byte[]>();
-		Iterator<ByteBuffer> itr = handleHash.iterator();
-		while (itr.hasNext()) {
-			handleList.add(itr.next().array());
+		for (ByteBuffer hash : handleHash) {
+			handleList.add(hash.array());
 		}
 		return handleList;
 	}
@@ -454,323 +438,7 @@ public class HandleService {
 	}
 
 	private String byteToString(byte[] b) {
-		String str = new String(b, Charset.forName("UTF-8"));
-		return str;
+		return new String(b, StandardCharsets.UTF_8);
 	}
-
-	// Admin Handle Generation
-
-	// public HandleRecordResponse
-
-	// LEGACY OBJECTS: BELOW THIS LINE SHOULD BE REDONE
-
-	// Reserve handles
-
-	// Cut
-	/*
-	 * public HashSet<String>reserveHandle(int reserves) { List<Handles>
-	 * reservedRecords = new ArrayList<Handles>(); List<byte[]> handleList =
-	 * genHandleList(reserves); // Mint new handles
-	 * 
-	 * // Create list of records to be posted for (byte[] h : handleList) {
-	 * reservedRecords.addAll(newReservedHandle(h)); }
-	 * 
-	 * // post the list of handle entries handleRep.saveAll(reservedRecords);
-	 * HashSet<String> savedStr = new HashSet<String>(); for (byte[] h : handleList)
-	 * { savedStr.add(byteToString(h)); }
-	 * 
-	 * return savedStr; }
-	 */
-
-	// Cut
-	/*
-	 * private List<Handles> newReservedHandle(byte[] h) { HandleRecord
-	 * reserveRecord = new HandleRecordReserve(h); //Add new handle string to our
-	 * record return reserveRecord.sortByIdx().getEntries(); }
-	 */
-
-	// Resolve handle
-
-	/*
-	 * public HandleRecord resolveHandleRecord(String handle) throws
-	 * JsonMappingException, JsonProcessingException { List<Handles> hList =
-	 * resolveHandle(handle); // Get list of handle records from repository if
-	 * (hList.isEmpty()) { return new HandleRecord(handle.getBytes()); // Return
-	 * empty HandleRecord if handle record does not exist }
-	 * 
-	 * return getRecord(handle.getBytes(), hList); // Determines type of
-	 * handleRecord and returns appropriate data }
-	 */
-	/*
-	 * 
-	 * private List<Handles> resolveHandle(String handle){ return
-	 * handleRep.resolveHandle(handle.getBytes()); }
-	 */
-	
-	/*
-
-	private HandleRecord getRecord(byte[] handle, List<Handles> hList)
-			throws JsonMappingException, JsonProcessingException {
-
-		// Get PID status and relation status
-
-		String pidStatus = getDataFromType("pidStatus", hList);
-		String relationStatus = getDataFromType("pidRelation", hList);
-
-		// Use pid Status and relation to extrapolate
-
-		if (pidStatus.equals("RESERVED")) {
-			return new HandleRecordReserve(handle);
-		}
-		if (pidStatus.equals("OBSOLETE")) {
-			return new HandleRecordTombstone(handle, hList);
-		}
-		if ((pidStatus.equals("TEST") | pidStatus.equals("ACTIVE")) && relationStatus.equals("")) {
-			return new HandleRecordSpecimen(handle, hList);
-		}
-		if ((pidStatus.equals("TEST") | pidStatus.equals("ACTIVE")) && relationStatus.equals("MERGED")) {
-			return new HandleRecordSpecimenMerged(handle, hList);
-		}
-		if ((pidStatus.equals("TEST") | pidStatus.equals("ACTIVE")) && relationStatus.equals("SPLIT")) {
-			return new HandleRecordSpecimenSplit(handle, hList);
-		}
-
-		logger.warning("Handle pidStatus not been set. Returning best-guess");
-		return new HandleRecord(handle, hList); // In case no PID status has been set
-	}*/
-
-	// Update Handle
-	
-	/*
-
-	public void updateHandle(String handle, int[] idxs, String[] newData) {
-		long timestamp = Instant.now().getEpochSecond();
-
-		for (int i = 0; i < idxs.length; i++) {
-			handleRep.updateHandleRecordData(newData[i].getBytes(), timestamp, handle.getBytes(), idxs[i]);
-		}
-	}*/
-	
-	/*
-
-	public void updateHandle(String handle, HandleRecordSpecimen updates)
-			throws JsonMappingException, JsonProcessingException, JSONException {
-
-		byte[] handleBytes = handle.getBytes();
-
-		// Timestamp to be used in subsequent DB operations
-		Long timestamp = Instant.now().getEpochSecond();
-
-		// Get original record
-		List<Handles> original = resolveHandle(handle);
-
-		// Increment issueNumber field
-		incrementIssueNumber(handleBytes, original, timestamp);
-
-		// Set up json parsing
-		JSONObject jsonObj = new JSONObject(mapper.writeValueAsString(updates));
-		Iterator<String> keys = jsonObj.keys();
-
-		Map<String, String> referentParams = new HashMap<>();
-
-		int idx;
-
-		String type;
-		String data;
-
-		while (keys.hasNext()) {
-			type = keys.next();
-			data = jsonObj.getString(type);
-
-			// logger.info(type + " (type) :"+ data+ " (data)");
-
-			if (type.equals("materialSampleName") | type.equals("identifier") | type.equals("principalAgent")
-					| type.equals("structuralType")) {
-				referentParams.put(type, data);
-			}
-
-			else if (!type.equals("issueNumber")) { // Protection against updating issueNum? (Wouldn't that be
-													// something...)
-				idx = getIdxFromType(original, type);
-				handleRep.updateHandleRecordData(data.getBytes(), timestamp, handleBytes, idx);
-			}
-
-		}
-
-		if (!referentParams.isEmpty()) {
-			updateReferent(handleBytes, referentParams, original, timestamp);
-		}
-	}*/
-	
-	/*
-
-	private void incrementIssueNumber(byte[] handleBytes, List<Handles> original, long timestamp) {
-		// Increase issueNumber by 1
-
-		String issueNum = String.valueOf(Integer.parseInt(getDataFromType("issueNumber", original)) + 1);
-
-		int idx = getIdxFromType(original, "issueNumber");
-
-		handleRep.updateHandleRecordData(issueNum.getBytes(), timestamp, handleBytes, idx);
-	} */
-	
-	/*
-
-	private void updateReferent(byte[] handle, Map<String, String> referentParams, List<Handles> original,
-			long timestamp) throws JsonMappingException, JsonProcessingException {
-		String originalReferentStr = getDataFromType("referent", original);
-		Referent originalReferent = mapper.readValue(originalReferentStr, Referent.class);
-		int idx = getIdxFromType(original, "referent");
-
-		MaterialSampleName msn;
-		List<NameIdTypeTriplet> ids;
-		NameIdTypeTriplet pa;
-		String struct;
-
-		if (referentParams.containsKey("materialSampleName")) {
-			msn = mapper.readValue(referentParams.get("materialSampleName"), MaterialSampleName.class);
-		} else {
-			msn = originalReferent.getMaterialSampleName();
-		}
-		if (referentParams.containsKey("identifier")) {
-			ids = mapper.readValue(referentParams.get("identifier"), new TypeReference<List<NameIdTypeTriplet>>() {
-			});
-		} else {
-			ids = originalReferent.getIdentifier();
-		}
-		if (referentParams.containsKey("principalAgent")) {
-			pa = mapper.readValue(referentParams.get("principalAgent"), NameIdTypeTriplet.class);
-		} else {
-			pa = originalReferent.getPrincipalAgent();
-		}
-		if (referentParams.containsKey("structuralType")) {
-			struct = referentParams.get("structuralType");
-		} else {
-			struct = originalReferent.getStructuralType();
-		}
-
-		Referent newReferent = new Referent(msn, struct, pa, ids);
-
-		handleRep.updateHandleRecordData(newReferent.toString().getBytes(), timestamp, handle, idx);
-	} */
-
-	// Delete Handle
-	
-	/*
-	public void deleteHandleSafe(String handle) {
-		handleRep.deleteAll(resolveHandle(handle));
-	} */
-	
-	/*
-
-	public HandleRecordTombstone createTombstone(byte[] handleB, String tombstone) {
-		// handleRep.flush();
-		HandleRecordTombstone tombstoneRecord = new HandleRecordTombstone(handleB, tombstone);
-		handleRep.saveAll(tombstoneRecord.sortByIdx().getEntries());
-		return tombstoneRecord;
-	} */
-	
-	/*
-
-	public HandleRecordTombstone createTombstoneMerged(byte[] handleB, String tombstone, String siblingPids,
-			String childPid) {
-		HandleRecordTombstone tombstoneRecord = new HandleRecordTombstone(handleB, tombstone);
-		tombstoneRecord.setRelationStatusMerged(siblingPids, childPid);
-		List<Handles> ts = handleRep.saveAll(tombstoneRecord.sortByIdx().getEntries());
-		logger.info("TS is empty: " + String.valueOf(ts.isEmpty()));
-
-		for (Handles h : ts) {
-			logger.info(h.getType() + ": " + h.getData());
-		}
-
-		return tombstoneRecord;
-	} */
-	
-
-	// Merge Handle
-	/*
-	public HandleRecordSpecimenMerged mergeHandle(HandleRecordSpecimenMerged mergeRecord)
-			throws JsonProcessingException {
-		byte[] handle = genHandleList(1).get(0);
-		mergeRecord.setDigitalSpecimenRecordMerged(handle);
-		logger.info(byteToString(handle));
-		logger.info(mergeRecord.getHandleStr());
-		String tombstoneStr = "This handle was merged";
-
-		List<HandleRecordSpecimen> legacyRecord = new ArrayList<HandleRecordSpecimen>();
-
-		for (String h : mergeRecord.getLegacyHandles()) {
-			try {
-				legacyRecord.add((HandleRecordSpecimen) resolveHandleRecord(h));
-			} catch (java.lang.ClassCastException e) {
-				logger.severe("One of the digital objects to be merged is not viable");
-				return null;
-			}
-			deleteHandleSafe(h);
-			createTombstoneMerged(h.getBytes(), tombstoneStr, mergeRecord.getLegacyHandleString(),
-					byteToString(handle));
-		}
-
-		return new HandleRecordSpecimenMerged(handle, handleRep.saveAll(mergeRecord.sortByIdx().getEntries()));
-	} */
-
-	// Split Handle
-	
-	/*
-
-	public List<HandleRecordSpecimenSplit> splitHandleRecord(List<HandleRecordSpecimenSplit> newRecords, String parent)
-			throws JsonProcessingException {
-
-		List<byte[]> siblingHandleBytes = genHandleList(newRecords.size());
-		String siblingHandleStrings = genSiblingString(getStrList(siblingHandleBytes));
-
-		List<HandleRecordSpecimenSplit> postedRecords = new ArrayList<>();
-		byte[] h;
-
-		for (HandleRecordSpecimenSplit record : newRecords) {
-			h = siblingHandleBytes.remove(0);
-			record.setDigitalSpecimenRecordSplit(h, parent, siblingHandleStrings);
-			postedRecords.add(new HandleRecordSpecimenSplit(h, handleRep.saveAll(record.sortByIdx().getEntries())));
-		}
-		String tombstone = "this handle record was split";
-		createTombstoneSplit(parent.getBytes(), tombstone, siblingHandleStrings);
-		return postedRecords;
-	} */
-	
-	/*
-
-	public HandleRecordTombstone createTombstoneSplit(byte[] handleB, String tombstone, String childPid) {
-		HandleRecordTombstone tombstoneRecord = new HandleRecordTombstone(handleB, tombstone);
-		tombstoneRecord.setRelationStatusSplit(childPid);
-		deleteHandleSafe(byteToString(handleB));
-
-		handleRep.saveAll(tombstoneRecord.sortByIdx().getEntries());
-		return tombstoneRecord;
-	} */
-	
-	/*
-
-	private String genSiblingString(List<String> siblingPidsList) {
-		String siblingPids = "{\n";
-		for (String sib : siblingPidsList) {
-			siblingPids += " \"" + sib + "\",\n";
-		}
-		siblingPids = siblingPids.substring(0, siblingPids.length() - 2) + "\n}";
-
-		return siblingPids;
-	} */
-	
-	/*
-
-
-
-	private void saveChildren(List<HandleRecordSpecimenSplit> children) {
-		List<Handles> recordsToSave = new ArrayList<>();
-		for (HandleRecordSpecimenSplit c : children) {
-			recordsToSave.addAll(c.getEntries());
-		}
-
-		handleRep.saveAll(recordsToSave);
-	} */
 
 }
