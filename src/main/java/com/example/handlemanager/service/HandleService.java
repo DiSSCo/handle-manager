@@ -46,6 +46,8 @@ import javax.xml.transform.stream.StreamResult;
 
 import lombok.RequiredArgsConstructor;
 import static com.example.handlemanager.utils.Resources.getDataFromType;
+import static com.example.handlemanager.utils.Resources.setLocations;
+
 import com.example.handlemanager.utils.Resources;
 
 // Postgres value in (value1, value2)..
@@ -79,12 +81,12 @@ public class HandleService {
 
 	// Create Handle Record Batch
 	public List<HandleRecordResponse> createHandleRecordBatch(List<HandleRecordRequest> requests) {
-		logger.info("Called");
 		List<byte[]> handles = genHandleList(requests.size());
-		long timestamp = Instant.now().getEpochSecond();
+		long timestamp = clock.instant().getEpochSecond();
 		List<Handles> handleRecord = new ArrayList<Handles>();
 		List<Handles> handleRecordsAll = new ArrayList<Handles>();
 		List<HandleRecordResponse> response = new ArrayList<HandleRecordResponse>();
+
 		for (int i = 0; i < requests.size(); i++) {
 
 			// Prepare handle record as list of Handles
@@ -102,13 +104,18 @@ public class HandleService {
 		}
 
 		// Save all records
+		System.out.println("GeneratedRecord");
+		for (Handles h: handleRecordsAll){
+			System.out.println(h.toString());
+		}
+
 		handleRep.saveAll(handleRecordsAll);
 		return response;
 	}
 
 	public List<DoiRecordResponse> createDoiRecordBatch(List<DoiRecordRequest> requests) {
 		List<byte[]> handles = genHandleList(requests.size());
-		long timestamp = Instant.now().getEpochSecond();
+		long timestamp = clock.instant().getEpochSecond();
 		List<Handles> doiRecord = new ArrayList<Handles>();
 		List<Handles> doiRecordsAll = new ArrayList<Handles>();
 		List<DoiRecordResponse> response = new ArrayList<DoiRecordResponse>();
@@ -135,7 +142,7 @@ public class HandleService {
 
 	public List<DigitalSpecimenResponse> createDigitalSpecimenBatch(List<DigitalSpecimenRequest> requests) {
 		List<byte[]> handles = genHandleList(requests.size());
-		long timestamp = Instant.now().getEpochSecond();
+		long timestamp = clock.instant().getEpochSecond();
 		List<Handles> digitalSpecimenRecord = new ArrayList<Handles>();
 		List<Handles> digitalSpecimenRecordsAll = new ArrayList<Handles>();
 		List<DigitalSpecimenResponse> response = new ArrayList<DigitalSpecimenResponse>();
@@ -162,7 +169,7 @@ public class HandleService {
 	public List<DigitalSpecimenBotanyResponse> createDigitalSpecimenBotanyBatch(
 			List<DigitalSpecimenBotanyRequest> requests) {
 		List<byte[]> handles = genHandleList(requests.size());
-		long timestamp = Instant.now().getEpochSecond();
+		long timestamp = clock.instant().getEpochSecond();
 		List<Handles> digitalSpecimenBotanyRecord = new ArrayList<Handles>();
 		List<Handles> digitalSpecimenRecordsAll = new ArrayList<Handles>();
 		List<DigitalSpecimenBotanyResponse> response = new ArrayList<DigitalSpecimenBotanyResponse>();
@@ -190,7 +197,7 @@ public class HandleService {
 	public HandleRecordResponse createRecord(HandleRecordRequest request, String recordType)
 			throws PidCreationException {
 		byte[] handle = genHandleList(1).get(0);
-		long timestamp = Instant.now().getEpochSecond();
+		long timestamp = clock.instant().getEpochSecond();
 		List<Handles> handleRecord;
 		HandleRecordResponse response;
 
@@ -337,36 +344,10 @@ public class HandleService {
 		return outputStream.toByteArray();
 	}
 
-	private byte[] setLocations(String[] objectLocations) throws TransformerException, ParserConfigurationException {
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-		DocumentBuilder documentBuilder = dbf.newDocumentBuilder();
 
-		var doc = documentBuilder.newDocument();
-		var locations = doc.createElement("locations");
-		doc.appendChild(locations);
-		for (int i = 0; i < objectLocations.length; i++) {
-
-			var locs = doc.createElement("location"); // Todo: can i add multiple elements with the same name
-			locs.setAttribute("id", String.valueOf(i));
-			locs.setAttribute("href", objectLocations[i]);
-			locs.setAttribute("weight", "0");
-			locations.appendChild(locs);
-		}
-
-		return documentToString(doc).getBytes(StandardCharsets.UTF_8);
-	}
-
-	private String documentToString(Document document) throws TransformerException {
-		var tf = TransformerFactory.newInstance();
-		var transformer = tf.newTransformer();
-		transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-		StringWriter writer = new StringWriter();
-		transformer.transform(new DOMSource(document), new StreamResult(writer));
-		return writer.getBuffer().toString();
-	}
 
 	private String getDate() {
-		DateTimeFormatter dt = DateTimeFormatter.ofPattern("yyyy-mm-dd");
+		DateTimeFormatter dt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 		LocalDateTime now = LocalDateTime.now(clock);
 		return dt.format(now);
 	}
@@ -379,7 +360,6 @@ public class HandleService {
 			type = getDataFromType("digitalObjectType", resolveRecord(h[i]));
 
 		}
-
 		return null;
 	}
 
@@ -413,6 +393,7 @@ public class HandleService {
 
 		// If a duplicate was found, recursively call this function
 		// Generate new handles for every duplicate found and add it to our hash list
+
 		if (!duplicates.isEmpty()) {
 			handleHash.removeAll(duplicates);
 			handleHash.addAll(genHandleHash(duplicates.size()));
