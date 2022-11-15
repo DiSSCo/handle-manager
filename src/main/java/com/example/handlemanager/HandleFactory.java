@@ -22,7 +22,6 @@ class HandleFactory {
 			}
 			else buf[idx] = symbols[random.nextInt(symbols.length)];
 		}
-
 		return new String(buf);
 	}
 
@@ -44,6 +43,4 @@ class HandleFactory {
 	public HandleFactory() {  // Default should be 9 chars
 		this(9, new Random(), ALPHA_NUM);
 	}
-
-
 }
