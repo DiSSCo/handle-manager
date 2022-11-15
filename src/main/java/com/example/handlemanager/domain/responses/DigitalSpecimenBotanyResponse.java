@@ -21,6 +21,8 @@ public class DigitalSpecimenBotanyResponse extends DigitalSpecimenResponse {
 			switch (type) {
 				case "objectType" -> this.objectType = data;
 				case "preservedOrLiving" -> this.preservedOrLiving = data;
+				default -> {
+				}
 			}
 		}
 

@@ -22,6 +22,8 @@ public class DoiRecordResponse extends HandleRecordResponse {
 			switch (type) {
 				case "referentDoiName" -> this.referentDoiName = data;
 				case "referent" -> this.referent = data;
+				default -> {
+				}
 			}
 		}
 	}

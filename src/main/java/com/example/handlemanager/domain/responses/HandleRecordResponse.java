@@ -34,6 +34,8 @@ public class HandleRecordResponse {
 				case "issueNumber" -> this.issueNumber = data;
 				case "pidKernelMetadataLicense" -> this.pidKernelMetadataLicense = data;
 				case "HS_ADMIN" -> this.HS_ADMIN = data;
+				default -> {
+				}
 			}
 		}
 		

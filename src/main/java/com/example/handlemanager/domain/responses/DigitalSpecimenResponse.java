@@ -24,6 +24,8 @@ public class DigitalSpecimenResponse extends DoiRecordResponse {
 				case "digitalOrPhysical" -> this.digitalOrPhysical = data;
 				case "specimenHost" -> this.specimenHost = data;
 				case "inCollectionFacility" -> this.inCollectionFacility = data;
+				default -> {
+				}
 			}
 		}
 		
