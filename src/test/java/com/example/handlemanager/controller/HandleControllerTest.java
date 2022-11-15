@@ -1,381 +1,241 @@
 package com.example.handlemanager.controller;
 
-import com.example.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
-import com.example.handlemanager.domain.requests.DigitalSpecimenRequest;
-import com.example.handlemanager.domain.requests.DoiRecordRequest;
-import com.example.handlemanager.domain.requests.HandleRecordRequest;
-import com.example.handlemanager.domain.responses.DigitalSpecimenBotanyResponse;
-import com.example.handlemanager.domain.responses.DigitalSpecimenResponse;
-import com.example.handlemanager.domain.responses.DoiRecordResponse;
-import com.example.handlemanager.domain.responses.HandleRecordResponse;
+import com.example.handlemanager.domain.requests.*;
+import com.example.handlemanager.domain.responses.*;
 import com.example.handlemanager.exceptions.PidCreationException;
 import com.example.handlemanager.service.HandleService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.Test;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.example.handlemanager.testUtils.TestUtils.*;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-
-@RunWith(SpringRunner.class)
-@WebMvcTest
+@ExtendWith(MockitoExtension.class)
 public class HandleControllerTest {
-	
-	@MockBean
-	HandleService service;
 
-	@Autowired
-	private MockMvc mockMvc;
+    @Mock
+    private HandleService service;
 
-	ObjectMapper mapper = new ObjectMapper();
-	final int requestLen = 3;
+    private HandleController controller;
 
-	private HandleController controller;
+    private final int REQUEST_LEN = 3;
 
-	@BeforeEach
-	public void init() {
-		controller = new HandleController(service);
-	}
+    private byte [] handle;
 
 
+    @BeforeEach
+    void init(){
+        controller = new HandleController(service);
+        handle = HANDLE.getBytes();
+    }
 
-	// Single Record Creation
-	@Test
-	public void handleRecordCreationTest() throws Exception {
-		HandleRecordRequest request = generateTestHandleRequest();
-		HandleRecordResponse response = generateTestHandleResponse(HANDLE.getBytes());
-		when(service.createRecord(eq(request), eq("hdl"))).thenReturn(response);
+    @Test
+    public void handleRecordCreationTest() throws PidCreationException {
+        // Given
+        HandleRecordRequest request = generateTestHandleRequest();
+        HandleRecordResponse responseExpected = generateTestHandleResponse(handle);
+        given(service.createRecord(request, "hdl")).willReturn(responseExpected);
+        // When
+        ResponseEntity<HandleRecordResponse> responseReceived = controller.createRecord(request);
+        // Then
+        assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+    }
+    @Test
+    public void doiRecordCreationTest() throws PidCreationException {
+        // Given
+        DoiRecordRequest request = generateTestDoiRequest();
+        DoiRecordResponse responseExpected = generateTestDoiResponse(handle);
+        given(service.createRecord(request, "doi")).willReturn(responseExpected);
+        // When
+        ResponseEntity<HandleRecordResponse> responseReceived = controller.createRecord(request);
+        // Then
+        assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+    }
+
+    @Test
+    public void digitalSpeciemenCreationTest() throws PidCreationException {
+        // Given
+        DigitalSpecimenRequest request = generateTestDigitalSpecimenRequest();
+        DigitalSpecimenResponse responseExpected = generateTestDigitalSpecimenResponse(handle);
+        given(service.createRecord(request, "ds")).willReturn(responseExpected);
+        // When
+        ResponseEntity<HandleRecordResponse> responseReceived = controller.createRecord(request);
+        // Then
+        assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+    }
+
+    @Test
+    public void digitalSpeciemenBotanyCreationTest() throws PidCreationException {
+        // Given
+        DigitalSpecimenBotanyRequest request = generateTestDigitalSpecimenBotanyRequest();
+        DigitalSpecimenBotanyResponse responseExpected = generateTestDigitalSpecimenBotanyResponse(handle);
+        given(service.createRecord(request, "dsB")).willReturn(responseExpected);
+        // When
+        ResponseEntity<HandleRecordResponse> responseReceived = controller.createRecord(request);
+        // Then
+        assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+    }
+    @Test
+    public void handleRecordBatchCreationTest() throws Exception {
+        // Given
+        List<HandleRecordRequest> requestList = buildHandleRequestList();
+        List<HandleRecordResponse> responseList = buildHandleResponseList();
+
+        given(service.createHandleRecordBatch(requestList)).willReturn(responseList);
+
+        // When
+        ResponseEntity<List<HandleRecordResponse>> responseReceived = controller.createHandleRecordBatch(requestList);
+
+        // Then
+        assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(responseReceived.getBody()).isEqualTo(responseList);
+    }
+
+    @Test
+    public void doiRecordBatchCreationTest() throws Exception {
+        // Given
+        List<DoiRecordRequest> requestList = buildDoiRequestList();
+        List<DoiRecordResponse> responseList = buildDoiResponseList();
+
+        given(service.createDoiRecordBatch(requestList)).willReturn(responseList);
+
+        // When
+        ResponseEntity<List<DoiRecordResponse>> responseReceived = controller.createDoiRecordBatch(requestList);
+
+        // Then
+        assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(responseReceived.getBody()).isEqualTo(responseList);
+    }
+    @Test
+    public void digitalSpecimenBatchCreationTest() throws Exception {
+        // Given
+        List<DigitalSpecimenRequest> requestList = buildDigitalSpecimenRequestList();
+        List<DigitalSpecimenResponse> responseList = buildDigitalSpecimenResponseList();
+
+        given(service.createDigitalSpecimenBatch(requestList)).willReturn(responseList);
+
+        // When
+        ResponseEntity<List<DigitalSpecimenResponse>> responseReceived = controller.createDigitalSpecimenBatch(requestList);
+
+        // Then
+        assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(responseReceived.getBody()).isEqualTo(responseList);
+    }
+
+    @Test
+    public void digitalSpecimenBotanyBatchCreationTest() throws Exception {
+        // Given
+        List<DigitalSpecimenBotanyRequest> requestList = buildDigitalSpecimenBotanyRequestList();
+        List<DigitalSpecimenBotanyResponse> responseList = buildDigitalSpecimenBotanyResponseList();
+
+        given(service.createDigitalSpecimenBotanyBatch(requestList)).willReturn(responseList);
+
+        // When
+        ResponseEntity<List<DigitalSpecimenBotanyResponse>> responseReceived = controller.createDigitalSpecimenBotanyBatch(requestList);
+
+        // Then
+        assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(responseReceived.getBody()).isEqualTo(responseList);
+    }
+
+    public void helloTest() throws Exception {
+        //When
+        ResponseEntity<String> response = controller.hello();
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    private List<HandleRecordRequest> buildHandleRequestList(){
+        List<HandleRecordRequest> requestList= new ArrayList<>();
+        HandleRecordRequest request = generateTestHandleRequest();
+
+        for (int i=0; i<REQUEST_LEN; i++) {
+            requestList.add(request);
+        }
+        return requestList;
+    }
+    private List<HandleRecordResponse> buildHandleResponseList(){
+        List<HandleRecordResponse> responseList= new ArrayList<>();
+        HandleRecordResponse response = generateTestHandleResponse(handle);
+        for (int i=0; i<REQUEST_LEN; i++) {
+            responseList.add(response);
+        }
+        return responseList;
+    }
+
+    private List<DoiRecordRequest> buildDoiRequestList(){
+        List<DoiRecordRequest> requestList= new ArrayList<>();
+        DoiRecordRequest request = generateTestDoiRequest();
+        for (int i=0; i<REQUEST_LEN; i++) {
+            requestList.add(request);
+        }
+        return requestList;
+    }
+    private List<DoiRecordResponse> buildDoiResponseList(){
+        List<DoiRecordResponse> responseList= new ArrayList<>();
+        DoiRecordResponse response = generateTestDoiResponse(handle);
+
+        for (int i=0; i<REQUEST_LEN; i++) {
+            responseList.add(response);
+        }
+        return responseList;
+    }
+
+    // DigitalSpecimens
+    private List<DigitalSpecimenRequest> buildDigitalSpecimenRequestList(){
+        List<DigitalSpecimenRequest> requestList= new ArrayList<>();
+        DigitalSpecimenRequest request = generateTestDigitalSpecimenRequest();
+        for (int i=0; i<REQUEST_LEN; i++) {
+            requestList.add(request);
+        }
+        return requestList;
+    }
+    private List<DigitalSpecimenResponse> buildDigitalSpecimenResponseList(){
+        List<DigitalSpecimenResponse> responseList= new ArrayList<>();
+        DigitalSpecimenResponse response = generateTestDigitalSpecimenResponse(handle);
+
+        for (int i=0; i<REQUEST_LEN; i++) {
+            responseList.add(response);
+        }
+        return responseList;
+    }
 
 
-		mockMvc.perform(post("/api/createRecord")
-				.content(mapper.writeValueAsString(request))
-				.param("pidType", "handle")
-				.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.pid").value(response.getPid()))
-				.andExpect(jsonPath("$.pidIssuer").value(response.getPidIssuer()))
-				.andExpect(jsonPath("$.digitalObjectType").value(response.getDigitalObjectType()))
-				.andExpect(jsonPath("$.digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
-				.andExpect(jsonPath("$.locs").value(response.getLocs()))
-				.andExpect(jsonPath("$.issueDate").value(response.getIssueDate()))
-				.andExpect(jsonPath("$.issueNumber").value(response.getIssueNumber()))
-				.andExpect(jsonPath("$.pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
-				.andExpect(jsonPath("$.hs_ADMIN").value(response.getHS_ADMIN()));
-	}
+    //DigitalSpecimenBotany
+    private List<DigitalSpecimenBotanyRequest> buildDigitalSpecimenBotanyRequestList(){
+        List<DigitalSpecimenBotanyRequest> responseList= new ArrayList<>();
+        DigitalSpecimenBotanyRequest request = generateTestDigitalSpecimenBotanyRequest();
+        for (int i=0; i<REQUEST_LEN; i++) {
+            responseList.add(request);
+        }
+        return responseList;
+    }
+    private List<DigitalSpecimenBotanyResponse> buildDigitalSpecimenBotanyResponseList(){
+        List<DigitalSpecimenBotanyResponse> responseList= new ArrayList<>();
+        DigitalSpecimenBotanyResponse response = generateTestDigitalSpecimenBotanyResponse(handle);
 
-	@Test
-	public void doiRecordCreationTest() throws Exception {
-		DoiRecordRequest request = generateTestDoiRequest();
-		DoiRecordResponse response = generateTestDoiResponse(HANDLE.getBytes());
-		
-		when(service.createRecord(eq(request), eq("doi"))).thenReturn(response);
-
-		mockMvc.perform(post("/api/createRecord")
-				.content(mapper.writeValueAsString(request))
-				.param("pidType", "doi")
-				.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.pid").value(response.getPid()))
-				.andExpect(jsonPath("$.pidIssuer").value(response.getPidIssuer()))
-				.andExpect(jsonPath("$.digitalObjectType").value(response.getDigitalObjectType()))
-				.andExpect(jsonPath("$.digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
-				.andExpect(jsonPath("$.locs").value(response.getLocs()))
-				.andExpect(jsonPath("$.issueDate").value(response.getIssueDate()))
-				.andExpect(jsonPath("$.issueNumber").value(response.getIssueNumber()))
-				.andExpect(jsonPath("$.pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
-				.andExpect(jsonPath("$.hs_ADMIN").value(response.getHS_ADMIN()))
-				.andExpect(jsonPath("$.referentDoiName").value(response.getReferentDoiName()))
-				.andExpect(jsonPath("$.referent").value(response.getReferent()));
-	}
+        for (int i=0; i<REQUEST_LEN; i++) {
+            responseList.add(response);
+        }
+        return responseList;
+    }
 
 
-	@Test
-	public void digitalSpecimenBotanyCreationTest() throws Exception {
-		DigitalSpecimenBotanyRequest request = generateTestDigitalSpecimenBotanyRequest();
-		DigitalSpecimenBotanyResponse response = generateTestDigitalSpecimenBotanyResponse(HANDLE.getBytes());
-
-		when(service.createRecord(eq(request), eq("dsB"))).thenReturn(response);
-
-
-		mockMvc.perform(post("/api/createRecord")
-				.content(mapper.writeValueAsString(request))
-				.param("pidType", "digitalSpecimenBotany")
-				.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.pid").value(response.getPid()))
-				.andExpect(jsonPath("$.pidIssuer").value(response.getPidIssuer()))
-				.andExpect(jsonPath("$.digitalObjectType").value(response.getDigitalObjectType()))
-				.andExpect(jsonPath("$.digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
-				.andExpect(jsonPath("$.locs").value(response.getLocs()))
-				.andExpect(jsonPath("$.issueDate").value(response.getIssueDate()))
-				.andExpect(jsonPath("$.issueNumber").value(response.getIssueNumber()))
-				.andExpect(jsonPath("$.pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
-				.andExpect(jsonPath("$.hs_ADMIN").value(response.getHS_ADMIN()))
-				.andExpect(jsonPath("$.referentDoiName").value(response.getReferentDoiName()))
-				.andExpect(jsonPath("$.referent").value(response.getReferent()))
-				.andExpect(jsonPath("$.digitalOrPhysical").value(response.getDigitalOrPhysical()))
-				.andExpect(jsonPath("$.specimenHost").value(response.getSpecimenHost()))
-				.andExpect(jsonPath("$.inCollectionFacility").value(response.getInCollectionFacility()))
-				.andExpect(jsonPath("$.objectType").value(response.getObjectType()))
-				.andExpect(jsonPath("$.preservedOrLiving").value(response.getPreservedOrLiving()));
-	}
-
-	@Test
-	public void digitalSpecimenCreationTest() throws Exception {
-		DigitalSpecimenRequest request = generateTestDigitalSpecimenRequest();
-		DigitalSpecimenResponse response = generateTestDigitalSpecimenResponse(HANDLE.getBytes());
-
-		when(service.createRecord(eq(request), eq("ds"))).thenReturn(response);
-
-
-		mockMvc.perform(post("/api/createRecord")
-						.content(mapper.writeValueAsString(request))
-						.param("pidType", "digitalSpecimen")
-						.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.pid").value(response.getPid()))
-				.andExpect(jsonPath("$.pidIssuer").value(response.getPidIssuer()))
-				.andExpect(jsonPath("$.digitalObjectType").value(response.getDigitalObjectType()))
-				.andExpect(jsonPath("$.digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
-				.andExpect(jsonPath("$.locs").value(response.getLocs()))
-				.andExpect(jsonPath("$.issueDate").value(response.getIssueDate()))
-				.andExpect(jsonPath("$.issueNumber").value(response.getIssueNumber()))
-				.andExpect(jsonPath("$.pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
-				.andExpect(jsonPath("$.hs_ADMIN").value(response.getHS_ADMIN()))
-				.andExpect(jsonPath("$.referentDoiName").value(response.getReferentDoiName()))
-				.andExpect(jsonPath("$.referent").value(response.getReferent()))
-				.andExpect(jsonPath("$.digitalOrPhysical").value(response.getDigitalOrPhysical()))
-				.andExpect(jsonPath("$.specimenHost").value(response.getSpecimenHost()))
-				.andExpect(jsonPath("$.inCollectionFacility").value(response.getInCollectionFacility()));
-		//.andExpect(jsonPath("$.digitalOrPhysical").value(response.getDigitalOrPhysical()));
-	}
-
-	// Batch Record Creation
-
-	@Test
-	public void handleRecordBatchCreationTest() throws Exception {
-		List<HandleRecordRequest> requestList = buildHandleRequestList();
-		List<HandleRecordResponse> responseList = buildHandleResponseList();
-		HandleRecordResponse response = responseList.get(0);
-		
-		when(service.createHandleRecordBatch(eq(requestList))).thenReturn(responseList);
-
-		mockMvc.perform(post("/api/createRecordBatch")
-				.content(mapper.writeValueAsString(requestList))
-				.param("pidType", "handle")
-				.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$[0].pid").value(response.getPid()))
-				.andExpect(jsonPath("$[0].pid").value(response.getPid()))
-				.andExpect(jsonPath("$[0].pidIssuer").value(response.getPidIssuer()))
-				.andExpect(jsonPath("$[0].digitalObjectType").value(response.getDigitalObjectType()))
-				.andExpect(jsonPath("$[0].digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
-				.andExpect(jsonPath("$[0].locs").value(response.getLocs()))
-				.andExpect(jsonPath("$[0].issueDate").value(response.getIssueDate()))
-				.andExpect(jsonPath("$[0].issueNumber").value(response.getIssueNumber()))
-				.andExpect(jsonPath("$[0].pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
-				.andExpect(jsonPath("$[0].hs_ADMIN").value(response.getHS_ADMIN()))
-				.andExpect(jsonPath("$.length()").value(requestLen));
-	}
-
-	@Test
-	public void doiRecordBatchCreationTest() throws Exception {
-		List<DoiRecordRequest> requestList = buildDoiRequestList();
-		List<DoiRecordResponse> responseList = buildDoiResponseList();
-		DoiRecordResponse response = responseList.get(0);
-		
-		when(service.createDoiRecordBatch(eq(requestList))).thenReturn(responseList);
-
-		mockMvc.perform(post("/api/createRecordBatch")
-				.content(mapper.writeValueAsString(requestList))
-				.param("pidType", "doi")
-				.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$[0].pid").value(response.getPid()))
-				.andExpect(jsonPath("$[0].pid").value(response.getPid()))
-				.andExpect(jsonPath("$[0].pidIssuer").value(response.getPidIssuer()))
-				.andExpect(jsonPath("$[0].digitalObjectType").value(response.getDigitalObjectType()))
-				.andExpect(jsonPath("$[0].digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
-				.andExpect(jsonPath("$[0].locs").value(response.getLocs()))
-				.andExpect(jsonPath("$[0].issueDate").value(response.getIssueDate()))
-				.andExpect(jsonPath("$[0].issueNumber").value(response.getIssueNumber()))
-				.andExpect(jsonPath("$[0].pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
-				.andExpect(jsonPath("$[0].hs_ADMIN").value(response.getHS_ADMIN()))
-				.andExpect(jsonPath("$[0].referentDoiName").value(response.getReferentDoiName()))
-				.andExpect(jsonPath("$[0].referent").value(response.getReferent()))
-				.andExpect(jsonPath("$.length()").value(requestLen));
-	}
-
-	@Test
-	public void digitalSpecimenBatchCreationTest() throws Exception {
-		List<DigitalSpecimenRequest> requestList = buildDigitalSpecimenRequestList();
-		List<DigitalSpecimenResponse> responseList = buildDigitalSpecimenResponseList();
-		DigitalSpecimenResponse response = responseList.get(0);		
-		
-		when(service.createDigitalSpecimenBatch(eq(requestList))).thenReturn(responseList);
-
-
-		mockMvc.perform(post("/api/createRecordBatch")
-				.content(mapper.writeValueAsString(requestList))
-				.param("pidType", "digitalSpecimen")
-				.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$[0].pid").value(response.getPid()))
-				.andExpect(jsonPath("$[0].pid").value(response.getPid()))
-				.andExpect(jsonPath("$[0].pidIssuer").value(response.getPidIssuer()))
-				.andExpect(jsonPath("$[0].digitalObjectType").value(response.getDigitalObjectType()))
-				.andExpect(jsonPath("$[0].digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
-				.andExpect(jsonPath("$[0].locs").value(response.getLocs()))
-				.andExpect(jsonPath("$[0].issueDate").value(response.getIssueDate()))
-				.andExpect(jsonPath("$[0].issueNumber").value(response.getIssueNumber()))
-				.andExpect(jsonPath("$[0].pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
-				.andExpect(jsonPath("$[0].hs_ADMIN").value(response.getHS_ADMIN()))
-				.andExpect(jsonPath("$[0].referentDoiName").value(response.getReferentDoiName()))
-				.andExpect(jsonPath("$[0].referent").value(response.getReferent()))
-				.andExpect(jsonPath("$[0].digitalOrPhysical").value(response.getDigitalOrPhysical()))
-				.andExpect(jsonPath("$[0].specimenHost").value(response.getSpecimenHost()))
-				.andExpect(jsonPath("$[0].inCollectionFacility").value(response.getInCollectionFacility()))
-				.andExpect(jsonPath("$.length()").value(requestLen));
-			
-	}
-
-	@Test
-	public void digitalSpecimenBotanyBatchCreationTest() throws Exception {
-		List<DigitalSpecimenBotanyRequest> requestList = buildDigitalSpecimenBotanyRequestList();
-		List<DigitalSpecimenBotanyResponse> responseList = buildDigitalSpecimenBotanyResponseList();
-		DigitalSpecimenBotanyResponse response = responseList.get(0);
-		
-		when(service.createDigitalSpecimenBotanyBatch(eq(requestList))).thenReturn(responseList);
-
-		mockMvc.perform(post("/api/createRecordBatch")
-				.content(mapper.writeValueAsString(requestList))
-				.param("pidType", "digitalSpecimenBotany")
-				.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$[0].pid").value(response.getPid()))
-				.andExpect(jsonPath("$[0].pid").value(response.getPid()))
-				.andExpect(jsonPath("$[0].pidIssuer").value(response.getPidIssuer()))
-				.andExpect(jsonPath("$[0].digitalObjectType").value(response.getDigitalObjectType()))
-				.andExpect(jsonPath("$[0].digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
-				.andExpect(jsonPath("$[0].locs").value(response.getLocs()))
-				.andExpect(jsonPath("$[0].issueDate").value(response.getIssueDate()))
-				.andExpect(jsonPath("$[0].issueNumber").value(response.getIssueNumber()))
-				.andExpect(jsonPath("$[0].pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
-				.andExpect(jsonPath("$[0].hs_ADMIN").value(response.getHS_ADMIN()))
-				.andExpect(jsonPath("$[0].referentDoiName").value(response.getReferentDoiName()))
-				.andExpect(jsonPath("$[0].referent").value(response.getReferent()))
-				.andExpect(jsonPath("$[0].digitalOrPhysical").value(response.getDigitalOrPhysical()))
-				.andExpect(jsonPath("$[0].specimenHost").value(response.getSpecimenHost()))
-				.andExpect(jsonPath("$[0].inCollectionFacility").value(response.getInCollectionFacility()))
-				.andExpect(jsonPath("$[0].objectType").value(response.getObjectType()))
-				.andExpect(jsonPath("$[0].preservedOrLiving").value(response.getPreservedOrLiving()))
-				.andExpect(jsonPath("$.length()").value(requestLen));
-	}
-	
-	
-	// For completion's sake
-	@Test
-	public void helloTest() throws Exception {
-		mockMvc.perform(get("/api/hello")).andExpect(status().isOk());
-	}
-	
-	
-	
-	// Build Request and Response Lists
-	
-	// Handles
-	private List<HandleRecordRequest> buildHandleRequestList(){
-		List<HandleRecordRequest> requestList= new ArrayList<>();
-		HandleRecordRequest request = generateTestHandleRequest();
-		
-		for (int i=0; i<requestLen; i++) {
-			requestList.add(request);
-		}
-		return requestList;
-	}
-	private List<HandleRecordResponse> buildHandleResponseList(){
-		List<HandleRecordResponse> responseList= new ArrayList<>();
-		HandleRecordResponse response = generateTestHandleResponse(HANDLE.getBytes());
-		
-		for (int i=0; i<requestLen; i++) {
-			responseList.add(response);
-		}
-		return responseList;
-	}
-	
-	// DOIs
-	private List<DoiRecordRequest> buildDoiRequestList(){
-		List<DoiRecordRequest> requestList= new ArrayList<>();
-		DoiRecordRequest request = generateTestDoiRequest();
-		for (int i=0; i<requestLen; i++) {
-			requestList.add(request);
-		}
-		return requestList;
-	}
-	private List<DoiRecordResponse> buildDoiResponseList(){
-		List<DoiRecordResponse> responseList= new ArrayList<>();
-		DoiRecordResponse response = generateTestDoiResponse(HANDLE.getBytes());
-		
-		for (int i=0; i<requestLen; i++) {
-			responseList.add(response);
-		}
-		return responseList;
-	}
-	
-	// DigitalSpecimens
-	private List<DigitalSpecimenRequest> buildDigitalSpecimenRequestList(){
-		List<DigitalSpecimenRequest> requestList= new ArrayList<>();
-		DigitalSpecimenRequest request = generateTestDigitalSpecimenRequest();
-		for (int i=0; i<requestLen; i++) {
-			requestList.add(request);
-		}
-		return requestList;
-	}
-	private List<DigitalSpecimenResponse> buildDigitalSpecimenResponseList(){
-		List<DigitalSpecimenResponse> responseList= new ArrayList<>();
-		DigitalSpecimenResponse response = generateTestDigitalSpecimenResponse(HANDLE.getBytes());
-
-		for (int i=0; i<requestLen; i++) {
-			responseList.add(response);
-		}
-		return responseList;
-	}
-	
-	
-	//DigitalSpecimenBotany
-	private List<DigitalSpecimenBotanyRequest> buildDigitalSpecimenBotanyRequestList(){
-		List<DigitalSpecimenBotanyRequest> responseList= new ArrayList<>();
-		DigitalSpecimenBotanyRequest request = generateTestDigitalSpecimenBotanyRequest();
-		for (int i=0; i<requestLen; i++) {
-			responseList.add(request);
-		}
-		return responseList;
-	}
-	private List<DigitalSpecimenBotanyResponse> buildDigitalSpecimenBotanyResponseList(){
-		List<DigitalSpecimenBotanyResponse> responseList= new ArrayList<>();
-		DigitalSpecimenBotanyResponse response = generateTestDigitalSpecimenBotanyResponse(HANDLE.getBytes());
-		
-		for (int i=0; i<requestLen; i++) {
-			responseList.add(response);
-		}
-		return responseList;
-	}
-	
 }
