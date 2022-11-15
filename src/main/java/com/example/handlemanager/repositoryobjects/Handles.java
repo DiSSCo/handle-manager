@@ -103,7 +103,7 @@ public class Handles implements Serializable, Comparable<Handles>{
 	}
 	
 	public String toStringData() {
-		String FORMATTER = "%-30s";
+		final String FORMATTER = "%-30s";
 		return String.format("%5s", getIdx()) + " | " +
 				String.format(FORMATTER,shrinkString(getType().replace("\n", ""))) + " | " +
 				String.format(FORMATTER,getData()).replace("\n", "") + " | " +
