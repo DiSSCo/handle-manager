@@ -13,11 +13,22 @@ import com.example.handlemanager.service.PidTypeServiceTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -35,7 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 
 @RunWith(SpringRunner.class)
-@WebMvcTest(HandleController.class)
+@WebMvcTest(controllers = HandleController.class)
 public class HandleControllerTest {
 	
 	@MockBean
@@ -43,7 +54,6 @@ public class HandleControllerTest {
 	
 	@Autowired
 	private MockMvc mockMvc;
-
 	ObjectMapper mapper = new ObjectMapper();
 	final int requestLen = 3;
 	
@@ -77,7 +87,7 @@ public class HandleControllerTest {
 				.andExpect(jsonPath("$.pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
 				.andExpect(jsonPath("$.hs_ADMIN").value(response.getHS_ADMIN()));
 	}
-	
+
 	@Test
 	public void doiRecordCreationTest() throws Exception {
 		DoiRecordRequest request = generateTestDoiRequest();
@@ -102,44 +112,15 @@ public class HandleControllerTest {
 				.andExpect(jsonPath("$.referentDoiName").value(response.getReferentDoiName()))
 				.andExpect(jsonPath("$.referent").value(response.getReferent()));
 	}
-	
-	@Test
-	public void digitalSpecimenCreationTest() throws Exception {
-		DigitalSpecimenRequest request = generateTestDigitalSpecimenRequest();
-		DigitalSpecimenResponse response = generateTestDigitalSpecimenResponse(HANDLE.getBytes());
-		
-		when(service.createRecord(eq(request), eq("ds"))).thenReturn(response);
-		
-		
-		mockMvc.perform(post("/api/createRecord")
-				.content(mapper.writeValueAsString(request))
-				.param("pidType", "digitalSpecimen")
-				.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.pid").value(response.getPid()))
-				.andExpect(jsonPath("$.pidIssuer").value(response.getPidIssuer()))
-				.andExpect(jsonPath("$.digitalObjectType").value(response.getDigitalObjectType()))
-				.andExpect(jsonPath("$.digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
-				.andExpect(jsonPath("$.locs").value(response.getLocs()))
-				.andExpect(jsonPath("$.issueDate").value(response.getIssueDate()))
-				.andExpect(jsonPath("$.issueNumber").value(response.getIssueNumber()))
-				.andExpect(jsonPath("$.pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
-				.andExpect(jsonPath("$.hs_ADMIN").value(response.getHS_ADMIN()))
-				.andExpect(jsonPath("$.referentDoiName").value(response.getReferentDoiName()))
-				.andExpect(jsonPath("$.referent").value(response.getReferent()))
-				.andExpect(jsonPath("$.digitalOrPhysical").value(response.getDigitalOrPhysical()))
-				.andExpect(jsonPath("$.specimenHost").value(response.getSpecimenHost()))
-				.andExpect(jsonPath("$.inCollectionFacility").value(response.getInCollectionFacility()));
-				//.andExpect(jsonPath("$.digitalOrPhysical").value(response.getDigitalOrPhysical()));
-	}
-	
+
+
 	@Test
 	public void digitalSpecimenBotanyCreationTest() throws Exception {
-		DigitalSpecimenBotanyRequest request = generateTestDigitalSpecimenBotanyRequest(); 
+		DigitalSpecimenBotanyRequest request = generateTestDigitalSpecimenBotanyRequest();
 		DigitalSpecimenBotanyResponse response = generateTestDigitalSpecimenBotanyResponse(HANDLE.getBytes());
-	
+
 		when(service.createRecord(eq(request), eq("dsB"))).thenReturn(response);
-		
+
 		mockMvc.perform(post("/api/createRecord")
 				.content(mapper.writeValueAsString(request))
 				.param("pidType", "digitalSpecimenBotany")
@@ -162,9 +143,39 @@ public class HandleControllerTest {
 				.andExpect(jsonPath("$.objectType").value(response.getObjectType()))
 				.andExpect(jsonPath("$.preservedOrLiving").value(response.getPreservedOrLiving()));
 	}
-	
+
+	@Test
+	public void digitalSpecimenCreationTest() throws Exception {
+		DigitalSpecimenRequest request = generateTestDigitalSpecimenRequest();
+		DigitalSpecimenResponse response = generateTestDigitalSpecimenResponse(HANDLE.getBytes());
+
+		when(service.createRecord(eq(request), eq("ds"))).thenReturn(response);
+
+
+		mockMvc.perform(post("/api/createRecord")
+						.content(mapper.writeValueAsString(request))
+						.param("pidType", "digitalSpecimen")
+						.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.pid").value(response.getPid()))
+				.andExpect(jsonPath("$.pidIssuer").value(response.getPidIssuer()))
+				.andExpect(jsonPath("$.digitalObjectType").value(response.getDigitalObjectType()))
+				.andExpect(jsonPath("$.digitalObjectSubtype").value(response.getDigitalObjectSubtype()))
+				.andExpect(jsonPath("$.locs").value(response.getLocs()))
+				.andExpect(jsonPath("$.issueDate").value(response.getIssueDate()))
+				.andExpect(jsonPath("$.issueNumber").value(response.getIssueNumber()))
+				.andExpect(jsonPath("$.pidKernelMetadataLicense").value(response.getPidKernelMetadataLicense()))
+				.andExpect(jsonPath("$.hs_ADMIN").value(response.getHS_ADMIN()))
+				.andExpect(jsonPath("$.referentDoiName").value(response.getReferentDoiName()))
+				.andExpect(jsonPath("$.referent").value(response.getReferent()))
+				.andExpect(jsonPath("$.digitalOrPhysical").value(response.getDigitalOrPhysical()))
+				.andExpect(jsonPath("$.specimenHost").value(response.getSpecimenHost()))
+				.andExpect(jsonPath("$.inCollectionFacility").value(response.getInCollectionFacility()));
+		//.andExpect(jsonPath("$.digitalOrPhysical").value(response.getDigitalOrPhysical()));
+	}
+
 	// Batch Record Creation
-	
+
 	@Test
 	public void handleRecordBatchCreationTest() throws Exception {
 		List<HandleRecordRequest> requestList = buildHandleRequestList();
@@ -190,7 +201,7 @@ public class HandleControllerTest {
 				.andExpect(jsonPath("$[0].hs_ADMIN").value(response.getHS_ADMIN()))
 				.andExpect(jsonPath("$.length()").value(requestLen));
 	}
-	
+
 	@Test
 	public void doiRecordBatchCreationTest() throws Exception {
 		List<DoiRecordRequest> requestList = buildDoiRequestList();
@@ -218,7 +229,7 @@ public class HandleControllerTest {
 				.andExpect(jsonPath("$[0].referent").value(response.getReferent()))
 				.andExpect(jsonPath("$.length()").value(requestLen));
 	}
-	
+
 	@Test
 	public void digitalSpecimenBatchCreationTest() throws Exception {
 		List<DigitalSpecimenRequest> requestList = buildDigitalSpecimenRequestList();
@@ -250,7 +261,7 @@ public class HandleControllerTest {
 				.andExpect(jsonPath("$.length()").value(requestLen));
 			
 	}
-	
+
 	@Test
 	public void digitalSpecimenBotanyBatchCreationTest() throws Exception {
 		List<DigitalSpecimenBotanyRequest> requestList = buildDigitalSpecimenBotanyRequestList();
