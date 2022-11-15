@@ -1,8 +1,8 @@
 package com.example.handlemanager.service;
 
 import com.example.handlemanager.exceptions.PidResolutionException;
-import com.example.handlemanager.repositoryObjects.Handles;
 import com.example.handlemanager.repository.HandleRepository;
+import com.example.handlemanager.repositoryObjects.Handles;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
@@ -44,20 +44,20 @@ public class PidTypeService {
 		String pidType;
 		String registrationAgencyDoiName = "";
 		String typeJson = "";
-		String NEW_LINE = "\", \n";
+		String NEWLINE = "\", \n";
 
 		if (pid.contains("doi")) {
 			pidType = "doi";
 			registrationAgencyDoiName = getDataFromType("registrationAgencyDoiName", typeRecord);
 
-			typeJson = "{ \n" + "\"pid\": \"" + pid + NEW_LINE + "\"pidType\": \"" + pidType + NEW_LINE
-					+ "\"primaryNameFromPid\": \"" + primaryNameFromPid + NEW_LINE + "\"registrationAgencyDoiName\": \""
-					+ registrationAgencyDoiName + NEW_LINE + "}";
+			typeJson = "{ \n" + "\"pid\": \"" + pid + NEWLINE + "\"pidType\": \"" + pidType + NEWLINE
+					+ "\"primaryNameFromPid\": \"" + primaryNameFromPid + NEWLINE + "\"registrationAgencyDoiName\": \""
+					+ registrationAgencyDoiName + NEWLINE + "}";
 
 		} else if (pid.contains("handle")) {
 			pidType = "handle";
-			typeJson = "{ \n" + "\"pid\": \"" + pid + NEW_LINE + "\"pidType\": \"" + pidType + NEW_LINE
-					+ "\"primaryNameFromPid\": \"" + primaryNameFromPid + NEW_LINE + "}";
+			typeJson = "{ \n" + "\"pid\": \"" + pid + NEWLINE + "\"pidType\": \"" + pidType + NEWLINE
+					+ "\"primaryNameFromPid\": \"" + primaryNameFromPid + NEWLINE + "}";
 		} else {
 			throw new PidResolutionException(
 					"One of the type PIDs provided resolves to an invalid record (reason: neither \"handle\" nor \"doi\" Check handle " + typePid

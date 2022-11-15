@@ -9,8 +9,8 @@ import com.example.handlemanager.domain.responses.DigitalSpecimenResponse;
 import com.example.handlemanager.domain.responses.DoiRecordResponse;
 import com.example.handlemanager.domain.responses.HandleRecordResponse;
 import com.example.handlemanager.exceptions.PidCreationException;
-import com.example.handlemanager.repositoryObjects.Handles;
 import com.example.handlemanager.repository.HandleRepository;
+import com.example.handlemanager.repositoryObjects.Handles;
 import com.example.handlemanager.utils.HandleFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -64,7 +64,7 @@ class HandleServiceTest {
 		when(hf.newHandle(anyInt())).thenReturn(handlesList);
 
 		// Return empty list to indicate handle is not taken
-		when(handleRep.checkDuplicateHandles(eq(handlesList))).thenReturn(new ArrayList<>());
+		when(handleRep.checkDuplicateHandles(handlesList)).thenReturn(new ArrayList<>());
 
 		//Date and time
 		initTime();
@@ -77,7 +77,7 @@ class HandleServiceTest {
 		HandleRecordRequest request = generateTestHandleRequest();
 		HandleRecordResponse response_expected = generateTestHandleResponse(handle);
 		List<Handles> recordTest = generateTestHandleRecord(handle);
-		when(handleRep.saveAll(eq(recordTest))).thenReturn(recordTest);
+		when(handleRep.saveAll(recordTest)).thenReturn(recordTest);
 
 		// Act
 		HandleRecordResponse response_received = service.createRecord(request, "hdl");
@@ -93,7 +93,7 @@ class HandleServiceTest {
 		DoiRecordRequest request = generateTestDoiRequest();
 		DoiRecordResponse response_expected = generateTestDoiResponse(handle);
 		List<Handles> recordTest = generateTestDoiRecord(handle);
-		when(handleRep.saveAll(eq(recordTest))).thenReturn(recordTest);
+		when(handleRep.saveAll(recordTest)).thenReturn(recordTest);
 
 		// Act
 		HandleRecordResponse response_received = service.createRecord(request, "doi");
@@ -109,7 +109,7 @@ class HandleServiceTest {
 		DigitalSpecimenRequest request = generateTestDigitalSpecimenRequest();
 		DigitalSpecimenResponse response_expected = generateTestDigitalSpecimenResponse(handle);
 		List<Handles> recordTest = generateTestDigitalSpecimenRecord(handle);
-		when(handleRep.saveAll(eq(recordTest))).thenReturn(recordTest);
+		when(handleRep.saveAll(recordTest)).thenReturn(recordTest);
 
 		// Act
 		HandleRecordResponse response_received = service.createRecord(request, "ds");
@@ -126,7 +126,7 @@ class HandleServiceTest {
 		DigitalSpecimenBotanyResponse response_expected = generateTestDigitalSpecimenBotanyResponse(handle);
 		List<Handles> recordTest = generateTestDigitalSpecimenBotanyRecord(handle);
 
-		when(handleRep.saveAll(eq(recordTest))).thenReturn(recordTest);
+		when(handleRep.saveAll(recordTest)).thenReturn(recordTest);
 
 		// Act
 		HandleRecordResponse response_received = service.createRecord(request, "dsB");
@@ -141,7 +141,7 @@ class HandleServiceTest {
 		List<HandleRecordResponse> responseExpected = generateBatchHandleResponse();
 		List<Handles> recordTest = generateBatchHandleList();
 
-		when(handleRep.saveAll(eq(recordTest))).thenReturn(recordTest);
+		when(handleRep.saveAll(recordTest)).thenReturn(recordTest);
 
 		// Act
 		List<HandleRecordResponse> responseReceived = service.createHandleRecordBatch(request);
@@ -156,7 +156,7 @@ class HandleServiceTest {
 		List<DoiRecordResponse> responseExpected = generateBatchDoiResponse();
 		List<Handles> recordTest = generateBatchDoiList();
 
-		when(handleRep.saveAll(eq(recordTest))).thenReturn(recordTest);
+		when(handleRep.saveAll(recordTest)).thenReturn(recordTest);
 
 		// Act
 		List<DoiRecordResponse> responseReceived = service.createDoiRecordBatch(request);
@@ -171,7 +171,7 @@ class HandleServiceTest {
 		List<DigitalSpecimenResponse> responseExpected = generateBatchDigitalSpecimenResponse();
 		List<Handles> recordTest = generateBatchDigitalSpecimenList();
 
-		when(handleRep.saveAll(eq(recordTest))).thenReturn(recordTest);
+		when(handleRep.saveAll(recordTest)).thenReturn(recordTest);
 
 		// Act
 		List<DigitalSpecimenResponse> responseReceived = service.createDigitalSpecimenBatch(request);
@@ -187,7 +187,7 @@ class HandleServiceTest {
 		List<DigitalSpecimenBotanyResponse> responseExpected = generateBatchDigitalSpecimenBotanyResponse();
 		List<Handles> recordTest = generateBatchDigitalSpecimenBotanyList();
 
-		when(handleRep.saveAll(eq(recordTest))).thenReturn(recordTest);
+		when(handleRep.saveAll(recordTest)).thenReturn(recordTest);
 
 		// Act
 		List<DigitalSpecimenBotanyResponse> responseReceived = service.createDigitalSpecimenBotanyBatch(request);

@@ -9,8 +9,8 @@ import com.example.handlemanager.domain.responses.DigitalSpecimenResponse;
 import com.example.handlemanager.domain.responses.DoiRecordResponse;
 import com.example.handlemanager.domain.responses.HandleRecordResponse;
 import com.example.handlemanager.exceptions.PidCreationException;
-import com.example.handlemanager.repositoryObjects.Handles;
 import com.example.handlemanager.repository.HandleRepository;
+import com.example.handlemanager.repositoryObjects.Handles;
 import com.example.handlemanager.utils.HandleFactory;
 import com.example.handlemanager.utils.Resources;
 import lombok.RequiredArgsConstructor;
@@ -67,8 +67,8 @@ public class HandleService {
 		List<byte[]> handles = genHandleList(requests.size());
 		long timestamp = clock.instant().getEpochSecond();
 		List<Handles> handleRecord;
-		List<Handles> handleRecordsAll = new ArrayList<Handles>();
-		List<HandleRecordResponse> response = new ArrayList<HandleRecordResponse>();
+		List<Handles> handleRecordsAll = new ArrayList<>();
+		List<HandleRecordResponse> response = new ArrayList<>();
 
 		for (int i = 0; i < requests.size(); i++) {
 
@@ -149,8 +149,8 @@ public class HandleService {
 		List<byte[]> handles = genHandleList(requests.size());
 		long timestamp = clock.instant().getEpochSecond();
 		List<Handles> digitalSpecimenBotanyRecord;
-		List<Handles> digitalSpecimenRecordsAll = new ArrayList<Handles>();
-		List<DigitalSpecimenBotanyResponse> response = new ArrayList<DigitalSpecimenBotanyResponse>();
+		List<Handles> digitalSpecimenRecordsAll = new ArrayList<>();
+		List<DigitalSpecimenBotanyResponse> response = new ArrayList<>();
 		for (int i = 0; i < requests.size(); i++) {
 
 			// Prepare record as list of Handles
@@ -211,7 +211,7 @@ public class HandleService {
 	// Prepare Record Lists
 
 	private List<Handles> prepareHandleRecord(HandleRecordRequest request, byte[] handle, long timestamp) {
-		List<Handles> handleRecord = new ArrayList<Handles>();
+		List<Handles> handleRecord = new ArrayList<>();
 
 		// 100: Admin Handle
 		handleRecord.add(Resources.genAdminHandle(handle, timestamp));
@@ -331,23 +331,6 @@ public class HandleService {
 		return dt.format(now);
 	}
 
-	// Resolving PID Records
-
-	/*
-
-	public List<HandleRecordResponse> resolve(String[] h) {
-		String type;
-		for (int i = 0; i < h.length; i++) {
-			type = getDataFromType("digitalObjectType", resolveRecord(h[i]));
-
-		}
-		return null;
-	}
-
-	private List<Handles> resolveRecord(String h) {
-		return handleRep.resolveHandle(h.getBytes());
-	}*/
-
 	// Given a list of Handles (of unknown pidStatus), return HandleRecord
 
 	// Minting Handles
@@ -410,7 +393,7 @@ public class HandleService {
 
 	// HashSet<ByteBuffer> --> List<byte[]>
 	private List<byte[]> unwrapBytes(HashSet<ByteBuffer> handleHash) {
-		List<byte[]> handleList = new ArrayList<byte[]>();
+		List<byte[]> handleList = new ArrayList<>();
 		for (ByteBuffer hash : handleHash) {
 			handleList.add(hash.array());
 		}

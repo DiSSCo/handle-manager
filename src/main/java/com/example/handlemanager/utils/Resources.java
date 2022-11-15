@@ -50,8 +50,7 @@ public class Resources {
 	}
 
 	private static int toDigit(char hexChar) {
-		int digit = Character.digit(hexChar, 16);
-		return digit;
+		return Character.digit(hexChar, 16);
 	}
 
 	public static byte[] setLocations(String[] objectLocations) throws TransformerException, ParserConfigurationException {

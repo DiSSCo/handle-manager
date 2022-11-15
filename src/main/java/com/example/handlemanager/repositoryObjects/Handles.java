@@ -38,15 +38,6 @@ public class Handles implements Serializable, Comparable<Handles>{
 	private final boolean admin_write = true;
 	private final boolean pub_read = true;
 	private final boolean pub_write = false;
-
-	
-	// Default permissions
-	/*
-	private final int ttl = 86400;
-	private boolean admin_read = true;
-	private boolean admin_write = true;
-	private boolean pub_read = true;
-	private boolean pub_write = false;*/
 	
 	public Handles() {
 	}

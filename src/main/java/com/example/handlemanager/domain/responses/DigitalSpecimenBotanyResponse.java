@@ -17,15 +17,12 @@ public class DigitalSpecimenBotanyResponse extends DigitalSpecimenResponse {
 
 		for (Handles h : entries) {
 			type = h.getType();
-			data = h.getData();
-			switch (type) {
-				case "objectType" -> this.objectType = data;
-				case "preservedOrLiving" -> this.preservedOrLiving = data;
-				default -> {
-				}
+			if (type.equals("objectType")) {
+				this.objectType = h.getData();
+			}
+			if (type.equals("preservedOrLiving")) {
+				this.preservedOrLiving = h.getData();
 			}
 		}
-
 	}
-
 }

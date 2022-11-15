@@ -2,10 +2,12 @@ package com.example.handlemanager.domain.responses;
 
 import com.example.handlemanager.repositoryObjects.Handles;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
 @Data
+@Slf4j
 public class HandleRecordResponse {
 	private String pid;
 	private String pidIssuer;
@@ -16,7 +18,7 @@ public class HandleRecordResponse {
 	private String issueNumber;
 	private String pidKernelMetadataLicense;
 	private String HS_ADMIN;
-	
+
 	public HandleRecordResponse (List<Handles> entries) {
 		String type;
 		String data;
@@ -35,6 +37,7 @@ public class HandleRecordResponse {
 				case "pidKernelMetadataLicense" -> this.pidKernelMetadataLicense = data;
 				case "HS_ADMIN" -> this.HS_ADMIN = data;
 				default -> {
+					log.info("Base constructor called");
 				}
 			}
 		}

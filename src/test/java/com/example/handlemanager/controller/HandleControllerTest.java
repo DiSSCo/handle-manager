@@ -1,7 +1,13 @@
 package com.example.handlemanager.controller;
 
-import com.example.handlemanager.domain.requests.*;
-import com.example.handlemanager.domain.responses.*;
+import com.example.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
+import com.example.handlemanager.domain.requests.DigitalSpecimenRequest;
+import com.example.handlemanager.domain.requests.DoiRecordRequest;
+import com.example.handlemanager.domain.requests.HandleRecordRequest;
+import com.example.handlemanager.domain.responses.DigitalSpecimenBotanyResponse;
+import com.example.handlemanager.domain.responses.DigitalSpecimenResponse;
+import com.example.handlemanager.domain.responses.DoiRecordResponse;
+import com.example.handlemanager.domain.responses.HandleRecordResponse;
 import com.example.handlemanager.exceptions.PidCreationException;
 import com.example.handlemanager.service.HandleService;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,11 +23,7 @@ import java.util.List;
 
 import static com.example.handlemanager.testUtils.TestUtils.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @ExtendWith(MockitoExtension.class)
 public class HandleControllerTest {
