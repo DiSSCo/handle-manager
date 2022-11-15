@@ -10,7 +10,7 @@ import com.example.handlemanager.domain.responses.DoiRecordResponse;
 import com.example.handlemanager.domain.responses.HandleRecordResponse;
 import com.example.handlemanager.exceptions.PidCreationException;
 import com.example.handlemanager.repository.HandleRepository;
-import com.example.handlemanager.repositoryObjects.Handles;
+import com.example.handlemanager.repositoryobjects.Handles;
 import com.example.handlemanager.utils.HandleFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -10,7 +10,7 @@ import com.example.handlemanager.domain.responses.DoiRecordResponse;
 import com.example.handlemanager.domain.responses.HandleRecordResponse;
 import com.example.handlemanager.exceptions.PidCreationException;
 import com.example.handlemanager.repository.HandleRepository;
-import com.example.handlemanager.repositoryObjects.Handles;
+import com.example.handlemanager.repositoryobjects.Handles;
 import com.example.handlemanager.utils.HandleFactory;
 import com.example.handlemanager.utils.Resources;
 import lombok.RequiredArgsConstructor;
@@ -384,7 +384,7 @@ public class HandleService {
 
 	// Converts List<byte[]> --> HashSet<ByteBuffer>
 	private HashSet<ByteBuffer> wrapBytes(List<byte[]> byteList) {
-		HashSet<ByteBuffer> byteHash = new HashSet<ByteBuffer>();
+		HashSet<ByteBuffer> byteHash = new HashSet<>();
 		for (byte[] bytes : byteList) {
 			byteHash.add(ByteBuffer.wrap(bytes));
 		}

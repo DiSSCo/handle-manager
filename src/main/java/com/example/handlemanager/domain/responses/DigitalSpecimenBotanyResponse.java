@@ -1,6 +1,6 @@
 package com.example.handlemanager.domain.responses;
 
-import com.example.handlemanager.repositoryObjects.Handles;
+import com.example.handlemanager.repositoryobjects.Handles;
 import lombok.Data;
 
 import java.util.List;
@@ -13,7 +13,6 @@ public class DigitalSpecimenBotanyResponse extends DigitalSpecimenResponse {
 	public DigitalSpecimenBotanyResponse(List<Handles> entries) {
 		super(entries);
 		String type;
-		String data;
 
 		for (Handles h : entries) {
 			type = h.getType();

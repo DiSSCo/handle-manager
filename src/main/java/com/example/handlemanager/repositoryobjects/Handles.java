@@ -1,4 +1,4 @@
-package com.example.handlemanager.repositoryObjects;
+package com.example.handlemanager.repositoryobjects;
 
 import org.hibernate.annotations.Type;
 
@@ -31,9 +31,11 @@ public class Handles implements Serializable, Comparable<Handles>{
 	private byte[] data;
 	
 	private long timestamp;
-	private final int ttl = 86400;
 
-	// Default permissions
+
+	// Default values posted to handle server
+	// Do not make static, do not remove
+	private final int ttl = 86400;
 	private final boolean admin_read = true;
 	private final boolean admin_write = true;
 	private final boolean pub_read = true;

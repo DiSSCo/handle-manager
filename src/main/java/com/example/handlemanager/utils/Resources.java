@@ -1,6 +1,6 @@
 package com.example.handlemanager.utils;
 
-import com.example.handlemanager.repositoryObjects.Handles;
+import com.example.handlemanager.repositoryobjects.Handles;
 import org.w3c.dom.Document;
 
 import javax.xml.XMLConstants;

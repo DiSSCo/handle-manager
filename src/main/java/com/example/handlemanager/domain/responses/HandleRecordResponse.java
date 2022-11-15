@@ -1,6 +1,6 @@
 package com.example.handlemanager.domain.responses;
 
-import com.example.handlemanager.repositoryObjects.Handles;
+import com.example.handlemanager.repositoryobjects.Handles;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,9 +36,7 @@ public class HandleRecordResponse {
 				case "issueNumber" -> this.issueNumber = data;
 				case "pidKernelMetadataLicense" -> this.pidKernelMetadataLicense = data;
 				case "HS_ADMIN" -> this.HS_ADMIN = data;
-				default -> {
-					log.info("Base constructor called");
-				}
+				default -> log.info("Base constructor called");
 			}
 		}
 		

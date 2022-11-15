@@ -1,4 +1,4 @@
-package com.example.handlemanager.repositoryObjects;
+package com.example.handlemanager.repositoryobjects;
 
 import org.hibernate.annotations.Type;
 

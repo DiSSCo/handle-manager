@@ -2,7 +2,7 @@ package com.example.handlemanager.service;
 
 import com.example.handlemanager.exceptions.PidResolutionException;
 import com.example.handlemanager.repository.HandleRepository;
-import com.example.handlemanager.repositoryObjects.Handles;
+import com.example.handlemanager.repositoryobjects.Handles;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
@@ -40,11 +40,11 @@ public class PidTypeService {
 		}
 
 		String pid = getDataFromType("pid", typeRecord);
-		String primaryNameFromPid = getDataFromType("primaryNameFromPid", typeRecord); // TODO this should be lower case
+		String primaryNameFromPid = getDataFromType("primaryNameFromPid", typeRecord);
 		String pidType;
 		String registrationAgencyDoiName = "";
 		String typeJson = "";
-		String NEWLINE = "\", \n";
+		final String NEWLINE = "\", \n";
 
 		if (pid.contains("doi")) {
 			pidType = "doi";

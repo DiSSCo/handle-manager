@@ -26,7 +26,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.BDDMockito.given;
 
 @ExtendWith(MockitoExtension.class)
-public class HandleControllerTest {
+class HandleControllerTest {
 
     @Mock
     private HandleService service;
@@ -45,7 +45,7 @@ public class HandleControllerTest {
     }
 
     @Test
-    public void handleRecordCreationTest() throws PidCreationException {
+    void handleRecordCreationTest() throws PidCreationException {
         // Given
         HandleRecordRequest request = generateTestHandleRequest();
         HandleRecordResponse responseExpected = generateTestHandleResponse(handle);
@@ -57,7 +57,7 @@ public class HandleControllerTest {
         assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
     }
     @Test
-    public void doiRecordCreationTest() throws PidCreationException {
+    void doiRecordCreationTest() throws PidCreationException {
         // Given
         DoiRecordRequest request = generateTestDoiRequest();
         DoiRecordResponse responseExpected = generateTestDoiResponse(handle);
@@ -70,7 +70,7 @@ public class HandleControllerTest {
     }
 
     @Test
-    public void digitalSpeciemenCreationTest() throws PidCreationException {
+    void digitalSpeciemenCreationTest() throws PidCreationException {
         // Given
         DigitalSpecimenRequest request = generateTestDigitalSpecimenRequest();
         DigitalSpecimenResponse responseExpected = generateTestDigitalSpecimenResponse(handle);
@@ -83,7 +83,7 @@ public class HandleControllerTest {
     }
 
     @Test
-    public void digitalSpeciemenBotanyCreationTest() throws PidCreationException {
+    void digitalSpeciemenBotanyCreationTest() throws PidCreationException {
         // Given
         DigitalSpecimenBotanyRequest request = generateTestDigitalSpecimenBotanyRequest();
         DigitalSpecimenBotanyResponse responseExpected = generateTestDigitalSpecimenBotanyResponse(handle);
@@ -95,7 +95,7 @@ public class HandleControllerTest {
         assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
     }
     @Test
-    public void handleRecordBatchCreationTest() throws Exception {
+    void handleRecordBatchCreationTest() throws Exception {
         // Given
         List<HandleRecordRequest> requestList = buildHandleRequestList();
         List<HandleRecordResponse> responseList = buildHandleResponseList();
@@ -111,7 +111,7 @@ public class HandleControllerTest {
     }
 
     @Test
-    public void doiRecordBatchCreationTest() throws Exception {
+    void doiRecordBatchCreationTest() throws Exception {
         // Given
         List<DoiRecordRequest> requestList = buildDoiRequestList();
         List<DoiRecordResponse> responseList = buildDoiResponseList();
@@ -126,7 +126,7 @@ public class HandleControllerTest {
         assertThat(responseReceived.getBody()).isEqualTo(responseList);
     }
     @Test
-    public void digitalSpecimenBatchCreationTest() throws Exception {
+    void digitalSpecimenBatchCreationTest() throws Exception {
         // Given
         List<DigitalSpecimenRequest> requestList = buildDigitalSpecimenRequestList();
         List<DigitalSpecimenResponse> responseList = buildDigitalSpecimenResponseList();
@@ -142,7 +142,7 @@ public class HandleControllerTest {
     }
 
     @Test
-    public void digitalSpecimenBotanyBatchCreationTest() throws Exception {
+    void digitalSpecimenBotanyBatchCreationTest() throws Exception {
         // Given
         List<DigitalSpecimenBotanyRequest> requestList = buildDigitalSpecimenBotanyRequestList();
         List<DigitalSpecimenBotanyResponse> responseList = buildDigitalSpecimenBotanyResponseList();
@@ -157,7 +157,7 @@ public class HandleControllerTest {
         assertThat(responseReceived.getBody()).isEqualTo(responseList);
     }
 
-    public void helloTest() throws Exception {
+    void helloTest() throws Exception {
         //When
         ResponseEntity<String> response = controller.hello();
         // Then

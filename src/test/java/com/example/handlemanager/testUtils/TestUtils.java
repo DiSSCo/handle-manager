@@ -8,7 +8,7 @@ import com.example.handlemanager.domain.responses.DigitalSpecimenBotanyResponse;
 import com.example.handlemanager.domain.responses.DigitalSpecimenResponse;
 import com.example.handlemanager.domain.responses.DoiRecordResponse;
 import com.example.handlemanager.domain.responses.HandleRecordResponse;
-import com.example.handlemanager.repositoryObjects.Handles;
+import com.example.handlemanager.repositoryobjects.Handles;
 import com.example.handlemanager.utils.Resources;
 
 import javax.xml.parsers.ParserConfigurationException;

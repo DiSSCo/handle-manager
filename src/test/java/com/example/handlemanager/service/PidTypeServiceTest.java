@@ -1,7 +1,7 @@
 package com.example.handlemanager.service;
 
 import com.example.handlemanager.repository.HandleRepository;
-import com.example.handlemanager.repositoryObjects.Handles;
+import com.example.handlemanager.repositoryobjects.Handles;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -57,7 +57,7 @@ class PidTypeServiceTest {
 	void testPidTypeRecordResolutionHandle() {
 		initTestPidTypeRecordHandle();
 		
-		when(handleRep.resolveHandle(eq(recordPid))).thenReturn(typeRecord);
+		when(handleRep.resolveHandle(recordPid)).thenReturn(typeRecord);
 		
 		String expected = PTR_HANDLE_RECORD;
 		String returned = pidTypeService.resolveTypePid(PID_ISSUER_PID);
@@ -69,7 +69,7 @@ class PidTypeServiceTest {
 	void TestPidTypeRecordResolutionDoi() {
 		initTestPidTypeRecordDoi();
 		
-		when(handleRep.resolveHandle(eq(recordPid))).thenReturn(typeRecord);
+		when(handleRep.resolveHandle(recordPid)).thenReturn(typeRecord);
 		String expected = PTR_DOI_RECORD;
 		String returned = pidTypeService.resolveTypePid(PID_ISSUER_PID);
 
