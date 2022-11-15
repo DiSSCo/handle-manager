@@ -28,6 +28,7 @@ import java.util.logging.Logger;
 import static com.example.handlemanager.testUtils.TestUtils.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
@@ -57,14 +58,14 @@ class HandleServiceTest {
 	@BeforeEach
 	void init() {
 		// Pid type record
-		when(pidTypeService.resolveTypePid(any(String.class))).thenReturn(PTR_HANDLE_RECORD);
+		given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
 
 		// Generating list of handles
 		initHandles();
-		when(hf.newHandle(anyInt())).thenReturn(handlesList);
+		given(hf.newHandle(anyInt())).willReturn(handlesList);
 
 		// Return empty list to indicate handle is not taken
-		when(handleRep.checkDuplicateHandles(handlesList)).thenReturn(new ArrayList<>());
+		given(handleRep.checkDuplicateHandles(handlesList)).willReturn(new ArrayList<>());
 
 		//Date and time
 		initTime();
@@ -72,127 +73,127 @@ class HandleServiceTest {
 
 	@Test 
 	void createHandleRecordTest() throws PidCreationException {
-		// Arrange
+		// Given
 		byte [] handle = handlesList.get(0);
 		HandleRecordRequest request = generateTestHandleRequest();
 		HandleRecordResponse response_expected = generateTestHandleResponse(handle);
 		List<Handles> recordTest = generateTestHandleRecord(handle);
-		when(handleRep.saveAll(recordTest)).thenReturn(recordTest);
+		given(handleRep.saveAll(recordTest)).willReturn(recordTest);
 
-		// Act
+		// When
 		HandleRecordResponse response_received = service.createRecord(request, "hdl");
 
-		// Assert
+		// Then
 		assertThat(response_received).isEqualTo(response_expected);
 	}
 
 	@Test
 	void CreateDoiRecordTest() throws PidCreationException {
-		// Arrange
+		// Given
 		byte [] handle = handlesList.get(0);
 		DoiRecordRequest request = generateTestDoiRequest();
 		DoiRecordResponse response_expected = generateTestDoiResponse(handle);
 		List<Handles> recordTest = generateTestDoiRecord(handle);
-		when(handleRep.saveAll(recordTest)).thenReturn(recordTest);
+		given(handleRep.saveAll(recordTest)).willReturn(recordTest);
 
-		// Act
+		// When
 		HandleRecordResponse response_received = service.createRecord(request, "doi");
 
-		// Assert
+		// Then
 		assertThat(response_received).isEqualTo(response_expected);
 	}
 
 	@Test
 	void CreateDigitalSpecimenTest() throws PidCreationException {
-		// Arrange
+		// Given
 		byte [] handle = handlesList.get(0);
 		DigitalSpecimenRequest request = generateTestDigitalSpecimenRequest();
 		DigitalSpecimenResponse response_expected = generateTestDigitalSpecimenResponse(handle);
 		List<Handles> recordTest = generateTestDigitalSpecimenRecord(handle);
-		when(handleRep.saveAll(recordTest)).thenReturn(recordTest);
+		given(handleRep.saveAll(recordTest)).willReturn(recordTest);
 
-		// Act
+		// When
 		HandleRecordResponse response_received = service.createRecord(request, "ds");
 
-		// Assert
+		// Then
 		assertThat(response_received).isEqualTo(response_expected);
 	}
 
 	@Test
 	void CreateDigitalSpecimenBotanyTest() throws PidCreationException {
-		// Arrange
+		// Given
 		byte [] handle = handlesList.get(0);
 		DigitalSpecimenBotanyRequest request = generateTestDigitalSpecimenBotanyRequest();
 		DigitalSpecimenBotanyResponse response_expected = generateTestDigitalSpecimenBotanyResponse(handle);
 		List<Handles> recordTest = generateTestDigitalSpecimenBotanyRecord(handle);
 
-		when(handleRep.saveAll(recordTest)).thenReturn(recordTest);
+		given(handleRep.saveAll(recordTest)).willReturn(recordTest);
 
-		// Act
+		// When
 		HandleRecordResponse response_received = service.createRecord(request, "dsB");
 
-		// Assert
+		// Then
 		assertThat(response_received).isEqualTo(response_expected);
 	}
 	@Test
 	void createBatchHandleRecordTest() throws PidCreationException {
-		// Arrange
+		// Given
 		List<HandleRecordRequest> request = generateBatchHandleRequest();
 		List<HandleRecordResponse> responseExpected = generateBatchHandleResponse();
 		List<Handles> recordTest = generateBatchHandleList();
 
-		when(handleRep.saveAll(recordTest)).thenReturn(recordTest);
+		given(handleRep.saveAll(recordTest)).willReturn(recordTest);
 
-		// Act
+		// When
 		List<HandleRecordResponse> responseReceived = service.createHandleRecordBatch(request);
 
-		// Assert
+		// Then
 		assertThat(responseExpected).isEqualTo(responseReceived);
 	}
 	@Test
 	void createBatchDoiRecordTest() throws PidCreationException {
-		// Arrange
+		// Given
 		List<DoiRecordRequest> request = generateBatchDoiRequest();
 		List<DoiRecordResponse> responseExpected = generateBatchDoiResponse();
 		List<Handles> recordTest = generateBatchDoiList();
 
-		when(handleRep.saveAll(recordTest)).thenReturn(recordTest);
+		given(handleRep.saveAll(recordTest)).willReturn(recordTest);
 
-		// Act
+		// When
 		List<DoiRecordResponse> responseReceived = service.createDoiRecordBatch(request);
 
-		// Assert
+		// Then
 		assertThat(responseExpected).isEqualTo(responseReceived);
 	}
 	@Test
 	void createBatchDigitalSpecimenTest() throws PidCreationException {
-		// Arrange
+		// Given
 		List<DigitalSpecimenRequest> request = generateBatchDigitalSpecimenRequest();
 		List<DigitalSpecimenResponse> responseExpected = generateBatchDigitalSpecimenResponse();
 		List<Handles> recordTest = generateBatchDigitalSpecimenList();
 
-		when(handleRep.saveAll(recordTest)).thenReturn(recordTest);
+		given(handleRep.saveAll(recordTest)).willReturn(recordTest);
 
-		// Act
+		// When
 		List<DigitalSpecimenResponse> responseReceived = service.createDigitalSpecimenBatch(request);
 
-		// Assert
+		// Then
 		assertThat(responseExpected).isEqualTo(responseReceived);
 	}
 
 	@Test
 	void createBatchDigitalSpecimenBotanyTest() throws PidCreationException {
-		// Arrange
+		// Given
 		List<DigitalSpecimenBotanyRequest> request = generateBatchDigitalSpecimenBotanyRequest();
 		List<DigitalSpecimenBotanyResponse> responseExpected = generateBatchDigitalSpecimenBotanyResponse();
 		List<Handles> recordTest = generateBatchDigitalSpecimenBotanyList();
 
-		when(handleRep.saveAll(recordTest)).thenReturn(recordTest);
+		given(handleRep.saveAll(recordTest)).willReturn(recordTest);
 
-		// Act
+		// When
 		List<DigitalSpecimenBotanyResponse> responseReceived = service.createDigitalSpecimenBotanyBatch(request);
 
-		// Assert
+		// Then
 		assertThat(responseExpected).isEqualTo(responseReceived);
 	}
 

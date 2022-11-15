@@ -17,6 +17,7 @@ import java.util.List;
 import static com.example.handlemanager.testUtils.TestUtils.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -55,24 +56,30 @@ class PidTypeServiceTest {
 	
 	@Test
 	void testPidTypeRecordResolutionHandle() {
+		// Given
 		initTestPidTypeRecordHandle();
-		
-		when(handleRep.resolveHandle(recordPid)).thenReturn(typeRecord);
-		
 		String expected = PTR_HANDLE_RECORD;
+
+		given(handleRep.resolveHandle(recordPid)).willReturn(typeRecord);
+
+		// When
 		String returned = pidTypeService.resolveTypePid(PID_ISSUER_PID);
 
+		// Then
 		assertThat(expected).isEqualTo(returned);
 	}
 	
 	@Test
 	void TestPidTypeRecordResolutionDoi() {
+		//Given
 		initTestPidTypeRecordDoi();
-		
-		when(handleRep.resolveHandle(recordPid)).thenReturn(typeRecord);
 		String expected = PTR_DOI_RECORD;
+		given(handleRep.resolveHandle(recordPid)).willReturn(typeRecord);
+
+		// When
 		String returned = pidTypeService.resolveTypePid(PID_ISSUER_PID);
 
+		// Then
 		assertThat(expected).isEqualTo(returned);
 	}
 	
