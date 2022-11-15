@@ -1,16 +1,3 @@
-FROM openjdk:11.0.15
-WORKDIR /app
-
-#Dependencies 
-COPY .mvn/ .mvn
-COPY mvnw pom.xml ./
-RUN ./mvnw dependency:resolve
-
-#Now for the application
-COPY src ./src
-CMD ["./mvnw", "spring-boot:run"]
-
-=======
 FROM eclipse-temurin:17-alpine as builder
 WORKDIR application
 ARG JAR_FILE=target/*.jar
@@ -30,4 +17,3 @@ COPY --chown=java:java --from=builder application/application/ ./
 USER 1000
 
 ENTRYPOINT ["java", "org.springframework.boot.loader.JarLauncher"]
-
