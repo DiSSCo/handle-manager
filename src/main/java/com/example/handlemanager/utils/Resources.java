@@ -72,6 +72,7 @@ public class Resources {
 
 	private static String documentToString(Document document) throws TransformerException {
 		var tf = TransformerFactory.newInstance();
+		tf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
 		var transformer = tf.newTransformer();
 		transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
 		StringWriter writer = new StringWriter();
