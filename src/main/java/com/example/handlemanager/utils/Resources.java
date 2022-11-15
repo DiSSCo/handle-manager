@@ -52,6 +52,8 @@ public class Resources {
 
 	public static byte[] setLocations(String[] objectLocations) throws TransformerException, ParserConfigurationException {
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+
 		DocumentBuilder documentBuilder = dbf.newDocumentBuilder();
 
 		var doc = documentBuilder.newDocument();
