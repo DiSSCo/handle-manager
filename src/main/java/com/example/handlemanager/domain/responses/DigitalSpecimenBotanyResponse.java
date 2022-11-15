@@ -1,6 +1,6 @@
 package com.example.handlemanager.domain.responses;
 
-import com.example.handlemanager.model.repositoryObjects.Handles;
+import com.example.handlemanager.repositoryObjects.Handles;
 import lombok.Data;
 
 import java.util.List;

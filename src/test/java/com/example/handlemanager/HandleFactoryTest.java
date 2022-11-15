@@ -47,9 +47,9 @@ public class HandleFactoryTest {
 	@Test 
 	public void invalidHandleGenerationParams(){
 		List<byte[]> handleListLong = hf.newHandle(1001);
-		assertEquals(handleListLong.size(), 1000);
+		assertEquals(1000, handleListLong.size());
 		List<byte[]> handleListShort = hf.newHandle(-1);
-		assertEquals(handleListShort.size(), 0);
+		assertEquals(0, handleListShort.size());
 	}
 	
 }

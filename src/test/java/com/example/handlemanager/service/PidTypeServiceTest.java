@@ -1,6 +1,6 @@
 package com.example.handlemanager.service;
 
-import com.example.handlemanager.model.repositoryObjects.Handles;
+import com.example.handlemanager.repositoryObjects.Handles;
 import com.example.handlemanager.repository.HandleRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,7 +13,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import static com.example.handlemanager.testUtils.TestUtils.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,8 +43,6 @@ class PidTypeServiceTest {
 	private String primaryNameFromPid;
 	private String registrationAgencyDoiName;
 	
-	Logger logger =  Logger.getLogger(PidTypeServiceTest.class.getName());	
-	
 	private byte[] recordPid;
 	
 	private List<Handles> typeRecord;
@@ -75,9 +72,6 @@ class PidTypeServiceTest {
 		when(handleRep.resolveHandle(eq(recordPid))).thenReturn(typeRecord);
 		String expected = PTR_DOI_RECORD;
 		String returned = pidTypeService.resolveTypePid(PID_ISSUER_PID);
-		
-		logger.info("Expected: "  + expected);
-		logger.info("Returned: " + returned);
 
 		assertThat(expected).isEqualTo(returned);
 	}

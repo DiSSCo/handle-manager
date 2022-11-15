@@ -9,11 +9,12 @@ import com.example.handlemanager.domain.responses.DigitalSpecimenResponse;
 import com.example.handlemanager.domain.responses.DoiRecordResponse;
 import com.example.handlemanager.domain.responses.HandleRecordResponse;
 import com.example.handlemanager.exceptions.PidCreationException;
-import com.example.handlemanager.model.repositoryObjects.Handles;
+import com.example.handlemanager.repositoryObjects.Handles;
 import com.example.handlemanager.repository.HandleRepository;
 import com.example.handlemanager.utils.HandleFactory;
 import com.example.handlemanager.utils.Resources;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,7 +30,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.logging.Logger;
 
 import static com.example.handlemanager.utils.Resources.setLocations;
 
@@ -39,6 +39,7 @@ import static com.example.handlemanager.utils.Resources.setLocations;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class HandleService {
 
 	@Autowired
@@ -51,7 +52,6 @@ public class HandleService {
 	private Clock clock;
 
 	private HandleFactory hf = new HandleFactory();
-	Logger logger = Logger.getLogger(HandleService.class.getName());
 
 	// Return all handle identifiers, option to filter by status
 	public List<String> getHandles() {
@@ -66,7 +66,7 @@ public class HandleService {
 	public List<HandleRecordResponse> createHandleRecordBatch(List<HandleRecordRequest> requests) {
 		List<byte[]> handles = genHandleList(requests.size());
 		long timestamp = clock.instant().getEpochSecond();
-		List<Handles> handleRecord = new ArrayList<Handles>();
+		List<Handles> handleRecord;
 		List<Handles> handleRecordsAll = new ArrayList<Handles>();
 		List<HandleRecordResponse> response = new ArrayList<HandleRecordResponse>();
 
@@ -182,7 +182,12 @@ public class HandleService {
 		switch (recordType) {
 			case "hdl" -> {
 				handleRecord = prepareHandleRecord(request, handle, timestamp);
-				response = new HandleRecordResponse(handleRep.saveAll(handleRecord));
+				List<Handles> posted = handleRep.saveAll(handleRecord);
+				response = new HandleRecordResponse(posted);
+				log.info("Handle Records saved");
+				for (Handles h: posted){
+					log.info(h.toString());
+				}
 			}
 			case "doi" -> {
 				handleRecord = prepareDoiRecord((DoiRecordRequest) request, handle, timestamp);
@@ -191,18 +196,15 @@ public class HandleService {
 			case "ds" -> {
 				handleRecord = prepareDigitalSpecimenRecord((DigitalSpecimenRequest) request, handle, timestamp);
 				response = new DigitalSpecimenResponse(handleRep.saveAll(handleRecord));
-				logger.info("creating digital specimen");
 			}
 			case "dsB" -> {
 				handleRecord = prepareDigitalSpecimenBotanyRecord((DigitalSpecimenBotanyRequest) request, handle,
 						timestamp);
 				response = new DigitalSpecimenBotanyResponse(handleRep.saveAll(handleRecord));
 			}
-			default ->
-				// Not sure if this is the best way to do this. We should never get here.
-					throw new PidCreationException("An internal error has occured. Invalid pid record type.");
+			default -> throw new PidCreationException("An internal error has occured. Invalid pid record type.");
 		}
-		// TODO: Maybe check response has all the pid kernel entries we're expecting
+		// Maybe check response has all the pid kernel entries we're expecting
 		return response;
 	}
 
@@ -216,20 +218,20 @@ public class HandleService {
 
 		int i = 1;
 		// 1: Pid
-		byte[] pid = concatBytes("https://hdl.handle.net/".getBytes(), handle); // TODO this should check if it's a DOI?
-		handleRecord.add(new Handles(handle, i++, "pid", pid, timestamp));
+		byte[] pid = concatBytes("https://hdl.handle.net/".getBytes(), handle); // Maybe this should check if it's a DOI?
+		handleRecord.add(new Handles(handle, i, "pid", pid, timestamp));
 
 		// 2: PidIssuer
 		String pidIssuer = pidTypeService.resolveTypePid(request.getPidIssuerPid());
-		handleRecord.add(new Handles(handle, i++, "pidIssuer", pidIssuer, timestamp));
+		handleRecord.add(new Handles(handle, ++i, "pidIssuer", pidIssuer, timestamp));
 
 		// 3: Digital Object Type
 		String digitalObjectType = pidTypeService.resolveTypePid(request.getDigitalObjectTypePid());
-		handleRecord.add(new Handles(handle, i++, "digitalObjectType", digitalObjectType, timestamp));
+		handleRecord.add(new Handles(handle, ++i, "digitalObjectType", digitalObjectType, timestamp));
 
 		// 4: Digital Object Subtype
 		String digitalObjectSubtype = pidTypeService.resolveTypePid(request.getDigitalObjectSubtypePid());
-		handleRecord.add(new Handles(handle, i++, "digitalObjectSubtype", digitalObjectSubtype, timestamp));
+		handleRecord.add(new Handles(handle, ++i, "digitalObjectSubtype", digitalObjectSubtype, timestamp));
 
 		// 5: 10320/loc
 		byte[] loc = "".getBytes();
@@ -238,24 +240,23 @@ public class HandleService {
 		} catch (TransformerException | ParserConfigurationException e) {
 			e.printStackTrace();
 		}
-		handleRecord.add(new Handles(handle, i++, "10320/loc", loc, timestamp));
+		handleRecord.add(new Handles(handle, ++i, "10320/loc", loc, timestamp));
 
 		// 6: Issue Date
-		handleRecord.add((new Handles(handle, i++, "issueDate", getDate(), timestamp)));
+		handleRecord.add((new Handles(handle, ++i, "issueDate", getDate(), timestamp)));
 
 		// 7: Issue number
-		handleRecord.add((new Handles(handle, i++, "issueNumber", "1", timestamp))); // TODO: Will every created handle
+		handleRecord.add((new Handles(handle, ++i, "issueNumber", "1", timestamp))); // Will every created handle
 																						// have a 1 for the issue date?
 
 		// 8: PidStatus
-		handleRecord.add((new Handles(handle, i++, "pidStatus", "TEST", timestamp))); // TODO: Can I keep this as test?
+		handleRecord.add((new Handles(handle, ++i, "pidStatus", "TEST", timestamp))); // Can I keep this as TEST?
 
 		// 9, 10: tombstone text, tombstone pids -> Skip
-		i++;
-		i++;
+		i = 11;
 		// 11: PidKernelMetadataLicense:
 		// https://creativecommons.org/publicdomain/zero/1.0/
-		handleRecord.add((new Handles(handle, i++, "pidKernelMetadataLicense",
+		handleRecord.add((new Handles(handle, i, "pidKernelMetadataLicense",
 				"https://creativecommons.org/publicdomain/zero/1.0/", timestamp)));
 
 		return handleRecord;
@@ -267,11 +268,11 @@ public class HandleService {
 
 		// 12: Referent DOI Name
 		String referentDoiName = pidTypeService.resolveTypePid(request.getReferentDoiName());
-		handleRecord.add(new Handles(handle, i++, "referentDoiName", referentDoiName, timestamp));
+		handleRecord.add(new Handles(handle, i, "referentDoiName", referentDoiName, timestamp));
 
 		// 13: Referent -> NOTE: Referent is blank currently until we have a model for
 		// it
-		handleRecord.add(new Handles(handle, i++, "referent", request.getReferent(), timestamp));
+		handleRecord.add(new Handles(handle, ++i, "referent", request.getReferent(), timestamp));
 
 		return handleRecord;
 	}
@@ -282,15 +283,15 @@ public class HandleService {
 		int i = 14;
 
 		// 14: digitalOrPhysical
-		handleRecord.add(new Handles(handle, i++, "digitalOrPhysical", request.getDigitalOrPhysical(), timestamp));
+		handleRecord.add(new Handles(handle, i, "digitalOrPhysical", request.getDigitalOrPhysical(), timestamp));
 
 		// 15: specimenHost
 		String specimenHost = pidTypeService.resolveTypePid(request.getSpecimenHostPid());
-		handleRecord.add(new Handles(handle, i++, "specimenHost", specimenHost, timestamp));
+		handleRecord.add(new Handles(handle, ++i, "specimenHost", specimenHost, timestamp));
 
 		// 16: In collectionFacillity
 		String inCollectionFacillity = pidTypeService.resolveTypePid(request.getInCollectionFacilityPid());
-		handleRecord.add(new Handles(handle, i++, "inCollectionFacillity", inCollectionFacillity, timestamp));
+		handleRecord.add(new Handles(handle, ++i, "inCollectionFacillity", inCollectionFacillity, timestamp));
 
 		return handleRecord;
 	}
@@ -303,10 +304,10 @@ public class HandleService {
 		int i = 17;
 
 		// 17: ObjectType
-		handleRecord.add(new Handles(handle, i++, "objectType", request.getObjectType(), timestamp));
+		handleRecord.add(new Handles(handle, i, "objectType", request.getObjectType(), timestamp));
 
 		// 18: preservedOrLiving
-		handleRecord.add(new Handles(handle, i++, "preservedOrLiving", request.getPreservedOrLiving(), timestamp));
+		handleRecord.add(new Handles(handle, ++i, "preservedOrLiving", request.getPreservedOrLiving(), timestamp));
 
 		return handleRecord;
 	}
@@ -330,7 +331,7 @@ public class HandleService {
 		return dt.format(now);
 	}
 
-	// TODO: Resolving PID Records
+	// Resolving PID Records
 
 	/*
 

@@ -1,7 +1,7 @@
 package com.example.handlemanager.repository;
 
-import com.example.handlemanager.model.repositoryObjects.HandleIdx;
-import com.example.handlemanager.model.repositoryObjects.Handles;
+import com.example.handlemanager.repositoryObjects.HandleIdx;
+import com.example.handlemanager.repositoryObjects.Handles;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

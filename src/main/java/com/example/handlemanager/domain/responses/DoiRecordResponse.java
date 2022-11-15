@@ -1,30 +1,28 @@
 package com.example.handlemanager.domain.responses;
 
-import com.example.handlemanager.model.repositoryObjects.Handles;
+import com.example.handlemanager.repositoryObjects.Handles;
 import lombok.Data;
 
 import java.util.List;
 
 @Data
 public class DoiRecordResponse extends HandleRecordResponse {
-	String referentDoiName;
-	String referent;
+    String referentDoiName;
+    String referent;
 
-	public DoiRecordResponse(List<Handles> entries) {
-		super(entries);
+    public DoiRecordResponse(List<Handles> entries) {
+        super(entries);
 
-		String type;
-		String data;
+        String type;
 
-		for (Handles h : entries) {
-			type = h.getType();
-			data = h.getData();
-			switch (type) {
-				case "referentDoiName" -> this.referentDoiName = data;
-				case "referent" -> this.referent = data;
-				default -> {
-				}
-			}
-		}
-	}
+        for (Handles h : entries) {
+            type = h.getType();
+            if (type.equals(referentDoiName)) {
+                this.referentDoiName = h.getData();
+            }
+            if (type.equals("referent")) {
+                this.referent = h.getData();
+            }
+        }
+    }
 }

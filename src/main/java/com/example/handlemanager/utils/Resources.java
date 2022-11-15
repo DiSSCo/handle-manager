@@ -1,6 +1,6 @@
 package com.example.handlemanager.utils;
 
-import com.example.handlemanager.model.repositoryObjects.Handles;
+import com.example.handlemanager.repositoryObjects.Handles;
 import org.w3c.dom.Document;
 
 import javax.xml.XMLConstants;
@@ -17,6 +17,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class Resources {
+
+	private Resources() {
+		throw new IllegalStateException("Utility class");
+	}
 
 	public static String getDataFromType(String type, List<Handles> hList) {
 		for (Handles h : hList) {

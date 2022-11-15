@@ -1,7 +1,7 @@
 package com.example.handlemanager.service;
 
 import com.example.handlemanager.exceptions.PidResolutionException;
-import com.example.handlemanager.model.repositoryObjects.Handles;
+import com.example.handlemanager.repositoryObjects.Handles;
 import com.example.handlemanager.repository.HandleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,18 +20,19 @@ public class PidTypeService {
 	public HandleRepository handleRep;
 	
 	public String resolveTypePid(String typePid) {
-		String record = "";
+		String pidRecord = "";
 		try {
-			record = resolveTypePidVal(typePid);
+			pidRecord = resolveTypePidVal(typePid);
 		} catch (PidResolutionException e) {
 			e.printStackTrace();
 		}
-		return record;
+		return pidRecord;
 		
 	}
 	
 	@Cacheable
 	private String resolveTypePidVal(String typePid) throws PidResolutionException {
+		if (typePid == null) throw new PidResolutionException("Missing PID in request body.");
 
 		List<Handles> typeRecord = handleRep.resolveHandle(typePid.getBytes());
 		if (typeRecord.isEmpty()) {

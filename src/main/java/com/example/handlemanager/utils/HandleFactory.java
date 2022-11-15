@@ -1,24 +1,25 @@
 package com.example.handlemanager.utils;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.logging.Logger;
 
 // This class generates new handles
 
+@Slf4j
 public class HandleFactory {	
 	
-	public static final String alphaNum = "ABCDEFGHJKLMNPQRSTUVWXYZ1234567890";
+	public static final String ALPHA_NUM = "ABCDEFGHJKLMNPQRSTUVWXYZ1234567890";
 	private final Random random;
 	private final char[] symbols;
 	private final char[] buf;
 
 	// Structure of handle: ABC-123-DEF
-	
-	Logger logger = Logger.getLogger(HandleFactory.class.getName());
 
 	public HandleFactory() {  
-		this(11, new Random(), alphaNum);
+		this(11, new Random(), ALPHA_NUM);
 	}
 
 	private HandleFactory(int length, Random random, String symbols) {
@@ -52,12 +53,12 @@ public class HandleFactory {
 	
 	public List<byte[]> newHandle(int h) { // Generates h number of handles
 		if (h < 1) {
-			logger.warning("Invalid number of handles to be generated");
+			log.warn("Invalid number of handles to be generated");
 			return new ArrayList<>();
 		}
 		int maxHandles = 1000;
 		if (h > maxHandles) {
-			logger.warning("Max number of handles exceeded. Generating maximum " + String.valueOf(maxHandles) + " handles");
+			log.warn("Max number of handles exceeded. Generating maximum {0} handles", String.valueOf(maxHandles));
 			h = maxHandles;
 		}
 		

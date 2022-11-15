@@ -1,4 +1,4 @@
-package com.example.handlemanager.model.repositoryObjects;
+package com.example.handlemanager.repositoryObjects;
 
 import org.hibernate.annotations.Type;
 
@@ -24,11 +24,11 @@ public class HandleIdx implements Serializable{
 	
 	@Column(name="idx")
 	private int idx;
-	
+
 	public HandleIdx() {
-		
+
 	}
-	
+
 	public HandleIdx(byte[] h, int i) {
 		handle = h;
 		idx = i;
@@ -49,7 +49,7 @@ public class HandleIdx implements Serializable{
 	}
 	
 	public String toString() {
-		return Base64.getEncoder().encodeToString(handle) + " | " + String.valueOf(idx);
+		return Base64.getEncoder().encodeToString(handle) + " | " + idx;
 	}
 	
 	// Getters
@@ -62,8 +62,7 @@ public class HandleIdx implements Serializable{
 	}
 	
 	public String getHandleStr() {
-		String str = new String(handle);
-		return str;
+		return new String(handle);
 	}
 	
 	public String getIdxStr() {
