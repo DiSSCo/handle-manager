@@ -51,22 +51,10 @@ public class HandleControllerTest {
 
 	@BeforeEach
 	public void init() {
-		
+		controller = new HandleController(service);
 	}
 
-	public void handleRecordCreationTestNoMVC() throws PidCreationException {
-		// Arrange
-		HandleRecordRequest request = generateTestHandleRequest();
-		HandleRecordResponse response = generateTestHandleResponse(HANDLE.getBytes());
-		when(service.createRecord(eq(request), eq("hdl"))).thenReturn(response);
 
-		// Act
-		ResponseEntity<?> responseReceived = controller.createRecord(request);
-
-		// Assert
-		assert(responseReceived.getStatusCodeValue() == 200);
-
-	}
 
 	// Single Record Creation
 	@Test

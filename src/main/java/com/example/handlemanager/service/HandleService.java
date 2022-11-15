@@ -66,7 +66,7 @@ public class HandleService {
 	public List<HandleRecordResponse> createHandleRecordBatch(List<HandleRecordRequest> requests) {
 		List<byte[]> handles = genHandleList(requests.size());
 		long timestamp = clock.instant().getEpochSecond();
-		List<Handles> handleRecord;
+		List<Handles> handleRecord = new ArrayList<Handles>();
 		List<Handles> handleRecordsAll = new ArrayList<Handles>();
 		List<HandleRecordResponse> response = new ArrayList<HandleRecordResponse>();
 
@@ -87,7 +87,6 @@ public class HandleService {
 		}
 
 		// Save all records
-
 		handleRep.saveAll(handleRecordsAll);
 		return response;
 	}
@@ -215,7 +214,7 @@ public class HandleService {
 		// 100: Admin Handle
 		handleRecord.add(Resources.genAdminHandle(handle, timestamp));
 
-		int i = 0;
+		int i = 1;
 		// 1: Pid
 		byte[] pid = concatBytes("https://hdl.handle.net/".getBytes(), handle); // TODO this should check if it's a DOI?
 		handleRecord.add(new Handles(handle, i++, "pid", pid, timestamp));
