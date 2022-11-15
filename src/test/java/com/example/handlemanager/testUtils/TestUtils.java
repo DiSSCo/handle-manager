@@ -1,22 +1,24 @@
 package com.example.handlemanager.testUtils;
 
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-import java.util.logging.Logger;
-
-import com.example.handlemanager.domain.requests.*;
-import com.example.handlemanager.domain.responses.*;
+import com.example.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
+import com.example.handlemanager.domain.requests.DigitalSpecimenRequest;
+import com.example.handlemanager.domain.requests.DoiRecordRequest;
+import com.example.handlemanager.domain.requests.HandleRecordRequest;
+import com.example.handlemanager.domain.responses.DigitalSpecimenBotanyResponse;
+import com.example.handlemanager.domain.responses.DigitalSpecimenResponse;
+import com.example.handlemanager.domain.responses.DoiRecordResponse;
+import com.example.handlemanager.domain.responses.HandleRecordResponse;
 import com.example.handlemanager.model.repositoryObjects.Handles;
-import com.example.handlemanager.utils.HandleFactory;
 import com.example.handlemanager.utils.Resources;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 import static com.example.handlemanager.utils.Resources.setLocations;
 
@@ -52,18 +54,20 @@ public class TestUtils {
 	public static String PTR_TYPE_DOI = "doi";
 	
 	public static String PTR_REGISTRATION_DOI_NAME = "Registration Agency";
-	
+
+	private static String NEW_LINE = "\", \n";
+
 	public static String PTR_HANDLE_RECORD = "{ \n"
-			+ "\"pid\": \"" + PTR_PID + "\", \n"
-			+ "\"pidType\": \""+PTR_TYPE+"\", \n"
-			+ "\"primaryNameFromPid\": \""+ PTR_PRIMARY_NAME +"\" \n"
+			+ "\"pid\": \"" + PTR_PID + NEW_LINE
+			+ "\"pidType\": \""+PTR_TYPE + NEW_LINE
+			+ "\"primaryNameFromPid\": \""+ PTR_PRIMARY_NAME + NEW_LINE
 			+ "}";
 	
 	public static String PTR_DOI_RECORD = "{ \n"
-			+ "\"pid\": \"" + PTR_PID_DOI + "\", \n"
-			+ "\"pidType\": \""+PTR_TYPE_DOI+"\", \n"
-			+ "\"primaryNameFromPid\": \""+ PTR_PRIMARY_NAME +"\", \n"
-			+ "\"registrationAgencyDoiName\": \""+ PTR_REGISTRATION_DOI_NAME +"\" \n"
+			+ "\"pid\": \"" + PTR_PID_DOI + NEW_LINE
+			+ "\"pidType\": \""+PTR_TYPE_DOI + NEW_LINE
+			+ "\"primaryNameFromPid\": \""+ PTR_PRIMARY_NAME + NEW_LINE
+			+ "\"registrationAgencyDoiName\": \""+ PTR_REGISTRATION_DOI_NAME + NEW_LINE
 			+ "}";
 
 

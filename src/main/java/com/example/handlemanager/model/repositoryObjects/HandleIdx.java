@@ -1,14 +1,13 @@
 package com.example.handlemanager.model.repositoryObjects;
 
-import java.io.Serializable;
-import java.util.Base64;
-import java.util.Objects;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.Lob;
-
-import org.hibernate.annotations.Type;
+import java.io.Serializable;
+import java.util.Base64;
+import java.util.Objects;
 
 // Composite Primary Key for Handles table
 

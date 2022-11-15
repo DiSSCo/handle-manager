@@ -1,12 +1,10 @@
 package com.example.handlemanager.configuration;
 
-import java.time.Clock;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-
-import lombok.RequiredArgsConstructor;
+import java.time.Clock;
 
 @Configuration
 @RequiredArgsConstructor

@@ -21,6 +21,8 @@ public class HandleController {
 
 	@Autowired
 	private HandleService service;
+
+	private String ERROR_MESSAGE = "Unable to create Pid Record";
 	
 	// ** Create Records: handle, doi, digital specimen, botany specimen **
 	
@@ -54,7 +56,7 @@ public class HandleController {
 			return ResponseEntity.ok(service.createRecord(hdl, "hdl"));
 		} catch (PidCreationException e) {
 			e.printStackTrace();
-			return new ResponseEntity<>("Unable to create record", HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<>(ERROR_MESSAGE, HttpStatus.INTERNAL_SERVER_ERROR);
 		}		
 	}
 	
@@ -65,7 +67,7 @@ public class HandleController {
 			return ResponseEntity.ok(service.createRecord(doi, "doi"));
 		} catch (PidCreationException e) {
 			e.printStackTrace();
-			return new ResponseEntity<>("Unable to create record", HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<>(ERROR_MESSAGE, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 	
@@ -76,7 +78,7 @@ public class HandleController {
 			return ResponseEntity.ok(service.createRecord(ds, "ds"));
 		} catch (PidCreationException e) {
 			e.printStackTrace();
-			return new ResponseEntity<>("Unable to create record", HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<>(ERROR_MESSAGE, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 	
@@ -88,7 +90,7 @@ public class HandleController {
 			return ResponseEntity.ok(service.createRecord(dsB, "dsB"));
 		} catch (PidCreationException e) {
 			e.printStackTrace();
-			return new ResponseEntity<>("Unable to create record", HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<>(ERROR_MESSAGE, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		
 	}

@@ -18,7 +18,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.Clock;
 import java.time.ZoneOffset;
@@ -33,8 +32,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@SpringBootTest
-public class HandleServiceTest {
+class HandleServiceTest {
 	
 	@Mock
 	HandleRepository handleRep;
@@ -57,7 +55,7 @@ public class HandleServiceTest {
 	Logger logger = Logger.getLogger(HandleServiceTest.class.getName());
 	
 	@BeforeEach
-	public void init() {
+	void init() {
 		// Pid type record
 		when(pidTypeService.resolveTypePid(any(String.class))).thenReturn(PTR_HANDLE_RECORD);
 
@@ -73,7 +71,7 @@ public class HandleServiceTest {
 	}
 
 	@Test 
-	public void createHandleRecordTest() throws PidCreationException {
+	void createHandleRecordTest() throws PidCreationException {
 		// Arrange
 		byte [] handle = handlesList.get(0);
 		HandleRecordRequest request = generateTestHandleRequest();
@@ -89,7 +87,7 @@ public class HandleServiceTest {
 	}
 
 	@Test
-	public void CreateDoiRecordTest() throws PidCreationException {
+	void CreateDoiRecordTest() throws PidCreationException {
 		// Arrange
 		byte [] handle = handlesList.get(0);
 		DoiRecordRequest request = generateTestDoiRequest();
@@ -105,7 +103,7 @@ public class HandleServiceTest {
 	}
 
 	@Test
-	public void CreateDigitalSpecimenTest() throws PidCreationException {
+	void CreateDigitalSpecimenTest() throws PidCreationException {
 		// Arrange
 		byte [] handle = handlesList.get(0);
 		DigitalSpecimenRequest request = generateTestDigitalSpecimenRequest();
@@ -121,7 +119,7 @@ public class HandleServiceTest {
 	}
 
 	@Test
-	public void CreateDigitalSpecimenBotanyTest() throws PidCreationException {
+	void CreateDigitalSpecimenBotanyTest() throws PidCreationException {
 		// Arrange
 		byte [] handle = handlesList.get(0);
 		DigitalSpecimenBotanyRequest request = generateTestDigitalSpecimenBotanyRequest();
@@ -137,7 +135,7 @@ public class HandleServiceTest {
 		assertThat(response_received).isEqualTo(response_expected);
 	}
 	@Test
-	public void createBatchHandleRecordTest() throws PidCreationException {
+	void createBatchHandleRecordTest() throws PidCreationException {
 		// Arrange
 		List<HandleRecordRequest> request = generateBatchHandleRequest();
 		List<HandleRecordResponse> responseExpected = generateBatchHandleResponse();
@@ -152,7 +150,7 @@ public class HandleServiceTest {
 		assertThat(responseExpected).isEqualTo(responseReceived);
 	}
 	@Test
-	public void createBatchDoiRecordTest() throws PidCreationException {
+	void createBatchDoiRecordTest() throws PidCreationException {
 		// Arrange
 		List<DoiRecordRequest> request = generateBatchDoiRequest();
 		List<DoiRecordResponse> responseExpected = generateBatchDoiResponse();
@@ -167,7 +165,7 @@ public class HandleServiceTest {
 		assertThat(responseExpected).isEqualTo(responseReceived);
 	}
 	@Test
-	public void createBatchDigitalSpecimenTest() throws PidCreationException {
+	void createBatchDigitalSpecimenTest() throws PidCreationException {
 		// Arrange
 		List<DigitalSpecimenRequest> request = generateBatchDigitalSpecimenRequest();
 		List<DigitalSpecimenResponse> responseExpected = generateBatchDigitalSpecimenResponse();
@@ -183,7 +181,7 @@ public class HandleServiceTest {
 	}
 
 	@Test
-	public void createBatchDigitalSpecimenBotanyTest() throws PidCreationException {
+	void createBatchDigitalSpecimenBotanyTest() throws PidCreationException {
 		// Arrange
 		List<DigitalSpecimenBotanyRequest> request = generateBatchDigitalSpecimenBotanyRequest();
 		List<DigitalSpecimenBotanyResponse> responseExpected = generateBatchDigitalSpecimenBotanyResponse();

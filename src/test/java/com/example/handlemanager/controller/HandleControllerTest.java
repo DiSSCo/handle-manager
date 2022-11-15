@@ -8,70 +8,73 @@ import com.example.handlemanager.domain.responses.DigitalSpecimenBotanyResponse;
 import com.example.handlemanager.domain.responses.DigitalSpecimenResponse;
 import com.example.handlemanager.domain.responses.DoiRecordResponse;
 import com.example.handlemanager.domain.responses.HandleRecordResponse;
+import com.example.handlemanager.exceptions.PidCreationException;
 import com.example.handlemanager.service.HandleService;
-import com.example.handlemanager.service.PidTypeServiceTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
-import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import static com.example.handlemanager.testUtils.TestUtils.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
 @RunWith(SpringRunner.class)
-@WebMvcTest(controllers = HandleController.class)
+@WebMvcTest
 public class HandleControllerTest {
 	
 	@MockBean
 	HandleService service;
-	
+
 	@Autowired
 	private MockMvc mockMvc;
+
 	ObjectMapper mapper = new ObjectMapper();
 	final int requestLen = 3;
-	
-	Logger logger =  Logger.getLogger(PidTypeServiceTest.class.getName());
-	
+
+	private HandleController controller;
+
 	@BeforeEach
 	public void init() {
 		
 	}
-	
+
+	public void handleRecordCreationTestNoMVC() throws PidCreationException {
+		// Arrange
+		HandleRecordRequest request = generateTestHandleRequest();
+		HandleRecordResponse response = generateTestHandleResponse(HANDLE.getBytes());
+		when(service.createRecord(eq(request), eq("hdl"))).thenReturn(response);
+
+		// Act
+		ResponseEntity<?> responseReceived = controller.createRecord(request);
+
+		// Assert
+		assert(responseReceived.getStatusCodeValue() == 200);
+
+	}
+
 	// Single Record Creation
 	@Test
 	public void handleRecordCreationTest() throws Exception {
 		HandleRecordRequest request = generateTestHandleRequest();
 		HandleRecordResponse response = generateTestHandleResponse(HANDLE.getBytes());
-		
 		when(service.createRecord(eq(request), eq("hdl"))).thenReturn(response);
-			
+
+
 		mockMvc.perform(post("/api/createRecord")
 				.content(mapper.writeValueAsString(request))
 				.param("pidType", "handle")
@@ -94,7 +97,7 @@ public class HandleControllerTest {
 		DoiRecordResponse response = generateTestDoiResponse(HANDLE.getBytes());
 		
 		when(service.createRecord(eq(request), eq("doi"))).thenReturn(response);
-		
+
 		mockMvc.perform(post("/api/createRecord")
 				.content(mapper.writeValueAsString(request))
 				.param("pidType", "doi")
@@ -120,6 +123,7 @@ public class HandleControllerTest {
 		DigitalSpecimenBotanyResponse response = generateTestDigitalSpecimenBotanyResponse(HANDLE.getBytes());
 
 		when(service.createRecord(eq(request), eq("dsB"))).thenReturn(response);
+
 
 		mockMvc.perform(post("/api/createRecord")
 				.content(mapper.writeValueAsString(request))
@@ -183,7 +187,7 @@ public class HandleControllerTest {
 		HandleRecordResponse response = responseList.get(0);
 		
 		when(service.createHandleRecordBatch(eq(requestList))).thenReturn(responseList);
-		
+
 		mockMvc.perform(post("/api/createRecordBatch")
 				.content(mapper.writeValueAsString(requestList))
 				.param("pidType", "handle")
@@ -209,7 +213,7 @@ public class HandleControllerTest {
 		DoiRecordResponse response = responseList.get(0);
 		
 		when(service.createDoiRecordBatch(eq(requestList))).thenReturn(responseList);
-		
+
 		mockMvc.perform(post("/api/createRecordBatch")
 				.content(mapper.writeValueAsString(requestList))
 				.param("pidType", "doi")
@@ -237,7 +241,8 @@ public class HandleControllerTest {
 		DigitalSpecimenResponse response = responseList.get(0);		
 		
 		when(service.createDigitalSpecimenBatch(eq(requestList))).thenReturn(responseList);
-		
+
+
 		mockMvc.perform(post("/api/createRecordBatch")
 				.content(mapper.writeValueAsString(requestList))
 				.param("pidType", "digitalSpecimen")
@@ -269,7 +274,7 @@ public class HandleControllerTest {
 		DigitalSpecimenBotanyResponse response = responseList.get(0);
 		
 		when(service.createDigitalSpecimenBotanyBatch(eq(requestList))).thenReturn(responseList);
-		
+
 		mockMvc.perform(post("/api/createRecordBatch")
 				.content(mapper.writeValueAsString(requestList))
 				.param("pidType", "digitalSpecimenBotany")
@@ -299,7 +304,7 @@ public class HandleControllerTest {
 	// For completion's sake
 	@Test
 	public void helloTest() throws Exception {
-		mockMvc.perform(get("/api/hello")).andExpect(status().isOk());
+		//mockMvc.perform(get("/api/hello")).andExpect(status().isOk());
 	}
 	
 	

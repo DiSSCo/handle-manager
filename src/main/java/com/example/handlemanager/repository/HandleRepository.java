@@ -1,17 +1,14 @@
 package com.example.handlemanager.repository;
 
-import java.nio.ByteBuffer;
-import java.util.HashSet;
-import java.util.List;
-
+import com.example.handlemanager.model.repositoryObjects.HandleIdx;
+import com.example.handlemanager.model.repositoryObjects.Handles;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.handlemanager.model.repositoryObjects.HandleIdx;
-import com.example.handlemanager.model.repositoryObjects.Handles;
+import java.util.List;
 
 @Repository
 public interface HandleRepository extends JpaRepository<Handles, HandleIdx> {

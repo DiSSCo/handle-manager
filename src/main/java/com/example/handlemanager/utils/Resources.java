@@ -1,12 +1,9 @@
 package com.example.handlemanager.utils;
 
-import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-
 import com.example.handlemanager.model.repositoryObjects.Handles;
 import org.w3c.dom.Document;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -15,6 +12,9 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 public class Resources {
 
@@ -71,8 +71,11 @@ public class Resources {
 	}
 
 	private static String documentToString(Document document) throws TransformerException {
-		var tf = TransformerFactory.newInstance();
-		tf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+		TransformerFactory tf = TransformerFactory.newInstance();
+		tf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+		tf.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+		tf.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
+
 		var transformer = tf.newTransformer();
 		transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
 		StringWriter writer = new StringWriter();

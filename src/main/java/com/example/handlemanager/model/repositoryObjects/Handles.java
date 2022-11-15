@@ -5,6 +5,8 @@ import org.hibernate.annotations.Type;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Objects;
 
 // This class is used to interface with the Handle Server Database
 //
@@ -29,13 +31,15 @@ public class Handles implements Serializable, Comparable<Handles>{
 	private byte[] data;
 	
 	private long timestamp;
-	private final int ttl = 86400;
+
 	
 	// Default permissions
+	/*
+	private final int ttl = 86400;
 	private boolean admin_read = true;
 	private boolean admin_write = true;
 	private boolean pub_read = true;
-	private boolean pub_write = false;
+	private boolean pub_write = false;*/
 	
 	public Handles() {
 	}
@@ -67,12 +71,13 @@ public class Handles implements Serializable, Comparable<Handles>{
 		this.timestamp = timestamp;
 	}
 	
+	/*
 	public void setPermissions(boolean ar, boolean aw, boolean pr, boolean pw) {
 		admin_read = ar;
 		admin_write = aw;
 		pub_read = pr;
 		pub_write = pw;
-	}
+	} */
 	
 	// for sorting
 	@Override
@@ -113,10 +118,11 @@ public class Handles implements Serializable, Comparable<Handles>{
 	}
 	
 	public String toStringData() {
+		String FORMATTER = "%-30s";
 		return String.format("%5s", getIdx()) + " | " +
-				String.format("%-30s",shrinkString(getType().replace("\n", ""))) + " | " +
-				String.format("%-30s",getData()).replace("\n", "") + " | " +
-				String.format("%-30s", String.valueOf(timestamp));
+				String.format(FORMATTER,shrinkString(getType().replace("\n", ""))) + " | " +
+				String.format(FORMATTER,getData()).replace("\n", "") + " | " +
+				String.format(FORMATTER, String.valueOf(timestamp));
 	}
 	
 	public String toString() {
@@ -128,11 +134,32 @@ public class Handles implements Serializable, Comparable<Handles>{
 		return s.substring(0, 30)+"...";
 	}
 
-	@Override
+
+	/*@Override
 	public boolean equals(Object h){
 		if (h == this){ return true; }
-		return this.toString().equals(h.toString()); // This is a bit of a cheat here...
+		if (h.getClass() != this.getClass()) {return false;}
+		try {
+			return this.toString().equals(h.toString()); // This is a bit of a cheat here...
+		} catch (NullPointerException e){
+			return false;
+		}
+	}*/
 
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		Handles handles = (Handles) o;
+		return idx == handles.idx && timestamp == handles.timestamp && Arrays.equals(handle, handles.handle) && Arrays.equals(type, handles.type) && Arrays.equals(data, handles.data);
 	}
-	
+
+	@Override
+	public int hashCode() {
+		int result = Objects.hash(idx, timestamp);
+		result = 31 * result + Arrays.hashCode(handle);
+		result = 31 * result + Arrays.hashCode(type);
+		result = 31 * result + Arrays.hashCode(data);
+		return result;
+	}
 }

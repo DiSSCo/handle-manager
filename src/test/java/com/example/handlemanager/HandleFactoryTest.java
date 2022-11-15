@@ -1,14 +1,12 @@
 package com.example.handlemanager;
 
-import static org.junit.Assert.*;
+import com.example.handlemanager.utils.HandleFactory;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import org.junit.jupiter.api.Test;
-
-import com.example.handlemanager.utils.HandleFactory;
-
-import org.junit.jupiter.api.BeforeEach;
+import static org.junit.Assert.assertEquals;
 
 public class HandleFactoryTest {
 	// Expected format: 20.5000.1025/XRD-2UH-D99

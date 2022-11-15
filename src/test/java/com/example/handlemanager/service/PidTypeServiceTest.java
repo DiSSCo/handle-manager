@@ -1,36 +1,27 @@
 package com.example.handlemanager.service;
 
-import org.junit.jupiter.api.AfterEach;
+import com.example.handlemanager.model.repositoryObjects.Handles;
+import com.example.handlemanager.repository.HandleRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.AdditionalMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.context.SpringBootTest;
-
-import com.example.handlemanager.model.repositoryObjects.Handles;
-import com.example.handlemanager.repository.HandleRepository;
-
-import static com.example.handlemanager.testUtils.TestUtils.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
 
 import java.time.Clock;
-import java.time.Instant;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import static com.example.handlemanager.testUtils.TestUtils.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+
 @ExtendWith(MockitoExtension.class)
-@SpringBootTest
-public class PidTypeServiceTest {
+class PidTypeServiceTest {
 	// NOTE: Pid Type Record => PTR in naming convention because these 
 	// PTR refers to the handle record that stores information about a type
 	
@@ -61,27 +52,24 @@ public class PidTypeServiceTest {
 	
 	
 	@BeforeEach
-	public void init() {
+	void init() {
 		timestamp = initTimestamp();		
 	}
 	
 	@Test
-	public void testPidTypeRecordResolutionHandle() {
+	void testPidTypeRecordResolutionHandle() {
 		initTestPidTypeRecordHandle();
 		
 		when(handleRep.resolveHandle(eq(recordPid))).thenReturn(typeRecord);
 		
 		String expected = PTR_HANDLE_RECORD;
 		String returned = pidTypeService.resolveTypePid(PID_ISSUER_PID);
-		
-		logger.info("Expected: " + expected);
-		logger.info("Returned: " + returned);
-		
-		assert(expected.equals(returned));
+
+		assertThat(expected).isEqualTo(returned);
 	}
 	
 	@Test
-	public void TestPidTypeRecordResolutionDoi() {
+	void TestPidTypeRecordResolutionDoi() {
 		initTestPidTypeRecordDoi();
 		
 		when(handleRep.resolveHandle(eq(recordPid))).thenReturn(typeRecord);
@@ -90,8 +78,8 @@ public class PidTypeServiceTest {
 		
 		logger.info("Expected: "  + expected);
 		logger.info("Returned: " + returned);
-		
-		assert(expected.equals(returned));
+
+		assertThat(expected).isEqualTo(returned);
 	}
 	
 	

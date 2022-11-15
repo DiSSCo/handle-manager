@@ -1,15 +1,15 @@
 package com.example.handlemanager;
 
+import lombok.Data;
+
 import java.util.Objects;
 import java.util.Random;
 
-import lombok.Data;
-
 
 @Data
-public class HandleFactory {
+class HandleFactory {
 
-	public static final String alphaNum = "ABCDEFGHJKLMNPQRSTUVWXYZ1234567890";
+	public static final String ALPHA_NUM = "ABCDEFGHJKLMNPQRSTUVWXYZ1234567890";
 	private final Random random;
 	private final char[] symbols;
 	private final char[] buf;
@@ -38,11 +38,11 @@ public class HandleFactory {
     }
 
 	public HandleFactory(int length) {
-        this(length, new Random(), alphaNum);
+        this(length, new Random(), ALPHA_NUM);
     }
 
 	public HandleFactory() {  // Default should be 9 chars
-		this(9, new Random(), alphaNum);
+		this(9, new Random(), ALPHA_NUM);
 	}
 
 
