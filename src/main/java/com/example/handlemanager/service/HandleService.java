@@ -52,7 +52,6 @@ public class HandleService {
 
 	private HandleFactory hf = new HandleFactory();
 	Logger logger = Logger.getLogger(HandleService.class.getName());
-	//ObjectMapper mapper = new ObjectMapper();
 
 	// Return all handle identifiers, option to filter by status
 	public List<String> getHandles() {
@@ -67,7 +66,7 @@ public class HandleService {
 	public List<HandleRecordResponse> createHandleRecordBatch(List<HandleRecordRequest> requests) {
 		List<byte[]> handles = genHandleList(requests.size());
 		long timestamp = clock.instant().getEpochSecond();
-		List<Handles> handleRecord = new ArrayList<Handles>();
+		List<Handles> handleRecord;
 		List<Handles> handleRecordsAll = new ArrayList<Handles>();
 		List<HandleRecordResponse> response = new ArrayList<HandleRecordResponse>();
 
@@ -150,7 +149,7 @@ public class HandleService {
 			List<DigitalSpecimenBotanyRequest> requests) {
 		List<byte[]> handles = genHandleList(requests.size());
 		long timestamp = clock.instant().getEpochSecond();
-		List<Handles> digitalSpecimenBotanyRecord = new ArrayList<Handles>();
+		List<Handles> digitalSpecimenBotanyRecord;
 		List<Handles> digitalSpecimenRecordsAll = new ArrayList<Handles>();
 		List<DigitalSpecimenBotanyResponse> response = new ArrayList<DigitalSpecimenBotanyResponse>();
 		for (int i = 0; i < requests.size(); i++) {
@@ -216,7 +215,7 @@ public class HandleService {
 		// 100: Admin Handle
 		handleRecord.add(Resources.genAdminHandle(handle, timestamp));
 
-		int i = 1;
+		int i = 0;
 		// 1: Pid
 		byte[] pid = concatBytes("https://hdl.handle.net/".getBytes(), handle); // TODO this should check if it's a DOI?
 		handleRecord.add(new Handles(handle, i++, "pid", pid, timestamp));

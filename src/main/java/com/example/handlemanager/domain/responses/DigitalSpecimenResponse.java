@@ -21,17 +21,9 @@ public class DigitalSpecimenResponse extends DoiRecordResponse {
 			type = h.getType();
 			data = h.getData();
 			switch (type) {
-			case "digitalOrPhysical":
-				this.digitalOrPhysical = data;
-				break;
-			case "specimenHost":
-				this.specimenHost = data;
-				break;
-			case "inCollectionFacility":
-				this.inCollectionFacility = data;
-				break;
-			default:
-				break;
+				case "digitalOrPhysical" -> this.digitalOrPhysical = data;
+				case "specimenHost" -> this.specimenHost = data;
+				case "inCollectionFacility" -> this.inCollectionFacility = data;
 			}
 		}
 		

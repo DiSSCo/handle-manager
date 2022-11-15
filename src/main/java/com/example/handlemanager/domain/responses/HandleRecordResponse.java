@@ -24,37 +24,16 @@ public class HandleRecordResponse {
 		for (Handles h: entries) {
 			type = h.getType();
 			data = h.getData();
-			switch(type) {
-				case "pid":
-					this.pid = data;
-					break;
-				case "pidIssuer":
-					this.pidIssuer = data;
-					break;
-				case "digitalObjectType":
-					this.digitalObjectType = data;
-					break;
-				case "digitalObjectSubtype":
-					this.digitalObjectSubtype = data;
-					break;
-				case "10320/loc":
-					this.locs = data;
-					break;
-				case "issueDate":
-					this.issueDate = data;
-					break;
-				case "issueNumber":
-					this.issueNumber = data;
-					break;
-				case "pidKernelMetadataLicense":
-					this.pidKernelMetadataLicense = data;
-					break;
-				case "HS_ADMIN":
-					this.HS_ADMIN = data;
-					break;
-				default:
-					break;
-				
+			switch (type) {
+				case "pid" -> this.pid = data;
+				case "pidIssuer" -> this.pidIssuer = data;
+				case "digitalObjectType" -> this.digitalObjectType = data;
+				case "digitalObjectSubtype" -> this.digitalObjectSubtype = data;
+				case "10320/loc" -> this.locs = data;
+				case "issueDate" -> this.issueDate = data;
+				case "issueNumber" -> this.issueNumber = data;
+				case "pidKernelMetadataLicense" -> this.pidKernelMetadataLicense = data;
+				case "HS_ADMIN" -> this.HS_ADMIN = data;
 			}
 		}
 		

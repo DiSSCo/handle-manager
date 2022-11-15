@@ -19,14 +19,8 @@ public class DigitalSpecimenBotanyResponse extends DigitalSpecimenResponse {
 			type = h.getType();
 			data = h.getData();
 			switch (type) {
-			case "objectType":
-				this.objectType = data;
-				break;
-			case "preservedOrLiving":
-				this.preservedOrLiving = data;
-				break;
-			default:
-				break;
+				case "objectType" -> this.objectType = data;
+				case "preservedOrLiving" -> this.preservedOrLiving = data;
 			}
 		}
 

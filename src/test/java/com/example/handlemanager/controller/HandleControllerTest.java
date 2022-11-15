@@ -28,6 +28,7 @@ import java.util.List;
 import static com.example.handlemanager.testUtils.TestUtils.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -304,7 +305,7 @@ public class HandleControllerTest {
 	// For completion's sake
 	@Test
 	public void helloTest() throws Exception {
-		//mockMvc.perform(get("/api/hello")).andExpect(status().isOk());
+		mockMvc.perform(get("/api/hello")).andExpect(status().isOk());
 	}
 	
 	

@@ -70,28 +70,16 @@ public class Handles implements Serializable, Comparable<Handles>{
 		this.data = data;
 		this.timestamp = timestamp;
 	}
-	
-	/*
-	public void setPermissions(boolean ar, boolean aw, boolean pr, boolean pw) {
-		admin_read = ar;
-		admin_write = aw;
-		pub_read = pr;
-		pub_write = pw;
-	} */
-	
+
 	// for sorting
 	@Override
 	public int compareTo(Handles h) {
 		return Integer.compare(getIdx(), h.getIdx());
 	}
 	
-	// ToString
-
-	
 	public String getHandle() {
-		
-		String str = new String(handle, StandardCharsets.UTF_8);
-		return str;
+
+		return new String(handle, StandardCharsets.UTF_8);
 	}
 	
 	public byte[] getHandleBytes() {
@@ -103,14 +91,11 @@ public class Handles implements Serializable, Comparable<Handles>{
 	}
 	
 	public String getType() {
-		String str = new String(type, StandardCharsets.UTF_8);
-		return str;
+		return new String(type, StandardCharsets.UTF_8);
 	}
-	
-	
+
 	public String getData() {
-		String str = new String(data, StandardCharsets.UTF_8);
-		return str;
+		return new String(data, StandardCharsets.UTF_8);
 	}
 	
 	public byte[] getDataBytes() {
@@ -133,18 +118,6 @@ public class Handles implements Serializable, Comparable<Handles>{
 		if (s.length() <= 30) return s;
 		return s.substring(0, 30)+"...";
 	}
-
-
-	/*@Override
-	public boolean equals(Object h){
-		if (h == this){ return true; }
-		if (h.getClass() != this.getClass()) {return false;}
-		try {
-			return this.toString().equals(h.toString()); // This is a bit of a cheat here...
-		} catch (NullPointerException e){
-			return false;
-		}
-	}*/
 
 	@Override
 	public boolean equals(Object o) {
