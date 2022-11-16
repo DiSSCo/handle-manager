@@ -12,7 +12,7 @@ import com.example.handlemanager.exceptions.PidCreationException;
 import com.example.handlemanager.exceptions.PidResolutionException;
 import com.example.handlemanager.service.HandleService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,9 +24,10 @@ import java.util.List;
 @RequestMapping("/api")  // Defines base URL for all REST APIs; followed by REST endpoints given to each controller methods
 @RequiredArgsConstructor
 @ControllerAdvice
+@Slf4j
 public class HandleController {
 
-	@Autowired
+
 	private final HandleService service;
 
 	// ** Create Records: handle, doi, digital specimen, botany specimen **
@@ -35,60 +36,62 @@ public class HandleController {
 	
 	@PostMapping(value="/createRecordBatch", params= "pidType=handle")
 	public ResponseEntity<List<HandleRecordResponse>> createHandleRecordBatch(@RequestBody List<HandleRecordRequest> hdl) {
-		return ResponseEntity.ok(service.createHandleRecordBatch(hdl));
+		return ResponseEntity.status(HttpStatus.CREATED).body(service.createHandleRecordBatch(hdl));
 	}
 	
 	@PostMapping(value="/createRecordBatch", params= "pidType=doi")
 	public ResponseEntity<List<DoiRecordResponse>> createDoiRecordBatch(@RequestBody List<DoiRecordRequest> doi) {
-		return ResponseEntity.ok(service.createDoiRecordBatch(doi));
+		return ResponseEntity.status(HttpStatus.CREATED).body(service.createDoiRecordBatch(doi));
 	}
 	
 	@PostMapping(value="/createRecordBatch", params= "pidType=digitalSpecimen")
 	public ResponseEntity<List<DigitalSpecimenResponse>> createDigitalSpecimenBatch(@RequestBody List<DigitalSpecimenRequest> ds) {
-		return ResponseEntity.ok(service.createDigitalSpecimenBatch(ds));
+		return ResponseEntity.status(HttpStatus.CREATED).body(service.createDigitalSpecimenBatch(ds));
 	}
 	
 	@PostMapping(value="/createRecordBatch", params= "pidType=digitalSpecimenBotany")
 	public ResponseEntity<List<DigitalSpecimenBotanyResponse>> createDigitalSpecimenBotanyBatch(@RequestBody List<DigitalSpecimenBotanyRequest> dsB) {
-		return ResponseEntity.ok(service.createDigitalSpecimenBotanyBatch(dsB));
+		return ResponseEntity.status(HttpStatus.CREATED).body(service.createDigitalSpecimenBotanyBatch(dsB));
 	}
 	
 	// Create Single Record
 	@PostMapping(value="/createRecord", params= "pidType=handle")
 	public ResponseEntity<HandleRecordResponse> createRecord(
 			@RequestBody HandleRecordRequest hdl) throws PidCreationException {
-		return ResponseEntity.ok(service.createRecord(hdl, "hdl"));
+		return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecord(hdl, "hdl"));
 	}
 	
 	@PostMapping(value="/createRecord",  params= "pidType=doi")
 	public ResponseEntity<HandleRecordResponse> createRecord(
 			@RequestBody DoiRecordRequest doi) throws PidCreationException {
-		return ResponseEntity.ok(service.createRecord(doi, "doi"));
+		return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecord(doi, "doi"));
 	}
 	
 	@PostMapping(value="/createRecord",  params= "pidType=digitalSpecimen")
 	public ResponseEntity<HandleRecordResponse> createRecord(
 			@RequestBody DigitalSpecimenRequest ds) throws PidCreationException {
-		return ResponseEntity.ok(service.createRecord(ds, "ds"));
+		return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecord(ds, "ds"));
 	}
 	
 	@PostMapping(value="/createRecord",  params= "pidType=digitalSpecimenBotany")
 	public ResponseEntity<HandleRecordResponse> createRecord(
 			@RequestBody DigitalSpecimenBotanyRequest dsB) throws PidCreationException {
-		return ResponseEntity.ok(service.createRecord(dsB, "dsB"));
+		return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecord(dsB, "dsB"));
 	}
 
 	// Hellos and getters
 	
-	@GetMapping(value="/hello") 
+	@GetMapping(value="/health")
 	public ResponseEntity<String> hello() {
-		return new ResponseEntity<>("Hello", HttpStatus.OK);
+		return new ResponseEntity<>("API is running", HttpStatus.OK);
 	}
 	
 	// List all handle values
 	@GetMapping(value="/all")
-	public ResponseEntity<List<String>> getAllHandles() throws PidResolutionException {
-		List<String> handleList = service.getHandles();
+	public ResponseEntity<List<String>> getAllHandles(
+			@RequestParam(value="pageNum", defaultValue = "0") int pageNum,
+			@RequestParam(value="pageSize", defaultValue="100") int pageSize) throws PidResolutionException {
+		List<String> handleList = service.getHandlesPaged(pageNum, pageSize);
 		if (handleList.isEmpty()){
 			throw new PidResolutionException("Unable to locate handles");
 		}
@@ -97,8 +100,11 @@ public class HandleController {
 	
 	@GetMapping(value="/subset")
 	public ResponseEntity<List<String>> getAllHandlesByPidStatus(
-			@RequestParam(name="pidStatus") String pidStatus) throws PidResolutionException {
-		List<String> handleList = service.getHandles(pidStatus);
+			@RequestParam(name="pidStatus") String pidStatus,
+			@RequestParam(value="pageNum", defaultValue = "0") int pageNum,
+			@RequestParam(value="pageSize", defaultValue="100") int pageSize) throws PidResolutionException {
+
+		List<String> handleList = service.getHandlesPaged(pidStatus, pageNum, pageSize);
 		if (handleList.isEmpty()){
 			throw new PidResolutionException("Unable to resolve pids");
 		}
@@ -112,7 +118,7 @@ public class HandleController {
 
 	@ExceptionHandler(PidResolutionException.class)
 	private ResponseEntity<String> pidResolutionException(PidResolutionException e){
-		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
 	}
 
 }

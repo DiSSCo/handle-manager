@@ -1,9 +1,9 @@
 package com.example.handlemanager.domain.requests;
 
-import lombok.Data;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-@Data
+@Getter
 @RequiredArgsConstructor
 public class HandleRecordRequest {
 	final String pidIssuerPid;

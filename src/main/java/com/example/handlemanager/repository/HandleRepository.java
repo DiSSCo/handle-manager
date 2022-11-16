@@ -12,13 +12,21 @@ import java.util.List;
 
 @Repository
 public interface HandleRepository extends JpaRepository<Handles, HandleIdx> {
-	// Get all handles	
+	// Get all handles
+	/*
 	@Query(value="select distinct handle from handles h", nativeQuery=true)
 	List<byte[]> getHandles();	
 
 	@Query(value="select distinct handle from handles h where data = ?1", nativeQuery=true)
-	List<byte[]> getHandles(byte[] pidStatus);	
-	
+	List<byte[]> getHandles(byte[] pidStatus);*/
+
+	@Query(value="select distinct handle from handles h where data = ?1 offset ?2 limit ?3", nativeQuery=true)
+	List<byte[]> getHandles(byte[] pidStatus, int pageNum, int pageSize);
+
+	@Query(value="select distinct handle from handles h offset ?1 limit ?2", nativeQuery=true)
+	List<byte[]> getHandles(int pageNum, int pageSize);
+
+
 	// Resolve single handle
 	@Query(value="select * from handles where handle = ?1", nativeQuery=true)
 	List<Handles> resolveHandle(byte[] handle);
@@ -26,12 +34,6 @@ public interface HandleRepository extends JpaRepository<Handles, HandleIdx> {
 	// Given list of handles, which ones are already taken?
 	@Query(value = "select distinct handle from handles where handle in :hdls", nativeQuery=true)
 	List<byte[]> checkDuplicateHandles(List<byte[]> hdls);
-	
-	// Delete handle record
-	@Modifying
-	@Transactional
-	@Query(value= "delete from handles where handle = ?1", nativeQuery=true)
-	int deleteHandleRecord(byte[] handle);
 	
 	// Given handle and index to modify, update handle record with supplied data
 	@Modifying

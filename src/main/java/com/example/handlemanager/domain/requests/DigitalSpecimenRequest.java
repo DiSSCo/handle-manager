@@ -1,8 +1,8 @@
 package com.example.handlemanager.domain.requests;
 
-import lombok.Data;
+import lombok.Getter;
 
-@Data
+@Getter
 public class DigitalSpecimenRequest extends DoiRecordRequest {
 	final String digitalOrPhysical;
 	final String specimenHostPid;
@@ -25,15 +25,6 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
 		this.digitalOrPhysical = digitalOrPhysical;
 		this.specimenHostPid = specimenHostPid;
 		this.inCollectionFacilityPid = inCollectionFacilityPid;
-	}
-	
-	public DoiRecordRequest getDoiRecordRequest() {
-		return new DoiRecordRequest(
-				this.pidIssuerPid, 
-				this.digitalObjectTypePid, 
-				this.digitalObjectSubtypePid, 
-				this.locations,
-				this.referentDoiName);
 	}
 
 }

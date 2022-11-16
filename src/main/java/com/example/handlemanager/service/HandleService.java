@@ -16,6 +16,9 @@ import com.example.handlemanager.utils.Resources;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -53,14 +56,23 @@ public class HandleService {
 
 	private HandleFactory hf = new HandleFactory();
 
+	public List<String> getHandlesPaged(String pidStatus, int pageNum, int pageSize){
+		return getStrList(handleRep.getHandles(pidStatus.getBytes(), pageNum, pageSize));
+	}
+
+	public List<String> getHandlesPaged(int pageNum, int pageSize){
+		return getStrList(handleRep.getHandles(pageNum, pageSize));
+	}
+
+
 	// Return all handle identifiers, option to filter by status
-	public List<String> getHandles() {
+	/*public List<String> getHandles() {
 		return getStrList(handleRep.getHandles());
 	}
 
 	public List<String> getHandles(String pidStatus) {
 		return getStrList(handleRep.getHandles(pidStatus.getBytes()));
-	}
+	}*/
 
 	// Create Handle Record Batch
 	public List<HandleRecordResponse> createHandleRecordBatch(List<HandleRecordRequest> requests) {
@@ -184,13 +196,11 @@ public class HandleService {
 				handleRecord = prepareHandleRecord(request, handle, timestamp);
 				List<Handles> posted = handleRep.saveAll(handleRecord);
 				response = new HandleRecordResponse(posted);
-				log.info("Handle Records saved");
-				for (Handles h: posted){
-					log.info(h.toString());
-				}
 			}
 			case "doi" -> {
-				handleRecord = prepareDoiRecord((DoiRecordRequest) request, handle, timestamp);
+				DoiRecordRequest doi = (DoiRecordRequest) request;
+				log.info("Casting handle record request. referent name: " + doi.getReferentDoiName());
+				handleRecord = prepareDoiRecord(doi, handle, timestamp);
 				response = new DoiRecordResponse(handleRep.saveAll(handleRecord));
 			}
 			case "ds" -> {
@@ -263,11 +273,13 @@ public class HandleService {
 	}
 
 	private List<Handles> prepareDoiRecord(DoiRecordRequest request, byte[] handle, long timestamp) {
-		List<Handles> handleRecord = prepareHandleRecord(request.getHandleRecordRequest(), handle, timestamp);
+		List<Handles> handleRecord = prepareHandleRecord(request, handle, timestamp);
 		int i = 12;
+		log.info("now in the subfunction: " + request.getReferentDoiName());
 
 		// 12: Referent DOI Name
 		String referentDoiName = pidTypeService.resolveTypePid(request.getReferentDoiName());
+		log.info ("Resolved referentDoiName = " + referentDoiName);
 		handleRecord.add(new Handles(handle, i, "referentDoiName", referentDoiName, timestamp));
 
 		// 13: Referent -> NOTE: Referent is blank currently until we have a model for
@@ -278,7 +290,7 @@ public class HandleService {
 	}
 
 	private List<Handles> prepareDigitalSpecimenRecord(DigitalSpecimenRequest request, byte[] handle, long timestamp) {
-		List<Handles> handleRecord = prepareDoiRecord(request.getDoiRecordRequest(), handle, timestamp);
+		List<Handles> handleRecord = prepareDoiRecord(request, handle, timestamp);
 
 		int i = 14;
 
@@ -291,15 +303,14 @@ public class HandleService {
 
 		// 16: In collectionFacillity
 		String inCollectionFacillity = pidTypeService.resolveTypePid(request.getInCollectionFacilityPid());
-		handleRecord.add(new Handles(handle, ++i, "inCollectionFacillity", inCollectionFacillity, timestamp));
+		handleRecord.add(new Handles(handle, ++i, "inCollectionFacility", inCollectionFacillity, timestamp));
 
 		return handleRecord;
 	}
 
 	private List<Handles> prepareDigitalSpecimenBotanyRecord(DigitalSpecimenBotanyRequest request, byte[] handle,
 			long timestamp) {
-		List<Handles> handleRecord = prepareDigitalSpecimenRecord(request.getDigitalSpecimenRequest(), handle,
-				timestamp);
+		List<Handles> handleRecord = prepareDigitalSpecimenRecord(request, handle, timestamp);
 
 		int i = 17;
 

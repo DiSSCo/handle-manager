@@ -53,7 +53,7 @@ class HandleControllerTest {
         // When
         ResponseEntity<HandleRecordResponse> responseReceived = controller.createRecord(request);
         // Then
-        assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
     }
     @Test
@@ -65,7 +65,7 @@ class HandleControllerTest {
         // When
         ResponseEntity<HandleRecordResponse> responseReceived = controller.createRecord(request);
         // Then
-        assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
     }
 
@@ -78,7 +78,7 @@ class HandleControllerTest {
         // When
         ResponseEntity<HandleRecordResponse> responseReceived = controller.createRecord(request);
         // Then
-        assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
     }
 
@@ -91,7 +91,7 @@ class HandleControllerTest {
         // When
         ResponseEntity<HandleRecordResponse> responseReceived = controller.createRecord(request);
         // Then
-        assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
     }
     @Test
@@ -106,7 +106,7 @@ class HandleControllerTest {
         ResponseEntity<List<HandleRecordResponse>> responseReceived = controller.createHandleRecordBatch(requestList);
 
         // Then
-        assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(responseReceived.getBody()).isEqualTo(responseList);
     }
 
@@ -122,7 +122,7 @@ class HandleControllerTest {
         ResponseEntity<List<DoiRecordResponse>> responseReceived = controller.createDoiRecordBatch(requestList);
 
         // Then
-        assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(responseReceived.getBody()).isEqualTo(responseList);
     }
     @Test
@@ -137,7 +137,7 @@ class HandleControllerTest {
         ResponseEntity<List<DigitalSpecimenResponse>> responseReceived = controller.createDigitalSpecimenBatch(requestList);
 
         // Then
-        assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(responseReceived.getBody()).isEqualTo(responseList);
     }
 
@@ -153,7 +153,7 @@ class HandleControllerTest {
         ResponseEntity<List<DigitalSpecimenBotanyResponse>> responseReceived = controller.createDigitalSpecimenBotanyBatch(requestList);
 
         // Then
-        assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(responseReceived.getBody()).isEqualTo(responseList);
     }
 
@@ -161,7 +161,7 @@ class HandleControllerTest {
         //When
         ResponseEntity<String> response = controller.hello();
         // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     }
 
     private List<HandleRecordRequest> buildHandleRequestList(){

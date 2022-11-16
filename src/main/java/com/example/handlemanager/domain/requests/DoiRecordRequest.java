@@ -1,8 +1,8 @@
 package com.example.handlemanager.domain.requests;
 
-import lombok.Data;
+import lombok.Getter;
 
-@Data
+@Getter
 public class DoiRecordRequest extends HandleRecordRequest {
 	final String referentDoiName;
 	final String referent = "";
@@ -17,14 +17,6 @@ public class DoiRecordRequest extends HandleRecordRequest {
 			String referentDoiName) {
 		super(pidIssuerPid, digitalObjectTypePid, digitalObjectSubtypePid, locations);
 		this.referentDoiName = referentDoiName;
-	}
-	
-	public HandleRecordRequest getHandleRecordRequest() {
-		return new HandleRecordRequest(
-				this.pidIssuerPid, 
-				this.digitalObjectTypePid,
-				this.digitalObjectSubtypePid,
-				this.locations);				
 	}
 
 }

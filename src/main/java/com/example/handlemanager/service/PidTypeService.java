@@ -4,7 +4,6 @@ import com.example.handlemanager.exceptions.PidResolutionException;
 import com.example.handlemanager.repository.HandleRepository;
 import com.example.handlemanager.repositoryobjects.Handles;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +15,6 @@ import static com.example.handlemanager.utils.Resources.getDataFromType;
 @RequiredArgsConstructor
 public class PidTypeService {
 
-	@Autowired
 	public HandleRepository handleRep;
 	
 	public String resolveTypePid(String typePid) {
@@ -27,7 +25,6 @@ public class PidTypeService {
 			e.printStackTrace();
 		}
 		return pidRecord;
-		
 	}
 	
 	@Cacheable

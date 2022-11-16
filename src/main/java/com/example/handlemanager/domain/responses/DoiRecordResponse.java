@@ -1,11 +1,11 @@
 package com.example.handlemanager.domain.responses;
 
 import com.example.handlemanager.repositoryobjects.Handles;
-import lombok.Data;
+import lombok.Getter;
 
 import java.util.List;
 
-@Data
+@Getter
 public class DoiRecordResponse extends HandleRecordResponse {
     String referentDoiName;
     String referent;
@@ -17,7 +17,7 @@ public class DoiRecordResponse extends HandleRecordResponse {
 
         for (Handles h : entries) {
             type = h.getType();
-            if (type.equals(referentDoiName)) {
+            if (type.equals("referentDoiName")) {
                 this.referentDoiName = h.getData();
             }
             if (type.equals("referent")) {
