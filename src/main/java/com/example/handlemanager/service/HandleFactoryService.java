@@ -1,6 +1,8 @@
-package com.example.handlemanager.utils;
+package com.example.handlemanager.service;
 
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -8,27 +10,25 @@ import java.util.*;
 // This class generates new handles
 
 @Slf4j
-public class HandleFactory {	
+@Service
+public class HandleFactoryService {
 	
-	public static final String ALPHA_NUM = "ABCDEFGHJKLMNPQRSTUVWXYZ1234567890";
+	private static final String ALPHA_NUM = "ABCDEFGHJKLMNPQRSTUVWXYZ1234567890";
 	private final Random random;
 	private final char[] symbols;
 	private final char[] buf;
 
-	// Structure of handle: ABC-123-DEF
-
-	public HandleFactory() {  
+	public HandleFactoryService() {
 		this(11, new Random(), ALPHA_NUM);
 	}
 
-	private HandleFactory(int length, Random random, String symbols) {
+	private HandleFactoryService(int length, Random random, String symbols) {
         if ((length < 1) || (symbols.length() < 2)) throw new IllegalArgumentException();
         this.random = Objects.requireNonNull(random);
         this.symbols = symbols.toCharArray();
         this.buf = new char[length];
     }
 
-	
 	private String newSuffix(){
 		for (int idx = 0; idx < buf.length; ++idx) {
 			if (idx == 3 || idx ==7) { //
@@ -41,13 +41,13 @@ public class HandleFactory {
 	}
 	
 
-	public String newHandle() { // Generates single handle
+	public String newHandle() {
 		String prefix = "20.5000.1025/";
 		return prefix + newSuffix();
 	}
 	
 	public byte[] newHandleBytes() {
-		return newHandle().getBytes(); //Yeesh...
+		return newHandle().getBytes();
 	}
 	
 	public List<byte[]> newHandle(int h) { // Generates h number of handles
@@ -57,7 +57,7 @@ public class HandleFactory {
 		}
 		int maxHandles = 1000;
 		if (h > maxHandles) {
-			log.warn("Max number of handles exceeded. Generating maximum {0} handles", String.valueOf(maxHandles));
+			log.warn("Max number of handles exceeded. Generating maximum {} handles", String.valueOf(maxHandles));
 			h = maxHandles;
 		}
 		
@@ -71,8 +71,8 @@ public class HandleFactory {
 		byte[] hdl;
 		
 		for (int i=0; i<h; i++) {
-			hdl = newHandleBytes(); // Generate new handle
-			while(!handleHash.add(ByteBuffer.wrap(hdl))) { // If hdl is already in the hash, regenerate a new one
+			hdl = newHandleBytes();
+			while(!handleHash.add(ByteBuffer.wrap(hdl))) {
 				hdl = newHandleBytes();	
 			}
 			handleList.add(hdl);

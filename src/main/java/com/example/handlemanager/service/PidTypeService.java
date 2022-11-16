@@ -3,7 +3,11 @@ package com.example.handlemanager.service;
 import com.example.handlemanager.exceptions.PidResolutionException;
 import com.example.handlemanager.repository.HandleRepository;
 import com.example.handlemanager.repositoryobjects.Handles;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -13,22 +17,15 @@ import static com.example.handlemanager.utils.Resources.getDataFromType;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PidTypeService {
 
-	public HandleRepository handleRep;
-	
-	public String resolveTypePid(String typePid) {
-		String pidRecord = "";
-		try {
-			pidRecord = resolveTypePidVal(typePid);
-		} catch (PidResolutionException e) {
-			e.printStackTrace();
-		}
-		return pidRecord;
-	}
-	
-	@Cacheable
-	private String resolveTypePidVal(String typePid) throws PidResolutionException {
+	private final HandleRepository handleRep;
+
+	private ObjectMapper mapper = new ObjectMapper();
+
+	@Cacheable(value="cache")
+	public String resolveTypePid(String typePid) throws PidResolutionException, JsonProcessingException {
 		if (typePid == null) throw new PidResolutionException("Missing PID in request body.");
 
 		List<Handles> typeRecord = handleRep.resolveHandle(typePid.getBytes());
@@ -41,20 +38,14 @@ public class PidTypeService {
 		String pidType;
 		String registrationAgencyDoiName = "";
 		String typeJson = "";
-		final String NEWLINE = "\", \n";
+		ObjectNode objectNode = mapper.createObjectNode();
 
 		if (pid.contains("doi")) {
 			pidType = "doi";
 			registrationAgencyDoiName = getDataFromType("registrationAgencyDoiName", typeRecord);
 
-			typeJson = "{ \n" + "\"pid\": \"" + pid + NEWLINE + "\"pidType\": \"" + pidType + NEWLINE
-					+ "\"primaryNameFromPid\": \"" + primaryNameFromPid + NEWLINE + "\"registrationAgencyDoiName\": \""
-					+ registrationAgencyDoiName + NEWLINE + "}";
-
 		} else if (pid.contains("handle")) {
 			pidType = "handle";
-			typeJson = "{ \n" + "\"pid\": \"" + pid + NEWLINE + "\"pidType\": \"" + pidType + NEWLINE
-					+ "\"primaryNameFromPid\": \"" + primaryNameFromPid + NEWLINE + "}";
 		} else {
 			throw new PidResolutionException(
 					"One of the type PIDs provided resolves to an invalid record (reason: neither \"handle\" nor \"doi\" Check handle " + typePid
@@ -67,7 +58,13 @@ public class PidTypeService {
 							+ " and try again");
 		}
 
-		return typeJson;
+		objectNode.put("pid", pid);
+		objectNode.put("pidType", pidType);
+		objectNode.put("primaryNamefromPid", primaryNameFromPid);
+		if (pidType.equals("doi")){
+			objectNode.put("registrationAgencyDoiName", registrationAgencyDoiName);
+		}
+		return mapper.writeValueAsString(objectNode);
 	}
 
 }

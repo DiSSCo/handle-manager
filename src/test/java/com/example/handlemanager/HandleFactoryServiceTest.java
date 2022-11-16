@@ -1,6 +1,6 @@
 package com.example.handlemanager;
 
-import com.example.handlemanager.utils.HandleFactory;
+import com.example.handlemanager.service.HandleFactoryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -8,13 +8,13 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-class HandleFactoryTest {
+class HandleFactoryServiceTest {
 	// Expected format: 20.5000.1025/XRD-2UH-D99
-	HandleFactory hf;
+	HandleFactoryService hf;
 	
 	@BeforeEach
 	void setup() {
-		hf = new HandleFactory();
+		hf = new HandleFactoryService();
 	}
 	
 	@Test

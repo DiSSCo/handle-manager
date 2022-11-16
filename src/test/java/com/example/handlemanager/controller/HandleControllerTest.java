@@ -9,7 +9,9 @@ import com.example.handlemanager.domain.responses.DigitalSpecimenResponse;
 import com.example.handlemanager.domain.responses.DoiRecordResponse;
 import com.example.handlemanager.domain.responses.HandleRecordResponse;
 import com.example.handlemanager.exceptions.PidCreationException;
+import com.example.handlemanager.exceptions.PidResolutionException;
 import com.example.handlemanager.service.HandleService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,7 +47,7 @@ class HandleControllerTest {
     }
 
     @Test
-    void handleRecordCreationTest() throws PidCreationException {
+    void handleRecordCreationTest() throws PidCreationException, PidResolutionException, JsonProcessingException {
         // Given
         HandleRecordRequest request = generateTestHandleRequest();
         HandleRecordResponse responseExpected = generateTestHandleResponse(handle);
@@ -57,7 +59,7 @@ class HandleControllerTest {
         assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
     }
     @Test
-    void doiRecordCreationTest() throws PidCreationException {
+    void doiRecordCreationTest() throws PidCreationException, PidResolutionException, JsonProcessingException {
         // Given
         DoiRecordRequest request = generateTestDoiRequest();
         DoiRecordResponse responseExpected = generateTestDoiResponse(handle);
@@ -70,7 +72,7 @@ class HandleControllerTest {
     }
 
     @Test
-    void digitalSpeciemenCreationTest() throws PidCreationException {
+    void digitalSpeciemenCreationTest() throws PidCreationException, PidResolutionException, JsonProcessingException {
         // Given
         DigitalSpecimenRequest request = generateTestDigitalSpecimenRequest();
         DigitalSpecimenResponse responseExpected = generateTestDigitalSpecimenResponse(handle);
@@ -83,7 +85,7 @@ class HandleControllerTest {
     }
 
     @Test
-    void digitalSpeciemenBotanyCreationTest() throws PidCreationException {
+    void digitalSpeciemenBotanyCreationTest() throws PidCreationException, PidResolutionException, JsonProcessingException {
         // Given
         DigitalSpecimenBotanyRequest request = generateTestDigitalSpecimenBotanyRequest();
         DigitalSpecimenBotanyResponse responseExpected = generateTestDigitalSpecimenBotanyResponse(handle);
@@ -157,7 +159,7 @@ class HandleControllerTest {
         assertThat(responseReceived.getBody()).isEqualTo(responseList);
     }
 
-    void helloTest() throws Exception {
+    void helloTest() {
         //When
         ResponseEntity<String> response = controller.hello();
         // Then

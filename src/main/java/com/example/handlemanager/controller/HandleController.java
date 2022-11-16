@@ -11,6 +11,7 @@ import com.example.handlemanager.domain.responses.HandleRecordResponse;
 import com.example.handlemanager.exceptions.PidCreationException;
 import com.example.handlemanager.exceptions.PidResolutionException;
 import com.example.handlemanager.service.HandleService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -33,49 +34,48 @@ public class HandleController {
 	// ** Create Records: handle, doi, digital specimen, botany specimen **
 	
 	// Batch creation
-	
 	@PostMapping(value="/createRecordBatch", params= "pidType=handle")
-	public ResponseEntity<List<HandleRecordResponse>> createHandleRecordBatch(@RequestBody List<HandleRecordRequest> hdl) {
+	public ResponseEntity<List<HandleRecordResponse>> createHandleRecordBatch(@RequestBody List<HandleRecordRequest> hdl) throws PidResolutionException, JsonProcessingException {
 		return ResponseEntity.status(HttpStatus.CREATED).body(service.createHandleRecordBatch(hdl));
 	}
 	
 	@PostMapping(value="/createRecordBatch", params= "pidType=doi")
-	public ResponseEntity<List<DoiRecordResponse>> createDoiRecordBatch(@RequestBody List<DoiRecordRequest> doi) {
+	public ResponseEntity<List<DoiRecordResponse>> createDoiRecordBatch(@RequestBody List<DoiRecordRequest> doi) throws PidResolutionException, JsonProcessingException {
 		return ResponseEntity.status(HttpStatus.CREATED).body(service.createDoiRecordBatch(doi));
 	}
 	
 	@PostMapping(value="/createRecordBatch", params= "pidType=digitalSpecimen")
-	public ResponseEntity<List<DigitalSpecimenResponse>> createDigitalSpecimenBatch(@RequestBody List<DigitalSpecimenRequest> ds) {
+	public ResponseEntity<List<DigitalSpecimenResponse>> createDigitalSpecimenBatch(@RequestBody List<DigitalSpecimenRequest> ds) throws PidResolutionException, JsonProcessingException {
 		return ResponseEntity.status(HttpStatus.CREATED).body(service.createDigitalSpecimenBatch(ds));
 	}
 	
 	@PostMapping(value="/createRecordBatch", params= "pidType=digitalSpecimenBotany")
-	public ResponseEntity<List<DigitalSpecimenBotanyResponse>> createDigitalSpecimenBotanyBatch(@RequestBody List<DigitalSpecimenBotanyRequest> dsB) {
+	public ResponseEntity<List<DigitalSpecimenBotanyResponse>> createDigitalSpecimenBotanyBatch(@RequestBody List<DigitalSpecimenBotanyRequest> dsB) throws PidResolutionException, JsonProcessingException {
 		return ResponseEntity.status(HttpStatus.CREATED).body(service.createDigitalSpecimenBotanyBatch(dsB));
 	}
 	
 	// Create Single Record
 	@PostMapping(value="/createRecord", params= "pidType=handle")
 	public ResponseEntity<HandleRecordResponse> createRecord(
-			@RequestBody HandleRecordRequest hdl) throws PidCreationException {
+			@RequestBody HandleRecordRequest hdl) throws PidCreationException, PidResolutionException, JsonProcessingException {
 		return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecord(hdl, "hdl"));
 	}
 	
 	@PostMapping(value="/createRecord",  params= "pidType=doi")
 	public ResponseEntity<HandleRecordResponse> createRecord(
-			@RequestBody DoiRecordRequest doi) throws PidCreationException {
+			@RequestBody DoiRecordRequest doi) throws PidCreationException, PidResolutionException, JsonProcessingException {
 		return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecord(doi, "doi"));
 	}
 	
 	@PostMapping(value="/createRecord",  params= "pidType=digitalSpecimen")
 	public ResponseEntity<HandleRecordResponse> createRecord(
-			@RequestBody DigitalSpecimenRequest ds) throws PidCreationException {
+			@RequestBody DigitalSpecimenRequest ds) throws PidCreationException, PidResolutionException, JsonProcessingException {
 		return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecord(ds, "ds"));
 	}
 	
 	@PostMapping(value="/createRecord",  params= "pidType=digitalSpecimenBotany")
 	public ResponseEntity<HandleRecordResponse> createRecord(
-			@RequestBody DigitalSpecimenBotanyRequest dsB) throws PidCreationException {
+			@RequestBody DigitalSpecimenBotanyRequest dsB) throws PidCreationException, PidResolutionException, JsonProcessingException {
 		return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecord(dsB, "dsB"));
 	}
 
@@ -119,6 +119,11 @@ public class HandleController {
 	@ExceptionHandler(PidResolutionException.class)
 	private ResponseEntity<String> pidResolutionException(PidResolutionException e){
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+	}
+
+	@ExceptionHandler(JsonProcessingException.class)
+	private ResponseEntity<String> JsonProcessingException(JsonProcessingException e){
+		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unable to read pid type record");
 	}
 
 }

@@ -9,9 +9,10 @@ import com.example.handlemanager.domain.responses.DigitalSpecimenResponse;
 import com.example.handlemanager.domain.responses.DoiRecordResponse;
 import com.example.handlemanager.domain.responses.HandleRecordResponse;
 import com.example.handlemanager.exceptions.PidCreationException;
+import com.example.handlemanager.exceptions.PidResolutionException;
 import com.example.handlemanager.repository.HandleRepository;
 import com.example.handlemanager.repositoryobjects.Handles;
-import com.example.handlemanager.utils.HandleFactory;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,7 +24,6 @@ import java.time.Clock;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import static com.example.handlemanager.testUtils.TestUtils.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -42,7 +42,7 @@ class HandleServiceTest {
 	private PidTypeService pidTypeService;
 	
 	@Mock 
-	private HandleFactory hf;
+	private HandleFactoryService hf;
 
 	@Mock
 	private Clock mockClock;
@@ -52,11 +52,9 @@ class HandleServiceTest {
 
 	private List<byte[]> handlesList;
 
-
-	Logger logger = Logger.getLogger(HandleServiceTest.class.getName());
 	
 	@BeforeEach
-	void init() {
+	void init() throws PidResolutionException, JsonProcessingException {
 		// Pid type record
 		given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
 
@@ -72,7 +70,7 @@ class HandleServiceTest {
 	}
 
 	@Test 
-	void createHandleRecordTest() throws PidCreationException {
+	void createHandleRecordTest() throws PidCreationException, PidResolutionException, JsonProcessingException {
 		// Given
 		byte [] handle = handlesList.get(0);
 		HandleRecordRequest request = generateTestHandleRequest();
@@ -88,7 +86,7 @@ class HandleServiceTest {
 	}
 
 	@Test
-	void CreateDoiRecordTest() throws PidCreationException {
+	void CreateDoiRecordTest() throws PidCreationException, PidResolutionException, JsonProcessingException {
 		// Given
 		byte [] handle = handlesList.get(0);
 		DoiRecordRequest request = generateTestDoiRequest();
@@ -104,7 +102,7 @@ class HandleServiceTest {
 	}
 
 	@Test
-	void CreateDigitalSpecimenTest() throws PidCreationException {
+	void CreateDigitalSpecimenTest() throws PidCreationException, PidResolutionException, JsonProcessingException {
 		// Given
 		byte [] handle = handlesList.get(0);
 		DigitalSpecimenRequest request = generateTestDigitalSpecimenRequest();
@@ -120,7 +118,7 @@ class HandleServiceTest {
 	}
 
 	@Test
-	void CreateDigitalSpecimenBotanyTest() throws PidCreationException {
+	void CreateDigitalSpecimenBotanyTest() throws PidCreationException, PidResolutionException, JsonProcessingException {
 		// Given
 		byte [] handle = handlesList.get(0);
 		DigitalSpecimenBotanyRequest request = generateTestDigitalSpecimenBotanyRequest();
@@ -136,7 +134,7 @@ class HandleServiceTest {
 		assertThat(response_received).isEqualTo(response_expected);
 	}
 	@Test
-	void createBatchHandleRecordTest() throws PidCreationException {
+	void createBatchHandleRecordTest() throws PidCreationException, PidResolutionException, JsonProcessingException {
 		// Given
 		List<HandleRecordRequest> request = generateBatchHandleRequest();
 		List<HandleRecordResponse> responseExpected = generateBatchHandleResponse();
@@ -151,7 +149,7 @@ class HandleServiceTest {
 		assertThat(responseExpected).isEqualTo(responseReceived);
 	}
 	@Test
-	void createBatchDoiRecordTest() throws PidCreationException {
+	void createBatchDoiRecordTest() throws PidCreationException, PidResolutionException, JsonProcessingException {
 		// Given
 		List<DoiRecordRequest> request = generateBatchDoiRequest();
 		List<DoiRecordResponse> responseExpected = generateBatchDoiResponse();
@@ -166,7 +164,7 @@ class HandleServiceTest {
 		assertThat(responseExpected).isEqualTo(responseReceived);
 	}
 	@Test
-	void createBatchDigitalSpecimenTest() throws PidCreationException {
+	void createBatchDigitalSpecimenTest() throws PidCreationException, PidResolutionException, JsonProcessingException {
 		// Given
 		List<DigitalSpecimenRequest> request = generateBatchDigitalSpecimenRequest();
 		List<DigitalSpecimenResponse> responseExpected = generateBatchDigitalSpecimenResponse();
@@ -182,7 +180,7 @@ class HandleServiceTest {
 	}
 
 	@Test
-	void createBatchDigitalSpecimenBotanyTest() throws PidCreationException {
+	void createBatchDigitalSpecimenBotanyTest() throws PidCreationException, PidResolutionException, JsonProcessingException {
 		// Given
 		List<DigitalSpecimenBotanyRequest> request = generateBatchDigitalSpecimenBotanyRequest();
 		List<DigitalSpecimenBotanyResponse> responseExpected = generateBatchDigitalSpecimenBotanyResponse();

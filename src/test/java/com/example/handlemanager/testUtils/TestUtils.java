@@ -10,6 +10,10 @@ import com.example.handlemanager.domain.responses.DoiRecordResponse;
 import com.example.handlemanager.domain.responses.HandleRecordResponse;
 import com.example.handlemanager.repositoryobjects.Handles;
 import com.example.handlemanager.utils.Resources;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -22,6 +26,7 @@ import java.util.Locale;
 
 import static com.example.handlemanager.utils.Resources.setLocations;
 
+@Slf4j
 public class TestUtils {
 	
 	public static Instant CREATED = Instant.parse("2022-11-01T09:59:24.00Z");
@@ -57,18 +62,44 @@ public class TestUtils {
 
 	private static String NEW_LINE = "\", \n";
 
-	public static String PTR_HANDLE_RECORD = "{ \n"
+	public static String PTR_HANDLE_RECORD1 = "{ \n"
 			+ "\"pid\": \"" + PTR_PID + NEW_LINE
 			+ "\"pidType\": \""+PTR_TYPE + NEW_LINE
 			+ "\"primaryNameFromPid\": \""+ PTR_PRIMARY_NAME + NEW_LINE
 			+ "}";
 	
-	public static String PTR_DOI_RECORD = "{ \n"
+	public static String PTR_DOI_RECORD2 = "{ \n"
 			+ "\"pid\": \"" + PTR_PID_DOI + NEW_LINE
 			+ "\"pidType\": \""+PTR_TYPE_DOI + NEW_LINE
 			+ "\"primaryNameFromPid\": \""+ PTR_PRIMARY_NAME + NEW_LINE
 			+ "\"registrationAgencyDoiName\": \""+ PTR_REGISTRATION_DOI_NAME + NEW_LINE
 			+ "}";
+
+	public static String PTR_HANDLE_RECORD = initPtrHandleRecord(false);
+	public static String PTR_DOI_RECORD = initPtrHandleRecord(true);
+
+
+	private static String initPtrHandleRecord(boolean isDoi){
+		ObjectMapper mapper = new ObjectMapper();
+		ObjectNode objectNode = mapper.createObjectNode();
+		if(isDoi){
+			objectNode.put("pid", PTR_PID_DOI);
+			objectNode.put("pidType", PTR_TYPE_DOI);
+			objectNode.put("primaryNamefromPid", PTR_PRIMARY_NAME);
+			objectNode.put("registrationAgencyDoiName", PTR_REGISTRATION_DOI_NAME);
+		}
+		else{
+			objectNode.put("pid", PTR_PID);
+			objectNode.put("pidType", PTR_TYPE);
+			objectNode.put("primaryNamefromPid", PTR_PRIMARY_NAME);
+		}
+		try {
+			return mapper.writeValueAsString(objectNode);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			return "";
+		}
+	}
 
 
 	public static List<Handles> generateTestHandleRecord(byte[] handle){
@@ -146,10 +177,11 @@ public class TestUtils {
 		// 15: specimenHost
 		handleRecord.add(new Handles(handle, i++, "specimenHost", PTR_HANDLE_RECORD, timestamp));
 
-		// 16: In collectionFacillity
-		handleRecord.add(new Handles(handle, i++, "inCollectionFacillity", PTR_HANDLE_RECORD, timestamp));
+		// 16: In collectionFacility
+		handleRecord.add(new Handles(handle, i++, "inCollectionFacility", PTR_HANDLE_RECORD, timestamp));
 		return handleRecord;
 	}
+
 
 
 	public static List<Handles> generateTestDigitalSpecimenBotanyRecord(byte[] handle){

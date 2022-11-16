@@ -9,16 +9,14 @@ import com.example.handlemanager.domain.responses.DigitalSpecimenResponse;
 import com.example.handlemanager.domain.responses.DoiRecordResponse;
 import com.example.handlemanager.domain.responses.HandleRecordResponse;
 import com.example.handlemanager.exceptions.PidCreationException;
+import com.example.handlemanager.exceptions.PidResolutionException;
 import com.example.handlemanager.repository.HandleRepository;
 import com.example.handlemanager.repositoryobjects.Handles;
-import com.example.handlemanager.utils.HandleFactory;
 import com.example.handlemanager.utils.Resources;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -54,7 +52,7 @@ public class HandleService {
 	@Autowired
 	private Clock clock;
 
-	private HandleFactory hf = new HandleFactory();
+	private HandleFactoryService hf = new HandleFactoryService();
 
 	public List<String> getHandlesPaged(String pidStatus, int pageNum, int pageSize){
 		return getStrList(handleRep.getHandles(pidStatus.getBytes(), pageNum, pageSize));
@@ -65,17 +63,8 @@ public class HandleService {
 	}
 
 
-	// Return all handle identifiers, option to filter by status
-	/*public List<String> getHandles() {
-		return getStrList(handleRep.getHandles());
-	}
-
-	public List<String> getHandles(String pidStatus) {
-		return getStrList(handleRep.getHandles(pidStatus.getBytes()));
-	}*/
-
 	// Create Handle Record Batch
-	public List<HandleRecordResponse> createHandleRecordBatch(List<HandleRecordRequest> requests) {
+	public List<HandleRecordResponse> createHandleRecordBatch(List<HandleRecordRequest> requests) throws PidResolutionException, JsonProcessingException {
 		List<byte[]> handles = genHandleList(requests.size());
 		long timestamp = clock.instant().getEpochSecond();
 		List<Handles> handleRecord;
@@ -103,7 +92,7 @@ public class HandleService {
 		return response;
 	}
 
-	public List<DoiRecordResponse> createDoiRecordBatch(List<DoiRecordRequest> requests) {
+	public List<DoiRecordResponse> createDoiRecordBatch(List<DoiRecordRequest> requests) throws PidResolutionException, JsonProcessingException {
 		List<byte[]> handles = genHandleList(requests.size());
 		long timestamp = clock.instant().getEpochSecond();
 		List<Handles> doiRecord;
@@ -130,7 +119,7 @@ public class HandleService {
 		return response;
 	}
 
-	public List<DigitalSpecimenResponse> createDigitalSpecimenBatch(List<DigitalSpecimenRequest> requests) {
+	public List<DigitalSpecimenResponse> createDigitalSpecimenBatch(List<DigitalSpecimenRequest> requests) throws PidResolutionException, JsonProcessingException {
 		List<byte[]> handles = genHandleList(requests.size());
 		long timestamp = clock.instant().getEpochSecond();
 		List<Handles> digitalSpecimenRecord;
@@ -157,7 +146,7 @@ public class HandleService {
 	}
 
 	public List<DigitalSpecimenBotanyResponse> createDigitalSpecimenBotanyBatch(
-			List<DigitalSpecimenBotanyRequest> requests) {
+			List<DigitalSpecimenBotanyRequest> requests) throws PidResolutionException, JsonProcessingException {
 		List<byte[]> handles = genHandleList(requests.size());
 		long timestamp = clock.instant().getEpochSecond();
 		List<Handles> digitalSpecimenBotanyRecord;
@@ -185,7 +174,7 @@ public class HandleService {
 	}
 
 	public HandleRecordResponse createRecord(HandleRecordRequest request, String recordType)
-			throws PidCreationException {
+			throws PidCreationException, PidResolutionException, JsonProcessingException {
 		byte[] handle = genHandleList(1).get(0);
 		long timestamp = clock.instant().getEpochSecond();
 		List<Handles> handleRecord;
@@ -198,9 +187,7 @@ public class HandleService {
 				response = new HandleRecordResponse(posted);
 			}
 			case "doi" -> {
-				DoiRecordRequest doi = (DoiRecordRequest) request;
-				log.info("Casting handle record request. referent name: " + doi.getReferentDoiName());
-				handleRecord = prepareDoiRecord(doi, handle, timestamp);
+				handleRecord = prepareDoiRecord((DoiRecordRequest) request, handle, timestamp);
 				response = new DoiRecordResponse(handleRep.saveAll(handleRecord));
 			}
 			case "ds" -> {
@@ -212,7 +199,7 @@ public class HandleService {
 						timestamp);
 				response = new DigitalSpecimenBotanyResponse(handleRep.saveAll(handleRecord));
 			}
-			default -> throw new PidCreationException("An internal error has occured. Invalid pid record type.");
+			default -> throw new PidCreationException("An internal error has occurred. Invalid pid record type.");
 		}
 		// Maybe check response has all the pid kernel entries we're expecting
 		return response;
@@ -220,7 +207,7 @@ public class HandleService {
 
 	// Prepare Record Lists
 
-	private List<Handles> prepareHandleRecord(HandleRecordRequest request, byte[] handle, long timestamp) {
+	private List<Handles> prepareHandleRecord(HandleRecordRequest request, byte[] handle, long timestamp) throws PidResolutionException, JsonProcessingException {
 		List<Handles> handleRecord = new ArrayList<>();
 
 		// 100: Admin Handle
@@ -272,14 +259,12 @@ public class HandleService {
 		return handleRecord;
 	}
 
-	private List<Handles> prepareDoiRecord(DoiRecordRequest request, byte[] handle, long timestamp) {
+	private List<Handles> prepareDoiRecord(DoiRecordRequest request, byte[] handle, long timestamp) throws PidResolutionException, JsonProcessingException {
 		List<Handles> handleRecord = prepareHandleRecord(request, handle, timestamp);
 		int i = 12;
-		log.info("now in the subfunction: " + request.getReferentDoiName());
 
 		// 12: Referent DOI Name
 		String referentDoiName = pidTypeService.resolveTypePid(request.getReferentDoiName());
-		log.info ("Resolved referentDoiName = " + referentDoiName);
 		handleRecord.add(new Handles(handle, i, "referentDoiName", referentDoiName, timestamp));
 
 		// 13: Referent -> NOTE: Referent is blank currently until we have a model for
@@ -289,7 +274,7 @@ public class HandleService {
 		return handleRecord;
 	}
 
-	private List<Handles> prepareDigitalSpecimenRecord(DigitalSpecimenRequest request, byte[] handle, long timestamp) {
+	private List<Handles> prepareDigitalSpecimenRecord(DigitalSpecimenRequest request, byte[] handle, long timestamp) throws PidResolutionException, JsonProcessingException {
 		List<Handles> handleRecord = prepareDoiRecord(request, handle, timestamp);
 
 		int i = 14;
@@ -301,15 +286,15 @@ public class HandleService {
 		String specimenHost = pidTypeService.resolveTypePid(request.getSpecimenHostPid());
 		handleRecord.add(new Handles(handle, ++i, "specimenHost", specimenHost, timestamp));
 
-		// 16: In collectionFacillity
-		String inCollectionFacillity = pidTypeService.resolveTypePid(request.getInCollectionFacilityPid());
-		handleRecord.add(new Handles(handle, ++i, "inCollectionFacility", inCollectionFacillity, timestamp));
+		// 16: In collectionFacility
+		String inCollectionFacility = pidTypeService.resolveTypePid(request.getInCollectionFacilityPid());
+		handleRecord.add(new Handles(handle, ++i, "inCollectionFacility", inCollectionFacility, timestamp));
 
 		return handleRecord;
 	}
 
 	private List<Handles> prepareDigitalSpecimenBotanyRecord(DigitalSpecimenBotanyRequest request, byte[] handle,
-			long timestamp) {
+			long timestamp) throws PidResolutionException, JsonProcessingException {
 		List<Handles> handleRecord = prepareDigitalSpecimenRecord(request, handle, timestamp);
 
 		int i = 17;

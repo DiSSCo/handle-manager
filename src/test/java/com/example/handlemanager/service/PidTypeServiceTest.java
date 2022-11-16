@@ -1,7 +1,9 @@
 package com.example.handlemanager.service;
 
+import com.example.handlemanager.exceptions.PidResolutionException;
 import com.example.handlemanager.repository.HandleRepository;
 import com.example.handlemanager.repositoryobjects.Handles;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -53,7 +55,7 @@ class PidTypeServiceTest {
 	}
 	
 	@Test
-	void testPidTypeRecordResolutionHandle() {
+	void testPidTypeRecordResolutionHandle() throws PidResolutionException, JsonProcessingException {
 		// Given
 		initTestPidTypeRecordHandle();
 		String expected = PTR_HANDLE_RECORD;
@@ -68,7 +70,7 @@ class PidTypeServiceTest {
 	}
 	
 	@Test
-	void TestPidTypeRecordResolutionDoi() {
+	void TestPidTypeRecordResolutionDoi() throws PidResolutionException, JsonProcessingException {
 		//Given
 		initTestPidTypeRecordDoi();
 		String expected = PTR_DOI_RECORD;
