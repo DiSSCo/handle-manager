@@ -1,30 +1,28 @@
-package com.example.handlemanager.service;
+package eu.dissco.core.handlemanager.service;
 
-import static com.example.handlemanager.utils.Resources.setLocations;
+import static eu.dissco.core.handlemanager.utils.Resources.setLocations;
 
-import com.example.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
-import com.example.handlemanager.domain.requests.DigitalSpecimenRequest;
-import com.example.handlemanager.domain.requests.DoiRecordRequest;
-import com.example.handlemanager.domain.requests.HandleRecordRequest;
-import com.example.handlemanager.domain.responses.DigitalSpecimenBotanyResponse;
-import com.example.handlemanager.domain.responses.DigitalSpecimenResponse;
-import com.example.handlemanager.domain.responses.DoiRecordResponse;
-import com.example.handlemanager.domain.responses.HandleRecordResponse;
-import com.example.handlemanager.exceptions.PidCreationException;
-import com.example.handlemanager.exceptions.PidResolutionException;
-import com.example.handlemanager.repository.HandleRepository;
-import com.example.handlemanager.repositoryobjects.Handles;
-import com.example.handlemanager.utils.Resources;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
+import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
+import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.HandleRecordRequest;
+import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenBotanyResponse;
+import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenResponse;
+import eu.dissco.core.handlemanager.domain.responses.DoiRecordResponse;
+import eu.dissco.core.handlemanager.domain.responses.HandleRecordResponse;
+import eu.dissco.core.handlemanager.exceptions.PidCreationException;
+import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
+import eu.dissco.core.handlemanager.repository.HandleRepository;
+import eu.dissco.core.handlemanager.repositoryobjects.Handles;
+import eu.dissco.core.handlemanager.utils.Resources;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -50,8 +48,8 @@ public class HandleService {
 
   @Autowired
   private Clock clock;
-
-  private HandleFactoryService hf = new HandleFactoryService();
+  @Autowired
+  private HandleGeneratorService hf;
 
   public List<String> getHandlesPaged(String pidStatus, int pageNum, int pageSize) {
     return getStrList(handleRep.getHandles(pidStatus.getBytes(), pageNum, pageSize));
@@ -65,7 +63,7 @@ public class HandleService {
   // Create Handle Record Batch
   public List<HandleRecordResponse> createHandleRecordBatch(List<HandleRecordRequest> requests)
       throws PidResolutionException, JsonProcessingException {
-    List<byte[]> handles = genHandleList(requests.size());
+    List<byte[]> handles = hf.genHandleList(requests.size());
     long timestamp = clock.instant().getEpochSecond();
     List<Handles> handleRecord;
     List<Handles> handleRecordsAll = new ArrayList<>();
@@ -94,7 +92,7 @@ public class HandleService {
 
   public List<DoiRecordResponse> createDoiRecordBatch(List<DoiRecordRequest> requests)
       throws PidResolutionException, JsonProcessingException {
-    List<byte[]> handles = genHandleList(requests.size());
+    List<byte[]> handles = hf.genHandleList(requests.size());
     long timestamp = clock.instant().getEpochSecond();
     List<Handles> doiRecord;
     List<Handles> doiRecordsAll = new ArrayList<>();
@@ -123,7 +121,10 @@ public class HandleService {
   public List<DigitalSpecimenResponse> createDigitalSpecimenBatch(
       List<DigitalSpecimenRequest> requests)
       throws PidResolutionException, JsonProcessingException {
-    List<byte[]> handles = genHandleList(requests.size());
+    List<byte[]> handles = hf.genHandleList(requests.size());
+    log.info("Handles to generate: "+requests.size());
+    log.info("first handle: " + new String(handles.get(0)));
+
     long timestamp = clock.instant().getEpochSecond();
     List<Handles> digitalSpecimenRecord;
     List<Handles> digitalSpecimenRecordsAll = new ArrayList<>();
@@ -152,7 +153,7 @@ public class HandleService {
   public List<DigitalSpecimenBotanyResponse> createDigitalSpecimenBotanyBatch(
       List<DigitalSpecimenBotanyRequest> requests)
       throws PidResolutionException, JsonProcessingException {
-    List<byte[]> handles = genHandleList(requests.size());
+    List<byte[]> handles = hf.genHandleList(requests.size());
     long timestamp = clock.instant().getEpochSecond();
     List<Handles> digitalSpecimenBotanyRecord;
     List<Handles> digitalSpecimenRecordsAll = new ArrayList<>();
@@ -180,40 +181,44 @@ public class HandleService {
   }
 
   // Todo Minimize branch points, break this up, lower cognitive complexity
-  public HandleRecordResponse createRecord(HandleRecordRequest request, String recordType)
-      throws PidCreationException, PidResolutionException, JsonProcessingException {
-    byte[] handle = genHandleList(1).get(0);
-    long timestamp = clock.instant()
-        .getEpochSecond(); // Todo switch to instant.now(), use mockedstatic in testing
+  public HandleRecordResponse createHandleReocrd(HandleRecordRequest request)
+      throws PidResolutionException, JsonProcessingException {
+    byte[] handle = hf.genHandleList(1).get(0);
+    long timestamp = clock.instant().getEpochSecond();
     List<Handles> handleRecord;
-    HandleRecordResponse response;
+    handleRecord = prepareHandleRecord(request, handle, timestamp);
+    List<Handles> posted = handleRep.saveAll(handleRecord);
+    return new HandleRecordResponse(posted);
+  }
 
-    switch (recordType) {
-      case "hdl" -> {
-        handleRecord = prepareHandleRecord(request, handle, timestamp);
-        List<Handles> posted = handleRep.saveAll(handleRecord);
-        response = new HandleRecordResponse(posted);
-      }
-      case "doi" -> {
-        handleRecord = prepareDoiRecord((DoiRecordRequest) request, handle, timestamp);
-        response = new DoiRecordResponse(handleRep.saveAll(handleRecord));
-      }
-      case "ds" -> {
-        handleRecord = prepareDigitalSpecimenRecord((DigitalSpecimenRequest) request, handle,
-            timestamp);
-        response = new DigitalSpecimenResponse(handleRep.saveAll(handleRecord));
-      }
-      case "dsB" -> {
-        handleRecord = prepareDigitalSpecimenBotanyRecord((DigitalSpecimenBotanyRequest) request,
-            handle,
-            timestamp);
-        response = new DigitalSpecimenBotanyResponse(handleRep.saveAll(handleRecord));
-      }
-      default -> throw new PidCreationException(
-          "An internal error has occurred. Invalid pid record type.");
-    }
-    // Maybe check response has all the pid kernel entries we're expecting
-    return response;
+  public DoiRecordResponse createDoiReocrd(DoiRecordRequest request)
+      throws PidResolutionException, JsonProcessingException {
+    byte[] handle = hf.genHandleList(1).get(0);
+    long timestamp = clock.instant().getEpochSecond();
+    List<Handles> handleRecord;
+    handleRecord = prepareDoiRecord(request, handle, timestamp);
+    List<Handles> posted = handleRep.saveAll(handleRecord);
+    return new DoiRecordResponse(posted);
+  }
+
+  public DigitalSpecimenResponse createDigitalSpecimenReocrd(DigitalSpecimenRequest request)
+      throws PidResolutionException, JsonProcessingException {
+    byte[] handle = hf.genHandleList(1).get(0);
+    long timestamp = clock.instant().getEpochSecond();
+    List<Handles> handleRecord;
+    handleRecord = prepareDigitalSpecimenRecord(request, handle, timestamp);
+    List<Handles> posted = handleRep.saveAll(handleRecord);
+    return new DigitalSpecimenResponse(posted);
+  }
+
+  public DigitalSpecimenBotanyResponse createDigitalSpecimenReocrd(DigitalSpecimenBotanyRequest request)
+      throws PidResolutionException, JsonProcessingException {
+    byte[] handle = hf.genHandleList(1).get(0);
+    long timestamp = clock.instant().getEpochSecond();
+    List<Handles> handleRecord;
+    handleRecord = prepareDigitalSpecimenBotanyRecord(request, handle, timestamp);
+    List<Handles> posted = handleRep.saveAll(handleRecord);
+    return new DigitalSpecimenBotanyResponse(posted);
   }
 
   // Prepare Record Lists
@@ -356,70 +361,6 @@ public class HandleService {
   // Minting Handles
 
   // Mint a list of handles
-  private List<byte[]> genHandleList(int h) {
-    return unwrapBytes(genHandleHash(h));
-  }
-
-  private HashSet<ByteBuffer> genHandleHash(int h) {
-    /*
-     * Generates a HashSet of minted handles of size h Calls the handlefactory
-     * object for random strings (8 alphanum characters with a dash in the middle)
-     * Checks list of random strings against database, replaces duplicates with new
-     * strings Finally, checks for collisions within the list
-     */
-
-    // Generate h number of bytes and wrap it into a HashSet<ByteBuffer>
-    List<byte[]> handleList = hf.newHandle(h);
-    HashSet<ByteBuffer> handleHash = wrapBytes(handleList);
-
-    // Check for duplicates from repository and wrap the duplicates
-    HashSet<ByteBuffer> duplicates = wrapBytes(handleRep.checkDuplicateHandles(handleList));
-
-    // If a duplicate was found, recursively call this function
-    // Generate new handles for every duplicate found and add it to our hash list
-
-    if (!duplicates.isEmpty()) {
-      handleHash.removeAll(duplicates);
-      handleHash.addAll(genHandleHash(duplicates.size()));
-    }
-
-    /*
-     * It's possible we have a collision within our list now i.e. on two different
-     * recursive cal)ls to this function, we generate the same If this occurs, we
-     * will not have our expected number of handles
-     */
-    while (h > handleHash.size()) {
-      handleHash.addAll(genHandleHash(h - handleHash.size()));
-    }
-
-    return handleHash;
-  }
-
-  // Converting between List<Byte[] and HashSet<ByteBuffer>
-  /*
-   * List<byte[]> <----> HashSet<ByteBuffer> HashSets are useful for preventing
-   * collisions within the list List<byte[]> is used to interface with repository
-   * layer
-   */
-
-  // Converts List<byte[]> --> HashSet<ByteBuffer>
-  private HashSet<ByteBuffer> wrapBytes(List<byte[]> byteList) {
-    HashSet<ByteBuffer> byteHash = new HashSet<>();
-    for (byte[] bytes : byteList) {
-      byteHash.add(ByteBuffer.wrap(bytes));
-    }
-    return byteHash;
-  }
-
-  // HashSet<ByteBuffer> --> List<byte[]>
-  private List<byte[]> unwrapBytes(HashSet<ByteBuffer> handleHash) {
-    List<byte[]> handleList = new ArrayList<>();
-    for (ByteBuffer hash : handleHash) {
-      handleList.add(hash.array());
-    }
-    return handleList;
-  }
-
 
   private List<String> getStrList(List<byte[]> byteList) {
     // It's crazy that ArrayList doesn't have a native type converter (especially
@@ -435,9 +376,9 @@ public class HandleService {
     }
     return strList;
   }
-
   private String byteToString(byte[] b) {
     return new String(b, StandardCharsets.UTF_8);
   }
 
 }
+
