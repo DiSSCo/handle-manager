@@ -36,7 +36,7 @@ public class HandleRecordResponse {
         case "issueNumber" -> this.issueNumber = data;
         case "pidKernelMetadataLicense" -> this.pidKernelMetadataLicense = data;
         case "HS_ADMIN" -> this.hs_admin = data;
-        default -> log.info("Base constructor called");
+        //default -> log.info("Base constructor called");
       }
     }
 

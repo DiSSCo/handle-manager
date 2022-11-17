@@ -64,13 +64,17 @@ public class HandleService {
   public List<HandleRecordResponse> createHandleRecordBatch(List<HandleRecordRequest> requests)
       throws PidResolutionException, JsonProcessingException {
     List<byte[]> handles = hf.genHandleList(requests.size());
+
+
     long timestamp = clock.instant().getEpochSecond();
     List<Handles> handleRecord;
     List<Handles> handleRecordsAll = new ArrayList<>();
     List<HandleRecordResponse> response = new ArrayList<>();
 
-    for (int i = 0; i < requests.size(); i++) {
+    log.info("handles to mint: " +requests.size());
 
+    for (int i = 0; i < requests.size(); i++) {
+      log.info("index = " + i);
       // Prepare handle record as list of Handles
       handleRecord = prepareHandleRecord(requests.get(i), handles.get(i), timestamp);
 
@@ -181,9 +185,11 @@ public class HandleService {
   }
 
   // Todo Minimize branch points, break this up, lower cognitive complexity
-  public HandleRecordResponse createHandleReocrd(HandleRecordRequest request)
+  public HandleRecordResponse createHandleRecord(HandleRecordRequest request)
       throws PidResolutionException, JsonProcessingException {
     byte[] handle = hf.genHandleList(1).get(0);
+    log.info("handle generated: " + new String(handle));
+
     long timestamp = clock.instant().getEpochSecond();
     List<Handles> handleRecord;
     handleRecord = prepareHandleRecord(request, handle, timestamp);
@@ -191,7 +197,7 @@ public class HandleService {
     return new HandleRecordResponse(posted);
   }
 
-  public DoiRecordResponse createDoiReocrd(DoiRecordRequest request)
+  public DoiRecordResponse createDoiRecord(DoiRecordRequest request)
       throws PidResolutionException, JsonProcessingException {
     byte[] handle = hf.genHandleList(1).get(0);
     long timestamp = clock.instant().getEpochSecond();
@@ -201,7 +207,7 @@ public class HandleService {
     return new DoiRecordResponse(posted);
   }
 
-  public DigitalSpecimenResponse createDigitalSpecimenReocrd(DigitalSpecimenRequest request)
+  public DigitalSpecimenResponse createDigitalSpecimenRecord(DigitalSpecimenRequest request)
       throws PidResolutionException, JsonProcessingException {
     byte[] handle = hf.genHandleList(1).get(0);
     long timestamp = clock.instant().getEpochSecond();
@@ -211,7 +217,7 @@ public class HandleService {
     return new DigitalSpecimenResponse(posted);
   }
 
-  public DigitalSpecimenBotanyResponse createDigitalSpecimenReocrd(DigitalSpecimenBotanyRequest request)
+  public DigitalSpecimenBotanyResponse createDigitalSpecimenBotanyRecord(DigitalSpecimenBotanyRequest request)
       throws PidResolutionException, JsonProcessingException {
     byte[] handle = hf.genHandleList(1).get(0);
     long timestamp = clock.instant().getEpochSecond();
@@ -231,25 +237,24 @@ public class HandleService {
     handleRecord.add(Resources.genAdminHandle(handle, timestamp));
 
     //Todo hardcode index values
-    int i = 1;
     // 1: Pid
     byte[] pid = concatBytes("https://hdl.handle.net/".getBytes(),
         handle); // Maybe this should check if it's a DOI?
-    handleRecord.add(new Handles(handle, i, "pid", pid, timestamp));
+    handleRecord.add(new Handles(handle, 1, "pid", pid, timestamp));
 
     // 2: PidIssuer
     String pidIssuer = pidTypeService.resolveTypePid(request.getPidIssuerPid());
-    handleRecord.add(new Handles(handle, ++i, "pidIssuer", pidIssuer, timestamp));
+    handleRecord.add(new Handles(handle, 2, "pidIssuer", pidIssuer, timestamp));
 
     // 3: Digital Object Type
     String digitalObjectType = pidTypeService.resolveTypePid(request.getDigitalObjectTypePid());
-    handleRecord.add(new Handles(handle, ++i, "digitalObjectType", digitalObjectType, timestamp));
+    handleRecord.add(new Handles(handle, 3, "digitalObjectType", digitalObjectType, timestamp));
 
     // 4: Digital Object Subtype
     String digitalObjectSubtype = pidTypeService.resolveTypePid(
         request.getDigitalObjectSubtypePid());
     handleRecord.add(
-        new Handles(handle, ++i, "digitalObjectSubtype", digitalObjectSubtype, timestamp));
+        new Handles(handle, 4, "digitalObjectSubtype", digitalObjectSubtype, timestamp));
 
     // 5: 10320/loc
     byte[] loc = "".getBytes();
@@ -258,25 +263,25 @@ public class HandleService {
     } catch (TransformerException | ParserConfigurationException e) {
       e.printStackTrace();
     }
-    handleRecord.add(new Handles(handle, ++i, "10320/loc", loc, timestamp));
+    handleRecord.add(new Handles(handle, 5, "10320/loc", loc, timestamp));
 
     // 6: Issue Date
-    handleRecord.add((new Handles(handle, ++i, "issueDate", getDate(), timestamp)));
+    handleRecord.add((new Handles(handle, 6, "issueDate", getDate(), timestamp)));
 
     // 7: Issue number
     handleRecord.add(
-        (new Handles(handle, ++i, "issueNumber", "1", timestamp))); // Will every created handle
+        (new Handles(handle, 7, "issueNumber", "1", timestamp))); // Will every created handle
     // have a 1 for the issue date?
 
     // 8: PidStatus
     handleRecord.add(
-        (new Handles(handle, ++i, "pidStatus", "DRAFT", timestamp))); // Can I keep this as TEST?
+        (new Handles(handle, 8, "pidStatus", "DRAFT", timestamp))); // Can I keep this as TEST?
 
     // 9, 10: tombstone text, tombstone pids -> Skip
-    i = 11;
+
     // 11: PidKernelMetadataLicense:
     // https://creativecommons.org/publicdomain/zero/1.0/
-    handleRecord.add((new Handles(handle, i, "pidKernelMetadataLicense",
+    handleRecord.add((new Handles(handle, 11, "pidKernelMetadataLicense",
         "https://creativecommons.org/publicdomain/zero/1.0/", timestamp)));
 
     return handleRecord;
@@ -285,15 +290,14 @@ public class HandleService {
   private List<Handles> prepareDoiRecord(DoiRecordRequest request, byte[] handle, long timestamp)
       throws PidResolutionException, JsonProcessingException {
     List<Handles> handleRecord = prepareHandleRecord(request, handle, timestamp);
-    int i = 12;
 
     // 12: Referent DOI Name
     String referentDoiName = pidTypeService.resolveTypePid(request.getReferentDoiName());
-    handleRecord.add(new Handles(handle, i, "referentDoiName", referentDoiName, timestamp));
+    handleRecord.add(new Handles(handle, 12, "referentDoiName", referentDoiName, timestamp));
 
     // 13: Referent -> NOTE: Referent is blank currently until we have a model for
     // it
-    handleRecord.add(new Handles(handle, ++i, "referent", request.getReferent(), timestamp));
+    handleRecord.add(new Handles(handle, 13, "referent", request.getReferent(), timestamp));
 
     return handleRecord;
   }
@@ -302,21 +306,19 @@ public class HandleService {
       long timestamp) throws PidResolutionException, JsonProcessingException {
     List<Handles> handleRecord = prepareDoiRecord(request, handle, timestamp);
 
-    int i = 14;
-
     // 14: digitalOrPhysical
     handleRecord.add(
-        new Handles(handle, i, "digitalOrPhysical", request.getDigitalOrPhysical(), timestamp));
+        new Handles(handle, 14, "digitalOrPhysical", request.getDigitalOrPhysical(), timestamp));
 
     // 15: specimenHost
     String specimenHost = pidTypeService.resolveTypePid(request.getSpecimenHostPid());
-    handleRecord.add(new Handles(handle, ++i, "specimenHost", specimenHost, timestamp));
+    handleRecord.add(new Handles(handle, 15, "specimenHost", specimenHost, timestamp));
 
     // 16: In collectionFacility
     String inCollectionFacility = pidTypeService.resolveTypePid(
         request.getInCollectionFacilityPid());
     handleRecord.add(
-        new Handles(handle, ++i, "inCollectionFacility", inCollectionFacility, timestamp));
+        new Handles(handle, 16, "inCollectionFacility", inCollectionFacility, timestamp));
 
     return handleRecord;
   }
@@ -326,14 +328,14 @@ public class HandleService {
       long timestamp) throws PidResolutionException, JsonProcessingException {
     List<Handles> handleRecord = prepareDigitalSpecimenRecord(request, handle, timestamp);
 
-    int i = 17;
+
 
     // 17: ObjectType
-    handleRecord.add(new Handles(handle, i, "objectType", request.getObjectType(), timestamp));
+    handleRecord.add(new Handles(handle, 17, "objectType", request.getObjectType(), timestamp));
 
     // 18: preservedOrLiving
     handleRecord.add(
-        new Handles(handle, ++i, "preservedOrLiving", request.getPreservedOrLiving(), timestamp));
+        new Handles(handle, 17, "preservedOrLiving", request.getPreservedOrLiving(), timestamp));
 
     return handleRecord;
   }

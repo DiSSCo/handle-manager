@@ -51,7 +51,7 @@ class HandleControllerTest {
     // Given
     HandleRecordRequest request = TestUtils.generateTestHandleRequest();
     HandleRecordResponse responseExpected = TestUtils.generateTestHandleResponse(handle);
-    given(service.createRecord(request, "hdl")).willReturn(responseExpected);
+    given(service.createHandleRecord(request)).willReturn(responseExpected);
     // When
     ResponseEntity<HandleRecordResponse> responseReceived = controller.createRecord(request);
     // Then
@@ -65,7 +65,7 @@ class HandleControllerTest {
     // Given
     DoiRecordRequest request = TestUtils.generateTestDoiRequest();
     DoiRecordResponse responseExpected = TestUtils.generateTestDoiResponse(handle);
-    given(service.createRecord(request, "doi")).willReturn(responseExpected);
+    given(service.createDoiRecord(request)).willReturn(responseExpected);
     // When
     ResponseEntity<HandleRecordResponse> responseReceived = controller.createRecord(request);
     // Then
@@ -79,7 +79,7 @@ class HandleControllerTest {
     // Given
     DigitalSpecimenRequest request = TestUtils.generateTestDigitalSpecimenRequest();
     DigitalSpecimenResponse responseExpected = TestUtils.generateTestDigitalSpecimenResponse(handle);
-    given(service.createRecord(request, "ds")).willReturn(responseExpected);
+    given(service.createDigitalSpecimenRecord(request)).willReturn(responseExpected);
     // When
     ResponseEntity<HandleRecordResponse> responseReceived = controller.createRecord(request);
     // Then
@@ -94,7 +94,7 @@ class HandleControllerTest {
     DigitalSpecimenBotanyRequest request = TestUtils.generateTestDigitalSpecimenBotanyRequest();
     DigitalSpecimenBotanyResponse responseExpected = TestUtils.generateTestDigitalSpecimenBotanyResponse(
         handle);
-    given(service.createRecord(request, "dsB")).willReturn(responseExpected);
+    given(service.createDigitalSpecimenBotanyRecord(request)).willReturn(responseExpected);
     // When
     ResponseEntity<HandleRecordResponse> responseReceived = controller.createRecord(request);
     // Then

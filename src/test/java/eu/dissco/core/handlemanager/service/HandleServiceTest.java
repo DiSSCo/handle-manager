@@ -62,7 +62,7 @@ class HandleServiceTest {
     initHandles();
 
     // Return empty list to indicate handle is not taken
-    given(handleRep.checkDuplicateHandles(handlesList)).willReturn(new ArrayList<>());
+
 
     //Date and time
     initTime();
@@ -74,16 +74,17 @@ class HandleServiceTest {
     // Given
     byte[] handle = handlesList.get(0);
     HandleRecordRequest request = TestUtils.generateTestHandleRequest();
-    HandleRecordResponse response_expected = TestUtils.generateTestHandleResponse(handle);
+    HandleRecordResponse responseExpected = TestUtils.generateTestHandleResponse(handle);
     List<Handles> recordTest = TestUtils.generateTestHandleRecord(handle);
+
     given(handleRep.saveAll(recordTest)).willReturn(recordTest);
     given(hf.genHandleList(1)).willReturn(handlesList);
 
     // When
-    HandleRecordResponse response_received = service.createRecord(request, "hdl");
+    HandleRecordResponse responseReceived = service.createHandleRecord(request);
 
     // Then
-    assertThat(response_received).isEqualTo(response_expected);
+    assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
   @Test
@@ -92,16 +93,16 @@ class HandleServiceTest {
     // Given
     byte[] handle = handlesList.get(0);
     DoiRecordRequest request = TestUtils.generateTestDoiRequest();
-    DoiRecordResponse response_expected = TestUtils.generateTestDoiResponse(handle);
+    DoiRecordResponse responseExpected = TestUtils.generateTestDoiResponse(handle);
     List<Handles> recordTest = TestUtils.generateTestDoiRecord(handle);
     given(handleRep.saveAll(recordTest)).willReturn(recordTest);
     given(hf.genHandleList(1)).willReturn(handlesList);
 
     // When
-    HandleRecordResponse response_received = service.createRecord(request, "doi");
+    DoiRecordResponse responseReceived = service.createDoiRecord(request);
 
     // Then
-    assertThat(response_received).isEqualTo(response_expected);
+    assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
   @Test
@@ -110,16 +111,16 @@ class HandleServiceTest {
     // Given
     byte[] handle = handlesList.get(0);
     DigitalSpecimenRequest request = TestUtils.generateTestDigitalSpecimenRequest();
-    DigitalSpecimenResponse response_expected = TestUtils.generateTestDigitalSpecimenResponse(handle);
+    DigitalSpecimenResponse responseExpected = TestUtils.generateTestDigitalSpecimenResponse(handle);
     List<Handles> recordTest = TestUtils.generateTestDigitalSpecimenRecord(handle);
     given(handleRep.saveAll(recordTest)).willReturn(recordTest);
     given(hf.genHandleList(1)).willReturn(handlesList);
 
     // When
-    HandleRecordResponse response_received = service.createRecord(request, "ds");
+    DigitalSpecimenResponse responseReceived = service.createDigitalSpecimenRecord(request);
 
     // Then
-    assertThat(response_received).isEqualTo(response_expected);
+    assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
   @Test
@@ -128,7 +129,7 @@ class HandleServiceTest {
     // Given
     byte[] handle = handlesList.get(0);
     DigitalSpecimenBotanyRequest request = TestUtils.generateTestDigitalSpecimenBotanyRequest();
-    DigitalSpecimenBotanyResponse response_expected = TestUtils.generateTestDigitalSpecimenBotanyResponse(
+    DigitalSpecimenBotanyResponse responseExpected = TestUtils.generateTestDigitalSpecimenBotanyResponse(
         handle);
     List<Handles> recordTest = TestUtils.generateTestDigitalSpecimenBotanyRecord(handle);
 
@@ -136,10 +137,10 @@ class HandleServiceTest {
     given(hf.genHandleList(1)).willReturn(handlesList);
 
     // When
-    HandleRecordResponse response_received = service.createRecord(request, "dsB");
+    DigitalSpecimenBotanyResponse responseReceived = service.createDigitalSpecimenBotanyRecord(request);
 
     // Then
-    assertThat(response_received).isEqualTo(response_expected);
+    assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
   @Test
@@ -152,6 +153,7 @@ class HandleServiceTest {
 
     given(handleRep.saveAll(recordTest)).willReturn(recordTest);
     given(hf.newHandle(2)).willReturn(handlesList);
+    given(handleRep.checkDuplicateHandles(handlesList)).willReturn(new ArrayList<>());
 
 
     // When
@@ -171,6 +173,7 @@ class HandleServiceTest {
 
     given(handleRep.saveAll(recordTest)).willReturn(recordTest);
     given(hf.newHandle(2)).willReturn(handlesList);
+    given(handleRep.checkDuplicateHandles(handlesList)).willReturn(new ArrayList<>());
 
 
     // When
@@ -190,6 +193,7 @@ class HandleServiceTest {
 
     given(handleRep.saveAll(recordTest)).willReturn(recordTest);
     given(hf.newHandle(2)).willReturn(handlesList);
+    given(handleRep.checkDuplicateHandles(handlesList)).willReturn(new ArrayList<>());
 
 
     // When
@@ -209,6 +213,7 @@ class HandleServiceTest {
 
     given(handleRep.saveAll(recordTest)).willReturn(recordTest);
     given(hf.newHandle(2)).willReturn(handlesList);
+    given(handleRep.checkDuplicateHandles(handlesList)).willReturn(new ArrayList<>());
 
 
     // When

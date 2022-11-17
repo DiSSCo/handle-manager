@@ -108,21 +108,20 @@ public class TestUtils {
     // 100: Admin Handle
     handleRecord.add(Resources.genAdminHandle(handle, timestamp));
 
-    int i = 1;
     // 1: Pid
     handleRecord.add(
-        new Handles(handle, i++, "pid", ("https://hdl.handle.net/" + new String(handle)).getBytes(),
+        new Handles(handle, 1, "pid", ("https://hdl.handle.net/" + new String(handle)).getBytes(),
             timestamp));
 
     // 2: PidIssuer
-    handleRecord.add(new Handles(handle, i++, "pidIssuer", PTR_HANDLE_RECORD, timestamp));
+    handleRecord.add(new Handles(handle, 2, "pidIssuer", PTR_HANDLE_RECORD, timestamp));
 
     // 3: Digital Object Type
-    handleRecord.add(new Handles(handle, i++, "digitalObjectType", PTR_HANDLE_RECORD, timestamp));
+    handleRecord.add(new Handles(handle, 3, "digitalObjectType", PTR_HANDLE_RECORD, timestamp));
 
     // 4: Digital Object Subtype
     handleRecord.add(
-        new Handles(handle, i++, "digitalObjectSubtype", PTR_HANDLE_RECORD, timestamp));
+        new Handles(handle, 4, "digitalObjectSubtype", PTR_HANDLE_RECORD, timestamp));
 
     // 5: 10320/loc
     byte[] loc = "".getBytes();
@@ -131,24 +130,23 @@ public class TestUtils {
     } catch (TransformerException | ParserConfigurationException e) {
       e.printStackTrace();
     }
-    handleRecord.add(new Handles(handle, i++, "10320/loc", loc, timestamp));
+    handleRecord.add(new Handles(handle, 5, "10320/loc", loc, timestamp));
 
     // 6: Issue Date
-    handleRecord.add((new Handles(handle, i++, "issueDate", initDate(), timestamp)));
+    handleRecord.add((new Handles(handle, 6, "issueDate", initDate(), timestamp)));
 
     // 7: Issue number
-    handleRecord.add((new Handles(handle, i++, "issueNumber", "1", timestamp)));
+    handleRecord.add((new Handles(handle, 7, "issueNumber", "1", timestamp)));
     // have a 1 for the issue date?
 
     // 8: PidStatus
-    handleRecord.add((new Handles(handle, i++, "pidStatus", "DRAFT", timestamp)));
+    handleRecord.add((new Handles(handle, 8, "pidStatus", "DRAFT", timestamp)));
 
     // 9, 10: tombstone text, tombstone pids -> Skip
-    i++;
-    i++;
+
     // 11: PidKernelMetadataLicense:
     // https://creativecommons.org/publicdomain/zero/1.0/
-    handleRecord.add((new Handles(handle, i++, "pidKernelMetadataLicense",
+    handleRecord.add((new Handles(handle, 11, "pidKernelMetadataLicense",
         "https://creativecommons.org/publicdomain/zero/1.0/", timestamp)));
     return handleRecord;
   }
@@ -157,12 +155,11 @@ public class TestUtils {
     List<Handles> handleRecord = generateTestHandleRecord(handle);
     long timestamp = initTime();
 
-    int i = 12;
     // 12: Referent DOI Name
-    handleRecord.add(new Handles(handle, i++, "referentDoiName", PTR_HANDLE_RECORD, timestamp));
+    handleRecord.add(new Handles(handle, 12, "referentDoiName", PTR_HANDLE_RECORD, timestamp));
     // 13: Referent
     // it
-    handleRecord.add(new Handles(handle, i++, "referent", REFERENT, timestamp));
+    handleRecord.add(new Handles(handle, 13, "referent", REFERENT, timestamp));
     return handleRecord;
   }
 
@@ -170,17 +167,15 @@ public class TestUtils {
     List<Handles> handleRecord = generateTestDoiRecord(handle);
     long timestamp = initTime();
 
-    int i = 14;
-
     // 14: digitalOrPhysical
-    handleRecord.add(new Handles(handle, i++, "digitalOrPhysical", DIGITAL_OR_PHYSICAL, timestamp));
+    handleRecord.add(new Handles(handle, 14, "digitalOrPhysical", DIGITAL_OR_PHYSICAL, timestamp));
 
     // 15: specimenHost
-    handleRecord.add(new Handles(handle, i++, "specimenHost", PTR_HANDLE_RECORD, timestamp));
+    handleRecord.add(new Handles(handle, 15, "specimenHost", PTR_HANDLE_RECORD, timestamp));
 
     // 16: In collectionFacility
     handleRecord.add(
-        new Handles(handle, i++, "inCollectionFacility", PTR_HANDLE_RECORD, timestamp));
+        new Handles(handle, 16, "inCollectionFacility", PTR_HANDLE_RECORD, timestamp));
     return handleRecord;
   }
 
@@ -189,13 +184,12 @@ public class TestUtils {
     List<Handles> handleRecord = generateTestDigitalSpecimenRecord(handle);
     long timestamp = initTime();
 
-    int i = 17;
 
     // 17: ObjectType
-    handleRecord.add(new Handles(handle, i++, "objectType", OBJECT_TYPE, timestamp));
+    handleRecord.add(new Handles(handle, 17, "objectType", OBJECT_TYPE, timestamp));
 
     // 18: preservedOrLiving
-    handleRecord.add(new Handles(handle, i++, "preservedOrLiving", PRESERVED_OR_LIVING, timestamp));
+    handleRecord.add(new Handles(handle, 18, "preservedOrLiving", PRESERVED_OR_LIVING, timestamp));
 
     return handleRecord;
   }
