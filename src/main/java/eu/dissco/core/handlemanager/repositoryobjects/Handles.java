@@ -40,10 +40,10 @@ public class Handles implements Serializable, Comparable<Handles> {
   // Default values posted to handle server
   // Do not make static, do not remove
   private final int ttl = 86400;
-  private final boolean admin_read = true;
-  private final boolean admin_write = true;
-  private final boolean pub_read = true;
-  private final boolean pub_write = false;
+  private final boolean adminRead = true;
+  private final boolean adminWrite = true;
+  private final boolean pubRead = true;
+  private final boolean pubWrite = false;
 
   public Handles() {
   }
