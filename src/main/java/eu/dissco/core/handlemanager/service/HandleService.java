@@ -11,7 +11,6 @@ import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenBotanyRespon
 import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenResponse;
 import eu.dissco.core.handlemanager.domain.responses.DoiRecordResponse;
 import eu.dissco.core.handlemanager.domain.responses.HandleRecordResponse;
-import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
 import eu.dissco.core.handlemanager.repositoryobjects.Handles;
@@ -28,7 +27,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 // Postgres value in (value1, value2)..
@@ -40,16 +38,12 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class HandleService {
 
-  @Autowired
-  public HandleRepository handleRep;
+  private final HandleRepository handleRep;
 
-  @Autowired
-  PidTypeService pidTypeService;
+  private final PidTypeService pidTypeService;
 
-  @Autowired
-  private Clock clock;
-  @Autowired
-  private HandleGeneratorService hf;
+  private final Clock clock;
+  private final HandleGeneratorService hf;
 
   public List<String> getHandlesPaged(String pidStatus, int pageNum, int pageSize) {
     return getStrList(handleRep.getHandles(pidStatus.getBytes(), pageNum, pageSize));
@@ -71,10 +65,7 @@ public class HandleService {
     List<Handles> handleRecordsAll = new ArrayList<>();
     List<HandleRecordResponse> response = new ArrayList<>();
 
-    log.info("handles to mint: " +requests.size());
-
     for (int i = 0; i < requests.size(); i++) {
-      log.info("index = " + i);
       // Prepare handle record as list of Handles
       handleRecord = prepareHandleRecord(requests.get(i), handles.get(i), timestamp);
 
@@ -126,8 +117,6 @@ public class HandleService {
       List<DigitalSpecimenRequest> requests)
       throws PidResolutionException, JsonProcessingException {
     List<byte[]> handles = hf.genHandleList(requests.size());
-    log.info("Handles to generate: "+requests.size());
-    log.info("first handle: " + new String(handles.get(0)));
 
     long timestamp = clock.instant().getEpochSecond();
     List<Handles> digitalSpecimenRecord;
@@ -188,7 +177,6 @@ public class HandleService {
   public HandleRecordResponse createHandleRecord(HandleRecordRequest request)
       throws PidResolutionException, JsonProcessingException {
     byte[] handle = hf.genHandleList(1).get(0);
-    log.info("handle generated: " + new String(handle));
 
     long timestamp = clock.instant().getEpochSecond();
     List<Handles> handleRecord;
@@ -335,7 +323,7 @@ public class HandleService {
 
     // 18: preservedOrLiving
     handleRecord.add(
-        new Handles(handle, 17, "preservedOrLiving", request.getPreservedOrLiving(), timestamp));
+        new Handles(handle, 18, "preservedOrLiving", request.getPreservedOrLiving(), timestamp));
 
     return handleRecord;
   }

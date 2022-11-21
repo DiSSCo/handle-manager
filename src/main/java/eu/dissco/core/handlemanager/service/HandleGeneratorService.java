@@ -53,8 +53,7 @@ public class HandleGeneratorService {
     return handleList;
   }
 
-  private HashSet<ByteBuffer> genHandleHash(int h) {
-    log.info("handles to really be generated: " + h);
+  public HashSet<ByteBuffer> genHandleHash(int h) {
 
     /*
      * Generates a HashSet of minted handles of size h Calls the handlefactory
@@ -65,6 +64,11 @@ public class HandleGeneratorService {
 
     // Generate h number of bytes and wrap it into a HashSet<ByteBuffer>
     List<byte[]> handleList = newHandle(h);
+    log.info("Handle list generated");
+    for (byte [] b : handleList){
+      log.info(new String (b));
+    }
+
     HashSet<ByteBuffer> handleHash = wrapBytes(handleList);
 
     // Check for duplicates from repository and wrap the duplicates
@@ -159,30 +163,5 @@ public class HandleGeneratorService {
     return handleList;
   }
 
-
-
-
-
-  // HashSet<ByteBuffer> --> List<byte[]>
-
-
-  private List<String> getStrList(List<byte[]> byteList) {
-    // It's crazy that ArrayList doesn't have a native type converter (especially
-    // from byte[] to str?
-    // If there's a better way to do this that would be cool
-
-    int l = byteList.size();
-    List<String> strList = new ArrayList<>(l);
-    String s;
-    for (byte[] b : byteList) {
-      s = byteToString(b);
-      strList.add(s);
-    }
-    return strList;
-  }
-
-  private String byteToString(byte[] b) {
-    return new String(b, StandardCharsets.UTF_8);
-  }
 
 }

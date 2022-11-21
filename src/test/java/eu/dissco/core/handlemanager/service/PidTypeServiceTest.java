@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
 import eu.dissco.core.handlemanager.repositoryobjects.Handles;
@@ -30,7 +31,8 @@ class PidTypeServiceTest {
   @Mock
   private Clock clock;
 
-  @InjectMocks
+  ObjectMapper mapper;
+
   private PidTypeService pidTypeService;
 
   // Time stuff
@@ -51,6 +53,8 @@ class PidTypeServiceTest {
   @BeforeEach
   void init() {
     timestamp = initTimestamp();
+    mapper = new ObjectMapper();
+    pidTypeService = new PidTypeService(handleRep, mapper);
   }
 
   @Test

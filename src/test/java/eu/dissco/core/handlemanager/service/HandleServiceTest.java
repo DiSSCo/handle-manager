@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
@@ -24,6 +25,7 @@ import java.time.Clock;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +34,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
+@Slf4j
 class HandleServiceTest {
 
   @Mock
@@ -46,7 +49,6 @@ class HandleServiceTest {
   @Mock
   private Clock mockClock;
 
-  @InjectMocks
   private HandleService service;
 
   private List<byte[]> handlesList;
@@ -57,6 +59,7 @@ class HandleServiceTest {
   void init() throws PidResolutionException, JsonProcessingException {
     // Pid type record
     given(pidTypeService.resolveTypePid(any(String.class))).willReturn(TestUtils.PTR_HANDLE_RECORD);
+    service = new HandleService(handleRep, pidTypeService, mockClock, hf);
 
     // Generating list of handles
     initHandles();
@@ -108,11 +111,13 @@ class HandleServiceTest {
   @Test
   void CreateDigitalSpecimenTest()
       throws PidCreationException, PidResolutionException, JsonProcessingException {
+
     // Given
     byte[] handle = handlesList.get(0);
     DigitalSpecimenRequest request = TestUtils.generateTestDigitalSpecimenRequest();
     DigitalSpecimenResponse responseExpected = TestUtils.generateTestDigitalSpecimenResponse(handle);
     List<Handles> recordTest = TestUtils.generateTestDigitalSpecimenRecord(handle);
+
     given(handleRep.saveAll(recordTest)).willReturn(recordTest);
     given(hf.genHandleList(1)).willReturn(handlesList);
 
@@ -152,9 +157,7 @@ class HandleServiceTest {
     List<Handles> recordTest = generateBatchHandleList();
 
     given(handleRep.saveAll(recordTest)).willReturn(recordTest);
-    given(hf.newHandle(2)).willReturn(handlesList);
-    given(handleRep.checkDuplicateHandles(handlesList)).willReturn(new ArrayList<>());
-
+    given(hf.genHandleList(2)).willReturn(handlesList);
 
     // When
     List<HandleRecordResponse> responseReceived = service.createHandleRecordBatch(request);
@@ -172,9 +175,7 @@ class HandleServiceTest {
     List<Handles> recordTest = generateBatchDoiList();
 
     given(handleRep.saveAll(recordTest)).willReturn(recordTest);
-    given(hf.newHandle(2)).willReturn(handlesList);
-    given(handleRep.checkDuplicateHandles(handlesList)).willReturn(new ArrayList<>());
-
+    given(hf.genHandleList(2)).willReturn(handlesList);
 
     // When
     List<DoiRecordResponse> responseReceived = service.createDoiRecordBatch(request);
@@ -192,9 +193,7 @@ class HandleServiceTest {
     List<Handles> recordTest = generateBatchDigitalSpecimenList();
 
     given(handleRep.saveAll(recordTest)).willReturn(recordTest);
-    given(hf.newHandle(2)).willReturn(handlesList);
-    given(handleRep.checkDuplicateHandles(handlesList)).willReturn(new ArrayList<>());
-
+    given(hf.genHandleList(2)).willReturn(handlesList);
 
     // When
     List<DigitalSpecimenResponse> responseReceived = service.createDigitalSpecimenBatch(request);
@@ -212,8 +211,7 @@ class HandleServiceTest {
     List<Handles> recordTest = generateBatchDigitalSpecimenBotanyList();
 
     given(handleRep.saveAll(recordTest)).willReturn(recordTest);
-    given(hf.newHandle(2)).willReturn(handlesList);
-    given(handleRep.checkDuplicateHandles(handlesList)).willReturn(new ArrayList<>());
+    given(hf.genHandleList(2)).willReturn(handlesList);
 
 
     // When
@@ -334,7 +332,7 @@ class HandleServiceTest {
     handlesList.add(TestUtils.HANDLE_ALT.getBytes());
 
     handlesSingle = new ArrayList<>();
-    handlesList.add(TestUtils.HANDLE.getBytes());
+    handlesSingle.add(TestUtils.HANDLE.getBytes());
   }
 
 
