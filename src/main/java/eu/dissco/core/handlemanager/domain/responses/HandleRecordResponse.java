@@ -17,7 +17,7 @@ public class HandleRecordResponse {
   private String issueDate;
   private String issueNumber;
   private String pidKernelMetadataLicense;
-  private String hs_admin;
+  private String hsAdmin;
 
   public HandleRecordResponse(List<Handles> entries) {
     String type;
@@ -35,8 +35,8 @@ public class HandleRecordResponse {
         case "issueDate" -> this.issueDate = data;
         case "issueNumber" -> this.issueNumber = data;
         case "pidKernelMetadataLicense" -> this.pidKernelMetadataLicense = data;
-        case "HS_ADMIN" -> this.hs_admin = data;
-        //default -> log.info("Base constructor called");
+        case "HS_ADMIN" -> this.hsAdmin = data;
+        default -> log.info("Base constructor called");
       }
     }
 

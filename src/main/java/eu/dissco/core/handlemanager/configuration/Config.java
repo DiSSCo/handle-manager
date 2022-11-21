@@ -20,8 +20,6 @@ public class Config {
     return Clock.systemUTC();
   }
 
-  // Create singleton object, create only once to avoid additional work
-  // instantiate ObjectMapper as bean
 
   @Bean
   public DocumentBuilderFactory documentBuilderFactory() throws ParserConfigurationException {

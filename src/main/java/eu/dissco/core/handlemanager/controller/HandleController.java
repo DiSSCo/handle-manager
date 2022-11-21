@@ -75,28 +75,28 @@ public class HandleController {
   @PostMapping(value = "/createRecord", params = "pidType=handle")
   public ResponseEntity<HandleRecordResponse> createRecord(
       @RequestBody HandleRecordRequest hdl)
-      throws PidCreationException, PidResolutionException, JsonProcessingException {
+      throws PidResolutionException, JsonProcessingException {
     return ResponseEntity.status(HttpStatus.CREATED).body(service.createHandleRecord(hdl));
   }
 
   @PostMapping(value = "/createRecord", params = "pidType=doi")
   public ResponseEntity<HandleRecordResponse> createRecord(
       @RequestBody DoiRecordRequest doi)
-      throws PidCreationException, PidResolutionException, JsonProcessingException {
+      throws PidResolutionException, JsonProcessingException {
     return ResponseEntity.status(HttpStatus.CREATED).body(service.createDoiRecord(doi));
   }
 
   @PostMapping(value = "/createRecord", params = "pidType=digitalSpecimen")
   public ResponseEntity<HandleRecordResponse> createRecord(
       @RequestBody DigitalSpecimenRequest ds)
-      throws PidCreationException, PidResolutionException, JsonProcessingException {
+      throws PidResolutionException, JsonProcessingException {
     return ResponseEntity.status(HttpStatus.CREATED).body(service.createDigitalSpecimenRecord(ds));
   }
 
   @PostMapping(value = "/createRecord", params = "pidType=digitalSpecimenBotany")
   public ResponseEntity<HandleRecordResponse> createRecord(
       @RequestBody DigitalSpecimenBotanyRequest dsB)
-      throws PidCreationException, PidResolutionException, JsonProcessingException {
+      throws PidResolutionException, JsonProcessingException {
     return ResponseEntity.status(HttpStatus.CREATED).body(service.createDigitalSpecimenBotanyRecord(dsB));
   }
 

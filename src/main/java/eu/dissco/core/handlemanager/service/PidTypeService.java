@@ -41,7 +41,6 @@ public class PidTypeService {
     String primaryNameFromPid = getDataFromType("primaryNameFromPid", typeRecord);
     String pidType;
     String registrationAgencyDoiName = "";
-    String typeJson = "";
     ObjectNode objectNode = mapper.createObjectNode();
 
     if (pid.contains("doi")) {

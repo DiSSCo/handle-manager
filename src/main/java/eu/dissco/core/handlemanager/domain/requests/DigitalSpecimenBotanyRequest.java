@@ -2,7 +2,6 @@ package eu.dissco.core.handlemanager.domain.requests;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.Objects;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 

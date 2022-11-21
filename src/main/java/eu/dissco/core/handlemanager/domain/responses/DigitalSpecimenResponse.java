@@ -11,7 +11,6 @@ public class DigitalSpecimenResponse extends DoiRecordResponse {
   String specimenHost;
   String inCollectionFacility;
 
-
   public DigitalSpecimenResponse(List<Handles> entries) {
     super(entries);
     String type;

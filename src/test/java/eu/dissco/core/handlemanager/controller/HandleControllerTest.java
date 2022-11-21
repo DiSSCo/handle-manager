@@ -40,7 +40,7 @@ class HandleControllerTest {
 
 
   @BeforeEach
-  void init() {
+  void setup() {
     controller = new HandleController(service);
     handle = TestUtils.HANDLE.getBytes();
   }

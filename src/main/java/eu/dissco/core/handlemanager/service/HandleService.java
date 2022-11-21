@@ -173,7 +173,6 @@ public class HandleService {
     return response;
   }
 
-  // Todo Minimize branch points, break this up, lower cognitive complexity
   public HandleRecordResponse createHandleRecord(HandleRecordRequest request)
       throws PidResolutionException, JsonProcessingException {
     byte[] handle = hf.genHandleList(1).get(0);
@@ -224,7 +223,6 @@ public class HandleService {
     // 100: Admin Handle
     handleRecord.add(Resources.genAdminHandle(handle, timestamp));
 
-    //Todo hardcode index values
     // 1: Pid
     byte[] pid = concatBytes("https://hdl.handle.net/".getBytes(),
         handle); // Maybe this should check if it's a DOI?

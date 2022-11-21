@@ -2,25 +2,26 @@ package eu.dissco.core.handlemanager.service;
 
 import eu.dissco.core.handlemanager.repository.HandleRepository;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+
 // This class generates new handles
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class HandleGeneratorService {
+
   @Autowired
   private HandleRepository handleRep;
-
   @Autowired
   private Random random;
 
@@ -40,10 +41,11 @@ public class HandleGeneratorService {
     }
     this.symbols = symbols.toCharArray();
     this.buf = new char[length];
+    this.random = random;
   }
 
   public List<byte[]> genHandleList(int h) {
-    return unwrapBytes(genHandleHash(h));
+    return unwrapBytes((HashSet<ByteBuffer>)genHandleHash(h));
   }
   private List<byte[]> unwrapBytes(HashSet<ByteBuffer> handleHash) {
     List<byte[]> handleList = new ArrayList<>();
@@ -53,7 +55,7 @@ public class HandleGeneratorService {
     return handleList;
   }
 
-  public HashSet<ByteBuffer> genHandleHash(int h) {
+  public Set<ByteBuffer> genHandleHash(int h) {
 
     /*
      * Generates a HashSet of minted handles of size h Calls the handlefactory
@@ -64,10 +66,6 @@ public class HandleGeneratorService {
 
     // Generate h number of bytes and wrap it into a HashSet<ByteBuffer>
     List<byte[]> handleList = newHandle(h);
-    log.info("Handle list generated");
-    for (byte [] b : handleList){
-      log.info(new String (b));
-    }
 
     HashSet<ByteBuffer> handleHash = wrapBytes(handleList);
 

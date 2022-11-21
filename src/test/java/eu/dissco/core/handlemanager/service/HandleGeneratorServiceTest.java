@@ -3,21 +3,13 @@ package eu.dissco.core.handlemanager.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.when;
 
 import eu.dissco.core.handlemanager.repository.HandleRepository;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import lombok.extern.slf4j.Slf4j;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,10 +19,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @Slf4j
-public class HandleGeneratorServiceTest {
+class HandleGeneratorServiceTest {
 
   @Mock
   HandleRepository handleRep;
+
   @Mock
   Random random;
 
@@ -39,7 +32,6 @@ public class HandleGeneratorServiceTest {
 
   @BeforeEach
   void setup(){
-
   }
 
   @Test
