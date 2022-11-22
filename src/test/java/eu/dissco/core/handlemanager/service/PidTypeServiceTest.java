@@ -94,7 +94,6 @@ class PidTypeServiceTest {
     primaryNameFromPid = TestUtils.PTR_PRIMARY_NAME;
     registrationAgencyDoiName = TestUtils.PTR_REGISTRATION_DOI_NAME;
 
-
     typeRecord = initTestPidTypeRecord(true);
   }
 

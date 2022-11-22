@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Slf4j
 public class HandleGeneratorService {
+
   private static final String ALPHA_NUM = "ABCDEFGHJKLMNPQRSTUVWXYZ1234567890";
   private static final String PREFIX = "20.5000.1025/";
   private final char[] symbols;

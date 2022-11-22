@@ -60,10 +60,10 @@ public class TestUtils {
   public static String PTR_TYPE = "handle";
   public static String PTR_PRIMARY_NAME = "DiSSCo";
   public static String PTR_PID_DOI = "http://doi.org/" + PID_ISSUER_PID;
-  public static String PTR_TYPE_DOI = "doi";
-  public static String PTR_REGISTRATION_DOI_NAME = "Registration Agency";
   public static String PTR_HANDLE_RECORD = initPtrHandleRecord(false);
   public static String PTR_DOI_RECORD = initPtrHandleRecord(true);
+  public static String PTR_TYPE_DOI = "doi";
+  public static String PTR_REGISTRATION_DOI_NAME = "Registration Agency";
 
   private TestUtils() {
     throw new IllegalStateException("Utility class");

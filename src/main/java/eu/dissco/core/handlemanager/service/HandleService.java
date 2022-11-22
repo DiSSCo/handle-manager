@@ -13,8 +13,6 @@ import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
 import eu.dissco.core.handlemanager.repositoryobjects.Handles;
 import eu.dissco.core.handlemanager.utils.Resources;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -235,7 +233,7 @@ public class HandleService {
     handleRecord.add(Resources.genAdminHandle(handle, timestamp));
 
     // 1: Pid
-    byte[] pid = ("https://hdl.handle.net/"+ new String(handle)).getBytes();
+    byte[] pid = ("https://hdl.handle.net/" + new String(handle)).getBytes();
     handleRecord.add(new Handles(handle, 1, "pid", pid, timestamp));
 
     // 2: PidIssuer
@@ -361,8 +359,6 @@ public class HandleService {
     DateTimeFormatter dt = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.ENGLISH)
         .withZone(ZoneId.of("UTC"));
     Instant instant = Instant.now();
-    log.info(String.valueOf(instant == null));
-    log.info(instant.toString());
     return dt.format(instant);
   }
 
