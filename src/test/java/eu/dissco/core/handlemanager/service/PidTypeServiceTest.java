@@ -77,7 +77,6 @@ class PidTypeServiceTest {
     assertThat(expected).isEqualTo(returned);
   }
 
-
   private void initTestPidTypeRecordHandle() {
     recordPid = TestUtils.PID_ISSUER_PID.getBytes();
     pid = TestUtils.PTR_PID;
