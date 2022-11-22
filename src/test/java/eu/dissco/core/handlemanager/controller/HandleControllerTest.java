@@ -175,10 +175,8 @@ class HandleControllerTest {
     //When
     ResponseEntity<String> response = controller.hello();
     // Then
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
   }
-
-
 
   private List<HandleRecordRequest> buildHandleRequestList() {
     List<HandleRecordRequest> requestList = new ArrayList<>();
