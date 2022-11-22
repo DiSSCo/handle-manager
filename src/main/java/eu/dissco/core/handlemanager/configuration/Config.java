@@ -2,24 +2,18 @@ package eu.dissco.core.handlemanager.configuration;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.time.Clock;
 import java.util.Random;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerFactory;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class Config {
-
-  @Bean
-  public Clock clock() {
-    return Clock.systemUTC();
-  }
-
 
   @Bean
   public DocumentBuilderFactory documentBuilderFactory() throws ParserConfigurationException {
@@ -39,11 +33,12 @@ public class Config {
 
   @Bean
   public ObjectMapper objectMapper() {
-    return new ObjectMapper().findAndRegisterModules().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    return new ObjectMapper().findAndRegisterModules()
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
   }
 
   @Bean
-  public Random random(){
+  public Random random() {
     return new Random();
   }
 

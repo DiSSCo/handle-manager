@@ -1,7 +1,5 @@
 package eu.dissco.core.handlemanager.service;
 
-import static eu.dissco.core.handlemanager.utils.Resources.getDataFromType;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -71,6 +69,15 @@ public class PidTypeService {
       objectNode.put("registrationAgencyDoiName", registrationAgencyDoiName);
     }
     return mapper.writeValueAsString(objectNode);
+  }
+
+  private String getDataFromType(String type, List<Handles> hList) {
+    for (Handles h : hList) {
+      if (h.getType().equals(type)) {
+        return h.getData();
+      }
+    }
+    return ""; // This should maybe return a warning?
   }
 
 }

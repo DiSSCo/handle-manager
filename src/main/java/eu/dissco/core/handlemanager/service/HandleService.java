@@ -1,7 +1,5 @@
 package eu.dissco.core.handlemanager.service;
 
-import static eu.dissco.core.handlemanager.utils.Resources.setLocations;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
@@ -17,17 +15,28 @@ import eu.dissco.core.handlemanager.repositoryobjects.Handles;
 import eu.dissco.core.handlemanager.utils.Resources;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
-import java.time.Clock;
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
 import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.w3c.dom.Document;
 
 // Postgres value in (value1, value2)..
 // Generate all handles before posting...
@@ -42,8 +51,11 @@ public class HandleService {
 
   private final PidTypeService pidTypeService;
 
-  private final Clock clock;
   private final HandleGeneratorService hf;
+  private final DocumentBuilderFactory dbf;
+
+  private final TransformerFactory tf;
+
 
   public List<String> getHandlesPaged(String pidStatus, int pageNum, int pageSize) {
     return getStrList(handleRep.getHandles(pidStatus.getBytes(), pageNum, pageSize));
@@ -56,11 +68,10 @@ public class HandleService {
 
   // Create Handle Record Batch
   public List<HandleRecordResponse> createHandleRecordBatch(List<HandleRecordRequest> requests)
-      throws PidResolutionException, JsonProcessingException {
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
     List<byte[]> handles = hf.genHandleList(requests.size());
 
-
-    long timestamp = clock.instant().getEpochSecond();
+    long timestamp = Instant.now().getEpochSecond();
     List<Handles> handleRecord;
     List<Handles> handleRecordsAll = new ArrayList<>();
     List<HandleRecordResponse> response = new ArrayList<>();
@@ -86,9 +97,9 @@ public class HandleService {
   }
 
   public List<DoiRecordResponse> createDoiRecordBatch(List<DoiRecordRequest> requests)
-      throws PidResolutionException, JsonProcessingException {
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
     List<byte[]> handles = hf.genHandleList(requests.size());
-    long timestamp = clock.instant().getEpochSecond();
+    long timestamp = Instant.now().getEpochSecond();
     List<Handles> doiRecord;
     List<Handles> doiRecordsAll = new ArrayList<>();
     List<DoiRecordResponse> response = new ArrayList<>();
@@ -115,10 +126,10 @@ public class HandleService {
 
   public List<DigitalSpecimenResponse> createDigitalSpecimenBatch(
       List<DigitalSpecimenRequest> requests)
-      throws PidResolutionException, JsonProcessingException {
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
     List<byte[]> handles = hf.genHandleList(requests.size());
 
-    long timestamp = clock.instant().getEpochSecond();
+    long timestamp = Instant.now().getEpochSecond();
     List<Handles> digitalSpecimenRecord;
     List<Handles> digitalSpecimenRecordsAll = new ArrayList<>();
     List<DigitalSpecimenResponse> response = new ArrayList<>();
@@ -145,9 +156,9 @@ public class HandleService {
 
   public List<DigitalSpecimenBotanyResponse> createDigitalSpecimenBotanyBatch(
       List<DigitalSpecimenBotanyRequest> requests)
-      throws PidResolutionException, JsonProcessingException {
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
     List<byte[]> handles = hf.genHandleList(requests.size());
-    long timestamp = clock.instant().getEpochSecond();
+    long timestamp = Instant.now().getEpochSecond();
     List<Handles> digitalSpecimenBotanyRecord;
     List<Handles> digitalSpecimenRecordsAll = new ArrayList<>();
     List<DigitalSpecimenBotanyResponse> response = new ArrayList<>();
@@ -174,10 +185,10 @@ public class HandleService {
   }
 
   public HandleRecordResponse createHandleRecord(HandleRecordRequest request)
-      throws PidResolutionException, JsonProcessingException {
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
     byte[] handle = hf.genHandleList(1).get(0);
 
-    long timestamp = clock.instant().getEpochSecond();
+    long timestamp = Instant.now().getEpochSecond();
     List<Handles> handleRecord;
     handleRecord = prepareHandleRecord(request, handle, timestamp);
     List<Handles> posted = handleRep.saveAll(handleRecord);
@@ -185,9 +196,9 @@ public class HandleService {
   }
 
   public DoiRecordResponse createDoiRecord(DoiRecordRequest request)
-      throws PidResolutionException, JsonProcessingException {
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
     byte[] handle = hf.genHandleList(1).get(0);
-    long timestamp = clock.instant().getEpochSecond();
+    long timestamp = Instant.now().getEpochSecond();
     List<Handles> handleRecord;
     handleRecord = prepareDoiRecord(request, handle, timestamp);
     List<Handles> posted = handleRep.saveAll(handleRecord);
@@ -195,19 +206,20 @@ public class HandleService {
   }
 
   public DigitalSpecimenResponse createDigitalSpecimenRecord(DigitalSpecimenRequest request)
-      throws PidResolutionException, JsonProcessingException {
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
     byte[] handle = hf.genHandleList(1).get(0);
-    long timestamp = clock.instant().getEpochSecond();
+    long timestamp = Instant.now().getEpochSecond();
     List<Handles> handleRecord;
     handleRecord = prepareDigitalSpecimenRecord(request, handle, timestamp);
     List<Handles> posted = handleRep.saveAll(handleRecord);
     return new DigitalSpecimenResponse(posted);
   }
 
-  public DigitalSpecimenBotanyResponse createDigitalSpecimenBotanyRecord(DigitalSpecimenBotanyRequest request)
-      throws PidResolutionException, JsonProcessingException {
+  public DigitalSpecimenBotanyResponse createDigitalSpecimenBotanyRecord(
+      DigitalSpecimenBotanyRequest request)
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
     byte[] handle = hf.genHandleList(1).get(0);
-    long timestamp = clock.instant().getEpochSecond();
+    long timestamp = Instant.now().getEpochSecond();
     List<Handles> handleRecord;
     handleRecord = prepareDigitalSpecimenBotanyRecord(request, handle, timestamp);
     List<Handles> posted = handleRep.saveAll(handleRecord);
@@ -217,7 +229,8 @@ public class HandleService {
   // Prepare Record Lists
 
   private List<Handles> prepareHandleRecord(HandleRecordRequest request, byte[] handle,
-      long timestamp) throws PidResolutionException, JsonProcessingException {
+      long timestamp)
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
     List<Handles> handleRecord = new ArrayList<>();
 
     // 100: Admin Handle
@@ -243,12 +256,7 @@ public class HandleService {
         new Handles(handle, 4, "digitalObjectSubtype", digitalObjectSubtype, timestamp));
 
     // 5: 10320/loc
-    byte[] loc = "".getBytes();
-    try {
-      loc = setLocations(request.getLocations());
-    } catch (TransformerException | ParserConfigurationException e) {
-      e.printStackTrace();
-    }
+    byte[] loc = setLocations(request.getLocations());
     handleRecord.add(new Handles(handle, 5, "10320/loc", loc, timestamp));
 
     // 6: Issue Date
@@ -257,7 +265,6 @@ public class HandleService {
     // 7: Issue number
     handleRecord.add(
         (new Handles(handle, 7, "issueNumber", "1", timestamp))); // Will every created handle
-    // have a 1 for the issue date?
 
     // 8: PidStatus
     handleRecord.add(
@@ -273,8 +280,42 @@ public class HandleService {
     return handleRecord;
   }
 
+  public byte[] setLocations(String[] objectLocations)
+      throws TransformerException, ParserConfigurationException {
+
+    DocumentBuilder documentBuilder = dbf.newDocumentBuilder();
+
+    var doc = documentBuilder.newDocument();
+    var locations = doc.createElement("locations");
+    doc.appendChild(locations);
+    for (int i = 0; i < objectLocations.length; i++) {
+
+      var locs = doc.createElement("location");
+      locs.setAttribute("id", String.valueOf(i));
+      locs.setAttribute("href", objectLocations[i]);
+      locs.setAttribute("weight", "0");
+      locations.appendChild(locs);
+    }
+    return documentToString(doc).getBytes(StandardCharsets.UTF_8);
+  }
+
+  private String documentToString(Document document) throws TransformerException {
+    TransformerFactory tf = TransformerFactory.newInstance();
+    tf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+    tf.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+    tf.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
+
+    var transformer = tf.newTransformer();
+    transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+    StringWriter writer = new StringWriter();
+    transformer.transform(new DOMSource(document), new StreamResult(writer));
+    return writer.getBuffer().toString();
+  }
+
+
+
   private List<Handles> prepareDoiRecord(DoiRecordRequest request, byte[] handle, long timestamp)
-      throws PidResolutionException, JsonProcessingException {
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
     List<Handles> handleRecord = prepareHandleRecord(request, handle, timestamp);
 
     // 12: Referent DOI Name
@@ -289,7 +330,8 @@ public class HandleService {
   }
 
   private List<Handles> prepareDigitalSpecimenRecord(DigitalSpecimenRequest request, byte[] handle,
-      long timestamp) throws PidResolutionException, JsonProcessingException {
+      long timestamp)
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
     List<Handles> handleRecord = prepareDoiRecord(request, handle, timestamp);
 
     // 14: digitalOrPhysical
@@ -311,10 +353,9 @@ public class HandleService {
 
   private List<Handles> prepareDigitalSpecimenBotanyRecord(DigitalSpecimenBotanyRequest request,
       byte[] handle,
-      long timestamp) throws PidResolutionException, JsonProcessingException {
+      long timestamp)
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
     List<Handles> handleRecord = prepareDigitalSpecimenRecord(request, handle, timestamp);
-
-
 
     // 17: ObjectType
     handleRecord.add(new Handles(handle, 17, "objectType", request.getObjectType(), timestamp));
@@ -339,9 +380,12 @@ public class HandleService {
 
 
   private String getDate() {
-    DateTimeFormatter dt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    LocalDateTime now = LocalDateTime.now(clock);
-    return dt.format(now);
+    DateTimeFormatter dt = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.ENGLISH)
+        .withZone(ZoneId.of("UTC"));
+    Instant instant = Instant.now();
+    log.info(String.valueOf(instant == null));
+    log.info(instant.toString());
+    return dt.format(instant);
   }
 
   // Given a list of Handles (of unknown pidStatus), return HandleRecord
@@ -364,6 +408,7 @@ public class HandleService {
     }
     return strList;
   }
+
   private String byteToString(byte[] b) {
     return new String(b, StandardCharsets.UTF_8);
   }

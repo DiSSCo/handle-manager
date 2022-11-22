@@ -12,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-
 // This class generates new handles
 
 @Service
@@ -45,8 +44,9 @@ public class HandleGeneratorService {
   }
 
   public List<byte[]> genHandleList(int h) {
-    return unwrapBytes((HashSet<ByteBuffer>)genHandleHash(h));
+    return unwrapBytes((HashSet<ByteBuffer>) genHandleHash(h));
   }
+
   private List<byte[]> unwrapBytes(HashSet<ByteBuffer> handleHash) {
     List<byte[]> handleList = new ArrayList<>();
     for (ByteBuffer hash : handleHash) {
@@ -59,7 +59,7 @@ public class HandleGeneratorService {
 
     /*
      * Generates a HashSet of minted handles of size h Calls the handlefactory
-     * object for random strings (8 alphanum characters with a dash in the middle)
+     * object for random strings (9 alphanum characters with a dash in the middle)
      * Checks list of random strings against database, replaces duplicates with new
      * strings Finally, checks for collisions within the list
      */
@@ -88,7 +88,6 @@ public class HandleGeneratorService {
     while (h > handleHash.size()) {
       handleHash.addAll(genHandleHash(h - handleHash.size()));
     }
-
     return handleHash;
   }
 
@@ -107,7 +106,6 @@ public class HandleGeneratorService {
     }
     return byteHash;
   }
-
 
   private String newSuffix() {
     for (int idx = 0; idx < buf.length; ++idx) {
@@ -129,17 +127,16 @@ public class HandleGeneratorService {
   }
 
 
-
-  public List<byte[]> newHandle(int h) { // Generates h number of handles
-    if (h < 1) {
+  public List<byte[]> newHandle(int numberOfHandles) { // Generates h number of handles
+    if (numberOfHandles < 1) {
       log.warn("Invalid number of handles to be generated");
       return new ArrayList<>();
     }
     int maxHandles = 1000;
-    if (h > maxHandles) {
+    if (numberOfHandles > maxHandles) {
       log.warn("Max number of handles exceeded. Generating maximum {} handles",
           String.valueOf(maxHandles));
-      h = maxHandles;
+      numberOfHandles = maxHandles;
     }
 
     // We'll use this to make sure we're not duplicating results
@@ -151,7 +148,7 @@ public class HandleGeneratorService {
     List<byte[]> handleList = new ArrayList<>();
     byte[] hdl;
 
-    for (int i = 0; i < h; i++) {
+    for (int i = 0; i < numberOfHandles; i++) {
       hdl = newHandleBytes();
       while (!handleHash.add(ByteBuffer.wrap(hdl))) {
         hdl = newHandleBytes();
@@ -160,6 +157,5 @@ public class HandleGeneratorService {
     }
     return handleList;
   }
-
 
 }

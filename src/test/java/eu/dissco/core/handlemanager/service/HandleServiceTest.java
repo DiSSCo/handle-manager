@@ -1,11 +1,28 @@
 package eu.dissco.core.handlemanager.service;
 
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PTR_HANDLE_RECORD;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDigitalSpecimenBotanyRecord;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDigitalSpecimenBotanyRequest;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDigitalSpecimenBotanyResponse;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDigitalSpecimenRecord;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDigitalSpecimenRequest;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDigitalSpecimenResponse;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDoiRecord;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDoiRequest;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDoiResponse;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestHandleRecord;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestHandleRequest;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestHandleResponse;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mockStatic;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import eu.dissco.core.handlemanager.configuration.Config;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
@@ -18,67 +35,80 @@ import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
 import eu.dissco.core.handlemanager.repositoryobjects.Handles;
-import eu.dissco.core.handlemanager.testUtils.TestUtils;
 import java.time.Clock;
+import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Resource;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
 @ExtendWith(MockitoExtension.class)
 @Slf4j
 class HandleServiceTest {
 
   @Mock
-  HandleRepository handleRep;
+  private HandleRepository handleRep;
 
   @Mock
   private PidTypeService pidTypeService;
 
   @Mock
-  private HandleGeneratorService hf;
+  private HandleGeneratorService hgService;
 
-  @Mock
-  private Clock mockClock;
+  private DocumentBuilderFactory documentBuilderFactory;
+  private TransformerFactory transformerFactory;
 
   private HandleService service;
 
   private List<byte[]> handlesList;
-  private List<byte[]> handlesSingle;
+
+  private MockedStatic<Instant> mockedStatic;
 
 
   @BeforeEach
-  void init() throws PidResolutionException, JsonProcessingException {
-    // Pid type record
-    given(pidTypeService.resolveTypePid(any(String.class))).willReturn(TestUtils.PTR_HANDLE_RECORD);
-    service = new HandleService(handleRep, pidTypeService, mockClock, hf);
+  void setup() throws PidResolutionException, JsonProcessingException {
+    log.info("tbf is null: " + String.valueOf(documentBuilderFactory == null));
+    documentBuilderFactory = DocumentBuilderFactory.newInstance();
+    transformerFactory = TransformerFactory.newInstance();
 
-    // Generating list of handles
-    initHandles();
-
-    // Return empty list to indicate handle is not taken
-
-
-    //Date and time
+    service = new HandleService(handleRep, pidTypeService, hgService, documentBuilderFactory, transformerFactory);
+    given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
     initTime();
+    initHandleList();
+  }
+
+  @AfterEach
+  void destroy() {
+    mockedStatic.close();
   }
 
   @Test
-  void createHandleRecordTest()
-      throws PidCreationException, PidResolutionException, JsonProcessingException {
+  void testCreateHandleRecord()
+      throws PidCreationException, PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
     // Given
     byte[] handle = handlesList.get(0);
-    HandleRecordRequest request = TestUtils.generateTestHandleRequest();
-    HandleRecordResponse responseExpected = TestUtils.generateTestHandleResponse(handle);
-    List<Handles> recordTest = TestUtils.generateTestHandleRecord(handle);
+    HandleRecordRequest request = generateTestHandleRequest();
+    HandleRecordResponse responseExpected = generateTestHandleResponse(handle);
+    List<Handles> recordTest = generateTestHandleRecord(handle);
 
     given(handleRep.saveAll(recordTest)).willReturn(recordTest);
-    given(hf.genHandleList(1)).willReturn(handlesList);
+    given(hgService.genHandleList(1)).willReturn(handlesList);
 
     // When
     HandleRecordResponse responseReceived = service.createHandleRecord(request);
@@ -88,15 +118,15 @@ class HandleServiceTest {
   }
 
   @Test
-  void CreateDoiRecordTest()
-      throws PidCreationException, PidResolutionException, JsonProcessingException {
+  void testCreateDoiRecord()
+      throws PidCreationException, PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
     // Given
     byte[] handle = handlesList.get(0);
-    DoiRecordRequest request = TestUtils.generateTestDoiRequest();
-    DoiRecordResponse responseExpected = TestUtils.generateTestDoiResponse(handle);
-    List<Handles> recordTest = TestUtils.generateTestDoiRecord(handle);
+    DoiRecordRequest request = generateTestDoiRequest();
+    DoiRecordResponse responseExpected = generateTestDoiResponse(handle);
+    List<Handles> recordTest = generateTestDoiRecord(handle);
     given(handleRep.saveAll(recordTest)).willReturn(recordTest);
-    given(hf.genHandleList(1)).willReturn(handlesList);
+    given(hgService.genHandleList(1)).willReturn(handlesList);
 
     // When
     DoiRecordResponse responseReceived = service.createDoiRecord(request);
@@ -106,17 +136,16 @@ class HandleServiceTest {
   }
 
   @Test
-  void CreateDigitalSpecimenTest()
-      throws PidCreationException, PidResolutionException, JsonProcessingException {
-
+  void testCreateDigitalSpecimen()
+      throws PidCreationException, PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
     // Given
     byte[] handle = handlesList.get(0);
-    DigitalSpecimenRequest request = TestUtils.generateTestDigitalSpecimenRequest();
-    DigitalSpecimenResponse responseExpected = TestUtils.generateTestDigitalSpecimenResponse(handle);
-    List<Handles> recordTest = TestUtils.generateTestDigitalSpecimenRecord(handle);
+    DigitalSpecimenRequest request = generateTestDigitalSpecimenRequest();
+    DigitalSpecimenResponse responseExpected = generateTestDigitalSpecimenResponse(handle);
+    List<Handles> recordTest = generateTestDigitalSpecimenRecord(handle);
 
     given(handleRep.saveAll(recordTest)).willReturn(recordTest);
-    given(hf.genHandleList(1)).willReturn(handlesList);
+    given(hgService.genHandleList(1)).willReturn(handlesList);
 
     // When
     DigitalSpecimenResponse responseReceived = service.createDigitalSpecimenRecord(request);
@@ -126,35 +155,36 @@ class HandleServiceTest {
   }
 
   @Test
-  void CreateDigitalSpecimenBotanyTest()
-      throws PidCreationException, PidResolutionException, JsonProcessingException {
+  void testCreateDigitalSpecimenBotany()
+      throws PidCreationException, PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
     // Given
     byte[] handle = handlesList.get(0);
-    DigitalSpecimenBotanyRequest request = TestUtils.generateTestDigitalSpecimenBotanyRequest();
-    DigitalSpecimenBotanyResponse responseExpected = TestUtils.generateTestDigitalSpecimenBotanyResponse(
+    DigitalSpecimenBotanyRequest request = generateTestDigitalSpecimenBotanyRequest();
+    DigitalSpecimenBotanyResponse responseExpected = generateTestDigitalSpecimenBotanyResponse(
         handle);
-    List<Handles> recordTest = TestUtils.generateTestDigitalSpecimenBotanyRecord(handle);
+    List<Handles> recordTest = generateTestDigitalSpecimenBotanyRecord(handle);
 
     given(handleRep.saveAll(recordTest)).willReturn(recordTest);
-    given(hf.genHandleList(1)).willReturn(handlesList);
+    given(hgService.genHandleList(1)).willReturn(handlesList);
 
     // When
-    DigitalSpecimenBotanyResponse responseReceived = service.createDigitalSpecimenBotanyRecord(request);
+    DigitalSpecimenBotanyResponse responseReceived = service.createDigitalSpecimenBotanyRecord(
+        request);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
   @Test
-  void createBatchHandleRecordTest()
-      throws PidCreationException, PidResolutionException, JsonProcessingException {
+  void testCreateBatchHandleRecord()
+      throws PidCreationException, PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
     // Given
     List<HandleRecordRequest> request = generateBatchHandleRequest();
     List<HandleRecordResponse> responseExpected = generateBatchHandleResponse();
     List<Handles> recordTest = generateBatchHandleList();
 
     given(handleRep.saveAll(recordTest)).willReturn(recordTest);
-    given(hf.genHandleList(2)).willReturn(handlesList);
+    given(hgService.genHandleList(2)).willReturn(handlesList);
 
     // When
     List<HandleRecordResponse> responseReceived = service.createHandleRecordBatch(request);
@@ -164,15 +194,15 @@ class HandleServiceTest {
   }
 
   @Test
-  void createBatchDoiRecordTest()
-      throws PidCreationException, PidResolutionException, JsonProcessingException {
+  void testCreateBatchDoiRecord()
+      throws PidCreationException, PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
     // Given
     List<DoiRecordRequest> request = generateBatchDoiRequest();
     List<DoiRecordResponse> responseExpected = generateBatchDoiResponse();
     List<Handles> recordTest = generateBatchDoiList();
 
     given(handleRep.saveAll(recordTest)).willReturn(recordTest);
-    given(hf.genHandleList(2)).willReturn(handlesList);
+    given(hgService.genHandleList(2)).willReturn(handlesList);
 
     // When
     List<DoiRecordResponse> responseReceived = service.createDoiRecordBatch(request);
@@ -182,15 +212,15 @@ class HandleServiceTest {
   }
 
   @Test
-  void createBatchDigitalSpecimenTest()
-      throws PidCreationException, PidResolutionException, JsonProcessingException {
+  void testCreateBatchDigitalSpecimen()
+      throws PidCreationException, PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
     // Given
     List<DigitalSpecimenRequest> request = generateBatchDigitalSpecimenRequest();
     List<DigitalSpecimenResponse> responseExpected = generateBatchDigitalSpecimenResponse();
     List<Handles> recordTest = generateBatchDigitalSpecimenList();
 
     given(handleRep.saveAll(recordTest)).willReturn(recordTest);
-    given(hf.genHandleList(2)).willReturn(handlesList);
+    given(hgService.genHandleList(2)).willReturn(handlesList);
 
     // When
     List<DigitalSpecimenResponse> responseReceived = service.createDigitalSpecimenBatch(request);
@@ -200,16 +230,15 @@ class HandleServiceTest {
   }
 
   @Test
-  void createBatchDigitalSpecimenBotanyTest()
-      throws PidCreationException, PidResolutionException, JsonProcessingException {
+  void testCreateBatchDigitalSpecimenBotany()
+      throws PidCreationException, PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
     // Given
     List<DigitalSpecimenBotanyRequest> request = generateBatchDigitalSpecimenBotanyRequest();
     List<DigitalSpecimenBotanyResponse> responseExpected = generateBatchDigitalSpecimenBotanyResponse();
     List<Handles> recordTest = generateBatchDigitalSpecimenBotanyList();
 
     given(handleRep.saveAll(recordTest)).willReturn(recordTest);
-    given(hf.genHandleList(2)).willReturn(handlesList);
-
+    given(hgService.genHandleList(2)).willReturn(handlesList);
 
     // When
     List<DigitalSpecimenBotanyResponse> responseReceived = service.createDigitalSpecimenBotanyBatch(
@@ -222,7 +251,7 @@ class HandleServiceTest {
   private List<HandleRecordRequest> generateBatchHandleRequest() {
     List<HandleRecordRequest> requestList = new ArrayList<>();
     for (int i = 0; i < handlesList.size(); i++) {
-      requestList.add(TestUtils.generateTestHandleRequest());
+      requestList.add(generateTestHandleRequest());
     }
     return requestList;
   }
@@ -230,7 +259,7 @@ class HandleServiceTest {
   private List<HandleRecordResponse> generateBatchHandleResponse() {
     List<HandleRecordResponse> responseList = new ArrayList<>();
     for (byte[] h : handlesList) {
-      responseList.add(TestUtils.generateTestHandleResponse(h));
+      responseList.add(generateTestHandleResponse(h));
     }
     return responseList;
   }
@@ -238,7 +267,7 @@ class HandleServiceTest {
   private List<Handles> generateBatchHandleList() {
     List<Handles> handleList = new ArrayList<>();
     for (byte[] h : handlesList) {
-      handleList.addAll(TestUtils.generateTestHandleRecord(h));
+      handleList.addAll(generateTestHandleRecord(h));
     }
     return handleList;
   }
@@ -247,7 +276,7 @@ class HandleServiceTest {
   private List<DoiRecordRequest> generateBatchDoiRequest() {
     List<DoiRecordRequest> requestList = new ArrayList<>();
     for (int i = 0; i < handlesList.size(); i++) {
-      requestList.add(TestUtils.generateTestDoiRequest());
+      requestList.add(generateTestDoiRequest());
     }
     return requestList;
   }
@@ -255,7 +284,7 @@ class HandleServiceTest {
   private List<DoiRecordResponse> generateBatchDoiResponse() {
     List<DoiRecordResponse> responseList = new ArrayList<>();
     for (byte[] h : handlesList) {
-      responseList.add(TestUtils.generateTestDoiResponse(h));
+      responseList.add(generateTestDoiResponse(h));
     }
     return responseList;
   }
@@ -263,7 +292,7 @@ class HandleServiceTest {
   private List<Handles> generateBatchDoiList() {
     List<Handles> handleList = new ArrayList<>();
     for (byte[] h : handlesList) {
-      handleList.addAll(TestUtils.generateTestDoiRecord(h));
+      handleList.addAll(generateTestDoiRecord(h));
     }
     return handleList;
   }
@@ -271,7 +300,7 @@ class HandleServiceTest {
   private List<DigitalSpecimenRequest> generateBatchDigitalSpecimenRequest() {
     List<DigitalSpecimenRequest> requestList = new ArrayList<>();
     for (int i = 0; i < handlesList.size(); i++) {
-      requestList.add(TestUtils.generateTestDigitalSpecimenRequest());
+      requestList.add(generateTestDigitalSpecimenRequest());
     }
     return requestList;
   }
@@ -279,7 +308,7 @@ class HandleServiceTest {
   private List<DigitalSpecimenResponse> generateBatchDigitalSpecimenResponse() {
     List<DigitalSpecimenResponse> responseList = new ArrayList<>();
     for (byte[] h : handlesList) {
-      responseList.add(TestUtils.generateTestDigitalSpecimenResponse(h));
+      responseList.add(generateTestDigitalSpecimenResponse(h));
     }
     return responseList;
   }
@@ -287,7 +316,7 @@ class HandleServiceTest {
   private List<Handles> generateBatchDigitalSpecimenList() {
     List<Handles> handleList = new ArrayList<>();
     for (byte[] h : handlesList) {
-      handleList.addAll(TestUtils.generateTestDigitalSpecimenRecord(h));
+      handleList.addAll(generateTestDigitalSpecimenRecord(h));
     }
     return handleList;
   }
@@ -295,7 +324,7 @@ class HandleServiceTest {
   private List<DigitalSpecimenBotanyRequest> generateBatchDigitalSpecimenBotanyRequest() {
     List<DigitalSpecimenBotanyRequest> requestList = new ArrayList<>();
     for (int i = 0; i < handlesList.size(); i++) {
-      requestList.add(TestUtils.generateTestDigitalSpecimenBotanyRequest());
+      requestList.add(generateTestDigitalSpecimenBotanyRequest());
     }
     return requestList;
   }
@@ -303,7 +332,7 @@ class HandleServiceTest {
   private List<DigitalSpecimenBotanyResponse> generateBatchDigitalSpecimenBotanyResponse() {
     List<DigitalSpecimenBotanyResponse> responseList = new ArrayList<>();
     for (byte[] h : handlesList) {
-      responseList.add(TestUtils.generateTestDigitalSpecimenBotanyResponse(h));
+      responseList.add(generateTestDigitalSpecimenBotanyResponse(h));
     }
     return responseList;
   }
@@ -311,44 +340,25 @@ class HandleServiceTest {
   private List<Handles> generateBatchDigitalSpecimenBotanyList() {
     List<Handles> handleList = new ArrayList<>();
     for (byte[] h : handlesList) {
-      handleList.addAll(TestUtils.generateTestDigitalSpecimenBotanyRecord(h));
+      handleList.addAll(generateTestDigitalSpecimenBotanyRecord(h));
     }
     return handleList;
   }
 
 
   private void initTime() {
-    Clock fixedClock = Clock.fixed(TestUtils.CREATED, ZoneOffset.UTC);
-    doReturn(fixedClock.instant()).when(mockClock).instant();
-    doReturn(fixedClock.getZone()).when(mockClock).getZone();
+    Clock clock = Clock.fixed(CREATED, ZoneOffset.UTC);
+    Instant instant = Instant.now(clock);
+    mockedStatic = mockStatic(Instant.class);
+    mockedStatic.when(Instant::now).thenReturn(instant);
+    mockedStatic.when(() -> Instant.from(any())).thenReturn(instant);
   }
 
-  private void initHandles() {
+  private void initHandleList() {
     handlesList = new ArrayList<>();
-    handlesList.add(TestUtils.HANDLE.getBytes());
-    handlesList.add(TestUtils.HANDLE_ALT.getBytes());
-
-    handlesSingle = new ArrayList<>();
-    handlesSingle.add(TestUtils.HANDLE.getBytes());
+    handlesList.add(HANDLE.getBytes());
+    handlesList.add(HANDLE_ALT.getBytes());
   }
-
-
-
-
-
-  /*
-   * createHandleRecordBatch
-   * createDoiRecordBatch
-   * createDigitalSpecimenBatch
-   * createDigitalSpecimenBotanyBatch
-   *
-   * createRecord
-   * 		recordType = "hdl"
-   * 		recordType = "doi"
-   * 		recordType = "ds"
-   * 		recordType = "dsB"
-   *
-   */
 
 
 }

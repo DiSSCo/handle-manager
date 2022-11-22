@@ -9,6 +9,7 @@ import lombok.ToString;
 @ToString
 @JsonIgnoreProperties
 public class DoiRecordRequest extends HandleRecordRequest {
+
   private static final String REFERENT_PLACEHOLDER = "";
   private final String referentDoiName;
   private final String referent;

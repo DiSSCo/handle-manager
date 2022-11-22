@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public interface HandleRepository extends JpaRepository<Handles, HandleIdx> {
+
   @Query(value = "select distinct handle from handles h where data = ?1 offset ?2 limit ?3", nativeQuery = true)
   List<byte[]> getHandles(byte[] pidStatus, int pageNum, int pageSize);
 

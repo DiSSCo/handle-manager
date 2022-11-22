@@ -22,20 +22,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class HandleGeneratorServiceTest {
 
   @Mock
-  HandleRepository handleRep;
+  private HandleRepository handleRep;
 
   @Mock
-  Random random;
+  private Random random;
 
   @InjectMocks
-  HandleGeneratorService hgService;
-
-  @BeforeEach
-  void setup(){
-  }
+  private HandleGeneratorService hgService;
 
   @Test
-  void testNewHandle(){
+  void testNewHandle() {
     // Given
     String expectedHandle = "20.5000.1025/AAA-AAA-AAA";
     given(random.nextInt(anyInt())).willReturn(0);
@@ -48,7 +44,7 @@ class HandleGeneratorServiceTest {
   }
 
   @Test
-  void testSingleBatchGen(){
+  void testSingleBatchGen() {
     String expectedHandle = "20.5000.1025/AAA-AAA-AAA";
     given(random.nextInt(anyInt())).willReturn(0);
 
@@ -60,7 +56,7 @@ class HandleGeneratorServiceTest {
   }
 
   @Test
-  void testBatchGen(){
+  void testBatchGen() {
     // Given
     String expectedHandle1 = "20.5000.1025/BBB-BBB-BBB";
     String expectedHandle2 = "20.5000.1025/ABB-BBB-BBB";
@@ -69,7 +65,7 @@ class HandleGeneratorServiceTest {
 
     // When
     List<byte[]> handleList = hgService.genHandleList(2);
-    String generatedHandle1 = new String (handleList.get(0));
+    String generatedHandle1 = new String(handleList.get(0));
     String generatedHandle2 = new String(handleList.get(1));
 
     // Then
@@ -78,7 +74,7 @@ class HandleGeneratorServiceTest {
   }
 
   @Test
-  void testInternalCollision(){
+  void testInternalCollision() {
     String expectedHandle1 = "20.5000.1025/BBB-BBB-BBB";
     String expectedHandle2 = "20.5000.1025/AAA-AAA-AAA";
 
@@ -88,9 +84,8 @@ class HandleGeneratorServiceTest {
 
     // When
     List<byte[]> handleList = hgService.genHandleList(2);
-    String generatedHandle1 = new String (handleList.get(0));
+    String generatedHandle1 = new String(handleList.get(0));
     String generatedHandle2 = new String(handleList.get(1));
-
 
     // Then
     assertThat(generatedHandle1).isEqualTo(expectedHandle1);
@@ -98,12 +93,11 @@ class HandleGeneratorServiceTest {
   }
 
   @Test
-  void testDbCollision(){
+  void testDbCollision() {
 
     // Given
     byte[] expectedHandle1 = "20.5000.1025/BBB-BBB-BBB".getBytes();
     byte[] expectedHandle2 = "20.5000.1025/ABB-BBB-BBB".getBytes();
-
 
     List<byte[]> handleListInternalDuplicate = new ArrayList<>();
     handleListInternalDuplicate.add(expectedHandle1);
@@ -122,8 +116,6 @@ class HandleGeneratorServiceTest {
     assertThat(generatedHandle1).isEqualTo(expectedHandle1);
     assertThat(generatedHandle2).isEqualTo(expectedHandle2);
   }
-
-
 
 
 }

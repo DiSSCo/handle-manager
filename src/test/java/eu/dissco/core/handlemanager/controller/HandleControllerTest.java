@@ -18,6 +18,8 @@ import eu.dissco.core.handlemanager.service.HandleService;
 import eu.dissco.core.handlemanager.testUtils.TestUtils;
 import java.util.ArrayList;
 import java.util.List;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,8 +48,8 @@ class HandleControllerTest {
   }
 
   @Test
-  void handleRecordCreationTest()
-      throws PidCreationException, PidResolutionException, JsonProcessingException {
+  void testHandleRecordCreation()
+      throws PidCreationException, PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
     // Given
     HandleRecordRequest request = TestUtils.generateTestHandleRequest();
     HandleRecordResponse responseExpected = TestUtils.generateTestHandleResponse(handle);
@@ -60,8 +62,8 @@ class HandleControllerTest {
   }
 
   @Test
-  void doiRecordCreationTest()
-      throws PidCreationException, PidResolutionException, JsonProcessingException {
+  void testDoiRecordCreation()
+      throws PidCreationException, PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
     // Given
     DoiRecordRequest request = TestUtils.generateTestDoiRequest();
     DoiRecordResponse responseExpected = TestUtils.generateTestDoiResponse(handle);
@@ -74,11 +76,12 @@ class HandleControllerTest {
   }
 
   @Test
-  void digitalSpeciemenCreationTest()
-      throws PidCreationException, PidResolutionException, JsonProcessingException {
+  void testDigitalSpeciemenCreation()
+      throws PidCreationException, PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
     // Given
     DigitalSpecimenRequest request = TestUtils.generateTestDigitalSpecimenRequest();
-    DigitalSpecimenResponse responseExpected = TestUtils.generateTestDigitalSpecimenResponse(handle);
+    DigitalSpecimenResponse responseExpected = TestUtils.generateTestDigitalSpecimenResponse(
+        handle);
     given(service.createDigitalSpecimenRecord(request)).willReturn(responseExpected);
     // When
     ResponseEntity<HandleRecordResponse> responseReceived = controller.createRecord(request);
@@ -88,8 +91,8 @@ class HandleControllerTest {
   }
 
   @Test
-  void digitalSpeciemenBotanyCreationTest()
-      throws PidCreationException, PidResolutionException, JsonProcessingException {
+  void testDigitalSpeciemenBotanyCreation()
+      throws PidCreationException, PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
     // Given
     DigitalSpecimenBotanyRequest request = TestUtils.generateTestDigitalSpecimenBotanyRequest();
     DigitalSpecimenBotanyResponse responseExpected = TestUtils.generateTestDigitalSpecimenBotanyResponse(
@@ -103,7 +106,7 @@ class HandleControllerTest {
   }
 
   @Test
-  void handleRecordBatchCreationTest() throws Exception {
+  void testHandleRecordBatchCreation() throws Exception {
     // Given
     List<HandleRecordRequest> requestList = buildHandleRequestList();
     List<HandleRecordResponse> responseList = buildHandleResponseList();
@@ -120,7 +123,7 @@ class HandleControllerTest {
   }
 
   @Test
-  void doiRecordBatchCreationTest() throws Exception {
+  void testDoiRecordBatchCreation() throws Exception {
     // Given
     List<DoiRecordRequest> requestList = buildDoiRequestList();
     List<DoiRecordResponse> responseList = buildDoiResponseList();
@@ -137,7 +140,7 @@ class HandleControllerTest {
   }
 
   @Test
-  void digitalSpecimenBatchCreationTest() throws Exception {
+  void testDigitalSpecimenBatchCreation() throws Exception {
     // Given
     List<DigitalSpecimenRequest> requestList = buildDigitalSpecimenRequestList();
     List<DigitalSpecimenResponse> responseList = buildDigitalSpecimenResponseList();
@@ -154,7 +157,7 @@ class HandleControllerTest {
   }
 
   @Test
-  void digitalSpecimenBotanyBatchCreationTest() throws Exception {
+  void testDigitalSpecimenBotanyBatchCreation() throws Exception {
     // Given
     List<DigitalSpecimenBotanyRequest> requestList = buildDigitalSpecimenBotanyRequestList();
     List<DigitalSpecimenBotanyResponse> responseList = buildDigitalSpecimenBotanyResponseList();
@@ -248,7 +251,8 @@ class HandleControllerTest {
 
   private List<DigitalSpecimenBotanyResponse> buildDigitalSpecimenBotanyResponseList() {
     List<DigitalSpecimenBotanyResponse> responseList = new ArrayList<>();
-    DigitalSpecimenBotanyResponse response = TestUtils.generateTestDigitalSpecimenBotanyResponse(handle);
+    DigitalSpecimenBotanyResponse response = TestUtils.generateTestDigitalSpecimenBotanyResponse(
+        handle);
 
     for (int i = 0; i < REQUEST_LEN; i++) {
       responseList.add(response);

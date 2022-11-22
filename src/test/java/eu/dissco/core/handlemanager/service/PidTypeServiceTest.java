@@ -31,21 +31,14 @@ class PidTypeServiceTest {
   private Clock clock;
 
   ObjectMapper mapper;
-
   private PidTypeService pidTypeService;
-
-  // Time stuff
-  private MockedStatic mockedStatic;
   private long timestamp;
 
-  // These are what the values are called in the handle record
   private String pid;
   private String pidType;
   private String primaryNameFromPid;
   private String registrationAgencyDoiName;
-
   private byte[] recordPid;
-
   private List<Handles> typeRecord;
 
 
@@ -72,7 +65,7 @@ class PidTypeServiceTest {
   }
 
   @Test
-  void TestPidTypeRecordResolutionDoi() throws PidResolutionException, JsonProcessingException {
+  void testPidTypeRecordResolutionDoi() throws PidResolutionException, JsonProcessingException {
     //Given
     initTestPidTypeRecordDoi();
     String expected = TestUtils.PTR_DOI_RECORD;
@@ -88,7 +81,6 @@ class PidTypeServiceTest {
 
   private void initTestPidTypeRecordHandle() {
     recordPid = TestUtils.PID_ISSUER_PID.getBytes();
-
     pid = TestUtils.PTR_PID;
     pidType = TestUtils.PTR_TYPE;
     primaryNameFromPid = TestUtils.PTR_PRIMARY_NAME;
@@ -98,15 +90,12 @@ class PidTypeServiceTest {
 
   private void initTestPidTypeRecordDoi() {
     recordPid = TestUtils.PID_ISSUER_PID.getBytes();
-
     pid = TestUtils.PTR_PID_DOI;
     pidType = TestUtils.PTR_TYPE_DOI;
     primaryNameFromPid = TestUtils.PTR_PRIMARY_NAME;
-
     registrationAgencyDoiName = TestUtils.PTR_REGISTRATION_DOI_NAME;
 
     typeRecord = initTestPidTypeRecord(true);
-
   }
 
   private List<Handles> initTestPidTypeRecord(boolean isDoi) {
@@ -125,7 +114,6 @@ class PidTypeServiceTest {
   }
 
   private long initTimestamp() {
-    //CREATED_INSTANT.getEpochSecond();
     return TestUtils.CREATED.getEpochSecond();
   }
 

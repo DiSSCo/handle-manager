@@ -20,12 +20,12 @@ public class HandleRecordRequest {
 
   @Override
   public boolean equals(Object o) {
-		if (this == o) {
-			return true;
-		}
-		if (o == null || getClass() != o.getClass()) {
-			return false;
-		}
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     HandleRecordRequest that = (HandleRecordRequest) o;
     return getPidIssuerPid().equals(that.getPidIssuerPid()) && getDigitalObjectTypePid().equals(
         that.getDigitalObjectTypePid()) && getDigitalObjectSubtypePid().equals(
