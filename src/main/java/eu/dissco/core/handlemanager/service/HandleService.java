@@ -235,8 +235,7 @@ public class HandleService {
     handleRecord.add(Resources.genAdminHandle(handle, timestamp));
 
     // 1: Pid
-    byte[] pid = concatBytes("https://hdl.handle.net/".getBytes(),
-        handle); // Maybe this should check if it's a DOI?
+    byte[] pid = ("https://hdl.handle.net/"+ new String(handle)).getBytes();
     handleRecord.add(new Handles(handle, 1, "pid", pid, timestamp));
 
     // 2: PidIssuer
@@ -357,18 +356,6 @@ public class HandleService {
 
     return handleRecord;
   }
-
-  private byte[] concatBytes(byte[] a, byte[] b) {
-    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    try {
-      outputStream.write(a);
-      outputStream.write(b);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    return outputStream.toByteArray();
-  }
-
 
   private String getDate() {
     DateTimeFormatter dt = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.ENGLISH)
