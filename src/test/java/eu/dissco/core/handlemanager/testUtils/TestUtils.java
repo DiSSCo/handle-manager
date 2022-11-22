@@ -61,24 +61,7 @@ public class TestUtils {
   public static String PTR_PRIMARY_NAME = "DiSSCo";
   public static String PTR_PID_DOI = "http://doi.org/" + PID_ISSUER_PID;
   public static String PTR_TYPE_DOI = "doi";
-
   public static String PTR_REGISTRATION_DOI_NAME = "Registration Agency";
-
-  private static String NEW_LINE = "\", \n";
-
-  public static String PTR_HANDLE_RECORD1 = "{ \n"
-      + "\"pid\": \"" + PTR_PID + NEW_LINE
-      + "\"pidType\": \"" + PTR_TYPE + NEW_LINE
-      + "\"primaryNameFromPid\": \"" + PTR_PRIMARY_NAME + NEW_LINE
-      + "}";
-
-  public static String PTR_DOI_RECORD2 = "{ \n"
-      + "\"pid\": \"" + PTR_PID_DOI + NEW_LINE
-      + "\"pidType\": \"" + PTR_TYPE_DOI + NEW_LINE
-      + "\"primaryNameFromPid\": \"" + PTR_PRIMARY_NAME + NEW_LINE
-      + "\"registrationAgencyDoiName\": \"" + PTR_REGISTRATION_DOI_NAME + NEW_LINE
-      + "}";
-
   public static String PTR_HANDLE_RECORD = initPtrHandleRecord(false);
   public static String PTR_DOI_RECORD = initPtrHandleRecord(true);
 

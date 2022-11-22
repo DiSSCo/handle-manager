@@ -19,24 +19,6 @@ import org.hibernate.annotations.Type;
 public class Handles implements Serializable, Comparable<Handles> {
 
   private static final long serialVersionUID = 1L;
-
-  @Id
-  private byte[] handle;
-
-  @Id
-  private int idx;
-
-  @Lob
-  @Type(type = "org.hibernate.type.BinaryType")
-  private byte[] type;
-
-  @Lob
-  @Type(type = "org.hibernate.type.BinaryType")
-  private byte[] data;
-
-  private long timestamp;
-
-
   // Default values posted to handle server
   // Do not make static, do not remove
   private final int ttl = 86400;
@@ -44,6 +26,17 @@ public class Handles implements Serializable, Comparable<Handles> {
   private final boolean adminWrite = true;
   private final boolean pubRead = true;
   private final boolean pubWrite = false;
+  @Id
+  private byte[] handle;
+  @Id
+  private int idx;
+  @Lob
+  @Type(type = "org.hibernate.type.BinaryType")
+  private byte[] type;
+  @Lob
+  @Type(type = "org.hibernate.type.BinaryType")
+  private byte[] data;
+  private long timestamp;
 
   public Handles() {
   }

@@ -22,7 +22,6 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mockStatic;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import eu.dissco.core.handlemanager.configuration.Config;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
@@ -40,7 +39,6 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Resource;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -53,10 +51,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
 @ExtendWith(MockitoExtension.class)
 @Slf4j
@@ -87,7 +81,8 @@ class HandleServiceTest {
     documentBuilderFactory = DocumentBuilderFactory.newInstance();
     transformerFactory = TransformerFactory.newInstance();
 
-    service = new HandleService(handleRep, pidTypeService, hgService, documentBuilderFactory, transformerFactory);
+    service = new HandleService(handleRep, pidTypeService, hgService, documentBuilderFactory,
+        transformerFactory);
     given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
     initTime();
     initHandleList();

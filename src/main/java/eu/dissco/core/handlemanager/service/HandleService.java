@@ -23,7 +23,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -34,7 +33,6 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 
@@ -300,19 +298,12 @@ public class HandleService {
   }
 
   private String documentToString(Document document) throws TransformerException {
-    TransformerFactory tf = TransformerFactory.newInstance();
-    tf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-    tf.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-    tf.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
-
     var transformer = tf.newTransformer();
     transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
     StringWriter writer = new StringWriter();
     transformer.transform(new DOMSource(document), new StreamResult(writer));
     return writer.getBuffer().toString();
   }
-
-
 
   private List<Handles> prepareDoiRecord(DoiRecordRequest request, byte[] handle, long timestamp)
       throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {

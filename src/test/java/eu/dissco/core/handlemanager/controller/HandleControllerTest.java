@@ -31,13 +31,10 @@ import org.springframework.http.ResponseEntity;
 @ExtendWith(MockitoExtension.class)
 class HandleControllerTest {
 
+  private final int REQUEST_LEN = 3;
   @Mock
   private HandleService service;
-
   private HandleController controller;
-
-  private final int REQUEST_LEN = 3;
-
   private byte[] handle;
 
 
@@ -173,12 +170,15 @@ class HandleControllerTest {
     assertThat(responseReceived.getBody()).isEqualTo(responseList);
   }
 
-  void helloTest() {
+  @Test
+  void testHello() {
     //When
     ResponseEntity<String> response = controller.hello();
     // Then
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
   }
+
+
 
   private List<HandleRecordRequest> buildHandleRequestList() {
     List<HandleRecordRequest> requestList = new ArrayList<>();

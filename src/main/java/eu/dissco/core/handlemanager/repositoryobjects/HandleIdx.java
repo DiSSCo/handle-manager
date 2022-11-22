@@ -60,9 +60,19 @@ public class HandleIdx implements Serializable {
     return idx;
   }
 
+  public void setIdx(int idx) {
+    this.idx = idx;
+  }
+
   public byte[] getHandle() {
     return handle;
   }
+
+  public void setHandle(byte[] handle) {
+    this.handle = handle;
+  }
+
+  // Setters
 
   public String getHandleStr() {
     return new String(handle);
@@ -70,16 +80,6 @@ public class HandleIdx implements Serializable {
 
   public String getIdxStr() {
     return String.valueOf(idx);
-  }
-
-  // Setters
-
-  public void setIdx(int idx) {
-    this.idx = idx;
-  }
-
-  public void setHandle(byte[] handle) {
-    this.handle = handle;
   }
 
 }

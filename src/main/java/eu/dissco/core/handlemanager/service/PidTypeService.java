@@ -24,7 +24,6 @@ public class PidTypeService {
   @Cacheable(value = "cache")
   public String resolveTypePid(String typePid)
       throws PidResolutionException, JsonProcessingException {
-    log.info("Type pid: " + typePid);
     if (typePid == null) {
       throw new PidResolutionException("Missing PID in request body.");
     }
