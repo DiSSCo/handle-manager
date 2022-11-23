@@ -1,4 +1,4 @@
-package eu.dissco.core.handlemanager.repositoryobjects;
+package eu.dissco.core.handlemanager.jparepository;
 
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;

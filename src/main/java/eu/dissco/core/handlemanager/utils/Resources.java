@@ -1,6 +1,6 @@
 package eu.dissco.core.handlemanager.utils;
 
-import eu.dissco.core.handlemanager.repositoryobjects.Handles;
+import eu.dissco.core.handlemanager.jparepository.Handles;
 
 public class Resources {
 

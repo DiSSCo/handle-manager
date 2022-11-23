@@ -1,6 +1,6 @@
 package eu.dissco.core.handlemanager.domain.responses;
 
-import eu.dissco.core.handlemanager.repositoryobjects.Handles;
+import eu.dissco.core.handlemanager.jparepository.Handles;
 import java.util.List;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;

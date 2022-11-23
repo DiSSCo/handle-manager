@@ -11,7 +11,7 @@ import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenBotanyRespon
 import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenResponse;
 import eu.dissco.core.handlemanager.domain.responses.DoiRecordResponse;
 import eu.dissco.core.handlemanager.domain.responses.HandleRecordResponse;
-import eu.dissco.core.handlemanager.repositoryobjects.Handles;
+import eu.dissco.core.handlemanager.jparepository.Handles;
 import eu.dissco.core.handlemanager.utils.Resources;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;

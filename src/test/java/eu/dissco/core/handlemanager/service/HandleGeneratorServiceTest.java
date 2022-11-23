@@ -5,7 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.BDDMockito.given;
 
-import eu.dissco.core.handlemanager.repository.HandleRepository;
+import eu.dissco.core.handlemanager.jparepository.HandleRepository;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
