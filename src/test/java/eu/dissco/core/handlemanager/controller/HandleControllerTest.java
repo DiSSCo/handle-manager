@@ -44,15 +44,18 @@ class HandleControllerTest {
     handle = TestUtils.HANDLE.getBytes();
   }
 
+  // Jooq Creation
   @Test
-  void testHandleRecordCreation()
-      throws PidCreationException, PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
+  void testHandleRecordCreationJooq()
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
     // Given
     HandleRecordRequest request = TestUtils.generateTestHandleRequest();
     HandleRecordResponse responseExpected = TestUtils.generateTestHandleResponse(handle);
-    given(service.createHandleRecord(request)).willReturn(responseExpected);
+    given(service.createHandleRecordJooq(request)).willReturn(responseExpected);
+
     // When
-    ResponseEntity<HandleRecordResponse> responseReceived = controller.createRecord(request);
+    ResponseEntity<HandleRecordResponse> responseReceived = controller.createHandleRecordJooq(request);
+
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
@@ -64,9 +67,11 @@ class HandleControllerTest {
     // Given
     DoiRecordRequest request = TestUtils.generateTestDoiRequest();
     DoiRecordResponse responseExpected = TestUtils.generateTestDoiResponse(handle);
-    given(service.createDoiRecord(request)).willReturn(responseExpected);
+    given(service.createDoiRecordJooq(request)).willReturn(responseExpected);
+
     // When
-    ResponseEntity<HandleRecordResponse> responseReceived = controller.createRecord(request);
+    ResponseEntity<DoiRecordResponse> responseReceived = controller.createDoiRecordJooq(request);
+
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
@@ -79,9 +84,11 @@ class HandleControllerTest {
     DigitalSpecimenRequest request = TestUtils.generateTestDigitalSpecimenRequest();
     DigitalSpecimenResponse responseExpected = TestUtils.generateTestDigitalSpecimenResponse(
         handle);
-    given(service.createDigitalSpecimenRecord(request)).willReturn(responseExpected);
+    given(service.createDigitalSpecimenJooq(request)).willReturn(responseExpected);
+
     // When
-    ResponseEntity<HandleRecordResponse> responseReceived = controller.createRecord(request);
+    ResponseEntity<DigitalSpecimenResponse> responseReceived = controller.createDigitalSpecimenJooq(request);
+
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
@@ -94,13 +101,17 @@ class HandleControllerTest {
     DigitalSpecimenBotanyRequest request = TestUtils.generateTestDigitalSpecimenBotanyRequest();
     DigitalSpecimenBotanyResponse responseExpected = TestUtils.generateTestDigitalSpecimenBotanyResponse(
         handle);
-    given(service.createDigitalSpecimenBotanyRecord(request)).willReturn(responseExpected);
+    given(service.createDigitalSpecimenBotanyJooq(request)).willReturn(responseExpected);
+
     // When
-    ResponseEntity<HandleRecordResponse> responseReceived = controller.createRecord(request);
+    ResponseEntity<DigitalSpecimenBotanyResponse> responseReceived = controller.createDigitalSpecimenBotanyJooq(request);
+
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
+
+  // Batch JPA
 
   @Test
   void testHandleRecordBatchCreation() throws Exception {

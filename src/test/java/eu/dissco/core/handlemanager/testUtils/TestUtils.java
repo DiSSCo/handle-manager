@@ -1,8 +1,11 @@
 package eu.dissco.core.handlemanager.testUtils;
 
+import static eu.dissco.core.handlemanager.utils.Resources.genAdminHandle;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import eu.dissco.core.handlemanager.domain.pidrecords.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
@@ -90,6 +93,95 @@ public class TestUtils {
     }
   }
 
+  // Jooq methods
+  public static List<HandleAttribute> generateTestHandleAttributes(byte[] handle) {
+
+    List<HandleAttribute> handleRecord= new ArrayList<>();
+    byte [] ptr_record = PTR_HANDLE_RECORD.getBytes();
+
+    // 100: Admin Handle
+    handleRecord.add(new HandleAttribute(100, "HS_ADMIN", genAdminHandle()));
+
+    // 1: Pid
+    byte[] pid = ("https://hdl.handle.net/" + new String(handle)).getBytes();
+    handleRecord.add(new HandleAttribute(1, "pid", pid));
+
+    // 2: PidIssuer
+    handleRecord.add(new HandleAttribute(2, "pidIssuer", ptr_record));
+
+    // 3: Digital Object Type
+    handleRecord.add(new HandleAttribute(3, "digitalObjectType", ptr_record));
+
+    // 4: Digital Object Subtype
+    handleRecord.add(new HandleAttribute(4, "digitalObjectSubtype",ptr_record));
+
+    // 5: 10320/loc
+    byte[] loc = "".getBytes();
+    try {
+      loc = setLocations(LOCATIONS);
+    } catch (TransformerException | ParserConfigurationException e) {
+      e.printStackTrace();
+    }
+    handleRecord.add(new HandleAttribute(5, "10320/loc", loc));
+
+    // 6: Issue Date
+    handleRecord.add(new HandleAttribute(6, "issueDate",  "2022-11-01".getBytes()));
+
+    // 7: Issue number
+    handleRecord.add(new HandleAttribute(7, "issueNumber",  "1".getBytes()));
+
+    // 8: PidStatus
+    handleRecord.add(new HandleAttribute(8, "pidStatus",  "TEST".getBytes()));
+
+    // 9, 10: tombstone text, tombstone pids -> Skip
+
+    // 11: PidKernelMetadataLicense:
+    byte[] pidKernelMetadataLicense = "https://creativecommons.org/publicdomain/zero/1.0/".getBytes();
+    handleRecord.add(new HandleAttribute(11, "pidKernelMetadataLicense",  pidKernelMetadataLicense));
+
+    return handleRecord;
+  }
+
+  public static List<HandleAttribute> generateTestDoiAttributes(byte[] handle) {
+    List<HandleAttribute> handleRecord = generateTestHandleAttributes(handle);
+    byte[] ptr_record = PTR_HANDLE_RECORD.getBytes();
+
+    // 12: Referent DOI Name
+    handleRecord.add(new HandleAttribute(12, "referentDoiName", ptr_record));
+    // 13: Referent
+    // it
+    handleRecord.add(new HandleAttribute(13, "referent", REFERENT.getBytes()));
+    return handleRecord;
+  }
+
+  public static List<HandleAttribute> generateTestDigitalSpecimenAttributes(byte[] handle) {
+    List<HandleAttribute> handleRecord = generateTestDoiAttributes(handle);
+    byte[] ptr_record = PTR_HANDLE_RECORD.getBytes();
+
+    // 14: digitalOrPhysical
+    handleRecord.add(new HandleAttribute(14, "digitalOrPhysical", DIGITAL_OR_PHYSICAL.getBytes()));
+
+    // 15: specimenHost
+    handleRecord.add(new HandleAttribute(15, "specimenHost", ptr_record));
+
+    // 16: In collectionFacility
+    handleRecord.add(
+        new HandleAttribute(16, "inCollectionFacility", ptr_record));
+    return handleRecord;
+  }
+
+  public static List<HandleAttribute> generateTestDigitalSpecimenBotanyAttributes(byte[] handle) {
+    List<HandleAttribute> handleRecord = generateTestDigitalSpecimenAttributes(handle);
+
+    // 17: ObjectType
+    handleRecord.add(new HandleAttribute(17, "objectType", OBJECT_TYPE.getBytes()));
+
+    // 18: preservedOrLiving
+    handleRecord.add(new HandleAttribute( 18, "preservedOrLiving", PRESERVED_OR_LIVING.getBytes()));
+    return handleRecord;
+  }
+
+  // JPA Methods
 
   public static List<Handles> generateTestHandleRecord(byte[] handle) {
 
@@ -131,7 +223,7 @@ public class TestUtils {
     // have a 1 for the issue date?
 
     // 8: PidStatus
-    handleRecord.add((new Handles(handle, 8, "pidStatus", "DRAFT", timestamp)));
+    handleRecord.add((new Handles(handle, 8, "pidStatus", "TEST", timestamp)));
 
     // 9, 10: tombstone text, tombstone pids -> Skip
 

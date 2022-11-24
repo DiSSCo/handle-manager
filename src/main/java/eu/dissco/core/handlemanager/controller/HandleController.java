@@ -75,10 +75,31 @@ public class HandleController {
 
   // Create Single Record Jooq
   @PostMapping(value = "/createRecord", params = "pidType=handleJ")
-  public ResponseEntity<HandleRecordResponse> createRecordJooq(
+  public ResponseEntity<HandleRecordResponse> createHandleRecordJooq(
       @RequestBody HandleRecordRequest hdl)
       throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
     return ResponseEntity.status(HttpStatus.CREATED).body(service.createHandleRecordJooq(hdl));
+  }
+
+  @PostMapping(value = "/createRecord", params = "pidType=doiJ")
+  public ResponseEntity<DoiRecordResponse> createDoiRecordJooq(
+      @RequestBody DoiRecordRequest hdl)
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
+    return ResponseEntity.status(HttpStatus.CREATED).body(service.createDoiRecordJooq(hdl));
+  }
+
+  @PostMapping(value = "/createRecord", params = "pidType=digitalSpecimenJ")
+  public ResponseEntity<DigitalSpecimenResponse> createDigitalSpecimenJooq(
+      @RequestBody DigitalSpecimenRequest hdl)
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
+    return ResponseEntity.status(HttpStatus.CREATED).body(service.createDigitalSpecimenJooq(hdl));
+  }
+
+  @PostMapping(value = "/createRecord", params = "pidType=digitalSpecimenBotanyJ")
+  public ResponseEntity<DigitalSpecimenBotanyResponse> createDigitalSpecimenBotanyJooq(
+      @RequestBody DigitalSpecimenBotanyRequest hdl)
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
+    return ResponseEntity.status(HttpStatus.CREATED).body(service.createDigitalSpecimenBotanyJooq(hdl));
   }
 
   // Create Single Record
