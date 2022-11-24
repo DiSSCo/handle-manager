@@ -14,6 +14,10 @@ public class Resources {
     return new Handles(handle, 100, "HS_ADMIN".getBytes(), decodeAdmin(), timestamp);
   }
 
+  public static byte[] genAdminHandle(){
+    return decodeAdmin();
+  }
+
   private static byte[] decodeAdmin() {
     String admin = "0fff000000153330303a302e4e412f32302e353030302e31303235000000c8";
     byte[] adminByte = new byte[admin.length() / 2];

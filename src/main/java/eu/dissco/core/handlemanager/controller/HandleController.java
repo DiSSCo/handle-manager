@@ -73,6 +73,14 @@ public class HandleController {
         .body(service.createDigitalSpecimenBotanyBatch(dsB));
   }
 
+  // Create Single Record Jooq
+  @PostMapping(value = "/createRecord", params = "pidType=handleJ")
+  public ResponseEntity<HandleRecordResponse> createRecordJooq(
+      @RequestBody HandleRecordRequest hdl)
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
+    return ResponseEntity.status(HttpStatus.CREATED).body(service.createHandleRecordJooq(hdl));
+  }
+
   // Create Single Record
   @PostMapping(value = "/createRecord", params = "pidType=handle")
   public ResponseEntity<HandleRecordResponse> createRecord(
