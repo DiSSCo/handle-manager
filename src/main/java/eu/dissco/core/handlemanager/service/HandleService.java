@@ -185,7 +185,7 @@ public class HandleService {
     return response;
   }
 
-  // Jooq
+  // Jooq Individual
 
   public HandleRecordResponse createHandleRecordJooq(HandleRecordRequest request)
       throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
@@ -217,6 +217,12 @@ public class HandleService {
     List<HandleAttribute> handleRecord = prepareDigitalSpecimenBotanyRecordAttributes(request, handle);
     var recordTimestamp = Instant.now();
     return jooqHandleRep.createDigitalSpecimenBotany(handle, recordTimestamp, handleRecord);
+  }
+
+  // Jooq Batch
+
+  public List<HandleRecordResponse> createHandleRecordBatchJooq(List<HandleRecordRequest> requests){
+    return null;
   }
 
   // JPA
