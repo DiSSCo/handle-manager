@@ -37,9 +37,35 @@ import org.springframework.web.bind.annotation.RestController;
 @ControllerAdvice
 @Slf4j
 public class HandleController {
-
-
   private final HandleService service;
+  @PostMapping(value = "/createRecordBatch", params = "pidType=handleJ")
+  public ResponseEntity<List<HandleRecordResponse>> createHandleRecordJooqBatch(
+      @RequestBody List<HandleRecordRequest> request)
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, PidCreationException, TransformerException {
+    return ResponseEntity.status(HttpStatus.CREATED).body(service.createHandleRecordBatchJooq(request));
+  }
+
+  @PostMapping(value = "/createRecordBatch", params = "pidType=doiJ")
+  public ResponseEntity<List<DoiRecordResponse>> createDoiRecordJooqBatch(
+      @RequestBody List<DoiRecordRequest> request)
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, PidCreationException, TransformerException {
+    return ResponseEntity.status(HttpStatus.CREATED).body(service.createDoiRecordBatchJooq(request));
+  }
+
+  @PostMapping(value = "/createRecordBatch", params = "pidType=digitalSpecimenJ")
+  public ResponseEntity<List<DigitalSpecimenResponse>> createDigitalSpecimenJooqBatch(
+      @RequestBody List<DigitalSpecimenRequest> request)
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, PidCreationException, TransformerException {
+    return ResponseEntity.status(HttpStatus.CREATED).body(service.createDigitalSpecimenBatchJooq(request));
+  }
+
+  @PostMapping(value = "/createRecordBatch", params = "pidType=digitalSpecimenBotanyJ")
+  public ResponseEntity<List<DigitalSpecimenBotanyResponse>> createDigitalSpecimenBotanyJooqBatch(
+      @RequestBody List<DigitalSpecimenBotanyRequest> request)
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, PidCreationException, TransformerException {
+    return ResponseEntity.status(HttpStatus.CREATED).body(service.createDigitalSpecimenBotanyBatchJooq(request));
+  }
+
 
   // ** Create Records: handle, doi, digital specimen, botany specimen **
 

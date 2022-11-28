@@ -55,9 +55,6 @@ class HandleServiceTest {
   @Mock
   private HandleGeneratorService hgService;
 
-  private DocumentBuilderFactory documentBuilderFactory;
-  private TransformerFactory transformerFactory;
-
   private Instant instant;
 
   private HandleService service;
@@ -69,8 +66,8 @@ class HandleServiceTest {
 
   @BeforeEach
   void setup() throws PidResolutionException, JsonProcessingException {
-    documentBuilderFactory = DocumentBuilderFactory.newInstance();
-    transformerFactory = TransformerFactory.newInstance();
+    DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+    TransformerFactory transformerFactory = TransformerFactory.newInstance();
 
     service = new HandleService(handleRep, handleRepJooq, pidTypeService, hgService,
         documentBuilderFactory,
@@ -163,6 +160,27 @@ class HandleServiceTest {
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
+
+  // Jooq Batch Creation
+  @Test
+  void testCreateBatchHandleRecordJooq()
+      throws NoSuchFieldException, PidCreationException, PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException {
+    List<HandleRecordRequest> request = generateBatchHandleRequest();
+    List<HandleRecordResponse> responseExpected = generateBatchHandleResponse();
+    List<HandleAttribute> handleAttributes = generateBatchAttributeList();
+
+    //given(handleRepJooq.createHandleBatch(handlesList, instant, handleAttributes)).willReturn((List<HandleRecordResponse>) responseExpected);
+    given(hgService.genHandleList(2)).willReturn(handlesList);
+
+    // When
+    List<HandleRecordResponse> responseReceived = service.createHandleRecordBatchJooq(request);
+
+    // Then
+    assertThat(responseExpected).isEqualTo(responseReceived);
+  }
+
+
+  // JPA Batch Creation
   @Test
   void testCreateBatchHandleRecord()
       throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
@@ -250,6 +268,14 @@ class HandleServiceTest {
       responseList.add(generateTestHandleResponse(h));
     }
     return responseList;
+  }
+
+  private List<HandleAttribute> generateBatchAttributeList() {
+    List<HandleAttribute> handleList = new ArrayList<>();
+    for (byte[] h : handlesList) {
+      handleList.addAll(generateTestHandleAttributes(h));
+    }
+    return handleList;
   }
 
   private List<Handles> generateBatchHandleList() {

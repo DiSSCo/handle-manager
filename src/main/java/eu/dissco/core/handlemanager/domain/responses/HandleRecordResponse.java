@@ -71,7 +71,6 @@ public class HandleRecordResponse {
 
   public void setAttribute(String type, String data)
       throws NoSuchFieldException {
-    log.info("attempting to match: " + type);
     switch (type) {
       case "pid" -> this.pid = data;
       case "pidIssuer" -> this.pidIssuer = data;

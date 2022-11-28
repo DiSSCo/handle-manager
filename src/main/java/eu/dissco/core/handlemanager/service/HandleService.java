@@ -91,7 +91,6 @@ public class HandleService {
       // Clear our list
       handleRecord.clear();
     }
-
     // Save all records
     handleRep.saveAll(handleRecordsAll);
     return response;
@@ -200,7 +199,7 @@ public class HandleService {
     byte[] handle = hf.genHandleList(1).get(0);
     List<HandleAttribute> handleRecord = prepareDoiRecordAttributes(request, handle);
     var recordTimestamp = Instant.now();
-    return jooqHandleRep.createDoi(handle, recordTimestamp, handleRecord);
+    return jooqHandleRep.<DoiRecordResponse>createDoi(handle, recordTimestamp, handleRecord);
   }
 
   public DigitalSpecimenResponse createDigitalSpecimenJooq(DigitalSpecimenRequest request)
@@ -211,18 +210,69 @@ public class HandleService {
     return jooqHandleRep.createDigitalSpecimen(handle, recordTimestamp, handleRecord);
   }
 
-  public DigitalSpecimenBotanyResponse createDigitalSpecimenBotanyJooq(DigitalSpecimenBotanyRequest request)
+  public DigitalSpecimenBotanyResponse createDigitalSpecimenBotanyJooq(
+      DigitalSpecimenBotanyRequest request)
       throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
     byte[] handle = hf.genHandleList(1).get(0);
-    List<HandleAttribute> handleRecord = prepareDigitalSpecimenBotanyRecordAttributes(request, handle);
+    List<HandleAttribute> handleRecord = prepareDigitalSpecimenBotanyRecordAttributes(request,
+        handle);
     var recordTimestamp = Instant.now();
     return jooqHandleRep.createDigitalSpecimenBotany(handle, recordTimestamp, handleRecord);
   }
 
   // Jooq Batch
 
-  public List<HandleRecordResponse> createHandleRecordBatchJooq(List<HandleRecordRequest> requests){
-    return null;
+  public List<HandleRecordResponse> createHandleRecordBatchJooq(List<HandleRecordRequest> requests)
+      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
+    List<byte[]> handles = hf.genHandleList(requests.size());
+    List<HandleAttribute> handleAttributes = new ArrayList<>();
+
+    for (int i = 0; i < requests.size(); i++) {
+      handleAttributes.addAll(prepareHandleRecordAttributes(requests.get(i), handles.get(i)));
+    }
+    var recordTimestamp = Instant.now();
+
+    return jooqHandleRep.createHandleRecordBatch(handles, recordTimestamp, handleAttributes);
+  }
+
+  public List<DoiRecordResponse> createDoiRecordBatchJooq(List<DoiRecordRequest> requests)
+      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
+    List<byte[]> handles = hf.genHandleList(requests.size());
+    List<HandleAttribute> handleAttributes = new ArrayList<>();
+
+    for (int i = 0; i < requests.size(); i++) {
+      handleAttributes.addAll(prepareDoiRecordAttributes(requests.get(i), handles.get(i)));
+    }
+    var recordTimestamp = Instant.now();
+    return jooqHandleRep.createDoiRecordBatch(handles, recordTimestamp, handleAttributes);
+  }
+
+  public List<DigitalSpecimenResponse> createDigitalSpecimenBatchJooq(
+      List<DigitalSpecimenRequest> requests)
+      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
+    List<byte[]> handles = hf.genHandleList(requests.size());
+    List<HandleAttribute> handleAttributes = new ArrayList<>();
+
+    for (int i = 0; i < requests.size(); i++) {
+      handleAttributes.addAll(
+          prepareDigitalSpecimenRecordAttributes(requests.get(i), handles.get(i)));
+    }
+    var recordTimestamp = Instant.now();
+    return jooqHandleRep.createDigitalSpecimenBatch(handles, recordTimestamp, handleAttributes);
+  }
+
+  public List<DigitalSpecimenBotanyResponse> createDigitalSpecimenBotanyBatchJooq(
+      List<DigitalSpecimenBotanyRequest> requests)
+      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
+    List<byte[]> handles = hf.genHandleList(requests.size());
+    List<HandleAttribute> handleAttributes = new ArrayList<>();
+
+    for (int i = 0; i < requests.size(); i++) {
+      handleAttributes.addAll(
+          prepareDigitalSpecimenBotanyRecordAttributes(requests.get(i), handles.get(i)));
+    }
+    var recordTimestamp = Instant.now();
+    return jooqHandleRep.createDigitalSpecimenBotanyBatch(handles, recordTimestamp, handleAttributes);
   }
 
   // JPA
@@ -277,44 +327,46 @@ public class HandleService {
     List<HandleAttribute> handleRecord = new ArrayList<>();
 
     // 100: Admin Handle
-    handleRecord.add(new HandleAttribute(100, "HS_ADMIN", genAdminHandle()));
+    handleRecord.add(new HandleAttribute(100, handle, "HS_ADMIN", genAdminHandle()));
 
     // 1: Pid
     byte[] pid = ("https://hdl.handle.net/" + new String(handle)).getBytes();
-    handleRecord.add(new HandleAttribute(1, "pid", pid));
+    handleRecord.add(new HandleAttribute(1, handle, "pid", pid));
 
     // 2: PidIssuer
     String pidIssuer = pidTypeService.resolveTypePid(request.getPidIssuerPid());
-    handleRecord.add(new HandleAttribute(2, "pidIssuer", pidIssuer.getBytes()));
+    handleRecord.add(new HandleAttribute(2, handle, "pidIssuer", pidIssuer.getBytes()));
 
     // 3: Digital Object Type
     String digitalObjectType = pidTypeService.resolveTypePid(request.getDigitalObjectTypePid());
-    handleRecord.add(new HandleAttribute(3, "digitalObjectType", digitalObjectType.getBytes()));
+    handleRecord.add(
+        new HandleAttribute(3, handle, "digitalObjectType", digitalObjectType.getBytes()));
 
     // 4: Digital Object Subtype
     String digitalObjectSubtype = pidTypeService.resolveTypePid(
         request.getDigitalObjectSubtypePid());
     handleRecord.add(
-        new HandleAttribute(4, "digitalObjectSubtype", digitalObjectSubtype.getBytes()));
+        new HandleAttribute(4, handle, "digitalObjectSubtype", digitalObjectSubtype.getBytes()));
 
     // 5: 10320/loc
     byte[] loc = setLocations(request.getLocations());
-    handleRecord.add(new HandleAttribute(5, "10320/loc", loc));
+    handleRecord.add(new HandleAttribute(5, handle, "10320/loc", loc));
 
     // 6: Issue Date
-    handleRecord.add(new HandleAttribute(6, "issueDate", getDate().getBytes()));
+    handleRecord.add(new HandleAttribute(6, handle, "issueDate", getDate().getBytes()));
 
     // 7: Issue number
-    handleRecord.add(new HandleAttribute(7, "issueNumber", "1".getBytes()));
+    handleRecord.add(new HandleAttribute(7, handle, "issueNumber", "1".getBytes()));
 
     // 8: PidStatus
-    handleRecord.add(new HandleAttribute(8, "pidStatus", "TEST".getBytes()));
+    handleRecord.add(new HandleAttribute(8, handle, "pidStatus", "TEST".getBytes()));
 
     // 9, 10: tombstone text, tombstone pids -> Skip
 
     // 11: PidKernelMetadataLicense:
     byte[] pidKernelMetadataLicense = "https://creativecommons.org/publicdomain/zero/1.0/".getBytes();
-    handleRecord.add(new HandleAttribute(11, "pidKernelMetadataLicense", pidKernelMetadataLicense));
+    handleRecord.add(
+        new HandleAttribute(11, handle, "pidKernelMetadataLicense", pidKernelMetadataLicense));
 
     return handleRecord;
   }
@@ -324,12 +376,13 @@ public class HandleService {
     List<HandleAttribute> handleRecord = prepareHandleRecordAttributes(request, handle);
 
     // 12: Referent DOI Name
-    String referentDoiName = pidTypeService.resolveTypePid(request.getReferentDoiName());
-    handleRecord.add(new HandleAttribute(12, "referentDoiName", referentDoiName.getBytes()));
+    String referentDoiName = pidTypeService.resolveTypePid(request.getReferentDoiNamePid());
+
+    handleRecord.add(
+        new HandleAttribute(12, handle, "referentDoiName", referentDoiName.getBytes()));
 
     // 13: Referent -> NOTE: Referent is blank currently until we have a model
-    handleRecord.add(new HandleAttribute(13, "referent", request.getReferent().getBytes()));
-
+    handleRecord.add(new HandleAttribute(13, handle, "referent", request.getReferent().getBytes()));
     return handleRecord;
   }
 
@@ -339,20 +392,22 @@ public class HandleService {
     List<HandleAttribute> handleRecord = prepareDoiRecordAttributes(request, handle);
 
     handleRecord.add(
-        new HandleAttribute(14, "digitalOrPhysical", request.getDigitalOrPhysical().getBytes()));
+        new HandleAttribute(14, handle, "digitalOrPhysical",
+            request.getDigitalOrPhysical().getBytes()));
 
     // 15: specimenHost
     String specimenHost = pidTypeService.resolveTypePid(request.getSpecimenHostPid());
-    handleRecord.add(new HandleAttribute(15, "specimenHost", specimenHost.getBytes()));
+    handleRecord.add(new HandleAttribute(15, handle, "specimenHost", specimenHost.getBytes()));
 
     // 16: In collectionFacility
     String inCollectionFacility = pidTypeService.resolveTypePid(
         request.getInCollectionFacilityPid());
     handleRecord.add(
-        new HandleAttribute(16, "inCollectionFacility", inCollectionFacility.getBytes()));
+        new HandleAttribute(16, handle, "inCollectionFacility", inCollectionFacility.getBytes()));
 
     return handleRecord;
   }
+
   private List<HandleAttribute> prepareDigitalSpecimenBotanyRecordAttributes(
       DigitalSpecimenBotanyRequest request,
       byte[] handle)
@@ -360,11 +415,13 @@ public class HandleService {
     List<HandleAttribute> handleRecord = prepareDigitalSpecimenRecordAttributes(request, handle);
 
     // 17: ObjectType
-    handleRecord.add(new HandleAttribute(17, "objectType", request.getObjectType().getBytes()));
+    handleRecord.add(
+        new HandleAttribute(17, handle, "objectType", request.getObjectType().getBytes()));
 
     // 18: preservedOrLiving
     handleRecord.add(
-        new HandleAttribute(18, "preservedOrLiving", request.getPreservedOrLiving().getBytes()));
+        new HandleAttribute(18, handle, "preservedOrLiving",
+            request.getPreservedOrLiving().getBytes()));
 
     return handleRecord;
   }
@@ -410,7 +467,7 @@ public class HandleService {
 
     // 8: PidStatus
     handleRecord.add(
-        (new Handles(handle, 8, "pidStatus", "DRAFT", timestamp))); // Can I keep this as TEST?
+        (new Handles(handle, 8, "pidStatus", "TEST", timestamp))); // Can I keep this as TEST?
 
     // 9, 10: tombstone text, tombstone pids -> Skip
 
@@ -427,7 +484,7 @@ public class HandleService {
     List<Handles> handleRecord = prepareHandleRecord(request, handle, timestamp);
 
     // 12: Referent DOI Name
-    String referentDoiName = pidTypeService.resolveTypePid(request.getReferentDoiName());
+    String referentDoiName = pidTypeService.resolveTypePid(request.getReferentDoiNamePid());
     handleRecord.add(new Handles(handle, 12, "referentDoiName", referentDoiName, timestamp));
 
     // 13: Referent -> NOTE: Referent is blank currently until we have a model for
@@ -475,7 +532,6 @@ public class HandleService {
 
     return handleRecord;
   }
-
 
 
   private String getDate() {

@@ -40,11 +40,7 @@ public class DigitalSpecimenBotanyResponse extends DigitalSpecimenResponse {
         pidKernelMetadataLicense, hsAdmin, referentDoiName, referent, digititalOrPhysical, specimenHost, inCollectionFacility);
     this.objectType = objectType;
     this.preservedOrLiving = preservedOrLiving;
-
-
   }
-
-
   public DigitalSpecimenBotanyResponse(List<Handles> entries) {
     super(entries);
     String type;
@@ -62,7 +58,6 @@ public class DigitalSpecimenBotanyResponse extends DigitalSpecimenResponse {
   @Override
   public void setAttribute(String type, String data)
       throws NoSuchFieldException {
-    log.info("this type is : " + type);
     if (type.equals("objectType")) {
       this.objectType = data;
     }

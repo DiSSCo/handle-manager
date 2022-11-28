@@ -3,9 +3,11 @@ package eu.dissco.core.handlemanager.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import eu.dissco.core.handlemanager.domain.pidrecords.HandleAttribute;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.jparepository.HandleRepository;
 import eu.dissco.core.handlemanager.jparepository.Handles;
+import eu.dissco.core.handlemanager.repository.JooqHandleRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +19,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class PidTypeService {
 
-  private final HandleRepository handleRep;
+  private final JooqHandleRepository handleRepJooq;
 
   private final ObjectMapper mapper;
 
@@ -28,7 +30,7 @@ public class PidTypeService {
       throw new PidResolutionException("Missing PID in request body.");
     }
 
-    List<Handles> typeRecord = handleRep.resolveHandle(typePid.getBytes());
+    List<HandleAttribute> typeRecord = handleRepJooq.resolveHandle(typePid.getBytes());
 
     if (typeRecord.isEmpty()) {
       throw new PidResolutionException("Unable to resolve type PID");
@@ -70,10 +72,10 @@ public class PidTypeService {
     return mapper.writeValueAsString(objectNode);
   }
 
-  private String getDataFromType(String type, List<Handles> hList) {
-    for (Handles h : hList) {
-      if (h.getType().equals(type)) {
-        return h.getData();
+  private String getDataFromType(String type, List<HandleAttribute> hList) {
+    for (HandleAttribute h : hList) {
+      if (h.type().equals(type)) {
+        return new String(h.data());
       }
     }
     return ""; // This should maybe return a warning?
