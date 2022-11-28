@@ -3,7 +3,10 @@ package eu.dissco.core.handlemanager.domain;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import eu.dissco.core.handlemanager.domain.responses.*;
+import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenBotanyResponse;
+import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenResponse;
+import eu.dissco.core.handlemanager.domain.responses.DoiRecordResponse;
+import eu.dissco.core.handlemanager.domain.responses.HandleRecordResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 

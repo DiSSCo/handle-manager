@@ -5,9 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.pidrecords.HandleAttribute;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
-import eu.dissco.core.handlemanager.jparepository.HandleRepository;
-import eu.dissco.core.handlemanager.jparepository.Handles;
-import eu.dissco.core.handlemanager.repository.JooqHandleRepository;
+import eu.dissco.core.handlemanager.repository.HandleRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +17,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class PidTypeService {
 
-  private final JooqHandleRepository handleRepJooq;
+  private final HandleRepository handleRep;
 
   private final ObjectMapper mapper;
 
@@ -30,7 +28,7 @@ public class PidTypeService {
       throw new PidResolutionException("Missing PID in request body.");
     }
 
-    List<HandleAttribute> typeRecord = handleRepJooq.resolveHandle(typePid.getBytes());
+    List<HandleAttribute> typeRecord = handleRep.resolveHandle(typePid.getBytes());
 
     if (typeRecord.isEmpty()) {
       throw new PidResolutionException("Unable to resolve type PID");

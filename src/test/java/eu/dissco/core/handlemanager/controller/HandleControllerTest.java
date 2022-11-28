@@ -51,10 +51,10 @@ class HandleControllerTest {
     // Given
     HandleRecordRequest request = TestUtils.generateTestHandleRequest();
     HandleRecordResponse responseExpected = TestUtils.generateTestHandleResponse(handle);
-    given(service.createHandleRecordJooq(request)).willReturn(responseExpected);
+    given(service.createHandleRecord(request)).willReturn(responseExpected);
 
     // When
-    ResponseEntity<HandleRecordResponse> responseReceived = controller.createHandleRecordJooq(request);
+    ResponseEntity<HandleRecordResponse> responseReceived = controller.createHandleRecord(request);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -67,10 +67,10 @@ class HandleControllerTest {
     // Given
     DoiRecordRequest request = TestUtils.generateTestDoiRequest();
     DoiRecordResponse responseExpected = TestUtils.generateTestDoiResponse(handle);
-    given(service.createDoiRecordJooq(request)).willReturn(responseExpected);
+    given(service.createDoiRecord(request)).willReturn(responseExpected);
 
     // When
-    ResponseEntity<DoiRecordResponse> responseReceived = controller.createDoiRecordJooq(request);
+    ResponseEntity<DoiRecordResponse> responseReceived = controller.createDoiRecord(request);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -84,10 +84,10 @@ class HandleControllerTest {
     DigitalSpecimenRequest request = TestUtils.generateTestDigitalSpecimenRequest();
     DigitalSpecimenResponse responseExpected = TestUtils.generateTestDigitalSpecimenResponse(
         handle);
-    given(service.createDigitalSpecimenJooq(request)).willReturn(responseExpected);
+    given(service.createDigitalSpecimen(request)).willReturn(responseExpected);
 
     // When
-    ResponseEntity<DigitalSpecimenResponse> responseReceived = controller.createDigitalSpecimenJooq(request);
+    ResponseEntity<DigitalSpecimenResponse> responseReceived = controller.createDigitalSpecimen(request);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -101,84 +101,14 @@ class HandleControllerTest {
     DigitalSpecimenBotanyRequest request = TestUtils.generateTestDigitalSpecimenBotanyRequest();
     DigitalSpecimenBotanyResponse responseExpected = TestUtils.generateTestDigitalSpecimenBotanyResponse(
         handle);
-    given(service.createDigitalSpecimenBotanyJooq(request)).willReturn(responseExpected);
+    given(service.createDigitalSpecimenBotany(request)).willReturn(responseExpected);
 
     // When
-    ResponseEntity<DigitalSpecimenBotanyResponse> responseReceived = controller.createDigitalSpecimenBotanyJooq(request);
+    ResponseEntity<DigitalSpecimenBotanyResponse> responseReceived = controller.createDigitalSpecimenBotany(request);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
-  }
-
-  // Batch JPA
-
-  @Test
-  void testHandleRecordBatchCreation() throws Exception {
-    // Given
-    List<HandleRecordRequest> requestList = buildHandleRequestList();
-    List<HandleRecordResponse> responseList = buildHandleResponseList();
-
-    given(service.createHandleRecordBatch(requestList)).willReturn(responseList);
-
-    // When
-    ResponseEntity<List<HandleRecordResponse>> responseReceived = controller.createHandleRecordBatch(
-        requestList);
-
-    // Then
-    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-    assertThat(responseReceived.getBody()).isEqualTo(responseList);
-  }
-
-  @Test
-  void testDoiRecordBatchCreation() throws Exception {
-    // Given
-    List<DoiRecordRequest> requestList = buildDoiRequestList();
-    List<DoiRecordResponse> responseList = buildDoiResponseList();
-
-    given(service.createDoiRecordBatch(requestList)).willReturn(responseList);
-
-    // When
-    ResponseEntity<List<DoiRecordResponse>> responseReceived = controller.createDoiRecordBatch(
-        requestList);
-
-    // Then
-    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-    assertThat(responseReceived.getBody()).isEqualTo(responseList);
-  }
-
-  @Test
-  void testDigitalSpecimenBatchCreation() throws Exception {
-    // Given
-    List<DigitalSpecimenRequest> requestList = buildDigitalSpecimenRequestList();
-    List<DigitalSpecimenResponse> responseList = buildDigitalSpecimenResponseList();
-
-    given(service.createDigitalSpecimenBatch(requestList)).willReturn(responseList);
-
-    // When
-    ResponseEntity<List<DigitalSpecimenResponse>> responseReceived = controller.createDigitalSpecimenBatch(
-        requestList);
-
-    // Then
-    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-    assertThat(responseReceived.getBody()).isEqualTo(responseList);
-  }
-
-  @Test
-  void testDigitalSpecimenBotanyBatchCreation() throws Exception {
-    // Given
-    List<DigitalSpecimenBotanyRequest> requestList = buildDigitalSpecimenBotanyRequestList();
-    List<DigitalSpecimenBotanyResponse> responseList = buildDigitalSpecimenBotanyResponseList();
-
-    given(service.createDigitalSpecimenBotanyBatch(requestList)).willReturn(responseList);
-
-    // When
-    ResponseEntity<List<DigitalSpecimenBotanyResponse>> responseReceived = controller.createDigitalSpecimenBotanyBatch(
-        requestList);
-
-    // Then
-    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-    assertThat(responseReceived.getBody()).isEqualTo(responseList);
   }
 
   @Test

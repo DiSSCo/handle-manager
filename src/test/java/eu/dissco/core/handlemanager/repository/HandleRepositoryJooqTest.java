@@ -1,7 +1,5 @@
 package eu.dissco.core.handlemanager.repository;
 
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.*;
-
 import java.util.Arrays;
 import java.util.List;
 import org.jooq.DSLContext;
@@ -14,11 +12,11 @@ class HandleRepositoryJooqTest {
   @Mock
   private DSLContext context;
 
-  private JooqHandleRepository jooqHandleRep;
+  private HandleRepository jooqHandleRep;
 
   @BeforeEach
   void setup(){
-    jooqHandleRep = new JooqHandleRepository(context);
+    jooqHandleRep = new HandleRepository(context);
 
   }
 

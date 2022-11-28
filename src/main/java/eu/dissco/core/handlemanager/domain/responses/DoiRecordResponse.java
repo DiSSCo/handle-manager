@@ -1,7 +1,5 @@
 package eu.dissco.core.handlemanager.domain.responses;
 
-import eu.dissco.core.handlemanager.jparepository.Handles;
-import java.util.List;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,21 +34,6 @@ public class DoiRecordResponse extends HandleRecordResponse {
 
   }
 
-  public DoiRecordResponse(List<Handles> entries) {
-    super(entries);
-
-    String type;
-
-    for (Handles h : entries) {
-      type = h.getType();
-      if (type.equals("referentDoiName")) {
-        this.referentDoiName = h.getData();
-      }
-      if (type.equals("referent")) {
-        this.referent = h.getData();
-      }
-    }
-  }
 
   @Override
   public void setAttribute(String type, String data)

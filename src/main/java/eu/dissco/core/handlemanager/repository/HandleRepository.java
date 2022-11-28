@@ -1,9 +1,14 @@
 package eu.dissco.core.handlemanager.repository;
 
-import eu.dissco.core.handlemanager.domain.pidrecords.HandleAttribute;
-import eu.dissco.core.handlemanager.domain.responses.*;
-import eu.dissco.core.handlemanager.exceptions.PidCreationException;
+import static eu.dissco.core.handlemanager.database.jooq.tables.Handles.HANDLES;
+
 import eu.dissco.core.handlemanager.database.jooq.tables.records.HandlesRecord;
+import eu.dissco.core.handlemanager.domain.pidrecords.HandleAttribute;
+import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenBotanyResponse;
+import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenResponse;
+import eu.dissco.core.handlemanager.domain.responses.DoiRecordResponse;
+import eu.dissco.core.handlemanager.domain.responses.HandleRecordResponse;
+import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -21,15 +26,14 @@ import org.jooq.Result;
 import org.jooq.TableField;
 import org.springframework.stereotype.Repository;
 
-import static eu.dissco.core.handlemanager.database.jooq.tables.Handles.HANDLES;
-
 @Slf4j
 @Repository
 @RequiredArgsConstructor
-public class JooqHandleRepository {
+public class HandleRepository {
 
   private static final int TTL = 86400;
-  private static final String ERROR = "Error: Attempting to add an invalid field into a pid record. Field: %s, Data: %s";
+  private static final String INVALID_FIELD_ERROR = "Error: Attempting to add an invalid field into a pid record. Field: %s, Data: %s";
+  private static final String FIELD_MISMATCH_ERROR = "Field mismatch: attempting to add a forbidden field in the record schema. Check ";
   private final DSLContext context;
 
   private final Map<String, TableField<HandlesRecord, ? extends Serializable>> attributeMapping = Map.of(
@@ -39,8 +43,22 @@ public class JooqHandleRepository {
       "data", HANDLES.DATA
   );
 
+  // Find Duplicate Handles
+//  @org.springframework.data.jpa.repository.Query(value = "select distinct handle from handles where handle in :hdls", nativeQuery = true)
+  //List<byte[]> checkDuplicateHandles(List<byte[]> hdls);
+
+  public List<byte[]> checkDuplicateHandles(List<byte[]> handles) {
+    return context
+        .selectDistinct(HANDLES.HANDLE)
+        .from(HANDLES)
+        .where(HANDLES.HANDLE.in(handles))
+        .fetch()
+        .getValues(HANDLES.HANDLE, byte[].class);
+  }
+
+
   // Resolve Pid
-  public List<HandleAttribute> resolveHandle(byte[] handle){
+  public List<HandleAttribute> resolveHandle(byte[] handle) {
     List<Record4<Integer, byte[], byte[], byte[]>> dbRecord = context
         .select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
         .from(HANDLES)
@@ -50,9 +68,10 @@ public class JooqHandleRepository {
     return mapToAttribute(dbRecord);
   }
 
-  private List<HandleAttribute> mapToAttribute(List<Record4<Integer, byte[], byte[], byte[]>> dbRecord){
+  private List<HandleAttribute> mapToAttribute(
+      List<Record4<Integer, byte[], byte[], byte[]>> dbRecord) {
     List<HandleAttribute> attributes = new ArrayList<>();
-    for (Record4<Integer, byte[], byte[], byte[]> row: dbRecord) {
+    for (Record4<Integer, byte[], byte[], byte[]> row : dbRecord) {
       attributes.add(new HandleAttribute(
           row.get(HANDLES.IDX),
           row.get(HANDLES.HANDLE),
@@ -63,9 +82,33 @@ public class JooqHandleRepository {
     return attributes;
   }
 
+  // Get All Pids
+  public List<String> getAllHandles(byte[] pidStatus, int pageNum, int pageSize) {
+    return context
+        .selectDistinct(HANDLES.HANDLE, HANDLES.DATA)
+        .from(HANDLES)
+        .where(HANDLES.DATA.eq(pidStatus)) // Hmm...
+        .limit(pageSize)
+        .offset(pageNum)
+        .fetch()
+        .getValues(HANDLES.HANDLE, String.class);
+  }
+
+  public List<String> getAllHandles(int pageNum, int pageSize) {
+    return context
+        .selectDistinct(HANDLES.HANDLE)
+        .from(HANDLES)
+        .limit(pageSize)
+        .offset(pageNum)
+        .fetch()
+        .getValues(HANDLES.HANDLE, String.class);
+  }
+
+
   // Handle Batch Creation
-  public List<HandleRecordResponse> createHandleRecordBatch(List<byte[]> handles, Instant recordTimestamp, List<HandleAttribute> handleAttributes)
-      throws PidCreationException{
+  public List<HandleRecordResponse> createHandleRecordBatch(List<byte[]> handles,
+      Instant recordTimestamp, List<HandleAttribute> handleAttributes)
+      throws PidCreationException {
     postBatchRecord(recordTimestamp, handleAttributes);
     // Todo catch pidCreationException, rollback any handles created
     return mapPostedRecordToHandleRecordResponse(handles);
@@ -123,16 +166,16 @@ public class JooqHandleRepository {
         response.setAttribute(type, data);
       } catch (NoSuchFieldException e) {
         throw new PidCreationException(
-            "Field mismatch: attempting to add a forbidden field in the record schema. Check "
-                + type);
+            FIELD_MISMATCH_ERROR + type);
       }
     }
     return response;
   }
-  
+
   // Doi Batch Creation
-  public List<DoiRecordResponse> createDoiRecordBatch(List<byte[]> handles, Instant recordTimestamp, List<HandleAttribute> handleAttributes)
-      throws PidCreationException{
+  public List<DoiRecordResponse> createDoiRecordBatch(List<byte[]> handles, Instant recordTimestamp,
+      List<HandleAttribute> handleAttributes)
+      throws PidCreationException {
     postBatchRecord(recordTimestamp, handleAttributes);
     return mapPostedRecordToDoiResponse(handles);
   }
@@ -173,7 +216,7 @@ public class JooqHandleRepository {
     }
     return responses;
   }
-  
+
   private DoiRecordResponse buildDoiRecordResponse(
       List<Record3<byte[], byte[], byte[]>> records)
       throws PidCreationException {
@@ -189,21 +232,22 @@ public class JooqHandleRepository {
         response.setAttribute(type, data);
       } catch (NoSuchFieldException e) {
         throw new PidCreationException(
-            "Field mismatch: attempting to add a forbidden field in the record schema. Check "
-                + type);
+            FIELD_MISMATCH_ERROR + type);
       }
     }
     return response;
   }
 
   // Batch Digital Specimen Creation
-  public List<DigitalSpecimenResponse> createDigitalSpecimenBatch(List<byte[]> handles, Instant recordTimestamp, List<HandleAttribute> handleAttributes)
-      throws PidCreationException{
+  public List<DigitalSpecimenResponse> createDigitalSpecimenBatch(List<byte[]> handles,
+      Instant recordTimestamp, List<HandleAttribute> handleAttributes)
+      throws PidCreationException {
     postBatchRecord(recordTimestamp, handleAttributes);
     return mapPostedRecordToDigitalSpecimenResponse(handles);
   }
 
-  private List<DigitalSpecimenResponse> mapPostedRecordToDigitalSpecimenResponse(List<byte[]> handles)
+  private List<DigitalSpecimenResponse> mapPostedRecordToDigitalSpecimenResponse(
+      List<byte[]> handles)
       throws PidCreationException {
 
     // Fetch all posted handles
@@ -239,7 +283,7 @@ public class JooqHandleRepository {
     }
     return responses;
   }
-  
+
   private DigitalSpecimenResponse buildDigitalSpecimenResponse(
       List<Record3<byte[], byte[], byte[]>> records)
       throws PidCreationException {
@@ -255,22 +299,23 @@ public class JooqHandleRepository {
         response.setAttribute(type, data);
       } catch (NoSuchFieldException e) {
         throw new PidCreationException(
-            "Field mismatch: attempting to add a forbidden field in the record schema. Check "
-                + type);
+            FIELD_MISMATCH_ERROR + type);
       }
     }
     return response;
   }
-  
+
   // DigitalSpecimenBotany Batch Creation
 
-  public List<DigitalSpecimenBotanyResponse> createDigitalSpecimenBotanyBatch(List<byte[]> handles, Instant recordTimestamp, List<HandleAttribute> handleAttributes)
-      throws PidCreationException{
+  public List<DigitalSpecimenBotanyResponse> createDigitalSpecimenBotanyBatch(List<byte[]> handles,
+      Instant recordTimestamp, List<HandleAttribute> handleAttributes)
+      throws PidCreationException {
     postBatchRecord(recordTimestamp, handleAttributes);
     return mapPostedRecordToDigitalSpecimenBotanyResponse(handles);
   }
 
-  private List<DigitalSpecimenBotanyResponse> mapPostedRecordToDigitalSpecimenBotanyResponse(List<byte[]> handles)
+  private List<DigitalSpecimenBotanyResponse> mapPostedRecordToDigitalSpecimenBotanyResponse(
+      List<byte[]> handles)
       throws PidCreationException {
 
     // Fetch all posted handles
@@ -322,8 +367,7 @@ public class JooqHandleRepository {
         response.setAttribute(type, data);
       } catch (NoSuchFieldException e) {
         throw new PidCreationException(
-            "Field mismatch: attempting to add a forbidden field in the record schema. Check "
-                + type);
+            FIELD_MISMATCH_ERROR + type);
       }
     }
     return response;
@@ -361,7 +405,7 @@ public class JooqHandleRepository {
         response.setAttribute(handleAttribute.type(), new String(handleAttribute.data()));
       } catch (NoSuchFieldException e) {
         throw new PidCreationException(
-            String.format(ERROR, handleAttribute.type(), handleAttribute.type()));
+            String.format(INVALID_FIELD_ERROR, handleAttribute.type(), handleAttribute.type()));
       }
       var query = context.insertInto(HANDLES)
           .set(HANDLES.HANDLE, handle)
@@ -389,7 +433,7 @@ public class JooqHandleRepository {
         response.setAttribute(handleAttribute.type(), new String(handleAttribute.data()));
       } catch (NoSuchFieldException e) {
         throw new PidCreationException(
-            String.format(ERROR, handleAttribute.type(), handleAttribute.type()));
+            String.format(INVALID_FIELD_ERROR, handleAttribute.type(), handleAttribute.type()));
       }
       var query = context.insertInto(HANDLES)
           .set(HANDLES.HANDLE, handle)
@@ -417,7 +461,7 @@ public class JooqHandleRepository {
         response.setAttribute(handleAttribute.type(), new String(handleAttribute.data()));
       } catch (NoSuchFieldException e) {
         throw new PidCreationException(
-            String.format(ERROR, handleAttribute.type(), handleAttribute.type()));
+            String.format(INVALID_FIELD_ERROR, handleAttribute.type(), handleAttribute.type()));
       }
       var query = context.insertInto(HANDLES)
           .set(HANDLES.HANDLE, handle)
@@ -445,7 +489,7 @@ public class JooqHandleRepository {
         response.setAttribute(handleAttribute.type(), new String(handleAttribute.data()));
       } catch (NoSuchFieldException e) {
         throw new PidCreationException(
-            String.format(ERROR, handleAttribute.type(), handleAttribute.type()));
+            String.format(INVALID_FIELD_ERROR, handleAttribute.type(), handleAttribute.type()));
       }
       var query = context.insertInto(HANDLES)
           .set(HANDLES.HANDLE, handle)

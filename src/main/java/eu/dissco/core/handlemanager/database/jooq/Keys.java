@@ -6,7 +6,6 @@ package eu.dissco.core.handlemanager.database.jooq;
 
 import eu.dissco.core.handlemanager.database.jooq.tables.Handles;
 import eu.dissco.core.handlemanager.database.jooq.tables.records.HandlesRecord;
-
 import org.jooq.TableField;
 import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;

@@ -1,17 +1,10 @@
 package eu.dissco.core.handlemanager.utils;
 
-import eu.dissco.core.handlemanager.jparepository.Handles;
-
 public class Resources {
 
 
   private Resources() {
     throw new IllegalStateException("Utility class");
-  }
-
-
-  public static Handles genAdminHandle(byte[] handle, long timestamp) {
-    return new Handles(handle, 100, "HS_ADMIN".getBytes(), decodeAdmin(), timestamp);
   }
 
   public static byte[] genAdminHandle(){

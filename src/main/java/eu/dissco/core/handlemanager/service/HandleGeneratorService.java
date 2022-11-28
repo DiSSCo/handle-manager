@@ -1,6 +1,6 @@
 package eu.dissco.core.handlemanager.service;
 
-import eu.dissco.core.handlemanager.jparepository.HandleRepository;
+import eu.dissco.core.handlemanager.repository.HandleRepository;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;

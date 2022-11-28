@@ -14,8 +14,6 @@ import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenBotanyRespon
 import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenResponse;
 import eu.dissco.core.handlemanager.domain.responses.DoiRecordResponse;
 import eu.dissco.core.handlemanager.domain.responses.HandleRecordResponse;
-import eu.dissco.core.handlemanager.jparepository.Handles;
-import eu.dissco.core.handlemanager.utils.Resources;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -37,6 +35,7 @@ import org.w3c.dom.Document;
 public class TestUtils {
 
   public static final Instant CREATED = Instant.parse("2022-11-01T09:59:24.00Z");
+  public static final String ISSUE_DATE = "2022-11-01";
 
   public static String HANDLE = "20.5000.1025/QRS-321-ABC";
   public static String HANDLE_ALT = "20.5000.1025/ABC-123-QRS";
@@ -47,6 +46,8 @@ public class TestUtils {
   public static String DIGITAL_OBJECT_TYPE_PID = "20.5000.1025/DIGITAL-SPECIMEN";
   public static String DIGITAL_OBJECT_SUBTYPE_PID = "20.5000.1025/BOTANY-SPECIMEN";
   public static String[] LOCATIONS = {"https://sandbox.dissco.tech/", "https://dissco.eu"};
+  public static final String PID_STATUS = "TEST";
+  public static final String LICENSE = "https://creativecommons.org/publicdomain/zero/1.0/";
   //DOIs
   public static String REFERENT_DOI_NAME_PID = "20.5000.1025/OTHER-TRIPLET";
   public static String REFERENT = "";
@@ -72,6 +73,7 @@ public class TestUtils {
     throw new IllegalStateException("Utility class");
   }
 
+  // Pid Type Records
   private static String initPtrHandleRecord(boolean isDoi) {
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode objectNode = mapper.createObjectNode();
@@ -93,7 +95,7 @@ public class TestUtils {
     }
   }
 
-  // Jooq methods
+  // Handle Attribute Lists
   public static List<HandleAttribute> generateTestHandleAttributes(byte[] handle) {
 
     List<HandleAttribute> handleRecord= new ArrayList<>();
@@ -125,19 +127,18 @@ public class TestUtils {
     handleRecord.add(new HandleAttribute(5, handle,"10320/loc", loc));
 
     // 6: Issue Date
-    handleRecord.add(new HandleAttribute(6, handle,"issueDate",  "2022-11-01".getBytes()));
+    handleRecord.add(new HandleAttribute(6, handle,"issueDate",  ISSUE_DATE.getBytes()));
 
     // 7: Issue number
     handleRecord.add(new HandleAttribute(7, handle,"issueNumber",  "1".getBytes()));
 
     // 8: PidStatus
-    handleRecord.add(new HandleAttribute(8,handle, "pidStatus",  "TEST".getBytes()));
+    handleRecord.add(new HandleAttribute(8,handle, "pidStatus",  PID_STATUS.getBytes()));
 
     // 9, 10: tombstone text, tombstone pids -> Skip
 
     // 11: PidKernelMetadataLicense:
-    byte[] pidKernelMetadataLicense = "https://creativecommons.org/publicdomain/zero/1.0/".getBytes();
-    handleRecord.add(new HandleAttribute(11,handle, "pidKernelMetadataLicense",  pidKernelMetadataLicense));
+    handleRecord.add(new HandleAttribute(11,handle, "pidKernelMetadataLicense",  LICENSE.getBytes()));
 
     return handleRecord;
   }
@@ -149,7 +150,6 @@ public class TestUtils {
     // 12: Referent DOI Name
     handleRecord.add(new HandleAttribute(12, handle,"referentDoiName", ptr_record));
     // 13: Referent
-    // it
     handleRecord.add(new HandleAttribute(13, handle,"referent", REFERENT.getBytes()));
     return handleRecord;
   }
@@ -181,101 +181,7 @@ public class TestUtils {
     return handleRecord;
   }
 
-  // JPA Methods
-
-  public static List<Handles> generateTestHandleRecord(byte[] handle) {
-
-    List<Handles> handleRecord = new ArrayList<Handles>();
-    long timestamp = initTime();
-
-    // 100: Admin Handle
-    handleRecord.add(Resources.genAdminHandle(handle, timestamp));
-
-    // 1: Pid
-    handleRecord.add(
-        new Handles(handle, 1, "pid", ("https://hdl.handle.net/" + new String(handle)).getBytes(),
-            timestamp));
-
-    // 2: PidIssuer
-    handleRecord.add(new Handles(handle, 2, "pidIssuer", PTR_HANDLE_RECORD, timestamp));
-
-    // 3: Digital Object Type
-    handleRecord.add(new Handles(handle, 3, "digitalObjectType", PTR_HANDLE_RECORD, timestamp));
-
-    // 4: Digital Object Subtype
-    handleRecord.add(
-        new Handles(handle, 4, "digitalObjectSubtype", PTR_HANDLE_RECORD, timestamp));
-
-    // 5: 10320/loc
-    byte[] loc = "".getBytes();
-    try {
-      loc = setLocations(LOCATIONS);
-    } catch (TransformerException | ParserConfigurationException e) {
-      e.printStackTrace();
-    }
-    handleRecord.add(new Handles(handle, 5, "10320/loc", loc, timestamp));
-
-    // 6: Issue Date
-    handleRecord.add((new Handles(handle, 6, "issueDate", "2022-11-01", timestamp)));
-
-    // 7: Issue number
-    handleRecord.add((new Handles(handle, 7, "issueNumber", "1", timestamp)));
-    // have a 1 for the issue date?
-
-    // 8: PidStatus
-    handleRecord.add((new Handles(handle, 8, "pidStatus", "TEST", timestamp)));
-
-    // 9, 10: tombstone text, tombstone pids -> Skip
-
-    // 11: PidKernelMetadataLicense:
-    // https://creativecommons.org/publicdomain/zero/1.0/
-    handleRecord.add((new Handles(handle, 11, "pidKernelMetadataLicense",
-        "https://creativecommons.org/publicdomain/zero/1.0/", timestamp)));
-    return handleRecord;
-  }
-
-  public static List<Handles> generateTestDoiRecord(byte[] handle) {
-    List<Handles> handleRecord = generateTestHandleRecord(handle);
-    long timestamp = initTime();
-
-    // 12: Referent DOI Name
-    handleRecord.add(new Handles(handle, 12, "referentDoiName", PTR_HANDLE_RECORD, timestamp));
-    // 13: Referent
-    // it
-    handleRecord.add(new Handles(handle, 13, "referent", REFERENT, timestamp));
-    return handleRecord;
-  }
-
-  public static List<Handles> generateTestDigitalSpecimenRecord(byte[] handle) {
-    List<Handles> handleRecord = generateTestDoiRecord(handle);
-    long timestamp = initTime();
-
-    // 14: digitalOrPhysical
-    handleRecord.add(new Handles(handle, 14, "digitalOrPhysical", DIGITAL_OR_PHYSICAL, timestamp));
-
-    // 15: specimenHost
-    handleRecord.add(new Handles(handle, 15, "specimenHost", PTR_HANDLE_RECORD, timestamp));
-
-    // 16: In collectionFacility
-    handleRecord.add(
-        new Handles(handle, 16, "inCollectionFacility", PTR_HANDLE_RECORD, timestamp));
-    return handleRecord;
-  }
-
-
-  public static List<Handles> generateTestDigitalSpecimenBotanyRecord(byte[] handle) {
-    List<Handles> handleRecord = generateTestDigitalSpecimenRecord(handle);
-    long timestamp = initTime();
-
-    // 17: ObjectType
-    handleRecord.add(new Handles(handle, 17, "objectType", OBJECT_TYPE, timestamp));
-
-    // 18: preservedOrLiving
-    handleRecord.add(new Handles(handle, 18, "preservedOrLiving", PRESERVED_OR_LIVING, timestamp));
-
-    return handleRecord;
-  }
-
+  // Requests
 
   public static HandleRecordRequest generateTestHandleRequest() {
     return new HandleRecordRequest(
@@ -285,10 +191,6 @@ public class TestUtils {
         LOCATIONS);
   }
 
-  public static HandleRecordResponse generateTestHandleResponse(byte[] handle) {
-
-    return new HandleRecordResponse(generateTestHandleRecord(handle));
-  }
 
   public static DoiRecordRequest generateTestDoiRequest() {
     return new DoiRecordRequest(
@@ -299,9 +201,6 @@ public class TestUtils {
         REFERENT_DOI_NAME_PID);
   }
 
-  public static DoiRecordResponse generateTestDoiResponse(byte[] handle) {
-    return new DoiRecordResponse(generateTestDoiRecord(handle));
-  }
 
   public static DigitalSpecimenRequest generateTestDigitalSpecimenRequest() {
     return new DigitalSpecimenRequest(
@@ -314,11 +213,6 @@ public class TestUtils {
         SPECIMEN_HOST_PID,
         IN_COLLECTION_FACILITY);
   }
-
-  public static DigitalSpecimenResponse generateTestDigitalSpecimenResponse(byte[] handle) {
-    return new DigitalSpecimenResponse(generateTestDigitalSpecimenRecord(handle));
-  }
-
 
   public static DigitalSpecimenBotanyRequest generateTestDigitalSpecimenBotanyRequest() {
     return new DigitalSpecimenBotanyRequest(PID_ISSUER_PID,
@@ -333,21 +227,113 @@ public class TestUtils {
         PRESERVED_OR_LIVING);
   }
 
-  public static DigitalSpecimenBotanyResponse generateTestDigitalSpecimenBotanyResponse(
-      byte[] handle) {
-    return new DigitalSpecimenBotanyResponse(generateTestDigitalSpecimenBotanyRecord(handle));
+  // Responses
+  public static HandleRecordResponse generateTestHandleResponse(byte[] handle) {
+    String pid =  "https://hdl.handle.net/" + new String(handle);
+    String locs = getLocString();
+
+    String admin = new String(genAdminHandle());
+
+    return new HandleRecordResponse(
+        pid,                  // Pid
+        PTR_HANDLE_RECORD,    // pidIssuer
+        PTR_HANDLE_RECORD,    // digitalObjectType
+        PTR_HANDLE_RECORD,    // digitalObjectSubtype
+        locs,                 // 10320/loc
+        ISSUE_DATE,           // issueDate
+        "1",                  // issueNumber
+        PID_STATUS,           // pidStatus
+        LICENSE,              // Pid Kernel Metadata License
+        admin
+    );
   }
 
-  public static List<byte[]> generateByteHandleList() {
-    List<byte[]> handles = new ArrayList<>();
-    handles.add(HANDLE.getBytes());
-    handles.add(HANDLE_ALT.getBytes());
+  public static DoiRecordResponse generateTestDoiResponse(byte[] handle) {
+    String pid =  "https://hdl.handle.net/" + new String(handle);
+    String locs = getLocString();
 
-    return handles;
+    String admin = new String(genAdminHandle());
+
+    return new DoiRecordResponse(
+        pid,                  // Pid
+        PTR_HANDLE_RECORD,    // pidIssuer
+        PTR_HANDLE_RECORD,    // digitalObjectType
+        PTR_HANDLE_RECORD,    // digitalObjectSubtype
+        locs,                 // 10320/loc
+        ISSUE_DATE,           // issueDate
+        "1",                  // issueNumber
+        PID_STATUS,           // pidStatus
+        LICENSE,              // Pid Kernel Metadata License
+        admin,
+        PTR_HANDLE_RECORD,
+        REFERENT
+    );
+  }
+
+  public static DigitalSpecimenResponse generateTestDigitalSpecimenResponse(byte[] handle) {
+    String pid =  "https://hdl.handle.net/" + new String(handle);
+    String locs = getLocString();
+
+    String admin = new String(genAdminHandle());
+
+    return new DigitalSpecimenResponse(
+        pid,                  // Pid
+        PTR_HANDLE_RECORD,    // pidIssuer
+        PTR_HANDLE_RECORD,    // digitalObjectType
+        PTR_HANDLE_RECORD,    // digitalObjectSubtype
+        locs,                 // 10320/loc
+        ISSUE_DATE,           // issueDate
+        "1",                  // issueNumber
+        PID_STATUS,           // pidStatus
+        LICENSE,              // Pid Kernel Metadata License
+        admin,
+        PTR_HANDLE_RECORD,
+        REFERENT,
+        DIGITAL_OR_PHYSICAL,
+        PTR_HANDLE_RECORD,
+        PTR_HANDLE_RECORD
+    );
+  }
+
+  public static DigitalSpecimenBotanyResponse generateTestDigitalSpecimenBotanyResponse(byte[] handle) {
+    String pid =  "https://hdl.handle.net/" + new String(handle);
+    String locs = getLocString();
+
+    String admin = new String(genAdminHandle());
+
+    return new DigitalSpecimenBotanyResponse(
+        pid,                  // Pid
+        PTR_HANDLE_RECORD,    // pidIssuer
+        PTR_HANDLE_RECORD,    // digitalObjectType
+        PTR_HANDLE_RECORD,    // digitalObjectSubtype
+        locs,                 // 10320/loc
+        ISSUE_DATE,           // issueDate
+        "1",                  // issueNumber
+        PID_STATUS,           // pidStatus
+        LICENSE,              // Pid Kernel Metadata License
+        admin,
+        PTR_HANDLE_RECORD,
+        REFERENT,
+        DIGITAL_OR_PHYSICAL,
+        PTR_HANDLE_RECORD,
+        PTR_HANDLE_RECORD,
+        OBJECT_TYPE,
+        PRESERVED_OR_LIVING
+    );
   }
 
   public static long initTime() {
     return CREATED.getEpochSecond();
+  }
+
+  private static String getLocString(){
+    byte[] loc = "".getBytes();
+    try {
+      loc = setLocations(LOCATIONS);
+    } catch (TransformerException | ParserConfigurationException e) {
+      e.printStackTrace();
+    }
+    return new String(loc);
   }
 
   public static byte[] setLocations(String[] objectLocations)

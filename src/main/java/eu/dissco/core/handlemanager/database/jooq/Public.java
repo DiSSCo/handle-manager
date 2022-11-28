@@ -5,10 +5,8 @@ package eu.dissco.core.handlemanager.database.jooq;
 
 
 import eu.dissco.core.handlemanager.database.jooq.tables.Handles;
-
 import java.util.Arrays;
 import java.util.List;
-
 import org.jooq.Catalog;
 import org.jooq.Table;
 import org.jooq.impl.SchemaImpl;
