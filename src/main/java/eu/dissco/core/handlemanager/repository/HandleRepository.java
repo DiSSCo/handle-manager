@@ -43,10 +43,6 @@ public class HandleRepository {
       "data", HANDLES.DATA
   );
 
-  // Find Duplicate Handles
-//  @org.springframework.data.jpa.repository.Query(value = "select distinct handle from handles where handle in :hdls", nativeQuery = true)
-  //List<byte[]> checkDuplicateHandles(List<byte[]> hdls);
-
   public List<byte[]> checkDuplicateHandles(List<byte[]> handles) {
     return context
         .selectDistinct(HANDLES.HANDLE)
@@ -107,11 +103,20 @@ public class HandleRepository {
 
   // Handle Batch Creation
   public List<HandleRecordResponse> createHandleRecordBatch(List<byte[]> handles,
-      Instant recordTimestamp, List<HandleAttribute> handleAttributes)
-      throws PidCreationException {
+      Instant recordTimestamp, List<HandleAttribute> handleAttributes) throws PidCreationException{
     postBatchRecord(recordTimestamp, handleAttributes);
-    // Todo catch pidCreationException, rollback any handles created
-    return mapPostedRecordToHandleRecordResponse(handles);
+    try {
+      return mapPostedRecordToHandleRecordResponse(handles);
+    } catch (PidCreationException e) {
+      rollbackHandleCreation(handles);
+      throw new PidCreationException(e.getMessage());
+    }
+  }
+
+  private void rollbackHandleCreation(List<byte[]> handles){
+    context.delete(HANDLES)
+        .where(HANDLES.HANDLE.in(handles))
+        .execute();
   }
 
   private List<HandleRecordResponse> mapPostedRecordToHandleRecordResponse(List<byte[]> handles)
@@ -158,7 +163,7 @@ public class HandleRepository {
 
     String type;
     String data;
-    for (Record3 r : records) {
+    for (Record3<byte[], byte[], byte[]> r : records) {
       type = new String((byte[]) r.getValue(1));
       data = new String((byte[]) r.getValue(2));
 
@@ -224,7 +229,7 @@ public class HandleRepository {
 
     String type;
     String data;
-    for (Record3 r : records) {
+    for (Record3<byte[], byte[], byte[]> r : records) {
       type = new String((byte[]) r.getValue(1));
       data = new String((byte[]) r.getValue(2));
 
@@ -291,7 +296,7 @@ public class HandleRepository {
 
     String type;
     String data;
-    for (Record3 r : records) {
+    for (Record3<byte[], byte[], byte[]> r : records) {
       type = new String((byte[]) r.getValue(1));
       data = new String((byte[]) r.getValue(2));
 
@@ -359,7 +364,7 @@ public class HandleRepository {
 
     String type;
     String data;
-    for (Record3 r : records) {
+    for (Record3<byte[], byte[], byte[]> r : records) {
       type = new String((byte[]) r.getValue(1));
       data = new String((byte[]) r.getValue(2));
 

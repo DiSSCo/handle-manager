@@ -30,5 +30,4 @@ public class Resources {
     return Character.digit(hexChar, 16);
   }
 
-
 }

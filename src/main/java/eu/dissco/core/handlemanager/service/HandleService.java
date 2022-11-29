@@ -263,18 +263,6 @@ public class HandleService {
     Instant instant = Instant.now();
     return dt.format(instant);
   }
-
-  private List<String> getStrList(List<byte[]> byteList) {
-    int l = byteList.size();
-    List<String> strList = new ArrayList<>(l);
-    String s;
-    for (byte[] b : byteList) {
-      s = byteToString(b);
-      strList.add(s);
-    }
-    return strList;
-  }
-
   public byte[] setLocations(String[] objectLocations)
       throws TransformerException, ParserConfigurationException {
 
@@ -302,9 +290,6 @@ public class HandleService {
     return writer.getBuffer().toString();
   }
 
-  private String byteToString(byte[] b) {
-    return new String(b, StandardCharsets.UTF_8);
-  }
 
 }
 

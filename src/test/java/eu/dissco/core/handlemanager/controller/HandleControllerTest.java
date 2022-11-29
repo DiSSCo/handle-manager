@@ -46,7 +46,7 @@ class HandleControllerTest {
 
   // Jooq Creation
   @Test
-  void testHandleRecordCreationJooq()
+  void testHandleRecordCreation()
       throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
     // Given
     HandleRecordRequest request = TestUtils.generateTestHandleRequest();
@@ -110,6 +110,71 @@ class HandleControllerTest {
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
+
+  @Test
+  void testHandleRecordCreationBatch()
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
+    // Given
+    List<HandleRecordRequest> request = buildHandleRequestList();
+    List<HandleRecordResponse> responseExpected = buildHandleResponseList();
+    given(service.createHandleRecordBatch(request)).willReturn(responseExpected);
+
+    // When
+    ResponseEntity<List<HandleRecordResponse>> responseReceived = controller.createHandleRecordBatch(request);
+
+    // Then
+    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testDoiRecordCreationBatch()
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
+    // Given
+    List<DoiRecordRequest> request = buildDoiRequestList();
+    List<DoiRecordResponse> responseExpected = buildDoiResponseList();
+    given(service.createDoiRecordBatch(request)).willReturn(responseExpected);
+
+    // When
+    ResponseEntity<List<DoiRecordResponse>> responseReceived = controller.createDoiRecordBatch(request);
+
+    // Then
+    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testDigitalSpecimenCreationBatch()
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
+    // Given
+    List<DigitalSpecimenRequest> request = buildDigitalSpecimenRequestList();
+    List<DigitalSpecimenResponse> responseExpected = buildDigitalSpecimenResponseList();
+    given(service.createDigitalSpecimenBatch(request)).willReturn(responseExpected);
+
+    // When
+    ResponseEntity<List<DigitalSpecimenResponse>> responseReceived = controller.createDigitalSpecimenBatch(request);
+
+    // Then
+    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testDigitalSpecimenBotanyCreationBatch()
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
+    // Given
+    List<DigitalSpecimenBotanyRequest> request = buildDigitalSpecimenBotanyRequestList();
+    List<DigitalSpecimenBotanyResponse> responseExpected = buildDigitalSpecimenBotanyResponseList();
+    given(service.createDigitalSpecimenBotanyBatch(request)).willReturn(responseExpected);
+
+    // When
+    ResponseEntity<List<DigitalSpecimenBotanyResponse>> responseReceived = controller.createDigitalSpecimenBotanyBatch(request);
+
+    // Then
+    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
 
   @Test
   void testHello() {
