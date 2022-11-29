@@ -49,10 +49,5 @@ public class DoiRecordResponse extends HandleRecordResponse {
     }
   }
 
-  /*
-  private void setDoiAttribute(String type, String data)
-      throws NoSuchFieldException, IllegalAccessException {
-    this.getClass().getDeclaredField(type).set(this, data);
-  }*/
 
 }
