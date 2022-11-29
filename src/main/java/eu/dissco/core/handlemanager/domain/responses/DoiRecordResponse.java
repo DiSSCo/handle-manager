@@ -2,13 +2,15 @@ package eu.dissco.core.handlemanager.domain.responses;
 
 import eu.dissco.core.handlemanager.repositoryobjects.Handles;
 import java.util.List;
-import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-@Data
+@Getter
+@NoArgsConstructor
 public class DoiRecordResponse extends HandleRecordResponse {
 
-  String referentDoiName;
-  String referent;
+  private String referentDoiName;
+  private String referent;
 
   public DoiRecordResponse(List<Handles> entries) {
     super(entries);

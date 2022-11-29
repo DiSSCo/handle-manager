@@ -96,10 +96,10 @@ public class HandleService {
       throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
     List<byte[]> handles = hf.genHandleList(requests.size());
     long timestamp = Instant.now().getEpochSecond();
-    List<Handles> doiRecord;
     List<Handles> doiRecordsAll = new ArrayList<>();
     List<DoiRecordResponse> response = new ArrayList<>();
     for (int i = 0; i < requests.size(); i++) {
+      List<Handles> doiRecord;
 
       // Prepare record as list of Handles
       doiRecord = prepareDoiRecord(requests.get(i), handles.get(i), timestamp);
@@ -110,9 +110,6 @@ public class HandleService {
 
       // Add new doiRecordResponse to our response list
       response.add(new DoiRecordResponse(doiRecord));
-
-      // Clear our list
-      doiRecord.clear();
     }
 
     // Save all records
@@ -126,10 +123,10 @@ public class HandleService {
     List<byte[]> handles = hf.genHandleList(requests.size());
 
     long timestamp = Instant.now().getEpochSecond();
-    List<Handles> digitalSpecimenRecord;
     List<Handles> digitalSpecimenRecordsAll = new ArrayList<>();
     List<DigitalSpecimenResponse> response = new ArrayList<>();
     for (int i = 0; i < requests.size(); i++) {
+      List<Handles> digitalSpecimenRecord;
 
       // Prepare record as list of Handles
       digitalSpecimenRecord = prepareDigitalSpecimenRecord(requests.get(i), handles.get(i),
@@ -141,9 +138,6 @@ public class HandleService {
 
       // Add new DigitalSpecimenResponse to our response list
       response.add(new DigitalSpecimenResponse(digitalSpecimenRecord));
-
-      // Clear our list
-      digitalSpecimenRecord.clear();
     }
     // Save all records
     handleRep.saveAll(digitalSpecimenRecordsAll);
@@ -155,10 +149,11 @@ public class HandleService {
       throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
     List<byte[]> handles = hf.genHandleList(requests.size());
     long timestamp = Instant.now().getEpochSecond();
-    List<Handles> digitalSpecimenBotanyRecord;
+
     List<Handles> digitalSpecimenRecordsAll = new ArrayList<>();
     List<DigitalSpecimenBotanyResponse> response = new ArrayList<>();
     for (int i = 0; i < requests.size(); i++) {
+      List<Handles> digitalSpecimenBotanyRecord;
 
       // Prepare record as list of Handles
       digitalSpecimenBotanyRecord = prepareDigitalSpecimenBotanyRecord(requests.get(i),
@@ -185,8 +180,7 @@ public class HandleService {
     byte[] handle = hf.genHandleList(1).get(0);
 
     long timestamp = Instant.now().getEpochSecond();
-    List<Handles> handleRecord;
-    handleRecord = prepareHandleRecord(request, handle, timestamp);
+    List<Handles> handleRecord = prepareHandleRecord(request, handle, timestamp);
     List<Handles> posted = handleRep.saveAll(handleRecord);
     return new HandleRecordResponse(posted);
   }
@@ -195,8 +189,7 @@ public class HandleService {
       throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
     byte[] handle = hf.genHandleList(1).get(0);
     long timestamp = Instant.now().getEpochSecond();
-    List<Handles> handleRecord;
-    handleRecord = prepareDoiRecord(request, handle, timestamp);
+    List<Handles> handleRecord = prepareDoiRecord(request, handle, timestamp);
     List<Handles> posted = handleRep.saveAll(handleRecord);
     return new DoiRecordResponse(posted);
   }
@@ -205,8 +198,7 @@ public class HandleService {
       throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
     byte[] handle = hf.genHandleList(1).get(0);
     long timestamp = Instant.now().getEpochSecond();
-    List<Handles> handleRecord;
-    handleRecord = prepareDigitalSpecimenRecord(request, handle, timestamp);
+    List<Handles> handleRecord = prepareDigitalSpecimenRecord(request, handle, timestamp);
     List<Handles> posted = handleRep.saveAll(handleRecord);
     return new DigitalSpecimenResponse(posted);
   }
@@ -216,8 +208,7 @@ public class HandleService {
       throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
     byte[] handle = hf.genHandleList(1).get(0);
     long timestamp = Instant.now().getEpochSecond();
-    List<Handles> handleRecord;
-    handleRecord = prepareDigitalSpecimenBotanyRecord(request, handle, timestamp);
+    List<Handles> handleRecord = prepareDigitalSpecimenBotanyRecord(request, handle, timestamp);
     List<Handles> posted = handleRep.saveAll(handleRecord);
     return new DigitalSpecimenBotanyResponse(posted);
   }

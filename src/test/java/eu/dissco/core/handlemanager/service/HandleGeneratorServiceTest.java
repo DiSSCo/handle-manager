@@ -10,9 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -26,8 +26,12 @@ class HandleGeneratorServiceTest {
   @Mock
   private Random random;
 
-  @InjectMocks
   private HandleGeneratorService hgService;
+
+  @BeforeEach
+  void setup() {
+    this.hgService = new HandleGeneratorService(handleRep, random);
+  }
 
   @Test
   void testNewHandle() {

@@ -3,7 +3,6 @@ package eu.dissco.core.handlemanager.controller;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.BDDMockito.given;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
@@ -12,14 +11,10 @@ import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenBotanyRespon
 import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenResponse;
 import eu.dissco.core.handlemanager.domain.responses.DoiRecordResponse;
 import eu.dissco.core.handlemanager.domain.responses.HandleRecordResponse;
-import eu.dissco.core.handlemanager.exceptions.PidCreationException;
-import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.service.HandleService;
 import eu.dissco.core.handlemanager.testUtils.TestUtils;
 import java.util.ArrayList;
 import java.util.List;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,7 +41,7 @@ class HandleControllerTest {
 
   @Test
   void testHandleRecordCreation()
-      throws PidCreationException, PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
+      throws Exception {
     // Given
     HandleRecordRequest request = TestUtils.generateTestHandleRequest();
     HandleRecordResponse responseExpected = TestUtils.generateTestHandleResponse(handle);
@@ -60,7 +55,7 @@ class HandleControllerTest {
 
   @Test
   void testDoiRecordCreation()
-      throws PidCreationException, PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
+      throws Exception {
     // Given
     DoiRecordRequest request = TestUtils.generateTestDoiRequest();
     DoiRecordResponse responseExpected = TestUtils.generateTestDoiResponse(handle);
@@ -74,7 +69,7 @@ class HandleControllerTest {
 
   @Test
   void testDigitalSpeciemenCreation()
-      throws PidCreationException, PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
+      throws Exception {
     // Given
     DigitalSpecimenRequest request = TestUtils.generateTestDigitalSpecimenRequest();
     DigitalSpecimenResponse responseExpected = TestUtils.generateTestDigitalSpecimenResponse(
@@ -89,7 +84,7 @@ class HandleControllerTest {
 
   @Test
   void testDigitalSpeciemenBotanyCreation()
-      throws PidCreationException, PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
+      throws Exception {
     // Given
     DigitalSpecimenBotanyRequest request = TestUtils.generateTestDigitalSpecimenBotanyRequest();
     DigitalSpecimenBotanyResponse responseExpected = TestUtils.generateTestDigitalSpecimenBotanyResponse(

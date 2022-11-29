@@ -3,9 +3,7 @@ package eu.dissco.core.handlemanager.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
 import eu.dissco.core.handlemanager.repositoryobjects.Handles;
 import eu.dissco.core.handlemanager.testUtils.TestUtils;
@@ -49,7 +47,7 @@ class PidTypeServiceTest {
   }
 
   @Test
-  void testPidTypeRecordResolutionHandle() throws PidResolutionException, JsonProcessingException {
+  void testPidTypeRecordResolutionHandle() throws Exception {
     // Given
     initTestPidTypeRecordHandle();
     String expected = TestUtils.PTR_HANDLE_RECORD;
@@ -64,7 +62,7 @@ class PidTypeServiceTest {
   }
 
   @Test
-  void testPidTypeRecordResolutionDoi() throws PidResolutionException, JsonProcessingException {
+  void testPidTypeRecordResolutionDoi() throws Exception {
     //Given
     initTestPidTypeRecordDoi();
     String expected = TestUtils.PTR_DOI_RECORD;

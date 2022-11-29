@@ -76,6 +76,7 @@ public class PidTypeService {
         return h.getData();
       }
     }
+    log.warn("Type \"{}\" has not been found", type);
     return ""; // This should maybe return a warning?
   }
 

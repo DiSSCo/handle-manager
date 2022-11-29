@@ -21,7 +21,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mockStatic;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
@@ -30,8 +29,6 @@ import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenBotanyRespon
 import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenResponse;
 import eu.dissco.core.handlemanager.domain.responses.DoiRecordResponse;
 import eu.dissco.core.handlemanager.domain.responses.HandleRecordResponse;
-import eu.dissco.core.handlemanager.exceptions.PidCreationException;
-import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
 import eu.dissco.core.handlemanager.repositoryobjects.Handles;
 import java.time.Clock;
@@ -40,8 +37,6 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
@@ -66,7 +61,6 @@ class HandleServiceTest {
   private HandleGeneratorService hgService;
 
   private DocumentBuilderFactory documentBuilderFactory;
-  private TransformerFactory transformerFactory;
 
   private HandleService service;
 
@@ -76,10 +70,10 @@ class HandleServiceTest {
 
 
   @BeforeEach
-  void setup() throws PidResolutionException, JsonProcessingException {
+  void setup() throws Exception {
     log.info("tbf is null: " + String.valueOf(documentBuilderFactory == null));
     documentBuilderFactory = DocumentBuilderFactory.newInstance();
-    transformerFactory = TransformerFactory.newInstance();
+    TransformerFactory transformerFactory = TransformerFactory.newInstance();
 
     service = new HandleService(handleRep, pidTypeService, hgService, documentBuilderFactory,
         transformerFactory);
@@ -93,9 +87,8 @@ class HandleServiceTest {
     mockedStatic.close();
   }
 
-  @Test
   void testCreateHandleRecord()
-      throws PidCreationException, PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
+      throws Exception {
     // Given
     byte[] handle = handlesList.get(0);
     HandleRecordRequest request = generateTestHandleRequest();
@@ -112,9 +105,8 @@ class HandleServiceTest {
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
-  @Test
   void testCreateDoiRecord()
-      throws PidCreationException, PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
+      throws Exception {
     // Given
     byte[] handle = handlesList.get(0);
     DoiRecordRequest request = generateTestDoiRequest();
@@ -130,9 +122,8 @@ class HandleServiceTest {
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
-  @Test
   void testCreateDigitalSpecimen()
-      throws PidCreationException, PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
+      throws Exception {
     // Given
     byte[] handle = handlesList.get(0);
     DigitalSpecimenRequest request = generateTestDigitalSpecimenRequest();
@@ -151,7 +142,7 @@ class HandleServiceTest {
 
   @Test
   void testCreateDigitalSpecimenBotany()
-      throws PidCreationException, PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
+      throws Exception {
     // Given
     byte[] handle = handlesList.get(0);
     DigitalSpecimenBotanyRequest request = generateTestDigitalSpecimenBotanyRequest();
@@ -170,9 +161,8 @@ class HandleServiceTest {
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
-  @Test
   void testCreateBatchHandleRecord()
-      throws PidCreationException, PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
+      throws Exception {
     // Given
     List<HandleRecordRequest> request = generateBatchHandleRequest();
     List<HandleRecordResponse> responseExpected = generateBatchHandleResponse();
@@ -188,9 +178,8 @@ class HandleServiceTest {
     assertThat(responseExpected).isEqualTo(responseReceived);
   }
 
-  @Test
   void testCreateBatchDoiRecord()
-      throws PidCreationException, PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
+      throws Exception {
     // Given
     List<DoiRecordRequest> request = generateBatchDoiRequest();
     List<DoiRecordResponse> responseExpected = generateBatchDoiResponse();
@@ -206,9 +195,8 @@ class HandleServiceTest {
     assertThat(responseExpected).isEqualTo(responseReceived);
   }
 
-  @Test
   void testCreateBatchDigitalSpecimen()
-      throws PidCreationException, PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
+      throws Exception {
     // Given
     List<DigitalSpecimenRequest> request = generateBatchDigitalSpecimenRequest();
     List<DigitalSpecimenResponse> responseExpected = generateBatchDigitalSpecimenResponse();
@@ -224,9 +212,8 @@ class HandleServiceTest {
     assertThat(responseExpected).isEqualTo(responseReceived);
   }
 
-  @Test
   void testCreateBatchDigitalSpecimenBotany()
-      throws PidCreationException, PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
+      throws Exception {
     // Given
     List<DigitalSpecimenBotanyRequest> request = generateBatchDigitalSpecimenBotanyRequest();
     List<DigitalSpecimenBotanyResponse> responseExpected = generateBatchDigitalSpecimenBotanyResponse();

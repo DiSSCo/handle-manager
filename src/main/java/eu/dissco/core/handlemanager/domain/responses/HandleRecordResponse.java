@@ -2,10 +2,12 @@ package eu.dissco.core.handlemanager.domain.responses;
 
 import eu.dissco.core.handlemanager.repositoryobjects.Handles;
 import java.util.List;
-import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-@Data
+@Getter
+@NoArgsConstructor
 @Slf4j
 public class HandleRecordResponse {
 
