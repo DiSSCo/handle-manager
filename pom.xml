@@ -15,10 +15,23 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <sonar.coverage.jacoco.xmlReportPaths>../app-it/target/site/jacoco-aggregate/jacoco.xml
     </sonar.coverage.jacoco.xmlReportPaths>
+    <testcontainers.version>1.17.5</testcontainers.version>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     <sonar.organization>dissco</sonar.organization>
     <db.properties>.properties</db.properties>
   </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>testcontainers-bom</artifactId>
+        <version>${testcontainers.version}</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
     <!-- Spring Boot Dependencies -->
@@ -98,6 +111,26 @@
       <groupId>org.jacoco</groupId>
       <version>0.8.8</version>
     </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
   <description>API for adding handle records</description>
   <groupId>eu.dissco.core</groupId>
@@ -154,7 +187,7 @@
           </execution>
         </executions>
         <configuration>
-          <configurationFile>src/main/resources/jooq-configuration.xml</configurationFile>
+          <configurationFile>src/main/testUtils/jooq-configuration.xml</configurationFile>
         </configuration>
         <dependencies>
           <dependency>
