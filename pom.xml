@@ -183,13 +183,6 @@
         <groupId>org.jooq</groupId>
         <artifactId>jooq-codegen-maven</artifactId>
         <version>${jooq.version}</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>generate</goal>
-            </goals>
-          </execution>
-        </executions>
         <configuration>
           <configurationFile>src/main/resources/jooq-configuration.xml</configurationFile>
         </configuration>
