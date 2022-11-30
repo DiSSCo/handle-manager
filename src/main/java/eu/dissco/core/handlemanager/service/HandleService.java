@@ -100,7 +100,7 @@ public class HandleService {
       handleAttributes.addAll(
           prepareDigitalSpecimenBotanyRecordAttributes(requests.get(i), handles.get(i)));
     }
-<
+
     var recordTimestamp = Instant.now();
     return handleRep.createDigitalSpecimenBotanyBatch(handles, recordTimestamp, handleAttributes);
 

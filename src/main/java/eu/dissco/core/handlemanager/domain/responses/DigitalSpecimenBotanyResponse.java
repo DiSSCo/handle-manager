@@ -1,9 +1,11 @@
 package eu.dissco.core.handlemanager.domain.responses;
 
+import java.util.Objects;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Data
+@Getter
 @NoArgsConstructor
 public class DigitalSpecimenBotanyResponse extends DigitalSpecimenResponse {
 
@@ -50,5 +52,26 @@ public class DigitalSpecimenBotanyResponse extends DigitalSpecimenResponse {
     } else {
       super.setAttribute(type, data);
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    if (!super.equals(o)) {
+      return false;
+    }
+    DigitalSpecimenBotanyResponse that = (DigitalSpecimenBotanyResponse) o;
+    return getObjectType().equals(that.getObjectType()) && getPreservedOrLiving().equals(
+        that.getPreservedOrLiving());
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), getObjectType(), getPreservedOrLiving());
   }
 }

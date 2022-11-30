@@ -74,7 +74,7 @@ class HandleServiceTest {
 
   void setup() throws Exception {
 
-    documentBuilderFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
     TransformerFactory transformerFactory = TransformerFactory.newInstance();
 
     service = new HandleService(handleRep, pidTypeService, hgService,

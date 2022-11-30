@@ -1,4 +1,5 @@
 package eu.dissco.core.handlemanager.domain.responses;
+import java.util.Objects;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 @Getter
@@ -7,6 +8,27 @@ public class DoiRecordResponse extends HandleRecordResponse {
 
   private String referentDoiName;
   private String referent;
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    if (!super.equals(o)) {
+      return false;
+    }
+    DoiRecordResponse response = (DoiRecordResponse) o;
+    return getReferentDoiName().equals(response.getReferentDoiName()) && getReferent().equals(
+        response.getReferent());
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), getReferentDoiName(), getReferent());
+  }
 
   public DoiRecordResponse(
       // Handle
