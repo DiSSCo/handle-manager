@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - UpdatingDataModel_jooq
   pull_request:
     types: [ opened, synchronize, reopened ]
 jobs:
