@@ -3,9 +3,9 @@ package eu.dissco.core.handlemanager.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import eu.dissco.core.handlemanager.domain.pidrecords.HandleAttribute;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
-import eu.dissco.core.handlemanager.repositoryobjects.Handles;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +28,7 @@ public class PidTypeService {
       throw new PidResolutionException("Missing PID in request body.");
     }
 
-    List<Handles> typeRecord = handleRep.resolveHandle(typePid.getBytes());
+    List<HandleAttribute> typeRecord = handleRep.resolveHandle(typePid.getBytes());
 
     if (typeRecord.isEmpty()) {
       throw new PidResolutionException("Unable to resolve type PID");
@@ -70,10 +70,10 @@ public class PidTypeService {
     return mapper.writeValueAsString(objectNode);
   }
 
-  private String getDataFromType(String type, List<Handles> hList) {
-    for (Handles h : hList) {
-      if (h.getType().equals(type)) {
-        return h.getData();
+  private String getDataFromType(String type, List<HandleAttribute> hList) {
+    for (HandleAttribute h : hList) {
+      if (h.type().equals(type)) {
+        return new String(h.data());
       }
     }
     log.warn("Type \"{}\" has not been found", type);

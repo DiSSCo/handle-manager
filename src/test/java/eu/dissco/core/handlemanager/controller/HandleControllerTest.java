@@ -39,6 +39,7 @@ class HandleControllerTest {
     handle = TestUtils.HANDLE.getBytes();
   }
 
+  // Jooq Creation
   @Test
   void testHandleRecordCreation()
       throws Exception {
@@ -46,8 +47,10 @@ class HandleControllerTest {
     HandleRecordRequest request = TestUtils.generateTestHandleRequest();
     HandleRecordResponse responseExpected = TestUtils.generateTestHandleResponse(handle);
     given(service.createHandleRecord(request)).willReturn(responseExpected);
+
     // When
-    ResponseEntity<HandleRecordResponse> responseReceived = controller.createRecord(request);
+    ResponseEntity<HandleRecordResponse> responseReceived = controller.createHandleRecord(request);
+
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
@@ -60,8 +63,10 @@ class HandleControllerTest {
     DoiRecordRequest request = TestUtils.generateTestDoiRequest();
     DoiRecordResponse responseExpected = TestUtils.generateTestDoiResponse(handle);
     given(service.createDoiRecord(request)).willReturn(responseExpected);
+
     // When
-    ResponseEntity<HandleRecordResponse> responseReceived = controller.createRecord(request);
+    ResponseEntity<DoiRecordResponse> responseReceived = controller.createDoiRecord(request);
+
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
@@ -74,9 +79,11 @@ class HandleControllerTest {
     DigitalSpecimenRequest request = TestUtils.generateTestDigitalSpecimenRequest();
     DigitalSpecimenResponse responseExpected = TestUtils.generateTestDigitalSpecimenResponse(
         handle);
-    given(service.createDigitalSpecimenRecord(request)).willReturn(responseExpected);
+    given(service.createDigitalSpecimen(request)).willReturn(responseExpected);
+
     // When
-    ResponseEntity<HandleRecordResponse> responseReceived = controller.createRecord(request);
+    ResponseEntity<DigitalSpecimenResponse> responseReceived = controller.createDigitalSpecimen(request);
+
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
@@ -89,81 +96,80 @@ class HandleControllerTest {
     DigitalSpecimenBotanyRequest request = TestUtils.generateTestDigitalSpecimenBotanyRequest();
     DigitalSpecimenBotanyResponse responseExpected = TestUtils.generateTestDigitalSpecimenBotanyResponse(
         handle);
-    given(service.createDigitalSpecimenBotanyRecord(request)).willReturn(responseExpected);
+    given(service.createDigitalSpecimenBotany(request)).willReturn(responseExpected);
+
     // When
-    ResponseEntity<HandleRecordResponse> responseReceived = controller.createRecord(request);
+    ResponseEntity<DigitalSpecimenBotanyResponse> responseReceived = controller.createDigitalSpecimenBotany(request);
+
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
 
   @Test
-  void testHandleRecordBatchCreation() throws Exception {
+  void testHandleRecordCreationBatch()
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
     // Given
-    List<HandleRecordRequest> requestList = buildHandleRequestList();
-    List<HandleRecordResponse> responseList = buildHandleResponseList();
-
-    given(service.createHandleRecordBatch(requestList)).willReturn(responseList);
+    List<HandleRecordRequest> request = buildHandleRequestList();
+    List<HandleRecordResponse> responseExpected = buildHandleResponseList();
+    given(service.createHandleRecordBatch(request)).willReturn(responseExpected);
 
     // When
-    ResponseEntity<List<HandleRecordResponse>> responseReceived = controller.createHandleRecordBatch(
-        requestList);
+    ResponseEntity<List<HandleRecordResponse>> responseReceived = controller.createHandleRecordBatch(request);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-    assertThat(responseReceived.getBody()).isEqualTo(responseList);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
 
   @Test
-  void testDoiRecordBatchCreation() throws Exception {
+  void testDoiRecordCreationBatch()
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
     // Given
-    List<DoiRecordRequest> requestList = buildDoiRequestList();
-    List<DoiRecordResponse> responseList = buildDoiResponseList();
-
-    given(service.createDoiRecordBatch(requestList)).willReturn(responseList);
+    List<DoiRecordRequest> request = buildDoiRequestList();
+    List<DoiRecordResponse> responseExpected = buildDoiResponseList();
+    given(service.createDoiRecordBatch(request)).willReturn(responseExpected);
 
     // When
-    ResponseEntity<List<DoiRecordResponse>> responseReceived = controller.createDoiRecordBatch(
-        requestList);
+    ResponseEntity<List<DoiRecordResponse>> responseReceived = controller.createDoiRecordBatch(request);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-    assertThat(responseReceived.getBody()).isEqualTo(responseList);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
 
   @Test
-  void testDigitalSpecimenBatchCreation() throws Exception {
+  void testDigitalSpecimenCreationBatch()
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
     // Given
-    List<DigitalSpecimenRequest> requestList = buildDigitalSpecimenRequestList();
-    List<DigitalSpecimenResponse> responseList = buildDigitalSpecimenResponseList();
-
-    given(service.createDigitalSpecimenBatch(requestList)).willReturn(responseList);
+    List<DigitalSpecimenRequest> request = buildDigitalSpecimenRequestList();
+    List<DigitalSpecimenResponse> responseExpected = buildDigitalSpecimenResponseList();
+    given(service.createDigitalSpecimenBatch(request)).willReturn(responseExpected);
 
     // When
-    ResponseEntity<List<DigitalSpecimenResponse>> responseReceived = controller.createDigitalSpecimenBatch(
-        requestList);
+    ResponseEntity<List<DigitalSpecimenResponse>> responseReceived = controller.createDigitalSpecimenBatch(request);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-    assertThat(responseReceived.getBody()).isEqualTo(responseList);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
 
   @Test
-  void testDigitalSpecimenBotanyBatchCreation() throws Exception {
+  void testDigitalSpecimenBotanyCreationBatch()
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
     // Given
-    List<DigitalSpecimenBotanyRequest> requestList = buildDigitalSpecimenBotanyRequestList();
-    List<DigitalSpecimenBotanyResponse> responseList = buildDigitalSpecimenBotanyResponseList();
-
-    given(service.createDigitalSpecimenBotanyBatch(requestList)).willReturn(responseList);
+    List<DigitalSpecimenBotanyRequest> request = buildDigitalSpecimenBotanyRequestList();
+    List<DigitalSpecimenBotanyResponse> responseExpected = buildDigitalSpecimenBotanyResponseList();
+    given(service.createDigitalSpecimenBotanyBatch(request)).willReturn(responseExpected);
 
     // When
-    ResponseEntity<List<DigitalSpecimenBotanyResponse>> responseReceived = controller.createDigitalSpecimenBotanyBatch(
-        requestList);
+    ResponseEntity<List<DigitalSpecimenBotanyResponse>> responseReceived = controller.createDigitalSpecimenBotanyBatch(request);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-    assertThat(responseReceived.getBody()).isEqualTo(responseList);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
+
 
   @Test
   void testHello() {

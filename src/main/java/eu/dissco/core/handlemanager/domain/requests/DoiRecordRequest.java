@@ -10,7 +10,7 @@ import lombok.ToString;
 public class DoiRecordRequest extends HandleRecordRequest {
 
   private static final String REFERENT_PLACEHOLDER = "";
-  private final String referentDoiName;
+  private final String referentDoiNamePid;
   private final String referent;
 
   public DoiRecordRequest(
@@ -20,9 +20,9 @@ public class DoiRecordRequest extends HandleRecordRequest {
       String digitalObjectSubtypePid,
       String[] locations,
       // Doi
-      String referentDoiName) {
+      String referentDoiNamePid) {
     super(pidIssuerPid, digitalObjectTypePid, digitalObjectSubtypePid, locations);
-    this.referentDoiName = referentDoiName;
+    this.referentDoiNamePid = referentDoiNamePid;
     this.referent = REFERENT_PLACEHOLDER;
   }
 
@@ -40,12 +40,12 @@ public class DoiRecordRequest extends HandleRecordRequest {
       return false;
     }
     DoiRecordRequest that = (DoiRecordRequest) o;
-    return Objects.equals(getReferentDoiName(), that.getReferentDoiName()) && Objects.equals(
+    return Objects.equals(getReferentDoiNamePid(), that.getReferentDoiNamePid()) && Objects.equals(
         getReferent(), that.getReferent());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), getReferentDoiName(), getReferent());
+    return Objects.hash(super.hashCode(), getReferentDoiNamePid(), getReferent());
   }
 }
