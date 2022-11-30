@@ -13,7 +13,6 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.BDDMockito.given;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
@@ -22,13 +21,9 @@ import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenBotanyRespon
 import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenResponse;
 import eu.dissco.core.handlemanager.domain.responses.DoiRecordResponse;
 import eu.dissco.core.handlemanager.domain.responses.HandleRecordResponse;
-import eu.dissco.core.handlemanager.exceptions.PidCreationException;
-import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.service.HandleService;
 import java.util.ArrayList;
 import java.util.List;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -87,7 +82,7 @@ class HandleControllerTest {
 
   @Test
   void testHandleRecordCreation()
-      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
+      throws Exception {
     // Given
     HandleRecordRequest request = generateTestHandleRequest();
     HandleRecordResponse responseExpected = generateTestHandleResponse(handle);

@@ -8,9 +8,9 @@ import lombok.ToString;
 @ToString
 public class DigitalSpecimenRequest extends DoiRecordRequest {
 
-  protected final String digitalOrPhysical;
-  protected final String specimenHostPid;
-  protected final String inCollectionFacilityPid;
+  private final String digitalOrPhysical;
+  private final String specimenHostPid;
+  private final String inCollectionFacilityPid;
 
   public DigitalSpecimenRequest(
       // Handle

@@ -1,14 +1,12 @@
 package eu.dissco.core.handlemanager.domain.responses;
-
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-@Data
+@Getter
 @NoArgsConstructor
 public class DoiRecordResponse extends HandleRecordResponse {
 
-  String referentDoiName;
-  String referent;
+  private String referentDoiName;
+  private String referent;
 
   public DoiRecordResponse(
       // Handle

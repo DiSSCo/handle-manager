@@ -1,9 +1,10 @@
 package eu.dissco.core.handlemanager.domain.responses;
 
-import lombok.Data;
+import lombok.Getter;
+
 import lombok.NoArgsConstructor;
 
-@Data
+@Getter
 @NoArgsConstructor
 public class HandleRecordResponse {
 

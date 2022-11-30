@@ -8,8 +8,8 @@ import lombok.ToString;
 @ToString
 public class DigitalSpecimenBotanyRequest extends DigitalSpecimenRequest {
 
-  protected final String objectType;
-  protected final String preservedOrLiving;
+  private final String objectType;
+  private final String preservedOrLiving;
 
   public DigitalSpecimenBotanyRequest(
       // Handle
