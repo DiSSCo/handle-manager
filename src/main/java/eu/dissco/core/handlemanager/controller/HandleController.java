@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.keycloak.KeycloakPrincipal;
 import org.keycloak.KeycloakSecurityContext;
 import org.keycloak.representations.AccessToken;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -36,12 +37,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 
 @RestController
-//Controller, return value of methods will be returned as the response body for an API; handleService is injected as dependency using Autowired
 @RequestMapping("/api")
-// Defines base URL for all REST APIs; followed by REST endpoints given to each controller methods
 @RequiredArgsConstructor
 @ControllerAdvice
 @Slf4j
+// @Profile(Profiles.WEB) Is there a digitalspecimenprofile Profile class?
 public class HandleController {
   private final HandleService service;
   // ** Create Records: handle, doi, digital specimen, botany specimen **

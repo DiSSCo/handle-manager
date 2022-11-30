@@ -52,7 +52,6 @@ public class HandleRepository {
         .getValues(HANDLES.HANDLE, byte[].class);
   }
 
-
   // Resolve Pid
   public List<HandleAttribute> resolveHandle(byte[] handle) {
     List<Record4<Integer, byte[], byte[], byte[]>> dbRecord = context
@@ -99,11 +98,15 @@ public class HandleRepository {
         .fetch()
         .getValues(HANDLES.HANDLE, String.class);
   }
-
+  private void rollbackHandleCreation(List<byte[]> handles) {
+    context.delete(HANDLES)
+        .where(HANDLES.HANDLE.in(handles))
+        .execute();
+  }
 
   // Handle Batch Creation
   public List<HandleRecordResponse> createHandleRecordBatch(List<byte[]> handles,
-      Instant recordTimestamp, List<HandleAttribute> handleAttributes) throws PidCreationException{
+      Instant recordTimestamp, List<HandleAttribute> handleAttributes) throws PidCreationException {
     postBatchRecord(recordTimestamp, handleAttributes);
     try {
       return mapPostedRecordToHandleRecordResponse(handles);
@@ -113,11 +116,6 @@ public class HandleRepository {
     }
   }
 
-  private void rollbackHandleCreation(List<byte[]> handles){
-    context.delete(HANDLES)
-        .where(HANDLES.HANDLE.in(handles))
-        .execute();
-  }
 
   private List<HandleRecordResponse> mapPostedRecordToHandleRecordResponse(List<byte[]> handles)
       throws PidCreationException {
