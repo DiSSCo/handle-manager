@@ -17,8 +17,12 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.keycloak.KeycloakPrincipal;
+import org.keycloak.KeycloakSecurityContext;
+import org.keycloak.representations.AccessToken;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,6 +31,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import org.springframework.security.access.prepost.PreAuthorize;
 
 
 @RestController
@@ -38,6 +44,20 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class HandleController {
   private final HandleService service;
+  // ** Create Records: handle, doi, digital specimen, botany specimen **
+
+  // Authenticated creation
+  @PreAuthorize("isAuthenticated()")
+  @PostMapping(value = "/createRecordBatchAuth", params = "pidType=handle")
+  public ResponseEntity<List<HandleRecordResponse>> createHandleRecordBatchAuth(
+      Authentication authentication,
+      @RequestBody List<HandleRecordRequest> hdl)
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
+    var tokenId = getNameFromToken(authentication);
+    return ResponseEntity.status(HttpStatus.CREATED).body(service.createHandleRecordBatch(hdl));
+  }
+
+  // Batch creation
   @PostMapping(value = "/createRecordBatch", params = "pidType=handle")
   public ResponseEntity<List<HandleRecordResponse>> createHandleRecordBatch(
       @RequestBody List<HandleRecordRequest> request)
@@ -128,6 +148,16 @@ public class HandleController {
     }
     return ResponseEntity.ok(handleList);
   }
+
+  // Authentication
+  private String getNameFromToken(Authentication authentication) {
+    KeycloakPrincipal<? extends KeycloakSecurityContext> principal =
+        (KeycloakPrincipal<?>) authentication.getPrincipal();
+    AccessToken token = principal.getKeycloakSecurityContext().getToken();
+    return token.getSubject();
+  }
+
+  //Error Handling
 
   @ExceptionHandler(PidCreationException.class)
   private ResponseEntity<String> pidCreationException(PidCreationException e) {
