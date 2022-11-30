@@ -3,7 +3,7 @@ package eu.dissco.core.handlemanager.domain.pidrecords;
 import java.util.Arrays;
 import java.util.Objects;
 
-public record HandleAttribute(int index,byte[] handle, String type, byte[] data) {
+public record HandleAttribute(int index, byte[] handle, String type, byte[] data) {
 
   @Override
   public boolean equals(Object o) {

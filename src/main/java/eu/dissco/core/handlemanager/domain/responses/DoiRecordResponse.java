@@ -2,10 +2,8 @@ package eu.dissco.core.handlemanager.domain.responses;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Data
-@Slf4j
 @NoArgsConstructor
 public class DoiRecordResponse extends HandleRecordResponse {
 
@@ -27,27 +25,22 @@ public class DoiRecordResponse extends HandleRecordResponse {
       //Doi
       String referentDoiName,
       String referent) {
-    super(pid, pidIssuer, digitalObjectType, digitalObjectSubtype, locs, issueDate, issueNumber, pidStatus,
+    super(pid, pidIssuer, digitalObjectType, digitalObjectSubtype, locs, issueDate, issueNumber,
+        pidStatus,
         pidKernelMetadataLicense, hsAdmin);
     this.referentDoiName = referentDoiName;
     this.referent = referent;
-
   }
-
 
   @Override
   public void setAttribute(String type, String data)
       throws NoSuchFieldException {
-    if(type.equals("referentDoiName")){
+    if (type.equals("referentDoiName")) {
       this.referentDoiName = data;
-    }
-    else if (type.equals("referent")){
+    } else if (type.equals("referent")) {
       this.referent = data;
-    }
-    else {
+    } else {
       super.setAttribute(type, data);
     }
   }
-
-
 }

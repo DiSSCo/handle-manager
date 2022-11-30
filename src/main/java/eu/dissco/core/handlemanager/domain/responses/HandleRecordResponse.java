@@ -2,10 +2,8 @@ package eu.dissco.core.handlemanager.domain.responses;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Data
-@Slf4j
 @NoArgsConstructor
 public class HandleRecordResponse {
 
@@ -43,7 +41,6 @@ public class HandleRecordResponse {
     this.hsAdmin = hsAdmin;
   }
 
-
   public void setAttribute(String type, String data)
       throws NoSuchFieldException {
     switch (type) {
@@ -60,5 +57,4 @@ public class HandleRecordResponse {
       default -> throw new NoSuchFieldException();
     }
   }
-
 }

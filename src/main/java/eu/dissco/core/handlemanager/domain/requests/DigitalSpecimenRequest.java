@@ -1,13 +1,11 @@
 package eu.dissco.core.handlemanager.domain.requests;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.Objects;
 import lombok.Getter;
 import lombok.ToString;
 
 @Getter
 @ToString
-@JsonIgnoreProperties
 public class DigitalSpecimenRequest extends DoiRecordRequest {
 
   protected final String digitalOrPhysical;

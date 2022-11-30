@@ -14,13 +14,15 @@ import org.jooq.impl.Internal;
 /**
  * A class modelling indexes of tables in public.
  */
-@SuppressWarnings({ "all", "unchecked", "rawtypes" })
+@SuppressWarnings({"all", "unchecked", "rawtypes"})
 public class Indexes {
 
-    // -------------------------------------------------------------------------
-    // INDEX definitions
-    // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // INDEX definitions
+  // -------------------------------------------------------------------------
 
-    public static final Index DATAINDEX = Internal.createIndex(DSL.name("dataindex"), Handles.HANDLES, new OrderField[] { Handles.HANDLES.DATA }, false);
-    public static final Index HANDLEINDEX = Internal.createIndex(DSL.name("handleindex"), Handles.HANDLES, new OrderField[] { Handles.HANDLES.HANDLE }, false);
+  public static final Index DATAINDEX = Internal.createIndex(DSL.name("dataindex"), Handles.HANDLES,
+      new OrderField[]{Handles.HANDLES.DATA}, false);
+  public static final Index HANDLEINDEX = Internal.createIndex(DSL.name("handleindex"),
+      Handles.HANDLES, new OrderField[]{Handles.HANDLES.HANDLE}, false);
 }

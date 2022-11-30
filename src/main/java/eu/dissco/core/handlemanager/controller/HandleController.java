@@ -37,7 +37,9 @@ import org.springframework.web.bind.annotation.RestController;
 @ControllerAdvice
 @Slf4j
 public class HandleController {
+
   private final HandleService service;
+
   @PostMapping(value = "/createRecordBatch", params = "pidType=handle")
   public ResponseEntity<List<HandleRecordResponse>> createHandleRecordBatch(
       @RequestBody List<HandleRecordRequest> request)
@@ -56,14 +58,16 @@ public class HandleController {
   public ResponseEntity<List<DigitalSpecimenResponse>> createDigitalSpecimenBatch(
       @RequestBody List<DigitalSpecimenRequest> request)
       throws PidResolutionException, JsonProcessingException, ParserConfigurationException, PidCreationException, TransformerException {
-    return ResponseEntity.status(HttpStatus.CREATED).body(service.createDigitalSpecimenBatch(request));
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(service.createDigitalSpecimenBatch(request));
   }
 
   @PostMapping(value = "/createRecordBatch", params = "pidType=digitalSpecimenBotany")
   public ResponseEntity<List<DigitalSpecimenBotanyResponse>> createDigitalSpecimenBotanyBatch(
       @RequestBody List<DigitalSpecimenBotanyRequest> request)
       throws PidResolutionException, JsonProcessingException, ParserConfigurationException, PidCreationException, TransformerException {
-    return ResponseEntity.status(HttpStatus.CREATED).body(service.createDigitalSpecimenBotanyBatch(request));
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(service.createDigitalSpecimenBotanyBatch(request));
   }
 
   // Create Single Record 

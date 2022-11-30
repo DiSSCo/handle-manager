@@ -2,11 +2,9 @@ package eu.dissco.core.handlemanager.domain.responses;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Data
 @NoArgsConstructor
-@Slf4j
 public class DigitalSpecimenBotanyResponse extends DigitalSpecimenResponse {
 
   String objectType;
@@ -34,21 +32,22 @@ public class DigitalSpecimenBotanyResponse extends DigitalSpecimenResponse {
       // Botany Specimen
       String objectType,
       String preservedOrLiving) {
-    super(pid, pidIssuer, digitalObjectType, digitalObjectSubtype, locs, issueDate, issueNumber, pidStatus,
-        pidKernelMetadataLicense, hsAdmin, referentDoiName, referent, digititalOrPhysical, specimenHost, inCollectionFacility);
+    super(pid, pidIssuer, digitalObjectType, digitalObjectSubtype, locs, issueDate, issueNumber,
+        pidStatus,
+        pidKernelMetadataLicense, hsAdmin, referentDoiName, referent, digititalOrPhysical,
+        specimenHost, inCollectionFacility);
     this.objectType = objectType;
     this.preservedOrLiving = preservedOrLiving;
   }
+
   @Override
   public void setAttribute(String type, String data)
       throws NoSuchFieldException {
     if (type.equals("objectType")) {
       this.objectType = data;
-    }
-    else if (type.equals("preservedOrLiving")) {
+    } else if (type.equals("preservedOrLiving")) {
       this.preservedOrLiving = data;
-    }
-    else {
+    } else {
       super.setAttribute(type, data);
     }
   }

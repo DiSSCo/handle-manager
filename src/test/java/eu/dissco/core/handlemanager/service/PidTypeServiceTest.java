@@ -98,11 +98,13 @@ class PidTypeServiceTest {
 
     record.add(new HandleAttribute(1, recordPid, "pid", pid.getBytes()));
     record.add(new HandleAttribute(2, recordPid, "pidType", pidType.getBytes()));
-    record.add(new HandleAttribute(3, recordPid, "primaryNameFromPid", primaryNameFromPid.getBytes()));
+    record.add(
+        new HandleAttribute(3, recordPid, "primaryNameFromPid", primaryNameFromPid.getBytes()));
 
     if (isDoi) {
       registrationAgencyDoiName = TestUtils.PTR_REGISTRATION_DOI_NAME;
-      record.add(new HandleAttribute(4, recordPid, "registrationAgencyDoiName", registrationAgencyDoiName.getBytes()));
+      record.add(new HandleAttribute(4, recordPid, "registrationAgencyDoiName",
+          registrationAgencyDoiName.getBytes()));
     }
     return record;
   }

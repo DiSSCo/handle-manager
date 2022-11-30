@@ -131,6 +131,7 @@ class HandleServiceTest {
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
+
   @Test
   void testCreateDigitalSpecimen()
       throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
@@ -140,7 +141,8 @@ class HandleServiceTest {
     DigitalSpecimenResponse responseExpected = generateTestDigitalSpecimenResponse(handle);
     List<HandleAttribute> recordTest = generateTestDigitalSpecimenAttributes(handle);
 
-    given(handleRep.createDigitalSpecimen(handle, instant, recordTest)).willReturn(responseExpected);
+    given(handleRep.createDigitalSpecimen(handle, instant, recordTest)).willReturn(
+        responseExpected);
     given(hgService.genHandleList(1)).willReturn(handlesList);
 
     // When
@@ -156,10 +158,12 @@ class HandleServiceTest {
     // Given
     byte[] handle = handlesList.get(0);
     DigitalSpecimenBotanyRequest request = generateTestDigitalSpecimenBotanyRequest();
-    DigitalSpecimenBotanyResponse responseExpected = generateTestDigitalSpecimenBotanyResponse(handle);
+    DigitalSpecimenBotanyResponse responseExpected = generateTestDigitalSpecimenBotanyResponse(
+        handle);
     List<HandleAttribute> recordTest = generateTestDigitalSpecimenBotanyAttributes(handle);
 
-    given(handleRep.createDigitalSpecimenBotany(handle, instant, recordTest)).willReturn(responseExpected);
+    given(handleRep.createDigitalSpecimenBotany(handle, instant, recordTest)).willReturn(
+        responseExpected);
     given(hgService.genHandleList(1)).willReturn(handlesList);
 
     // When
@@ -178,7 +182,8 @@ class HandleServiceTest {
     List<HandleRecordResponse> responseExpected = generateBatchHandleResponse();
     List<HandleAttribute> handleAttributes = generateBatchHandleAttributeList();
 
-    given(handleRep.createHandleRecordBatch(handlesList, instant, handleAttributes)).willReturn(responseExpected);
+    given(handleRep.createHandleRecordBatch(handlesList, instant, handleAttributes)).willReturn(
+        responseExpected);
     given(hgService.genHandleList(2)).willReturn(handlesList);
 
     // When
@@ -196,7 +201,8 @@ class HandleServiceTest {
 
     List<HandleAttribute> handleAttributes = generateBatchDoiAttributeList();
 
-    given(handleRep.createDoiRecordBatch(handlesList, instant, handleAttributes)).willReturn(responseExpected);
+    given(handleRep.createDoiRecordBatch(handlesList, instant, handleAttributes)).willReturn(
+        responseExpected);
     given(hgService.genHandleList(2)).willReturn(handlesList);
 
     // When
@@ -214,7 +220,8 @@ class HandleServiceTest {
 
     List<HandleAttribute> handleAttributes = generateBatchDigitalSpecimenAttributeList();
 
-    given(handleRep.createDigitalSpecimenBatch(handlesList, instant, handleAttributes)).willReturn(responseExpected);
+    given(handleRep.createDigitalSpecimenBatch(handlesList, instant, handleAttributes)).willReturn(
+        responseExpected);
     given(hgService.genHandleList(2)).willReturn(handlesList);
 
     // When
@@ -232,16 +239,17 @@ class HandleServiceTest {
 
     List<HandleAttribute> handleAttributes = generateBatchDigitalSpecimenBotanyAttributeList();
 
-    given(handleRep.createDigitalSpecimenBotanyBatch(handlesList, instant, handleAttributes)).willReturn(responseExpected);
+    given(handleRep.createDigitalSpecimenBotanyBatch(handlesList, instant,
+        handleAttributes)).willReturn(responseExpected);
     given(hgService.genHandleList(2)).willReturn(handlesList);
 
     // When
-    List<DigitalSpecimenBotanyResponse> responseReceived = service.createDigitalSpecimenBotanyBatch(request);
+    List<DigitalSpecimenBotanyResponse> responseReceived = service.createDigitalSpecimenBotanyBatch(
+        request);
 
     // Then
     assertThat(responseExpected).isEqualTo(responseReceived);
   }
-
 
 
   private List<HandleRecordRequest> generateBatchHandleRequest() {

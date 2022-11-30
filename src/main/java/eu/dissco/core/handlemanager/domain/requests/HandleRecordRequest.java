@@ -1,6 +1,5 @@
 package eu.dissco.core.handlemanager.domain.requests;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.Arrays;
 import java.util.Objects;
 import lombok.Getter;
@@ -10,7 +9,6 @@ import lombok.ToString;
 @Getter
 @RequiredArgsConstructor
 @ToString
-@JsonIgnoreProperties
 public class HandleRecordRequest {
 
   protected final String pidIssuerPid;

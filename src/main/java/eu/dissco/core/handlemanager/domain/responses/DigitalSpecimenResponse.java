@@ -30,7 +30,8 @@ public class DigitalSpecimenResponse extends DoiRecordResponse {
       String digititalOrPhysical,
       String specimenHost,
       String inCollectionFacility) {
-    super(pid, pidIssuer, digitalObjectType, digitalObjectSubtype, locs, issueDate, issueNumber, pidStatus,
+    super(pid, pidIssuer, digitalObjectType, digitalObjectSubtype, locs, issueDate, issueNumber,
+        pidStatus,
         pidKernelMetadataLicense, hsAdmin, referentDoiName, referent);
 
     this.digitalOrPhysical = digititalOrPhysical;
@@ -41,14 +42,11 @@ public class DigitalSpecimenResponse extends DoiRecordResponse {
   @Override
   public void setAttribute(String type, String data)
       throws NoSuchFieldException {
-    if (type.equals("digitalOrPhysical")) {
-      this.digitalOrPhysical = data;
-    } else if (type.equals("specimenHost")) {
-      this.specimenHost = data;
-    } else if (type.equals("inCollectionFacility")) {
-      this.inCollectionFacility = data;
-    } else {
-      super.setAttribute(type, data);
+    switch (type) {
+      case "digitalOrPhysical" -> this.digitalOrPhysical = data;
+      case "specimenHost" -> this.specimenHost = data;
+      case "inCollectionFacility" -> this.inCollectionFacility = data;
+      default -> super.setAttribute(type, data);
     }
   }
 }

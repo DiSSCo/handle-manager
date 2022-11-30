@@ -98,24 +98,24 @@ public class TestUtils {
   // Handle Attribute Lists
   public static List<HandleAttribute> generateTestHandleAttributes(byte[] handle) {
 
-    List<HandleAttribute> handleRecord= new ArrayList<>();
-    byte [] ptr_record = PTR_HANDLE_RECORD.getBytes();
+    List<HandleAttribute> handleRecord = new ArrayList<>();
+    byte[] ptr_record = PTR_HANDLE_RECORD.getBytes();
 
     // 100: Admin Handle
-    handleRecord.add(new HandleAttribute(100, handle,"HS_ADMIN", genAdminHandle()));
+    handleRecord.add(new HandleAttribute(100, handle, "HS_ADMIN", genAdminHandle()));
 
     // 1: Pid
     byte[] pid = ("https://hdl.handle.net/" + new String(handle)).getBytes();
-    handleRecord.add(new HandleAttribute(1, handle,"pid", pid));
+    handleRecord.add(new HandleAttribute(1, handle, "pid", pid));
 
     // 2: PidIssuer
-    handleRecord.add(new HandleAttribute(2, handle,"pidIssuer", ptr_record));
+    handleRecord.add(new HandleAttribute(2, handle, "pidIssuer", ptr_record));
 
     // 3: Digital Object Type
-    handleRecord.add(new HandleAttribute(3, handle,"digitalObjectType", ptr_record));
+    handleRecord.add(new HandleAttribute(3, handle, "digitalObjectType", ptr_record));
 
     // 4: Digital Object Subtype
-    handleRecord.add(new HandleAttribute(4, handle,"digitalObjectSubtype",ptr_record));
+    handleRecord.add(new HandleAttribute(4, handle, "digitalObjectSubtype", ptr_record));
 
     // 5: 10320/loc
     byte[] loc = "".getBytes();
@@ -124,21 +124,22 @@ public class TestUtils {
     } catch (TransformerException | ParserConfigurationException e) {
       e.printStackTrace();
     }
-    handleRecord.add(new HandleAttribute(5, handle,"10320/loc", loc));
+    handleRecord.add(new HandleAttribute(5, handle, "10320/loc", loc));
 
     // 6: Issue Date
-    handleRecord.add(new HandleAttribute(6, handle,"issueDate",  ISSUE_DATE.getBytes()));
+    handleRecord.add(new HandleAttribute(6, handle, "issueDate", ISSUE_DATE.getBytes()));
 
     // 7: Issue number
-    handleRecord.add(new HandleAttribute(7, handle,"issueNumber",  "1".getBytes()));
+    handleRecord.add(new HandleAttribute(7, handle, "issueNumber", "1".getBytes()));
 
     // 8: PidStatus
-    handleRecord.add(new HandleAttribute(8,handle, "pidStatus",  PID_STATUS.getBytes()));
+    handleRecord.add(new HandleAttribute(8, handle, "pidStatus", PID_STATUS.getBytes()));
 
     // 9, 10: tombstone text, tombstone pids -> Skip
 
     // 11: PidKernelMetadataLicense:
-    handleRecord.add(new HandleAttribute(11,handle, "pidKernelMetadataLicense",  LICENSE.getBytes()));
+    handleRecord.add(
+        new HandleAttribute(11, handle, "pidKernelMetadataLicense", LICENSE.getBytes()));
 
     return handleRecord;
   }
@@ -148,9 +149,9 @@ public class TestUtils {
     byte[] ptr_record = PTR_HANDLE_RECORD.getBytes();
 
     // 12: Referent DOI Name
-    handleRecord.add(new HandleAttribute(12, handle,"referentDoiName", ptr_record));
+    handleRecord.add(new HandleAttribute(12, handle, "referentDoiName", ptr_record));
     // 13: Referent
-    handleRecord.add(new HandleAttribute(13, handle,"referent", REFERENT.getBytes()));
+    handleRecord.add(new HandleAttribute(13, handle, "referent", REFERENT.getBytes()));
     return handleRecord;
   }
 
@@ -159,14 +160,15 @@ public class TestUtils {
     byte[] ptr_record = PTR_HANDLE_RECORD.getBytes();
 
     // 14: digitalOrPhysical
-    handleRecord.add(new HandleAttribute(14, handle,"digitalOrPhysical", DIGITAL_OR_PHYSICAL.getBytes()));
+    handleRecord.add(
+        new HandleAttribute(14, handle, "digitalOrPhysical", DIGITAL_OR_PHYSICAL.getBytes()));
 
     // 15: specimenHost
-    handleRecord.add(new HandleAttribute(15, handle,"specimenHost", ptr_record));
+    handleRecord.add(new HandleAttribute(15, handle, "specimenHost", ptr_record));
 
     // 16: In collectionFacility
     handleRecord.add(
-        new HandleAttribute(16, handle,"inCollectionFacility", ptr_record));
+        new HandleAttribute(16, handle, "inCollectionFacility", ptr_record));
     return handleRecord;
   }
 
@@ -174,10 +176,11 @@ public class TestUtils {
     List<HandleAttribute> handleRecord = generateTestDigitalSpecimenAttributes(handle);
 
     // 17: ObjectType
-    handleRecord.add(new HandleAttribute(17, handle,"objectType", OBJECT_TYPE.getBytes()));
+    handleRecord.add(new HandleAttribute(17, handle, "objectType", OBJECT_TYPE.getBytes()));
 
     // 18: preservedOrLiving
-    handleRecord.add(new HandleAttribute( 18, handle,"preservedOrLiving", PRESERVED_OR_LIVING.getBytes()));
+    handleRecord.add(
+        new HandleAttribute(18, handle, "preservedOrLiving", PRESERVED_OR_LIVING.getBytes()));
     return handleRecord;
   }
 
@@ -229,7 +232,7 @@ public class TestUtils {
 
   // Responses
   public static HandleRecordResponse generateTestHandleResponse(byte[] handle) {
-    String pid =  "https://hdl.handle.net/" + new String(handle);
+    String pid = "https://hdl.handle.net/" + new String(handle);
     String locs = getLocString();
 
     String admin = new String(genAdminHandle());
@@ -249,7 +252,7 @@ public class TestUtils {
   }
 
   public static DoiRecordResponse generateTestDoiResponse(byte[] handle) {
-    String pid =  "https://hdl.handle.net/" + new String(handle);
+    String pid = "https://hdl.handle.net/" + new String(handle);
     String locs = getLocString();
 
     String admin = new String(genAdminHandle());
@@ -271,7 +274,7 @@ public class TestUtils {
   }
 
   public static DigitalSpecimenResponse generateTestDigitalSpecimenResponse(byte[] handle) {
-    String pid =  "https://hdl.handle.net/" + new String(handle);
+    String pid = "https://hdl.handle.net/" + new String(handle);
     String locs = getLocString();
 
     String admin = new String(genAdminHandle());
@@ -295,8 +298,9 @@ public class TestUtils {
     );
   }
 
-  public static DigitalSpecimenBotanyResponse generateTestDigitalSpecimenBotanyResponse(byte[] handle) {
-    String pid =  "https://hdl.handle.net/" + new String(handle);
+  public static DigitalSpecimenBotanyResponse generateTestDigitalSpecimenBotanyResponse(
+      byte[] handle) {
+    String pid = "https://hdl.handle.net/" + new String(handle);
     String locs = getLocString();
 
     String admin = new String(genAdminHandle());
@@ -326,7 +330,7 @@ public class TestUtils {
     return CREATED.getEpochSecond();
   }
 
-  private static String getLocString(){
+  private static String getLocString() {
     byte[] loc = "".getBytes();
     try {
       loc = setLocations(LOCATIONS);
