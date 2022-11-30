@@ -7,11 +7,10 @@ import lombok.ToString;
 
 @Getter
 @ToString
-@JsonIgnoreProperties
 public class DigitalSpecimenBotanyRequest extends DigitalSpecimenRequest {
 
-  protected final String objectType;
-  protected final String preservedOrLiving;
+  private final String objectType;
+  private final String preservedOrLiving;
 
   public DigitalSpecimenBotanyRequest(
       // Handle

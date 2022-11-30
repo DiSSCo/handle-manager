@@ -113,6 +113,7 @@ public class HandleService {
   public List<DoiRecordResponse> createDoiRecordBatch(List<DoiRecordRequest> requests)
       throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
     List<byte[]> handles = hf.genHandleList(requests.size());
+
     List<HandleAttribute> handleAttributes = new ArrayList<>();
 
     for (int i = 0; i < requests.size(); i++) {
@@ -128,6 +129,7 @@ public class HandleService {
     List<byte[]> handles = hf.genHandleList(requests.size());
     List<HandleAttribute> handleAttributes = new ArrayList<>();
 
+
     for (int i = 0; i < requests.size(); i++) {
       handleAttributes.addAll(
           prepareDigitalSpecimenRecordAttributes(requests.get(i), handles.get(i)));
@@ -140,14 +142,17 @@ public class HandleService {
       List<DigitalSpecimenBotanyRequest> requests)
       throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
     List<byte[]> handles = hf.genHandleList(requests.size());
+
     List<HandleAttribute> handleAttributes = new ArrayList<>();
 
     for (int i = 0; i < requests.size(); i++) {
       handleAttributes.addAll(
           prepareDigitalSpecimenBotanyRecordAttributes(requests.get(i), handles.get(i)));
     }
+<
     var recordTimestamp = Instant.now();
     return handleRep.createDigitalSpecimenBotanyBatch(handles, recordTimestamp, handleAttributes);
+
   }
 
   // Prepare Attribute lists

@@ -31,8 +31,6 @@ import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenBotanyRespon
 import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenResponse;
 import eu.dissco.core.handlemanager.domain.responses.DoiRecordResponse;
 import eu.dissco.core.handlemanager.domain.responses.HandleRecordResponse;
-import eu.dissco.core.handlemanager.exceptions.PidCreationException;
-import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
 import java.time.Clock;
 import java.time.Instant;
@@ -40,8 +38,6 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
@@ -75,8 +71,10 @@ class HandleServiceTest {
 
 
   @BeforeEach
-  void setup() throws PidResolutionException, JsonProcessingException {
-    DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+
+  void setup() throws Exception {
+
+    documentBuilderFactory = DocumentBuilderFactory.newInstance();
     TransformerFactory transformerFactory = TransformerFactory.newInstance();
 
     service = new HandleService(handleRep, pidTypeService, hgService,
@@ -92,11 +90,9 @@ class HandleServiceTest {
     mockedStatic.close();
   }
 
-  // Jooq Creation
-
-  @Test
+@Test
   void testCreateHandleRecord()
-      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
+      throws Exception {
     // Given
     byte[] handle = handlesList.get(0);
     HandleRecordRequest request = generateTestHandleRequest();
@@ -112,10 +108,11 @@ class HandleServiceTest {
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
-
+  
   @Test
   void testCreateDoiRecord()
-      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
+      throws Exception {
+
     // Given
     byte[] handle = handlesList.get(0);
     DoiRecordRequest request = generateTestDoiRequest();
@@ -133,7 +130,8 @@ class HandleServiceTest {
   }
   @Test
   void testCreateDigitalSpecimen()
-      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
+      throws Exception {
+      
     // Given
     byte[] handle = handlesList.get(0);
     DigitalSpecimenRequest request = generateTestDigitalSpecimenRequest();
@@ -152,7 +150,7 @@ class HandleServiceTest {
 
   @Test
   void testCreateDigitalSpecimenBotany()
-      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
+      throws Exception {
     // Given
     byte[] handle = handlesList.get(0);
     DigitalSpecimenBotanyRequest request = generateTestDigitalSpecimenBotanyRequest();
@@ -170,10 +168,10 @@ class HandleServiceTest {
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
-  // Jooq Batch Creation
   @Test
-  void testCreateHandleRecordBatch()
-      throws PidCreationException, PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException {
+  void testCreateBatchHandleRecord()
+      throws Exception {
+    // Given
     List<HandleRecordRequest> request = generateBatchHandleRequest();
     List<HandleRecordResponse> responseExpected = generateBatchHandleResponse();
     List<HandleAttribute> handleAttributes = generateBatchHandleAttributeList();
@@ -189,8 +187,9 @@ class HandleServiceTest {
   }
 
   @Test
-  void testCreateDoiRecordBatch()
-      throws PidCreationException, PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException {
+  void testCreateBatchDoiRecord()
+      throws Exception {
+    // Given
     List<DoiRecordRequest> request = generateBatchDoiRequest();
     List<DoiRecordResponse> responseExpected = generateBatchDoiResponse();
 
@@ -207,8 +206,9 @@ class HandleServiceTest {
   }
 
   @Test
-  void testCreateDigitalSpecimenBatch()
-      throws PidCreationException, PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException {
+  void testCreateBatchDigitalSpecimen()
+      throws Exception {
+    // Given
     List<DigitalSpecimenRequest> request = generateBatchDigitalSpecimenRequest();
     List<DigitalSpecimenResponse> responseExpected = generateBatchDigitalSpecimenResponse();
 
@@ -225,8 +225,9 @@ class HandleServiceTest {
   }
 
   @Test
-  void testCreateDigitalSpecimenBotanyBatch()
-      throws PidCreationException, PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException {
+  void testCreateBatchDigitalSpecimenBotany()
+      throws Exception {
+    // Given
     List<DigitalSpecimenBotanyRequest> request = generateBatchDigitalSpecimenBotanyRequest();
     List<DigitalSpecimenBotanyResponse> responseExpected = generateBatchDigitalSpecimenBotanyResponse();
 

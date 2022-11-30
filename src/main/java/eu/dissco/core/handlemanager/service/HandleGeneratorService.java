@@ -9,7 +9,6 @@ import java.util.Random;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 // This class generates new handles
@@ -21,25 +20,11 @@ public class HandleGeneratorService {
 
   private static final String ALPHA_NUM = "ABCDEFGHJKLMNPQRSTUVWXYZ1234567890";
   private static final String PREFIX = "20.5000.1025/";
-  private final char[] symbols;
-  private final char[] buf;
-  @Autowired
-  private HandleRepository handleRep;
-  @Autowired
-  private Random random;
-
-  public HandleGeneratorService() {
-    this(11, new Random(), ALPHA_NUM);
-  }
-
-  private HandleGeneratorService(int length, Random random, String symbols) {
-    if ((length < 1) || (symbols.length() < 2)) {
-      throw new IllegalArgumentException();
-    }
-    this.symbols = symbols.toCharArray();
-    this.buf = new char[length];
-    this.random = random;
-  }
+  private static final int LENGTH = 11;
+  private final char[] symbols = ALPHA_NUM.toCharArray();
+  private final char[] buf = new char[LENGTH];
+  private final HandleRepository handleRep;
+  private final Random random;
 
   public List<byte[]> genHandleList(int h) {
     return unwrapBytes((HashSet<ByteBuffer>) genHandleHash(h));

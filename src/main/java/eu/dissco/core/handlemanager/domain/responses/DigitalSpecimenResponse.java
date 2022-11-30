@@ -1,15 +1,17 @@
 package eu.dissco.core.handlemanager.domain.responses;
 
-import lombok.Data;
+import eu.dissco.core.handlemanager.repositoryobjects.Handles;
+import java.util.List;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Data
+@Getter
 @NoArgsConstructor
 public class DigitalSpecimenResponse extends DoiRecordResponse {
 
-  String digitalOrPhysical;
-  String specimenHost;
-  String inCollectionFacility;
+  private String digitalOrPhysical;
+  private String specimenHost;
+  private String inCollectionFacility;
 
   public DigitalSpecimenResponse(
       // Handle Record
