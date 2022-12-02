@@ -98,6 +98,7 @@ public class HandleRepository {
         .fetch()
         .getValues(HANDLES.HANDLE, String.class);
   }
+
   private void rollbackHandleCreation(List<byte[]> handles) {
     context.delete(HANDLES)
         .where(HANDLES.HANDLE.in(handles))

@@ -1,9 +1,11 @@
 package eu.dissco.core.handlemanager.service;
 
+import static eu.dissco.core.handlemanager.utils.HandleNameSettings.ALPHA_NUM;
+import static eu.dissco.core.handlemanager.utils.HandleNameSettings.LENGTH;
+import static eu.dissco.core.handlemanager.utils.HandleNameSettings.MAX_HANDLES;
+import static eu.dissco.core.handlemanager.utils.HandleNameSettings.PREFIX;
+
 import eu.dissco.core.handlemanager.repository.HandleRepository;
-
-import static eu.dissco.core.handlemanager.utils.HandleNameSettings.*;
-
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
