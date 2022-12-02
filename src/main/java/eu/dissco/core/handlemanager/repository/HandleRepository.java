@@ -3,7 +3,7 @@ package eu.dissco.core.handlemanager.repository;
 import static eu.dissco.core.handlemanager.database.jooq.tables.Handles.HANDLES;
 
 import eu.dissco.core.handlemanager.database.jooq.tables.records.HandlesRecord;
-import eu.dissco.core.handlemanager.domain.pidrecords.HandleAttribute;
+import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenBotanyResponse;
 import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenResponse;
 import eu.dissco.core.handlemanager.domain.responses.DoiRecordResponse;
@@ -195,7 +195,7 @@ public class HandleRepository {
       data = new String((byte[]) r.getValue(2));
 
       try {
-        response.setAttribute(type, data);
+        response = setHandleRecordAttribute(type, data, response);
       } catch (NoSuchFieldException e) {
         throw new PidCreationException(
             FIELD_MISMATCH_ERROR + type);
@@ -203,6 +203,62 @@ public class HandleRepository {
     }
     return response;
   }
+
+  private <T extends HandleRecordResponse> T setHandleRecordAttribute(String type, String data, T response)
+      throws NoSuchFieldException {
+    switch (type) {
+      case "pid" -> response.setPid(data);
+      case "pidIssuer" -> response.setPidIssuer(data);
+      case "digitalObjectType" -> response.setDigitalObjectType(data);
+      case "digitalObjectSubtype" -> response.setDigitalObjectSubtype(data);
+      case "10320/loc" -> response.setLocs(data);
+      case "issueDate" -> response.setIssueDate(data);
+      case "issueNumber" -> response.setIssueNumber(data);
+      case "pidStatus" -> response.setPidStatus(data);
+      case "pidKernelMetadataLicense" -> response.setPidKernelMetadataLicense(data);
+      case "HS_ADMIN" -> response.setHsAdmin(data);
+      default -> throw new NoSuchFieldException();
+    }
+    return response;
+  }
+
+  private <T extends DoiRecordResponse> T setDoiRecordAttribute(String type, String data, T response)
+      throws NoSuchFieldException {
+    switch(type){
+      case "referentDoiName" -> response.setReferentDoiName(data);
+      case "referent" -> response.setReferent(data);
+      default -> {
+        return setHandleRecordAttribute(type, data, response);
+      }
+    }
+    return response;
+  }
+
+  private <T extends DigitalSpecimenResponse> T setDigitalSpecimenRecordAttribute(String type, String data, T response)
+      throws NoSuchFieldException {
+    switch(type){
+      case "digitalOrPhysical" -> response.setDigitalOrPhysical(data);
+      case "specimenHost" -> response.setSpecimenHost(data);
+      case "inCollectionFacility" -> response.setInCollectionFacility(data);
+      default -> {
+        return setDoiRecordAttribute(type, data, response);
+      }
+    }
+    return response;
+  }
+
+  private DigitalSpecimenBotanyResponse  setDigitalSpecimenBotanyRecordAttribute(String type, String data, DigitalSpecimenBotanyResponse response)
+      throws NoSuchFieldException {
+    switch(type){
+      case "objectTyoe" -> response.setObjectType(data);
+      case "preservedOrLiving" -> response.setPreservedOrLiving(data);
+      default -> {
+        return setDigitalSpecimenRecordAttribute(type, data, response);
+      }
+    }
+    return response;
+  }
+
 
   // Doi Batch Creation
   public List<DoiRecordResponse> createDoiRecordBatch(List<byte[]> handles, Instant recordTimestamp,
@@ -261,7 +317,7 @@ public class HandleRepository {
       data = new String((byte[]) r.getValue(2));
 
       try {
-        response.setAttribute(type, data);
+        response = setDoiRecordAttribute(type, data, response);
       } catch (NoSuchFieldException e) {
         throw new PidCreationException(
             FIELD_MISMATCH_ERROR + type);
@@ -328,7 +384,7 @@ public class HandleRepository {
       data = new String((byte[]) r.getValue(2));
 
       try {
-        response.setAttribute(type, data);
+        response = setDigitalSpecimenRecordAttribute(type, data, response);
       } catch (NoSuchFieldException e) {
         throw new PidCreationException(
             FIELD_MISMATCH_ERROR + type);
@@ -396,7 +452,7 @@ public class HandleRepository {
       data = new String((byte[]) r.getValue(2));
 
       try {
-        response.setAttribute(type, data);
+        response = setDigitalSpecimenBotanyRecordAttribute(type, data, response);
       } catch (NoSuchFieldException e) {
         throw new PidCreationException(
             FIELD_MISMATCH_ERROR + type);
@@ -413,7 +469,7 @@ public class HandleRepository {
 
     for (var handleAttribute : handleAttributes) {
       try {
-        response.setAttribute(handleAttribute.type(), new String(handleAttribute.data()));
+        response = setHandleRecordAttribute(handleAttribute.type(), new String(handleAttribute.data()), response);
       } catch (NoSuchFieldException e) {
         throw new PidCreationException(
             String.format(INVALID_FIELD_ERROR, handleAttribute.type(), handleAttribute.type()));
@@ -441,7 +497,7 @@ public class HandleRepository {
     DoiRecordResponse response = new DoiRecordResponse();
     for (var handleAttribute : handleAttributes) {
       try {
-        response.setAttribute(handleAttribute.type(), new String(handleAttribute.data()));
+        response = setDoiRecordAttribute(handleAttribute.type(), new String(handleAttribute.data()), response);
       } catch (NoSuchFieldException e) {
         throw new PidCreationException(
             String.format(INVALID_FIELD_ERROR, handleAttribute.type(), handleAttribute.type()));
@@ -469,7 +525,7 @@ public class HandleRepository {
     DigitalSpecimenResponse response = new DigitalSpecimenResponse();
     for (var handleAttribute : handleAttributes) {
       try {
-        response.setAttribute(handleAttribute.type(), new String(handleAttribute.data()));
+        response = setDigitalSpecimenRecordAttribute(handleAttribute.type(), new String(handleAttribute.data()), response);
       } catch (NoSuchFieldException e) {
         throw new PidCreationException(
             String.format(INVALID_FIELD_ERROR, handleAttribute.type(), handleAttribute.type()));
@@ -497,7 +553,7 @@ public class HandleRepository {
     DigitalSpecimenBotanyResponse response = new DigitalSpecimenBotanyResponse();
     for (var handleAttribute : handleAttributes) {
       try {
-        response.setAttribute(handleAttribute.type(), new String(handleAttribute.data()));
+        response = setDigitalSpecimenBotanyRecordAttribute(handleAttribute.type(), new String(handleAttribute.data()), response);
       } catch (NoSuchFieldException e) {
         throw new PidCreationException(
             String.format(INVALID_FIELD_ERROR, handleAttribute.type(), handleAttribute.type()));

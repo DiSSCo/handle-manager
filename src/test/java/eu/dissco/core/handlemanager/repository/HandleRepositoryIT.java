@@ -15,7 +15,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestHandl
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestHandleResponse;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import eu.dissco.core.handlemanager.domain.pidrecords.HandleAttribute;
+import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenBotanyResponse;
 import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenResponse;
 import eu.dissco.core.handlemanager.domain.responses.DoiRecordResponse;

@@ -3,8 +3,10 @@ package eu.dissco.core.handlemanager.domain.responses;
 import java.util.Objects;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
+@Setter
 @NoArgsConstructor
 public class DigitalSpecimenBotanyResponse extends DigitalSpecimenResponse {
 
@@ -40,19 +42,6 @@ public class DigitalSpecimenBotanyResponse extends DigitalSpecimenResponse {
     this.objectType = objectType;
     this.preservedOrLiving = preservedOrLiving;
   }
-
-  @Override
-  public void setAttribute(String type, String data)
-      throws NoSuchFieldException {
-    if (type.equals("objectType")) {
-      this.objectType = data;
-    } else if (type.equals("preservedOrLiving")) {
-      this.preservedOrLiving = data;
-    } else {
-      super.setAttribute(type, data);
-    }
-  }
-
   @Override
   public boolean equals(Object o) {
     if (this == o) {

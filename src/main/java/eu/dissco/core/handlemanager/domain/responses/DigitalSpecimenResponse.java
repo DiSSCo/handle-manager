@@ -3,8 +3,10 @@ package eu.dissco.core.handlemanager.domain.responses;
 import java.util.Objects;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
+@Setter
 @NoArgsConstructor
 public class DigitalSpecimenResponse extends DoiRecordResponse {
 
@@ -38,17 +40,6 @@ public class DigitalSpecimenResponse extends DoiRecordResponse {
     this.digitalOrPhysical = digititalOrPhysical;
     this.specimenHost = specimenHost;
     this.inCollectionFacility = inCollectionFacility;
-  }
-
-  @Override
-  public void setAttribute(String type, String data)
-      throws NoSuchFieldException {
-    switch (type) {
-      case "digitalOrPhysical" -> this.digitalOrPhysical = data;
-      case "specimenHost" -> this.specimenHost = data;
-      case "inCollectionFacility" -> this.inCollectionFacility = data;
-      default -> super.setAttribute(type, data);
-    }
   }
 
   @Override

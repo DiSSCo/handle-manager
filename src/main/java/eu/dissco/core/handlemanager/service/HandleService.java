@@ -3,7 +3,7 @@ package eu.dissco.core.handlemanager.service;
 import static eu.dissco.core.handlemanager.utils.Resources.genAdminHandle;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import eu.dissco.core.handlemanager.domain.pidrecords.HandleAttribute;
+import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;

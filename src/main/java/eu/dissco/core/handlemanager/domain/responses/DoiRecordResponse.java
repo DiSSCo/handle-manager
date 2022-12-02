@@ -3,8 +3,10 @@ package eu.dissco.core.handlemanager.domain.responses;
 import java.util.Objects;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
+@Setter
 @NoArgsConstructor
 public class DoiRecordResponse extends HandleRecordResponse {
 
@@ -31,18 +33,6 @@ public class DoiRecordResponse extends HandleRecordResponse {
         pidKernelMetadataLicense, hsAdmin);
     this.referentDoiName = referentDoiName;
     this.referent = referent;
-  }
-
-  @Override
-  public void setAttribute(String type, String data)
-      throws NoSuchFieldException {
-    if (type.equals("referentDoiName")) {
-      this.referentDoiName = data;
-    } else if (type.equals("referent")) {
-      this.referent = data;
-    } else {
-      super.setAttribute(type, data);
-    }
   }
 
   @Override

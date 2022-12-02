@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import eu.dissco.core.handlemanager.domain.pidrecords.HandleAttribute;
+import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
 import eu.dissco.core.handlemanager.testUtils.TestUtils;
 import java.time.Clock;

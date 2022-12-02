@@ -3,8 +3,10 @@ package eu.dissco.core.handlemanager.domain.responses;
 import java.util.Objects;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
+@Setter
 @NoArgsConstructor
 public class HandleRecordResponse {
 
@@ -40,23 +42,6 @@ public class HandleRecordResponse {
     this.pidStatus = pidStatus;
     this.pidKernelMetadataLicense = pidKernelMetadataLicense;
     this.hsAdmin = hsAdmin;
-  }
-
-  public void setAttribute(String type, String data)
-      throws NoSuchFieldException {
-    switch (type) {
-      case "pid" -> this.pid = data;
-      case "pidIssuer" -> this.pidIssuer = data;
-      case "digitalObjectType" -> this.digitalObjectType = data;
-      case "digitalObjectSubtype" -> this.digitalObjectSubtype = data;
-      case "10320/loc" -> this.locs = data;
-      case "issueDate" -> this.issueDate = data;
-      case "issueNumber" -> this.issueNumber = data;
-      case "pidStatus" -> this.pidStatus = data;
-      case "pidKernelMetadataLicense" -> this.pidKernelMetadataLicense = data;
-      case "HS_ADMIN" -> this.hsAdmin = data;
-      default -> throw new NoSuchFieldException();
-    }
   }
 
   @Override
