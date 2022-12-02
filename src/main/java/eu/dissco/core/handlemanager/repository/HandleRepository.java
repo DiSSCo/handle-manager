@@ -104,12 +104,6 @@ public class HandleRepository {
         .execute();
   }
 
-  private void rollbackHandleCreation(List<byte[]> handles) {
-    context.delete(HANDLES)
-        .where(HANDLES.HANDLE.in(handles))
-        .execute();
-  }
-
   // Record Creation
   // Batch Record Posting  - Same for Handle, DOI, DigitalSpecimen, DigitalSpecimenBotany
   private void postBatchRecord(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
