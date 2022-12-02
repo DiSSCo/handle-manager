@@ -6,7 +6,6 @@ RUN java -Djarmode=layertools -jar application.jar extract
 
 FROM eclipse-temurin:17-alpine
 RUN adduser -D -u 1000 java
-COPY .db.properties application/
 WORKDIR application
 COPY --chown=java:java --from=builder application/dependencies/ ./
 RUN true
