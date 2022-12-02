@@ -34,5 +34,5 @@ metadata:
 spec:
   stripPrefix:
     prefixes:
-      - /processing/digitalmedia
+      - /handle-manager/api
     forceSlash: false

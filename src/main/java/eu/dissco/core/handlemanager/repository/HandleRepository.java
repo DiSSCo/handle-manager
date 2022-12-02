@@ -98,8 +98,6 @@ public class HandleRepository {
         .fetch()
         .getValues(HANDLES.HANDLE, String.class);
   }
-
-
   private void rollbackHandleCreation(List<byte[]> handles) {
     context.delete(HANDLES)
         .where(HANDLES.HANDLE.in(handles))
@@ -140,7 +138,6 @@ public class HandleRepository {
     }
   }
 
-  // Read all records posted, create response based on what was posted
   private List<HandleRecordResponse> mapPostedRecordToHandleRecordResponse(List<byte[]> handles)
       throws PidCreationException {
 

@@ -22,6 +22,7 @@
     </sonar.coverage.jacoco.xmlReportPaths>
 
     <testcontainers.version>1.17.5</testcontainers.version>
+    <keycloak-adapter-bom.version>16.1.1</keycloak-adapter-bom.version>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     <sonar.organization>dissco</sonar.organization>
     <db.properties>.properties</db.properties>
@@ -36,6 +37,13 @@
         <scope>import</scope>
         <type>pom</type>
       </dependency>
+      <dependency>
+        <groupId>org.keycloak.bom</groupId>
+        <artifactId>keycloak-adapter-bom</artifactId>
+        <version>${keycloak-adapter-bom.version}</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -44,6 +52,10 @@
     <dependency>
       <artifactId>spring-boot-starter</artifactId>
       <groupId>org.springframework.boot</groupId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-security</artifactId>
     </dependency>
     <dependency>
       <artifactId>spring-boot-starter-cache</artifactId>
@@ -86,6 +98,14 @@
     <dependency>
       <artifactId>jackson-databind</artifactId>  <!-- JSON Mapper -->
       <groupId>com.fasterxml.jackson.core</groupId>
+    </dependency>
+    <dependency>
+      <groupId>org.keycloak</groupId>
+      <artifactId>keycloak-spring-boot-starter</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>javax.annotation</groupId>
+      <artifactId>javax.annotation-api</artifactId>
     </dependency>
 
     <!-- Testing Dependencies -->
@@ -142,10 +162,6 @@
   <build>
     <defaultGoal>-B verify</defaultGoal>
     <plugins>
-      <plugin>
-        <artifactId>spring-boot-maven-plugin</artifactId>
-        <groupId>org.springframework.boot</groupId>
-      </plugin>
       <plugin>
         <artifactId>jacoco-maven-plugin</artifactId>
         <executions>

@@ -21,12 +21,24 @@ spec:
           ports:
             - containerPort: 80
           env:
+            - name: keycloak.auth-server-url
+              value: https://login-demo.dissco.eu/auth
+            - name: keycloak.realm
+              value: dissco
+            - name: keycloak.resource
+              value: processing-service
             - name: spring.datasource.url
-              value:
+              value: jdbc:postgresql://database-1.cbppwfnjypll.eu-west-2.rds.amazonaws.com/dissco
             - name: spring.datasource.username
-              value:
+              valueFrom:
+                secretKeyRef:
+                  name: db-user-pass
+                  key: username
             - name: spring.datasource.password
-              value:
+              valueFrom:
+                secretKeyRef:
+                  name: db-user-pass
+                  key: password
           securityContext:
             runAsNonRoot: true
             allowPrivilegeEscalation: false

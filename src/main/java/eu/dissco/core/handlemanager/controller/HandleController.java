@@ -17,8 +17,12 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.keycloak.KeycloakPrincipal;
+import org.keycloak.KeycloakSecurityContext;
+import org.keycloak.representations.AccessToken;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,18 +32,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
-//Controller, return value of methods will be returned as the response body for an API; handleService is injected as dependency using Autowired
-@RequestMapping("/api")
-// Defines base URL for all REST APIs; followed by REST endpoints given to each controller methods
+@RequestMapping("/")
 @RequiredArgsConstructor
 @ControllerAdvice
+@PreAuthorize("isAuthenticated()")
 @Slf4j
+// @Profile(Profiles.WEB) Is there a digitalspecimenprofile Profile class?
 public class HandleController {
 
   private final HandleService service;
-
+  
   @PostMapping(value = "/createRecordBatch", params = "pidType=handle")
   public ResponseEntity<List<HandleRecordResponse>> createHandleRecordBatch(
       @RequestBody List<HandleRecordRequest> request)
@@ -101,6 +106,7 @@ public class HandleController {
 
   // Hellos and getters
 
+  //TODO this shouldnt need to be authenticated in future (nor reads)
   @GetMapping(value = "/health")
   public ResponseEntity<String> hello() {
     return new ResponseEntity<>("API is running", HttpStatus.OK);
@@ -132,6 +138,16 @@ public class HandleController {
     }
     return ResponseEntity.ok(handleList);
   }
+
+  // Authentication
+  private String getNameFromToken(Authentication authentication) {
+    KeycloakPrincipal<? extends KeycloakSecurityContext> principal =
+        (KeycloakPrincipal<?>) authentication.getPrincipal();
+    AccessToken token = principal.getKeycloakSecurityContext().getToken();
+    return token.getSubject();
+  }
+
+  //Error Handling
 
   @ExceptionHandler(PidCreationException.class)
   private ResponseEntity<String> pidCreationException(PidCreationException e) {
