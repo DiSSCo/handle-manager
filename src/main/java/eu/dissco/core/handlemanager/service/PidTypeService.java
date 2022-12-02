@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 public class PidTypeService {
 
   private final HandleRepository handleRep;
-
   private final ObjectMapper mapper;
 
   @Cacheable(value = "cache")
@@ -27,16 +26,13 @@ public class PidTypeService {
     if (typePid == null) {
       throw new PidResolutionException("Missing PID in request body.");
     }
-
     List<HandleAttribute> typeRecord = handleRep.resolveHandle(typePid.getBytes());
-
     if (typeRecord.isEmpty()) {
       throw new PidResolutionException("Unable to resolve type PID");
     }
-
     String pid = getDataFromType("pid", typeRecord);
     String primaryNameFromPid = getDataFromType("primaryNameFromPid", typeRecord);
-    String pidType;
+    String pidType = "";
     String registrationAgencyDoiName = "";
     ObjectNode objectNode = mapper.createObjectNode();
 
@@ -52,9 +48,7 @@ public class PidTypeService {
               + typePid
               + " and try again");
     }
-
-    if (pidType.equals("") || primaryNameFromPid.equals(
-        "")) { // If one of these were not resolvable
+    if (primaryNameFromPid.equals("")) { // If this is not resolvableof these were not resolvable
       throw new PidResolutionException(
           "One of the type PIDs provided resolves to an invalid record. reason: pid type and/or primaryNameFromPid are empty. Check PID "
               + typePid
@@ -64,6 +58,7 @@ public class PidTypeService {
     objectNode.put("pid", pid);
     objectNode.put("pidType", pidType);
     objectNode.put("primaryNamefromPid", primaryNameFromPid);
+
     if (pidType.equals("doi")) {
       objectNode.put("registrationAgencyDoiName", registrationAgencyDoiName);
     }
@@ -76,7 +71,8 @@ public class PidTypeService {
         return new String(h.data());
       }
     }
-    return ""; // This should maybe return a warning?
+    log.warn("Type {} is not set in the handle record", type);
+    return "";
   }
 
 }

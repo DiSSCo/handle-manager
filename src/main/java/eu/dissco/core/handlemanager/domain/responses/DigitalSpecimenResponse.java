@@ -1,15 +1,16 @@
 package eu.dissco.core.handlemanager.domain.responses;
 
-import lombok.Data;
+import java.util.Objects;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Data
+@Getter
 @NoArgsConstructor
 public class DigitalSpecimenResponse extends DoiRecordResponse {
 
-  String digitalOrPhysical;
-  String specimenHost;
-  String inCollectionFacility;
+  private String digitalOrPhysical;
+  private String specimenHost;
+  private String inCollectionFacility;
 
   public DigitalSpecimenResponse(
       // Handle Record
@@ -30,7 +31,8 @@ public class DigitalSpecimenResponse extends DoiRecordResponse {
       String digititalOrPhysical,
       String specimenHost,
       String inCollectionFacility) {
-    super(pid, pidIssuer, digitalObjectType, digitalObjectSubtype, locs, issueDate, issueNumber, pidStatus,
+    super(pid, pidIssuer, digitalObjectType, digitalObjectSubtype, locs, issueDate, issueNumber,
+        pidStatus,
         pidKernelMetadataLicense, hsAdmin, referentDoiName, referent);
 
     this.digitalOrPhysical = digititalOrPhysical;
@@ -41,14 +43,33 @@ public class DigitalSpecimenResponse extends DoiRecordResponse {
   @Override
   public void setAttribute(String type, String data)
       throws NoSuchFieldException {
-    if (type.equals("digitalOrPhysical")) {
-      this.digitalOrPhysical = data;
-    } else if (type.equals("specimenHost")) {
-      this.specimenHost = data;
-    } else if (type.equals("inCollectionFacility")) {
-      this.inCollectionFacility = data;
-    } else {
-      super.setAttribute(type, data);
+    switch (type) {
+      case "digitalOrPhysical" -> this.digitalOrPhysical = data;
+      case "specimenHost" -> this.specimenHost = data;
+      case "inCollectionFacility" -> this.inCollectionFacility = data;
+      default -> super.setAttribute(type, data);
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    if (!super.equals(o)) {
+      return false;
+    }
+    DigitalSpecimenResponse that = (DigitalSpecimenResponse) o;
+    return getDigitalOrPhysical().equals(that.getDigitalOrPhysical()) && getSpecimenHost().equals(
+        that.getSpecimenHost()) && getInCollectionFacility().equals(that.getInCollectionFacility());
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), getDigitalOrPhysical(), getSpecimenHost(),
+        getInCollectionFacility());
   }
 }

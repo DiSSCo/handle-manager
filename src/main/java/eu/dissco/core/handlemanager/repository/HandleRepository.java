@@ -77,7 +77,7 @@ public class HandleRepository {
     return attributes;
   }
 
-  // Get All Pids
+  // Get List of Pids
   public List<String> getAllHandles(byte[] pidStatus, int pageNum, int pageSize) {
     return context
         .selectDistinct(HANDLES.HANDLE, HANDLES.DATA)
@@ -104,6 +104,34 @@ public class HandleRepository {
         .execute();
   }
 
+  private void rollbackHandleCreation(List<byte[]> handles) {
+    context.delete(HANDLES)
+        .where(HANDLES.HANDLE.in(handles))
+        .execute();
+  }
+
+  // Record Creation
+  // Batch Record Posting  - Same for Handle, DOI, DigitalSpecimen, DigitalSpecimenBotany
+  private void postBatchRecord(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
+    var queryList = new ArrayList<Query>();
+
+    for (var handleAttribute : handleAttributes) {
+      var query = context.insertInto(HANDLES)
+          .set(HANDLES.HANDLE, handleAttribute.handle())
+          .set(HANDLES.IDX, handleAttribute.index())
+          .set(HANDLES.TYPE, handleAttribute.type().getBytes(StandardCharsets.UTF_8))
+          .set(HANDLES.DATA, handleAttribute.data())
+          .set(HANDLES.TTL, 86400)
+          .set(HANDLES.TIMESTAMP, recordTimestamp.getEpochSecond())
+          .set(HANDLES.ADMIN_READ, true)
+          .set(HANDLES.ADMIN_WRITE, true)
+          .set(HANDLES.PUB_READ, true)
+          .set(HANDLES.PUB_WRITE, false);
+      queryList.add(query);
+    }
+    context.batch(queryList).execute();
+  }
+
   // Handle Batch Creation
   public List<HandleRecordResponse> createHandleRecordBatch(List<byte[]> handles,
       Instant recordTimestamp, List<HandleAttribute> handleAttributes) throws PidCreationException {
@@ -111,11 +139,10 @@ public class HandleRepository {
     try {
       return mapPostedRecordToHandleRecordResponse(handles);
     } catch (PidCreationException e) {
-      rollbackHandleCreation(handles);
+      rollbackHandleCreation(handles); // If an error has occured, delete any handles we've posted
       throw new PidCreationException(e.getMessage());
     }
   }
-
 
   private List<HandleRecordResponse> mapPostedRecordToHandleRecordResponse(List<byte[]> handles)
       throws PidCreationException {
@@ -127,23 +154,29 @@ public class HandleRepository {
         .where(HANDLES.HANDLE.in(handles))
         .fetchGroups(HANDLES.HANDLE);
 
-    byte[] handle = posted.keySet().iterator().next();
+    byte[] handle = posted.keySet().iterator().next(); // First handle retrieved
     List<Record3<byte[], byte[], byte[]>> aggregatedRecord = new ArrayList<>();
     List<HandleRecordResponse> responses = new ArrayList<>();
 
     int endOfList = posted.size() - 1;
     int i = 0;
 
-    // Create a handle record response for each group of handles
+    // Our database result is a list of all rows posted (functionally decoupled from their handle id)
+    // In this loop, we create a HandleRecordResponse for each group of handles
+    // Where each "group" of handles is a handle record
     for (Map.Entry<byte[], Result<Record3<byte[], byte[], byte[]>>> entry : posted.entrySet()) {
       if (Arrays.equals(handle, entry.getKey()) && i < endOfList) {
+        // While previous handle = current handle, add this row to the handle record
         aggregatedRecord.add(entry.getValue().get(0));
       } else if (i == endOfList) {
+        // Special case for end of list
         aggregatedRecord.add(entry.getValue().get(0));
         responses.add(buildHandleRecordResponse(aggregatedRecord));
       } else {
+        // If we've found all rows under a given handle, create a response from those rows
         responses.add(buildHandleRecordResponse(aggregatedRecord));
         if (i < endOfList - 1) {
+          // if this is not the last record in the list, we clear the list for the next handle record
           aggregatedRecord.clear();
         }
         aggregatedRecord.add(entry.getValue().get(0));
@@ -154,13 +187,14 @@ public class HandleRepository {
     return responses;
   }
 
+  // Given a list of database rows (which can be considered
   private HandleRecordResponse buildHandleRecordResponse(
       List<Record3<byte[], byte[], byte[]>> records)
       throws PidCreationException {
     HandleRecordResponse response = new HandleRecordResponse();
-
     String type;
     String data;
+
     for (Record3<byte[], byte[], byte[]> r : records) {
       type = new String((byte[]) r.getValue(1));
       data = new String((byte[]) r.getValue(2));
@@ -376,33 +410,12 @@ public class HandleRepository {
     return response;
   }
 
-  // Batch Record Posting  - Same for Handle, DOI, DigitalSpecimen, DigitalSpecimenBotany
-  private void postBatchRecord(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
-    var queryList = new ArrayList<Query>();
-
-    for (var handleAttribute : handleAttributes) {
-      var query = context.insertInto(HANDLES)
-          .set(HANDLES.HANDLE, handleAttribute.handle())
-          .set(HANDLES.IDX, handleAttribute.index())
-          .set(HANDLES.TYPE, handleAttribute.type().getBytes(StandardCharsets.UTF_8))
-          .set(HANDLES.DATA, handleAttribute.data())
-          .set(HANDLES.TTL, 86400)
-          .set(HANDLES.TIMESTAMP, recordTimestamp.getEpochSecond())
-          .set(HANDLES.ADMIN_READ, true)
-          .set(HANDLES.ADMIN_WRITE, true)
-          .set(HANDLES.PUB_READ, true)
-          .set(HANDLES.PUB_WRITE, false);
-      queryList.add(query);
-    }
-    context.batch(queryList).execute();
-  }
-
   // Create Individual Records
-
   public HandleRecordResponse createHandle(byte[] handle, Instant recordTimestamp,
       List<HandleAttribute> handleAttributes) throws PidCreationException {
     var queryList = new ArrayList<Query>();
     HandleRecordResponse response = new HandleRecordResponse();
+
     for (var handleAttribute : handleAttributes) {
       try {
         response.setAttribute(handleAttribute.type(), new String(handleAttribute.data()));

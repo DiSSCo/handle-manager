@@ -2,29 +2,44 @@ package eu.dissco.core.handlemanager.repository;
 
 
 import static eu.dissco.core.handlemanager.database.jooq.Tables.HANDLES;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.*;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDigitalSpecimenAttributes;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDigitalSpecimenBotanyAttributes;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDigitalSpecimenBotanyResponse;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDigitalSpecimenResponse;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDoiAttributes;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDoiResponse;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestHandleAttributes;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestHandleResponse;
 import static org.assertj.core.api.Assertions.assertThat;
 
-
 import eu.dissco.core.handlemanager.domain.pidrecords.HandleAttribute;
-import eu.dissco.core.handlemanager.domain.responses.*;
+import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenBotanyResponse;
+import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenResponse;
+import eu.dissco.core.handlemanager.domain.responses.DoiRecordResponse;
+import eu.dissco.core.handlemanager.domain.responses.HandleRecordResponse;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-class HandleRepositoryIT extends BaseRepositoryIT{
+
+@Slf4j
+class HandleRepositoryIT extends BaseRepositoryIT {
 
   private HandleRepository handleRep;
 
   @BeforeEach
-  void setup(){
+  void setup() {
     handleRep = new HandleRepository(context);
   }
 
   @AfterEach
-  void destroy(){
+  void destroy() {
     context.truncate(HANDLES).execute();
   }
 
@@ -68,7 +83,8 @@ class HandleRepositoryIT extends BaseRepositoryIT{
     DigitalSpecimenResponse responseExpected = generateTestDigitalSpecimenResponse(handle);
 
     // When
-    DigitalSpecimenResponse responseReceived = handleRep.createDigitalSpecimen(handle, CREATED, attributes);
+    DigitalSpecimenResponse responseReceived = handleRep.createDigitalSpecimen(handle, CREATED,
+        attributes);
 
     // Then
     var postedRecord = context.selectFrom(HANDLES).fetch();
@@ -81,10 +97,12 @@ class HandleRepositoryIT extends BaseRepositoryIT{
     // Given
     byte[] handle = HANDLE.getBytes();
     List<HandleAttribute> attributes = generateTestDigitalSpecimenBotanyAttributes(handle);
-    DigitalSpecimenBotanyResponse responseExpected = generateTestDigitalSpecimenBotanyResponse(handle);
+    DigitalSpecimenBotanyResponse responseExpected = generateTestDigitalSpecimenBotanyResponse(
+        handle);
 
     // When
-    DigitalSpecimenBotanyResponse responseReceived = handleRep.createDigitalSpecimenBotany(handle, CREATED, attributes);
+    DigitalSpecimenBotanyResponse responseReceived = handleRep.createDigitalSpecimenBotany(handle,
+        CREATED, attributes);
 
     // Then
     var postedRecord = context.selectFrom(HANDLES).fetch();
@@ -95,15 +113,16 @@ class HandleRepositoryIT extends BaseRepositoryIT{
   @Test
   void testCreateHandleBatch() throws PidCreationException {
     // Given    
-    List<byte[] > handleList = new ArrayList<>();
+    List<byte[]> handleList = new ArrayList<>();
     handleList.add(HANDLE.getBytes());
-    handleList.add(HANDLE_ALT.getBytes());   
+    handleList.add(HANDLE_ALT.getBytes());
 
     List<HandleAttribute> attributes = generateBatchHandleAttributeList(handleList);
     List<HandleRecordResponse> responseExpected = generateBatchHandleResponse(handleList);
 
     // When
-    List<HandleRecordResponse> responseReceived = handleRep.createHandleRecordBatch(handleList, CREATED, attributes);
+    List<HandleRecordResponse> responseReceived = handleRep.createHandleRecordBatch(handleList,
+        CREATED, attributes);
 
     // Then
     var postedRecord = context.selectFrom(HANDLES).fetch();
@@ -114,7 +133,7 @@ class HandleRepositoryIT extends BaseRepositoryIT{
   @Test
   void testCreateDoiBatch() throws PidCreationException {
     // Given
-    List<byte[] > handleList = new ArrayList<>();
+    List<byte[]> handleList = new ArrayList<>();
     handleList.add(HANDLE.getBytes());
     handleList.add(HANDLE_ALT.getBytes());
 
@@ -122,7 +141,8 @@ class HandleRepositoryIT extends BaseRepositoryIT{
     List<DoiRecordResponse> responseExpected = generateBatchDoiResponse(handleList);
 
     // When
-    List<DoiRecordResponse> responseReceived = handleRep.createDoiRecordBatch(handleList, CREATED, attributes);
+    List<DoiRecordResponse> responseReceived = handleRep.createDoiRecordBatch(handleList, CREATED,
+        attributes);
 
     // Then
     var postedRecord = context.selectFrom(HANDLES).fetch();
@@ -133,15 +153,17 @@ class HandleRepositoryIT extends BaseRepositoryIT{
   @Test
   void testCreateDigitalSpecimenBatch() throws PidCreationException {
     // Given
-    List<byte[] > handleList = new ArrayList<>();
+    List<byte[]> handleList = new ArrayList<>();
     handleList.add(HANDLE.getBytes());
     handleList.add(HANDLE_ALT.getBytes());
 
     List<HandleAttribute> attributes = generateBatchDigitalSpecimenAttributeList(handleList);
-    List<DigitalSpecimenResponse> responseExpected = generateBatchDigitalSpecimenResponse(handleList);
+    List<DigitalSpecimenResponse> responseExpected = generateBatchDigitalSpecimenResponse(
+        handleList);
 
     // When
-    List<DigitalSpecimenResponse> responseReceived = handleRep.createDigitalSpecimenBatch(handleList, CREATED, attributes);
+    List<DigitalSpecimenResponse> responseReceived = handleRep.createDigitalSpecimenBatch(
+        handleList, CREATED, attributes);
 
     // Then
     var postedRecord = context.selectFrom(HANDLES).fetch();
@@ -152,15 +174,17 @@ class HandleRepositoryIT extends BaseRepositoryIT{
   @Test
   void testCreateDigitalSpecimenBotanyBatch() throws PidCreationException {
     // Given
-    List<byte[] > handleList = new ArrayList<>();
+    List<byte[]> handleList = new ArrayList<>();
     handleList.add(HANDLE.getBytes());
     handleList.add(HANDLE_ALT.getBytes());
 
     List<HandleAttribute> attributes = generateBatchDigitalSpecimenBotanyAttributeList(handleList);
-    List<DigitalSpecimenBotanyResponse> responseExpected = generateBatchDigitalSpecimenBotanyResponse(handleList);
+    List<DigitalSpecimenBotanyResponse> responseExpected = generateBatchDigitalSpecimenBotanyResponse(
+        handleList);
 
     // When
-    List<DigitalSpecimenBotanyResponse> responseReceived = handleRep.createDigitalSpecimenBotanyBatch(handleList, CREATED, attributes);
+    List<DigitalSpecimenBotanyResponse> responseReceived = handleRep.createDigitalSpecimenBotanyBatch(
+        handleList, CREATED, attributes);
 
     // Then
     var postedRecord = context.selectFrom(HANDLES).fetch();
@@ -184,7 +208,8 @@ class HandleRepositoryIT extends BaseRepositoryIT{
     return responseList;
   }
 
-  private List<DigitalSpecimenResponse> generateBatchDigitalSpecimenResponse(List<byte[]> handleList) {
+  private List<DigitalSpecimenResponse> generateBatchDigitalSpecimenResponse(
+      List<byte[]> handleList) {
     List<DigitalSpecimenResponse> responseList = new ArrayList<>();
     for (byte[] h : handleList) {
       responseList.add(generateTestDigitalSpecimenResponse(h));
@@ -192,7 +217,8 @@ class HandleRepositoryIT extends BaseRepositoryIT{
     return responseList;
   }
 
-  private List<DigitalSpecimenBotanyResponse> generateBatchDigitalSpecimenBotanyResponse(List<byte[]> handleList) {
+  private List<DigitalSpecimenBotanyResponse> generateBatchDigitalSpecimenBotanyResponse(
+      List<byte[]> handleList) {
     List<DigitalSpecimenBotanyResponse> responseList = new ArrayList<>();
     for (byte[] h : handleList) {
       responseList.add(generateTestDigitalSpecimenBotanyResponse(h));
@@ -224,7 +250,8 @@ class HandleRepositoryIT extends BaseRepositoryIT{
     return attributes;
   }
 
-  private List<HandleAttribute> generateBatchDigitalSpecimenBotanyAttributeList(List<byte[]> handleList) {
+  private List<HandleAttribute> generateBatchDigitalSpecimenBotanyAttributeList(
+      List<byte[]> handleList) {
     List<HandleAttribute> attributes = new ArrayList<>();
     for (byte[] h : handleList) {
       attributes.addAll(generateTestDigitalSpecimenBotanyAttributes(h));

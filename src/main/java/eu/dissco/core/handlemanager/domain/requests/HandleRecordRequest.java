@@ -1,6 +1,5 @@
 package eu.dissco.core.handlemanager.domain.requests;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.Arrays;
 import java.util.Objects;
 import lombok.Getter;
@@ -10,13 +9,12 @@ import lombok.ToString;
 @Getter
 @RequiredArgsConstructor
 @ToString
-@JsonIgnoreProperties
 public class HandleRecordRequest {
 
-  protected final String pidIssuerPid;
-  protected final String digitalObjectTypePid;
-  protected final String digitalObjectSubtypePid;
-  protected final String[] locations;
+  private final String pidIssuerPid;
+  private final String digitalObjectTypePid;
+  private final String digitalObjectSubtypePid;
+  private final String[] locations;
 
   @Override
   public boolean equals(Object o) {

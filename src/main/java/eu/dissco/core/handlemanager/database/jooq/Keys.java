@@ -13,15 +13,16 @@ import org.jooq.impl.Internal;
 
 
 /**
- * A class modelling foreign key relationships and constraints of tables in 
- * public.
+ * A class modelling foreign key relationships and constraints of tables in public.
  */
-@SuppressWarnings({ "all", "unchecked", "rawtypes" })
+@SuppressWarnings({"all", "unchecked", "rawtypes"})
 public class Keys {
 
-    // -------------------------------------------------------------------------
-    // UNIQUE and PRIMARY KEY definitions
-    // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // UNIQUE and PRIMARY KEY definitions
+  // -------------------------------------------------------------------------
 
-    public static final UniqueKey<HandlesRecord> HANDLES_PKEY = Internal.createUniqueKey(Handles.HANDLES, DSL.name("handles_pkey"), new TableField[] { Handles.HANDLES.HANDLE, Handles.HANDLES.IDX }, true);
+  public static final UniqueKey<HandlesRecord> HANDLES_PKEY = Internal.createUniqueKey(
+      Handles.HANDLES, DSL.name("handles_pkey"),
+      new TableField[]{Handles.HANDLES.HANDLE, Handles.HANDLES.IDX}, true);
 }

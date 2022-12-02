@@ -1,6 +1,9 @@
 package eu.dissco.core.handlemanager.service;
 
 import eu.dissco.core.handlemanager.repository.HandleRepository;
+
+import static eu.dissco.core.handlemanager.utils.HandleNameSettings.*;
+
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -9,7 +12,6 @@ import java.util.Random;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 // This class generates new handles
@@ -19,27 +21,10 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class HandleGeneratorService {
 
-  private static final String ALPHA_NUM = "ABCDEFGHJKLMNPQRSTUVWXYZ1234567890";
-  private static final String PREFIX = "20.5000.1025/";
-  private final char[] symbols;
-  private final char[] buf;
-  @Autowired
-  private HandleRepository handleRep;
-  @Autowired
-  private Random random;
-
-  public HandleGeneratorService() {
-    this(11, new Random(), ALPHA_NUM);
-  }
-
-  private HandleGeneratorService(int length, Random random, String symbols) {
-    if ((length < 1) || (symbols.length() < 2)) {
-      throw new IllegalArgumentException();
-    }
-    this.symbols = symbols.toCharArray();
-    this.buf = new char[length];
-    this.random = random;
-  }
+  private final char[] symbols = ALPHA_NUM.toCharArray();
+  private final char[] buf = new char[LENGTH];
+  private final HandleRepository handleRep;
+  private final Random random;
 
   public List<byte[]> genHandleList(int h) {
     return unwrapBytes((HashSet<ByteBuffer>) genHandleHash(h));
@@ -124,17 +109,15 @@ public class HandleGeneratorService {
     return newHandle().getBytes();
   }
 
-
   public List<byte[]> newHandle(int numberOfHandles) { // Generates h number of handles
     if (numberOfHandles < 1) {
       log.warn("Invalid number of handles to be generated");
       return new ArrayList<>();
     }
-    int maxHandles = 1000;
-    if (numberOfHandles > maxHandles) {
+    if (numberOfHandles > MAX_HANDLES) {
       log.warn("Max number of handles exceeded. Generating maximum {} handles",
-          String.valueOf(maxHandles));
-      numberOfHandles = maxHandles;
+          String.valueOf(MAX_HANDLES));
+      numberOfHandles = MAX_HANDLES;
     }
 
     // We'll use this to make sure we're not duplicating results
@@ -155,5 +138,4 @@ public class HandleGeneratorService {
     }
     return handleList;
   }
-
 }

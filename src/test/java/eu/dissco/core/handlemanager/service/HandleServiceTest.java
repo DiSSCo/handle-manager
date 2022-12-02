@@ -21,7 +21,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mockStatic;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import eu.dissco.core.handlemanager.domain.pidrecords.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
@@ -31,8 +30,6 @@ import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenBotanyRespon
 import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenResponse;
 import eu.dissco.core.handlemanager.domain.responses.DoiRecordResponse;
 import eu.dissco.core.handlemanager.domain.responses.HandleRecordResponse;
-import eu.dissco.core.handlemanager.exceptions.PidCreationException;
-import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
 import java.time.Clock;
 import java.time.Instant;
@@ -40,8 +37,6 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
@@ -75,7 +70,8 @@ class HandleServiceTest {
 
 
   @BeforeEach
-  void setup() throws PidResolutionException, JsonProcessingException {
+  void setup() throws Exception {
+
     DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
     TransformerFactory transformerFactory = TransformerFactory.newInstance();
 
@@ -92,11 +88,9 @@ class HandleServiceTest {
     mockedStatic.close();
   }
 
-  // Jooq Creation
-
   @Test
   void testCreateHandleRecord()
-      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
+      throws Exception {
     // Given
     byte[] handle = handlesList.get(0);
     HandleRecordRequest request = generateTestHandleRequest();
@@ -115,7 +109,8 @@ class HandleServiceTest {
 
   @Test
   void testCreateDoiRecord()
-      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
+      throws Exception {
+
     // Given
     byte[] handle = handlesList.get(0);
     DoiRecordRequest request = generateTestDoiRequest();
@@ -131,16 +126,19 @@ class HandleServiceTest {
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
+
   @Test
   void testCreateDigitalSpecimen()
-      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
+      throws Exception {
+
     // Given
     byte[] handle = handlesList.get(0);
     DigitalSpecimenRequest request = generateTestDigitalSpecimenRequest();
     DigitalSpecimenResponse responseExpected = generateTestDigitalSpecimenResponse(handle);
     List<HandleAttribute> recordTest = generateTestDigitalSpecimenAttributes(handle);
 
-    given(handleRep.createDigitalSpecimen(handle, instant, recordTest)).willReturn(responseExpected);
+    given(handleRep.createDigitalSpecimen(handle, instant, recordTest)).willReturn(
+        responseExpected);
     given(hgService.genHandleList(1)).willReturn(handlesList);
 
     // When
@@ -152,14 +150,16 @@ class HandleServiceTest {
 
   @Test
   void testCreateDigitalSpecimenBotany()
-      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
+      throws Exception {
     // Given
     byte[] handle = handlesList.get(0);
     DigitalSpecimenBotanyRequest request = generateTestDigitalSpecimenBotanyRequest();
-    DigitalSpecimenBotanyResponse responseExpected = generateTestDigitalSpecimenBotanyResponse(handle);
+    DigitalSpecimenBotanyResponse responseExpected = generateTestDigitalSpecimenBotanyResponse(
+        handle);
     List<HandleAttribute> recordTest = generateTestDigitalSpecimenBotanyAttributes(handle);
 
-    given(handleRep.createDigitalSpecimenBotany(handle, instant, recordTest)).willReturn(responseExpected);
+    given(handleRep.createDigitalSpecimenBotany(handle, instant, recordTest)).willReturn(
+        responseExpected);
     given(hgService.genHandleList(1)).willReturn(handlesList);
 
     // When
@@ -170,15 +170,16 @@ class HandleServiceTest {
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
-  // Jooq Batch Creation
   @Test
-  void testCreateHandleRecordBatch()
-      throws PidCreationException, PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException {
+  void testCreateBatchHandleRecord()
+      throws Exception {
+    // Given
     List<HandleRecordRequest> request = generateBatchHandleRequest();
     List<HandleRecordResponse> responseExpected = generateBatchHandleResponse();
     List<HandleAttribute> handleAttributes = generateBatchHandleAttributeList();
 
-    given(handleRep.createHandleRecordBatch(handlesList, instant, handleAttributes)).willReturn(responseExpected);
+    given(handleRep.createHandleRecordBatch(handlesList, instant, handleAttributes)).willReturn(
+        responseExpected);
     given(hgService.genHandleList(2)).willReturn(handlesList);
 
     // When
@@ -189,14 +190,16 @@ class HandleServiceTest {
   }
 
   @Test
-  void testCreateDoiRecordBatch()
-      throws PidCreationException, PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException {
+  void testCreateBatchDoiRecord()
+      throws Exception {
+    // Given
     List<DoiRecordRequest> request = generateBatchDoiRequest();
     List<DoiRecordResponse> responseExpected = generateBatchDoiResponse();
 
     List<HandleAttribute> handleAttributes = generateBatchDoiAttributeList();
 
-    given(handleRep.createDoiRecordBatch(handlesList, instant, handleAttributes)).willReturn(responseExpected);
+    given(handleRep.createDoiRecordBatch(handlesList, instant, handleAttributes)).willReturn(
+        responseExpected);
     given(hgService.genHandleList(2)).willReturn(handlesList);
 
     // When
@@ -207,14 +210,16 @@ class HandleServiceTest {
   }
 
   @Test
-  void testCreateDigitalSpecimenBatch()
-      throws PidCreationException, PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException {
+  void testCreateBatchDigitalSpecimen()
+      throws Exception {
+    // Given
     List<DigitalSpecimenRequest> request = generateBatchDigitalSpecimenRequest();
     List<DigitalSpecimenResponse> responseExpected = generateBatchDigitalSpecimenResponse();
 
     List<HandleAttribute> handleAttributes = generateBatchDigitalSpecimenAttributeList();
 
-    given(handleRep.createDigitalSpecimenBatch(handlesList, instant, handleAttributes)).willReturn(responseExpected);
+    given(handleRep.createDigitalSpecimenBatch(handlesList, instant, handleAttributes)).willReturn(
+        responseExpected);
     given(hgService.genHandleList(2)).willReturn(handlesList);
 
     // When
@@ -225,23 +230,25 @@ class HandleServiceTest {
   }
 
   @Test
-  void testCreateDigitalSpecimenBotanyBatch()
-      throws PidCreationException, PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException {
+  void testCreateBatchDigitalSpecimenBotany()
+      throws Exception {
+    // Given
     List<DigitalSpecimenBotanyRequest> request = generateBatchDigitalSpecimenBotanyRequest();
     List<DigitalSpecimenBotanyResponse> responseExpected = generateBatchDigitalSpecimenBotanyResponse();
 
     List<HandleAttribute> handleAttributes = generateBatchDigitalSpecimenBotanyAttributeList();
 
-    given(handleRep.createDigitalSpecimenBotanyBatch(handlesList, instant, handleAttributes)).willReturn(responseExpected);
+    given(handleRep.createDigitalSpecimenBotanyBatch(handlesList, instant,
+        handleAttributes)).willReturn(responseExpected);
     given(hgService.genHandleList(2)).willReturn(handlesList);
 
     // When
-    List<DigitalSpecimenBotanyResponse> responseReceived = service.createDigitalSpecimenBotanyBatch(request);
+    List<DigitalSpecimenBotanyResponse> responseReceived = service.createDigitalSpecimenBotanyBatch(
+        request);
 
     // Then
     assertThat(responseExpected).isEqualTo(responseReceived);
   }
-
 
 
   private List<HandleRecordRequest> generateBatchHandleRequest() {

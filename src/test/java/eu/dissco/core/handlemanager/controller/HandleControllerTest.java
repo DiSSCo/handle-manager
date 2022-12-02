@@ -1,6 +1,16 @@
 package eu.dissco.core.handlemanager.controller;
 
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDigitalSpecimenBotanyRequest;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDigitalSpecimenBotanyResponse;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDigitalSpecimenRequest;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDigitalSpecimenResponse;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDoiRequest;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDoiResponse;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestHandleRequest;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestHandleResponse;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.BDDMockito.given;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -15,7 +25,6 @@ import eu.dissco.core.handlemanager.domain.responses.HandleRecordResponse;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.service.HandleService;
-import eu.dissco.core.handlemanager.testUtils.TestUtils;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.parsers.ParserConfigurationException;
@@ -37,20 +46,51 @@ class HandleControllerTest {
   private HandleController controller;
   private byte[] handle;
 
-
   @BeforeEach
   void setup() {
     controller = new HandleController(service);
-    handle = TestUtils.HANDLE.getBytes();
+    handle = HANDLE.getBytes();
   }
 
-  // Jooq Creation
+  @Test
+  void testGetAllHandles() throws PidResolutionException {
+    // Given
+    int pageSize = 10;
+    int pageNum = 1;
+    String handle = "20.10/...";
+    List<String> expectedHandles = new ArrayList<>();
+    for (int i = 0; i < pageSize; i++) {
+      expectedHandles.add(handle);
+    }
+    given(service.getHandlesPaged(pageNum, pageSize)).willReturn(expectedHandles);
+
+    // When
+    ResponseEntity<List<String>> response = controller.getAllHandles(pageNum, pageSize);
+
+    // Then
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(expectedHandles).isEqualTo(response.getBody());
+  }
+
+  @Test
+  void testGetAllHandlesFailure() {
+    // Given
+    given(service.getHandlesPaged(1, 10)).willReturn(new ArrayList<>());
+
+    // When
+    var exception = assertThrowsExactly(PidResolutionException.class,
+        () -> controller.getAllHandles(1, 10));
+
+    // Then
+    assertThat(exception).hasMessage("Unable to locate handles");
+  }
+
   @Test
   void testHandleRecordCreation()
-      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
+      throws Exception {
     // Given
-    HandleRecordRequest request = TestUtils.generateTestHandleRequest();
-    HandleRecordResponse responseExpected = TestUtils.generateTestHandleResponse(handle);
+    HandleRecordRequest request = generateTestHandleRequest();
+    HandleRecordResponse responseExpected = generateTestHandleResponse(handle);
     given(service.createHandleRecord(request)).willReturn(responseExpected);
 
     // When
@@ -63,10 +103,10 @@ class HandleControllerTest {
 
   @Test
   void testDoiRecordCreation()
-      throws PidCreationException, PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
+      throws Exception {
     // Given
-    DoiRecordRequest request = TestUtils.generateTestDoiRequest();
-    DoiRecordResponse responseExpected = TestUtils.generateTestDoiResponse(handle);
+    DoiRecordRequest request = generateTestDoiRequest();
+    DoiRecordResponse responseExpected = generateTestDoiResponse(handle);
     given(service.createDoiRecord(request)).willReturn(responseExpected);
 
     // When
@@ -79,15 +119,16 @@ class HandleControllerTest {
 
   @Test
   void testDigitalSpeciemenCreation()
-      throws PidCreationException, PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
+      throws Exception {
     // Given
-    DigitalSpecimenRequest request = TestUtils.generateTestDigitalSpecimenRequest();
-    DigitalSpecimenResponse responseExpected = TestUtils.generateTestDigitalSpecimenResponse(
+    DigitalSpecimenRequest request = generateTestDigitalSpecimenRequest();
+    DigitalSpecimenResponse responseExpected = generateTestDigitalSpecimenResponse(
         handle);
     given(service.createDigitalSpecimen(request)).willReturn(responseExpected);
 
     // When
-    ResponseEntity<DigitalSpecimenResponse> responseReceived = controller.createDigitalSpecimen(request);
+    ResponseEntity<DigitalSpecimenResponse> responseReceived = controller.createDigitalSpecimen(
+        request);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -96,15 +137,16 @@ class HandleControllerTest {
 
   @Test
   void testDigitalSpeciemenBotanyCreation()
-      throws PidCreationException, PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
+      throws Exception {
     // Given
-    DigitalSpecimenBotanyRequest request = TestUtils.generateTestDigitalSpecimenBotanyRequest();
-    DigitalSpecimenBotanyResponse responseExpected = TestUtils.generateTestDigitalSpecimenBotanyResponse(
+    DigitalSpecimenBotanyRequest request = generateTestDigitalSpecimenBotanyRequest();
+    DigitalSpecimenBotanyResponse responseExpected = generateTestDigitalSpecimenBotanyResponse(
         handle);
     given(service.createDigitalSpecimenBotany(request)).willReturn(responseExpected);
 
     // When
-    ResponseEntity<DigitalSpecimenBotanyResponse> responseReceived = controller.createDigitalSpecimenBotany(request);
+    ResponseEntity<DigitalSpecimenBotanyResponse> responseReceived = controller.createDigitalSpecimenBotany(
+        request);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -120,7 +162,8 @@ class HandleControllerTest {
     given(service.createHandleRecordBatch(request)).willReturn(responseExpected);
 
     // When
-    ResponseEntity<List<HandleRecordResponse>> responseReceived = controller.createHandleRecordBatch(request);
+    ResponseEntity<List<HandleRecordResponse>> responseReceived = controller.createHandleRecordBatch(
+        request);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -129,14 +172,15 @@ class HandleControllerTest {
 
   @Test
   void testDoiRecordCreationBatch()
-      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
+      throws Exception {
     // Given
     List<DoiRecordRequest> request = buildDoiRequestList();
     List<DoiRecordResponse> responseExpected = buildDoiResponseList();
     given(service.createDoiRecordBatch(request)).willReturn(responseExpected);
 
     // When
-    ResponseEntity<List<DoiRecordResponse>> responseReceived = controller.createDoiRecordBatch(request);
+    ResponseEntity<List<DoiRecordResponse>> responseReceived = controller.createDoiRecordBatch(
+        request);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -145,14 +189,15 @@ class HandleControllerTest {
 
   @Test
   void testDigitalSpecimenCreationBatch()
-      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
+      throws Exception {
     // Given
     List<DigitalSpecimenRequest> request = buildDigitalSpecimenRequestList();
     List<DigitalSpecimenResponse> responseExpected = buildDigitalSpecimenResponseList();
     given(service.createDigitalSpecimenBatch(request)).willReturn(responseExpected);
 
     // When
-    ResponseEntity<List<DigitalSpecimenResponse>> responseReceived = controller.createDigitalSpecimenBatch(request);
+    ResponseEntity<List<DigitalSpecimenResponse>> responseReceived = controller.createDigitalSpecimenBatch(
+        request);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -161,20 +206,20 @@ class HandleControllerTest {
 
   @Test
   void testDigitalSpecimenBotanyCreationBatch()
-      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
+      throws Exception {
     // Given
     List<DigitalSpecimenBotanyRequest> request = buildDigitalSpecimenBotanyRequestList();
     List<DigitalSpecimenBotanyResponse> responseExpected = buildDigitalSpecimenBotanyResponseList();
     given(service.createDigitalSpecimenBotanyBatch(request)).willReturn(responseExpected);
 
     // When
-    ResponseEntity<List<DigitalSpecimenBotanyResponse>> responseReceived = controller.createDigitalSpecimenBotanyBatch(request);
+    ResponseEntity<List<DigitalSpecimenBotanyResponse>> responseReceived = controller.createDigitalSpecimenBotanyBatch(
+        request);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
-
 
   @Test
   void testHello() {
@@ -184,9 +229,23 @@ class HandleControllerTest {
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
   }
 
+  @Test
+  void testPidCreationException() throws Exception {
+    // Given
+    HandleRecordRequest request = generateTestHandleRequest();
+    given(service.createHandleRecord(request)).willThrow(PidResolutionException.class);
+
+    // When
+    var exception = assertThrowsExactly(PidResolutionException.class,
+        () -> controller.createHandleRecord(request));
+
+    // Then
+
+  }
+
   private List<HandleRecordRequest> buildHandleRequestList() {
     List<HandleRecordRequest> requestList = new ArrayList<>();
-    HandleRecordRequest request = TestUtils.generateTestHandleRequest();
+    HandleRecordRequest request = generateTestHandleRequest();
 
     for (int i = 0; i < REQUEST_LEN; i++) {
       requestList.add(request);
@@ -196,7 +255,7 @@ class HandleControllerTest {
 
   private List<HandleRecordResponse> buildHandleResponseList() {
     List<HandleRecordResponse> responseList = new ArrayList<>();
-    HandleRecordResponse response = TestUtils.generateTestHandleResponse(handle);
+    HandleRecordResponse response = generateTestHandleResponse(handle);
     for (int i = 0; i < REQUEST_LEN; i++) {
       responseList.add(response);
     }
@@ -205,7 +264,7 @@ class HandleControllerTest {
 
   private List<DoiRecordRequest> buildDoiRequestList() {
     List<DoiRecordRequest> requestList = new ArrayList<>();
-    DoiRecordRequest request = TestUtils.generateTestDoiRequest();
+    DoiRecordRequest request = generateTestDoiRequest();
     for (int i = 0; i < REQUEST_LEN; i++) {
       requestList.add(request);
     }
@@ -214,7 +273,7 @@ class HandleControllerTest {
 
   private List<DoiRecordResponse> buildDoiResponseList() {
     List<DoiRecordResponse> responseList = new ArrayList<>();
-    DoiRecordResponse response = TestUtils.generateTestDoiResponse(handle);
+    DoiRecordResponse response = generateTestDoiResponse(handle);
 
     for (int i = 0; i < REQUEST_LEN; i++) {
       responseList.add(response);
@@ -225,7 +284,7 @@ class HandleControllerTest {
   // DigitalSpecimens
   private List<DigitalSpecimenRequest> buildDigitalSpecimenRequestList() {
     List<DigitalSpecimenRequest> requestList = new ArrayList<>();
-    DigitalSpecimenRequest request = TestUtils.generateTestDigitalSpecimenRequest();
+    DigitalSpecimenRequest request = generateTestDigitalSpecimenRequest();
     for (int i = 0; i < REQUEST_LEN; i++) {
       requestList.add(request);
     }
@@ -234,7 +293,7 @@ class HandleControllerTest {
 
   private List<DigitalSpecimenResponse> buildDigitalSpecimenResponseList() {
     List<DigitalSpecimenResponse> responseList = new ArrayList<>();
-    DigitalSpecimenResponse response = TestUtils.generateTestDigitalSpecimenResponse(handle);
+    DigitalSpecimenResponse response = generateTestDigitalSpecimenResponse(handle);
 
     for (int i = 0; i < REQUEST_LEN; i++) {
       responseList.add(response);
@@ -242,11 +301,10 @@ class HandleControllerTest {
     return responseList;
   }
 
-
   //DigitalSpecimenBotany
   private List<DigitalSpecimenBotanyRequest> buildDigitalSpecimenBotanyRequestList() {
     List<DigitalSpecimenBotanyRequest> responseList = new ArrayList<>();
-    DigitalSpecimenBotanyRequest request = TestUtils.generateTestDigitalSpecimenBotanyRequest();
+    DigitalSpecimenBotanyRequest request = generateTestDigitalSpecimenBotanyRequest();
     for (int i = 0; i < REQUEST_LEN; i++) {
       responseList.add(request);
     }
@@ -255,7 +313,7 @@ class HandleControllerTest {
 
   private List<DigitalSpecimenBotanyResponse> buildDigitalSpecimenBotanyResponseList() {
     List<DigitalSpecimenBotanyResponse> responseList = new ArrayList<>();
-    DigitalSpecimenBotanyResponse response = TestUtils.generateTestDigitalSpecimenBotanyResponse(
+    DigitalSpecimenBotanyResponse response = generateTestDigitalSpecimenBotanyResponse(
         handle);
 
     for (int i = 0; i < REQUEST_LEN; i++) {
@@ -263,6 +321,4 @@ class HandleControllerTest {
     }
     return responseList;
   }
-
-
 }

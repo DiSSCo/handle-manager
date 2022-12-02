@@ -2,12 +2,11 @@ package eu.dissco.core.handlemanager.utils;
 
 public class Resources {
 
-
   private Resources() {
     throw new IllegalStateException("Utility class");
   }
 
-  public static byte[] genAdminHandle(){
+  public static byte[] genAdminHandle() {
     return decodeAdmin();
   }
 

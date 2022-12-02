@@ -10,11 +10,11 @@ import eu.dissco.core.handlemanager.database.jooq.tables.Handles;
 /**
  * Convenience access to all tables in public.
  */
-@SuppressWarnings({ "all", "unchecked", "rawtypes" })
+@SuppressWarnings({"all", "unchecked", "rawtypes"})
 public class Tables {
 
-    /**
-     * The table <code>public.handles</code>.
-     */
-    public static final Handles HANDLES = Handles.HANDLES;
+  /**
+   * The table <code>public.handles</code>.
+   */
+  public static final Handles HANDLES = Handles.HANDLES;
 }

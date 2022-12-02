@@ -3,10 +3,8 @@ package eu.dissco.core.handlemanager.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.domain.pidrecords.HandleAttribute;
-import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
 import eu.dissco.core.handlemanager.testUtils.TestUtils;
 import java.time.Clock;
@@ -46,7 +44,7 @@ class PidTypeServiceTest {
   }
 
   @Test
-  void testPidTypeRecordResolutionHandle() throws PidResolutionException, JsonProcessingException {
+  void testPidTypeRecordResolutionHandle() throws Exception {
     // Given
     initTestPidTypeRecordHandle();
     String expected = TestUtils.PTR_HANDLE_RECORD;
@@ -61,7 +59,7 @@ class PidTypeServiceTest {
   }
 
   @Test
-  void testPidTypeRecordResolutionDoi() throws PidResolutionException, JsonProcessingException {
+  void testPidTypeRecordResolutionDoi() throws Exception {
     //Given
     initTestPidTypeRecordDoi();
     String expected = TestUtils.PTR_DOI_RECORD;
@@ -98,11 +96,13 @@ class PidTypeServiceTest {
 
     record.add(new HandleAttribute(1, recordPid, "pid", pid.getBytes()));
     record.add(new HandleAttribute(2, recordPid, "pidType", pidType.getBytes()));
-    record.add(new HandleAttribute(3, recordPid, "primaryNameFromPid", primaryNameFromPid.getBytes()));
+    record.add(
+        new HandleAttribute(3, recordPid, "primaryNameFromPid", primaryNameFromPid.getBytes()));
 
     if (isDoi) {
       registrationAgencyDoiName = TestUtils.PTR_REGISTRATION_DOI_NAME;
-      record.add(new HandleAttribute(4, recordPid, "registrationAgencyDoiName", registrationAgencyDoiName.getBytes()));
+      record.add(new HandleAttribute(4, recordPid, "registrationAgencyDoiName",
+          registrationAgencyDoiName.getBytes()));
     }
     return record;
   }

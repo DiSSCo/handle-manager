@@ -42,21 +42,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 @Slf4j
 // @Profile(Profiles.WEB) Is there a digitalspecimenprofile Profile class?
 public class HandleController {
+
   private final HandleService service;
-  // ** Create Records: handle, doi, digital specimen, botany specimen **
-
-  // Authenticated creation
-
-  @PostMapping(value = "/createRecordBatchAuth", params = "pidType=handle")
-  public ResponseEntity<List<HandleRecordResponse>> createHandleRecordBatchAuth(
-      Authentication authentication,
-      @RequestBody List<HandleRecordRequest> hdl)
-      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
-    var tokenId = getNameFromToken(authentication);
-    return ResponseEntity.status(HttpStatus.CREATED).body(service.createHandleRecordBatch(hdl));
-  }
-
-  // Batch creation
+  
   @PostMapping(value = "/createRecordBatch", params = "pidType=handle")
   public ResponseEntity<List<HandleRecordResponse>> createHandleRecordBatch(
       @RequestBody List<HandleRecordRequest> request)
@@ -75,14 +63,16 @@ public class HandleController {
   public ResponseEntity<List<DigitalSpecimenResponse>> createDigitalSpecimenBatch(
       @RequestBody List<DigitalSpecimenRequest> request)
       throws PidResolutionException, JsonProcessingException, ParserConfigurationException, PidCreationException, TransformerException {
-    return ResponseEntity.status(HttpStatus.CREATED).body(service.createDigitalSpecimenBatch(request));
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(service.createDigitalSpecimenBatch(request));
   }
 
   @PostMapping(value = "/createRecordBatch", params = "pidType=digitalSpecimenBotany")
   public ResponseEntity<List<DigitalSpecimenBotanyResponse>> createDigitalSpecimenBotanyBatch(
       @RequestBody List<DigitalSpecimenBotanyRequest> request)
       throws PidResolutionException, JsonProcessingException, ParserConfigurationException, PidCreationException, TransformerException {
-    return ResponseEntity.status(HttpStatus.CREATED).body(service.createDigitalSpecimenBotanyBatch(request));
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(service.createDigitalSpecimenBotanyBatch(request));
   }
 
   // Create Single Record 
@@ -161,7 +151,7 @@ public class HandleController {
 
   @ExceptionHandler(PidCreationException.class)
   private ResponseEntity<String> pidCreationException(PidCreationException e) {
-    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
   }
 
   @ExceptionHandler(PidResolutionException.class)

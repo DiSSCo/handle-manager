@@ -1,12 +1,11 @@
 package eu.dissco.core.handlemanager.domain.responses;
 
-import lombok.Data;
+import java.util.Objects;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Data
+@Getter
 @NoArgsConstructor
-@Slf4j
 public class DigitalSpecimenBotanyResponse extends DigitalSpecimenResponse {
 
   String objectType;
@@ -34,22 +33,44 @@ public class DigitalSpecimenBotanyResponse extends DigitalSpecimenResponse {
       // Botany Specimen
       String objectType,
       String preservedOrLiving) {
-    super(pid, pidIssuer, digitalObjectType, digitalObjectSubtype, locs, issueDate, issueNumber, pidStatus,
-        pidKernelMetadataLicense, hsAdmin, referentDoiName, referent, digititalOrPhysical, specimenHost, inCollectionFacility);
+    super(pid, pidIssuer, digitalObjectType, digitalObjectSubtype, locs, issueDate, issueNumber,
+        pidStatus,
+        pidKernelMetadataLicense, hsAdmin, referentDoiName, referent, digititalOrPhysical,
+        specimenHost, inCollectionFacility);
     this.objectType = objectType;
     this.preservedOrLiving = preservedOrLiving;
   }
+
   @Override
   public void setAttribute(String type, String data)
       throws NoSuchFieldException {
     if (type.equals("objectType")) {
       this.objectType = data;
-    }
-    else if (type.equals("preservedOrLiving")) {
+    } else if (type.equals("preservedOrLiving")) {
       this.preservedOrLiving = data;
-    }
-    else {
+    } else {
       super.setAttribute(type, data);
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    if (!super.equals(o)) {
+      return false;
+    }
+    DigitalSpecimenBotanyResponse that = (DigitalSpecimenBotanyResponse) o;
+    return getObjectType().equals(that.getObjectType()) && getPreservedOrLiving().equals(
+        that.getPreservedOrLiving());
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), getObjectType(), getPreservedOrLiving());
   }
 }

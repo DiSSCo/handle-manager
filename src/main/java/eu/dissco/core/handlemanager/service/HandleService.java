@@ -36,31 +36,76 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 
-// Postgres value in (value1, value2)..
-// Generate all handles before posting...
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class HandleService {
+
   private final HandleRepository handleRep;
-
   private final PidTypeService pidTypeService;
-
   private final HandleGeneratorService hf;
   private final DocumentBuilderFactory dbf;
-
   private final TransformerFactory tf;
 
-  public List<String> getHandlesPaged(String pidStatus, int pageNum, int pageSize) {
-    return handleRep.getAllHandles(pidStatus.getBytes(), pageNum, pageSize);
+  //  Batch
+  public List<HandleRecordResponse> createHandleRecordBatch(List<HandleRecordRequest> requests)
+      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
+    List<byte[]> handles = hf.genHandleList(requests.size());
+    List<HandleAttribute> handleAttributes = new ArrayList<>();
+
+    for (int i = 0; i < requests.size(); i++) {
+      handleAttributes.addAll(prepareHandleRecordAttributes(requests.get(i), handles.get(i)));
+    }
+    var recordTimestamp = Instant.now();
+
+    return handleRep.createHandleRecordBatch(handles, recordTimestamp, handleAttributes);
   }
 
-  public List<String> getHandlesPaged(int pageNum, int pageSize) {
-    return handleRep.getAllHandles(pageNum, pageSize);
+  public List<DoiRecordResponse> createDoiRecordBatch(List<DoiRecordRequest> requests)
+      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
+    List<byte[]> handles = hf.genHandleList(requests.size());
+
+    List<HandleAttribute> handleAttributes = new ArrayList<>();
+
+    for (int i = 0; i < requests.size(); i++) {
+      handleAttributes.addAll(prepareDoiRecordAttributes(requests.get(i), handles.get(i)));
+    }
+    var recordTimestamp = Instant.now();
+    return handleRep.createDoiRecordBatch(handles, recordTimestamp, handleAttributes);
   }
 
+  public List<DigitalSpecimenResponse> createDigitalSpecimenBatch(
+      List<DigitalSpecimenRequest> requests)
+      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
+    List<byte[]> handles = hf.genHandleList(requests.size());
+    List<HandleAttribute> handleAttributes = new ArrayList<>();
 
+    for (int i = 0; i < requests.size(); i++) {
+      handleAttributes.addAll(
+          prepareDigitalSpecimenRecordAttributes(requests.get(i), handles.get(i)));
+    }
+    var recordTimestamp = Instant.now();
+    return handleRep.createDigitalSpecimenBatch(handles, recordTimestamp, handleAttributes);
+  }
+
+  public List<DigitalSpecimenBotanyResponse> createDigitalSpecimenBotanyBatch(
+      List<DigitalSpecimenBotanyRequest> requests)
+      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
+    List<byte[]> handles = hf.genHandleList(requests.size());
+
+    List<HandleAttribute> handleAttributes = new ArrayList<>();
+
+    for (int i = 0; i < requests.size(); i++) {
+      handleAttributes.addAll(
+          prepareDigitalSpecimenBotanyRecordAttributes(requests.get(i), handles.get(i)));
+    }
+
+    var recordTimestamp = Instant.now();
+    return handleRep.createDigitalSpecimenBotanyBatch(handles, recordTimestamp, handleAttributes);
+
+  }
+
+  // Create Single Record
   public HandleRecordResponse createHandleRecord(HandleRecordRequest request)
       throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
     byte[] handle = hf.genHandleList(1).get(0);
@@ -95,59 +140,14 @@ public class HandleService {
     return handleRep.createDigitalSpecimenBotany(handle, recordTimestamp, handleRecord);
   }
 
-  //  Batch
+  // Getters
 
-  public List<HandleRecordResponse> createHandleRecordBatch(List<HandleRecordRequest> requests)
-      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
-    List<byte[]> handles = hf.genHandleList(requests.size());
-    List<HandleAttribute> handleAttributes = new ArrayList<>();
-
-    for (int i = 0; i < requests.size(); i++) {
-      handleAttributes.addAll(prepareHandleRecordAttributes(requests.get(i), handles.get(i)));
-    }
-    var recordTimestamp = Instant.now();
-
-    return handleRep.createHandleRecordBatch(handles, recordTimestamp, handleAttributes);
+  public List<String> getHandlesPaged(String pidStatus, int pageNum, int pageSize) {
+    return handleRep.getAllHandles(pidStatus.getBytes(), pageNum, pageSize);
   }
 
-  public List<DoiRecordResponse> createDoiRecordBatch(List<DoiRecordRequest> requests)
-      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
-    List<byte[]> handles = hf.genHandleList(requests.size());
-    List<HandleAttribute> handleAttributes = new ArrayList<>();
-
-    for (int i = 0; i < requests.size(); i++) {
-      handleAttributes.addAll(prepareDoiRecordAttributes(requests.get(i), handles.get(i)));
-    }
-    var recordTimestamp = Instant.now();
-    return handleRep.createDoiRecordBatch(handles, recordTimestamp, handleAttributes);
-  }
-
-  public List<DigitalSpecimenResponse> createDigitalSpecimenBatch(
-      List<DigitalSpecimenRequest> requests)
-      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
-    List<byte[]> handles = hf.genHandleList(requests.size());
-    List<HandleAttribute> handleAttributes = new ArrayList<>();
-
-    for (int i = 0; i < requests.size(); i++) {
-      handleAttributes.addAll(
-          prepareDigitalSpecimenRecordAttributes(requests.get(i), handles.get(i)));
-    }
-    var recordTimestamp = Instant.now();
-    return handleRep.createDigitalSpecimenBatch(handles, recordTimestamp, handleAttributes);
-  }
-
-  public List<DigitalSpecimenBotanyResponse> createDigitalSpecimenBotanyBatch(
-      List<DigitalSpecimenBotanyRequest> requests)
-      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
-    List<byte[]> handles = hf.genHandleList(requests.size());
-    List<HandleAttribute> handleAttributes = new ArrayList<>();
-
-    for (int i = 0; i < requests.size(); i++) {
-      handleAttributes.addAll(
-          prepareDigitalSpecimenBotanyRecordAttributes(requests.get(i), handles.get(i)));
-    }
-    var recordTimestamp = Instant.now();
-    return handleRep.createDigitalSpecimenBotanyBatch(handles, recordTimestamp, handleAttributes);
+  public List<String> getHandlesPaged(int pageNum, int pageSize) {
+    return handleRep.getAllHandles(pageNum, pageSize);
   }
 
   // Prepare Attribute lists
@@ -263,6 +263,7 @@ public class HandleService {
     Instant instant = Instant.now();
     return dt.format(instant);
   }
+
   public byte[] setLocations(String[] objectLocations)
       throws TransformerException, ParserConfigurationException {
 

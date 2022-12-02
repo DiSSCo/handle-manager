@@ -1,17 +1,15 @@
 package eu.dissco.core.handlemanager.domain.requests;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.Objects;
 import lombok.Getter;
 import lombok.ToString;
 
 @Getter
 @ToString
-@JsonIgnoreProperties
 public class DigitalSpecimenBotanyRequest extends DigitalSpecimenRequest {
 
-  protected final String objectType;
-  protected final String preservedOrLiving;
+  private final String objectType;
+  private final String preservedOrLiving;
 
   public DigitalSpecimenBotanyRequest(
       // Handle
@@ -35,7 +33,6 @@ public class DigitalSpecimenBotanyRequest extends DigitalSpecimenRequest {
     this.objectType = objectType;
     this.preservedOrLiving = preservedOrLiving;
   }
-
 
   @Override
   public boolean equals(Object o) {
