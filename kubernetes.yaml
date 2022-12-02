@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: dissco-handle-manager
-          image: public.ecr.aws/m8w1i6p4/dissco-handle-manager
+          image: public.ecr.aws/m8w1i6p4/handle-manager
           imagePullPolicy: Always
           ports:
             - containerPort: 80
@@ -27,10 +27,6 @@ spec:
               value:
             - name: spring.datasource.password
               value:
-            - name: springdoc.api-docs.path
-              value: /api/v3/api-docs
-            - name: springdoc.swagger-ui.path
-              value: /api/swagger-ui.html
           securityContext:
             runAsNonRoot: true
             allowPrivilegeEscalation: false
