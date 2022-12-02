@@ -19,7 +19,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`sandbox.dissco.tech`) && PathPrefix(`/processing/digitalmedia`)
+    - match: Host(`sandbox.dissco.tech`) && PathPrefix(`/handle-manager/api`)
       kind: Rule
       services:
         - name: dissco-handle-manager-service
@@ -35,5 +35,5 @@ metadata:
 spec:
   stripPrefix:
     prefixes:
-      - /processing/digitalmedia
+      - /handle-manager/api
     forceSlash: false
