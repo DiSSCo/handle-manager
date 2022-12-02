@@ -16,7 +16,7 @@ public class HandleRecordResponse {
   private String issueDate;
   private String issueNumber;
   private String pidKernelMetadataLicense;
-  private String pidStatus;
+  protected String pidStatus;
   private String hsAdmin;
 
   public HandleRecordResponse(
