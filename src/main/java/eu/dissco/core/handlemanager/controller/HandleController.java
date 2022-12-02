@@ -20,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.keycloak.KeycloakPrincipal;
 import org.keycloak.KeycloakSecurityContext;
 import org.keycloak.representations.AccessToken;
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -35,11 +34,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 
-
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
 @ControllerAdvice
+@PreAuthorize("isAuthenticated()")
 @Slf4j
 // @Profile(Profiles.WEB) Is there a digitalspecimenprofile Profile class?
 public class HandleController {
@@ -47,7 +46,7 @@ public class HandleController {
   // ** Create Records: handle, doi, digital specimen, botany specimen **
 
   // Authenticated creation
-  @PreAuthorize("isAuthenticated()")
+
   @PostMapping(value = "/createRecordBatchAuth", params = "pidType=handle")
   public ResponseEntity<List<HandleRecordResponse>> createHandleRecordBatchAuth(
       Authentication authentication,
@@ -117,6 +116,7 @@ public class HandleController {
 
   // Hellos and getters
 
+  //TODO this shouldnt need to be authenticated in future (nor reads)
   @GetMapping(value = "/health")
   public ResponseEntity<String> hello() {
     return new ResponseEntity<>("API is running", HttpStatus.OK);
