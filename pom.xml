@@ -100,13 +100,12 @@
       <groupId>com.fasterxml.jackson.core</groupId>
     </dependency>
     <dependency>
-      <artifactId>postgresql</artifactId>
-      <groupId>org.postgresql</groupId>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
       <groupId>org.keycloak</groupId>
       <artifactId>keycloak-spring-boot-starter</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>javax.annotation</groupId>
+      <artifactId>javax.annotation-api</artifactId>
     </dependency>
 
     <!-- Testing Dependencies -->
@@ -163,10 +162,6 @@
   <build>
     <defaultGoal>-B verify</defaultGoal>
     <plugins>
-      <plugin>
-        <artifactId>spring-boot-maven-plugin</artifactId>
-        <groupId>org.springframework.boot</groupId>
-      </plugin>
       <plugin>
         <artifactId>jacoco-maven-plugin</artifactId>
         <executions>
