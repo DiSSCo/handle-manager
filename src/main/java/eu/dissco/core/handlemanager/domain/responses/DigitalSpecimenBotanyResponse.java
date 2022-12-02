@@ -1,7 +1,6 @@
 package eu.dissco.core.handlemanager.domain.responses;
 
 import java.util.Objects;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 

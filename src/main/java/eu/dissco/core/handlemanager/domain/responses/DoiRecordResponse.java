@@ -1,7 +1,9 @@
 package eu.dissco.core.handlemanager.domain.responses;
+
 import java.util.Objects;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
 @Getter
 @NoArgsConstructor
 public class DoiRecordResponse extends HandleRecordResponse {

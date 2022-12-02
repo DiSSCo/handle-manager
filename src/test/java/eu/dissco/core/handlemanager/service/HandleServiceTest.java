@@ -21,7 +21,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mockStatic;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import eu.dissco.core.handlemanager.domain.pidrecords.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
@@ -71,7 +70,6 @@ class HandleServiceTest {
 
 
   @BeforeEach
-
   void setup() throws Exception {
 
     DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
@@ -90,7 +88,7 @@ class HandleServiceTest {
     mockedStatic.close();
   }
 
-@Test
+  @Test
   void testCreateHandleRecord()
       throws Exception {
     // Given
@@ -108,7 +106,7 @@ class HandleServiceTest {
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
-  
+
   @Test
   void testCreateDoiRecord()
       throws Exception {
@@ -132,7 +130,7 @@ class HandleServiceTest {
   @Test
   void testCreateDigitalSpecimen()
       throws Exception {
-      
+
     // Given
     byte[] handle = handlesList.get(0);
     DigitalSpecimenRequest request = generateTestDigitalSpecimenRequest();

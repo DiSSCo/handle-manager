@@ -80,7 +80,6 @@ public class HandleService {
     List<byte[]> handles = hf.genHandleList(requests.size());
     List<HandleAttribute> handleAttributes = new ArrayList<>();
 
-
     for (int i = 0; i < requests.size(); i++) {
       handleAttributes.addAll(
           prepareDigitalSpecimenRecordAttributes(requests.get(i), handles.get(i)));

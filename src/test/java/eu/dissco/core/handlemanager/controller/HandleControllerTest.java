@@ -172,7 +172,7 @@ class HandleControllerTest {
 
   @Test
   void testDoiRecordCreationBatch()
-      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
+      throws Exception {
     // Given
     List<DoiRecordRequest> request = buildDoiRequestList();
     List<DoiRecordResponse> responseExpected = buildDoiResponseList();
@@ -189,7 +189,7 @@ class HandleControllerTest {
 
   @Test
   void testDigitalSpecimenCreationBatch()
-      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
+      throws Exception {
     // Given
     List<DigitalSpecimenRequest> request = buildDigitalSpecimenRequestList();
     List<DigitalSpecimenResponse> responseExpected = buildDigitalSpecimenResponseList();
@@ -206,7 +206,7 @@ class HandleControllerTest {
 
   @Test
   void testDigitalSpecimenBotanyCreationBatch()
-      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
+      throws Exception {
     // Given
     List<DigitalSpecimenBotanyRequest> request = buildDigitalSpecimenBotanyRequestList();
     List<DigitalSpecimenBotanyResponse> responseExpected = buildDigitalSpecimenBotanyResponseList();
