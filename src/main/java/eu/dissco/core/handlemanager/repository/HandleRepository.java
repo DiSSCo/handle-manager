@@ -74,7 +74,8 @@ public class HandleRepository {
     return context
         .selectDistinct(HANDLES.HANDLE)
         .from(HANDLES)
-        .where(HANDLES.DATA.eq(pidStatus))
+        .where(HANDLES.TYPE.eq("pidStatus".getBytes(StandardCharsets.UTF_8)))
+        .and(HANDLES.DATA.eq(pidStatus))
         .limit(pageSize)
         .offset(pageNum)
         .fetch()
