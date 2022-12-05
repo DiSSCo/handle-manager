@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class DigitalSpecimenBotanyResponse extends DigitalSpecimenResponse {
 
-  String objectType;
-  String preservedOrLiving;
+  private String objectType;
+  private String preservedOrLiving;
 
   public DigitalSpecimenBotanyResponse(
       // Handle

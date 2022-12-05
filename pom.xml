@@ -24,7 +24,6 @@
     <keycloak-adapter-bom.version>16.1.1</keycloak-adapter-bom.version>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     <sonar.organization>dissco</sonar.organization>
-    <db.properties>.properties</db.properties>
   </properties>
 
   <dependencyManagement>
@@ -62,10 +61,6 @@
     </dependency>
     <dependency>
       <artifactId>spring-boot-starter-web</artifactId>
-      <groupId>org.springframework.boot</groupId>
-    </dependency>
-    <dependency>
-      <artifactId>spring-boot-starter-data-jpa</artifactId>
       <groupId>org.springframework.boot</groupId>
     </dependency>
     <dependency>

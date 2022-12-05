@@ -28,7 +28,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-@Slf4j
 class HandleRepositoryIT extends BaseRepositoryIT {
 
   private HandleRepository handleRep;

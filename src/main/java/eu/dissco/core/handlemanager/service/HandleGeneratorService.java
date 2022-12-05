@@ -1,10 +1,5 @@
 package eu.dissco.core.handlemanager.service;
 
-import static eu.dissco.core.handlemanager.utils.HandleNameSettings.ALPHA_NUM;
-import static eu.dissco.core.handlemanager.utils.HandleNameSettings.LENGTH;
-import static eu.dissco.core.handlemanager.utils.HandleNameSettings.MAX_HANDLES;
-import static eu.dissco.core.handlemanager.utils.HandleNameSettings.PREFIX;
-
 import eu.dissco.core.handlemanager.repository.HandleRepository;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -22,6 +17,11 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Slf4j
 public class HandleGeneratorService {
+
+  private static final int LENGTH = 11;
+  private static final String ALPHA_NUM = "ABCDEFGHJKLMNPQRSTUVWXYZ1234567890";
+  private static final String PREFIX = "20.5000.1025/";
+  private static final int MAX_HANDLES = 1000;
 
   private final char[] symbols = ALPHA_NUM.toCharArray();
   private final char[] buf = new char[LENGTH];

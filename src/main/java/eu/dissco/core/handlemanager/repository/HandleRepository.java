@@ -54,34 +54,27 @@ public class HandleRepository {
 
   // Resolve Pid
   public List<HandleAttribute> resolveHandle(byte[] handle) {
-    List<Record4<Integer, byte[], byte[], byte[]>> dbRecord = context
+    return context
         .select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
         .from(HANDLES)
         .where(HANDLES.HANDLE.eq(handle))
-        .fetch();
-    return mapToAttribute(dbRecord);
+        .fetch(this::mapToAttribute);
   }
 
-  private List<HandleAttribute> mapToAttribute(
-      List<Record4<Integer, byte[], byte[], byte[]>> dbRecord) {
-    List<HandleAttribute> attributes = new ArrayList<>();
-    for (Record4<Integer, byte[], byte[], byte[]> row : dbRecord) {
-      attributes.add(new HandleAttribute(
-          row.get(HANDLES.IDX),
-          row.get(HANDLES.HANDLE),
-          new String(row.get(HANDLES.TYPE)),
-          row.get(HANDLES.DATA)
-      ));
-    }
-    return attributes;
+  private HandleAttribute mapToAttribute(Record4<Integer, byte[], byte[], byte[]> row){
+    return new HandleAttribute(
+        row.get(HANDLES.IDX),
+        row.get(HANDLES.HANDLE),
+        new String(row.get(HANDLES.TYPE)),
+        row.get(HANDLES.DATA));
   }
 
   // Get List of Pids
   public List<String> getAllHandles(byte[] pidStatus, int pageNum, int pageSize) {
     return context
-        .selectDistinct(HANDLES.HANDLE, HANDLES.DATA)
+        .selectDistinct(HANDLES.HANDLE)
         .from(HANDLES)
-        .where(HANDLES.DATA.eq(pidStatus)) // Hmm...
+        .where(HANDLES.DATA.eq(pidStatus))
         .limit(pageSize)
         .offset(pageNum)
         .fetch()
