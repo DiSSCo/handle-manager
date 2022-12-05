@@ -1,4 +1,4 @@
 target/
 .idea
-src/main/resources/.connection.properties
+**/application.properties
 .mvn/
