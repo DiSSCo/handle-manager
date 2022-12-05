@@ -127,7 +127,7 @@ public class HandleRepository {
     try {
       return mapPostedRecordToHandleRecordResponse(handles);
     } catch (PidCreationException e) {
-      rollbackHandleCreation(handles); // If an error has occured, delete any handles we've posted
+      rollbackHandleCreation(handles); // If an error has occurred, delete any handles we've posted
       throw new PidCreationException(e.getMessage());
     }
   }
