@@ -1,6 +1,7 @@
 package eu.dissco.core.handlemanager.repository;
 
 import static eu.dissco.core.handlemanager.database.jooq.tables.Handles.HANDLES;
+import static eu.dissco.core.handlemanager.domain.PidRecords.*;
 
 import eu.dissco.core.handlemanager.database.jooq.tables.records.HandlesRecord;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
@@ -440,16 +441,16 @@ public class HandleRepository {
       T response)
       throws NoSuchFieldException {
     switch (type) {
-      case "pid" -> response.setPid(data);
-      case "pidIssuer" -> response.setPidIssuer(data);
-      case "digitalObjectType" -> response.setDigitalObjectType(data);
-      case "digitalObjectSubtype" -> response.setDigitalObjectSubtype(data);
-      case "10320/loc" -> response.setLocs(data);
-      case "issueDate" -> response.setIssueDate(data);
-      case "issueNumber" -> response.setIssueNumber(data);
-      case "pidStatus" -> response.setPidStatus(data);
-      case "pidKernelMetadataLicense" -> response.setPidKernelMetadataLicense(data);
-      case "HS_ADMIN" -> response.setHsAdmin(data);
+      case PID -> response.setPid(data);
+      case PID_ISSUER -> response.setPidIssuer(data);
+      case DIGITAL_OBJECT_TYPE -> response.setDigitalObjectType(data);
+      case DIGITAL_OBJECT_SUBTYPE -> response.setDigitalObjectSubtype(data);
+      case LOC -> response.setLocs(data);
+      case ISSUE_DATE -> response.setIssueDate(data);
+      case ISSUE_NUMBER -> response.setIssueNumber(data);
+      case PID_STATUS -> response.setPidStatus(data);
+      case PID_KERNEL_METADATA_LICENSE -> response.setPidKernelMetadataLicense(data);
+      case HS_ADMIN -> response.setHsAdmin(data);
       default -> throw new NoSuchFieldException();
     }
     return response;
@@ -459,8 +460,8 @@ public class HandleRepository {
       T response)
       throws NoSuchFieldException {
     switch (type) {
-      case "referentDoiName" -> response.setReferentDoiName(data);
-      case "referent" -> response.setReferent(data);
+      case REFERENT_DOI_NAME -> response.setReferentDoiName(data);
+      case REFERENT -> response.setReferent(data);
       default -> {
         return setHandleRecordAttribute(type, data, response);
       }
@@ -472,9 +473,9 @@ public class HandleRepository {
       String data, T response)
       throws NoSuchFieldException {
     switch (type) {
-      case "digitalOrPhysical" -> response.setDigitalOrPhysical(data);
-      case "specimenHost" -> response.setSpecimenHost(data);
-      case "inCollectionFacility" -> response.setInCollectionFacility(data);
+      case DIGITAL_OR_PHYSICAL -> response.setDigitalOrPhysical(data);
+      case SPECIMEN_HOST -> response.setSpecimenHost(data);
+      case IN_COLLECTION_FACILITY -> response.setInCollectionFacility(data);
       default -> {
         return setDoiRecordAttribute(type, data, response);
       }
@@ -486,8 +487,8 @@ public class HandleRepository {
       String data, DigitalSpecimenBotanyResponse response)
       throws NoSuchFieldException {
     switch (type) {
-      case "objectType" -> response.setObjectType(data);
-      case "preservedOrLiving" -> response.setPreservedOrLiving(data);
+      case OBJECT_TYPE -> response.setObjectType(data);
+      case PRESERVED_OR_LIVING -> response.setPreservedOrLiving(data);
       default -> {
         return setDigitalSpecimenRecordAttribute(type, data, response);
       }
@@ -677,6 +678,7 @@ public class HandleRepository {
 
   public TombstoneRecordResponse archiveRecord(byte[] handle,
       Instant recordTimestamp, List<HandleAttribute> handleAttributes, boolean versionIncrement){
+    return null;
 
   }
 

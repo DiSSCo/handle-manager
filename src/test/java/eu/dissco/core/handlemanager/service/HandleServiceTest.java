@@ -21,6 +21,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mockStatic;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
@@ -60,6 +61,9 @@ class HandleServiceTest {
   @Mock
   private HandleGeneratorService hgService;
 
+  @Mock
+  private ObjectMapper mapper;
+
   private Instant instant;
 
   private HandleService service;
@@ -76,8 +80,7 @@ class HandleServiceTest {
     TransformerFactory transformerFactory = TransformerFactory.newInstance();
 
     service = new HandleService(handleRep, pidTypeService, hgService,
-        documentBuilderFactory,
-        transformerFactory);
+        documentBuilderFactory, mapper, transformerFactory);
     given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
     initTime();
     initHandleList();

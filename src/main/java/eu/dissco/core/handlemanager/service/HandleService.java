@@ -1,5 +1,6 @@
 package eu.dissco.core.handlemanager.service;
 
+import static eu.dissco.core.handlemanager.domain.PidRecords.*;
 import static eu.dissco.core.handlemanager.utils.Resources.genAdminHandle;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -163,46 +164,46 @@ public class HandleService {
     List<HandleAttribute> handleRecord = new ArrayList<>();
 
     // 100: Admin Handle
-    handleRecord.add(new HandleAttribute(100, handle, "HS_ADMIN", genAdminHandle()));
+    handleRecord.add(new HandleAttribute(100, handle, HS_ADMIN, genAdminHandle()));
 
     // 1: Pid
     byte[] pid = ("https://hdl.handle.net/" + new String(handle)).getBytes();
-    handleRecord.add(new HandleAttribute(1, handle, "pid", pid));
+    handleRecord.add(new HandleAttribute(1, handle, PID, pid));
 
     // 2: PidIssuer
     String pidIssuer = pidTypeService.resolveTypePid(request.getPidIssuerPid());
-    handleRecord.add(new HandleAttribute(2, handle, "pidIssuer", pidIssuer.getBytes()));
+    handleRecord.add(new HandleAttribute(2, handle, PID_ISSUER, pidIssuer.getBytes()));
 
     // 3: Digital Object Type
     String digitalObjectType = pidTypeService.resolveTypePid(request.getDigitalObjectTypePid());
     handleRecord.add(
-        new HandleAttribute(3, handle, "digitalObjectType", digitalObjectType.getBytes()));
+        new HandleAttribute(3, handle, DIGITAL_OBJECT_TYPE, digitalObjectType.getBytes()));
 
     // 4: Digital Object Subtype
     String digitalObjectSubtype = pidTypeService.resolveTypePid(
         request.getDigitalObjectSubtypePid());
     handleRecord.add(
-        new HandleAttribute(4, handle, "digitalObjectSubtype", digitalObjectSubtype.getBytes()));
+        new HandleAttribute(4, handle, DIGITAL_OBJECT_SUBTYPE, digitalObjectSubtype.getBytes()));
 
     // 5: 10320/loc
     byte[] loc = setLocations(request.getLocations());
-    handleRecord.add(new HandleAttribute(5, handle, "10320/loc", loc));
+    handleRecord.add(new HandleAttribute(5, handle, LOC, loc));
 
     // 6: Issue Date
-    handleRecord.add(new HandleAttribute(6, handle, "issueDate", getDate().getBytes()));
+    handleRecord.add(new HandleAttribute(6, handle, ISSUE_DATE, getDate().getBytes()));
 
     // 7: Issue number
-    handleRecord.add(new HandleAttribute(7, handle, "issueNumber", "1".getBytes()));
+    handleRecord.add(new HandleAttribute(7, handle, ISSUE_NUMBER, "1".getBytes()));
 
     // 8: PidStatus
-    handleRecord.add(new HandleAttribute(8, handle, "pidStatus", "TEST".getBytes()));
+    handleRecord.add(new HandleAttribute(8, handle, PID_STATUS, "TEST".getBytes()));
 
     // 9, 10: tombstone text, tombstone pids -> Skip
 
     // 11: PidKernelMetadataLicense:
     byte[] pidKernelMetadataLicense = "https://creativecommons.org/publicdomain/zero/1.0/".getBytes();
     handleRecord.add(
-        new HandleAttribute(11, handle, "pidKernelMetadataLicense", pidKernelMetadataLicense));
+        new HandleAttribute(11, handle, PID_KERNEL_METADATA_LICENSE, pidKernelMetadataLicense));
 
     return handleRecord;
   }
@@ -216,10 +217,10 @@ public class HandleService {
     String referentDoiName = pidTypeService.resolveTypePid(request.getReferentDoiNamePid());
 
     handleRecord.add(
-        new HandleAttribute(12, handle, "referentDoiName", referentDoiName.getBytes()));
+        new HandleAttribute(12, handle, REFERENT_DOI_NAME, referentDoiName.getBytes()));
 
     // 13: Referent -> NOTE: Referent is blank currently until we have a model
-    handleRecord.add(new HandleAttribute(13, handle, "referent", request.getReferent().getBytes()));
+    handleRecord.add(new HandleAttribute(13, handle, REFERENT, request.getReferent().getBytes()));
     return handleRecord;
   }
 
@@ -229,18 +230,18 @@ public class HandleService {
     List<HandleAttribute> handleRecord = prepareDoiRecordAttributes(request, handle);
 
     handleRecord.add(
-        new HandleAttribute(14, handle, "digitalOrPhysical",
+        new HandleAttribute(14, handle, DIGITAL_OR_PHYSICAL,
             request.getDigitalOrPhysical().getBytes()));
 
     // 15: specimenHost
     String specimenHost = pidTypeService.resolveTypePid(request.getSpecimenHostPid());
-    handleRecord.add(new HandleAttribute(15, handle, "specimenHost", specimenHost.getBytes()));
+    handleRecord.add(new HandleAttribute(15, handle, SPECIMEN_HOST, specimenHost.getBytes()));
 
     // 16: In collectionFacility
     String inCollectionFacility = pidTypeService.resolveTypePid(
         request.getInCollectionFacilityPid());
     handleRecord.add(
-        new HandleAttribute(16, handle, "inCollectionFacility", inCollectionFacility.getBytes()));
+        new HandleAttribute(16, handle, IN_COLLECTION_FACILITY, inCollectionFacility.getBytes()));
 
     return handleRecord;
   }
@@ -253,11 +254,11 @@ public class HandleService {
 
     // 17: ObjectType
     handleRecord.add(
-        new HandleAttribute(17, handle, "objectType", request.getObjectType().getBytes()));
+        new HandleAttribute(17, handle, OBJECT_TYPE, request.getObjectType().getBytes()));
 
     // 18: preservedOrLiving
     handleRecord.add(
-        new HandleAttribute(18, handle, "preservedOrLiving",
+        new HandleAttribute(18, handle, PRESERVED_OR_LIVING,
             request.getPreservedOrLiving().getBytes()));
 
     return handleRecord;
@@ -300,13 +301,12 @@ public class HandleService {
   public void archiveHandleRecord(TombstoneRecordRequest request){
     byte[] handle = request.getHandle();
     List<HandleAttribute> record = new ArrayList<>();
-    record.add(new HandleAttribute(8, handle, "pidStatus", "ARCHIVED".getBytes()));
-    record.add(new HandleAttribute(11, handle, "tombstoneText", request.getTombstoneText().getBytes()));
+    record.add(new HandleAttribute(8, handle, PID_STATUS, "ARCHIVED".getBytes()));
+    record.add(new HandleAttribute(11, handle, TOMBSTONE_TEXT, request.getTombstoneText().getBytes()));
 
     if (request.getTombstonePids().length == 0) {
-      record.add(new HandleAttribute(11, handle, "tombstonePids", "".getBytes()));
+      record.add(new HandleAttribute(11, handle, TOMBSTONE_PIDS, "".getBytes()));
     }
-
 
 
 

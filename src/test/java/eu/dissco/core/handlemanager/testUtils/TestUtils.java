@@ -1,5 +1,6 @@
 package eu.dissco.core.handlemanager.testUtils;
 
+import static eu.dissco.core.handlemanager.domain.PidRecords.*;
 import static eu.dissco.core.handlemanager.utils.Resources.genAdminHandle;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -35,29 +36,31 @@ import org.w3c.dom.Document;
 public class TestUtils {
 
   public static final Instant CREATED = Instant.parse("2022-11-01T09:59:24.00Z");
-  public static final String ISSUE_DATE = "2022-11-01";
+  public static final String ISSUE_DATE_TESTVAL = "2022-11-01";
 
   public static String HANDLE = "20.5000.1025/QRS-321-ABC";
   public static String HANDLE_ALT = "20.5000.1025/ABC-123-QRS";
 
   // Request Vars
   // Handles
+
   public static String PID_ISSUER_PID = "20.5000.1025/PID-ISSUER";
   public static String DIGITAL_OBJECT_TYPE_PID = "20.5000.1025/DIGITAL-SPECIMEN";
   public static String DIGITAL_OBJECT_SUBTYPE_PID = "20.5000.1025/BOTANY-SPECIMEN";
-  public static String[] LOCATIONS = {"https://sandbox.dissco.tech/", "https://dissco.eu"};
-  public static final String PID_STATUS = "TEST";
-  public static final String LICENSE = "https://creativecommons.org/publicdomain/zero/1.0/";
+  public static String[] LOC_TESTVAL = {"https://sandbox.dissco.tech/", "https://dissco.eu"};
+  public static final String PID_STATUS_TESTVAL = "TEST";
+  public static final String PID_KERNEL_METADATA_LICENSE_TESTVAL = "https://creativecommons.org/publicdomain/zero/1.0/";
   //DOIs
   public static String REFERENT_DOI_NAME_PID = "20.5000.1025/OTHER-TRIPLET";
-  public static String REFERENT = "";
+  public static String REFERENT_TESTVAL = "";
   //Digital Specimens
-  public static String DIGITAL_OR_PHYSICAL = "physical";
+  public static String DIGITAL_OR_PHYSICAL_TESTVAL = "physical";
   public static String SPECIMEN_HOST_PID = "20.5000.1025/OTHER-TRIPLET";
-  public static String IN_COLLECTION_FACILITY = "20.5000.1025/OTHER-TRIPLET";
+  public static String IN_COLLECTION_FACILITY_TESTVAL = "20.5000.1025/OTHER-TRIPLET";
+
   //Botany Specimens
-  public static String OBJECT_TYPE = "Herbarium Sheet";
-  public static String PRESERVED_OR_LIVING = "preserved";
+  public static String OBJECT_TYPE_TESTVAL = "Herbarium Sheet";
+  public static String PRESERVED_OR_LIVING_TESTVAL = "preserved";
 
   // Pid Type Record vars
   public static String PTR_PID = "http://hdl.handle.net/" + PID_ISSUER_PID;
@@ -102,44 +105,44 @@ public class TestUtils {
     byte[] ptr_record = PTR_HANDLE_RECORD.getBytes();
 
     // 100: Admin Handle
-    handleRecord.add(new HandleAttribute(100, handle, "HS_ADMIN", genAdminHandle()));
+    handleRecord.add(new HandleAttribute(100, handle, HS_ADMIN, genAdminHandle()));
 
     // 1: Pid
     byte[] pid = ("https://hdl.handle.net/" + new String(handle)).getBytes();
-    handleRecord.add(new HandleAttribute(1, handle, "pid", pid));
+    handleRecord.add(new HandleAttribute(1, handle, PID, pid));
 
     // 2: PidIssuer
-    handleRecord.add(new HandleAttribute(2, handle, "pidIssuer", ptr_record));
+    handleRecord.add(new HandleAttribute(2, handle, PID_ISSUER, ptr_record));
 
     // 3: Digital Object Type
-    handleRecord.add(new HandleAttribute(3, handle, "digitalObjectType", ptr_record));
+    handleRecord.add(new HandleAttribute(3, handle, DIGITAL_OBJECT_TYPE, ptr_record));
 
     // 4: Digital Object Subtype
-    handleRecord.add(new HandleAttribute(4, handle, "digitalObjectSubtype", ptr_record));
+    handleRecord.add(new HandleAttribute(4, handle, DIGITAL_OBJECT_SUBTYPE, ptr_record));
 
     // 5: 10320/loc
     byte[] loc = "".getBytes();
     try {
-      loc = setLocations(LOCATIONS);
+      loc = setLocations(LOC_TESTVAL);
     } catch (TransformerException | ParserConfigurationException e) {
       e.printStackTrace();
     }
-    handleRecord.add(new HandleAttribute(5, handle, "10320/loc", loc));
+    handleRecord.add(new HandleAttribute(5, handle, LOC, loc));
 
     // 6: Issue Date
-    handleRecord.add(new HandleAttribute(6, handle, "issueDate", ISSUE_DATE.getBytes()));
+    handleRecord.add(new HandleAttribute(6, handle, ISSUE_DATE, ISSUE_DATE_TESTVAL.getBytes()));
 
     // 7: Issue number
-    handleRecord.add(new HandleAttribute(7, handle, "issueNumber", "1".getBytes()));
+    handleRecord.add(new HandleAttribute(7, handle, ISSUE_NUMBER, "1".getBytes()));
 
     // 8: PidStatus
-    handleRecord.add(new HandleAttribute(8, handle, "pidStatus", PID_STATUS.getBytes()));
+    handleRecord.add(new HandleAttribute(8, handle, PID_STATUS, PID_STATUS_TESTVAL.getBytes()));
 
     // 9, 10: tombstone text, tombstone pids -> Skip
 
     // 11: PidKernelMetadataLicense:
     handleRecord.add(
-        new HandleAttribute(11, handle, "pidKernelMetadataLicense", LICENSE.getBytes()));
+        new HandleAttribute(11, handle, PID_KERNEL_METADATA_LICENSE, PID_KERNEL_METADATA_LICENSE_TESTVAL.getBytes()));
 
     return handleRecord;
   }
@@ -149,9 +152,9 @@ public class TestUtils {
     byte[] ptr_record = PTR_HANDLE_RECORD.getBytes();
 
     // 12: Referent DOI Name
-    handleRecord.add(new HandleAttribute(12, handle, "referentDoiName", ptr_record));
+    handleRecord.add(new HandleAttribute(12, handle, REFERENT_DOI_NAME, ptr_record));
     // 13: Referent
-    handleRecord.add(new HandleAttribute(13, handle, "referent", REFERENT.getBytes()));
+    handleRecord.add(new HandleAttribute(13, handle, REFERENT, REFERENT_TESTVAL.getBytes()));
     return handleRecord;
   }
 
@@ -161,14 +164,14 @@ public class TestUtils {
 
     // 14: digitalOrPhysical
     handleRecord.add(
-        new HandleAttribute(14, handle, "digitalOrPhysical", DIGITAL_OR_PHYSICAL.getBytes()));
+        new HandleAttribute(14, handle, DIGITAL_OR_PHYSICAL, DIGITAL_OR_PHYSICAL_TESTVAL.getBytes()));
 
     // 15: specimenHost
-    handleRecord.add(new HandleAttribute(15, handle, "specimenHost", ptr_record));
+    handleRecord.add(new HandleAttribute(15, handle, SPECIMEN_HOST, ptr_record));
 
     // 16: In collectionFacility
     handleRecord.add(
-        new HandleAttribute(16, handle, "inCollectionFacility", ptr_record));
+        new HandleAttribute(16, handle, IN_COLLECTION_FACILITY, ptr_record));
     return handleRecord;
   }
 
@@ -176,11 +179,11 @@ public class TestUtils {
     List<HandleAttribute> handleRecord = generateTestDigitalSpecimenAttributes(handle);
 
     // 17: ObjectType
-    handleRecord.add(new HandleAttribute(17, handle, "objectType", OBJECT_TYPE.getBytes()));
+    handleRecord.add(new HandleAttribute(17, handle, OBJECT_TYPE, OBJECT_TYPE_TESTVAL.getBytes()));
 
     // 18: preservedOrLiving
     handleRecord.add(
-        new HandleAttribute(18, handle, "preservedOrLiving", PRESERVED_OR_LIVING.getBytes()));
+        new HandleAttribute(18, handle, PRESERVED_OR_LIVING, PRESERVED_OR_LIVING_TESTVAL.getBytes()));
     return handleRecord;
   }
 
@@ -191,7 +194,7 @@ public class TestUtils {
         PID_ISSUER_PID,
         DIGITAL_OBJECT_TYPE_PID,
         DIGITAL_OBJECT_SUBTYPE_PID,
-        LOCATIONS);
+        LOC_TESTVAL);
   }
 
 
@@ -200,7 +203,7 @@ public class TestUtils {
         PID_ISSUER_PID,
         DIGITAL_OBJECT_TYPE_PID,
         DIGITAL_OBJECT_SUBTYPE_PID,
-        LOCATIONS,
+        LOC_TESTVAL,
         REFERENT_DOI_NAME_PID);
   }
 
@@ -210,24 +213,24 @@ public class TestUtils {
         PID_ISSUER_PID,
         DIGITAL_OBJECT_TYPE_PID,
         DIGITAL_OBJECT_SUBTYPE_PID,
-        LOCATIONS,
+        LOC_TESTVAL,
         REFERENT_DOI_NAME_PID,
-        DIGITAL_OR_PHYSICAL,
+        DIGITAL_OR_PHYSICAL_TESTVAL,
         SPECIMEN_HOST_PID,
-        IN_COLLECTION_FACILITY);
+        IN_COLLECTION_FACILITY_TESTVAL);
   }
 
   public static DigitalSpecimenBotanyRequest generateTestDigitalSpecimenBotanyRequest() {
     return new DigitalSpecimenBotanyRequest(PID_ISSUER_PID,
         DIGITAL_OBJECT_TYPE_PID,
         DIGITAL_OBJECT_SUBTYPE_PID,
-        LOCATIONS,
+        LOC_TESTVAL,
         REFERENT_DOI_NAME_PID,
-        DIGITAL_OR_PHYSICAL,
+        DIGITAL_OR_PHYSICAL_TESTVAL,
         SPECIMEN_HOST_PID,
-        IN_COLLECTION_FACILITY,
-        OBJECT_TYPE,
-        PRESERVED_OR_LIVING);
+        IN_COLLECTION_FACILITY_TESTVAL,
+        OBJECT_TYPE_TESTVAL,
+        PRESERVED_OR_LIVING_TESTVAL);
   }
 
   // Responses
@@ -243,10 +246,10 @@ public class TestUtils {
         PTR_HANDLE_RECORD,    // digitalObjectType
         PTR_HANDLE_RECORD,    // digitalObjectSubtype
         locs,                 // 10320/loc
-        ISSUE_DATE,           // issueDate
+        ISSUE_DATE_TESTVAL,           // issueDate
         "1",                  // issueNumber
-        PID_STATUS,           // pidStatus
-        LICENSE,              // Pid Kernel Metadata License
+        PID_STATUS_TESTVAL,           // pidStatus
+        PID_KERNEL_METADATA_LICENSE_TESTVAL,              // Pid Kernel Metadata License
         admin
     );
   }
@@ -263,13 +266,13 @@ public class TestUtils {
         PTR_HANDLE_RECORD,    // digitalObjectType
         PTR_HANDLE_RECORD,    // digitalObjectSubtype
         locs,                 // 10320/loc
-        ISSUE_DATE,           // issueDate
+        ISSUE_DATE_TESTVAL,           // issueDate
         "1",                  // issueNumber
-        PID_STATUS,           // pidStatus
-        LICENSE,              // Pid Kernel Metadata License
+        PID_STATUS_TESTVAL,           // pidStatus
+        PID_KERNEL_METADATA_LICENSE_TESTVAL,              // Pid Kernel Metadata License
         admin,
         PTR_HANDLE_RECORD,
-        REFERENT
+        REFERENT_TESTVAL
     );
   }
 
@@ -285,14 +288,14 @@ public class TestUtils {
         PTR_HANDLE_RECORD,    // digitalObjectType
         PTR_HANDLE_RECORD,    // digitalObjectSubtype
         locs,                 // 10320/loc
-        ISSUE_DATE,           // issueDate
+        ISSUE_DATE_TESTVAL,           // issueDate
         "1",                  // issueNumber
-        PID_STATUS,           // pidStatus
-        LICENSE,              // Pid Kernel Metadata License
+        PID_STATUS_TESTVAL,           // pidStatus
+        PID_KERNEL_METADATA_LICENSE_TESTVAL,              // Pid Kernel Metadata License
         admin,
         PTR_HANDLE_RECORD,
-        REFERENT,
-        DIGITAL_OR_PHYSICAL,
+        REFERENT_TESTVAL,
+        DIGITAL_OR_PHYSICAL_TESTVAL,
         PTR_HANDLE_RECORD,
         PTR_HANDLE_RECORD
     );
@@ -311,18 +314,18 @@ public class TestUtils {
         PTR_HANDLE_RECORD,    // digitalObjectType
         PTR_HANDLE_RECORD,    // digitalObjectSubtype
         locs,                 // 10320/loc
-        ISSUE_DATE,           // issueDate
+        ISSUE_DATE_TESTVAL,           // issueDate
         "1",                  // issueNumber
-        PID_STATUS,           // pidStatus
-        LICENSE,              // Pid Kernel Metadata License
+        PID_STATUS_TESTVAL,           // pidStatus
+        PID_KERNEL_METADATA_LICENSE_TESTVAL,              // Pid Kernel Metadata License
         admin,
         PTR_HANDLE_RECORD,
-        REFERENT,
-        DIGITAL_OR_PHYSICAL,
+        REFERENT_TESTVAL,
+        DIGITAL_OR_PHYSICAL_TESTVAL,
         PTR_HANDLE_RECORD,
         PTR_HANDLE_RECORD,
-        OBJECT_TYPE,
-        PRESERVED_OR_LIVING
+        OBJECT_TYPE_TESTVAL,
+        PRESERVED_OR_LIVING_TESTVAL
     );
   }
 
@@ -333,7 +336,7 @@ public class TestUtils {
   private static String getLocString() {
     byte[] loc = "".getBytes();
     try {
-      loc = setLocations(LOCATIONS);
+      loc = setLocations(LOC_TESTVAL);
     } catch (TransformerException | ParserConfigurationException e) {
       e.printStackTrace();
     }
