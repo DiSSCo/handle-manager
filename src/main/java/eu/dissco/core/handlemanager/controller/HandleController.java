@@ -1,6 +1,9 @@
 package eu.dissco.core.handlemanager.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
@@ -12,6 +15,7 @@ import eu.dissco.core.handlemanager.domain.responses.HandleRecordResponse;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.service.HandleService;
+import java.util.Arrays;
 import java.util.List;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -38,6 +42,20 @@ import org.springframework.web.bind.annotation.RestController;
 public class HandleController {
 
   private final HandleService service;
+
+  @GetMapping("/test")
+  public ResponseEntity<ObjectNode> buildJson(){
+    ObjectMapper mapper = new ObjectMapper();
+    ObjectNode node = mapper.createObjectNode();
+    List<String> types = Arrays.asList("A", "B", "C");
+    List<String> data = Arrays.asList("1", "2", "3");
+
+    for (int i = 0; i <3; i++){
+      node.put(types.get(i), data.get(i));
+    }
+
+    return ResponseEntity.status(HttpStatus.OK).body(node);
+  }
 
   @PreAuthorize("isAuthenticated()")
   @PostMapping(value = "/createRecordBatch", params = "pidType=handle")

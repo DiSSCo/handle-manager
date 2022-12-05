@@ -38,39 +38,39 @@ public class TestUtils {
   public static final Instant CREATED = Instant.parse("2022-11-01T09:59:24.00Z");
   public static final String ISSUE_DATE_TESTVAL = "2022-11-01";
 
-  public static String HANDLE = "20.5000.1025/QRS-321-ABC";
-  public static String HANDLE_ALT = "20.5000.1025/ABC-123-QRS";
+  public static final String HANDLE = "20.5000.1025/QRS-321-ABC";
+  public static final String HANDLE_ALT = "20.5000.1025/ABC-123-QRS";
 
   // Request Vars
   // Handles
 
-  public static String PID_ISSUER_PID = "20.5000.1025/PID-ISSUER";
-  public static String DIGITAL_OBJECT_TYPE_PID = "20.5000.1025/DIGITAL-SPECIMEN";
-  public static String DIGITAL_OBJECT_SUBTYPE_PID = "20.5000.1025/BOTANY-SPECIMEN";
-  public static String[] LOC_TESTVAL = {"https://sandbox.dissco.tech/", "https://dissco.eu"};
+  public static final String PID_ISSUER_PID = "20.5000.1025/PID-ISSUER";
+  public static final String DIGITAL_OBJECT_TYPE_PID = "20.5000.1025/DIGITAL-SPECIMEN";
+  public static final String DIGITAL_OBJECT_SUBTYPE_PID = "20.5000.1025/BOTANY-SPECIMEN";
+  public static final String[] LOC_TESTVAL = {"https://sandbox.dissco.tech/", "https://dissco.eu"};
   public static final String PID_STATUS_TESTVAL = "TEST";
   public static final String PID_KERNEL_METADATA_LICENSE_TESTVAL = "https://creativecommons.org/publicdomain/zero/1.0/";
   //DOIs
-  public static String REFERENT_DOI_NAME_PID = "20.5000.1025/OTHER-TRIPLET";
-  public static String REFERENT_TESTVAL = "";
+  public static final String REFERENT_DOI_NAME_PID = "20.5000.1025/OTHER-TRIPLET";
+  public static final String REFERENT_TESTVAL = "";
   //Digital Specimens
-  public static String DIGITAL_OR_PHYSICAL_TESTVAL = "physical";
-  public static String SPECIMEN_HOST_PID = "20.5000.1025/OTHER-TRIPLET";
-  public static String IN_COLLECTION_FACILITY_TESTVAL = "20.5000.1025/OTHER-TRIPLET";
+  public static final String DIGITAL_OR_PHYSICAL_TESTVAL = "physical";
+  public static final String SPECIMEN_HOST_PID = "20.5000.1025/OTHER-TRIPLET";
+  public static final String IN_COLLECTION_FACILITY_TESTVAL = "20.5000.1025/OTHER-TRIPLET";
 
   //Botany Specimens
-  public static String OBJECT_TYPE_TESTVAL = "Herbarium Sheet";
-  public static String PRESERVED_OR_LIVING_TESTVAL = "preserved";
+  public static final String OBJECT_TYPE_TESTVAL = "Herbarium Sheet";
+  public static final String PRESERVED_OR_LIVING_TESTVAL = "preserved";
 
   // Pid Type Record vars
-  public static String PTR_PID = "http://hdl.handle.net/" + PID_ISSUER_PID;
-  public static String PTR_TYPE = "handle";
-  public static String PTR_PRIMARY_NAME = "DiSSCo";
-  public static String PTR_PID_DOI = "http://doi.org/" + PID_ISSUER_PID;
-  public static String PTR_TYPE_DOI = "doi";
-  public static String PTR_REGISTRATION_DOI_NAME = "Registration Agency";
-  public static String PTR_HANDLE_RECORD = initPtrHandleRecord(false);
-  public static String PTR_DOI_RECORD = initPtrHandleRecord(true);
+  public static final String PTR_PID = "http://hdl.handle.net/" + PID_ISSUER_PID;
+  public static final String PTR_TYPE = "handle";
+  public static final String PTR_PRIMARY_NAME = "DiSSCo";
+  public static final String PTR_PID_DOI = "http://doi.org/" + PID_ISSUER_PID;
+  public static final String PTR_TYPE_DOI = "doi";
+  public static final String PTR_REGISTRATION_DOI_NAME = "Registration Agency";
+  public final static String PTR_HANDLE_RECORD = initPtrHandleRecord(false);
+  public final static String PTR_DOI_RECORD = initPtrHandleRecord(true);
 
   private TestUtils() {
     throw new IllegalStateException("Utility class");

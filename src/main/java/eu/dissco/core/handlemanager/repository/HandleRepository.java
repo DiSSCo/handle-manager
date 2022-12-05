@@ -3,6 +3,9 @@ package eu.dissco.core.handlemanager.repository;
 import static eu.dissco.core.handlemanager.database.jooq.tables.Handles.HANDLES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.*;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.database.jooq.tables.records.HandlesRecord;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenBotanyResponse;
@@ -52,6 +55,24 @@ public class HandleRepository {
         .where(HANDLES.HANDLE.in(handles))
         .fetch()
         .getValues(HANDLES.HANDLE, byte[].class);
+  }
+
+  public JsonNode resolveRecord(byte[] handle){
+    ObjectMapper mapper = new ObjectMapper();
+    JsonNode rootNode = mapper.createObjectNode();
+    ObjectNode addedNode;
+
+    List<Record4<Integer, byte[], byte[], byte[]>> dbRecord = context
+        .select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
+        .from(HANDLES)
+        .where(HANDLES.HANDLE.eq(handle))
+        .fetch();
+    for (Record4<Integer, byte[], byte[], byte[]> row: dbRecord){
+      addedNode = ((ObjectNode) rootNode).putObject(new String(row.get(HANDLES.HANDLE)));
+      addedNode.put(new String(row.get(HANDLES.TYPE)), new String(row.get(HANDLES.DATA)));
+    }
+
+    return null;
   }
 
   // Resolve Pid
