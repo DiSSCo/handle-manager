@@ -1,12 +1,11 @@
 package eu.dissco.core.handlemanager.domain.responses;
 
-import java.util.Objects;
-import lombok.Getter;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
+@Data
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 public class DigitalSpecimenResponse extends DoiRecordResponse {
 
@@ -42,25 +41,4 @@ public class DigitalSpecimenResponse extends DoiRecordResponse {
     this.inCollectionFacility = inCollectionFacility;
   }
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    if (!super.equals(o)) {
-      return false;
-    }
-    DigitalSpecimenResponse that = (DigitalSpecimenResponse) o;
-    return getDigitalOrPhysical().equals(that.getDigitalOrPhysical()) && getSpecimenHost().equals(
-        that.getSpecimenHost()) && getInCollectionFacility().equals(that.getInCollectionFacility());
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(super.hashCode(), getDigitalOrPhysical(), getSpecimenHost(),
-        getInCollectionFacility());
-  }
 }

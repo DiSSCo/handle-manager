@@ -1,38 +1,14 @@
 package eu.dissco.core.handlemanager.domain.responses;
 
-import java.util.Objects;
-import lombok.Getter;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-@Getter
+@Data
+@EqualsAndHashCode(callSuper = true)
 public class TombstoneRecordResponse extends HandleRecordResponse {
 
   private String tombstoneText;
   private String tombstonePids;
-
-  public TombstoneRecordResponse(){
-    this.pidStatus = "ARCHIVED";
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    if (!super.equals(o)) {
-      return false;
-    }
-    TombstoneRecordResponse that = (TombstoneRecordResponse) o;
-    return getTombstoneText().equals(that.getTombstoneText()) && Objects.equals(
-        getTombstonePids(), that.getTombstonePids());
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(super.hashCode(), getTombstoneText(), getTombstonePids());
-  }
 
   public TombstoneRecordResponse(
       // Handle
@@ -55,20 +31,10 @@ public class TombstoneRecordResponse extends HandleRecordResponse {
     this.tombstonePids = tombstonePids;
   }
 
-  @Override
-  public void setAttribute(String type, String data)
-      throws NoSuchFieldException {
-    if (type.equals("referentDoiName")) {
-      this.tombstoneText = data;
-    } else if (type.equals("referent")) {
-      this.tombstonePids = data;
-    } else {
-      super.setAttribute(type, data);
-    }
+  public TombstoneRecordResponse() {
+    super();
+    this.setPidStatus("ARCHIVED");
   }
-
-
-
 
 
 }

@@ -20,7 +20,6 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <sonar.coverage.jacoco.xmlReportPaths>../app-it/target/site/jacoco-aggregate/jacoco.xml
     </sonar.coverage.jacoco.xmlReportPaths>
-
     <testcontainers.version>1.17.5</testcontainers.version>
     <keycloak-adapter-bom.version>16.1.1</keycloak-adapter-bom.version>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
@@ -102,10 +101,6 @@
     <dependency>
       <groupId>org.keycloak</groupId>
       <artifactId>keycloak-spring-boot-starter</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>javax.annotation</groupId>
-      <artifactId>javax.annotation-api</artifactId>
     </dependency>
 
     <!-- Testing Dependencies -->
@@ -218,23 +213,6 @@
             <version>${glassfish-jaxb.version}</version>
           </dependency>
         </dependencies>
-      </plugin>
-      <plugin>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <goals>
-              <goal>repackage</goal>
-            </goals>
-            <configuration>
-              <classifier>spring-boot</classifier>
-              <mainClass>
-                eu.dissco.core.handlemanager.HandleManagerApplication
-              </mainClass>
-            </configuration>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
   </build>

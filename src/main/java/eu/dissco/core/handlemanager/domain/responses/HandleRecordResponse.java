@@ -1,12 +1,9 @@
 package eu.dissco.core.handlemanager.domain.responses;
 
-import java.util.Objects;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 public class HandleRecordResponse {
 
@@ -18,7 +15,7 @@ public class HandleRecordResponse {
   private String issueDate;
   private String issueNumber;
   private String pidKernelMetadataLicense;
-  protected String pidStatus;
+  private String pidStatus;
   private String hsAdmin;
 
   public HandleRecordResponse(
@@ -42,31 +39,5 @@ public class HandleRecordResponse {
     this.pidStatus = pidStatus;
     this.pidKernelMetadataLicense = pidKernelMetadataLicense;
     this.hsAdmin = hsAdmin;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    HandleRecordResponse response = (HandleRecordResponse) o;
-    return getPid().equals(response.getPid()) && getPidIssuer().equals(response.getPidIssuer())
-        && getDigitalObjectType().equals(response.getDigitalObjectType())
-        && getDigitalObjectSubtype().equals(response.getDigitalObjectSubtype()) && getLocs().equals(
-        response.getLocs()) && getIssueDate().equals(response.getIssueDate())
-        && getIssueNumber().equals(response.getIssueNumber())
-        && getPidKernelMetadataLicense().equals(
-        response.getPidKernelMetadataLicense()) && getPidStatus().equals(response.getPidStatus())
-        && getHsAdmin().equals(response.getHsAdmin());
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(getPid(), getPidIssuer(), getDigitalObjectType(), getDigitalObjectSubtype(),
-        getLocs(), getIssueDate(), getIssueNumber(), getPidKernelMetadataLicense(), getPidStatus(),
-        getHsAdmin());
   }
 }

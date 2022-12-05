@@ -1,11 +1,13 @@
 package eu.dissco.core.handlemanager.domain.requests;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
 @Getter
 @ToString
-public class TombstoneRecordRequest extends HandleRecordRequest{
+@EqualsAndHashCode(callSuper = true)
+public class TombstoneRecordRequest extends HandleRecordRequest {
 
   private final String tombstoneText;
   private final String[] tombstonePids;
@@ -20,7 +22,8 @@ public class TombstoneRecordRequest extends HandleRecordRequest{
 
   // Tombstone PIDs only to be used in the event of a merge (maybe split?)
   public TombstoneRecordRequest(String pidIssuerPid, String digitalObjectTypePid,
-      String digitalObjectSubtypePid, String[] locations, String tombstoneText, String[] tombstonePids) {
+      String digitalObjectSubtypePid, String[] locations, String tombstoneText,
+      String[] tombstonePids) {
     super(pidIssuerPid, digitalObjectTypePid, digitalObjectSubtypePid, locations);
 
     this.tombstoneText = tombstoneText;
