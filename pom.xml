@@ -24,6 +24,7 @@
     <keycloak-adapter-bom.version>16.1.1</keycloak-adapter-bom.version>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     <sonar.organization>dissco</sonar.organization>
+    <db.properties>.properties</db.properties>
   </properties>
 
   <dependencyManagement>
