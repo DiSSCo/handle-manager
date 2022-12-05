@@ -1,7 +1,5 @@
 package eu.dissco.core.handlemanager.domain.requests;
 
-import java.util.Arrays;
-import java.util.Objects;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
