@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapper;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
@@ -15,6 +16,7 @@ import eu.dissco.core.handlemanager.domain.responses.HandleRecordResponse;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.service.HandleService;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import javax.xml.parsers.ParserConfigurationException;
@@ -44,15 +46,23 @@ public class HandleController {
   private final HandleService service;
 
   @GetMapping("/test")
-  public ResponseEntity<ObjectNode> buildJson(){
+  public ResponseEntity<JsonApiWrapper> buildJson()
+      throws JsonProcessingException, PidResolutionException {
+
+    /*
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode node = mapper.createObjectNode();
+
     List<String> types = Arrays.asList("A", "B", "C");
     List<String> data = Arrays.asList("1", "2", "3");
 
     for (int i = 0; i <3; i++){
       node.put(types.get(i), data.get(i));
-    }
+    }*/
+
+    byte[] handle = "20.5000.1025/000-019-CQH".getBytes(StandardCharsets.UTF_8);
+
+    JsonApiWrapper node = service.resolveRecord(handle);
 
     return ResponseEntity.status(HttpStatus.OK).body(node);
   }

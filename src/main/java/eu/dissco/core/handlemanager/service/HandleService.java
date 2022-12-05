@@ -6,6 +6,9 @@ import static eu.dissco.core.handlemanager.utils.Resources.genAdminHandle;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiData;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapper;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
@@ -52,6 +55,14 @@ public class HandleService {
   private final DocumentBuilderFactory dbf;
   private final ObjectMapper mapper;
   private final TransformerFactory tf;
+
+  public JsonApiWrapper resolveRecord(byte[] handle)
+      throws PidResolutionException, JsonProcessingException {
+    ObjectNode attributes = handleRep.resolveRecord(handle);
+    JsonApiData jsonData = new JsonApiData(new String(handle), "PID", attributes);
+    JsonApiLinks links = new JsonApiLinks(mapper.writeValueAsString(attributes.get("pid")));
+    return new JsonApiWrapper(links, jsonData);
+  }
 
   //  Batch
   public List<HandleRecordResponse> createHandleRecordBatch(List<HandleRecordRequest> requests)

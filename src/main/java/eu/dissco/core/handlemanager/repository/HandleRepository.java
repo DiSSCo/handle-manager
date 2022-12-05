@@ -3,7 +3,7 @@ package eu.dissco.core.handlemanager.repository;
 import static eu.dissco.core.handlemanager.database.jooq.tables.Handles.HANDLES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.*;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.database.jooq.tables.records.HandlesRecord;
@@ -14,6 +14,7 @@ import eu.dissco.core.handlemanager.domain.responses.DoiRecordResponse;
 import eu.dissco.core.handlemanager.domain.responses.HandleRecordResponse;
 import eu.dissco.core.handlemanager.domain.responses.TombstoneRecordResponse;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
+import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -57,22 +58,36 @@ public class HandleRepository {
         .getValues(HANDLES.HANDLE, byte[].class);
   }
 
-  public JsonNode resolveRecord(byte[] handle){
+  public ObjectNode resolveRecord(byte[] handle)
+      throws PidResolutionException {
     ObjectMapper mapper = new ObjectMapper();
-    JsonNode rootNode = mapper.createObjectNode();
-    ObjectNode addedNode;
-
+    ObjectNode rootNode = mapper.createObjectNode();
+    ObjectNode subNode;
+    String data;
+    String type;
     List<Record4<Integer, byte[], byte[], byte[]>> dbRecord = context
         .select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
         .from(HANDLES)
         .where(HANDLES.HANDLE.eq(handle))
         .fetch();
-    for (Record4<Integer, byte[], byte[], byte[]> row: dbRecord){
-      addedNode = ((ObjectNode) rootNode).putObject(new String(row.get(HANDLES.HANDLE)));
-      addedNode.put(new String(row.get(HANDLES.TYPE)), new String(row.get(HANDLES.DATA)));
-    }
+    for (Record4<Integer, byte[], byte[], byte[]> row : dbRecord) {
+      type = new String(row.get(HANDLES.TYPE));
+      data = new String(row.get(HANDLES.DATA));
 
-    return null;
+      if (FIELD_IS_PID_RECORD.contains(type)) {
+        try {
+          subNode = mapper.readValue(data, ObjectNode.class);
+          rootNode.set(type, subNode);
+        } catch (JsonProcessingException e){
+          // Not 100% sure if an exception should be thrown here. We don't want to make a poorly formatted record un-resolvable
+          log.warn("Type \"{}\" is noncompliant to the PID kernel model. Invalid data: {}", type, data);
+        }
+
+      } else {
+        rootNode.put(type, data);
+      }
+    }
+    return rootNode;
   }
 
   // Resolve Pid
@@ -400,7 +415,8 @@ public class HandleRepository {
     return context
         .selectDistinct(HANDLES.HANDLE, HANDLES.DATA)
         .from(HANDLES)
-        .where(HANDLES.DATA.eq(pidStatus)) // Hmm...
+        .where(HANDLES.TYPE.eq(PID_STATUS.getBytes(StandardCharsets.UTF_8)))
+        .and(HANDLES.DATA.eq(pidStatus))
         .limit(pageSize)
         .offset(pageNum)
         .fetch()
@@ -698,7 +714,7 @@ public class HandleRepository {
   }
 
   public TombstoneRecordResponse archiveRecord(byte[] handle,
-      Instant recordTimestamp, List<HandleAttribute> handleAttributes, boolean versionIncrement){
+      Instant recordTimestamp, List<HandleAttribute> handleAttributes, boolean versionIncrement) {
     return null;
 
   }

@@ -41,6 +41,8 @@ public class PidRecords {
   public static final Set<String> DIGITAL_SPECIMEN_BOTANY;
   public static final Set<String> TOMBSTONE_RECORD;
 
+  public static final Set<String> FIELD_IS_PID_RECORD;
+
   static {
     Set<String> tmp = new HashSet<>();
     tmp.add(HS_ADMIN);
@@ -86,6 +88,19 @@ public class PidRecords {
     tmp.add(TOMBSTONE_PIDS);
     TOMBSTONE_RECORD = Collections.unmodifiableSet(tmp);
   }
+
+  static {
+    Set<String> tmp = new HashSet<>();
+    tmp.add(PID_ISSUER);
+    tmp.add(DIGITAL_OBJECT_TYPE);
+    tmp.add(DIGITAL_OBJECT_SUBTYPE);
+    tmp.add(TOMBSTONE_PIDS);
+    tmp.add(SPECIMEN_HOST);
+    tmp.add(IN_COLLECTION_FACILITY);
+    tmp.add(REFERENT);
+    FIELD_IS_PID_RECORD = Collections.unmodifiableSet(tmp);
+  }
+
 
   private PidRecords(){
     throw new IllegalStateException("Utility class");
