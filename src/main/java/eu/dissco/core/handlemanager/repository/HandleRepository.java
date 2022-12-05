@@ -61,7 +61,7 @@ public class HandleRepository {
         .fetch(this::mapToAttribute);
   }
 
-  private HandleAttribute mapToAttribute(Record4<Integer, byte[], byte[], byte[]> row){
+  private HandleAttribute mapToAttribute(Record4<Integer, byte[], byte[], byte[]> row) {
     return new HandleAttribute(
         row.get(HANDLES.IDX),
         row.get(HANDLES.HANDLE),
