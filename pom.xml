@@ -36,10 +36,6 @@
         <type>pom</type>
       </dependency>
       <dependency>
-        <artifactId>spring-boot-starter-data-jpa</artifactId>
-        <groupId>org.springframework.boot</groupId>
-      </dependency>
-      <dependency>
         <groupId>org.keycloak.bom</groupId>
         <artifactId>keycloak-adapter-bom</artifactId>
         <version>${keycloak-adapter-bom.version}</version>
@@ -66,6 +62,25 @@
     <dependency>
       <artifactId>spring-boot-starter-web</artifactId>
       <groupId>org.springframework.boot</groupId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-jdbc</artifactId>
+    </dependency>
+
+    <!--Database Dependencies -->
+    <dependency>
+      <artifactId>postgresql</artifactId>
+      <groupId>org.postgresql</groupId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jooq</groupId>
+      <artifactId>jooq</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
