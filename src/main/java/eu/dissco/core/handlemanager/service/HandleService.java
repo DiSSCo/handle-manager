@@ -3,15 +3,19 @@ package eu.dissco.core.handlemanager.service;
 import static eu.dissco.core.handlemanager.utils.Resources.genAdminHandle;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.HandleRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.TombstoneRecordRequest;
 import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenBotanyResponse;
 import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenResponse;
 import eu.dissco.core.handlemanager.domain.responses.DoiRecordResponse;
 import eu.dissco.core.handlemanager.domain.responses.HandleRecordResponse;
+import eu.dissco.core.handlemanager.domain.responses.TombstoneRecordResponse;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
@@ -45,6 +49,7 @@ public class HandleService {
   private final PidTypeService pidTypeService;
   private final HandleGeneratorService hf;
   private final DocumentBuilderFactory dbf;
+  private final ObjectMapper mapper;
   private final TransformerFactory tf;
 
   //  Batch
@@ -202,6 +207,7 @@ public class HandleService {
     return handleRecord;
   }
 
+
   private List<HandleAttribute> prepareDoiRecordAttributes(DoiRecordRequest request, byte[] handle)
       throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException {
     List<HandleAttribute> handleRecord = prepareHandleRecordAttributes(request, handle);
@@ -289,6 +295,21 @@ public class HandleService {
     StringWriter writer = new StringWriter();
     transformer.transform(new DOMSource(document), new StreamResult(writer));
     return writer.getBuffer().toString();
+  }
+
+  public void archiveHandleRecord(TombstoneRecordRequest request){
+    byte[] handle = request.getHandle();
+    List<HandleAttribute> record = new ArrayList<>();
+    record.add(new HandleAttribute(8, handle, "pidStatus", "ARCHIVED".getBytes()));
+    record.add(new HandleAttribute(11, handle, "tombstoneText", request.getTombstoneText().getBytes()));
+
+    if (request.getTombstonePids().length == 0) {
+      record.add(new HandleAttribute(11, handle, "tombstonePids", "".getBytes()));
+    }
+
+
+
+
   }
 
 

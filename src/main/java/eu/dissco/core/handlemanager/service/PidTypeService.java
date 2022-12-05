@@ -26,7 +26,7 @@ public class PidTypeService {
     if (typePid == null) {
       throw new PidResolutionException("Missing PID in request body.");
     }
-    List<HandleAttribute> typeRecord = handleRep.resolveHandle(typePid.getBytes());
+    List<HandleAttribute> typeRecord = handleRep.resolveHandleAttributes(typePid.getBytes());
     if (typeRecord.isEmpty()) {
       throw new PidResolutionException("Unable to resolve type PID");
     }

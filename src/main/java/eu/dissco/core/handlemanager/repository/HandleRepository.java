@@ -8,6 +8,7 @@ import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenBotanyRespon
 import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenResponse;
 import eu.dissco.core.handlemanager.domain.responses.DoiRecordResponse;
 import eu.dissco.core.handlemanager.domain.responses.HandleRecordResponse;
+import eu.dissco.core.handlemanager.domain.responses.TombstoneRecordResponse;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
@@ -53,7 +54,7 @@ public class HandleRepository {
   }
 
   // Resolve Pid
-  public List<HandleAttribute> resolveHandle(byte[] handle) {
+  public List<HandleAttribute> resolveHandleAttributes(byte[] handle) {
     List<Record4<Integer, byte[], byte[], byte[]>> dbRecord = context
         .select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
         .from(HANDLES)
@@ -74,6 +75,302 @@ public class HandleRepository {
       ));
     }
     return attributes;
+  }
+
+  // TODO: When we resolve a record, will we always know its type (i.e. handle, DOI, digitalSpecimen)? I'm inclined to say no.
+  // Will we have to make that decision based on what fields are present in the resolved record?
+  // Should this be determined by digitalObjectType? 
+
+  public HandleRecordResponse resolveHandleRecord(byte[] handle) throws PidCreationException {
+    Result<Record3<byte[], byte[], byte[]>> record = context
+        .select(HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
+        .from(HANDLES)
+        .where(HANDLES.HANDLE.eq(handle))
+        .fetch();
+    return buildHandleRecordResponse(record);
+  }
+
+  private List<HandleRecordResponse> resolveHandleRecordBatch(List<byte[]> handles)
+      throws PidCreationException {
+
+    // Fetch all posted handles
+    Map<byte[], Result<Record3<byte[], byte[], byte[]>>> posted = context
+        .select(HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
+        .from(HANDLES)
+        .where(HANDLES.HANDLE.in(handles))
+        .fetchGroups(HANDLES.HANDLE);
+
+    /* The result of this fetch is a "map" (wherein keys are not unique) of handle, result(handle, type, data)
+    So it would look like:
+      20.10/123,   (20.10/123, pidStatus, ACTIVE)
+      20.10/123,   (20.10/123, issueDate, 2022-10-10)
+      20.10/ABC,   (20.10/ABC, pidStatus, DRAFT)
+      20.10/ABC,   (20.10/ABC, issueDate, 2022-06-06)
+
+    And so on.
+    This next code block goes through the "map" sequentially and groups rows with the same handle into a list.
+    The list gets turned into a HandleRecordResponse object, then we aggregate the next group of handle rows.
+
+    It's this complicated because of how records are stored in the database. I'm open to other approaches.
+     */
+
+    byte[] handle = posted.keySet().iterator().next(); // First handle retrieved
+    List<Record3<byte[], byte[], byte[]>> aggregatedRecord = new ArrayList<>();
+    List<HandleRecordResponse> responses = new ArrayList<>();
+
+    int endOfList = posted.size() - 1;
+    int i = 0;
+
+    // Our database result is a list of all rows posted (functionally decoupled from their handle id)
+    // In this loop, we create a HandleRecordResponse for each group of handles
+    // Where each "group" of handles is a handle record
+    for (Map.Entry<byte[], Result<Record3<byte[], byte[], byte[]>>> entry : posted.entrySet()) {
+      if (Arrays.equals(handle, entry.getKey()) && i < endOfList) {
+        // While previous handle = current handle, add this row to the handle record
+        aggregatedRecord.add(entry.getValue().get(0));
+      } else if (i == endOfList) {
+        // Special case for end of list
+        aggregatedRecord.add(entry.getValue().get(0));
+        responses.add(buildHandleRecordResponse(aggregatedRecord));
+      } else {
+        // If we've found all rows under a given handle, create a response from those rows
+        responses.add(buildHandleRecordResponse(aggregatedRecord));
+        if (i < endOfList - 1) {
+          // if this is not the last record in the list, we clear the list for the next handle record
+          aggregatedRecord.clear();
+        }
+        aggregatedRecord.add(entry.getValue().get(0));
+        handle = entry.getKey();
+      }
+      i++;
+    }
+    return responses;
+  }
+
+  private HandleRecordResponse buildHandleRecordResponse(
+      List<Record3<byte[], byte[], byte[]>> records)
+      throws PidCreationException {
+    HandleRecordResponse response = new HandleRecordResponse();
+    String type;
+    String data;
+
+    for (Record3<byte[], byte[], byte[]> r : records) {
+      type = new String((byte[]) r.getValue(1));
+      data = new String((byte[]) r.getValue(2));
+
+      try {
+        response = setHandleRecordAttribute(type, data, response);
+      } catch (NoSuchFieldException e) {
+        throw new PidCreationException(
+            FIELD_MISMATCH_ERROR + type);
+      }
+    }
+    return response;
+  }
+
+  public DoiRecordResponse resolveDoiRecord(byte[] handle) throws PidCreationException {
+    Result<Record3<byte[], byte[], byte[]>> record = context
+        .select(HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
+        .from(HANDLES)
+        .where(HANDLES.HANDLE.eq(handle))
+        .fetch();
+    return buildDoiRecordResponse(record);
+  }
+
+  private List<DoiRecordResponse> resolveDoiRecordBatch(List<byte[]> handles)
+      throws PidCreationException {
+
+    // Fetch all posted handles
+    Map<byte[], Result<Record3<byte[], byte[], byte[]>>> posted = context
+        .select(HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
+        .from(HANDLES)
+        .where(HANDLES.HANDLE.in(handles))
+        .fetchGroups(HANDLES.HANDLE);
+
+    byte[] handle = posted.keySet().iterator().next();
+    List<Record3<byte[], byte[], byte[]>> aggregatedRecord = new ArrayList<>();
+    List<DoiRecordResponse> responses = new ArrayList<>();
+
+    int endOfList = posted.size() - 1;
+    int i = 0;
+
+    // Create a handle record response for each group of handles
+    for (Map.Entry<byte[], Result<Record3<byte[], byte[], byte[]>>> entry : posted.entrySet()) {
+      if (Arrays.equals(handle, entry.getKey()) && i < endOfList) {
+        aggregatedRecord.add(entry.getValue().get(0));
+      } else if (i == endOfList) {
+        aggregatedRecord.add(entry.getValue().get(0));
+        responses.add(buildDoiRecordResponse(aggregatedRecord));
+      } else {
+        responses.add(buildDoiRecordResponse(aggregatedRecord));
+        if (i < endOfList - 1) {
+          aggregatedRecord.clear();
+        }
+        aggregatedRecord.add(entry.getValue().get(0));
+        handle = entry.getKey();
+      }
+      i++;
+    }
+    return responses;
+  }
+
+  private DoiRecordResponse buildDoiRecordResponse(
+      List<Record3<byte[], byte[], byte[]>> records)
+      throws PidCreationException {
+    DoiRecordResponse response = new DoiRecordResponse();
+
+    String type;
+    String data;
+    for (Record3<byte[], byte[], byte[]> r : records) {
+      type = new String((byte[]) r.getValue(1));
+      data = new String((byte[]) r.getValue(2));
+
+      try {
+        response = setDoiRecordAttribute(type, data, response);
+      } catch (NoSuchFieldException e) {
+        throw new PidCreationException(
+            FIELD_MISMATCH_ERROR + type);
+      }
+    }
+    return response;
+  }
+
+  public DigitalSpecimenResponse resolveDigitalSpecimenRecord(byte[] handle)
+      throws PidCreationException {
+    Result<Record3<byte[], byte[], byte[]>> record = context
+        .select(HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
+        .from(HANDLES)
+        .where(HANDLES.HANDLE.eq(handle))
+        .fetch();
+    return buildDigitalSpecimenResponse(record);
+  }
+
+  private List<DigitalSpecimenResponse> resolveDigitalSpecimenBatch(
+      List<byte[]> handles)
+      throws PidCreationException {
+
+    // Fetch all posted handles
+    Map<byte[], Result<Record3<byte[], byte[], byte[]>>> posted = context
+        .select(HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
+        .from(HANDLES)
+        .where(HANDLES.HANDLE.in(handles))
+        .fetchGroups(HANDLES.HANDLE);
+
+    byte[] handle = posted.keySet().iterator().next();
+    List<Record3<byte[], byte[], byte[]>> aggregatedRecord = new ArrayList<>();
+    List<DigitalSpecimenResponse> responses = new ArrayList<>();
+
+    int endOfList = posted.size() - 1;
+    int i = 0;
+
+    // Create a handle record response for each group of handles
+    for (Map.Entry<byte[], Result<Record3<byte[], byte[], byte[]>>> entry : posted.entrySet()) {
+      if (Arrays.equals(handle, entry.getKey()) && i < endOfList) {
+        aggregatedRecord.add(entry.getValue().get(0));
+      } else if (i == endOfList) {
+        aggregatedRecord.add(entry.getValue().get(0));
+        responses.add(buildDigitalSpecimenResponse(aggregatedRecord));
+      } else {
+        responses.add(buildDigitalSpecimenResponse(aggregatedRecord));
+        if (i < endOfList - 1) {
+          aggregatedRecord.clear();
+        }
+        aggregatedRecord.add(entry.getValue().get(0));
+        handle = entry.getKey();
+      }
+      i++;
+    }
+    return responses;
+  }
+
+  private DigitalSpecimenResponse buildDigitalSpecimenResponse(
+      List<Record3<byte[], byte[], byte[]>> records)
+      throws PidCreationException {
+    DigitalSpecimenResponse response = new DigitalSpecimenResponse();
+
+    String type;
+    String data;
+    for (Record3<byte[], byte[], byte[]> r : records) {
+      type = new String((byte[]) r.getValue(1));
+      data = new String((byte[]) r.getValue(2));
+
+      try {
+        response = setDigitalSpecimenRecordAttribute(type, data, response);
+      } catch (NoSuchFieldException e) {
+        throw new PidCreationException(
+            FIELD_MISMATCH_ERROR + type);
+      }
+    }
+    return response;
+  }
+
+  public DigitalSpecimenBotanyResponse resolveDigitalSpecimenBotanyRecord(byte[] handle)
+      throws PidCreationException {
+    Result<Record3<byte[], byte[], byte[]>> record = context
+        .select(HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
+        .from(HANDLES)
+        .where(HANDLES.HANDLE.eq(handle))
+        .fetch();
+    return buildDigitalSpecimenBotanyResponse(record);
+  }
+
+  private List<DigitalSpecimenBotanyResponse> resolveDigitalSpecimenBotanyBatch(
+      List<byte[]> handles)
+      throws PidCreationException {
+
+    // Fetch all posted handles
+    Map<byte[], Result<Record3<byte[], byte[], byte[]>>> posted = context
+        .select(HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
+        .from(HANDLES)
+        .where(HANDLES.HANDLE.in(handles))
+        .fetchGroups(HANDLES.HANDLE);
+
+    byte[] handle = posted.keySet().iterator().next();
+    List<Record3<byte[], byte[], byte[]>> aggregatedRecord = new ArrayList<>();
+    List<DigitalSpecimenBotanyResponse> responses = new ArrayList<>();
+
+    int endOfList = posted.size() - 1;
+    int i = 0;
+
+    // Create a handle record response for each group of handles
+    for (Map.Entry<byte[], Result<Record3<byte[], byte[], byte[]>>> entry : posted.entrySet()) {
+      if (Arrays.equals(handle, entry.getKey()) && i < endOfList) {
+        aggregatedRecord.add(entry.getValue().get(0));
+      } else if (i == endOfList) {
+        aggregatedRecord.add(entry.getValue().get(0));
+        responses.add(buildDigitalSpecimenBotanyResponse(aggregatedRecord));
+      } else {
+        responses.add(buildDigitalSpecimenBotanyResponse(aggregatedRecord));
+        if (i < endOfList - 1) {
+          aggregatedRecord.clear();
+        }
+        aggregatedRecord.add(entry.getValue().get(0));
+        handle = entry.getKey();
+      }
+      i++;
+    }
+    return responses;
+  }
+
+  private DigitalSpecimenBotanyResponse buildDigitalSpecimenBotanyResponse(
+      List<Record3<byte[], byte[], byte[]>> records)
+      throws PidCreationException {
+    DigitalSpecimenBotanyResponse response = new DigitalSpecimenBotanyResponse();
+
+    String type;
+    String data;
+    for (Record3<byte[], byte[], byte[]> r : records) {
+      type = new String((byte[]) r.getValue(1));
+      data = new String((byte[]) r.getValue(2));
+
+      try {
+        response = setDigitalSpecimenBotanyRecordAttribute(type, data, response);
+      } catch (NoSuchFieldException e) {
+        throw new PidCreationException(
+            FIELD_MISMATCH_ERROR + type);
+      }
+    }
+    return response;
   }
 
   // Get List of Pids
@@ -131,90 +428,11 @@ public class HandleRepository {
       Instant recordTimestamp, List<HandleAttribute> handleAttributes) throws PidCreationException {
     postBatchRecord(recordTimestamp, handleAttributes);
     try {
-      return mapPostedRecordToHandleRecordResponse(handles);
+      return resolveHandleRecordBatch(handles);
     } catch (PidCreationException e) {
       rollbackHandleCreation(handles); // If an error has occured, delete any handles we've posted
       throw new PidCreationException(e.getMessage());
     }
-  }
-
-  private List<HandleRecordResponse> mapPostedRecordToHandleRecordResponse(List<byte[]> handles)
-      throws PidCreationException {
-
-    // Fetch all posted handles
-    Map<byte[], Result<Record3<byte[], byte[], byte[]>>> posted = context
-        .select(HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
-        .from(HANDLES)
-        .where(HANDLES.HANDLE.in(handles))
-        .fetchGroups(HANDLES.HANDLE);
-
-    /* The result of this fetch is a "map" (wherein keys are not unique) of handle, result(handle, type, data)
-    So it would look like:
-      20.10/123,   (20.10/123, pidStatus, ACTIVE)
-      20.10/123,   (20.10/123, issueDate, 2022-10-10)
-      20.10/ABC,   (20.10/ABC, pidStatus, DRAFT)
-      20.10/ABC,   (20.10/ABC, issueDate, 2022-06-06)
-
-    And so on.
-    This next code block goes through the "map" sequentially and groups rows with the same handle into a list.
-    The list gets turned into a HandleRecordResponse object, then we aggregate the next group of handle rows.
-
-    It's this complicated because of how records are stored in the database. I'm open to other approaches.
-     */
-
-    byte[] handle = posted.keySet().iterator().next(); // First handle retrieved
-    List<Record3<byte[], byte[], byte[]>> aggregatedRecord = new ArrayList<>();
-    List<HandleRecordResponse> responses = new ArrayList<>();
-
-    int endOfList = posted.size() - 1;
-    int i = 0;
-
-    // Our database result is a list of all rows posted (functionally decoupled from their handle id)
-    // In this loop, we create a HandleRecordResponse for each group of handles
-    // Where each "group" of handles is a handle record
-    for (Map.Entry<byte[], Result<Record3<byte[], byte[], byte[]>>> entry : posted.entrySet()) {
-      if (Arrays.equals(handle, entry.getKey()) && i < endOfList) {
-        // While previous handle = current handle, add this row to the handle record
-        aggregatedRecord.add(entry.getValue().get(0));
-      } else if (i == endOfList) {
-        // Special case for end of list
-        aggregatedRecord.add(entry.getValue().get(0));
-        responses.add(buildHandleRecordResponse(aggregatedRecord));
-      } else {
-        // If we've found all rows under a given handle, create a response from those rows
-        responses.add(buildHandleRecordResponse(aggregatedRecord));
-        if (i < endOfList - 1) {
-          // if this is not the last record in the list, we clear the list for the next handle record
-          aggregatedRecord.clear();
-        }
-        aggregatedRecord.add(entry.getValue().get(0));
-        handle = entry.getKey();
-      }
-      i++;
-    }
-    return responses;
-  }
-
-  // Given a list of database rows, return a HandleRecordResponse
-  private HandleRecordResponse buildHandleRecordResponse(
-      List<Record3<byte[], byte[], byte[]>> records)
-      throws PidCreationException {
-    HandleRecordResponse response = new HandleRecordResponse();
-    String type;
-    String data;
-
-    for (Record3<byte[], byte[], byte[]> r : records) {
-      type = new String((byte[]) r.getValue(1));
-      data = new String((byte[]) r.getValue(2));
-
-      try {
-        response = setHandleRecordAttribute(type, data, response);
-      } catch (NoSuchFieldException e) {
-        throw new PidCreationException(
-            FIELD_MISMATCH_ERROR + type);
-      }
-    }
-    return response;
   }
 
   // Given an attribute (type) and value (data), set the Response object's attribute to that value
@@ -282,132 +500,16 @@ public class HandleRepository {
       List<HandleAttribute> handleAttributes)
       throws PidCreationException {
     postBatchRecord(recordTimestamp, handleAttributes);
-    return mapPostedRecordToDoiResponse(handles);
+    return resolveDoiRecordBatch(handles);
   }
 
-  private List<DoiRecordResponse> mapPostedRecordToDoiResponse(List<byte[]> handles)
-      throws PidCreationException {
-
-    // Fetch all posted handles
-    Map<byte[], Result<Record3<byte[], byte[], byte[]>>> posted = context
-        .select(HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
-        .from(HANDLES)
-        .where(HANDLES.HANDLE.in(handles))
-        .fetchGroups(HANDLES.HANDLE);
-
-    byte[] handle = posted.keySet().iterator().next();
-    List<Record3<byte[], byte[], byte[]>> aggregatedRecord = new ArrayList<>();
-    List<DoiRecordResponse> responses = new ArrayList<>();
-
-    int endOfList = posted.size() - 1;
-    int i = 0;
-
-    // Create a handle record response for each group of handles
-    for (Map.Entry<byte[], Result<Record3<byte[], byte[], byte[]>>> entry : posted.entrySet()) {
-      if (Arrays.equals(handle, entry.getKey()) && i < endOfList) {
-        aggregatedRecord.add(entry.getValue().get(0));
-      } else if (i == endOfList) {
-        aggregatedRecord.add(entry.getValue().get(0));
-        responses.add(buildDoiRecordResponse(aggregatedRecord));
-      } else {
-        responses.add(buildDoiRecordResponse(aggregatedRecord));
-        if (i < endOfList - 1) {
-          aggregatedRecord.clear();
-        }
-        aggregatedRecord.add(entry.getValue().get(0));
-        handle = entry.getKey();
-      }
-      i++;
-    }
-    return responses;
-  }
-
-  private DoiRecordResponse buildDoiRecordResponse(
-      List<Record3<byte[], byte[], byte[]>> records)
-      throws PidCreationException {
-    DoiRecordResponse response = new DoiRecordResponse();
-
-    String type;
-    String data;
-    for (Record3<byte[], byte[], byte[]> r : records) {
-      type = new String((byte[]) r.getValue(1));
-      data = new String((byte[]) r.getValue(2));
-
-      try {
-        response = setDoiRecordAttribute(type, data, response);
-      } catch (NoSuchFieldException e) {
-        throw new PidCreationException(
-            FIELD_MISMATCH_ERROR + type);
-      }
-    }
-    return response;
-  }
 
   // Batch Digital Specimen Creation
   public List<DigitalSpecimenResponse> createDigitalSpecimenBatch(List<byte[]> handles,
       Instant recordTimestamp, List<HandleAttribute> handleAttributes)
       throws PidCreationException {
     postBatchRecord(recordTimestamp, handleAttributes);
-    return mapPostedRecordToDigitalSpecimenResponse(handles);
-  }
-
-  private List<DigitalSpecimenResponse> mapPostedRecordToDigitalSpecimenResponse(
-      List<byte[]> handles)
-      throws PidCreationException {
-
-    // Fetch all posted handles
-    Map<byte[], Result<Record3<byte[], byte[], byte[]>>> posted = context
-        .select(HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
-        .from(HANDLES)
-        .where(HANDLES.HANDLE.in(handles))
-        .fetchGroups(HANDLES.HANDLE);
-
-    byte[] handle = posted.keySet().iterator().next();
-    List<Record3<byte[], byte[], byte[]>> aggregatedRecord = new ArrayList<>();
-    List<DigitalSpecimenResponse> responses = new ArrayList<>();
-
-    int endOfList = posted.size() - 1;
-    int i = 0;
-
-    // Create a handle record response for each group of handles
-    for (Map.Entry<byte[], Result<Record3<byte[], byte[], byte[]>>> entry : posted.entrySet()) {
-      if (Arrays.equals(handle, entry.getKey()) && i < endOfList) {
-        aggregatedRecord.add(entry.getValue().get(0));
-      } else if (i == endOfList) {
-        aggregatedRecord.add(entry.getValue().get(0));
-        responses.add(buildDigitalSpecimenResponse(aggregatedRecord));
-      } else {
-        responses.add(buildDigitalSpecimenResponse(aggregatedRecord));
-        if (i < endOfList - 1) {
-          aggregatedRecord.clear();
-        }
-        aggregatedRecord.add(entry.getValue().get(0));
-        handle = entry.getKey();
-      }
-      i++;
-    }
-    return responses;
-  }
-
-  private DigitalSpecimenResponse buildDigitalSpecimenResponse(
-      List<Record3<byte[], byte[], byte[]>> records)
-      throws PidCreationException {
-    DigitalSpecimenResponse response = new DigitalSpecimenResponse();
-
-    String type;
-    String data;
-    for (Record3<byte[], byte[], byte[]> r : records) {
-      type = new String((byte[]) r.getValue(1));
-      data = new String((byte[]) r.getValue(2));
-
-      try {
-        response = setDigitalSpecimenRecordAttribute(type, data, response);
-      } catch (NoSuchFieldException e) {
-        throw new PidCreationException(
-            FIELD_MISMATCH_ERROR + type);
-      }
-    }
-    return response;
+    return resolveDigitalSpecimenBatch(handles);
   }
 
   // DigitalSpecimenBotany Batch Creation
@@ -416,66 +518,7 @@ public class HandleRepository {
       Instant recordTimestamp, List<HandleAttribute> handleAttributes)
       throws PidCreationException {
     postBatchRecord(recordTimestamp, handleAttributes);
-    return mapPostedRecordToDigitalSpecimenBotanyResponse(handles);
-  }
-
-  private List<DigitalSpecimenBotanyResponse> mapPostedRecordToDigitalSpecimenBotanyResponse(
-      List<byte[]> handles)
-      throws PidCreationException {
-
-    // Fetch all posted handles
-    Map<byte[], Result<Record3<byte[], byte[], byte[]>>> posted = context
-        .select(HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
-        .from(HANDLES)
-        .where(HANDLES.HANDLE.in(handles))
-        .fetchGroups(HANDLES.HANDLE);
-
-    byte[] handle = posted.keySet().iterator().next();
-    List<Record3<byte[], byte[], byte[]>> aggregatedRecord = new ArrayList<>();
-    List<DigitalSpecimenBotanyResponse> responses = new ArrayList<>();
-
-    int endOfList = posted.size() - 1;
-    int i = 0;
-
-    // Create a handle record response for each group of handles
-    for (Map.Entry<byte[], Result<Record3<byte[], byte[], byte[]>>> entry : posted.entrySet()) {
-      if (Arrays.equals(handle, entry.getKey()) && i < endOfList) {
-        aggregatedRecord.add(entry.getValue().get(0));
-      } else if (i == endOfList) {
-        aggregatedRecord.add(entry.getValue().get(0));
-        responses.add(buildDigitalSpecimenBotanyResponse(aggregatedRecord));
-      } else {
-        responses.add(buildDigitalSpecimenBotanyResponse(aggregatedRecord));
-        if (i < endOfList - 1) {
-          aggregatedRecord.clear();
-        }
-        aggregatedRecord.add(entry.getValue().get(0));
-        handle = entry.getKey();
-      }
-      i++;
-    }
-    return responses;
-  }
-
-  private DigitalSpecimenBotanyResponse buildDigitalSpecimenBotanyResponse(
-      List<Record3<byte[], byte[], byte[]>> records)
-      throws PidCreationException {
-    DigitalSpecimenBotanyResponse response = new DigitalSpecimenBotanyResponse();
-
-    String type;
-    String data;
-    for (Record3<byte[], byte[], byte[]> r : records) {
-      type = new String((byte[]) r.getValue(1));
-      data = new String((byte[]) r.getValue(2));
-
-      try {
-        response = setDigitalSpecimenBotanyRecordAttribute(type, data, response);
-      } catch (NoSuchFieldException e) {
-        throw new PidCreationException(
-            FIELD_MISMATCH_ERROR + type);
-      }
-    }
-    return response;
+    return resolveDigitalSpecimenBotanyBatch(handles);
   }
 
   // Create Individual Records
@@ -596,4 +639,76 @@ public class HandleRepository {
     return response;
   }
 
+  private void updateHandleAttributes(byte[] handle, Instant recordTimestamp,
+      List<HandleAttribute> handleAttributes, boolean versionIncrement) {
+    var queryList = new ArrayList<Query>();
+    for (var handleAttribute : handleAttributes) {
+      var query = context.update(HANDLES)
+          .set(HANDLES.DATA, handleAttribute.data())
+          .set(HANDLES.TIMESTAMP, recordTimestamp.getEpochSecond())
+          .where(HANDLES.HANDLE.eq(handle))
+          .and(HANDLES.IDX.eq(handleAttribute.index()));
+      queryList.add(query);
+    }
+    queryList.add(versionIncrement(handle, recordTimestamp, versionIncrement));
+    context.batch(queryList).execute();
+  }
+
+  private Query versionIncrement(byte[] handle, Instant recordTimestamp, boolean versionIncrement) {
+    var currentVersion =
+        Integer.parseInt(context.select(HANDLES.DATA)
+            .from(HANDLES)
+            .where(HANDLES.HANDLE.eq(handle))
+            .and(HANDLES.TYPE.eq("issueNumber".getBytes(StandardCharsets.UTF_8)))
+            .fetchOne(dbRecord -> new String(dbRecord.value1())));
+    int version;
+    if (versionIncrement) {
+      version = currentVersion + 1;
+    } else {
+      version = currentVersion - 1;
+    }
+
+    return context.update(HANDLES)
+        .set(HANDLES.DATA, String.valueOf(version).getBytes(StandardCharsets.UTF_8))
+        .set(HANDLES.TIMESTAMP, recordTimestamp.getEpochSecond())
+        .where(HANDLES.HANDLE.eq(handle))
+        .and(HANDLES.TYPE.eq("issueNumber".getBytes(StandardCharsets.UTF_8)));
+  }
+
+  public TombstoneRecordResponse archiveRecord(byte[] handle,
+      Instant recordTimestamp, List<HandleAttribute> handleAttributes, boolean versionIncrement){
+
+  }
+
+  public HandleRecordResponse updateHandleRecord(byte[] handle,
+      Instant recordTimestamp, List<HandleAttribute> handleAttributes, boolean versionIncrement)
+      throws PidCreationException {
+
+    updateHandleAttributes(handle, recordTimestamp, handleAttributes, versionIncrement);
+    return resolveHandleRecord(handle);
+  }
+
+  public DoiRecordResponse updateDoiRecord(byte[] handle,
+      Instant recordTimestamp, List<HandleAttribute> handleAttributes, boolean versionIncrement)
+      throws PidCreationException {
+
+    updateHandleAttributes(handle, recordTimestamp, handleAttributes, versionIncrement);
+    return resolveDoiRecord(handle);
+  }
+
+  public DigitalSpecimenResponse updateDigitalSpecimen(byte[] handle,
+      Instant recordTimestamp, List<HandleAttribute> handleAttributes, boolean versionIncrement)
+      throws PidCreationException {
+
+    updateHandleAttributes(handle, recordTimestamp, handleAttributes, versionIncrement);
+    return resolveDigitalSpecimenRecord(handle);
+  }
+
+  public DigitalSpecimenBotanyResponse updateDigitalSpecimenBotany(byte[] handle,
+      Instant recordTimestamp, List<HandleAttribute> handleAttributes, boolean versionIncrement)
+      throws PidCreationException {
+
+    updateHandleAttributes(handle, recordTimestamp, handleAttributes, versionIncrement);
+    return resolveDigitalSpecimenBotanyRecord(handle);
+  }
 }

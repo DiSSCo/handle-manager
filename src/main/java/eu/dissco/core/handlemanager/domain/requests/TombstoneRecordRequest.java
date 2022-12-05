@@ -1,32 +1,21 @@
 package eu.dissco.core.handlemanager.domain.requests;
 
+import java.nio.charset.StandardCharsets;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
 @Getter
 @ToString
-@EqualsAndHashCode(callSuper = true)
-public class TombstoneRecordRequest extends HandleRecordRequest {
+public class TombstoneRecordRequest {
 
+  private final byte[] handle;
   private final String tombstoneText;
-  private final String[] tombstonePids;
+  private final String[] tombstonePids = new String[]{};
 
-  public TombstoneRecordRequest(String pidIssuerPid, String digitalObjectTypePid,
-      String digitalObjectSubtypePid, String[] locations, String tombstoneText) {
-    super(pidIssuerPid, digitalObjectTypePid, digitalObjectSubtypePid, locations);
-
+  public TombstoneRecordRequest(String handle, String tombstoneText){
+    this.handle = handle.getBytes(StandardCharsets.UTF_8);
     this.tombstoneText = tombstoneText;
-    this.tombstonePids = new String[]{};
   }
 
-  // Tombstone PIDs only to be used in the event of a merge (maybe split?)
-  public TombstoneRecordRequest(String pidIssuerPid, String digitalObjectTypePid,
-      String digitalObjectSubtypePid, String[] locations, String tombstoneText,
-      String[] tombstonePids) {
-    super(pidIssuerPid, digitalObjectTypePid, digitalObjectSubtypePid, locations);
-
-    this.tombstoneText = tombstoneText;
-    this.tombstonePids = tombstonePids;
-  }
 }

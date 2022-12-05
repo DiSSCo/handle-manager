@@ -49,7 +49,7 @@ class PidTypeServiceTest {
     initTestPidTypeRecordHandle();
     String expected = TestUtils.PTR_HANDLE_RECORD;
 
-    given(handleRep.resolveHandle(recordPid)).willReturn(typeRecord);
+    given(handleRep.resolveHandleAttributes(recordPid)).willReturn(typeRecord);
 
     // When
     String returned = pidTypeService.resolveTypePid(TestUtils.PID_ISSUER_PID);
@@ -63,7 +63,7 @@ class PidTypeServiceTest {
     //Given
     initTestPidTypeRecordDoi();
     String expected = TestUtils.PTR_DOI_RECORD;
-    given(handleRep.resolveHandle(recordPid)).willReturn(typeRecord);
+    given(handleRep.resolveHandleAttributes(recordPid)).willReturn(typeRecord);
 
     // When
     String returned = pidTypeService.resolveTypePid(TestUtils.PID_ISSUER_PID);
