@@ -118,7 +118,7 @@ public class TestUtils {
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(DIGITAL_OBJECT_TYPE), handle, DIGITAL_OBJECT_TYPE, ptr_record));
 
     // 4: Digital Object Subtype
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(DIGITAL_OBJECT_SUBTYPE_PID), handle, DIGITAL_OBJECT_SUBTYPE, ptr_record));
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(DIGITAL_OBJECT_SUBTYPE), handle, DIGITAL_OBJECT_SUBTYPE, ptr_record));
 
     // 5: 10320/loc
     byte[] loc = "".getBytes();
@@ -133,12 +133,10 @@ public class TestUtils {
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(ISSUE_DATE), handle, ISSUE_DATE, ISSUE_DATE_TESTVAL.getBytes()));
 
     // 7: Issue number
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(ISSUE_DATE), handle, ISSUE_NUMBER, "1".getBytes()));
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(ISSUE_NUMBER), handle, ISSUE_NUMBER, "1".getBytes()));
 
     // 8: PidStatus
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS, PID_STATUS_TESTVAL.getBytes()));
-
-    // 9, 10: tombstone text, tombstone pids -> Skip
 
     // 11: PidKernelMetadataLicense:
     handleRecord.add(

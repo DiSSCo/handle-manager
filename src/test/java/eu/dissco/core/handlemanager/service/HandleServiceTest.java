@@ -1,5 +1,6 @@
 package eu.dissco.core.handlemanager.service;
 
+import static eu.dissco.core.handlemanager.domain.PidRecords.*;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
@@ -89,6 +90,13 @@ class HandleServiceTest {
   @AfterEach
   void destroy() {
     mockedStatic.close();
+  }
+
+
+  void testFieldIdx(){
+    String pidIssuer = "pidIssuer";
+    assertThat(pidIssuer).isEqualTo(PID_ISSUER);
+    log.info("index "+ FIELD_IDX.get(PID_ISSUER));
   }
 
   @Test

@@ -241,7 +241,7 @@ public class HandleService {
     List<HandleAttribute> handleRecord = prepareDoiRecordAttributes(request, handle);
 
     handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(DIGITAL_SPECIMEN), handle, DIGITAL_OR_PHYSICAL,
+        new HandleAttribute(FIELD_IDX.get(DIGITAL_OR_PHYSICAL), handle, DIGITAL_OR_PHYSICAL,
             request.getDigitalOrPhysical().getBytes()));
 
     // 15: specimenHost
