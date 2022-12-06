@@ -2,6 +2,7 @@ package eu.dissco.core.handlemanager.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+import static eu.dissco.core.handlemanager.domain.PidRecords.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;

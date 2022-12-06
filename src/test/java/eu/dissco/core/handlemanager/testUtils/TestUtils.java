@@ -105,20 +105,20 @@ public class TestUtils {
     byte[] ptr_record = PTR_HANDLE_RECORD.getBytes();
 
     // 100: Admin Handle
-    handleRecord.add(new HandleAttribute(100, handle, HS_ADMIN, genAdminHandle()));
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(HS_ADMIN), handle, HS_ADMIN, genAdminHandle()));
 
     // 1: Pid
     byte[] pid = ("https://hdl.handle.net/" + new String(handle)).getBytes();
-    handleRecord.add(new HandleAttribute(1, handle, PID, pid));
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(PID), handle, PID, pid));
 
     // 2: PidIssuer
-    handleRecord.add(new HandleAttribute(2, handle, PID_ISSUER, ptr_record));
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(PID_ISSUER), handle, PID_ISSUER, ptr_record));
 
     // 3: Digital Object Type
-    handleRecord.add(new HandleAttribute(3, handle, DIGITAL_OBJECT_TYPE, ptr_record));
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(DIGITAL_OBJECT_TYPE), handle, DIGITAL_OBJECT_TYPE, ptr_record));
 
     // 4: Digital Object Subtype
-    handleRecord.add(new HandleAttribute(4, handle, DIGITAL_OBJECT_SUBTYPE, ptr_record));
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(DIGITAL_OBJECT_SUBTYPE_PID), handle, DIGITAL_OBJECT_SUBTYPE, ptr_record));
 
     // 5: 10320/loc
     byte[] loc = "".getBytes();
@@ -127,22 +127,22 @@ public class TestUtils {
     } catch (TransformerException | ParserConfigurationException e) {
       e.printStackTrace();
     }
-    handleRecord.add(new HandleAttribute(5, handle, LOC, loc));
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, loc));
 
     // 6: Issue Date
-    handleRecord.add(new HandleAttribute(6, handle, ISSUE_DATE, ISSUE_DATE_TESTVAL.getBytes()));
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(ISSUE_DATE), handle, ISSUE_DATE, ISSUE_DATE_TESTVAL.getBytes()));
 
     // 7: Issue number
-    handleRecord.add(new HandleAttribute(7, handle, ISSUE_NUMBER, "1".getBytes()));
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(ISSUE_DATE), handle, ISSUE_NUMBER, "1".getBytes()));
 
     // 8: PidStatus
-    handleRecord.add(new HandleAttribute(8, handle, PID_STATUS, PID_STATUS_TESTVAL.getBytes()));
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS, PID_STATUS_TESTVAL.getBytes()));
 
     // 9, 10: tombstone text, tombstone pids -> Skip
 
     // 11: PidKernelMetadataLicense:
     handleRecord.add(
-        new HandleAttribute(11, handle, PID_KERNEL_METADATA_LICENSE, PID_KERNEL_METADATA_LICENSE_TESTVAL.getBytes()));
+        new HandleAttribute(FIELD_IDX.get(PID_KERNEL_METADATA_LICENSE), handle, PID_KERNEL_METADATA_LICENSE, PID_KERNEL_METADATA_LICENSE_TESTVAL.getBytes()));
 
     return handleRecord;
   }
@@ -152,9 +152,9 @@ public class TestUtils {
     byte[] ptr_record = PTR_HANDLE_RECORD.getBytes();
 
     // 12: Referent DOI Name
-    handleRecord.add(new HandleAttribute(12, handle, REFERENT_DOI_NAME, ptr_record));
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(REFERENT_DOI_NAME), handle, REFERENT_DOI_NAME, ptr_record));
     // 13: Referent
-    handleRecord.add(new HandleAttribute(13, handle, REFERENT, REFERENT_TESTVAL.getBytes()));
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(REFERENT), handle, REFERENT, REFERENT_TESTVAL.getBytes()));
     return handleRecord;
   }
 
@@ -164,14 +164,14 @@ public class TestUtils {
 
     // 14: digitalOrPhysical
     handleRecord.add(
-        new HandleAttribute(14, handle, DIGITAL_OR_PHYSICAL, DIGITAL_OR_PHYSICAL_TESTVAL.getBytes()));
+        new HandleAttribute(FIELD_IDX.get(DIGITAL_OR_PHYSICAL), handle, DIGITAL_OR_PHYSICAL, DIGITAL_OR_PHYSICAL_TESTVAL.getBytes()));
 
     // 15: specimenHost
-    handleRecord.add(new HandleAttribute(15, handle, SPECIMEN_HOST, ptr_record));
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST), handle, SPECIMEN_HOST, ptr_record));
 
     // 16: In collectionFacility
     handleRecord.add(
-        new HandleAttribute(16, handle, IN_COLLECTION_FACILITY, ptr_record));
+        new HandleAttribute(FIELD_IDX.get(IN_COLLECTION_FACILITY), handle, IN_COLLECTION_FACILITY, ptr_record));
     return handleRecord;
   }
 
@@ -179,11 +179,11 @@ public class TestUtils {
     List<HandleAttribute> handleRecord = generateTestDigitalSpecimenAttributes(handle);
 
     // 17: ObjectType
-    handleRecord.add(new HandleAttribute(17, handle, OBJECT_TYPE, OBJECT_TYPE_TESTVAL.getBytes()));
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(OBJECT_TYPE), handle, OBJECT_TYPE, OBJECT_TYPE_TESTVAL.getBytes()));
 
     // 18: preservedOrLiving
     handleRecord.add(
-        new HandleAttribute(18, handle, PRESERVED_OR_LIVING, PRESERVED_OR_LIVING_TESTVAL.getBytes()));
+        new HandleAttribute(FIELD_IDX.get(PRESERVED_OR_LIVING), handle, PRESERVED_OR_LIVING, PRESERVED_OR_LIVING_TESTVAL.getBytes()));
     return handleRecord;
   }
 

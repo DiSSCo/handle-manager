@@ -1,7 +1,9 @@
 package eu.dissco.core.handlemanager.domain;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class PidRecords {
@@ -42,6 +44,9 @@ public class PidRecords {
   public static final Set<String> TOMBSTONE_RECORD;
 
   public static final Set<String> FIELD_IS_PID_RECORD;
+
+  public static final Map<String, Integer> FIELD_IDX;
+
 
   static {
     Set<String> tmp = new HashSet<>();
@@ -98,7 +103,36 @@ public class PidRecords {
     tmp.add(SPECIMEN_HOST);
     tmp.add(IN_COLLECTION_FACILITY);
     tmp.add(REFERENT);
+    tmp.add(REFERENT_DOI_NAME);
     FIELD_IS_PID_RECORD = Collections.unmodifiableSet(tmp);
+  }
+
+  static {
+    // Keys = field names, values = indexes
+    // Seems counterintuitive, but it's likely specific indexes will be overloaded
+
+    Map<String, Integer> tmp = new HashMap<>();
+    tmp.put(HS_ADMIN, 100);
+    tmp.put(PID, 1);
+    tmp.put(PID_ISSUER, 2);
+    tmp.put(DIGITAL_OBJECT_TYPE, 3);
+    tmp.put(DIGITAL_OBJECT_SUBTYPE, 4);
+    tmp.put(LOC, 5);
+    tmp.put(ISSUE_DATE, 6);
+    tmp.put(ISSUE_NUMBER, 7);
+    tmp.put(PID_STATUS, 8);
+    tmp.put(TOMBSTONE_TEXT, 9);
+    tmp.put(TOMBSTONE_PIDS, 10);
+    tmp.put(PID_KERNEL_METADATA_LICENSE, 11);
+    tmp.put(REFERENT_DOI_NAME, 12);
+    tmp.put(REFERENT, 13);
+    tmp.put(DIGITAL_OR_PHYSICAL, 14);
+    tmp.put(SPECIMEN_HOST, 15);
+    tmp.put(IN_COLLECTION_FACILITY, 16);
+    tmp.put(OBJECT_TYPE, 17);
+    tmp.put(PRESERVED_OR_LIVING, 18);
+    FIELD_IDX = Collections.unmodifiableMap(tmp);
+
   }
 
 

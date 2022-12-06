@@ -60,7 +60,7 @@ public class HandleController {
       node.put(types.get(i), data.get(i));
     }*/
 
-    byte[] handle = "20.5000.1025/000-019-CQH".getBytes(StandardCharsets.UTF_8);
+    byte[] handle = "20.5000.1025/YMY-Z4B-4K6".getBytes(StandardCharsets.UTF_8);
 
     JsonApiWrapper node = service.resolveRecord(handle);
 
