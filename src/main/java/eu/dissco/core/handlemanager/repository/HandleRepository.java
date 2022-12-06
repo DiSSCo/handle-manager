@@ -119,12 +119,12 @@ public class HandleRepository {
   // Should this be determined by digitalObjectType? 
 
   public HandleRecordResponse resolveHandleRecord(byte[] handle) throws PidCreationException {
-    Result<Record3<byte[], byte[], byte[]>> record = context
+    Result<Record3<byte[], byte[], byte[]>> handleRecord = context
         .select(HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
         .from(HANDLES)
         .where(HANDLES.HANDLE.eq(handle))
         .fetch();
-    return buildHandleRecordResponse(record);
+    return buildHandleRecordResponse(handleRecord);
   }
 
   private List<HandleRecordResponse> resolveHandleRecordBatch(List<byte[]> handles)
@@ -206,12 +206,12 @@ public class HandleRepository {
   }
 
   public DoiRecordResponse resolveDoiRecord(byte[] handle) throws PidCreationException {
-    Result<Record3<byte[], byte[], byte[]>> record = context
+    Result<Record3<byte[], byte[], byte[]>> handleRecord = context
         .select(HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
         .from(HANDLES)
         .where(HANDLES.HANDLE.eq(handle))
         .fetch();
-    return buildDoiRecordResponse(record);
+    return buildDoiRecordResponse(handleRecord);
   }
 
   private List<DoiRecordResponse> resolveDoiRecordBatch(List<byte[]> handles)
@@ -274,12 +274,12 @@ public class HandleRepository {
 
   public DigitalSpecimenResponse resolveDigitalSpecimenRecord(byte[] handle)
       throws PidCreationException {
-    Result<Record3<byte[], byte[], byte[]>> record = context
+    Result<Record3<byte[], byte[], byte[]>> handleRecord = context
         .select(HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
         .from(HANDLES)
         .where(HANDLES.HANDLE.eq(handle))
         .fetch();
-    return buildDigitalSpecimenResponse(record);
+    return buildDigitalSpecimenResponse(handleRecord);
   }
 
   private List<DigitalSpecimenResponse> resolveDigitalSpecimenBatch(
@@ -343,12 +343,12 @@ public class HandleRepository {
 
   public DigitalSpecimenBotanyResponse resolveDigitalSpecimenBotanyRecord(byte[] handle)
       throws PidCreationException {
-    Result<Record3<byte[], byte[], byte[]>> record = context
+    Result<Record3<byte[], byte[], byte[]>> handleRecord = context
         .select(HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
         .from(HANDLES)
         .where(HANDLES.HANDLE.eq(handle))
         .fetch();
-    return buildDigitalSpecimenBotanyResponse(record);
+    return buildDigitalSpecimenBotanyResponse(handleRecord);
   }
 
   private List<DigitalSpecimenBotanyResponse> resolveDigitalSpecimenBotanyBatch(
