@@ -209,44 +209,6 @@ public class HandleService {
     return new JsonApiWrapper(links, jsonData);
   }
 
-
-
-  // Response Object Creation
-
-  public HandleRecordResponse createHandleRecord(HandleRecordRequest request)
-      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
-    byte[] handle = hf.genHandleList(1).get(0);
-    List<HandleAttribute> handleRecord = prepareHandleRecordAttributes(request, handle);
-    var recordTimestamp = Instant.now();
-    return handleRep.createHandle(handle, recordTimestamp, handleRecord);
-  }
-
-  public DoiRecordResponse createDoiRecord(DoiRecordRequest request)
-      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
-    byte[] handle = hf.genHandleList(1).get(0);
-    List<HandleAttribute> handleRecord = prepareDoiRecordAttributes(request, handle);
-    var recordTimestamp = Instant.now();
-    return handleRep.<DoiRecordResponse>createDoi(handle, recordTimestamp, handleRecord);
-  }
-
-  public DigitalSpecimenResponse createDigitalSpecimen(DigitalSpecimenRequest request)
-      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
-    byte[] handle = hf.genHandleList(1).get(0);
-    List<HandleAttribute> handleRecord = prepareDigitalSpecimenRecordAttributes(request, handle);
-    var recordTimestamp = Instant.now();
-    return handleRep.createDigitalSpecimen(handle, recordTimestamp, handleRecord);
-  }
-
-  public DigitalSpecimenBotanyResponse createDigitalSpecimenBotany(
-      DigitalSpecimenBotanyRequest request)
-      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
-    byte[] handle = hf.genHandleList(1).get(0);
-    List<HandleAttribute> handleRecord = prepareDigitalSpecimenBotanyRecordAttributes(request,
-        handle);
-    var recordTimestamp = Instant.now();
-    return handleRep.createDigitalSpecimenBotany(handle, recordTimestamp, handleRecord);
-  }
-
   // Getters
 
   public List<String> getHandlesPaged(String pidStatus, int pageNum, int pageSize) {

@@ -179,73 +179,6 @@ class HandleControllerTest {
 
   // Response Object
 
-  @Test
-  void testHandleRecordCreation()
-      throws Exception {
-    // Given
-    HandleRecordRequest request = generateTestHandleRequest();
-    HandleRecordResponse responseExpected = generateTestHandleResponse(handle);
-    given(service.createHandleRecord(request)).willReturn(responseExpected);
-
-    // When
-    ResponseEntity<HandleRecordResponse> responseReceived = controller.createHandleRecord(request);
-
-    // Then
-    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
-  }
-
-  @Test
-  void testDoiRecordCreation()
-      throws Exception {
-    // Given
-    DoiRecordRequest request = generateTestDoiRequest();
-    DoiRecordResponse responseExpected = generateTestDoiResponse(handle);
-    given(service.createDoiRecord(request)).willReturn(responseExpected);
-
-    // When
-    ResponseEntity<DoiRecordResponse> responseReceived = controller.createDoiRecord(request);
-
-    // Then
-    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
-  }
-
-  @Test
-  void testDigitalSpeciemenCreation()
-      throws Exception {
-    // Given
-    DigitalSpecimenRequest request = generateTestDigitalSpecimenRequest();
-    DigitalSpecimenResponse responseExpected = generateTestDigitalSpecimenResponse(
-        handle);
-    given(service.createDigitalSpecimen(request)).willReturn(responseExpected);
-
-    // When
-    ResponseEntity<DigitalSpecimenResponse> responseReceived = controller.createDigitalSpecimen(
-        request);
-
-    // Then
-    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
-  }
-
-  @Test
-  void testDigitalSpeciemenBotanyCreation()
-      throws Exception {
-    // Given
-    DigitalSpecimenBotanyRequest request = generateTestDigitalSpecimenBotanyRequest();
-    DigitalSpecimenBotanyResponse responseExpected = generateTestDigitalSpecimenBotanyResponse(
-        handle);
-    given(service.createDigitalSpecimenBotany(request)).willReturn(responseExpected);
-
-    // When
-    ResponseEntity<DigitalSpecimenBotanyResponse> responseReceived = controller.createDigitalSpecimenBotany(
-        request);
-
-    // Then
-    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
-  }
 
   @Test
   void testHandleRecordCreationBatch()
@@ -327,11 +260,11 @@ class HandleControllerTest {
   void testPidCreationException() throws Exception {
     // Given
     HandleRecordRequest request = generateTestHandleRequest();
-    given(service.createHandleRecord(request)).willThrow(PidResolutionException.class);
+    given(service.createHandleRecordJson(request)).willThrow(PidResolutionException.class);
 
     // When
     var exception = assertThrowsExactly(PidResolutionException.class,
-        () -> controller.createHandleRecord(request));
+        () -> controller.createHandleRecordJson(request));
 
     // Then
 

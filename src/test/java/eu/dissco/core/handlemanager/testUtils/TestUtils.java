@@ -365,6 +365,9 @@ public class TestUtils {
     for (HandleAttribute row : dbRecord) {
       type = row.type();
       data = new String(row.data());
+      if (row.index() == FIELD_IDX.get(HS_ADMIN)){
+        continue; // We never want HS_ADMIN in our json
+      }
       if (FIELD_IS_PID_RECORD.contains(type)) {
         subNode = mapper.readValue(data, ObjectNode.class);
         rootNode.set(type, subNode);

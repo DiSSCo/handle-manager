@@ -126,38 +126,6 @@ public class HandleController {
         .body(service.createDigitalSpecimenBotanyBatch(request));
   }
 
-  @PreAuthorize("isAuthenticated()")
-  @PostMapping(value = "/createRecord", params = "pidType=handle")
-  public ResponseEntity<HandleRecordResponse> createHandleRecord(
-      @RequestBody HandleRecordRequest hdl)
-      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
-    return ResponseEntity.status(HttpStatus.CREATED).body(service.createHandleRecord(hdl));
-  }
-
-  @PreAuthorize("isAuthenticated()")
-  @PostMapping(value = "/createRecord", params = "pidType=doi")
-  public ResponseEntity<DoiRecordResponse> createDoiRecord(
-      @RequestBody DoiRecordRequest hdl)
-      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
-    return ResponseEntity.status(HttpStatus.CREATED).body(service.createDoiRecord(hdl));
-  }
-
-  @PreAuthorize("isAuthenticated()")
-  @PostMapping(value = "/createRecord", params = "pidType=digitalSpecimen")
-  public ResponseEntity<DigitalSpecimenResponse> createDigitalSpecimen(
-      @RequestBody DigitalSpecimenRequest hdl)
-      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
-    return ResponseEntity.status(HttpStatus.CREATED).body(service.createDigitalSpecimen(hdl));
-  }
-
-  @PreAuthorize("isAuthenticated()")
-  @PostMapping(value = "/createRecord", params = "pidType=digitalSpecimenBotany")
-  public ResponseEntity<DigitalSpecimenBotanyResponse> createDigitalSpecimenBotany(
-      @RequestBody DigitalSpecimenBotanyRequest hdl)
-      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
-    return ResponseEntity.status(HttpStatus.CREATED).body(service.createDigitalSpecimenBotany(hdl));
-  }
-
   // Hellos and getters
   @GetMapping(value = "/health")
   public ResponseEntity<String> hello() {

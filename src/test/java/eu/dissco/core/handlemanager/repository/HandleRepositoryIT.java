@@ -5,6 +5,7 @@ import static eu.dissco.core.handlemanager.database.jooq.Tables.HANDLES;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateRecordObjectNode;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDigitalSpecimenAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDigitalSpecimenBotanyAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDigitalSpecimenBotanyResponse;
@@ -13,11 +14,14 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDoiAt
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDoiResponse;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestHandleAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestHandleResponse;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestJsonHandleRecordResponse;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapper;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenBotanyResponse;
 import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenResponse;
@@ -49,14 +53,14 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
-  void testCreateHandle() throws PidCreationException {
+  void testCreateHandleJson() throws PidCreationException, JsonProcessingException {
     // Given
     byte[] handle = HANDLE.getBytes();
     List<HandleAttribute> attributes = generateTestHandleAttributes(handle);
-    HandleRecordResponse responseExpected = generateTestHandleResponse(handle);
+    ObjectNode responseExpected =generateRecordObjectNode(attributes);
 
     // When
-    HandleRecordResponse responseReceived = handleRep.createHandle(handle, CREATED, attributes);
+    ObjectNode responseReceived = handleRep.createHandleRecordJson(handle, CREATED, attributes);
     var postedRecord = context.selectFrom(HANDLES).fetch();
 
     // Then
@@ -65,55 +69,54 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
-  void testCreateDoi() throws PidCreationException {
+  void testCreateDoiJson() throws PidCreationException, JsonProcessingException {
     // Given
     byte[] handle = HANDLE.getBytes();
     List<HandleAttribute> attributes = generateTestDoiAttributes(handle);
-    DoiRecordResponse responseExpected = generateTestDoiResponse(handle);
+    ObjectNode responseExpected =generateRecordObjectNode(attributes);
 
     // When
-    DoiRecordResponse responseReceived = handleRep.createDoi(handle, CREATED, attributes);
+    ObjectNode responseReceived = handleRep.createDoiRecordJson(handle, CREATED, attributes);
+    var postedRecord = context.selectFrom(HANDLES).fetch();
 
     // Then
-    var postedRecord = context.selectFrom(HANDLES).fetch();
     assertThat(responseExpected).isEqualTo(responseReceived);
     assertThat(postedRecord).hasSize(attributes.size());
   }
 
   @Test
-  void testCreateDigitalSpecimen() throws PidCreationException {
+  void testCreateDigitalSpecimenJson() throws PidCreationException, JsonProcessingException {
     // Given
     byte[] handle = HANDLE.getBytes();
     List<HandleAttribute> attributes = generateTestDigitalSpecimenAttributes(handle);
-    DigitalSpecimenResponse responseExpected = generateTestDigitalSpecimenResponse(handle);
+    ObjectNode responseExpected =generateRecordObjectNode(attributes);
 
     // When
-    DigitalSpecimenResponse responseReceived = handleRep.createDigitalSpecimen(handle, CREATED,
-        attributes);
+    ObjectNode responseReceived = handleRep.createDigitalSpecimenJson(handle, CREATED, attributes);
+    var postedRecord = context.selectFrom(HANDLES).fetch();
 
     // Then
-    var postedRecord = context.selectFrom(HANDLES).fetch();
     assertThat(responseExpected).isEqualTo(responseReceived);
     assertThat(postedRecord).hasSize(attributes.size());
   }
 
   @Test
-  void testCreateDigitalSpecimenBotany() throws PidCreationException {
+  void testCreateDigitalSpecimenBotanyJson() throws PidCreationException, JsonProcessingException {
     // Given
     byte[] handle = HANDLE.getBytes();
     List<HandleAttribute> attributes = generateTestDigitalSpecimenBotanyAttributes(handle);
-    DigitalSpecimenBotanyResponse responseExpected = generateTestDigitalSpecimenBotanyResponse(
-        handle);
+    ObjectNode responseExpected =generateRecordObjectNode(attributes);
 
     // When
-    DigitalSpecimenBotanyResponse responseReceived = handleRep.createDigitalSpecimenBotany(handle,
-        CREATED, attributes);
+    ObjectNode responseReceived = handleRep.createDigitalSpecimenBotanyJson(handle, CREATED, attributes);
+    var postedRecord = context.selectFrom(HANDLES).fetch();
 
     // Then
-    var postedRecord = context.selectFrom(HANDLES).fetch();
     assertThat(responseExpected).isEqualTo(responseReceived);
     assertThat(postedRecord).hasSize(attributes.size());
   }
+
+
 
   @Test
   void testCreateHandleBatch() throws PidCreationException {

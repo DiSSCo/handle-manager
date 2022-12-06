@@ -49,13 +49,6 @@ public class HandleRepository {
   private final DSLContext context;
   private final ObjectMapper mapper;
 
-  private final Map<String, TableField<HandlesRecord, ? extends Serializable>> attributeMapping = Map.of(
-      "index", HANDLES.IDX,
-      "handle", HANDLES.HANDLE,
-      "type", HANDLES.TYPE,
-      "data", HANDLES.DATA
-  );
-
   // For Handle Name Generation
   public List<byte[]> checkDuplicateHandles(List<byte[]> handles) {
     return context
@@ -68,7 +61,7 @@ public class HandleRepository {
 
   // Resolving handles
   public ObjectNode resolveSingleRecord(byte[] handle) throws PidResolutionException {
-    var dbRecord = fetchRecordFromDb(handle);
+    var dbRecord = resolveHandleAttributes(handle);
     if (dbRecord.isEmpty()) {
       throw new PidResolutionException("Unable to resolve handle");
     }
@@ -76,7 +69,7 @@ public class HandleRepository {
   }
 
   public List<ObjectNode> resolveBatchRecord(List<byte[]> handles) {
-    var dbRecord = fetchRecordFromDb(handles);
+    var dbRecord = resolveHandleAttributes(handles);
     var aggrRecord = aggregateRecords(dbRecord);
     List<ObjectNode> rootNodeList = new ArrayList<>();
 
@@ -94,7 +87,7 @@ public class HandleRepository {
         row.get(HANDLES.DATA));
   }
 
-  private List<HandleAttribute> fetchRecordFromDb(byte[] handle) {
+  public List<HandleAttribute> resolveHandleAttributes(byte[] handle) {
     return context
         .select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
         .from(HANDLES)
@@ -103,7 +96,7 @@ public class HandleRepository {
         .fetch(this::mapToAttribute);
   }
 
-  private List<HandleAttribute> fetchRecordFromDb(List<byte[]> handles) {
+  private List<HandleAttribute> resolveHandleAttributes(List<byte[]> handles) {
     return context
         .select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
         .from(HANDLES)
@@ -173,32 +166,6 @@ public class HandleRepository {
   }
 
   // Resolve Pid
-  public List<HandleAttribute> resolveHandleAttributes(byte[] handle) {
-    List<Record4<Integer, byte[], byte[], byte[]>> dbRecord = context
-        .select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
-        .from(HANDLES)
-        .where(HANDLES.HANDLE.eq(handle))
-        .fetch();
-    return mapToAttribute(dbRecord);
-  }
-
-  private List<HandleAttribute> mapToAttribute(
-      List<Record4<Integer, byte[], byte[], byte[]>> dbRecord) {
-    List<HandleAttribute> attributes = new ArrayList<>();
-    for (Record4<Integer, byte[], byte[], byte[]> row : dbRecord) {
-      attributes.add(new HandleAttribute(
-          row.get(HANDLES.IDX),
-          row.get(HANDLES.HANDLE),
-          new String(row.get(HANDLES.TYPE)),
-          row.get(HANDLES.DATA)
-      ));
-    }
-    return attributes;
-  }
-
-  // TODO: When we resolve a record, will we always know its type (i.e. handle, DOI, digitalSpecimen)? I'm inclined to say no.
-  // Will we have to make that decision based on what fields are present in the resolved record?
-  // Should this be determined by digitalObjectType?
 
   private List<HandleRecordResponse> resolveHandleRecordBatch(List<byte[]> handles)
       throws PidCreationException {
@@ -278,15 +245,6 @@ public class HandleRepository {
     return response;
   }
 
-  public DoiRecordResponse resolveDoiRecord(byte[] handle) throws PidCreationException {
-    Result<Record3<byte[], byte[], byte[]>> handleRecord = context
-        .select(HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
-        .from(HANDLES)
-        .where(HANDLES.HANDLE.eq(handle))
-        .fetch();
-    return buildDoiRecordResponse(handleRecord);
-  }
-
   private List<DoiRecordResponse> resolveDoiRecordBatch(List<byte[]> handles)
       throws PidCreationException {
 
@@ -343,16 +301,6 @@ public class HandleRepository {
       }
     }
     return response;
-  }
-
-  public DigitalSpecimenResponse resolveDigitalSpecimenRecord(byte[] handle)
-      throws PidCreationException {
-    Result<Record3<byte[], byte[], byte[]>> handleRecord = context
-        .select(HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
-        .from(HANDLES)
-        .where(HANDLES.HANDLE.eq(handle))
-        .fetch();
-    return buildDigitalSpecimenResponse(handleRecord);
   }
 
   private List<DigitalSpecimenResponse> resolveDigitalSpecimenBatch(
@@ -414,15 +362,6 @@ public class HandleRepository {
     return response;
   }
 
-  public DigitalSpecimenBotanyResponse resolveDigitalSpecimenBotanyRecord(byte[] handle)
-      throws PidCreationException {
-    Result<Record3<byte[], byte[], byte[]>> handleRecord = context
-        .select(HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
-        .from(HANDLES)
-        .where(HANDLES.HANDLE.eq(handle))
-        .fetch();
-    return buildDigitalSpecimenBotanyResponse(handleRecord);
-  }
 
   private List<DigitalSpecimenBotanyResponse> resolveDigitalSpecimenBotanyBatch(
       List<byte[]> handles)
@@ -708,124 +647,8 @@ public class HandleRepository {
     return resolveDigitalSpecimenBotanyBatch(handles);
   }
 
-  // Create Individual Records
-  public HandleRecordResponse createHandle(byte[] handle, Instant recordTimestamp,
-      List<HandleAttribute> handleAttributes) throws PidCreationException {
-    var queryList = new ArrayList<Query>();
-    HandleRecordResponse response = new HandleRecordResponse();
 
-    for (var handleAttribute : handleAttributes) {
-      try {
-        response = setHandleRecordAttribute(handleAttribute.type(),
-            new String(handleAttribute.data()), response);
-      } catch (NoSuchFieldException e) {
-        throw new PidCreationException(
-            String.format(INVALID_FIELD_ERROR, handleAttribute.type(), handleAttribute.type()));
-      }
-      var query = context.insertInto(HANDLES)
-          .set(HANDLES.HANDLE, handle)
-          .set(HANDLES.IDX, handleAttribute.index())
-          .set(HANDLES.TYPE, handleAttribute.type().getBytes(StandardCharsets.UTF_8))
-          .set(HANDLES.DATA, handleAttribute.data())
-          .set(HANDLES.TTL, 86400)
-          .set(HANDLES.TIMESTAMP, recordTimestamp.getEpochSecond())
-          .set(HANDLES.ADMIN_READ, true)
-          .set(HANDLES.ADMIN_WRITE, true)
-          .set(HANDLES.PUB_READ, true)
-          .set(HANDLES.PUB_WRITE, false);
-      queryList.add(query);
-    }
-    context.batch(queryList).execute();
-    return response;
-  }
-
-  public DoiRecordResponse createDoi(byte[] handle, Instant recordTimestamp,
-      List<HandleAttribute> handleAttributes) throws PidCreationException {
-    var queryList = new ArrayList<Query>();
-    DoiRecordResponse response = new DoiRecordResponse();
-    for (var handleAttribute : handleAttributes) {
-      try {
-        response = setDoiRecordAttribute(handleAttribute.type(), new String(handleAttribute.data()),
-            response);
-      } catch (NoSuchFieldException e) {
-        throw new PidCreationException(
-            String.format(INVALID_FIELD_ERROR, handleAttribute.type(), handleAttribute.type()));
-      }
-      var query = context.insertInto(HANDLES)
-          .set(HANDLES.HANDLE, handle)
-          .set(HANDLES.IDX, handleAttribute.index())
-          .set(HANDLES.TYPE, handleAttribute.type().getBytes(StandardCharsets.UTF_8))
-          .set(HANDLES.DATA, handleAttribute.data())
-          .set(HANDLES.TTL, 86400)
-          .set(HANDLES.TIMESTAMP, recordTimestamp.getEpochSecond())
-          .set(HANDLES.ADMIN_READ, true)
-          .set(HANDLES.ADMIN_WRITE, true)
-          .set(HANDLES.PUB_READ, true)
-          .set(HANDLES.PUB_WRITE, false);
-      queryList.add(query);
-    }
-    context.batch(queryList).execute();
-    return response;
-  }
-
-  public DigitalSpecimenResponse createDigitalSpecimen(byte[] handle, Instant recordTimestamp,
-      List<HandleAttribute> handleAttributes) throws PidCreationException {
-    var queryList = new ArrayList<Query>();
-    DigitalSpecimenResponse response = new DigitalSpecimenResponse();
-    for (var handleAttribute : handleAttributes) {
-      try {
-        response = setDigitalSpecimenRecordAttribute(handleAttribute.type(),
-            new String(handleAttribute.data()), response);
-      } catch (NoSuchFieldException e) {
-        throw new PidCreationException(
-            String.format(INVALID_FIELD_ERROR, handleAttribute.type(), handleAttribute.type()));
-      }
-      var query = context.insertInto(HANDLES)
-          .set(HANDLES.HANDLE, handle)
-          .set(HANDLES.IDX, handleAttribute.index())
-          .set(HANDLES.TYPE, handleAttribute.type().getBytes(StandardCharsets.UTF_8))
-          .set(HANDLES.DATA, handleAttribute.data())
-          .set(HANDLES.TTL, 86400)
-          .set(HANDLES.TIMESTAMP, recordTimestamp.getEpochSecond())
-          .set(HANDLES.ADMIN_READ, true)
-          .set(HANDLES.ADMIN_WRITE, true)
-          .set(HANDLES.PUB_READ, true)
-          .set(HANDLES.PUB_WRITE, false);
-      queryList.add(query);
-    }
-    context.batch(queryList).execute();
-    return response;
-  }
-
-  public DigitalSpecimenBotanyResponse createDigitalSpecimenBotany(byte[] handle,
-      Instant recordTimestamp, List<HandleAttribute> handleAttributes) throws PidCreationException {
-    var queryList = new ArrayList<Query>();
-    DigitalSpecimenBotanyResponse response = new DigitalSpecimenBotanyResponse();
-    for (var handleAttribute : handleAttributes) {
-      try {
-        response = setDigitalSpecimenBotanyRecordAttribute(handleAttribute.type(),
-            new String(handleAttribute.data()), response);
-      } catch (NoSuchFieldException e) {
-        throw new PidCreationException(
-            String.format(INVALID_FIELD_ERROR, handleAttribute.type(), handleAttribute.type()));
-      }
-      var query = context.insertInto(HANDLES)
-          .set(HANDLES.HANDLE, handle)
-          .set(HANDLES.IDX, handleAttribute.index())
-          .set(HANDLES.TYPE, handleAttribute.type().getBytes(StandardCharsets.UTF_8))
-          .set(HANDLES.DATA, handleAttribute.data())
-          .set(HANDLES.TTL, 86400)
-          .set(HANDLES.TIMESTAMP, recordTimestamp.getEpochSecond())
-          .set(HANDLES.ADMIN_READ, true)
-          .set(HANDLES.ADMIN_WRITE, true)
-          .set(HANDLES.PUB_READ, true)
-          .set(HANDLES.PUB_WRITE, false);
-      queryList.add(query);
-    }
-    context.batch(queryList).execute();
-    return response;
-  }
-
+/*
   private void updateHandleAttributes(byte[] handle, Instant recordTimestamp,
       List<HandleAttribute> handleAttributes, boolean versionIncrement) {
     var queryList = new ArrayList<Query>();
@@ -868,6 +691,7 @@ public class HandleRepository {
 
   }
 
+
   public DoiRecordResponse updateDoiRecord(byte[] handle,
       Instant recordTimestamp, List<HandleAttribute> handleAttributes, boolean versionIncrement)
       throws PidCreationException {
@@ -890,5 +714,5 @@ public class HandleRepository {
 
     updateHandleAttributes(handle, recordTimestamp, handleAttributes, versionIncrement);
     return resolveDigitalSpecimenBotanyRecord(handle);
-  }
+  } */
 }
