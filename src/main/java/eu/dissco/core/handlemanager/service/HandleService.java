@@ -75,7 +75,7 @@ public class HandleService {
   private final TransformerFactory tf;
 
   public JsonApiWrapper resolveSingleRecord(byte[] handle)
-      throws JsonProcessingException {
+      throws JsonProcessingException, PidResolutionException {
     ObjectNode recordAttributes = handleRep.resolveSingleRecord(handle);
     JsonApiData jsonData = new JsonApiData(new String(handle), "PID", recordAttributes);
     JsonApiLinks links = new JsonApiLinks(mapper.writeValueAsString(recordAttributes.get("pid")));
@@ -89,16 +89,16 @@ public class HandleService {
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
     var recordAttributeList = handleRep.resolveBatchRecord(handles);
 
-    for (ObjectNode recordAttributes : recordAttributeList){
+    for (ObjectNode recordAttributes : recordAttributeList) {
       String pid = mapper.writeValueAsString(recordAttributes.get("pid"));
-      jsonData = new JsonApiData(pid.substring(pid.length()-25), "PID", recordAttributes);
+      jsonData = new JsonApiData(pid.substring(pid.length() - 25), "PID", recordAttributes);
       links = new JsonApiLinks(pid);
 
       wrapperList.add(new JsonApiWrapper(links, jsonData));
     }
     return wrapperList;
   }
-
+  
   //  Batch
   public List<HandleRecordResponse> createHandleRecordBatch(List<HandleRecordRequest> requests)
       throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
@@ -158,6 +158,61 @@ public class HandleService {
   }
 
   // Create Single Record
+
+  // Json
+  public JsonApiWrapper createHandleRecordJson(HandleRecordRequest request)
+      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
+    byte[] handle = hf.genHandleList(1).get(0);
+    List<HandleAttribute> handleRecord = prepareHandleRecordAttributes(request, handle);
+    var recordTimestamp = Instant.now();
+
+    ObjectNode postedRecordAttributes = handleRep.createHandleRecordJson(handle, recordTimestamp, handleRecord);
+    JsonApiData jsonData = new JsonApiData(new String(handle), "handle", postedRecordAttributes);
+    JsonApiLinks links = new JsonApiLinks(mapper.writeValueAsString(postedRecordAttributes.get("pid")));
+    
+    return new JsonApiWrapper(links, jsonData);
+  }
+  
+  public JsonApiWrapper createDoiRecordJson(DoiRecordRequest request)
+      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
+    byte[] handle = hf.genHandleList(1).get(0);
+    List<HandleAttribute> handleRecord = prepareDoiRecordAttributes(request, handle);
+    var recordTimestamp = Instant.now();
+
+    ObjectNode postedRecordAttributes = handleRep.createDoiRecordJson(handle, recordTimestamp, handleRecord);
+    JsonApiData jsonData = new JsonApiData(new String(handle), "doi", postedRecordAttributes);
+    JsonApiLinks links = new JsonApiLinks(mapper.writeValueAsString(postedRecordAttributes.get("pid")));
+    return new JsonApiWrapper(links, jsonData);
+  }
+
+  public JsonApiWrapper createDigitalSpecimenJson(DigitalSpecimenRequest request)
+      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
+    byte[] handle = hf.genHandleList(1).get(0);
+    List<HandleAttribute> handleRecord = prepareDigitalSpecimenRecordAttributes(request, handle);
+    var recordTimestamp = Instant.now();
+
+    ObjectNode postedRecordAttributes = handleRep.createDigitalSpecimenJson(handle, recordTimestamp, handleRecord);
+    JsonApiData jsonData = new JsonApiData(new String(handle), "digitalSpecimen", postedRecordAttributes);
+    JsonApiLinks links = new JsonApiLinks(mapper.writeValueAsString(postedRecordAttributes.get("pid")));
+    return new JsonApiWrapper(links, jsonData);
+  }
+
+  public JsonApiWrapper createDigitalSpecimenBotanyJson(DigitalSpecimenBotanyRequest request)
+      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
+    byte[] handle = hf.genHandleList(1).get(0);
+    List<HandleAttribute> handleRecord = prepareDigitalSpecimenBotanyRecordAttributes(request, handle);
+    var recordTimestamp = Instant.now();
+
+    ObjectNode postedRecordAttributes = handleRep.createDigitalSpecimenBotanyJson(handle, recordTimestamp, handleRecord);
+    JsonApiData jsonData = new JsonApiData(new String(handle), "digitalSpecimenBotany", postedRecordAttributes);
+    JsonApiLinks links = new JsonApiLinks(mapper.writeValueAsString(postedRecordAttributes.get("pid")));
+    return new JsonApiWrapper(links, jsonData);
+  }
+
+
+
+  // Response Object Creation
+
   public HandleRecordResponse createHandleRecord(HandleRecordRequest request)
       throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
     byte[] handle = hf.genHandleList(1).get(0);
@@ -210,7 +265,8 @@ public class HandleService {
     List<HandleAttribute> handleRecord = new ArrayList<>();
 
     // 100: Admin Handle
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(HS_ADMIN), handle, HS_ADMIN, genAdminHandle()));
+    handleRecord.add(
+        new HandleAttribute(FIELD_IDX.get(HS_ADMIN), handle, HS_ADMIN, genAdminHandle()));
 
     // 1: Pid
     byte[] pid = ("https://hdl.handle.net/" + new String(handle)).getBytes();
@@ -218,38 +274,45 @@ public class HandleService {
 
     // 2: PidIssuer
     String pidIssuer = pidTypeService.resolveTypePid(request.getPidIssuerPid());
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(PID_ISSUER), handle, PID_ISSUER, pidIssuer.getBytes()));
+    handleRecord.add(
+        new HandleAttribute(FIELD_IDX.get(PID_ISSUER), handle, PID_ISSUER, pidIssuer.getBytes()));
 
     // 3: Digital Object Type
     String digitalObjectType = pidTypeService.resolveTypePid(request.getDigitalObjectTypePid());
     handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(DIGITAL_OBJECT_TYPE), handle, DIGITAL_OBJECT_TYPE, digitalObjectType.getBytes()));
+        new HandleAttribute(FIELD_IDX.get(DIGITAL_OBJECT_TYPE), handle, DIGITAL_OBJECT_TYPE,
+            digitalObjectType.getBytes()));
 
     // 4: Digital Object Subtype
     String digitalObjectSubtype = pidTypeService.resolveTypePid(
         request.getDigitalObjectSubtypePid());
     handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(DIGITAL_OBJECT_SUBTYPE), handle, DIGITAL_OBJECT_SUBTYPE, digitalObjectSubtype.getBytes()));
+        new HandleAttribute(FIELD_IDX.get(DIGITAL_OBJECT_SUBTYPE), handle, DIGITAL_OBJECT_SUBTYPE,
+            digitalObjectSubtype.getBytes()));
 
     // 5: 10320/loc
     byte[] loc = setLocations(request.getLocations());
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, loc));
 
     // 6: Issue Date
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(ISSUE_DATE), handle, ISSUE_DATE, getDate().getBytes()));
+    handleRecord.add(
+        new HandleAttribute(FIELD_IDX.get(ISSUE_DATE), handle, ISSUE_DATE, getDate().getBytes()));
 
     // 7: Issue number
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(ISSUE_NUMBER), handle, ISSUE_NUMBER, "1".getBytes()));
+    handleRecord.add(
+        new HandleAttribute(FIELD_IDX.get(ISSUE_NUMBER), handle, ISSUE_NUMBER, "1".getBytes()));
 
     // 8: PidStatus
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS, "TEST".getBytes()));
+    handleRecord.add(
+        new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS, "TEST".getBytes()));
 
     // 9, 10: tombstone text, tombstone pids -> Skip
 
     // 11: PidKernelMetadataLicense:
     byte[] pidKernelMetadataLicense = "https://creativecommons.org/publicdomain/zero/1.0/".getBytes();
     handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(PID_KERNEL_METADATA_LICENSE), handle, PID_KERNEL_METADATA_LICENSE, pidKernelMetadataLicense));
+        new HandleAttribute(FIELD_IDX.get(PID_KERNEL_METADATA_LICENSE), handle,
+            PID_KERNEL_METADATA_LICENSE, pidKernelMetadataLicense));
 
     return handleRecord;
   }
@@ -263,10 +326,12 @@ public class HandleService {
     String referentDoiName = pidTypeService.resolveTypePid(request.getReferentDoiNamePid());
 
     handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(REFERENT_DOI_NAME), handle, REFERENT_DOI_NAME, referentDoiName.getBytes()));
+        new HandleAttribute(FIELD_IDX.get(REFERENT_DOI_NAME), handle, REFERENT_DOI_NAME,
+            referentDoiName.getBytes()));
 
     // 13: Referent -> NOTE: Referent is blank currently until we have a model
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(REFERENT), handle, REFERENT, request.getReferent().getBytes()));
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(REFERENT), handle, REFERENT,
+        request.getReferent().getBytes()));
     return handleRecord;
   }
 
@@ -281,13 +346,15 @@ public class HandleService {
 
     // 15: specimenHost
     String specimenHost = pidTypeService.resolveTypePid(request.getSpecimenHostPid());
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST), handle, SPECIMEN_HOST, specimenHost.getBytes()));
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST), handle, SPECIMEN_HOST,
+        specimenHost.getBytes()));
 
     // 16: In collectionFacility
     String inCollectionFacility = pidTypeService.resolveTypePid(
         request.getInCollectionFacilityPid());
     handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(IN_COLLECTION_FACILITY), handle, IN_COLLECTION_FACILITY, inCollectionFacility.getBytes()));
+        new HandleAttribute(FIELD_IDX.get(IN_COLLECTION_FACILITY), handle, IN_COLLECTION_FACILITY,
+            inCollectionFacility.getBytes()));
 
     return handleRecord;
   }
@@ -300,7 +367,8 @@ public class HandleService {
 
     // 17: ObjectType
     handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(OBJECT_TYPE), handle, OBJECT_TYPE, request.getObjectType().getBytes()));
+        new HandleAttribute(FIELD_IDX.get(OBJECT_TYPE), handle, OBJECT_TYPE,
+            request.getObjectType().getBytes()));
 
     // 18: preservedOrLiving
     handleRecord.add(
@@ -344,20 +412,18 @@ public class HandleService {
     return writer.getBuffer().toString();
   }
 
-  public void archiveHandleRecord(TombstoneRecordRequest request){
+  public void archiveHandleRecord(TombstoneRecordRequest request) {
     byte[] handle = request.getHandle();
     List<HandleAttribute> handleRecord = new ArrayList<>();
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS, "ARCHIVED".getBytes()));
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(TOMBSTONE_TEXT), handle, TOMBSTONE_TEXT, request.getTombstoneText().getBytes()));
+    handleRecord.add(
+        new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS, "ARCHIVED".getBytes()));
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(TOMBSTONE_TEXT), handle, TOMBSTONE_TEXT,
+        request.getTombstoneText().getBytes()));
 
     if (request.getTombstonePids().length == 0) {
-      handleRecord.add(new HandleAttribute(FIELD_IDX.get(TOMBSTONE_PIDS), handle, TOMBSTONE_PIDS, "".getBytes()));
+      handleRecord.add(new HandleAttribute(FIELD_IDX.get(TOMBSTONE_PIDS), handle, TOMBSTONE_PIDS,
+          "".getBytes()));
     }
-
-
-
   }
-
-
 }
 

@@ -48,9 +48,8 @@ public class PidRecords {
   public static final Map<String, Integer> FIELD_IDX;
 
 
-  static {
+  static { // Handle Record Fields
     Set<String> tmp = new HashSet<>();
-    tmp.add(HS_ADMIN);
     tmp.add(PID);
     tmp.add(PID_ISSUER);
     tmp.add(DIGITAL_OBJECT_TYPE);
@@ -63,15 +62,14 @@ public class PidRecords {
     HANDLE_RECORD = Collections.unmodifiableSet(tmp);
   }
 
-  static
-  {
+  static { // Doi Record Fields
     Set<String> tmp = new HashSet<>(HANDLE_RECORD);
     tmp.add(REFERENT_DOI_NAME);
     tmp.add(REFERENT);
     DOI_RECORD = Collections.unmodifiableSet(tmp);
   }
 
-  static{
+  static { // Digital Specimen Fields
     Set<String> tmp = new HashSet<>(DOI_RECORD);
     tmp.add(DIGITAL_OR_PHYSICAL);
     tmp.add(SPECIMEN_HOST);
@@ -79,7 +77,7 @@ public class PidRecords {
     DIGITAL_SPECIMEN = Collections.unmodifiableSet(tmp);
   }
 
-  static {
+  static { // Digital Specimen Botany Fields
     Set<String> tmp = new HashSet<>(DIGITAL_SPECIMEN);
     tmp.add(OBJECT_TYPE);
     tmp.add(PRESERVED_OR_LIVING);
@@ -87,8 +85,7 @@ public class PidRecords {
   }
 
   static {
-    Set<String> tmp = new HashSet<>();
-    tmp = new HashSet<>(HANDLE_RECORD);
+    Set<String> tmp = new HashSet<>(HANDLE_RECORD);
     tmp.add(TOMBSTONE_TEXT);
     tmp.add(TOMBSTONE_PIDS);
     TOMBSTONE_RECORD = Collections.unmodifiableSet(tmp);

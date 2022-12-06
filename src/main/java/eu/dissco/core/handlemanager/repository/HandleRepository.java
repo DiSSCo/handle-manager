@@ -1,24 +1,7 @@
 package eu.dissco.core.handlemanager.repository;
 
 import static eu.dissco.core.handlemanager.database.jooq.tables.Handles.HANDLES;
-import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_SUBTYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OR_PHYSICAL;
-import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IS_PID_RECORD;
-import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
-import static eu.dissco.core.handlemanager.domain.PidRecords.IN_COLLECTION_FACILITY;
-import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_DATE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_NUMBER;
-import static eu.dissco.core.handlemanager.domain.PidRecords.LOC;
-import static eu.dissco.core.handlemanager.domain.PidRecords.OBJECT_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_KERNEL_METADATA_LICENSE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PRESERVED_OR_LIVING;
-import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT;
-import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
-import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
+import static eu.dissco.core.handlemanager.domain.PidRecords.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,13 +14,17 @@ import eu.dissco.core.handlemanager.domain.responses.DoiRecordResponse;
 import eu.dissco.core.handlemanager.domain.responses.HandleRecordResponse;
 import eu.dissco.core.handlemanager.domain.responses.TombstoneRecordResponse;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
+import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
@@ -56,6 +43,9 @@ public class HandleRepository {
   private static final int TTL = 86400;
   private static final String INVALID_FIELD_ERROR = "Error: Attempting to add an invalid field into a pid record. Field: %s, Data: %s";
   private static final String FIELD_MISMATCH_ERROR = "Field mismatch: attempting to add a forbidden field in the record schema. Check ";
+
+  private static final String TOO_MANY_FIELDS_ERROR = "Inappropriate record has been created. Reason: Too many fields created for type of record. Expected type = %s. Superfluous fields = %s";
+  private static final String INSUFFICIENT_FIELDS_ERROR = "Inappropriate record has been created. Reason: Missing fields for type this of record. Expected type = %s. Missing fields = %s";
   private final DSLContext context;
   private final ObjectMapper mapper;
 
@@ -77,17 +67,20 @@ public class HandleRepository {
   }
 
   // Resolving handles
-  public ObjectNode resolveSingleRecord(byte[] handle){
+  public ObjectNode resolveSingleRecord(byte[] handle) throws PidResolutionException {
     var dbRecord = fetchRecordFromDb(handle);
+    if (dbRecord.isEmpty()) {
+      throw new PidResolutionException("Unable to resolve handle");
+    }
     return jsonFormatSingleRecord(dbRecord);
   }
 
   public List<ObjectNode> resolveBatchRecord(List<byte[]> handles) {
     var dbRecord = fetchRecordFromDb(handles);
     var aggrRecord = aggregateRecords(dbRecord);
-    List <ObjectNode> rootNodeList = new ArrayList<>();
+    List<ObjectNode> rootNodeList = new ArrayList<>();
 
-    for (List<HandleAttribute> handleRecord : aggrRecord){
+    for (List<HandleAttribute> handleRecord : aggrRecord) {
       rootNodeList.add(jsonFormatSingleRecord(handleRecord));
     }
     return rootNodeList;
@@ -106,6 +99,7 @@ public class HandleRepository {
         .select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
         .from(HANDLES)
         .where(HANDLES.HANDLE.eq(handle))
+        .and(HANDLES.TYPE.notEqual(HS_ADMIN.getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
         .fetch(this::mapToAttribute);
   }
 
@@ -114,6 +108,7 @@ public class HandleRepository {
         .select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
         .from(HANDLES)
         .where(HANDLES.HANDLE.in(handles))
+        .and(HANDLES.TYPE.notEqual(HS_ADMIN.getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
         .fetch(this::mapToAttribute);
   }
 
@@ -203,17 +198,7 @@ public class HandleRepository {
 
   // TODO: When we resolve a record, will we always know its type (i.e. handle, DOI, digitalSpecimen)? I'm inclined to say no.
   // Will we have to make that decision based on what fields are present in the resolved record?
-  // Should this be determined by digitalObjectType? 
-
-  public HandleRecordResponse resolveHandleRecord(byte[] handle) throws PidCreationException {
-    Result<Record3<byte[], byte[], byte[]>> handleRecord = context
-        .select(HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
-        .from(HANDLES)
-        .where(HANDLES.HANDLE.eq(handle))
-        .fetch();
-    return buildHandleRecordResponse(handleRecord);
-  }
-
+  // Should this be determined by digitalObjectType?
 
   private List<HandleRecordResponse> resolveHandleRecordBatch(List<byte[]> handles)
       throws PidCreationException {
@@ -521,7 +506,7 @@ public class HandleRepository {
         .getValues(HANDLES.HANDLE, String.class);
   }
 
-  private void rollbackHandleCreation(List<byte[]> handles) {
+  private void rollbackRecordCreation(List<byte[]> handles) {
     context.delete(HANDLES)
         .where(HANDLES.HANDLE.in(handles))
         .execute();
@@ -529,7 +514,7 @@ public class HandleRepository {
 
   // Record Creation
   // Batch Record Posting  - Same for Handle, DOI, DigitalSpecimen, DigitalSpecimenBotany
-  private void postBatchRecord(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
+  private void postAttributesToDb(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
     var queryList = new ArrayList<Query>();
 
     for (var handleAttribute : handleAttributes) {
@@ -550,14 +535,89 @@ public class HandleRepository {
   }
 
   // Handle Batch Creation
+  public ObjectNode createHandleRecordJson(byte[] handle, Instant recordTimestamp,
+      List<HandleAttribute> handleAttributes) throws PidCreationException {
+    ObjectNode postedRecord = createGenericRecord(handle, recordTimestamp, handleAttributes);
+    checkPostedRecordFields(postedRecord, handle, "handle");
+    return postedRecord;
+  }
+
+  public ObjectNode createDoiRecordJson(byte[] handle, Instant recordTimestamp,
+      List<HandleAttribute> handleAttributes) throws PidCreationException {
+    ObjectNode postedRecord = createGenericRecord(handle, recordTimestamp, handleAttributes);
+    checkPostedRecordFields(postedRecord, handle, "doi");
+    return postedRecord;
+  }
+
+  public ObjectNode createDigitalSpecimenJson(byte[] handle, Instant recordTimestamp,
+      List<HandleAttribute> handleAttributes) throws PidCreationException {
+    ObjectNode postedRecord = createGenericRecord(handle, recordTimestamp, handleAttributes);
+    checkPostedRecordFields(postedRecord, handle, "digitalSpecimen");
+    return postedRecord;
+  }
+
+  public ObjectNode createDigitalSpecimenBotanyJson(byte[] handle, Instant recordTimestamp,
+      List<HandleAttribute> handleAttributes) throws PidCreationException {
+    ObjectNode postedRecord = createGenericRecord(handle, recordTimestamp, handleAttributes);
+    checkPostedRecordFields(postedRecord, handle, "digitalSpecimenBotany");
+    return postedRecord;
+  }
+  
+  private ObjectNode createGenericRecord(byte[] handle, Instant recordTimestamp,
+      List<HandleAttribute> handleAttributes) throws PidCreationException {
+    postAttributesToDb(recordTimestamp, handleAttributes);
+    ObjectNode postedRecord;
+    try {
+      postedRecord = resolveSingleRecord(handle);
+    } catch (PidResolutionException e) {
+      rollbackRecordCreation(List.of(handle));
+      throw new PidCreationException("An error has occured posting the record. Rolling back");
+    }
+    return postedRecord;
+  }
+
+  private void checkPostedRecordFields(ObjectNode handleRecord, byte[] handle, String recordType)
+      throws PidCreationException {
+    Set<String> observedFields = new HashSet<>();
+    var fieldIterator = handleRecord.fieldNames();
+    fieldIterator.forEachRemaining(observedFields::add);
+    Set<String> expectedFields;
+    
+    switch(recordType){
+      case "handle" -> expectedFields = HANDLE_RECORD;
+      case "doi" -> expectedFields = DOI_RECORD;
+      case "digitalSpecimen" -> expectedFields = DIGITAL_SPECIMEN;
+      case "digitalSpecimenBotany" -> expectedFields = DIGITAL_SPECIMEN_BOTANY;
+      default -> expectedFields = new HashSet<>();
+    }
+
+    Set<String> extraFields = observedFields.stream().filter(e -> !expectedFields.contains(e)).collect(
+        Collectors.toSet());
+
+    Set<String> missingFields = expectedFields.stream().filter(e -> !observedFields.contains(e)).collect(
+        Collectors.toSet());
+
+    if (!extraFields.isEmpty()) {
+      rollbackRecordCreation(List.of(handle));
+      log.info("Expected fields:" + expectedFields);
+      log.info("Observed fields: " + observedFields);
+      throw new PidCreationException(String.format(TOO_MANY_FIELDS_ERROR, recordType, extraFields));
+    }
+    if (!missingFields.isEmpty()) {
+      rollbackRecordCreation(List.of(handle));
+      log.info("Expected fields:" + expectedFields);
+      log.info("Observed fields: " + observedFields);
+      throw new PidCreationException(String.format(INSUFFICIENT_FIELDS_ERROR, recordType, missingFields));
+    }
+  }
 
   public List<HandleRecordResponse> createHandleRecordBatch(List<byte[]> handles,
       Instant recordTimestamp, List<HandleAttribute> handleAttributes) throws PidCreationException {
-    postBatchRecord(recordTimestamp, handleAttributes);
+    postAttributesToDb(recordTimestamp, handleAttributes);
     try {
       return resolveHandleRecordBatch(handles);
     } catch (PidCreationException e) {
-      rollbackHandleCreation(handles); // If an error has occured, delete any handles we've posted
+      rollbackRecordCreation(handles); // If an error has occured, delete any handles we've posted
       throw new PidCreationException(e.getMessage());
     }
   }
@@ -626,7 +686,7 @@ public class HandleRepository {
   public List<DoiRecordResponse> createDoiRecordBatch(List<byte[]> handles, Instant recordTimestamp,
       List<HandleAttribute> handleAttributes)
       throws PidCreationException {
-    postBatchRecord(recordTimestamp, handleAttributes);
+    postAttributesToDb(recordTimestamp, handleAttributes);
     return resolveDoiRecordBatch(handles);
   }
 
@@ -635,7 +695,7 @@ public class HandleRepository {
   public List<DigitalSpecimenResponse> createDigitalSpecimenBatch(List<byte[]> handles,
       Instant recordTimestamp, List<HandleAttribute> handleAttributes)
       throws PidCreationException {
-    postBatchRecord(recordTimestamp, handleAttributes);
+    postAttributesToDb(recordTimestamp, handleAttributes);
     return resolveDigitalSpecimenBatch(handles);
   }
 
@@ -644,7 +704,7 @@ public class HandleRepository {
   public List<DigitalSpecimenBotanyResponse> createDigitalSpecimenBotanyBatch(List<byte[]> handles,
       Instant recordTimestamp, List<HandleAttribute> handleAttributes)
       throws PidCreationException {
-    postBatchRecord(recordTimestamp, handleAttributes);
+    postAttributesToDb(recordTimestamp, handleAttributes);
     return resolveDigitalSpecimenBotanyBatch(handles);
   }
 
@@ -806,14 +866,6 @@ public class HandleRepository {
       Instant recordTimestamp, List<HandleAttribute> handleAttributes, boolean versionIncrement) {
     return null;
 
-  }
-
-  public HandleRecordResponse updateHandleRecord(byte[] handle,
-      Instant recordTimestamp, List<HandleAttribute> handleAttributes, boolean versionIncrement)
-      throws PidCreationException {
-
-    updateHandleAttributes(handle, recordTimestamp, handleAttributes, versionIncrement);
-    return resolveHandleRecord(handle);
   }
 
   public DoiRecordResponse updateDoiRecord(byte[] handle,

@@ -53,7 +53,7 @@ public class HandleController {
   @GetMapping("/resolveList")
   public ResponseEntity<List<JsonApiWrapper>> resolveBatchHandle(
       @RequestBody List<String> handleStrings
-  ) throws JsonProcessingException, PidResolutionException {
+  ) throws JsonProcessingException {
 
     List<byte[]> handles = new ArrayList<>();
     for (String hdlStr : handleStrings){
@@ -61,6 +61,35 @@ public class HandleController {
     }
     List<JsonApiWrapper> node = service.resolveBatchRecord(handles);
     return ResponseEntity.status(HttpStatus.OK).body(node);
+  }
+
+  //@PreAuthorize("isAuthenticated()")
+  @PostMapping(value = "/createRecordJson", params = "pidType=handle")
+  public ResponseEntity<JsonApiWrapper> createHandleRecordJson(
+      @RequestBody HandleRecordRequest request)
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
+    return ResponseEntity.status(HttpStatus.CREATED).body(service.createHandleRecordJson(request));
+  }
+
+  @PostMapping(value = "/createRecordJson", params = "pidType=doi")
+  public ResponseEntity<JsonApiWrapper> createDoiRecordJson(
+      @RequestBody DoiRecordRequest request)
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
+    return ResponseEntity.status(HttpStatus.CREATED).body(service.createDoiRecordJson(request));
+  }
+
+  @PostMapping(value = "/createRecordJson", params = "pidType=digitalSpecimen")
+  public ResponseEntity<JsonApiWrapper> createDigitalSpecimenJson(
+      @RequestBody DigitalSpecimenRequest request)
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
+    return ResponseEntity.status(HttpStatus.CREATED).body(service.createDigitalSpecimenJson(request));
+  }
+
+  @PostMapping(value = "/createRecordJson", params = "pidType=digitalSpecimenBotany")
+  public ResponseEntity<JsonApiWrapper> createDigitalSpecimenBotanyJson(
+      @RequestBody DigitalSpecimenBotanyRequest request)
+      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
+    return ResponseEntity.status(HttpStatus.CREATED).body(service.createDigitalSpecimenBotanyJson(request));
   }
 
   @PreAuthorize("isAuthenticated()")

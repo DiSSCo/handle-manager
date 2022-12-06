@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapper;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
@@ -19,7 +20,7 @@ import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenBotanyRespon
 import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenResponse;
 import eu.dissco.core.handlemanager.domain.responses.DoiRecordResponse;
 import eu.dissco.core.handlemanager.domain.responses.HandleRecordResponse;
-import eu.dissco.core.handlemanager.exceptions.PidCreationException;
+import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
@@ -83,12 +84,12 @@ class HandleServiceTest {
   }
 
   @Test
-  void testResolveSingleRecord() throws JsonProcessingException {
+  void testResolveSingleRecord() throws JsonProcessingException, PidResolutionException {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> recordAttributeList = generateTestHandleAttributes(handle);
-    ObjectNode repositoryResponse =  generateHandleRecordObjectNode(recordAttributeList);
-    var responseExpected = generateTestJsonHandleRecordResponse(handle);
+    ObjectNode repositoryResponse =  generateRecordObjectNode(recordAttributeList);
+    var responseExpected = generateTestJsonHandleRecordResponse(handle, "PID");
 
     given(handleRep.resolveSingleRecord(handle)).willReturn(repositoryResponse);
 
@@ -104,7 +105,7 @@ class HandleServiceTest {
     // Given
     List<ObjectNode> repositoryResponse = new ArrayList<>();
     for (byte[] handle : handlesList){
-      repositoryResponse.add(generateHandleRecordObjectNode(generateTestHandleAttributes(handle)));
+      repositoryResponse.add(generateRecordObjectNode(generateTestHandleAttributes(handle)));
     }
     given(handleRep.resolveBatchRecord(handlesList)).willReturn(repositoryResponse);
     var responseExpected = generateTestJsonHandleRecordResponseBatch(handlesList);
@@ -115,6 +116,85 @@ class HandleServiceTest {
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
+  // Json object creation
+
+  @Test
+  void testCreateHandleRecordJson() throws Exception {
+    // Given
+    byte[] handle = handlesList.get(0);
+    HandleRecordRequest request = generateTestHandleRequest();
+    List<HandleAttribute> handleRecord = generateTestHandleAttributes(handle);
+    var databaseResponse =  generateRecordObjectNode(handleRecord);
+    var responseExpected = generateTestJsonHandleRecordResponse(handle);
+
+    given(handleRep.createHandleRecordJson(handle, instant, handleRecord)).willReturn(databaseResponse);
+    given(hgService.genHandleList(1)).willReturn(handlesList);
+
+    // When
+    JsonApiWrapper responseReceived = service.createHandleRecordJson(request);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testCreateDoiRecordJson() throws Exception {
+    // Given
+    byte[] handle = handlesList.get(0);
+    DoiRecordRequest request = generateTestDoiRequest();
+    List<HandleAttribute> handleRecord = generateTestDoiAttributes(handle);
+    var databaseResponse =  generateRecordObjectNode(handleRecord);
+    var responseExpected = generateTestJsonDoiRecordResponse(handle);
+
+    given(handleRep.createDoiRecordJson(handle, instant, handleRecord)).willReturn(databaseResponse);
+    given(hgService.genHandleList(1)).willReturn(handlesList);
+
+    // When
+    JsonApiWrapper responseReceived = service.createDoiRecordJson(request);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testCreateDigitalSpecimenJson() throws Exception {
+    // Given
+    byte[] handle = handlesList.get(0);
+    DigitalSpecimenRequest request = generateTestDigitalSpecimenRequest();
+    List<HandleAttribute> handleRecord = generateTestDigitalSpecimenAttributes(handle);
+    var databaseResponse =  generateRecordObjectNode(handleRecord);
+    var responseExpected = generateTestJsonDigitalSpecimenResponse(handle);
+
+    given(handleRep.createDigitalSpecimenJson(handle, instant, handleRecord)).willReturn(databaseResponse);
+    given(hgService.genHandleList(1)).willReturn(handlesList);
+
+    // When
+    JsonApiWrapper responseReceived = service.createDigitalSpecimenJson(request);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testCreateDigitalSpecimenBotanyJson() throws Exception {
+    // Given
+    byte[] handle = handlesList.get(0);
+    DigitalSpecimenBotanyRequest request = generateTestDigitalSpecimenBotanyRequest();
+    List<HandleAttribute> handleRecord = generateTestDigitalSpecimenBotanyAttributes(handle);
+    var databaseResponse =  generateRecordObjectNode(handleRecord);
+    var responseExpected = generateTestJsonDigitalSpecimenBotanyResponse(handle);
+
+    given(handleRep.createDigitalSpecimenBotanyJson(handle, instant, handleRecord)).willReturn(databaseResponse);
+    given(hgService.genHandleList(1)).willReturn(handlesList);
+
+    // When
+    JsonApiWrapper responseReceived = service.createDigitalSpecimenBotanyJson(request);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  // Response Object Creation
   @Test
   void testCreateHandleRecord()
       throws Exception {

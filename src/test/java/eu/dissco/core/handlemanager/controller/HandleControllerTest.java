@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapper;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
@@ -114,6 +115,69 @@ class HandleControllerTest {
     // Then
     assertThat(exception).hasMessage("Unable to locate handles");
   }
+
+  // JSON
+  @Test
+  void testHandleRecordCreationJson() throws Exception {
+    // Given
+    HandleRecordRequest request = generateTestHandleRequest();
+    JsonApiWrapper responseExpected = generateTestJsonHandleRecordResponse(handle);
+    given(service.createHandleRecordJson(request)).willReturn(responseExpected);
+
+    // When
+    ResponseEntity<JsonApiWrapper> responseReceived = controller.createHandleRecordJson(request);
+
+    // Then
+    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testDoiRecordCreationJson() throws Exception {
+    // Given
+    DoiRecordRequest request = generateTestDoiRequest();
+    JsonApiWrapper responseExpected = generateTestJsonDoiRecordResponse(handle);
+    given(service.createDoiRecordJson(request)).willReturn(responseExpected);
+
+    // When
+    ResponseEntity<JsonApiWrapper> responseReceived = controller.createDoiRecordJson(request);
+
+    // Then
+    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testDigitalSpecimenCreationJson() throws Exception {
+    // Given
+    DigitalSpecimenRequest request = generateTestDigitalSpecimenRequest();
+    JsonApiWrapper responseExpected = generateTestJsonDigitalSpecimenResponse(handle);
+    given(service.createDigitalSpecimenJson(request)).willReturn(responseExpected);
+
+    // When
+    ResponseEntity<JsonApiWrapper> responseReceived = controller.createDigitalSpecimenJson(request);
+
+    // Then
+    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testDigitalSpecimenBotanyCreationJson() throws Exception {
+    // Given
+    DigitalSpecimenBotanyRequest request = generateTestDigitalSpecimenBotanyRequest();
+    JsonApiWrapper responseExpected = generateTestJsonDigitalSpecimenBotanyResponse(handle);
+    given(service.createDigitalSpecimenBotanyJson(request)).willReturn(responseExpected);
+
+    // When
+    ResponseEntity<JsonApiWrapper> responseReceived = controller.createDigitalSpecimenBotanyJson(request);
+
+    // Then
+    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  // Response Object
 
   @Test
   void testHandleRecordCreation()

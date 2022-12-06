@@ -61,6 +61,7 @@ public class TestUtils {
   public static final String HANDLE = "20.5000.1025/QRS-321-ABC";
   public static final String HANDLE_ALT = "20.5000.1025/ABC-123-QRS";
   public static final List<String> HANDLE_LIST_STR;
+
   static {
     HANDLE_LIST_STR = List.of(HANDLE, HANDLE_ALT);
   }
@@ -95,7 +96,6 @@ public class TestUtils {
   public static final String PTR_REGISTRATION_DOI_NAME = "Registration Agency";
   public final static String PTR_HANDLE_RECORD = initPtrHandleRecord(false);
   public final static String PTR_DOI_RECORD = initPtrHandleRecord(true);
-
 
 
   private TestUtils() {
@@ -298,11 +298,40 @@ public class TestUtils {
 
   public static JsonApiWrapper generateTestJsonHandleRecordResponse(byte[] handle)
       throws JsonProcessingException {
-    ObjectMapper mapper = new ObjectMapper();
-
     var testDbRecord = generateTestHandleAttributes(handle);
-    ObjectNode recordAttributes = generateHandleRecordObjectNode(testDbRecord);
-    JsonApiData jsonData = new JsonApiData(new String(handle), "PID", recordAttributes);
+    return generateTestJsonGenericRecordResponse(handle, testDbRecord, "handle");
+  }
+
+  public static JsonApiWrapper generateTestJsonHandleRecordResponse(byte[] handle, String recordType)
+      throws JsonProcessingException {
+    var testDbRecord = generateTestHandleAttributes(handle);
+    return generateTestJsonGenericRecordResponse(handle, testDbRecord, recordType);
+  }
+
+  public static JsonApiWrapper generateTestJsonDoiRecordResponse(byte[] handle)
+      throws JsonProcessingException {
+    var testDbRecord = generateTestDoiAttributes(handle);
+    return generateTestJsonGenericRecordResponse(handle, testDbRecord, "doi");
+  }
+
+  public static JsonApiWrapper generateTestJsonDigitalSpecimenResponse(byte[] handle)
+      throws JsonProcessingException {
+    var testDbRecord = generateTestDigitalSpecimenAttributes(handle);
+    return generateTestJsonGenericRecordResponse(handle, testDbRecord, "digitalSpecimen");
+  }
+
+  public static JsonApiWrapper generateTestJsonDigitalSpecimenBotanyResponse(byte[] handle)
+      throws JsonProcessingException {
+    var testDbRecord = generateTestDigitalSpecimenBotanyAttributes(handle);
+    return generateTestJsonGenericRecordResponse(handle, testDbRecord, "digitalSpecimenBotany");
+  }
+
+  private static JsonApiWrapper generateTestJsonGenericRecordResponse(byte[] handle,
+      List<HandleAttribute> testDbRecord, String recordType)
+      throws JsonProcessingException {
+    ObjectMapper mapper = new ObjectMapper();
+    ObjectNode recordAttributes = generateRecordObjectNode(testDbRecord);
+    JsonApiData jsonData = new JsonApiData(new String(handle), recordType, recordAttributes);
     JsonApiLinks links = new JsonApiLinks(mapper.writeValueAsString(recordAttributes.get("pid")));
     return new JsonApiWrapper(links, jsonData);
   }
@@ -314,10 +343,10 @@ public class TestUtils {
     JsonApiLinks links;
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
 
-    for (byte[] handle : handles){
-      ObjectNode recordAttributes = generateHandleRecordObjectNode(generateTestHandleAttributes(handle));
+    for (byte[] handle : handles) {
+      ObjectNode recordAttributes = generateRecordObjectNode(generateTestHandleAttributes(handle));
       String pid = mapper.writeValueAsString(recordAttributes.get("pid"));
-      jsonData = new JsonApiData(pid.substring(pid.length()-25), "PID", recordAttributes);
+      jsonData = new JsonApiData(pid.substring(pid.length() - 25), "PID", recordAttributes);
       links = new JsonApiLinks(pid);
       wrapperList.add(new JsonApiWrapper(links, jsonData));
     }
@@ -325,7 +354,7 @@ public class TestUtils {
     return wrapperList;
   }
 
-  public static ObjectNode generateHandleRecordObjectNode(List<HandleAttribute> dbRecord)
+  public static ObjectNode generateRecordObjectNode(List<HandleAttribute> dbRecord)
       throws JsonProcessingException {
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode rootNode = mapper.createObjectNode();
