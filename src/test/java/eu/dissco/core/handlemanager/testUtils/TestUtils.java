@@ -22,8 +22,6 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.utils.Resources.genAdminHandle;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiData;
@@ -42,7 +40,6 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
@@ -304,7 +301,7 @@ public class TestUtils {
     ObjectMapper mapper = new ObjectMapper();
 
     var testDbRecord = generateTestHandleAttributes(handle);
-    ObjectNode recordAttributes = jsonFormatSingleRecord(testDbRecord);
+    ObjectNode recordAttributes = generateHandleRecordObjectNode(testDbRecord);
     JsonApiData jsonData = new JsonApiData(new String(handle), "PID", recordAttributes);
     JsonApiLinks links = new JsonApiLinks(mapper.writeValueAsString(recordAttributes.get("pid")));
     return new JsonApiWrapper(links, jsonData);
@@ -318,7 +315,7 @@ public class TestUtils {
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
 
     for (byte[] handle : handles){
-      ObjectNode recordAttributes = jsonFormatSingleRecord(generateTestHandleAttributes(handle));
+      ObjectNode recordAttributes = generateHandleRecordObjectNode(generateTestHandleAttributes(handle));
       String pid = mapper.writeValueAsString(recordAttributes.get("pid"));
       jsonData = new JsonApiData(pid.substring(pid.length()-25), "PID", recordAttributes);
       links = new JsonApiLinks(pid);
@@ -328,7 +325,7 @@ public class TestUtils {
     return wrapperList;
   }
 
-  private static ObjectNode jsonFormatSingleRecord(List<HandleAttribute> dbRecord)
+  public static ObjectNode generateHandleRecordObjectNode(List<HandleAttribute> dbRecord)
       throws JsonProcessingException {
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode rootNode = mapper.createObjectNode();

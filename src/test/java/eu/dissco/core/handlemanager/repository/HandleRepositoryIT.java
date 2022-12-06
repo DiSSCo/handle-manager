@@ -15,7 +15,9 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestHandl
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestHandleResponse;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenBotanyResponse;
 import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenResponse;
@@ -31,14 +33,13 @@ import org.junit.jupiter.api.Test;
 
 @Slf4j
 class HandleRepositoryIT extends BaseRepositoryIT {
-
   private HandleRepository handleRep;
-
   private ObjectMapper mapper;
 
   @BeforeEach
   void setup() {
-    mapper = new ObjectMapper();
+    mapper = new ObjectMapper().findAndRegisterModules()
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     handleRep = new HandleRepository(context, mapper);
   }
 
@@ -56,9 +57,9 @@ class HandleRepositoryIT extends BaseRepositoryIT {
 
     // When
     HandleRecordResponse responseReceived = handleRep.createHandle(handle, CREATED, attributes);
+    var postedRecord = context.selectFrom(HANDLES).fetch();
 
     // Then
-    var postedRecord = context.selectFrom(HANDLES).fetch();
     assertThat(responseExpected).isEqualTo(responseReceived);
     assertThat(postedRecord).hasSize(attributes.size());
   }

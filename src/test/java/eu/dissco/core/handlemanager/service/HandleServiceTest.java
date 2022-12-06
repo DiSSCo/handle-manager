@@ -1,29 +1,15 @@
 package eu.dissco.core.handlemanager.service;
 
-import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.PTR_HANDLE_RECORD;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDigitalSpecimenAttributes;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDigitalSpecimenBotanyAttributes;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDigitalSpecimenBotanyRequest;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDigitalSpecimenBotanyResponse;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDigitalSpecimenRequest;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDigitalSpecimenResponse;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDoiAttributes;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDoiRequest;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDoiResponse;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestHandleAttributes;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestHandleRequest;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestHandleResponse;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mockStatic;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
@@ -33,7 +19,9 @@ import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenBotanyRespon
 import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenResponse;
 import eu.dissco.core.handlemanager.domain.responses.DoiRecordResponse;
 import eu.dissco.core.handlemanager.domain.responses.HandleRecordResponse;
+import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -57,13 +45,12 @@ class HandleServiceTest {
   @Mock
   private HandleRepository handleRep;
 
-  @Mock
+  @Mock(lenient = true)
   private PidTypeService pidTypeService;
 
   @Mock
   private HandleGeneratorService hgService;
 
-  @Mock
   private ObjectMapper mapper;
 
   private Instant instant;
@@ -78,6 +65,8 @@ class HandleServiceTest {
   @BeforeEach
   void setup() throws Exception {
 
+    mapper = new ObjectMapper().findAndRegisterModules()
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
     TransformerFactory transformerFactory = TransformerFactory.newInstance();
 
@@ -93,11 +82,37 @@ class HandleServiceTest {
     mockedStatic.close();
   }
 
+  @Test
+  void testResolveSingleRecord() throws JsonProcessingException {
+    // Given
+    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
+    List<HandleAttribute> recordAttributeList = generateTestHandleAttributes(handle);
+    ObjectNode repositoryResponse =  generateHandleRecordObjectNode(recordAttributeList);
+    var responseExpected = generateTestJsonHandleRecordResponse(handle);
 
-  void testFieldIdx(){
-    String pidIssuer = "pidIssuer";
-    assertThat(pidIssuer).isEqualTo(PID_ISSUER);
-    log.info("index "+ FIELD_IDX.get(PID_ISSUER));
+    given(handleRep.resolveSingleRecord(handle)).willReturn(repositoryResponse);
+
+    // When
+    var responseReceived = service.resolveSingleRecord(handle);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testResolveBatchRecord() throws JsonProcessingException {
+    // Given
+    List<ObjectNode> repositoryResponse = new ArrayList<>();
+    for (byte[] handle : handlesList){
+      repositoryResponse.add(generateHandleRecordObjectNode(generateTestHandleAttributes(handle)));
+    }
+    given(handleRep.resolveBatchRecord(handlesList)).willReturn(repositoryResponse);
+    var responseExpected = generateTestJsonHandleRecordResponseBatch(handlesList);
+    // When
+    var responseReceived = service.resolveBatchRecord(handlesList);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
   @Test

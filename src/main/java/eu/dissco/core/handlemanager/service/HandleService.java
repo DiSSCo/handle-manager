@@ -75,7 +75,7 @@ public class HandleService {
   private final TransformerFactory tf;
 
   public JsonApiWrapper resolveSingleRecord(byte[] handle)
-      throws PidResolutionException, JsonProcessingException {
+      throws JsonProcessingException {
     ObjectNode recordAttributes = handleRep.resolveSingleRecord(handle);
     JsonApiData jsonData = new JsonApiData(new String(handle), "PID", recordAttributes);
     JsonApiLinks links = new JsonApiLinks(mapper.writeValueAsString(recordAttributes.get("pid")));
@@ -346,12 +346,12 @@ public class HandleService {
 
   public void archiveHandleRecord(TombstoneRecordRequest request){
     byte[] handle = request.getHandle();
-    List<HandleAttribute> record = new ArrayList<>();
-    record.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS, "ARCHIVED".getBytes()));
-    record.add(new HandleAttribute(FIELD_IDX.get(TOMBSTONE_TEXT), handle, TOMBSTONE_TEXT, request.getTombstoneText().getBytes()));
+    List<HandleAttribute> handleRecord = new ArrayList<>();
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS, "ARCHIVED".getBytes()));
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(TOMBSTONE_TEXT), handle, TOMBSTONE_TEXT, request.getTombstoneText().getBytes()));
 
     if (request.getTombstonePids().length == 0) {
-      record.add(new HandleAttribute(FIELD_IDX.get(TOMBSTONE_PIDS), handle, TOMBSTONE_PIDS, "".getBytes()));
+      handleRecord.add(new HandleAttribute(FIELD_IDX.get(TOMBSTONE_PIDS), handle, TOMBSTONE_PIDS, "".getBytes()));
     }
 
 
