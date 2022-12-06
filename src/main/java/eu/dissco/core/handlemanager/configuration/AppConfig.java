@@ -2,7 +2,6 @@ package eu.dissco.core.handlemanager.configuration;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import eu.dissco.core.handlemanager.service.HandleGeneratorService;
 import java.util.Random;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -13,7 +12,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class Config {
+public class AppConfig {
 
   @Bean
   public DocumentBuilderFactory documentBuilderFactory() throws ParserConfigurationException {

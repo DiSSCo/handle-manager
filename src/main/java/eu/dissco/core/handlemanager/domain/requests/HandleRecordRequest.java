@@ -1,8 +1,6 @@
 package eu.dissco.core.handlemanager.domain.requests;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import java.util.Arrays;
-import java.util.Objects;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
@@ -10,6 +8,7 @@ import lombok.ToString;
 @Getter
 @RequiredArgsConstructor
 @ToString
+@EqualsAndHashCode
 public class HandleRecordRequest {
 
   private final String pidIssuerPid;
@@ -17,25 +16,4 @@ public class HandleRecordRequest {
   private final String digitalObjectSubtypePid;
   private final String[] locations;
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    HandleRecordRequest that = (HandleRecordRequest) o;
-    return getPidIssuerPid().equals(that.getPidIssuerPid()) && getDigitalObjectTypePid().equals(
-        that.getDigitalObjectTypePid()) && getDigitalObjectSubtypePid().equals(
-        that.getDigitalObjectSubtypePid()) && Arrays.equals(getLocations(), that.getLocations());
-  }
-
-  @Override
-  public int hashCode() {
-    int result = Objects.hash(getPidIssuerPid(), getDigitalObjectTypePid(),
-        getDigitalObjectSubtypePid());
-    result = 31 * result + Arrays.hashCode(getLocations());
-    return result;
-  }
 }

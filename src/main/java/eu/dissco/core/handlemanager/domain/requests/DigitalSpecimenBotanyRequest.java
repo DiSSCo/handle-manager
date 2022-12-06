@@ -1,12 +1,12 @@
 package eu.dissco.core.handlemanager.domain.requests;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import java.util.Objects;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
 @Getter
 @ToString
+@EqualsAndHashCode(callSuper = true)
 public class DigitalSpecimenBotanyRequest extends DigitalSpecimenRequest {
 
   private final String objectType;
@@ -35,25 +35,4 @@ public class DigitalSpecimenBotanyRequest extends DigitalSpecimenRequest {
     this.preservedOrLiving = preservedOrLiving;
   }
 
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    if (!super.equals(o)) {
-      return false;
-    }
-    DigitalSpecimenBotanyRequest that = (DigitalSpecimenBotanyRequest) o;
-    return getObjectType().equals(that.getObjectType()) && getPreservedOrLiving().equals(
-        that.getPreservedOrLiving());
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(super.hashCode(), getObjectType(), getPreservedOrLiving());
-  }
 }

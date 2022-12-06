@@ -2,17 +2,15 @@ package eu.dissco.core.handlemanager.domain.responses;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-@NoArgsConstructor
-public class DoiRecordResponse extends HandleRecordResponse {
+public class TombstoneRecordResponse extends HandleRecordResponse {
 
-  private String referentDoiName;
-  private String referent;
+  private String tombstoneText;
+  private String tombstonePids;
 
-  public DoiRecordResponse(
+  public TombstoneRecordResponse(
       // Handle
       String pid,
       String pidIssuer,
@@ -21,17 +19,22 @@ public class DoiRecordResponse extends HandleRecordResponse {
       String locs,
       String issueDate,
       String issueNumber,
-      String pidStatus,
       String pidKernelMetadataLicense,
       String hsAdmin,
-      //Doi
-      String referentDoiName,
-      String referent) {
+      //
+      String tombstoneText,
+      String tombstonePids) {
     super(pid, pidIssuer, digitalObjectType, digitalObjectSubtype, locs, issueDate, issueNumber,
-        pidStatus,
+        "ARCHIVED",
         pidKernelMetadataLicense, hsAdmin);
-    this.referentDoiName = referentDoiName;
-    this.referent = referent;
+    this.tombstoneText = tombstoneText;
+    this.tombstonePids = tombstonePids;
   }
+
+  public TombstoneRecordResponse() {
+    super();
+    this.setPidStatus("ARCHIVED");
+  }
+
 
 }

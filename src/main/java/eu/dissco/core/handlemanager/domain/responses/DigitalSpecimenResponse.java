@@ -1,11 +1,11 @@
 package eu.dissco.core.handlemanager.domain.responses;
 
-import eu.dissco.core.handlemanager.repositoryobjects.Handles;
-import java.util.List;
-import lombok.Getter;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-@Getter
+@Data
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 public class DigitalSpecimenResponse extends DoiRecordResponse {
 
@@ -13,21 +13,32 @@ public class DigitalSpecimenResponse extends DoiRecordResponse {
   private String specimenHost;
   private String inCollectionFacility;
 
-  public DigitalSpecimenResponse(List<Handles> entries) {
-    super(entries);
-    String type;
+  public DigitalSpecimenResponse(
+      // Handle Record
+      String pid,
+      String pidIssuer,
+      String digitalObjectType,
+      String digitalObjectSubtype,
+      String locs,
+      String issueDate,
+      String issueNumber,
+      String pidStatus,
+      String pidKernelMetadataLicense,
+      String hsAdmin,
+      // Doi
+      String referentDoiName,
+      String referent,
+      // Digital Specimen
+      String digititalOrPhysical,
+      String specimenHost,
+      String inCollectionFacility) {
+    super(pid, pidIssuer, digitalObjectType, digitalObjectSubtype, locs, issueDate, issueNumber,
+        pidStatus,
+        pidKernelMetadataLicense, hsAdmin, referentDoiName, referent);
 
-    for (Handles h : entries) {
-      type = h.getType();
-      if (type.equals("digitalOrPhysical")) {
-        this.digitalOrPhysical = h.getData();
-      }
-      if (type.equals("specimenHost")) {
-        this.specimenHost = h.getData();
-      }
-      if (type.equals("inCollectionFacility")) {
-        this.inCollectionFacility = h.getData();
-      }
-    }
+    this.digitalOrPhysical = digititalOrPhysical;
+    this.specimenHost = specimenHost;
+    this.inCollectionFacility = inCollectionFacility;
   }
+
 }

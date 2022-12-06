@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
-import eu.dissco.core.handlemanager.repositoryobjects.Handles;
 import eu.dissco.core.handlemanager.testUtils.TestUtils;
 import java.time.Clock;
 import java.util.ArrayList;
@@ -29,19 +29,16 @@ class PidTypeServiceTest {
   @Mock
   private Clock clock;
   private PidTypeService pidTypeService;
-  private long timestamp;
-
   private String pid;
   private String pidType;
   private String primaryNameFromPid;
   private String registrationAgencyDoiName;
   private byte[] recordPid;
-  private List<Handles> typeRecord;
+  private List<HandleAttribute> typeRecord;
 
 
   @BeforeEach
   void init() {
-    timestamp = initTimestamp();
     mapper = new ObjectMapper();
     pidTypeService = new PidTypeService(handleRep, mapper);
   }
@@ -94,23 +91,20 @@ class PidTypeServiceTest {
     typeRecord = initTestPidTypeRecord(true);
   }
 
-  private List<Handles> initTestPidTypeRecord(boolean isDoi) {
-    List<Handles> record = new ArrayList<>();
-    int i = 1;
-    record.add(new Handles(recordPid, i++, "pid", pid, timestamp));
-    record.add(new Handles(recordPid, i++, "pidType", pidType, timestamp));
-    record.add(new Handles(recordPid, i++, "primaryNameFromPid", primaryNameFromPid, timestamp));
+  private List<HandleAttribute> initTestPidTypeRecord(boolean isDoi) {
+    List<HandleAttribute> record = new ArrayList<>();
+
+    record.add(new HandleAttribute(1, recordPid, "pid", pid.getBytes()));
+    record.add(new HandleAttribute(2, recordPid, "pidType", pidType.getBytes()));
+    record.add(
+        new HandleAttribute(3, recordPid, "primaryNameFromPid", primaryNameFromPid.getBytes()));
 
     if (isDoi) {
       registrationAgencyDoiName = TestUtils.PTR_REGISTRATION_DOI_NAME;
-      record.add(new Handles(recordPid, i++, "registrationAgencyDoiName", registrationAgencyDoiName,
-          timestamp));
+      record.add(new HandleAttribute(4, recordPid, "registrationAgencyDoiName",
+          registrationAgencyDoiName.getBytes()));
     }
     return record;
-  }
-
-  private long initTimestamp() {
-    return TestUtils.CREATED.getEpochSecond();
   }
 
 }

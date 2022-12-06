@@ -12,5 +12,4 @@ public class HandleManagerApplication {
   public static void main(String[] args) {
     SpringApplication.run(HandleManagerApplication.class, args);
   }
-
 }
