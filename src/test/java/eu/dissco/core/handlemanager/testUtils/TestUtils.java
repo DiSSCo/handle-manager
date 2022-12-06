@@ -1,11 +1,34 @@
 package eu.dissco.core.handlemanager.testUtils;
 
-import static eu.dissco.core.handlemanager.domain.PidRecords.*;
+import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_SUBTYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OR_PHYSICAL;
+import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
+import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IS_PID_RECORD;
+import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
+import static eu.dissco.core.handlemanager.domain.PidRecords.IN_COLLECTION_FACILITY;
+import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_DATE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_NUMBER;
+import static eu.dissco.core.handlemanager.domain.PidRecords.LOC;
+import static eu.dissco.core.handlemanager.domain.PidRecords.OBJECT_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID_KERNEL_METADATA_LICENSE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PRESERVED_OR_LIVING;
+import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT;
+import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
+import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.utils.Resources.genAdminHandle;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiData;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapper;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
@@ -19,6 +42,7 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
@@ -37,9 +61,12 @@ public class TestUtils {
 
   public static final Instant CREATED = Instant.parse("2022-11-01T09:59:24.00Z");
   public static final String ISSUE_DATE_TESTVAL = "2022-11-01";
-
   public static final String HANDLE = "20.5000.1025/QRS-321-ABC";
   public static final String HANDLE_ALT = "20.5000.1025/ABC-123-QRS";
+  public static final List<String> HANDLE_LIST_STR;
+  static {
+    HANDLE_LIST_STR = List.of(HANDLE, HANDLE_ALT);
+  }
 
   // Request Vars
   // Handles
@@ -71,6 +98,8 @@ public class TestUtils {
   public static final String PTR_REGISTRATION_DOI_NAME = "Registration Agency";
   public final static String PTR_HANDLE_RECORD = initPtrHandleRecord(false);
   public final static String PTR_DOI_RECORD = initPtrHandleRecord(true);
+
+
 
   private TestUtils() {
     throw new IllegalStateException("Utility class");
@@ -105,20 +134,26 @@ public class TestUtils {
     byte[] ptr_record = PTR_HANDLE_RECORD.getBytes();
 
     // 100: Admin Handle
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(HS_ADMIN), handle, HS_ADMIN, genAdminHandle()));
+    handleRecord.add(
+        new HandleAttribute(FIELD_IDX.get(HS_ADMIN), handle, HS_ADMIN, genAdminHandle()));
 
     // 1: Pid
     byte[] pid = ("https://hdl.handle.net/" + new String(handle)).getBytes();
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(PID), handle, PID, pid));
 
     // 2: PidIssuer
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(PID_ISSUER), handle, PID_ISSUER, ptr_record));
+    handleRecord.add(
+        new HandleAttribute(FIELD_IDX.get(PID_ISSUER), handle, PID_ISSUER, ptr_record));
 
     // 3: Digital Object Type
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(DIGITAL_OBJECT_TYPE), handle, DIGITAL_OBJECT_TYPE, ptr_record));
+    handleRecord.add(
+        new HandleAttribute(FIELD_IDX.get(DIGITAL_OBJECT_TYPE), handle, DIGITAL_OBJECT_TYPE,
+            ptr_record));
 
     // 4: Digital Object Subtype
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(DIGITAL_OBJECT_SUBTYPE), handle, DIGITAL_OBJECT_SUBTYPE, ptr_record));
+    handleRecord.add(
+        new HandleAttribute(FIELD_IDX.get(DIGITAL_OBJECT_SUBTYPE), handle, DIGITAL_OBJECT_SUBTYPE,
+            ptr_record));
 
     // 5: 10320/loc
     byte[] loc = "".getBytes();
@@ -130,17 +165,21 @@ public class TestUtils {
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, loc));
 
     // 6: Issue Date
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(ISSUE_DATE), handle, ISSUE_DATE, ISSUE_DATE_TESTVAL.getBytes()));
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(ISSUE_DATE), handle, ISSUE_DATE,
+        ISSUE_DATE_TESTVAL.getBytes()));
 
     // 7: Issue number
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(ISSUE_NUMBER), handle, ISSUE_NUMBER, "1".getBytes()));
+    handleRecord.add(
+        new HandleAttribute(FIELD_IDX.get(ISSUE_NUMBER), handle, ISSUE_NUMBER, "1".getBytes()));
 
     // 8: PidStatus
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS, PID_STATUS_TESTVAL.getBytes()));
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS,
+        PID_STATUS_TESTVAL.getBytes()));
 
     // 11: PidKernelMetadataLicense:
     handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(PID_KERNEL_METADATA_LICENSE), handle, PID_KERNEL_METADATA_LICENSE, PID_KERNEL_METADATA_LICENSE_TESTVAL.getBytes()));
+        new HandleAttribute(FIELD_IDX.get(PID_KERNEL_METADATA_LICENSE), handle,
+            PID_KERNEL_METADATA_LICENSE, PID_KERNEL_METADATA_LICENSE_TESTVAL.getBytes()));
 
     return handleRecord;
   }
@@ -150,9 +189,12 @@ public class TestUtils {
     byte[] ptr_record = PTR_HANDLE_RECORD.getBytes();
 
     // 12: Referent DOI Name
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(REFERENT_DOI_NAME), handle, REFERENT_DOI_NAME, ptr_record));
+    handleRecord.add(
+        new HandleAttribute(FIELD_IDX.get(REFERENT_DOI_NAME), handle, REFERENT_DOI_NAME,
+            ptr_record));
     // 13: Referent
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(REFERENT), handle, REFERENT, REFERENT_TESTVAL.getBytes()));
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(REFERENT), handle, REFERENT,
+        REFERENT_TESTVAL.getBytes()));
     return handleRecord;
   }
 
@@ -162,14 +204,17 @@ public class TestUtils {
 
     // 14: digitalOrPhysical
     handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(DIGITAL_OR_PHYSICAL), handle, DIGITAL_OR_PHYSICAL, DIGITAL_OR_PHYSICAL_TESTVAL.getBytes()));
+        new HandleAttribute(FIELD_IDX.get(DIGITAL_OR_PHYSICAL), handle, DIGITAL_OR_PHYSICAL,
+            DIGITAL_OR_PHYSICAL_TESTVAL.getBytes()));
 
     // 15: specimenHost
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST), handle, SPECIMEN_HOST, ptr_record));
+    handleRecord.add(
+        new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST), handle, SPECIMEN_HOST, ptr_record));
 
     // 16: In collectionFacility
     handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(IN_COLLECTION_FACILITY), handle, IN_COLLECTION_FACILITY, ptr_record));
+        new HandleAttribute(FIELD_IDX.get(IN_COLLECTION_FACILITY), handle, IN_COLLECTION_FACILITY,
+            ptr_record));
     return handleRecord;
   }
 
@@ -177,11 +222,13 @@ public class TestUtils {
     List<HandleAttribute> handleRecord = generateTestDigitalSpecimenAttributes(handle);
 
     // 17: ObjectType
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(OBJECT_TYPE), handle, OBJECT_TYPE, OBJECT_TYPE_TESTVAL.getBytes()));
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(OBJECT_TYPE), handle, OBJECT_TYPE,
+        OBJECT_TYPE_TESTVAL.getBytes()));
 
     // 18: preservedOrLiving
     handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(PRESERVED_OR_LIVING), handle, PRESERVED_OR_LIVING, PRESERVED_OR_LIVING_TESTVAL.getBytes()));
+        new HandleAttribute(FIELD_IDX.get(PRESERVED_OR_LIVING), handle, PRESERVED_OR_LIVING,
+            PRESERVED_OR_LIVING_TESTVAL.getBytes()));
     return handleRecord;
   }
 
@@ -250,6 +297,56 @@ public class TestUtils {
         PID_KERNEL_METADATA_LICENSE_TESTVAL,              // Pid Kernel Metadata License
         admin
     );
+  }
+
+  public static JsonApiWrapper generateTestJsonHandleRecordResponse(byte[] handle)
+      throws JsonProcessingException {
+    ObjectMapper mapper = new ObjectMapper();
+
+    var testDbRecord = generateTestHandleAttributes(handle);
+    ObjectNode recordAttributes = jsonFormatSingleRecord(testDbRecord);
+    JsonApiData jsonData = new JsonApiData(new String(handle), "PID", recordAttributes);
+    JsonApiLinks links = new JsonApiLinks(mapper.writeValueAsString(recordAttributes.get("pid")));
+    return new JsonApiWrapper(links, jsonData);
+  }
+
+  public static List<JsonApiWrapper> generateTestJsonHandleRecordResponseBatch(List<byte[]> handles)
+      throws JsonProcessingException {
+    ObjectMapper mapper = new ObjectMapper();
+    JsonApiData jsonData;
+    JsonApiLinks links;
+    List<JsonApiWrapper> wrapperList = new ArrayList<>();
+
+    for (byte[] handle : handles){
+      ObjectNode recordAttributes = jsonFormatSingleRecord(generateTestHandleAttributes(handle));
+      String pid = mapper.writeValueAsString(recordAttributes.get("pid"));
+      jsonData = new JsonApiData(pid.substring(pid.length()-25), "PID", recordAttributes);
+      links = new JsonApiLinks(pid);
+      wrapperList.add(new JsonApiWrapper(links, jsonData));
+    }
+
+    return wrapperList;
+  }
+
+  private static ObjectNode jsonFormatSingleRecord(List<HandleAttribute> dbRecord)
+      throws JsonProcessingException {
+    ObjectMapper mapper = new ObjectMapper();
+    ObjectNode rootNode = mapper.createObjectNode();
+    ObjectNode subNode;
+    String data;
+    String type;
+
+    for (HandleAttribute row : dbRecord) {
+      type = row.type();
+      data = new String(row.data());
+      if (FIELD_IS_PID_RECORD.contains(type)) {
+        subNode = mapper.readValue(data, ObjectNode.class);
+        rootNode.set(type, subNode);
+      } else {
+        rootNode.put(type, data);
+      }
+    }
+    return rootNode;
   }
 
   public static DoiRecordResponse generateTestDoiResponse(byte[] handle) {
@@ -374,5 +471,6 @@ public class TestUtils {
     transformer.transform(new DOMSource(document), new StreamResult(writer));
     return writer.getBuffer().toString();
   }
+
 
 }

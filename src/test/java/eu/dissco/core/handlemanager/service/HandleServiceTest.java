@@ -1,6 +1,7 @@
 package eu.dissco.core.handlemanager.service;
 
-import static eu.dissco.core.handlemanager.domain.PidRecords.*;
+import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;

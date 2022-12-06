@@ -1,7 +1,6 @@
 package eu.dissco.core.handlemanager.domain.requests;
 
 import java.nio.charset.StandardCharsets;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 

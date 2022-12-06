@@ -15,6 +15,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestHandl
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestHandleResponse;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenBotanyResponse;
 import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenResponse;
@@ -33,9 +34,12 @@ class HandleRepositoryIT extends BaseRepositoryIT {
 
   private HandleRepository handleRep;
 
+  private ObjectMapper mapper;
+
   @BeforeEach
   void setup() {
-    handleRep = new HandleRepository(context);
+    mapper = new ObjectMapper();
+    handleRep = new HandleRepository(context, mapper);
   }
 
   @AfterEach

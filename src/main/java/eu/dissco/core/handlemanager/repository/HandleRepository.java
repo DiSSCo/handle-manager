@@ -1,7 +1,24 @@
 package eu.dissco.core.handlemanager.repository;
 
 import static eu.dissco.core.handlemanager.database.jooq.tables.Handles.HANDLES;
-import static eu.dissco.core.handlemanager.domain.PidRecords.*;
+import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_SUBTYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OR_PHYSICAL;
+import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IS_PID_RECORD;
+import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
+import static eu.dissco.core.handlemanager.domain.PidRecords.IN_COLLECTION_FACILITY;
+import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_DATE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_NUMBER;
+import static eu.dissco.core.handlemanager.domain.PidRecords.LOC;
+import static eu.dissco.core.handlemanager.domain.PidRecords.OBJECT_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID_KERNEL_METADATA_LICENSE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PRESERVED_OR_LIVING;
+import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT;
+import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
+import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,7 +31,6 @@ import eu.dissco.core.handlemanager.domain.responses.DoiRecordResponse;
 import eu.dissco.core.handlemanager.domain.responses.HandleRecordResponse;
 import eu.dissco.core.handlemanager.domain.responses.TombstoneRecordResponse;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
-import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -41,6 +57,7 @@ public class HandleRepository {
   private static final String INVALID_FIELD_ERROR = "Error: Attempting to add an invalid field into a pid record. Field: %s, Data: %s";
   private static final String FIELD_MISMATCH_ERROR = "Field mismatch: attempting to add a forbidden field in the record schema. Check ";
   private final DSLContext context;
+  private final ObjectMapper mapper;
 
   private final Map<String, TableField<HandlesRecord, ? extends Serializable>> attributeMapping = Map.of(
       "index", HANDLES.IDX,
@@ -49,6 +66,7 @@ public class HandleRepository {
       "data", HANDLES.DATA
   );
 
+  // For Handle Name Generation
   public List<byte[]> checkDuplicateHandles(List<byte[]> handles) {
     return context
         .selectDistinct(HANDLES.HANDLE)
@@ -58,31 +76,100 @@ public class HandleRepository {
         .getValues(HANDLES.HANDLE, byte[].class);
   }
 
-  public ObjectNode resolveRecord(byte[] handle)
-      throws PidResolutionException {
-    ObjectMapper mapper = new ObjectMapper();
+  // Resolving handles
+  public ObjectNode resolveSingleRecord(byte[] handle){
+    var dbRecord = fetchRecordFromDb(handle);
+    return jsonFormatSingleRecord(dbRecord);
+  }
+
+  public List<ObjectNode> resolveBatchRecord(List<byte[]> handles) {
+    var dbRecord = fetchRecordFromDb(handles);
+    var aggrRecord = aggregateRecords(dbRecord);
+    List <ObjectNode> rootNodeList = new ArrayList<>();
+
+    for (List<HandleAttribute> handleRecord : aggrRecord){
+      rootNodeList.add(jsonFormatSingleRecord(handleRecord));
+    }
+    return rootNodeList;
+  }
+
+  private HandleAttribute mapToAttribute(Record4<Integer, byte[], byte[], byte[]> row) {
+    return new HandleAttribute(
+        row.get(HANDLES.IDX),
+        row.get(HANDLES.HANDLE),
+        new String(row.get(HANDLES.TYPE)),
+        row.get(HANDLES.DATA));
+  }
+
+  private List<HandleAttribute> fetchRecordFromDb(byte[] handle) {
+    return context
+        .select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
+        .from(HANDLES)
+        .where(HANDLES.HANDLE.eq(handle))
+        .fetch(this::mapToAttribute);
+  }
+
+  private List<HandleAttribute> fetchRecordFromDb(List<byte[]> handles) {
+    return context
+        .select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
+        .from(HANDLES)
+        .where(HANDLES.HANDLE.in(handles))
+        .fetch(this::mapToAttribute);
+  }
+
+  private List<List<HandleAttribute>> aggregateRecords(List<HandleAttribute> flatList) {
+
+    byte[] handle = flatList.get(0).handle(); // First handle retrieved
+    List<List<HandleAttribute>> aggrList = new ArrayList<>();
+    List<HandleAttribute> singleRecord = new ArrayList<>();
+
+    int endOfList = flatList.size() - 1;
+    int i = 0;
+
+    // Our database result is a list of all rows posted (functionally decoupled from their handle id)
+    // In this loop, we create a HandleRecordResponse for each group of handles
+    // Where each "group" of handles is a handle record
+
+    for (HandleAttribute row : flatList) {
+      if (Arrays.equals(handle, row.handle()) && i < endOfList) {
+        // While previous handle = current handle, add this row to the handle record
+        singleRecord.add(row);
+      } else if (i == endOfList) {
+        // Special case for end of list
+        singleRecord.add(row);
+        aggrList.add(singleRecord);
+      } else {
+        // If we've found all rows under a given handle, create a response from those rows
+        aggrList.add(singleRecord);
+        if (i < endOfList - 1) {
+          // if this is not the last record in the fetch, we clear the list for the next handle record
+          singleRecord.clear();
+        }
+        singleRecord.add(row);
+        handle = row.handle();
+      }
+      i++;
+    }
+    return aggrList;
+  }
+
+  private ObjectNode jsonFormatSingleRecord(List<HandleAttribute> dbRecord) {
     ObjectNode rootNode = mapper.createObjectNode();
     ObjectNode subNode;
     String data;
     String type;
-    List<Record4<Integer, byte[], byte[], byte[]>> dbRecord = context
-        .select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
-        .from(HANDLES)
-        .where(HANDLES.HANDLE.eq(handle))
-        .fetch();
-    for (Record4<Integer, byte[], byte[], byte[]> row : dbRecord) {
-      type = new String(row.get(HANDLES.TYPE));
-      data = new String(row.get(HANDLES.DATA));
-
+    for (HandleAttribute row : dbRecord) {
+      type = row.type();
+      data = new String(row.data());
       if (FIELD_IS_PID_RECORD.contains(type)) {
         try {
           subNode = mapper.readValue(data, ObjectNode.class);
           rootNode.set(type, subNode);
-        } catch (JsonProcessingException e){
+        } catch (JsonProcessingException e) {
           // Not 100% sure if an exception should be thrown here. We don't want to make a poorly formatted record un-resolvable
-          log.warn("Type \"{}\" is noncompliant to the PID kernel model. Invalid data: {}", type, data);
+          log.warn("Type \"{}\" is noncompliant to the PID kernel model. Invalid data: {}", type,
+              data);
         }
-
       } else {
         rootNode.put(type, data);
       }
@@ -126,6 +213,7 @@ public class HandleRepository {
         .fetch();
     return buildHandleRecordResponse(handleRecord);
   }
+
 
   private List<HandleRecordResponse> resolveHandleRecordBatch(List<byte[]> handles)
       throws PidCreationException {
@@ -462,6 +550,7 @@ public class HandleRepository {
   }
 
   // Handle Batch Creation
+
   public List<HandleRecordResponse> createHandleRecordBatch(List<byte[]> handles,
       Instant recordTimestamp, List<HandleAttribute> handleAttributes) throws PidCreationException {
     postBatchRecord(recordTimestamp, handleAttributes);

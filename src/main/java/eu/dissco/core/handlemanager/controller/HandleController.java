@@ -1,9 +1,6 @@
 package eu.dissco.core.handlemanager.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapper;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
@@ -17,7 +14,7 @@ import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.service.HandleService;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -45,25 +42,24 @@ public class HandleController {
 
   private final HandleService service;
 
-  @GetMapping("/test")
-  public ResponseEntity<JsonApiWrapper> buildJson()
-      throws JsonProcessingException, PidResolutionException {
+  @GetMapping("/resolve")
+  public ResponseEntity<JsonApiWrapper> resolveSingleHandle(
+      @RequestBody byte[] handle
+  ) throws JsonProcessingException, PidResolutionException {
+    JsonApiWrapper node = service.resolveSingleRecord(handle);
+    return ResponseEntity.status(HttpStatus.OK).body(node);
+  }
 
-    /*
-    ObjectMapper mapper = new ObjectMapper();
-    ObjectNode node = mapper.createObjectNode();
+  @GetMapping("/resolveList")
+  public ResponseEntity<List<JsonApiWrapper>> resolveBatchHandle(
+      @RequestBody List<String> handleStrings
+  ) throws JsonProcessingException, PidResolutionException {
 
-    List<String> types = Arrays.asList("A", "B", "C");
-    List<String> data = Arrays.asList("1", "2", "3");
-
-    for (int i = 0; i <3; i++){
-      node.put(types.get(i), data.get(i));
-    }*/
-
-    byte[] handle = "20.5000.1025/YMY-Z4B-4K6".getBytes(StandardCharsets.UTF_8);
-
-    JsonApiWrapper node = service.resolveRecord(handle);
-
+    List<byte[]> handles = new ArrayList<>();
+    for (String hdlStr : handleStrings){
+      handles.add(hdlStr.getBytes(StandardCharsets.UTF_8));
+    }
+    List<JsonApiWrapper> node = service.resolveBatchRecord(handles);
     return ResponseEntity.status(HttpStatus.OK).body(node);
   }
 

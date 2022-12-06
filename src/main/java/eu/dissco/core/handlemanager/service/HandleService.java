@@ -1,6 +1,25 @@
 package eu.dissco.core.handlemanager.service;
 
-import static eu.dissco.core.handlemanager.domain.PidRecords.*;
+import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_SUBTYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OR_PHYSICAL;
+import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
+import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
+import static eu.dissco.core.handlemanager.domain.PidRecords.IN_COLLECTION_FACILITY;
+import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_DATE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_NUMBER;
+import static eu.dissco.core.handlemanager.domain.PidRecords.LOC;
+import static eu.dissco.core.handlemanager.domain.PidRecords.OBJECT_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID_KERNEL_METADATA_LICENSE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PRESERVED_OR_LIVING;
+import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT;
+import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
+import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
+import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_PIDS;
+import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_TEXT;
 import static eu.dissco.core.handlemanager.utils.Resources.genAdminHandle;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -19,7 +38,6 @@ import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenBotanyRespon
 import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenResponse;
 import eu.dissco.core.handlemanager.domain.responses.DoiRecordResponse;
 import eu.dissco.core.handlemanager.domain.responses.HandleRecordResponse;
-import eu.dissco.core.handlemanager.domain.responses.TombstoneRecordResponse;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
@@ -56,12 +74,29 @@ public class HandleService {
   private final ObjectMapper mapper;
   private final TransformerFactory tf;
 
-  public JsonApiWrapper resolveRecord(byte[] handle)
+  public JsonApiWrapper resolveSingleRecord(byte[] handle)
       throws PidResolutionException, JsonProcessingException {
-    ObjectNode attributes = handleRep.resolveRecord(handle);
-    JsonApiData jsonData = new JsonApiData(new String(handle), "PID", attributes);
-    JsonApiLinks links = new JsonApiLinks(mapper.writeValueAsString(attributes.get("pid")));
+    ObjectNode recordAttributes = handleRep.resolveSingleRecord(handle);
+    JsonApiData jsonData = new JsonApiData(new String(handle), "PID", recordAttributes);
+    JsonApiLinks links = new JsonApiLinks(mapper.writeValueAsString(recordAttributes.get("pid")));
     return new JsonApiWrapper(links, jsonData);
+  }
+
+  public List<JsonApiWrapper> resolveBatchRecord(List<byte[]> handles)
+      throws JsonProcessingException {
+    JsonApiData jsonData;
+    JsonApiLinks links;
+    List<JsonApiWrapper> wrapperList = new ArrayList<>();
+    var recordAttributeList = handleRep.resolveBatchRecord(handles);
+
+    for (ObjectNode recordAttributes : recordAttributeList){
+      String pid = mapper.writeValueAsString(recordAttributes.get("pid"));
+      jsonData = new JsonApiData(pid.substring(pid.length()-25), "PID", recordAttributes);
+      links = new JsonApiLinks(pid);
+
+      wrapperList.add(new JsonApiWrapper(links, jsonData));
+    }
+    return wrapperList;
   }
 
   //  Batch

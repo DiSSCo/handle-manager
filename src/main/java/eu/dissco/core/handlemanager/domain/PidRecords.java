@@ -102,7 +102,6 @@ public class PidRecords {
     tmp.add(TOMBSTONE_PIDS);
     tmp.add(SPECIMEN_HOST);
     tmp.add(IN_COLLECTION_FACILITY);
-    tmp.add(REFERENT);
     tmp.add(REFERENT_DOI_NAME);
     FIELD_IS_PID_RECORD = Collections.unmodifiableSet(tmp);
   }
@@ -134,7 +133,6 @@ public class PidRecords {
     FIELD_IDX = Collections.unmodifiableMap(tmp);
 
   }
-
 
   private PidRecords(){
     throw new IllegalStateException("Utility class");

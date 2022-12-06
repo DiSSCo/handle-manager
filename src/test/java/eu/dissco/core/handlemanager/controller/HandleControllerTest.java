@@ -1,19 +1,13 @@
 package eu.dissco.core.handlemanager.controller;
 
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDigitalSpecimenBotanyRequest;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDigitalSpecimenBotanyResponse;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDigitalSpecimenRequest;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDigitalSpecimenResponse;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDoiRequest;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestDoiResponse;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestHandleRequest;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.generateTestHandleResponse;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapper;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
@@ -25,10 +19,12 @@ import eu.dissco.core.handlemanager.domain.responses.HandleRecordResponse;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.service.HandleService;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,6 +34,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 @ExtendWith(MockitoExtension.class)
+@Slf4j
 class HandleControllerTest {
 
   private final int REQUEST_LEN = 3;
@@ -70,6 +67,39 @@ class HandleControllerTest {
     // Then
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(expectedHandles).isEqualTo(response.getBody());
+  }
+
+  @Test
+  void testResolveSingleHandle() throws Exception {
+    // Given
+    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
+    JsonApiWrapper responseExpected = generateTestJsonHandleRecordResponse(handle);
+    given(service.resolveSingleRecord(handle)).willReturn(responseExpected);
+
+    // When
+    var responseReceived = controller.resolveSingleHandle(handle);
+
+    // Then
+    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testResolveBatchHandle() throws Exception {
+    // Given
+    List<byte[]> handles = new ArrayList<>();
+    for (String hdlStr : HANDLE_LIST_STR){
+      handles.add(hdlStr.getBytes(StandardCharsets.UTF_8));
+    }
+    var responseExpected = generateTestJsonHandleRecordResponseBatch(handles);
+    given(service.resolveBatchRecord(anyList())).willReturn(responseExpected);
+
+    // When
+    var responseReceived = controller.resolveBatchHandle(HANDLE_LIST_STR);
+
+    // Then
+    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
 
   @Test
