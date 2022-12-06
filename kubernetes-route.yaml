@@ -18,7 +18,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`sandbox.dissco.tech`) && PathPrefix(`/handle/api/v1`)
+    - match: Host(`sandbox.dissco.tech`) && PathPrefix(`/handle-manager/api`)
       kind: Rule
       services:
         - name: dissco-handle-manager
