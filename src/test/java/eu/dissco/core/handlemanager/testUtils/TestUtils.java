@@ -16,6 +16,10 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_KERNEL_METADATA_LICENSE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PRESERVED_OR_LIVING;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
@@ -32,10 +36,6 @@ import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenBotanyResponse;
-import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenResponse;
-import eu.dissco.core.handlemanager.domain.responses.DoiRecordResponse;
-import eu.dissco.core.handlemanager.domain.responses.HandleRecordResponse;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -94,8 +94,8 @@ public class TestUtils {
   public static final String PTR_PID_DOI = "http://doi.org/" + PID_ISSUER_PID;
   public static final String PTR_TYPE_DOI = "doi";
   public static final String PTR_REGISTRATION_DOI_NAME = "Registration Agency";
-  public final static String PTR_HANDLE_RECORD = initPtrHandleRecord(false);
-  public final static String PTR_DOI_RECORD = initPtrHandleRecord(true);
+  public final static String PTR_HANDLE_RECORD = genPtrHandleRecord(false);
+  public final static String PTR_DOI_RECORD = genPtrHandleRecord(true);
 
 
   private TestUtils() {
@@ -103,7 +103,7 @@ public class TestUtils {
   }
 
   // Pid Type Records
-  private static String initPtrHandleRecord(boolean isDoi) {
+  private static String genPtrHandleRecord(boolean isDoi) {
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode objectNode = mapper.createObjectNode();
     if (isDoi) {
@@ -124,8 +124,8 @@ public class TestUtils {
     }
   }
 
-  // Handle Attribute Lists
-  public static List<HandleAttribute> generateTestHandleAttributes(byte[] handle) {
+  // Single Handle Attribute Lists
+  public static List<HandleAttribute> genHandleRecordAttributes(byte[] handle) {
 
     List<HandleAttribute> handleRecord = new ArrayList<>();
     byte[] ptr_record = PTR_HANDLE_RECORD.getBytes();
@@ -181,8 +181,8 @@ public class TestUtils {
     return handleRecord;
   }
 
-  public static List<HandleAttribute> generateTestDoiAttributes(byte[] handle) {
-    List<HandleAttribute> handleRecord = generateTestHandleAttributes(handle);
+  public static List<HandleAttribute> genDoiRecordAttributes(byte[] handle) {
+    List<HandleAttribute> handleRecord = genHandleRecordAttributes(handle);
     byte[] ptr_record = PTR_HANDLE_RECORD.getBytes();
 
     // 12: Referent DOI Name
@@ -195,8 +195,8 @@ public class TestUtils {
     return handleRecord;
   }
 
-  public static List<HandleAttribute> generateTestDigitalSpecimenAttributes(byte[] handle) {
-    List<HandleAttribute> handleRecord = generateTestDoiAttributes(handle);
+  public static List<HandleAttribute> genDigitalSpecimenAttributes(byte[] handle) {
+    List<HandleAttribute> handleRecord = genDoiRecordAttributes(handle);
     byte[] ptr_record = PTR_HANDLE_RECORD.getBytes();
 
     // 14: digitalOrPhysical
@@ -215,8 +215,8 @@ public class TestUtils {
     return handleRecord;
   }
 
-  public static List<HandleAttribute> generateTestDigitalSpecimenBotanyAttributes(byte[] handle) {
-    List<HandleAttribute> handleRecord = generateTestDigitalSpecimenAttributes(handle);
+  public static List<HandleAttribute> genDigitalSpecimenBotanyAttributes(byte[] handle) {
+    List<HandleAttribute> handleRecord = genDigitalSpecimenAttributes(handle);
 
     // 17: ObjectType
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(OBJECT_TYPE), handle, OBJECT_TYPE,
@@ -228,19 +228,50 @@ public class TestUtils {
             PRESERVED_OR_LIVING_TESTVAL.getBytes()));
     return handleRecord;
   }
+  
+  // Batch Handle Attribute Lists
+  public static List<HandleAttribute> genHandleRecordAttributesBatch(List<byte[]> handles) {
+    List<HandleAttribute> handleList = new ArrayList<>();
+    for (byte[] h : handles) {
+      handleList.addAll(genHandleRecordAttributes(h));
+    }
+    return handleList;
+  }
 
-  // Requests
+  public static List<HandleAttribute> genDoiRecordAttributesBatch(List<byte[]> handles) {
+    List<HandleAttribute> handleList = new ArrayList<>();
+    for (byte[] h : handles) {
+      handleList.addAll(genDoiRecordAttributes(h));
+    }
+    return handleList;
+  }
 
-  public static HandleRecordRequest generateTestHandleRequest() {
+  public static List<HandleAttribute> genDigitalSpecimenRecordAttributesBatch(List<byte[]> handles) {
+    List<HandleAttribute> handleList = new ArrayList<>();
+    for (byte[] h : handles) {
+      handleList.addAll(genDigitalSpecimenAttributes(h));
+    }
+    return handleList;
+  }
+
+  public static List<HandleAttribute> genDigitalSpecimenRecordBotanyAttributesBatch(List<byte[]> handles) {
+    List<HandleAttribute> handleList = new ArrayList<>();
+    for (byte[] h : handles) {
+      handleList.addAll(genDigitalSpecimenBotanyAttributes(h));
+    }
+    return handleList;
+  }
+
+  // Single Requests
+  public static HandleRecordRequest genHandleRecordRequest() {
     return new HandleRecordRequest(
         PID_ISSUER_PID,
         DIGITAL_OBJECT_TYPE_PID,
         DIGITAL_OBJECT_SUBTYPE_PID,
         LOC_TESTVAL);
   }
-
-
-  public static DoiRecordRequest generateTestDoiRequest() {
+  
+  public static DoiRecordRequest genDoiRecordRequest() {
     return new DoiRecordRequest(
         PID_ISSUER_PID,
         DIGITAL_OBJECT_TYPE_PID,
@@ -249,8 +280,7 @@ public class TestUtils {
         REFERENT_DOI_NAME_PID);
   }
 
-
-  public static DigitalSpecimenRequest generateTestDigitalSpecimenRequest() {
+  public static DigitalSpecimenRequest genDigitalSpecimenRequest() {
     return new DigitalSpecimenRequest(
         PID_ISSUER_PID,
         DIGITAL_OBJECT_TYPE_PID,
@@ -262,7 +292,7 @@ public class TestUtils {
         IN_COLLECTION_FACILITY_TESTVAL);
   }
 
-  public static DigitalSpecimenBotanyRequest generateTestDigitalSpecimenBotanyRequest() {
+  public static DigitalSpecimenBotanyRequest genDigitalSpecimenBotanyRequest() {
     return new DigitalSpecimenBotanyRequest(PID_ISSUER_PID,
         DIGITAL_OBJECT_TYPE_PID,
         DIGITAL_OBJECT_SUBTYPE_PID,
@@ -275,86 +305,133 @@ public class TestUtils {
         PRESERVED_OR_LIVING_TESTVAL);
   }
 
-  // Responses
-  public static HandleRecordResponse generateTestHandleResponse(byte[] handle) {
-    String pid = "https://hdl.handle.net/" + new String(handle);
-    String locs = getLocString();
+  // Batch Requests
 
-    String admin = new String(genAdminHandle());
-
-    return new HandleRecordResponse(
-        pid,                  // Pid
-        PTR_HANDLE_RECORD,    // pidIssuer
-        PTR_HANDLE_RECORD,    // digitalObjectType
-        PTR_HANDLE_RECORD,    // digitalObjectSubtype
-        locs,                 // 10320/loc
-        ISSUE_DATE_TESTVAL,           // issueDate
-        "1",                  // issueNumber
-        PID_STATUS_TESTVAL,           // pidStatus
-        PID_KERNEL_METADATA_LICENSE_TESTVAL,              // Pid Kernel Metadata License
-        admin
-    );
+  public static List<HandleRecordRequest> genHandleRecordRequestBatch(List<byte[]> handles) {
+    List<HandleRecordRequest> requestList = new ArrayList<>();
+    for (int i = 0; i < handles.size(); i++) {
+      requestList.add(genDoiRecordRequest());
+    }
+    return requestList;
   }
 
-  public static JsonApiWrapper generateTestJsonHandleRecordResponse(byte[] handle)
+  public static List<DoiRecordRequest> genDoiRecordRequestBatch(List<byte[]> handles) {
+    List<DoiRecordRequest> requestList = new ArrayList<>();
+    for (int i = 0; i < handles.size(); i++) {
+      requestList.add(genDoiRecordRequest());
+    }
+    return requestList;
+  }
+
+  public static List<DigitalSpecimenRequest> genDigitalSpecimenRequestBatch(List<byte[]> handles) {
+    List<DigitalSpecimenRequest> requestList = new ArrayList<>();
+    for (int i = 0; i < handles.size(); i++) {
+      requestList.add(genDigitalSpecimenRequest());
+    }
+    return requestList;
+  }
+
+  public static List<DigitalSpecimenBotanyRequest> genDigitalSpecimenBotanyRequestBatch(List<byte[]> handles) {
+    List<DigitalSpecimenBotanyRequest> requestList = new ArrayList<>();
+    for (int i = 0; i < handles.size(); i++) {
+      requestList.add(genDigitalSpecimenBotanyRequest());
+    }
+    return requestList;
+  }
+
+  // Single JsonApiWrapper Response 
+  public static JsonApiWrapper genHandleRecordJsonResponse(byte[] handle)
       throws JsonProcessingException {
-    var testDbRecord = generateTestHandleAttributes(handle);
-    return generateTestJsonGenericRecordResponse(handle, testDbRecord, "handle");
+    var testDbRecord = genHandleRecordAttributes(handle);
+    return genGenericRecordJsonResponse(handle, testDbRecord, RECORD_TYPE_HANDLE);
   }
-
-  public static JsonApiWrapper generateTestJsonHandleRecordResponse(byte[] handle, String recordType)
+  
+  public static JsonApiWrapper genHandleRecordJsonResponse(byte[] handle, String recordType)
       throws JsonProcessingException {
-    var testDbRecord = generateTestHandleAttributes(handle);
-    return generateTestJsonGenericRecordResponse(handle, testDbRecord, recordType);
+    var testDbRecord = genHandleRecordAttributes(handle);
+    return genGenericRecordJsonResponse(handle, testDbRecord, recordType);
   }
 
-  public static JsonApiWrapper generateTestJsonDoiRecordResponse(byte[] handle)
+  public static JsonApiWrapper genDoiRecordJsonResponse(byte[] handle)
       throws JsonProcessingException {
-    var testDbRecord = generateTestDoiAttributes(handle);
-    return generateTestJsonGenericRecordResponse(handle, testDbRecord, "doi");
+    var testDbRecord = genDoiRecordAttributes(handle);
+    return genGenericRecordJsonResponse(handle, testDbRecord, RECORD_TYPE_DOI);
   }
 
-  public static JsonApiWrapper generateTestJsonDigitalSpecimenResponse(byte[] handle)
+  public static JsonApiWrapper genDigitalSpecimenJsonResponse(byte[] handle)
       throws JsonProcessingException {
-    var testDbRecord = generateTestDigitalSpecimenAttributes(handle);
-    return generateTestJsonGenericRecordResponse(handle, testDbRecord, "digitalSpecimen");
+    var testDbRecord = genDigitalSpecimenAttributes(handle);
+    return genGenericRecordJsonResponse(handle, testDbRecord, RECORD_TYPE_DS);
   }
 
-  public static JsonApiWrapper generateTestJsonDigitalSpecimenBotanyResponse(byte[] handle)
+  public static JsonApiWrapper genDigitalSpecimenBotanyJsonResponse(byte[] handle)
       throws JsonProcessingException {
-    var testDbRecord = generateTestDigitalSpecimenBotanyAttributes(handle);
-    return generateTestJsonGenericRecordResponse(handle, testDbRecord, "digitalSpecimenBotany");
+    var testDbRecord = genDigitalSpecimenBotanyAttributes(handle);
+    return genGenericRecordJsonResponse(handle, testDbRecord, RECORD_TYPE_DS_BOTANY);
   }
-
-  private static JsonApiWrapper generateTestJsonGenericRecordResponse(byte[] handle,
+  
+  private static JsonApiWrapper genGenericRecordJsonResponse(byte[] handle,
       List<HandleAttribute> testDbRecord, String recordType)
       throws JsonProcessingException {
     ObjectMapper mapper = new ObjectMapper();
-    ObjectNode recordAttributes = generateRecordObjectNode(testDbRecord);
+    ObjectNode recordAttributes = genObjectNodeRecord(testDbRecord);
     JsonApiData jsonData = new JsonApiData(new String(handle), recordType, recordAttributes);
     JsonApiLinks links = new JsonApiLinks(mapper.writeValueAsString(recordAttributes.get("pid")));
     return new JsonApiWrapper(links, jsonData);
   }
 
-  public static List<JsonApiWrapper> generateTestJsonHandleRecordResponseBatch(List<byte[]> handles)
+  // Batch JsonApiWrapper Response
+  public static List<JsonApiWrapper> genHandleRecordJsonResponseBatch(List<byte[]> handles)
       throws JsonProcessingException {
-    ObjectMapper mapper = new ObjectMapper();
-    JsonApiData jsonData;
-    JsonApiLinks links;
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
 
     for (byte[] handle : handles) {
-      ObjectNode recordAttributes = generateRecordObjectNode(generateTestHandleAttributes(handle));
-      String pid = mapper.writeValueAsString(recordAttributes.get("pid"));
-      jsonData = new JsonApiData(pid.substring(pid.length() - 25), "PID", recordAttributes);
-      links = new JsonApiLinks(pid);
-      wrapperList.add(new JsonApiWrapper(links, jsonData));
+      wrapperList.add(genHandleRecordJsonResponse(handle));
     }
-
     return wrapperList;
   }
 
-  public static ObjectNode generateRecordObjectNode(List<HandleAttribute> dbRecord)
+  public static List<JsonApiWrapper> genHandleRecordJsonResponseBatch(List<byte[]> handles, String recordType)
+      throws JsonProcessingException {
+    List<JsonApiWrapper> wrapperList = new ArrayList<>();
+
+    for (byte[] handle : handles) {
+      wrapperList.add(genHandleRecordJsonResponse(handle, recordType));
+    }
+    return wrapperList;
+  }
+  public static List<JsonApiWrapper> genDoiRecordJsonResponseBatch(List<byte[]> handles)
+      throws JsonProcessingException {
+    List<JsonApiWrapper> wrapperList = new ArrayList<>();
+
+    for (byte[] handle : handles) {
+      wrapperList.add(genDoiRecordJsonResponse(handle));
+    }
+    return wrapperList;
+  }
+
+  public static List<JsonApiWrapper> genDigitalSpecimenJsonResponseBatch(List<byte[]> handles)
+      throws JsonProcessingException {
+    List<JsonApiWrapper> wrapperList = new ArrayList<>();
+
+    for (byte[] handle : handles) {
+      wrapperList.add(genDigitalSpecimenJsonResponse(handle));
+    }
+    return wrapperList;
+  }
+
+  public static List<JsonApiWrapper> genDigitalSpecimenBotanyJsonResponseBatch(List<byte[]> handles)
+      throws JsonProcessingException {
+    List<JsonApiWrapper> wrapperList = new ArrayList<>();
+
+    for (byte[] handle : handles) {
+      wrapperList.add(genDigitalSpecimenBotanyJsonResponse(handle));
+    }
+    return wrapperList;
+  }
+
+  // Handle Attributes as ObjectNode 
+  public static ObjectNode genObjectNodeRecord(List<HandleAttribute> dbRecord)
       throws JsonProcessingException {
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode rootNode = mapper.createObjectNode();
@@ -378,84 +455,16 @@ public class TestUtils {
     return rootNode;
   }
 
-  public static DoiRecordResponse generateTestDoiResponse(byte[] handle) {
-    String pid = "https://hdl.handle.net/" + new String(handle);
-    String locs = getLocString();
-
-    String admin = new String(genAdminHandle());
-
-    return new DoiRecordResponse(
-        pid,                  // Pid
-        PTR_HANDLE_RECORD,    // pidIssuer
-        PTR_HANDLE_RECORD,    // digitalObjectType
-        PTR_HANDLE_RECORD,    // digitalObjectSubtype
-        locs,                 // 10320/loc
-        ISSUE_DATE_TESTVAL,           // issueDate
-        "1",                  // issueNumber
-        PID_STATUS_TESTVAL,           // pidStatus
-        PID_KERNEL_METADATA_LICENSE_TESTVAL,              // Pid Kernel Metadata License
-        admin,
-        PTR_HANDLE_RECORD,
-        REFERENT_TESTVAL
-    );
+  public static List<ObjectNode> genObjectNodeRecordBatch(List<List<HandleAttribute>> dbRecords)
+      throws JsonProcessingException {
+    List<ObjectNode> nodeList = new ArrayList<>();
+    for (List<HandleAttribute> dbRecord : dbRecords){
+      nodeList.add(genObjectNodeRecord(dbRecord));
+    }
+    return nodeList;
   }
 
-  public static DigitalSpecimenResponse generateTestDigitalSpecimenResponse(byte[] handle) {
-    String pid = "https://hdl.handle.net/" + new String(handle);
-    String locs = getLocString();
-
-    String admin = new String(genAdminHandle());
-
-    return new DigitalSpecimenResponse(
-        pid,                  // Pid
-        PTR_HANDLE_RECORD,    // pidIssuer
-        PTR_HANDLE_RECORD,    // digitalObjectType
-        PTR_HANDLE_RECORD,    // digitalObjectSubtype
-        locs,                 // 10320/loc
-        ISSUE_DATE_TESTVAL,           // issueDate
-        "1",                  // issueNumber
-        PID_STATUS_TESTVAL,           // pidStatus
-        PID_KERNEL_METADATA_LICENSE_TESTVAL,              // Pid Kernel Metadata License
-        admin,
-        PTR_HANDLE_RECORD,
-        REFERENT_TESTVAL,
-        DIGITAL_OR_PHYSICAL_TESTVAL,
-        PTR_HANDLE_RECORD,
-        PTR_HANDLE_RECORD
-    );
-  }
-
-  public static DigitalSpecimenBotanyResponse generateTestDigitalSpecimenBotanyResponse(
-      byte[] handle) {
-    String pid = "https://hdl.handle.net/" + new String(handle);
-    String locs = getLocString();
-
-    String admin = new String(genAdminHandle());
-
-    return new DigitalSpecimenBotanyResponse(
-        pid,                  // Pid
-        PTR_HANDLE_RECORD,    // pidIssuer
-        PTR_HANDLE_RECORD,    // digitalObjectType
-        PTR_HANDLE_RECORD,    // digitalObjectSubtype
-        locs,                 // 10320/loc
-        ISSUE_DATE_TESTVAL,           // issueDate
-        "1",                  // issueNumber
-        PID_STATUS_TESTVAL,           // pidStatus
-        PID_KERNEL_METADATA_LICENSE_TESTVAL,              // Pid Kernel Metadata License
-        admin,
-        PTR_HANDLE_RECORD,
-        REFERENT_TESTVAL,
-        DIGITAL_OR_PHYSICAL_TESTVAL,
-        PTR_HANDLE_RECORD,
-        PTR_HANDLE_RECORD,
-        OBJECT_TYPE_TESTVAL,
-        PRESERVED_OR_LIVING_TESTVAL
-    );
-  }
-
-  public static long initTime() {
-    return CREATED.getEpochSecond();
-  }
+  // Other Functions
 
   private static String getLocString() {
     byte[] loc = "".getBytes();
@@ -500,6 +509,5 @@ public class TestUtils {
     transformer.transform(new DOMSource(document), new StreamResult(writer));
     return writer.getBuffer().toString();
   }
-
 
 }

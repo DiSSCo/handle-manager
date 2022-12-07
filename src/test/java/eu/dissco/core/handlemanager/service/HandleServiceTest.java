@@ -6,7 +6,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mockStatic;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -16,11 +15,6 @@ import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenBotanyResponse;
-import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenResponse;
-import eu.dissco.core.handlemanager.domain.responses.DoiRecordResponse;
-import eu.dissco.core.handlemanager.domain.responses.HandleRecordResponse;
-import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
@@ -84,12 +78,12 @@ class HandleServiceTest {
   }
 
   @Test
-  void testResolveSingleRecord() throws JsonProcessingException, PidResolutionException {
+  void testResolveSingleRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    List<HandleAttribute> recordAttributeList = generateTestHandleAttributes(handle);
-    ObjectNode repositoryResponse =  generateRecordObjectNode(recordAttributeList);
-    var responseExpected = generateTestJsonHandleRecordResponse(handle, "PID");
+    List<HandleAttribute> recordAttributeList = genHandleRecordAttributes(handle);
+    ObjectNode repositoryResponse =  genObjectNodeRecord(recordAttributeList);
+    var responseExpected = genHandleRecordJsonResponse(handle, "PID");
 
     given(handleRep.resolveSingleRecord(handle)).willReturn(repositoryResponse);
 
@@ -101,14 +95,14 @@ class HandleServiceTest {
   }
 
   @Test
-  void testResolveBatchRecord() throws JsonProcessingException, PidResolutionException {
+  void testResolveBatchRecord() throws Exception {
     // Given
     List<ObjectNode> repositoryResponse = new ArrayList<>();
     for (byte[] handle : handlesList){
-      repositoryResponse.add(generateRecordObjectNode(generateTestHandleAttributes(handle)));
+      repositoryResponse.add(genObjectNodeRecord(genHandleRecordAttributes(handle)));
     }
     given(handleRep.resolveBatchRecord(handlesList)).willReturn(repositoryResponse);
-    var responseExpected = generateTestJsonHandleRecordResponseBatch(handlesList);
+    var responseExpected = genHandleRecordJsonResponseBatch(handlesList, "PID");
     // When
     var responseReceived = service.resolveBatchRecord(handlesList);
 
@@ -117,15 +111,14 @@ class HandleServiceTest {
   }
 
   // Json object creation
-
   @Test
   void testCreateHandleRecordJson() throws Exception {
     // Given
     byte[] handle = handlesList.get(0);
-    HandleRecordRequest request = generateTestHandleRequest();
-    List<HandleAttribute> handleRecord = generateTestHandleAttributes(handle);
-    var databaseResponse =  generateRecordObjectNode(handleRecord);
-    var responseExpected = generateTestJsonHandleRecordResponse(handle);
+    HandleRecordRequest request = genHandleRecordRequest();
+    List<HandleAttribute> handleRecord = genHandleRecordAttributes(handle);
+    var databaseResponse =  genObjectNodeRecord(handleRecord);
+    var responseExpected = genHandleRecordJsonResponse(handle);
 
     given(handleRep.createHandleRecordJson(handle, instant, handleRecord)).willReturn(databaseResponse);
     given(hgService.genHandleList(1)).willReturn(handlesList);
@@ -141,10 +134,10 @@ class HandleServiceTest {
   void testCreateDoiRecordJson() throws Exception {
     // Given
     byte[] handle = handlesList.get(0);
-    DoiRecordRequest request = generateTestDoiRequest();
-    List<HandleAttribute> handleRecord = generateTestDoiAttributes(handle);
-    var databaseResponse =  generateRecordObjectNode(handleRecord);
-    var responseExpected = generateTestJsonDoiRecordResponse(handle);
+    DoiRecordRequest request = genDoiRecordRequest();
+    List<HandleAttribute> handleRecord = genDoiRecordAttributes(handle);
+    var databaseResponse =  genObjectNodeRecord(handleRecord);
+    var responseExpected = genDoiRecordJsonResponse(handle);
 
     given(handleRep.createDoiRecordJson(handle, instant, handleRecord)).willReturn(databaseResponse);
     given(hgService.genHandleList(1)).willReturn(handlesList);
@@ -160,10 +153,10 @@ class HandleServiceTest {
   void testCreateDigitalSpecimenJson() throws Exception {
     // Given
     byte[] handle = handlesList.get(0);
-    DigitalSpecimenRequest request = generateTestDigitalSpecimenRequest();
-    List<HandleAttribute> handleRecord = generateTestDigitalSpecimenAttributes(handle);
-    var databaseResponse =  generateRecordObjectNode(handleRecord);
-    var responseExpected = generateTestJsonDigitalSpecimenResponse(handle);
+    DigitalSpecimenRequest request = genDigitalSpecimenRequest();
+    List<HandleAttribute> handleRecord = genDigitalSpecimenAttributes(handle);
+    var databaseResponse =  genObjectNodeRecord(handleRecord);
+    var responseExpected = genDigitalSpecimenJsonResponse(handle);
 
     given(handleRep.createDigitalSpecimenJson(handle, instant, handleRecord)).willReturn(databaseResponse);
     given(hgService.genHandleList(1)).willReturn(handlesList);
@@ -179,10 +172,10 @@ class HandleServiceTest {
   void testCreateDigitalSpecimenBotanyJson() throws Exception {
     // Given
     byte[] handle = handlesList.get(0);
-    DigitalSpecimenBotanyRequest request = generateTestDigitalSpecimenBotanyRequest();
-    List<HandleAttribute> handleRecord = generateTestDigitalSpecimenBotanyAttributes(handle);
-    var databaseResponse =  generateRecordObjectNode(handleRecord);
-    var responseExpected = generateTestJsonDigitalSpecimenBotanyResponse(handle);
+    DigitalSpecimenBotanyRequest request = genDigitalSpecimenBotanyRequest();
+    List<HandleAttribute> handleRecord = genDigitalSpecimenBotanyAttributes(handle);
+    var databaseResponse =  genObjectNodeRecord(handleRecord);
+    var responseExpected = genDigitalSpecimenBotanyJsonResponse(handle);
 
     given(handleRep.createDigitalSpecimenBotanyJson(handle, instant, handleRecord)).willReturn(databaseResponse);
     given(hgService.genHandleList(1)).willReturn(handlesList);
@@ -194,184 +187,109 @@ class HandleServiceTest {
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
-
   @Test
-  void testCreateBatchHandleRecord()
-      throws Exception {
+  void testCreateHandleRecordBatchJson() throws Exception{
     // Given
-    List<HandleRecordRequest> request = generateBatchHandleRequest();
-    List<HandleRecordResponse> responseExpected = generateBatchHandleResponse();
-    List<HandleAttribute> handleAttributes = generateBatchHandleAttributeList();
+    List<HandleRecordRequest> requests = genHandleRecordRequestBatch(handlesList);
+    List<List<HandleAttribute>> aggrList = new ArrayList<>();
+    List<HandleAttribute> flatList = new ArrayList<>();
+    List<HandleAttribute> singleRecord;
 
-    given(handleRep.createHandleRecordBatch(handlesList, instant, handleAttributes)).willReturn(
-        responseExpected);
-    given(hgService.genHandleList(2)).willReturn(handlesList);
+    for (byte[] handle : handlesList){
+      singleRecord = genHandleRecordAttributes(handle);
+      flatList.addAll(singleRecord);
+      aggrList.add(new ArrayList<>(singleRecord));
+    }
+    List<ObjectNode> databaseResponse = genObjectNodeRecordBatch(aggrList);
+    var responseExpected = genHandleRecordJsonResponseBatch(handlesList);
+
+    given(handleRep.createHandleRecordBatchJson(handlesList, instant, flatList)).willReturn(databaseResponse);
+    given(hgService.genHandleList(handlesList.size())).willReturn(handlesList);
 
     // When
-    List<HandleRecordResponse> responseReceived = service.createHandleRecordBatch(request);
+    var responseReceived = service.createHandleRecordBatchJson(requests);
 
     // Then
-    assertThat(responseExpected).isEqualTo(responseReceived);
-  }
-
-  @Test
-  void testCreateBatchDoiRecord()
-      throws Exception {
-    // Given
-    List<DoiRecordRequest> request = generateBatchDoiRequest();
-    List<DoiRecordResponse> responseExpected = generateBatchDoiResponse();
-
-    List<HandleAttribute> handleAttributes = generateBatchDoiAttributeList();
-
-    given(handleRep.createDoiRecordBatch(handlesList, instant, handleAttributes)).willReturn(
-        responseExpected);
-    given(hgService.genHandleList(2)).willReturn(handlesList);
-
-    // When
-    List<DoiRecordResponse> responseReceived = service.createDoiRecordBatch(request);
-
-    // Then
-    assertThat(responseExpected).isEqualTo(responseReceived);
+    assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
   @Test
-  void testCreateBatchDigitalSpecimen()
-      throws Exception {
+  void testCreateDoiRecordBatchJson() throws Exception{
     // Given
-    List<DigitalSpecimenRequest> request = generateBatchDigitalSpecimenRequest();
-    List<DigitalSpecimenResponse> responseExpected = generateBatchDigitalSpecimenResponse();
+    List<DoiRecordRequest> requests = genDoiRecordRequestBatch(handlesList);
+    List<List<HandleAttribute>> aggrList = new ArrayList<>();
+    List<HandleAttribute> flatList = new ArrayList<>();
+    List<HandleAttribute> singleRecord;
 
-    List<HandleAttribute> handleAttributes = generateBatchDigitalSpecimenAttributeList();
+    for (byte[] handle : handlesList){
+      singleRecord = genDoiRecordAttributes(handle);
+      flatList.addAll(singleRecord);
+      aggrList.add(new ArrayList<>(singleRecord));
+    }
+    List<ObjectNode> databaseResponse = genObjectNodeRecordBatch(aggrList);
+    var responseExpected = genDoiRecordJsonResponseBatch(handlesList);
 
-    given(handleRep.createDigitalSpecimenBatch(handlesList, instant, handleAttributes)).willReturn(
-        responseExpected);
-    given(hgService.genHandleList(2)).willReturn(handlesList);
+    given(handleRep.createDoiRecordBatchJson(handlesList, instant, flatList)).willReturn(databaseResponse);
+    given(hgService.genHandleList(handlesList.size())).willReturn(handlesList);
 
     // When
-    List<DigitalSpecimenResponse> responseReceived = service.createDigitalSpecimenBatch(request);
+    var responseReceived = service.createDoiRecordBatchJson(requests);
 
     // Then
-    assertThat(responseExpected).isEqualTo(responseReceived);
+    assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
   @Test
-  void testCreateBatchDigitalSpecimenBotany()
-      throws Exception {
+  void testCreateDigitalSpecimenBatchJson() throws Exception{
     // Given
-    List<DigitalSpecimenBotanyRequest> request = generateBatchDigitalSpecimenBotanyRequest();
-    List<DigitalSpecimenBotanyResponse> responseExpected = generateBatchDigitalSpecimenBotanyResponse();
+    List<DigitalSpecimenRequest> requests = genDigitalSpecimenRequestBatch(handlesList);
+    List<List<HandleAttribute>> aggrList = new ArrayList<>();
+    List<HandleAttribute> flatList = new ArrayList<>();
+    List<HandleAttribute> singleRecord;
 
-    List<HandleAttribute> handleAttributes = generateBatchDigitalSpecimenBotanyAttributeList();
+    for (byte[] handle : handlesList){
+      singleRecord = genDigitalSpecimenAttributes(handle);
+      flatList.addAll(singleRecord);
+      aggrList.add(new ArrayList<>(singleRecord));
+    }
+    List<ObjectNode> databaseResponse = genObjectNodeRecordBatch(aggrList);
+    var responseExpected = genDigitalSpecimenJsonResponseBatch(handlesList);
 
-    given(handleRep.createDigitalSpecimenBotanyBatch(handlesList, instant,
-        handleAttributes)).willReturn(responseExpected);
-    given(hgService.genHandleList(2)).willReturn(handlesList);
+    given(handleRep.createDigitalSpecimenBatchJson(handlesList, instant, flatList)).willReturn(databaseResponse);
+    given(hgService.genHandleList(handlesList.size())).willReturn(handlesList);
 
     // When
-    List<DigitalSpecimenBotanyResponse> responseReceived = service.createDigitalSpecimenBotanyBatch(
-        request);
+    var responseReceived = service.createDigitalSpecimenBatchJson(requests);
 
     // Then
-    assertThat(responseExpected).isEqualTo(responseReceived);
+    assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
+  @Test
+  void testCreateDigitalSpecimenBotanyBatchJson() throws Exception{
+    // Given
+    List<DigitalSpecimenBotanyRequest> requests = genDigitalSpecimenBotanyRequestBatch(handlesList);
+    List<List<HandleAttribute>> aggrList = new ArrayList<>();
+    List<HandleAttribute> flatList = new ArrayList<>();
+    List<HandleAttribute> singleRecord;
 
-  private List<HandleRecordRequest> generateBatchHandleRequest() {
-    List<HandleRecordRequest> requestList = new ArrayList<>();
-    for (int i = 0; i < handlesList.size(); i++) {
-      requestList.add(generateTestHandleRequest());
+    for (byte[] handle : handlesList){
+      singleRecord = genDigitalSpecimenBotanyAttributes(handle);
+      flatList.addAll(singleRecord);
+      aggrList.add(new ArrayList<>(singleRecord));
     }
-    return requestList;
-  }
+    List<ObjectNode> databaseResponse = genObjectNodeRecordBatch(aggrList);
+    var responseExpected = genDigitalSpecimenBotanyJsonResponseBatch(handlesList);
 
-  private List<HandleRecordResponse> generateBatchHandleResponse() {
-    List<HandleRecordResponse> responseList = new ArrayList<>();
-    for (byte[] h : handlesList) {
-      responseList.add(generateTestHandleResponse(h));
-    }
-    return responseList;
-  }
+    given(handleRep.createDigitalSpecimenBotanyBatchJson(handlesList, instant, flatList)).willReturn(databaseResponse);
+    given(hgService.genHandleList(handlesList.size())).willReturn(handlesList);
 
-  private List<HandleAttribute> generateBatchHandleAttributeList() {
-    List<HandleAttribute> handleList = new ArrayList<>();
-    for (byte[] h : handlesList) {
-      handleList.addAll(generateTestHandleAttributes(h));
-    }
-    return handleList;
-  }
+    // When
+    var responseReceived = service.createDigitalSpecimenBotanyBatchJson(requests);
 
-  private List<HandleAttribute> generateBatchDoiAttributeList() {
-    List<HandleAttribute> handleList = new ArrayList<>();
-    for (byte[] h : handlesList) {
-      handleList.addAll(generateTestDoiAttributes(h));
-    }
-    return handleList;
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
   }
-
-  private List<HandleAttribute> generateBatchDigitalSpecimenAttributeList() {
-    List<HandleAttribute> handleList = new ArrayList<>();
-    for (byte[] h : handlesList) {
-      handleList.addAll(generateTestDigitalSpecimenAttributes(h));
-    }
-    return handleList;
-  }
-
-  private List<HandleAttribute> generateBatchDigitalSpecimenBotanyAttributeList() {
-    List<HandleAttribute> handleList = new ArrayList<>();
-    for (byte[] h : handlesList) {
-      handleList.addAll(generateTestDigitalSpecimenBotanyAttributes(h));
-    }
-    return handleList;
-  }
-
-  private List<DoiRecordRequest> generateBatchDoiRequest() {
-    List<DoiRecordRequest> requestList = new ArrayList<>();
-    for (int i = 0; i < handlesList.size(); i++) {
-      requestList.add(generateTestDoiRequest());
-    }
-    return requestList;
-  }
-
-  private List<DoiRecordResponse> generateBatchDoiResponse() {
-    List<DoiRecordResponse> responseList = new ArrayList<>();
-    for (byte[] h : handlesList) {
-      responseList.add(generateTestDoiResponse(h));
-    }
-    return responseList;
-  }
-
-  private List<DigitalSpecimenRequest> generateBatchDigitalSpecimenRequest() {
-    List<DigitalSpecimenRequest> requestList = new ArrayList<>();
-    for (int i = 0; i < handlesList.size(); i++) {
-      requestList.add(generateTestDigitalSpecimenRequest());
-    }
-    return requestList;
-  }
-
-  private List<DigitalSpecimenResponse> generateBatchDigitalSpecimenResponse() {
-    List<DigitalSpecimenResponse> responseList = new ArrayList<>();
-    for (byte[] h : handlesList) {
-      responseList.add(generateTestDigitalSpecimenResponse(h));
-    }
-    return responseList;
-  }
-
-  private List<DigitalSpecimenBotanyRequest> generateBatchDigitalSpecimenBotanyRequest() {
-    List<DigitalSpecimenBotanyRequest> requestList = new ArrayList<>();
-    for (int i = 0; i < handlesList.size(); i++) {
-      requestList.add(generateTestDigitalSpecimenBotanyRequest());
-    }
-    return requestList;
-  }
-
-  private List<DigitalSpecimenBotanyResponse> generateBatchDigitalSpecimenBotanyResponse() {
-    List<DigitalSpecimenBotanyResponse> responseList = new ArrayList<>();
-    for (byte[] h : handlesList) {
-      responseList.add(generateTestDigitalSpecimenBotanyResponse(h));
-    }
-    return responseList;
-  }
-
 
   private void initTime() {
     Clock clock = Clock.fixed(CREATED, ZoneOffset.UTC);

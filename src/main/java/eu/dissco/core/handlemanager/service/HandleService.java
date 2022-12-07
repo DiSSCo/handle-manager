@@ -51,7 +51,8 @@ public class HandleService {
       throws JsonProcessingException, PidResolutionException {
     ObjectNode recordAttributes = handleRep.resolveSingleRecord(handle);
     JsonApiData jsonData = new JsonApiData(new String(handle), "PID", recordAttributes);
-    JsonApiLinks links = new JsonApiLinks(mapper.writeValueAsString(recordAttributes.get("pid")));
+    String pidLink = mapper.writeValueAsString(recordAttributes.get("pid"));
+    JsonApiLinks links = new JsonApiLinks(pidLink);
     return new JsonApiWrapper(links, jsonData);
   }
 
@@ -63,17 +64,20 @@ public class HandleService {
     var recordAttributeList = handleRep.resolveBatchRecord(handles);
 
     for (ObjectNode recordAttributes : recordAttributeList) {
-      String pid = mapper.writeValueAsString(recordAttributes.get("pid"));
-      jsonData = new JsonApiData(pid.substring(pid.length() - 25), "PID", recordAttributes);
-      links = new JsonApiLinks(pid);
-
+      String pidLink = mapper.writeValueAsString(recordAttributes.get("pid"));
+      String pidName = getPidName(pidLink);
+      jsonData = new JsonApiData(pidName, "PID", recordAttributes);
+      links = new JsonApiLinks(pidLink);
       wrapperList.add(new JsonApiWrapper(links, jsonData));
     }
     return wrapperList;
   }
 
-  // Batch Creation Json
+  private String getPidName(String pidLink){
+    return pidLink.substring(pidLink.length() - 25, pidLink.length()-1);
+  }
 
+  // Batch Creation Json
 
   public List<JsonApiWrapper> createHandleRecordBatchJson(List<HandleRecordRequest> requests)
       throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
@@ -91,9 +95,10 @@ public class HandleService {
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
 
     for (ObjectNode recordAttributes : postedRecordAttributes) {
-      String pid = mapper.writeValueAsString(recordAttributes.get("pid")); 
-      jsonData = new JsonApiData(pid.substring(pid.length() - 25), RECORD_TYPE_HANDLE, recordAttributes);
-      links = new JsonApiLinks(pid);
+      String pidLink = mapper.writeValueAsString(recordAttributes.get("pid"));
+      String pidName = getPidName(pidLink);
+      jsonData = new JsonApiData(pidName, RECORD_TYPE_HANDLE, recordAttributes);
+      links = new JsonApiLinks(pidLink);
 
       wrapperList.add(new JsonApiWrapper(links, jsonData));
     }
@@ -116,9 +121,10 @@ public class HandleService {
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
 
     for (ObjectNode recordAttributes : postedRecordAttributes) {
-      String pid = mapper.writeValueAsString(recordAttributes.get("pid"));
-      jsonData = new JsonApiData(pid.substring(pid.length() - 25), RECORD_TYPE_DOI, recordAttributes);
-      links = new JsonApiLinks(pid);
+      String pidLink = mapper.writeValueAsString(recordAttributes.get("pid"));
+      String pidName = getPidName(pidLink);
+      jsonData = new JsonApiData(pidName, RECORD_TYPE_DOI, recordAttributes);
+      links = new JsonApiLinks(pidLink);
 
       wrapperList.add(new JsonApiWrapper(links, jsonData));
     }
@@ -141,10 +147,10 @@ public class HandleService {
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
 
     for (ObjectNode recordAttributes : postedRecordAttributes) {
-      String pid = mapper.writeValueAsString(recordAttributes.get("pid"));
-      jsonData = new JsonApiData(pid.substring(pid.length() - 25), RECORD_TYPE_DS, recordAttributes);
-      links = new JsonApiLinks(pid);
-
+      String pidLink = mapper.writeValueAsString(recordAttributes.get("pid"));
+      String pidName = getPidName(pidLink);
+      jsonData = new JsonApiData(pidName, RECORD_TYPE_DS, recordAttributes);
+      links = new JsonApiLinks(pidLink);
       wrapperList.add(new JsonApiWrapper(links, jsonData));
     }
     return wrapperList;
@@ -166,9 +172,10 @@ public class HandleService {
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
 
     for (ObjectNode recordAttributes : postedRecordAttributes) {
-      String pid = mapper.writeValueAsString(recordAttributes.get("pid"));
-      jsonData = new JsonApiData(pid.substring(pid.length() - 25), RECORD_TYPE_DS_BOTANY, recordAttributes);
-      links = new JsonApiLinks(pid);
+      String pidLink = mapper.writeValueAsString(recordAttributes.get("pid"));
+      String pidName = getPidName(pidLink);
+      jsonData = new JsonApiData(pidName, RECORD_TYPE_DS_BOTANY, recordAttributes);
+      links = new JsonApiLinks(pidLink);
 
       wrapperList.add(new JsonApiWrapper(links, jsonData));
     }
