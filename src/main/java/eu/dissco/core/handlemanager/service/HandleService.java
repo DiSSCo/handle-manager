@@ -237,7 +237,7 @@ public class HandleService {
   // Getters
 
   public List<String> getHandlesPaged(String pidStatus, int pageNum, int pageSize) {
-    return handleRep.getAllHandles(pidStatus.getBytes(), pageNum, pageSize);
+    return handleRep.getAllHandles(pidStatus.getBytes(StandardCharsets.UTF_8), pageNum, pageSize);
   }
 
   public List<String> getHandlesPaged(int pageNum, int pageSize) {
@@ -256,26 +256,26 @@ public class HandleService {
         new HandleAttribute(FIELD_IDX.get(HS_ADMIN), handle, HS_ADMIN, genAdminHandle()));
 
     // 1: Pid
-    byte[] pid = ("https://hdl.handle.net/" + new String(handle)).getBytes();
+    byte[] pid = ("https://hdl.handle.net/" + new String(handle)).getBytes(StandardCharsets.UTF_8);
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(PID), handle, PID, pid));
 
     // 2: PidIssuer
     String pidIssuer = pidTypeService.resolveTypePid(request.getPidIssuerPid());
     handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(PID_ISSUER), handle, PID_ISSUER, pidIssuer.getBytes()));
+        new HandleAttribute(FIELD_IDX.get(PID_ISSUER), handle, PID_ISSUER, pidIssuer.getBytes(StandardCharsets.UTF_8)));
 
     // 3: Digital Object Type
     String digitalObjectType = pidTypeService.resolveTypePid(request.getDigitalObjectTypePid());
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(DIGITAL_OBJECT_TYPE), handle, DIGITAL_OBJECT_TYPE,
-            digitalObjectType.getBytes()));
+            digitalObjectType.getBytes(StandardCharsets.UTF_8)));
 
     // 4: Digital Object Subtype
     String digitalObjectSubtype = pidTypeService.resolveTypePid(
         request.getDigitalObjectSubtypePid());
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(DIGITAL_OBJECT_SUBTYPE), handle, DIGITAL_OBJECT_SUBTYPE,
-            digitalObjectSubtype.getBytes()));
+            digitalObjectSubtype.getBytes(StandardCharsets.UTF_8)));
 
     // 5: 10320/loc
     byte[] loc = setLocations(request.getLocations());
@@ -283,20 +283,20 @@ public class HandleService {
 
     // 6: Issue Date
     handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(ISSUE_DATE), handle, ISSUE_DATE, getDate().getBytes()));
+        new HandleAttribute(FIELD_IDX.get(ISSUE_DATE), handle, ISSUE_DATE, getDate().getBytes(StandardCharsets.UTF_8)));
 
     // 7: Issue number
     handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(ISSUE_NUMBER), handle, ISSUE_NUMBER, "1".getBytes()));
+        new HandleAttribute(FIELD_IDX.get(ISSUE_NUMBER), handle, ISSUE_NUMBER, "1".getBytes(StandardCharsets.UTF_8)));
 
     // 8: PidStatus
     handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS, "TEST".getBytes()));
+        new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS, "TEST".getBytes(StandardCharsets.UTF_8)));
 
     // 9, 10: tombstone text, tombstone pids -> Skip
 
     // 11: PidKernelMetadataLicense:
-    byte[] pidKernelMetadataLicense = "https://creativecommons.org/publicdomain/zero/1.0/".getBytes();
+    byte[] pidKernelMetadataLicense = "https://creativecommons.org/publicdomain/zero/1.0/".getBytes(StandardCharsets.UTF_8);
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(PID_KERNEL_METADATA_LICENSE), handle,
             PID_KERNEL_METADATA_LICENSE, pidKernelMetadataLicense));
@@ -314,11 +314,11 @@ public class HandleService {
 
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(REFERENT_DOI_NAME), handle, REFERENT_DOI_NAME,
-            referentDoiName.getBytes()));
+            referentDoiName.getBytes(StandardCharsets.UTF_8)));
 
     // 13: Referent -> NOTE: Referent is blank currently until we have a model
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(REFERENT), handle, REFERENT,
-        request.getReferent().getBytes()));
+        request.getReferent().getBytes(StandardCharsets.UTF_8)));
     return handleRecord;
   }
 
@@ -329,19 +329,19 @@ public class HandleService {
 
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(DIGITAL_OR_PHYSICAL), handle, DIGITAL_OR_PHYSICAL,
-            request.getDigitalOrPhysical().getBytes()));
+            request.getDigitalOrPhysical().getBytes(StandardCharsets.UTF_8)));
 
     // 15: specimenHost
     String specimenHost = pidTypeService.resolveTypePid(request.getSpecimenHostPid());
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST), handle, SPECIMEN_HOST,
-        specimenHost.getBytes()));
+        specimenHost.getBytes(StandardCharsets.UTF_8)));
 
     // 16: In collectionFacility
     String inCollectionFacility = pidTypeService.resolveTypePid(
         request.getInCollectionFacilityPid());
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(IN_COLLECTION_FACILITY), handle, IN_COLLECTION_FACILITY,
-            inCollectionFacility.getBytes()));
+            inCollectionFacility.getBytes(StandardCharsets.UTF_8)));
 
     return handleRecord;
   }
@@ -355,12 +355,12 @@ public class HandleService {
     // 17: ObjectType
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(OBJECT_TYPE), handle, OBJECT_TYPE,
-            request.getObjectType().getBytes()));
+            request.getObjectType().getBytes(StandardCharsets.UTF_8)));
 
     // 18: preservedOrLiving
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(PRESERVED_OR_LIVING), handle, PRESERVED_OR_LIVING,
-            request.getPreservedOrLiving().getBytes()));
+            request.getPreservedOrLiving().getBytes(StandardCharsets.UTF_8)));
 
     return handleRecord;
   }
@@ -403,13 +403,13 @@ public class HandleService {
     byte[] handle = request.getHandle();
     List<HandleAttribute> handleRecord = new ArrayList<>();
     handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS, "ARCHIVED".getBytes()));
+        new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS, "ARCHIVED".getBytes(StandardCharsets.UTF_8)));
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(TOMBSTONE_TEXT), handle, TOMBSTONE_TEXT,
-        request.getTombstoneText().getBytes()));
+        request.getTombstoneText().getBytes(StandardCharsets.UTF_8)));
 
     if (request.getTombstonePids().length == 0) {
       handleRecord.add(new HandleAttribute(FIELD_IDX.get(TOMBSTONE_PIDS), handle, TOMBSTONE_PIDS,
-          "".getBytes()));
+          "".getBytes(StandardCharsets.UTF_8)));
     }
   }
 }

@@ -128,14 +128,14 @@ public class TestUtils {
   public static List<HandleAttribute> genHandleRecordAttributes(byte[] handle) {
 
     List<HandleAttribute> handleRecord = new ArrayList<>();
-    byte[] ptr_record = PTR_HANDLE_RECORD.getBytes();
+    byte[] ptr_record = PTR_HANDLE_RECORD.getBytes(StandardCharsets.UTF_8);
 
     // 100: Admin Handle
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(HS_ADMIN), handle, HS_ADMIN, genAdminHandle()));
 
     // 1: Pid
-    byte[] pid = ("https://hdl.handle.net/" + new String(handle)).getBytes();
+    byte[] pid = ("https://hdl.handle.net/" + new String(handle)).getBytes(StandardCharsets.UTF_8);
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(PID), handle, PID, pid));
 
     // 2: PidIssuer
@@ -153,7 +153,7 @@ public class TestUtils {
             ptr_record));
 
     // 5: 10320/loc
-    byte[] loc = "".getBytes();
+    byte[] loc = "".getBytes(StandardCharsets.UTF_8);
     try {
       loc = setLocations(LOC_TESTVAL);
     } catch (TransformerException | ParserConfigurationException e) {
@@ -163,27 +163,27 @@ public class TestUtils {
 
     // 6: Issue Date
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(ISSUE_DATE), handle, ISSUE_DATE,
-        ISSUE_DATE_TESTVAL.getBytes()));
+        ISSUE_DATE_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     // 7: Issue number
     handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(ISSUE_NUMBER), handle, ISSUE_NUMBER, "1".getBytes()));
+        new HandleAttribute(FIELD_IDX.get(ISSUE_NUMBER), handle, ISSUE_NUMBER, "1".getBytes(StandardCharsets.UTF_8)));
 
     // 8: PidStatus
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS,
-        PID_STATUS_TESTVAL.getBytes()));
+        PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     // 11: PidKernelMetadataLicense:
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(PID_KERNEL_METADATA_LICENSE), handle,
-            PID_KERNEL_METADATA_LICENSE, PID_KERNEL_METADATA_LICENSE_TESTVAL.getBytes()));
+            PID_KERNEL_METADATA_LICENSE, PID_KERNEL_METADATA_LICENSE_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     return handleRecord;
   }
 
   public static List<HandleAttribute> genDoiRecordAttributes(byte[] handle) {
     List<HandleAttribute> handleRecord = genHandleRecordAttributes(handle);
-    byte[] ptr_record = PTR_HANDLE_RECORD.getBytes();
+    byte[] ptr_record = PTR_HANDLE_RECORD.getBytes(StandardCharsets.UTF_8);
 
     // 12: Referent DOI Name
     handleRecord.add(
@@ -191,18 +191,18 @@ public class TestUtils {
             ptr_record));
     // 13: Referent
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(REFERENT), handle, REFERENT,
-        REFERENT_TESTVAL.getBytes()));
+        REFERENT_TESTVAL.getBytes(StandardCharsets.UTF_8)));
     return handleRecord;
   }
 
   public static List<HandleAttribute> genDigitalSpecimenAttributes(byte[] handle) {
     List<HandleAttribute> handleRecord = genDoiRecordAttributes(handle);
-    byte[] ptr_record = PTR_HANDLE_RECORD.getBytes();
+    byte[] ptr_record = PTR_HANDLE_RECORD.getBytes(StandardCharsets.UTF_8);
 
     // 14: digitalOrPhysical
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(DIGITAL_OR_PHYSICAL), handle, DIGITAL_OR_PHYSICAL,
-            DIGITAL_OR_PHYSICAL_TESTVAL.getBytes()));
+            DIGITAL_OR_PHYSICAL_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     // 15: specimenHost
     handleRecord.add(
@@ -220,46 +220,13 @@ public class TestUtils {
 
     // 17: ObjectType
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(OBJECT_TYPE), handle, OBJECT_TYPE,
-        OBJECT_TYPE_TESTVAL.getBytes()));
+        OBJECT_TYPE_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     // 18: preservedOrLiving
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(PRESERVED_OR_LIVING), handle, PRESERVED_OR_LIVING,
-            PRESERVED_OR_LIVING_TESTVAL.getBytes()));
+            PRESERVED_OR_LIVING_TESTVAL.getBytes(StandardCharsets.UTF_8)));
     return handleRecord;
-  }
-  
-  // Batch Handle Attribute Lists
-  public static List<HandleAttribute> genHandleRecordAttributesBatch(List<byte[]> handles) {
-    List<HandleAttribute> handleList = new ArrayList<>();
-    for (byte[] h : handles) {
-      handleList.addAll(genHandleRecordAttributes(h));
-    }
-    return handleList;
-  }
-
-  public static List<HandleAttribute> genDoiRecordAttributesBatch(List<byte[]> handles) {
-    List<HandleAttribute> handleList = new ArrayList<>();
-    for (byte[] h : handles) {
-      handleList.addAll(genDoiRecordAttributes(h));
-    }
-    return handleList;
-  }
-
-  public static List<HandleAttribute> genDigitalSpecimenRecordAttributesBatch(List<byte[]> handles) {
-    List<HandleAttribute> handleList = new ArrayList<>();
-    for (byte[] h : handles) {
-      handleList.addAll(genDigitalSpecimenAttributes(h));
-    }
-    return handleList;
-  }
-
-  public static List<HandleAttribute> genDigitalSpecimenRecordBotanyAttributesBatch(List<byte[]> handles) {
-    List<HandleAttribute> handleList = new ArrayList<>();
-    for (byte[] h : handles) {
-      handleList.addAll(genDigitalSpecimenBotanyAttributes(h));
-    }
-    return handleList;
   }
 
   // Single Requests
@@ -467,7 +434,7 @@ public class TestUtils {
   // Other Functions
 
   private static String getLocString() {
-    byte[] loc = "".getBytes();
+    byte[] loc = "".getBytes(StandardCharsets.UTF_8);
     try {
       loc = setLocations(LOC_TESTVAL);
     } catch (TransformerException | ParserConfigurationException e) {

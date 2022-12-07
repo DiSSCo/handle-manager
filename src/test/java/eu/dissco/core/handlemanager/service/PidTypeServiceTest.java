@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
 import eu.dissco.core.handlemanager.testUtils.TestUtils;
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
@@ -73,7 +74,7 @@ class PidTypeServiceTest {
   }
 
   private void initTestPidTypeRecordHandle() {
-    recordPid = TestUtils.PID_ISSUER_PID.getBytes();
+    recordPid = TestUtils.PID_ISSUER_PID.getBytes(StandardCharsets.UTF_8);
     pid = TestUtils.PTR_PID;
     pidType = TestUtils.PTR_TYPE;
     primaryNameFromPid = TestUtils.PTR_PRIMARY_NAME;
@@ -82,7 +83,7 @@ class PidTypeServiceTest {
   }
 
   private void initTestPidTypeRecordDoi() {
-    recordPid = TestUtils.PID_ISSUER_PID.getBytes();
+    recordPid = TestUtils.PID_ISSUER_PID.getBytes(StandardCharsets.UTF_8);
     pid = TestUtils.PTR_PID_DOI;
     pidType = TestUtils.PTR_TYPE_DOI;
     primaryNameFromPid = TestUtils.PTR_PRIMARY_NAME;
@@ -94,15 +95,15 @@ class PidTypeServiceTest {
   private List<HandleAttribute> initTestPidTypeRecord(boolean isDoi) {
     List<HandleAttribute> record = new ArrayList<>();
 
-    record.add(new HandleAttribute(1, recordPid, "pid", pid.getBytes()));
-    record.add(new HandleAttribute(2, recordPid, "pidType", pidType.getBytes()));
+    record.add(new HandleAttribute(1, recordPid, "pid", pid.getBytes(StandardCharsets.UTF_8)));
+    record.add(new HandleAttribute(2, recordPid, "pidType", pidType.getBytes(StandardCharsets.UTF_8)));
     record.add(
-        new HandleAttribute(3, recordPid, "primaryNameFromPid", primaryNameFromPid.getBytes()));
+        new HandleAttribute(3, recordPid, "primaryNameFromPid", primaryNameFromPid.getBytes(StandardCharsets.UTF_8)));
 
     if (isDoi) {
       registrationAgencyDoiName = TestUtils.PTR_REGISTRATION_DOI_NAME;
       record.add(new HandleAttribute(4, recordPid, "registrationAgencyDoiName",
-          registrationAgencyDoiName.getBytes()));
+          registrationAgencyDoiName.getBytes(StandardCharsets.UTF_8)));
     }
     return record;
   }

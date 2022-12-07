@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +27,8 @@ public class PidTypeService {
     if (typePid == null) {
       throw new PidResolutionException("Missing PID in request body.");
     }
-    List<HandleAttribute> typeRecord = handleRep.resolveHandleAttributes(typePid.getBytes());
+    List<HandleAttribute> typeRecord = handleRep.resolveHandleAttributes(typePid.getBytes(
+        StandardCharsets.UTF_8));
     if (typeRecord.isEmpty()) {
       throw new PidResolutionException("Unable to resolve type PID");
     }

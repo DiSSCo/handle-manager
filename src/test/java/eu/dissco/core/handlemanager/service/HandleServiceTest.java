@@ -301,8 +301,8 @@ class HandleServiceTest {
 
   private void initHandleList() {
     handlesList = new ArrayList<>();
-    handlesList.add(HANDLE.getBytes());
-    handlesList.add(HANDLE_ALT.getBytes());
+    handlesList.add(HANDLE.getBytes(StandardCharsets.UTF_8));
+    handlesList.add(HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
   }
 
 

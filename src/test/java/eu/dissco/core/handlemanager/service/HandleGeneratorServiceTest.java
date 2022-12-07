@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.BDDMockito.given;
 
 import eu.dissco.core.handlemanager.repository.HandleRepository;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -99,8 +100,8 @@ class HandleGeneratorServiceTest {
   void testDbCollision() {
 
     // Given
-    byte[] expectedHandle1 = "20.5000.1025/BBB-BBB-BBB".getBytes();
-    byte[] expectedHandle2 = "20.5000.1025/ABB-BBB-BBB".getBytes();
+    byte[] expectedHandle1 = "20.5000.1025/BBB-BBB-BBB".getBytes(StandardCharsets.UTF_8);
+    byte[] expectedHandle2 = "20.5000.1025/ABB-BBB-BBB".getBytes(StandardCharsets.UTF_8);
 
     List<byte[]> handleListInternalDuplicate = new ArrayList<>();
     handleListInternalDuplicate.add(expectedHandle1);

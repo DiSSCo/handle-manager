@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +43,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   @Test
   void testCreateHandleJson() throws PidCreationException, JsonProcessingException {
     // Given
-    byte[] handle = HANDLE.getBytes();
+    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> attributes = genHandleRecordAttributes(handle);
     ObjectNode responseExpected = genObjectNodeRecord(attributes);
 
@@ -58,7 +59,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   @Test
   void testCreateDoiJson() throws PidCreationException, JsonProcessingException {
     // Given
-    byte[] handle = HANDLE.getBytes();
+    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> attributes = genDoiRecordAttributes(handle);
     ObjectNode responseExpected = genObjectNodeRecord(attributes);
 
@@ -74,7 +75,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   @Test
   void testCreateDigitalSpecimenJson() throws PidCreationException, JsonProcessingException {
     // Given
-    byte[] handle = HANDLE.getBytes();
+    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> attributes = genDigitalSpecimenAttributes(handle);
     ObjectNode responseExpected = genObjectNodeRecord(attributes);
 
@@ -86,13 +87,12 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     assertThat(responseExpected).isEqualTo(responseReceived);
     assertThat(postedRecord).hasSize(attributes.size());
   }
-/*
+
   @Test
   void testCreateDigitalSpecimenBotanyJson() throws PidCreationException, JsonProcessingException {
     // Given
-
-    byte[] handle = HANDLE.getBytes();
-    List<HandleAttribute> attributes = generateTestDigitalSpecimenBotanyAttributes(handle);
+    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
+    List<HandleAttribute> attributes = genDigitalSpecimenBotanyAttributes(handle);
     ObjectNode responseExpected = genObjectNodeRecord(attributes);
 
     // When
@@ -104,155 +104,112 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     assertThat(postedRecord).hasSize(attributes.size());
   }
 
-
   @Test
-  void testCreateHandleBatch() throws PidCreationException {
-    // Given    
-    List<byte[]> handleList = new ArrayList<>();
-    handleList.add(HANDLE.getBytes());
-    handleList.add(HANDLE_ALT.getBytes());
-
-    List<HandleAttribute> attributes = generateBatchHandleAttributeList(handleList);
-    List<HandleRecordResponse> responseExpected = generateBatchHandleResponse(handleList);
-
-    // When
-    List<HandleRecordResponse> responseReceived = handleRep.createHandleRecordBatch(handleList,
-        CREATED, attributes);
-
-    // Then
-    var postedRecord = context.selectFrom(HANDLES).fetch();
-    assertThat(responseExpected).isEqualTo(responseReceived);
-    assertThat(postedRecord).hasSize(attributes.size());
-  }
-
-  @Test
-  void testCreateDoiBatch() throws PidCreationException {
+  void testCreateHandleRecordBatchJson() throws Exception {
     // Given
-    List<byte[]> handleList = new ArrayList<>();
-    handleList.add(HANDLE.getBytes());
-    handleList.add(HANDLE_ALT.getBytes());
+    List<byte[]> handles = List.of(
+        HANDLE.getBytes(StandardCharsets.UTF_8),
+        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
-    List<HandleAttribute> attributes = generateBatchDoiAttributeList(handleList);
-    List<DoiRecordResponse> responseExpected = generateBatchDoiResponse(handleList);
+    List<List<HandleAttribute>> aggrList = new ArrayList<>();
+    List<HandleAttribute> flatList = new ArrayList<>();
+    List<HandleAttribute> singleRecord;
+
+    for (byte[] handle : handles){
+      singleRecord = genHandleRecordAttributes(handle);
+      flatList.addAll(singleRecord);
+      aggrList.add(new ArrayList<>(singleRecord));
+    }
+    List<ObjectNode> responseExpected = genObjectNodeRecordBatch(aggrList);
 
     // When
-    List<DoiRecordResponse> responseReceived = handleRep.createDoiRecordBatch(handleList, CREATED,
-        attributes);
+    List<ObjectNode> responseReceived = handleRep.createHandleRecordBatchJson(handles, CREATED, flatList);
+    var postedRecord = context.selectFrom(HANDLES).fetch();
 
     // Then
-    var postedRecord = context.selectFrom(HANDLES).fetch();
     assertThat(responseExpected).isEqualTo(responseReceived);
-    assertThat(postedRecord).hasSize(attributes.size());
+    assertThat(postedRecord).hasSize(flatList.size());
   }
 
   @Test
-  void testCreateDigitalSpecimenBatch() throws PidCreationException {
+  void testCreateDoiRecordBatchJson() throws Exception {
     // Given
-    List<byte[]> handleList = new ArrayList<>();
-    handleList.add(HANDLE.getBytes());
-    handleList.add(HANDLE_ALT.getBytes());
+    List<byte[]> handles = List.of(
+        HANDLE.getBytes(StandardCharsets.UTF_8),
+        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
-    List<HandleAttribute> attributes = generateBatchDigitalSpecimenAttributeList(handleList);
-    List<DigitalSpecimenResponse> responseExpected = generateBatchDigitalSpecimenResponse(
-        handleList);
+    List<List<HandleAttribute>> aggrList = new ArrayList<>();
+    List<HandleAttribute> flatList = new ArrayList<>();
+    List<HandleAttribute> singleRecord;
+
+    for (byte[] handle : handles){
+      singleRecord = genDoiRecordAttributes(handle);
+      flatList.addAll(singleRecord);
+      aggrList.add(new ArrayList<>(singleRecord));
+    }
+    List<ObjectNode> responseExpected = genObjectNodeRecordBatch(aggrList);
 
     // When
-    List<DigitalSpecimenResponse> responseReceived = handleRep.createDigitalSpecimenBatch(
-        handleList, CREATED, attributes);
+    List<ObjectNode> responseReceived = handleRep.createDoiRecordBatchJson(handles, CREATED, flatList);
+    var postedRecord = context.selectFrom(HANDLES).fetch();
 
     // Then
-    var postedRecord = context.selectFrom(HANDLES).fetch();
     assertThat(responseExpected).isEqualTo(responseReceived);
-    assertThat(postedRecord).hasSize(attributes.size());
+    assertThat(postedRecord).hasSize(flatList.size());
   }
 
   @Test
-  void testCreateDigitalSpecimenBotanyBatch() throws PidCreationException {
+  void testCreateDigitalSpecimenBatchJson() throws Exception {
     // Given
-    List<byte[]> handleList = new ArrayList<>();
-    handleList.add(HANDLE.getBytes());
-    handleList.add(HANDLE_ALT.getBytes());
+    List<byte[]> handles = List.of(
+        HANDLE.getBytes(StandardCharsets.UTF_8),
+        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
-    List<HandleAttribute> attributes = generateBatchDigitalSpecimenBotanyAttributeList(handleList);
-    List<DigitalSpecimenBotanyResponse> responseExpected = generateBatchDigitalSpecimenBotanyResponse(
-        handleList);
+    List<List<HandleAttribute>> aggrList = new ArrayList<>();
+    List<HandleAttribute> flatList = new ArrayList<>();
+    List<HandleAttribute> singleRecord;
+
+    for (byte[] handle : handles){
+      singleRecord = genDigitalSpecimenAttributes(handle);
+      flatList.addAll(singleRecord);
+      aggrList.add(new ArrayList<>(singleRecord));
+    }
+    List<ObjectNode> responseExpected = genObjectNodeRecordBatch(aggrList);
 
     // When
-    List<DigitalSpecimenBotanyResponse> responseReceived = handleRep.createDigitalSpecimenBotanyBatch(
-        handleList, CREATED, attributes);
+    List<ObjectNode> responseReceived = handleRep.createDigitalSpecimenBatchJson(handles, CREATED, flatList);
+    var postedRecord = context.selectFrom(HANDLES).fetch();
 
     // Then
-    var postedRecord = context.selectFrom(HANDLES).fetch();
     assertThat(responseExpected).isEqualTo(responseReceived);
-    assertThat(postedRecord).hasSize(attributes.size());
+    assertThat(postedRecord).hasSize(flatList.size());
   }
 
-  private List<HandleRecordResponse> generateBatchHandleResponse(List<byte[]> handleList) {
-    List<HandleRecordResponse> responseList = new ArrayList<>();
-    for (byte[] h : handleList) {
-      responseList.add(generateTestHandleResponse(h));
+  @Test
+  void testCreateDigitalSpecimenBotanyBatchJson() throws Exception {
+    // Given
+    List<byte[]> handles = List.of(
+        HANDLE.getBytes(StandardCharsets.UTF_8),
+        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
+
+    List<List<HandleAttribute>> aggrList = new ArrayList<>();
+    List<HandleAttribute> flatList = new ArrayList<>();
+    List<HandleAttribute> singleRecord;
+
+    for (byte[] handle : handles){
+      singleRecord = genDigitalSpecimenBotanyAttributes(handle);
+      flatList.addAll(singleRecord);
+      aggrList.add(new ArrayList<>(singleRecord));
     }
-    return responseList;
+    List<ObjectNode> responseExpected = genObjectNodeRecordBatch(aggrList);
+
+    // When
+    List<ObjectNode> responseReceived = handleRep.createDigitalSpecimenBotanyBatchJson(handles, CREATED, flatList);
+    var postedRecord = context.selectFrom(HANDLES).fetch();
+
+    // Then
+    assertThat(responseExpected).isEqualTo(responseReceived);
+    assertThat(postedRecord).hasSize(flatList.size());
   }
-
-  private List<DoiRecordResponse> generateBatchDoiResponse(List<byte[]> handleList) {
-    List<DoiRecordResponse> responseList = new ArrayList<>();
-    for (byte[] h : handleList) {
-      responseList.add(generateTestDoiResponse(h));
-    }
-    return responseList;
-  }
-
-  private List<DigitalSpecimenResponse> generateBatchDigitalSpecimenResponse(
-      List<byte[]> handleList) {
-    List<DigitalSpecimenResponse> responseList = new ArrayList<>();
-    for (byte[] h : handleList) {
-      responseList.add(generateTestDigitalSpecimenResponse(h));
-    }
-    return responseList;
-  }
-
-  private List<DigitalSpecimenBotanyResponse> generateBatchDigitalSpecimenBotanyResponse(
-      List<byte[]> handleList) {
-    List<DigitalSpecimenBotanyResponse> responseList = new ArrayList<>();
-    for (byte[] h : handleList) {
-      responseList.add(generateTestDigitalSpecimenBotanyResponse(h));
-    }
-    return responseList;
-  }
-
-  private List<HandleAttribute> generateBatchHandleAttributeList(List<byte[]> handleList) {
-    List<HandleAttribute> attributes = new ArrayList<>();
-    for (byte[] h : handleList) {
-      attributes.addAll(genHandleRecordAttributes(h));
-    }
-    return attributes;
-  }
-
-  private List<HandleAttribute> generateBatchDoiAttributeList(List<byte[]> handleList) {
-    List<HandleAttribute> attributes = new ArrayList<>();
-    for (byte[] h : handleList) {
-      attributes.addAll(genDoiRecordAttributes(h));
-    }
-    return attributes;
-  }
-
-  private List<HandleAttribute> generateBatchDigitalSpecimenAttributeList(List<byte[]> handleList) {
-    List<HandleAttribute> attributes = new ArrayList<>();
-    for (byte[] h : handleList) {
-      attributes.addAll(genDigitalSpecimenAttributes(h));
-    }
-    return attributes;
-  }
-
-  private List<HandleAttribute> generateBatchDigitalSpecimenBotanyAttributeList(
-      List<byte[]> handleList) {
-    List<HandleAttribute> attributes = new ArrayList<>();
-    for (byte[] h : handleList) {
-      attributes.addAll(generateTestDigitalSpecimenBotanyAttributes(h));
-    }
-    return attributes;
-  }*/
-
 
 }
