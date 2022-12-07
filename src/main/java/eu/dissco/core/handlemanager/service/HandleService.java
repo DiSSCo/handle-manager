@@ -1,25 +1,6 @@
 package eu.dissco.core.handlemanager.service;
 
-import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_SUBTYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OR_PHYSICAL;
-import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
-import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
-import static eu.dissco.core.handlemanager.domain.PidRecords.IN_COLLECTION_FACILITY;
-import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_DATE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_NUMBER;
-import static eu.dissco.core.handlemanager.domain.PidRecords.LOC;
-import static eu.dissco.core.handlemanager.domain.PidRecords.OBJECT_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_KERNEL_METADATA_LICENSE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PRESERVED_OR_LIVING;
-import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT;
-import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
-import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
-import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_PIDS;
-import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_TEXT;
+import static eu.dissco.core.handlemanager.domain.PidRecords.*;
 import static eu.dissco.core.handlemanager.utils.Resources.genAdminHandle;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -29,15 +10,7 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiData;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapper;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
-import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
-import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.TombstoneRecordRequest;
-import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenBotanyResponse;
-import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenResponse;
-import eu.dissco.core.handlemanager.domain.responses.DoiRecordResponse;
-import eu.dissco.core.handlemanager.domain.responses.HandleRecordResponse;
+import eu.dissco.core.handlemanager.domain.requests.*;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
@@ -83,7 +56,7 @@ public class HandleService {
   }
 
   public List<JsonApiWrapper> resolveBatchRecord(List<byte[]> handles)
-      throws JsonProcessingException {
+      throws JsonProcessingException, PidResolutionException {
     JsonApiData jsonData;
     JsonApiLinks links;
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
@@ -98,9 +71,11 @@ public class HandleService {
     }
     return wrapperList;
   }
-  
-  //  Batch
-  public List<HandleRecordResponse> createHandleRecordBatch(List<HandleRecordRequest> requests)
+
+  // Batch Creation Json
+
+
+  public List<JsonApiWrapper> createHandleRecordBatchJson(List<HandleRecordRequest> requests)
       throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
     List<byte[]> handles = hf.genHandleList(requests.size());
     List<HandleAttribute> handleAttributes = new ArrayList<>();
@@ -109,52 +84,95 @@ public class HandleService {
       handleAttributes.addAll(prepareHandleRecordAttributes(requests.get(i), handles.get(i)));
     }
     var recordTimestamp = Instant.now();
+    List<ObjectNode> postedRecordAttributes = handleRep.createHandleRecordBatchJson(handles, recordTimestamp, handleAttributes); 
 
-    return handleRep.createHandleRecordBatch(handles, recordTimestamp, handleAttributes);
+    JsonApiData jsonData;
+    JsonApiLinks links;
+    List<JsonApiWrapper> wrapperList = new ArrayList<>();
+
+    for (ObjectNode recordAttributes : postedRecordAttributes) {
+      String pid = mapper.writeValueAsString(recordAttributes.get("pid")); 
+      jsonData = new JsonApiData(pid.substring(pid.length() - 25), RECORD_TYPE_HANDLE, recordAttributes);
+      links = new JsonApiLinks(pid);
+
+      wrapperList.add(new JsonApiWrapper(links, jsonData));
+    }
+    return wrapperList;
   }
 
-  public List<DoiRecordResponse> createDoiRecordBatch(List<DoiRecordRequest> requests)
+  public List<JsonApiWrapper> createDoiRecordBatchJson(List<DoiRecordRequest> requests)
       throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
     List<byte[]> handles = hf.genHandleList(requests.size());
-
     List<HandleAttribute> handleAttributes = new ArrayList<>();
 
     for (int i = 0; i < requests.size(); i++) {
       handleAttributes.addAll(prepareDoiRecordAttributes(requests.get(i), handles.get(i)));
     }
     var recordTimestamp = Instant.now();
-    return handleRep.createDoiRecordBatch(handles, recordTimestamp, handleAttributes);
+    List<ObjectNode> postedRecordAttributes = handleRep.createDoiRecordBatchJson(handles, recordTimestamp, handleAttributes);
+
+    JsonApiData jsonData;
+    JsonApiLinks links;
+    List<JsonApiWrapper> wrapperList = new ArrayList<>();
+
+    for (ObjectNode recordAttributes : postedRecordAttributes) {
+      String pid = mapper.writeValueAsString(recordAttributes.get("pid"));
+      jsonData = new JsonApiData(pid.substring(pid.length() - 25), RECORD_TYPE_DOI, recordAttributes);
+      links = new JsonApiLinks(pid);
+
+      wrapperList.add(new JsonApiWrapper(links, jsonData));
+    }
+    return wrapperList;
   }
 
-  public List<DigitalSpecimenResponse> createDigitalSpecimenBatch(
-      List<DigitalSpecimenRequest> requests)
+  public List<JsonApiWrapper> createDigitalSpecimenBatchJson(List<DigitalSpecimenRequest> requests)
       throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
     List<byte[]> handles = hf.genHandleList(requests.size());
     List<HandleAttribute> handleAttributes = new ArrayList<>();
 
     for (int i = 0; i < requests.size(); i++) {
-      handleAttributes.addAll(
-          prepareDigitalSpecimenRecordAttributes(requests.get(i), handles.get(i)));
+      handleAttributes.addAll(prepareDigitalSpecimenRecordAttributes(requests.get(i), handles.get(i)));
     }
     var recordTimestamp = Instant.now();
-    return handleRep.createDigitalSpecimenBatch(handles, recordTimestamp, handleAttributes);
+    List<ObjectNode> postedRecordAttributes = handleRep.createDigitalSpecimenBatchJson(handles, recordTimestamp, handleAttributes);
+
+    JsonApiData jsonData;
+    JsonApiLinks links;
+    List<JsonApiWrapper> wrapperList = new ArrayList<>();
+
+    for (ObjectNode recordAttributes : postedRecordAttributes) {
+      String pid = mapper.writeValueAsString(recordAttributes.get("pid"));
+      jsonData = new JsonApiData(pid.substring(pid.length() - 25), RECORD_TYPE_DS, recordAttributes);
+      links = new JsonApiLinks(pid);
+
+      wrapperList.add(new JsonApiWrapper(links, jsonData));
+    }
+    return wrapperList;
   }
 
-  public List<DigitalSpecimenBotanyResponse> createDigitalSpecimenBotanyBatch(
-      List<DigitalSpecimenBotanyRequest> requests)
+  public List<JsonApiWrapper> createDigitalSpecimenBotanyBatchJson(List<DigitalSpecimenBotanyRequest> requests)
       throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
     List<byte[]> handles = hf.genHandleList(requests.size());
-
     List<HandleAttribute> handleAttributes = new ArrayList<>();
 
     for (int i = 0; i < requests.size(); i++) {
-      handleAttributes.addAll(
-          prepareDigitalSpecimenBotanyRecordAttributes(requests.get(i), handles.get(i)));
+      handleAttributes.addAll(prepareDigitalSpecimenBotanyRecordAttributes(requests.get(i), handles.get(i)));
     }
-
     var recordTimestamp = Instant.now();
-    return handleRep.createDigitalSpecimenBotanyBatch(handles, recordTimestamp, handleAttributes);
+    List<ObjectNode> postedRecordAttributes = handleRep.createDigitalSpecimenBotanyBatchJson(handles, recordTimestamp, handleAttributes);
 
+    JsonApiData jsonData;
+    JsonApiLinks links;
+    List<JsonApiWrapper> wrapperList = new ArrayList<>();
+
+    for (ObjectNode recordAttributes : postedRecordAttributes) {
+      String pid = mapper.writeValueAsString(recordAttributes.get("pid"));
+      jsonData = new JsonApiData(pid.substring(pid.length() - 25), RECORD_TYPE_DS_BOTANY, recordAttributes);
+      links = new JsonApiLinks(pid);
+
+      wrapperList.add(new JsonApiWrapper(links, jsonData));
+    }
+    return wrapperList;
   }
 
   // Create Single Record
@@ -167,7 +185,7 @@ public class HandleService {
     var recordTimestamp = Instant.now();
 
     ObjectNode postedRecordAttributes = handleRep.createHandleRecordJson(handle, recordTimestamp, handleRecord);
-    JsonApiData jsonData = new JsonApiData(new String(handle), "handle", postedRecordAttributes);
+    JsonApiData jsonData = new JsonApiData(new String(handle), RECORD_TYPE_HANDLE, postedRecordAttributes);
     JsonApiLinks links = new JsonApiLinks(mapper.writeValueAsString(postedRecordAttributes.get("pid")));
     
     return new JsonApiWrapper(links, jsonData);
@@ -180,7 +198,7 @@ public class HandleService {
     var recordTimestamp = Instant.now();
 
     ObjectNode postedRecordAttributes = handleRep.createDoiRecordJson(handle, recordTimestamp, handleRecord);
-    JsonApiData jsonData = new JsonApiData(new String(handle), "doi", postedRecordAttributes);
+    JsonApiData jsonData = new JsonApiData(new String(handle), RECORD_TYPE_DOI, postedRecordAttributes);
     JsonApiLinks links = new JsonApiLinks(mapper.writeValueAsString(postedRecordAttributes.get("pid")));
     return new JsonApiWrapper(links, jsonData);
   }
@@ -192,7 +210,7 @@ public class HandleService {
     var recordTimestamp = Instant.now();
 
     ObjectNode postedRecordAttributes = handleRep.createDigitalSpecimenJson(handle, recordTimestamp, handleRecord);
-    JsonApiData jsonData = new JsonApiData(new String(handle), "digitalSpecimen", postedRecordAttributes);
+    JsonApiData jsonData = new JsonApiData(new String(handle), RECORD_TYPE_DS, postedRecordAttributes);
     JsonApiLinks links = new JsonApiLinks(mapper.writeValueAsString(postedRecordAttributes.get("pid")));
     return new JsonApiWrapper(links, jsonData);
   }
@@ -204,7 +222,7 @@ public class HandleService {
     var recordTimestamp = Instant.now();
 
     ObjectNode postedRecordAttributes = handleRep.createDigitalSpecimenBotanyJson(handle, recordTimestamp, handleRecord);
-    JsonApiData jsonData = new JsonApiData(new String(handle), "digitalSpecimenBotany", postedRecordAttributes);
+    JsonApiData jsonData = new JsonApiData(new String(handle), RECORD_TYPE_DS_BOTANY, postedRecordAttributes);
     JsonApiLinks links = new JsonApiLinks(mapper.writeValueAsString(postedRecordAttributes.get("pid")));
     return new JsonApiWrapper(links, jsonData);
   }

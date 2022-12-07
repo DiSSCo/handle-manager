@@ -117,7 +117,6 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
 
-
   @Test
   void testCreateHandleBatch() throws PidCreationException {
     // Given    

@@ -30,7 +30,7 @@ public record HandleAttribute(int index, byte[] handle, String type, byte[] data
     return "HandleAttribute{" +
         "index=" + index +
         ", type='" + type + '\'' +
-        ", data=" + Arrays.toString(data) +
+        ", data=" + new String(data) +
         '}';
   }
 }

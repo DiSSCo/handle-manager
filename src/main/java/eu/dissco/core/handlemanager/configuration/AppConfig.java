@@ -2,17 +2,29 @@ package eu.dissco.core.handlemanager.configuration;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import eu.dissco.core.handlemanager.repository.StatisticsListener;
 import java.util.Random;
+import javax.sql.DataSource;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerFactory;
+import org.jooq.DSLContext;
+import org.jooq.SQLDialect;
+import org.jooq.impl.DSL;
+import org.jooq.impl.DefaultConfiguration;
+import org.jooq.impl.DefaultExecuteListenerProvider;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.couchbase.CouchbaseProperties.Env;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 
 @Configuration
 public class AppConfig {
+  @Autowired
+  private DataSource dataSource;
 
   @Bean
   public DocumentBuilderFactory documentBuilderFactory() throws ParserConfigurationException {
@@ -41,5 +53,13 @@ public class AppConfig {
     return new Random();
   }
 
+@Bean
+  public DSLContext dslContext(){
+    DefaultConfiguration configuration = new DefaultConfiguration();
+    configuration.set(new DefaultExecuteListenerProvider(new StatisticsListener()));
+    configuration.set(dataSource);
+    configuration.set(SQLDialect.POSTGRES);
+    return DSL.using(configuration);
+  }
 
 }

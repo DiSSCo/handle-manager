@@ -101,7 +101,7 @@ class HandleServiceTest {
   }
 
   @Test
-  void testResolveBatchRecord() throws JsonProcessingException {
+  void testResolveBatchRecord() throws JsonProcessingException, PidResolutionException {
     // Given
     List<ObjectNode> repositoryResponse = new ArrayList<>();
     for (byte[] handle : handlesList){

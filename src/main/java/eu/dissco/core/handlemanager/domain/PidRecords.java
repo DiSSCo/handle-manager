@@ -19,24 +19,26 @@ public class PidRecords {
   public static final String ISSUE_NUMBER = "issueNumber";
   public static final String PID_STATUS = "pidStatus";
   public static final String PID_KERNEL_METADATA_LICENSE = "pidKernelMetadataLicense";
-
   // Doi
   public static final String REFERENT_DOI_NAME = "referentDoiName";
   public static final String REFERENT = "referent";
-
   // Digital Specimen
   public static final String DIGITAL_OR_PHYSICAL = "digitalOrPhysical";
   public static final String SPECIMEN_HOST = "specimenHost";
   public static final String IN_COLLECTION_FACILITY = "inCollectionFacility";
-
   // Digital Specimen Botany
   public static final String OBJECT_TYPE = "objectType";
   public static final String PRESERVED_OR_LIVING = "preservedOrLiving";
-
   // Tombstone
   public static final String TOMBSTONE_TEXT = "tombstoneText";
   public static final String TOMBSTONE_PIDS = "tombstonePids";
+  // Record types
+  public static final String RECORD_TYPE_HANDLE = "handle";
+  public static final String RECORD_TYPE_DOI = "doi";
+  public static final String RECORD_TYPE_DS = "digitalSpecimen";
+  public static final String RECORD_TYPE_DS_BOTANY = "digitalSpecimenBotany";
 
+  // Fields for each record typw
   public static final Set<String> HANDLE_RECORD;
   public static final Set<String> DOI_RECORD;
   public static final Set<String> DIGITAL_SPECIMEN;
