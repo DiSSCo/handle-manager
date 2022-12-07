@@ -174,7 +174,7 @@ public class HandleRepository {
   // Get List of Pids
   public List<String> getAllHandles(byte[] pidStatus, int pageNum, int pageSize) {
     return context
-        .selectDistinct(HANDLES.HANDLE, HANDLES.DATA)
+        .selectDistinct(HANDLES.HANDLE)
         .from(HANDLES)
         .where(HANDLES.TYPE.eq(PID_STATUS.getBytes(StandardCharsets.UTF_8)))
         .and(HANDLES.DATA.eq(pidStatus))

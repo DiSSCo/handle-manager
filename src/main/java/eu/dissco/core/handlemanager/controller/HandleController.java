@@ -33,7 +33,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @ControllerAdvice
 @Slf4j
-// @Profile(Profiles.WEB) Is there a digitalspecimenprofile Profile class?
 public class HandleController {
 
   private final HandleService service;
