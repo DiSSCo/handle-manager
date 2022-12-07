@@ -1,12 +1,13 @@
 package eu.dissco.core.handlemanager.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapper;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.HandleRecordRequest;
-import eu.dissco.core.handlemanager.exceptions.InvalidRecordInputException;
+import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.service.HandleService;
@@ -162,7 +163,7 @@ public class HandleController {
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
   }
 
-  @ExceptionHandler(InvalidRecordInputException.class)
+  @ExceptionHandler(InvalidRecordInput.class)
   private ResponseEntity<String> invalidRecordCreationException(PidCreationException e) {
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
   }
@@ -176,6 +177,23 @@ public class HandleController {
   private ResponseEntity<String> jsonProcessingException(JsonProcessingException e) {
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
         .body(e.getMessage());
+  }
+
+  @ExceptionHandler(UnrecognizedPropertyException.class)
+  private ResponseEntity<String> unrecognizedPropertyException(UnrecognizedPropertyException e) {
+    String message = String.format(
+        """
+        INVALID REQUEST: One or more request fields are inappropriate for the type of PID you are attempting to create.
+        Record Type: %s
+        Unrecognized Property: %s
+        This kind of record accepts these properties: %s
+        """,
+        e.getReferringClass().getSimpleName(),
+        e.getPropertyName(),
+        e.getKnownPropertyIds());
+
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(message);
   }
 
 }

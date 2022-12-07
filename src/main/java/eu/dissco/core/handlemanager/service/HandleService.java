@@ -39,7 +39,6 @@ import org.w3c.dom.Document;
 @RequiredArgsConstructor
 @Slf4j
 public class HandleService {
-
   private final HandleRepository handleRep;
   private final PidTypeService pidTypeService;
   private final HandleGeneratorService hf;

@@ -25,12 +25,12 @@ public class PidTypeService {
   public String resolveTypePid(String typePid)
       throws PidResolutionException, JsonProcessingException {
     if (typePid == null) {
-      throw new PidResolutionException("Missing PID in request body.");
+      throw new PidResolutionException("Missing a PID field in request body.");
     }
     List<HandleAttribute> typeRecord = handleRep.resolveHandleAttributes(typePid.getBytes(
         StandardCharsets.UTF_8));
     if (typeRecord.isEmpty()) {
-      throw new PidResolutionException("Unable to resolve type PID");
+      throw new PidResolutionException("Unable to resolve PID " +typePid);
     }
     String pid = getDataFromType("pid", typeRecord);
     String primaryNameFromPid = getDataFromType("primaryNameFromPid", typeRecord);
