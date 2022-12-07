@@ -60,6 +60,27 @@ class HandleControllerTest {
   }
 
   @Test
+  void testGetAllHandlesByPidStatus() throws Exception {
+    // Given
+    int pageSize = 10;
+    int pageNum = 1;
+    String pidStatus = "TEST";
+    String handle = HANDLE;
+    List<String> expectedHandles = new ArrayList<>();
+    for (int i = 0; i < pageSize; i++) {
+      expectedHandles.add(handle);
+    }
+    given(service.getHandlesPaged(pageNum, pageSize, pidStatus)).willReturn(expectedHandles);
+
+    // When
+    ResponseEntity<List<String>> response = controller.getAllHandlesByPidStatus(pageNum, pageSize, pidStatus);
+
+    // Then
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(expectedHandles).isEqualTo(response.getBody());
+  }
+
+  @Test
   void testResolveSingleHandle() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
@@ -276,8 +297,11 @@ class HandleControllerTest {
         () -> controller.createHandleRecordJson(request));
 
     // Then
-
   }
+
+
+
+
 
   
 }

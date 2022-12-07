@@ -2,6 +2,7 @@ package eu.dissco.core.handlemanager.repository;
 
 
 import static eu.dissco.core.handlemanager.database.jooq.Tables.HANDLES;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.*;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genObjectNodeRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenAttributes;
@@ -13,14 +14,18 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import eu.dissco.core.handlemanager.database.jooq.tables.Handles;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import java.nio.charset.StandardCharsets;
+import java.sql.Array;
 import java.util.ArrayList;
 import java.util.List;
+import org.jooq.Query;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.core.parameters.P;
 
 class HandleRepositoryIT extends BaseRepositoryIT {
   private HandleRepository handleRep;
@@ -210,4 +215,39 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     assertThat(postedRecord).hasSize(flatList.size());
   }
 
+  // TODO - How to post to context?
+  void testCheckDuplicateHandlesNoCollision(){
+    // Given
+    List<byte[]> handles = List.of(HANDLE.getBytes(StandardCharsets.UTF_8), HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
+    List<HandleAttribute> rows = List.of(
+        new HandleAttribute(1, handles.get(0), PID_STATUS, PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8)),
+        new HandleAttribute(1, handles.get(1), PID_STATUS, PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+    postAttributes(rows);
+
+    // When
+    List<byte[]> collisions = handleRep.checkDuplicateHandles(handles);
+
+    // Then
+    assertThat(collisions).isEmpty();
+
+  }
+
+  private void postAttributes(List<HandleAttribute> rows){
+    List<Query> queryList = new ArrayList<>();
+    for (var handleAttribute: rows){
+      var query = context.insertInto(Handles.HANDLES)
+          .set(Handles.HANDLES.HANDLE, handleAttribute.handle())
+          .set(Handles.HANDLES.IDX, handleAttribute.index())
+          .set(Handles.HANDLES.TYPE, handleAttribute.type().getBytes(StandardCharsets.UTF_8))
+          .set(Handles.HANDLES.DATA, handleAttribute.data())
+          .set(Handles.HANDLES.TTL, 86400)
+          .set(Handles.HANDLES.TIMESTAMP, CREATED.getEpochSecond())
+          .set(Handles.HANDLES.ADMIN_READ, true)
+          .set(Handles.HANDLES.ADMIN_WRITE, true)
+          .set(Handles.HANDLES.PUB_READ, true)
+          .set(Handles.HANDLES.PUB_WRITE, false);
+      queryList.add(query);
+    }
+    //context.batch(queryList).execute();
+  }
 }

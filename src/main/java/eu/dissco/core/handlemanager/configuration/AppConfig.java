@@ -1,6 +1,5 @@
 package eu.dissco.core.handlemanager.configuration;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.repository.StatisticsListener;
 import java.util.Random;
@@ -15,6 +14,8 @@ import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
 import org.jooq.impl.DefaultConfiguration;
 import org.jooq.impl.DefaultExecuteListenerProvider;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 @Configuration
@@ -38,8 +39,7 @@ public class AppConfig {
 
   @Bean
   public ObjectMapper objectMapper() {
-    return new ObjectMapper().findAndRegisterModules()
-        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    return new ObjectMapper().findAndRegisterModules();
   }
 
   @Bean
@@ -47,7 +47,7 @@ public class AppConfig {
     return new Random();
   }
 
-@Bean
+  @Bean
   public DSLContext dslContext(DataSource dataSource){
     DefaultConfiguration configuration = new DefaultConfiguration();
     configuration.set(new DefaultExecuteListenerProvider(new StatisticsListener()));
@@ -55,5 +55,4 @@ public class AppConfig {
     configuration.set(SQLDialect.POSTGRES);
     return DSL.using(configuration);
   }
-
 }

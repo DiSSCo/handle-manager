@@ -3,6 +3,7 @@ package eu.dissco.core.handlemanager.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
 
 import eu.dissco.core.handlemanager.repository.HandleRepository;
@@ -107,7 +108,7 @@ class HandleGeneratorServiceTest {
     handleListInternalDuplicate.add(expectedHandle1);
 
     given(random.nextInt(anyInt())).willReturn(0, 1);
-    given(handleRep.checkDuplicateHandles(any(List.class)))
+    given(handleRep.checkDuplicateHandles(anyList()))
         .willReturn(handleListInternalDuplicate)
         .willReturn(new ArrayList<>());
 

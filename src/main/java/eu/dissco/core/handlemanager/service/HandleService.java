@@ -236,7 +236,7 @@ public class HandleService {
 
   // Getters
 
-  public List<String> getHandlesPaged(String pidStatus, int pageNum, int pageSize) {
+  public List<String> getHandlesPaged(int pageNum, int pageSize, String pidStatus) {
     return handleRep.getAllHandles(pidStatus.getBytes(StandardCharsets.UTF_8), pageNum, pageSize);
   }
 

@@ -6,6 +6,7 @@ import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.HandleRecordRequest;
+import eu.dissco.core.handlemanager.exceptions.InvalidRecordInputException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.service.HandleService;
@@ -142,12 +143,12 @@ public class HandleController {
 
   @GetMapping(value = "/all", params = {"pidStatus", "pageNum", "pageSize"})
   public ResponseEntity<List<String>> getAllHandlesByPidStatus(
-      @RequestParam(name = "pidStatus") String pidStatus,
       @RequestParam(value = "pageNum", defaultValue = "0") int pageNum,
-      @RequestParam(value = "pageSize", defaultValue = "100") int pageSize)
+      @RequestParam(value = "pageSize", defaultValue = "100") int pageSize,
+      @RequestParam(name = "pidStatus") String pidStatus)
       throws PidResolutionException {
 
-    List<String> handleList = service.getHandlesPaged(pidStatus, pageNum, pageSize);
+    List<String> handleList = service.getHandlesPaged(pageNum, pageSize, pidStatus);
     if (handleList.isEmpty()) {
       throw new PidResolutionException("Unable to resolve pids");
     }
@@ -158,6 +159,11 @@ public class HandleController {
 
   @ExceptionHandler(PidCreationException.class)
   private ResponseEntity<String> pidCreationException(PidCreationException e) {
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+  }
+
+  @ExceptionHandler(InvalidRecordInputException.class)
+  private ResponseEntity<String> invalidRecordCreationException(PidCreationException e) {
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
   }
 

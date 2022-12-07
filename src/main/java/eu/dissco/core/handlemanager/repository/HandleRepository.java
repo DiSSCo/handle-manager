@@ -221,7 +221,6 @@ public class HandleRepository {
     }
     context.batch(queryList).execute();
 
-
     log.info("------------------------");
     log.info("STATISTICS");
     log.info("------------------------");
