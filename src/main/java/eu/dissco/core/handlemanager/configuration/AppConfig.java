@@ -15,16 +15,10 @@ import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
 import org.jooq.impl.DefaultConfiguration;
 import org.jooq.impl.DefaultExecuteListenerProvider;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.couchbase.CouchbaseProperties.Env;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
-
 @Configuration
 public class AppConfig {
-  @Autowired
-  private DataSource dataSource;
 
   @Bean
   public DocumentBuilderFactory documentBuilderFactory() throws ParserConfigurationException {
@@ -54,7 +48,7 @@ public class AppConfig {
   }
 
 @Bean
-  public DSLContext dslContext(){
+  public DSLContext dslContext(DataSource dataSource){
     DefaultConfiguration configuration = new DefaultConfiguration();
     configuration.set(new DefaultExecuteListenerProvider(new StatisticsListener()));
     configuration.set(dataSource);

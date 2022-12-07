@@ -8,7 +8,7 @@ import org.jooq.impl.DefaultExecuteListener;
 
 public class StatisticsListener extends DefaultExecuteListener {
 
-  public static final Map<ExecuteType, Integer> STATISTICS = new ConcurrentHashMap<>();
+  protected static final Map<ExecuteType, Integer> STATISTICS = new ConcurrentHashMap<>();
 
   @Override
   public void start(ExecuteContext ctx) {
