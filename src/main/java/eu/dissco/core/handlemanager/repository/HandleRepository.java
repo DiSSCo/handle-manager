@@ -13,8 +13,10 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
@@ -33,8 +35,6 @@ public class HandleRepository {
   private static final String INVALID_FIELD_ERROR = "Error: Attempting to add an invalid field into a pid record. Field: %s, Data: %s";
   private static final String FIELD_MISMATCH_ERROR = "Field mismatch: attempting to add a forbidden field in the record schema. Check ";
   private static final String PID_ROLLBACK_MESSAGE = "An error has occured posting the record. Reason: %s. Rolling back";
-  private static final String TOO_MANY_FIELDS_ERROR = "Inappropriate record has been created. Reason: Too many fields created for type of record. Expected type = %s. Superfluous fields = %s";
-  private static final String INSUFFICIENT_FIELDS_ERROR = "Inappropriate record has been created. Reason: Missing fields for type this of record. Expected type = %s. Missing fields = %s";
   private final DSLContext context;
   private final ObjectMapper mapper;
 
@@ -59,23 +59,21 @@ public class HandleRepository {
 
   public List<ObjectNode> resolveBatchRecord(List<byte[]> handles) throws PidResolutionException {
     var dbRecord = resolveHandleAttributes(handles);
-    var aggrRecord = aggregateRecords(dbRecord);
-
+    var handleMap = mapRecords(dbRecord);
 
     List<ObjectNode> rootNodeList = new ArrayList<>();
-    Set<byte[]> unresolvedHandles = new HashSet<>(handles);
+    Set<String> resolvedHandles = new HashSet<>();
+    Set<String> allHandles = handleMap.keySet();
 
-    int i = handles.size()-1;
 
-    for (List<HandleAttribute> handleRecord : aggrRecord) {
-      rootNodeList.add(jsonFormatSingleRecord(handleRecord));
-      unresolvedHandles.remove(handles.get(i));
-      i--;
+    for (Map.Entry<String, List<HandleAttribute>> handleRecord : handleMap.entrySet()){
+      rootNodeList.add(jsonFormatSingleRecord(handleRecord.getValue()));
+      resolvedHandles.add(handleRecord.getKey());
     }
 
-    if (!unresolvedHandles.isEmpty()){
-      log.warn("Unresolved handles:" + unresolvedHandles);
-      throw new PidResolutionException("Unable to resolve the following handles: " + unresolvedHandles);
+    allHandles.removeAll(resolvedHandles);
+    if (!allHandles.isEmpty()){
+      throw new PidResolutionException("PID RESOLUTION ERROR. Unable to resolve the following handles: " + allHandles);
     }
     return rootNodeList;
   }
@@ -201,39 +199,23 @@ public class HandleRepository {
     context.batch(queryList).execute();
   }
 
-  private List<List<HandleAttribute>> aggregateRecords(List<HandleAttribute> flatList) {
+  private HashMap<String, List<HandleAttribute>> mapRecords(List<HandleAttribute> flatList) {
 
-    byte[] handle = flatList.get(0).handle(); // First handle retrieved
-    List<List<HandleAttribute>> aggrList = new ArrayList<>();
-    List<HandleAttribute> singleRecord = new ArrayList<>();
-
-    int endOfList = flatList.size() - 1;
-    int i = 0;
-
-    // Our database result is a list of all rows posted (functionally decoupled from their handle id)
-    // Where each "group" of handles is a handle record
+    HashMap<String, List<HandleAttribute>> handleMap = new HashMap<>();
 
     for (HandleAttribute row : flatList) {
-      if (Arrays.equals(handle, row.handle()) && i < endOfList) {
-        // While previous handle = current handle, add this row to the handle record
-        singleRecord.add(row);
-      } else if (i == endOfList) {
-        // Special case for end of list
-        singleRecord.add(row);
-        aggrList.add(singleRecord);
-      } else {
-        // If we've found all rows under a given handle, create a response from those rows
-        aggrList.add(new ArrayList<>(singleRecord));
-        if (i < endOfList -1) {
-          // if this is not the last record in the fetch, we clear the list for the next handle record
-          singleRecord.clear();
-        }
-        singleRecord.add(row);
-        handle = row.handle();
+      String handle = new String(row.handle());
+      if (handleMap.containsKey(handle)){
+        var tmpList = new ArrayList<HandleAttribute>(handleMap.get(handle));
+        tmpList.add(row);
+        handleMap.replace(handle, tmpList);
       }
-      i++;
+      else{
+        handleMap.put(handle, List.of(row));
+        log.info("adding");
+      }
     }
-    return aggrList;
+    return handleMap;
   }
 
   // Rollback

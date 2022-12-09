@@ -152,16 +152,25 @@ public class HandleController {
   public ResponseEntity<JsonApiWrapper> updateHandleRecord(
       @RequestBody ObjectNode request)
       throws InvalidRecordInput, PidResolutionException, IOException, ParserConfigurationException, TransformerException, PidCreationException {
+
     JsonNode data = request.get("data");
     byte[] handle = data.get("id").asText().getBytes(StandardCharsets.UTF_8);
     String recordType = data.get("type").asText();
-    Set<String> recordFields = getRecordFields(recordType);
-
     JsonNode requestAttributes = data.get("attributes");
-
     return ResponseEntity.status(HttpStatus.OK)
-        .body(service.updateRecord(requestAttributes, handle, recordFields, recordType));
+        .body(service.updateRecord(requestAttributes, handle, recordType));
   }
+
+  @PreAuthorize("isAuthenticated()")
+  @PatchMapping(value = "/records")
+  public ResponseEntity<List<JsonApiWrapper>> updateHandleRecords(
+      @RequestBody List<ObjectNode> request)
+      throws InvalidRecordInput, PidResolutionException, IOException, ParserConfigurationException, TransformerException, PidCreationException {
+
+    return ResponseEntity.status(HttpStatus.OK).body(service.updateRecordBatch(request));
+  }
+
+
 
   // Hellos and getters
   @GetMapping(value = "/health")
@@ -194,26 +203,6 @@ public class HandleController {
       throw new PidResolutionException("Unable to resolve pids");
     }
     return ResponseEntity.ok(handleList);
-  }
-
-  private Set<String> getRecordFields(String recordType) throws InvalidRecordInput {
-    switch (recordType) {
-      case RECORD_TYPE_HANDLE -> {
-        return HANDLE_RECORD_REQ;
-      }
-      case RECORD_TYPE_DOI -> {
-        return DOI_RECORD_REQ;
-      }
-      case RECORD_TYPE_DS -> {
-        return  DIGITAL_SPECIMEN_REQ;
-      }
-      case RECORD_TYPE_DS_BOTANY -> {
-        return DIGITAL_SPECIMEN_BOTANY_REQ;
-      }
-      default -> {
-        throw new InvalidRecordInput("Invalid request. Reason: unknown record type.");
-      }
-    }
   }
 
   //Error Handling

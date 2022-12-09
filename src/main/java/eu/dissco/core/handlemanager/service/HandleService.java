@@ -266,52 +266,110 @@ public class HandleService {
   }
 
   // Update
-  public void updateRecordBatch(List<JsonNode> request){
+  public List<JsonApiWrapper> updateRecordBatch(List<ObjectNode> requests)
+      throws InvalidRecordInput, PidResolutionException, ParserConfigurationException, IOException, TransformerException {
+    var recordTimestamp = Instant.now();
+    List<byte[]> handles = new ArrayList<>();
+    List<List<HandleAttribute>> attributesToUpdate = new ArrayList<>();
+    List<String> recordTypes = new ArrayList<>();
+    List<JsonNode> checkedRequests = new ArrayList<>();
 
+    for (JsonNode root : requests){
+      JsonNode data = root.get("data");
+      JsonNode requestAttributes = data.get("attributes");
+      String recordType = data.get("type").asText();
+      recordTypes.add(recordType);
+      byte[] handle = data.get("id").asText().getBytes(StandardCharsets.UTF_8);
+      handles.add(handle);
+      validateRequestData(handle, requestAttributes, recordType);
+      attributesToUpdate.add(prepareUpdateAttributes(handle, requestAttributes));
+    }
+    List<ObjectNode> updatedRecords = handleRep.updateRecordBatch(handles, recordTimestamp, attributesToUpdate);
+
+    List<JsonApiWrapper> wrapperList = new ArrayList<>();
+    int i = 0;
+
+    for (ObjectNode updatedRecord : updatedRecords) {
+      String pidLink = mapper.writeValueAsString(updatedRecord.get("pid"));
+      String pidName = getPidName(pidLink);
+      JsonApiData jsonData = new JsonApiData(pidName, recordTypes.get(i), updatedRecord);
+      JsonApiLinks links = new JsonApiLinks(pidLink);
+      wrapperList.add(new JsonApiWrapper(links, jsonData));
+    }
+    return wrapperList;
   }
 
 
 
-
-  public JsonApiWrapper updateRecord(JsonNode request, byte[] handle, Set<String> recordFields,
-      String recordType)
+  public JsonApiWrapper updateRecord(JsonNode request, byte[] handle, String recordType)
       throws InvalidRecordInput, PidResolutionException, IOException, ParserConfigurationException, TransformerException, PidCreationException {
 
     var recordTimestamp = Instant.now();
 
+    request = validateRequestData(handle, request, recordType);
+    List<HandleAttribute> attributesToUpdate = prepareUpdateAttributes(handle, request);
+
+    // Update record
+    ObjectNode updatedRecord = handleRep.updateRecord(recordTimestamp, attributesToUpdate);
+
+    // Package response
+    JsonApiData jsonData = new JsonApiData(new String(handle), recordType, updatedRecord);
+    JsonApiLinks links = new JsonApiLinks(
+        mapper.writeValueAsString(updatedRecord.get("pid")));
+    return new JsonApiWrapper(links, jsonData);
+  }
+
+  private JsonNode validateRequestData(byte[] handle, JsonNode request, String recordType)
+      throws ParserConfigurationException, IOException, TransformerException, InvalidRecordInput, PidResolutionException {
     List<String> keys = new ArrayList<>();
     Iterator<String> fieldItr = request.fieldNames();
     fieldItr.forEachRemaining(keys::add);
 
+    JsonNode requestUpdated = request;
+
     // Data Ingestion Checks
+    Set<String> recordFields = getRecordFields(recordType);
     checkFields(keys, recordFields, recordType);
     checkHandles(List.of(handle));
 
     // Format 10320/loc
     if (keys.contains(LOC_REQ)) {
-      request = setLocationFromJson(request);
+      requestUpdated = setLocationFromJson(request);
     }
+    return requestUpdated;
+  }
 
-    Map<String, String> updateRecord = mapper.convertValue(request,
-        new TypeReference<Map<String, String>>() {
-        });
-    List<HandleAttribute> attributesToUpdate = new ArrayList<>();
-
-    for (Map.Entry<String, String> requestField : updateRecord.entrySet()) {
-      String type = requestField.getKey().replace("Pid", "");
-      byte[] data = requestField.getValue().getBytes(StandardCharsets.UTF_8);
-
-      // Resolve data if it's a pid
-      if (FIELD_IS_PID_RECORD.contains(type)) {
-        data = (pidTypeService.resolveTypePid(new String(data))).getBytes(StandardCharsets.UTF_8);
+  private Set<String> getRecordFields(String recordType) throws InvalidRecordInput {
+    switch (recordType) {
+      case RECORD_TYPE_HANDLE -> {
+        return HANDLE_RECORD_REQ;
       }
-      attributesToUpdate.add(new HandleAttribute(FIELD_IDX.get(type), handle, type, data));
+      case RECORD_TYPE_DOI -> {
+        return DOI_RECORD_REQ;
+      }
+      case RECORD_TYPE_DS -> {
+        return  DIGITAL_SPECIMEN_REQ;
+      }
+      case RECORD_TYPE_DS_BOTANY -> {
+        return DIGITAL_SPECIMEN_BOTANY_REQ;
+      }
+      default -> {
+        throw new InvalidRecordInput("Invalid request. Reason: unknown record type.");
+      }
     }
-    ObjectNode updatedRecord = handleRep.updateRecord(recordTimestamp, attributesToUpdate);
-    JsonApiData jsonData = new JsonApiData(new String(handle), RECORD_TYPE_HANDLE, updatedRecord);
-    JsonApiLinks links = new JsonApiLinks(
-        mapper.writeValueAsString(updatedRecord.get("pid")));
-    return new JsonApiWrapper(links, jsonData);
+  }
+
+  private void checkFields(List<String> fields, Set<String> recordFields, String recordType)
+      throws InvalidRecordInput {
+    List<String> invalidFields = new ArrayList<>();
+    for (String field : fields) {
+      if (!recordFields.contains(field)) {
+        invalidFields.add(field);
+      }
+    }
+    if (!invalidFields.isEmpty()) {
+      throw new InvalidRecordInput(String.format(INVALID_FIELD_ERROR, recordType, invalidFields));
+    }
   }
 
   private void checkHandles(List<byte[]> handles) throws InvalidRecordInput, PidResolutionException {
@@ -330,6 +388,7 @@ public class HandleService {
     }
   }
 
+
   private Set<byte[]> findDuplicates(List<byte[]> handles, Set<byte[]> handlesToUpdate){
     Set<byte[]> duplicateHandles = new HashSet<>();
     for(byte[] handle : handles ){
@@ -340,10 +399,8 @@ public class HandleService {
     return duplicateHandles;
   }
 
-
   private JsonNode setLocationFromJson(JsonNode request)
       throws ParserConfigurationException, TransformerException, IOException {
-
     ObjectReader reader = mapper.readerFor(new TypeReference<List<String>>() {
     }); // make this a bean
     JsonNode locNode = request.get(LOC_REQ);
@@ -356,17 +413,23 @@ public class HandleService {
     return request;
   }
 
-  private void checkFields(List<String> fields, Set<String> recordFields, String recordType)
-      throws InvalidRecordInput {
-    List<String> invalidFields = new ArrayList<>();
-    for (String field : fields) {
-      if (!recordFields.contains(field)) {
-        invalidFields.add(field);
+
+  private List<HandleAttribute> prepareUpdateAttributes(byte[] handle, JsonNode request)
+      throws PidResolutionException, JsonProcessingException {
+    Map<String, String> updateRecord = mapper.convertValue(request, new TypeReference<Map<String, String>>() {});
+    List<HandleAttribute> attributesToUpdate = new ArrayList<>();
+
+    for (Map.Entry<String, String> requestField : updateRecord.entrySet()) {
+      String type = requestField.getKey().replace("Pid", "");
+      byte[] data = requestField.getValue().getBytes(StandardCharsets.UTF_8);
+
+      // Resolve data if it's a pid
+      if (FIELD_IS_PID_RECORD.contains(type)) {
+        data = (pidTypeService.resolveTypePid(new String(data))).getBytes(StandardCharsets.UTF_8);
       }
+      attributesToUpdate.add(new HandleAttribute(FIELD_IDX.get(type), handle, type, data));
     }
-    if (!invalidFields.isEmpty()) {
-      throw new InvalidRecordInput(String.format(INVALID_FIELD_ERROR, recordType, invalidFields));
-    }
+    return attributesToUpdate;
   }
 
   // Getters
@@ -553,5 +616,6 @@ public class HandleService {
           "".getBytes(StandardCharsets.UTF_8)));
     }
   }
+
 }
 

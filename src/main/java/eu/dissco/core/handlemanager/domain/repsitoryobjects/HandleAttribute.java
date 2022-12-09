@@ -28,6 +28,7 @@ public record HandleAttribute(int index, byte[] handle, String type, byte[] data
   @Override
   public String toString() {
     return "HandleAttribute{" +
+        "handle=" + new String(handle) +
         "index=" + index +
         ", type='" + type + '\'' +
         ", data=" + new String(data) +
