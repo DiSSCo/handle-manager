@@ -18,14 +18,12 @@ import eu.dissco.core.handlemanager.database.jooq.tables.Handles;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import java.nio.charset.StandardCharsets;
-import java.sql.Array;
 import java.util.ArrayList;
 import java.util.List;
 import org.jooq.Query;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.security.core.parameters.P;
 
 class HandleRepositoryIT extends BaseRepositoryIT {
   private HandleRepository handleRep;
@@ -51,7 +49,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     ObjectNode responseExpected = genObjectNodeRecord(attributes);
 
     // When
-    ObjectNode responseReceived = handleRep.createHandleRecordJson(handle, CREATED, attributes);
+    ObjectNode responseReceived = handleRep.createRecord(handle, CREATED, attributes);
     var postedRecord = context.selectFrom(HANDLES).fetch();
 
     // Then
@@ -67,7 +65,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     ObjectNode responseExpected = genObjectNodeRecord(attributes);
 
     // When
-    ObjectNode responseReceived = handleRep.createDoiRecordJson(handle, CREATED, attributes);
+    ObjectNode responseReceived = handleRep.createRecord(handle, CREATED, attributes);
     var postedRecord = context.selectFrom(HANDLES).fetch();
 
     // Then
@@ -83,7 +81,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     ObjectNode responseExpected = genObjectNodeRecord(attributes);
 
     // When
-    ObjectNode responseReceived = handleRep.createDigitalSpecimenJson(handle, CREATED, attributes);
+    ObjectNode responseReceived = handleRep.createRecord(handle, CREATED, attributes);
     var postedRecord = context.selectFrom(HANDLES).fetch();
 
     // Then
@@ -99,7 +97,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     ObjectNode responseExpected = genObjectNodeRecord(attributes);
 
     // When
-    ObjectNode responseReceived = handleRep.createDigitalSpecimenBotanyJson(handle, CREATED, attributes);
+    ObjectNode responseReceived = handleRep.createRecord(handle, CREATED, attributes);
     var postedRecord = context.selectFrom(HANDLES).fetch();
 
     // Then
@@ -126,7 +124,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     List<ObjectNode> responseExpected = genObjectNodeRecordBatch(aggrList);
 
     // When
-    List<ObjectNode> responseReceived = handleRep.createHandleRecordBatchJson(handles, CREATED, flatList);
+    List<ObjectNode> responseReceived = handleRep.createRecordBatchJson(handles, CREATED, flatList);
     var postedRecord = context.selectFrom(HANDLES).fetch();
 
     // Then
@@ -153,7 +151,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     List<ObjectNode> responseExpected = genObjectNodeRecordBatch(aggrList);
 
     // When
-    List<ObjectNode> responseReceived = handleRep.createDoiRecordBatchJson(handles, CREATED, flatList);
+    List<ObjectNode> responseReceived = handleRep.createRecordBatchJson(handles, CREATED, flatList);
     var postedRecord = context.selectFrom(HANDLES).fetch();
 
     // Then
@@ -180,7 +178,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     List<ObjectNode> responseExpected = genObjectNodeRecordBatch(aggrList);
 
     // When
-    List<ObjectNode> responseReceived = handleRep.createDigitalSpecimenBatchJson(handles, CREATED, flatList);
+    List<ObjectNode> responseReceived = handleRep.createRecordBatchJson(handles, CREATED, flatList);
     var postedRecord = context.selectFrom(HANDLES).fetch();
 
     // Then
@@ -207,7 +205,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     List<ObjectNode> responseExpected = genObjectNodeRecordBatch(aggrList);
 
     // When
-    List<ObjectNode> responseReceived = handleRep.createDigitalSpecimenBotanyBatchJson(handles, CREATED, flatList);
+    List<ObjectNode> responseReceived = handleRep.createRecordBatchJson(handles, CREATED, flatList);
     var postedRecord = context.selectFrom(HANDLES).fetch();
 
     // Then
@@ -225,7 +223,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     postAttributes(rows);
 
     // When
-    List<byte[]> collisions = handleRep.checkDuplicateHandles(handles);
+    List<byte[]> collisions = handleRep.checkHandlesExist(handles);
 
     // Then
     assertThat(collisions).isEmpty();

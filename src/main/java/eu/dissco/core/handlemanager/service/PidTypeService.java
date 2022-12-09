@@ -30,7 +30,8 @@ public class PidTypeService {
     List<HandleAttribute> typeRecord = handleRep.resolveHandleAttributes(typePid.getBytes(
         StandardCharsets.UTF_8));
     if (typeRecord.isEmpty()) {
-      throw new PidResolutionException("Unable to resolve PID " +typePid);
+      log.info(typePid);
+      throw new PidResolutionException("Unable to resolve PID: " +typePid + ", Reason: Record is empty");
     }
     String pid = getDataFromType("pid", typeRecord);
     String primaryNameFromPid = getDataFromType("primaryNameFromPid", typeRecord);

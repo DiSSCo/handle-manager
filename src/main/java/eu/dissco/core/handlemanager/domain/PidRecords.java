@@ -37,17 +37,32 @@ public class PidRecords {
   public static final String RECORD_TYPE_DOI = "doi";
   public static final String RECORD_TYPE_DS = "digitalSpecimen";
   public static final String RECORD_TYPE_DS_BOTANY = "digitalSpecimenBotany";
+  // Fields for requests
+  public static final String PID_ISSUER_REQ = "pidIssuerPid";
+  public static final String DIGITAL_OBJECT_TYPE_REQ = "digitalObjectTypePid";
+  public static final String DIGITAL_OBJECT_SUBTYPE_REQ = "digitalObjectSubtypePid";
+  public static final String LOC_REQ = "locations";
+  public static final String REFERENT_DOI_NAME_REQ = "referentDoiNamePid";
+  public static final String SPECIMEN_HOST_REQ = "specimenHostPid";
+  public static final String IN_COLLECTION_FACILITY_REQ = "inCollectionFacilityPid";
 
-  // Fields for each record typw
-  public static final Set<String> HANDLE_RECORD;
-  public static final Set<String> DOI_RECORD;
-  public static final Set<String> DIGITAL_SPECIMEN;
-  public static final Set<String> DIGITAL_SPECIMEN_BOTANY;
-  public static final Set<String> TOMBSTONE_RECORD;
+  // Permitted fields for each record type
+  public static final Set<String> HANDLE_RECORD_FIELDS;
+  public static final Set<String> DOI_RECORD_FIELDS;
+  public static final Set<String> DIGITAL_SPECIMEN_FIELDS;
+  public static final Set<String> DIGITAL_SPECIMEN_BOTANY_FIELDS;
+  public static final Set<String> TOMBSTONE_RECORD_FIELDS;
+  // Fields for request type (For checking update requests)
+  public static final Set<String> HANDLE_RECORD_REQ;
+  public static final Set<String> DOI_RECORD_REQ;
+  public static final Set<String> DIGITAL_SPECIMEN_REQ;
+  public static final Set<String> DIGITAL_SPECIMEN_BOTANY_REQ;
 
   public static final Set<String> FIELD_IS_PID_RECORD;
 
   public static final Map<String, Integer> FIELD_IDX;
+
+  public static final Map<String, Integer> REQ_FIELD_IDX;
 
 
   static { // Handle Record Fields
@@ -61,38 +76,71 @@ public class PidRecords {
     tmp.add(ISSUE_NUMBER);
     tmp.add(PID_STATUS);
     tmp.add(PID_KERNEL_METADATA_LICENSE);
-    HANDLE_RECORD = Collections.unmodifiableSet(tmp);
+    HANDLE_RECORD_FIELDS = Collections.unmodifiableSet(tmp);
   }
 
   static { // Doi Record Fields
-    Set<String> tmp = new HashSet<>(HANDLE_RECORD);
+    Set<String> tmp = new HashSet<>(HANDLE_RECORD_FIELDS);
     tmp.add(REFERENT_DOI_NAME);
     tmp.add(REFERENT);
-    DOI_RECORD = Collections.unmodifiableSet(tmp);
+    DOI_RECORD_FIELDS = Collections.unmodifiableSet(tmp);
   }
 
   static { // Digital Specimen Fields
-    Set<String> tmp = new HashSet<>(DOI_RECORD);
+    Set<String> tmp = new HashSet<>(DOI_RECORD_FIELDS);
     tmp.add(DIGITAL_OR_PHYSICAL);
     tmp.add(SPECIMEN_HOST);
     tmp.add(IN_COLLECTION_FACILITY);
-    DIGITAL_SPECIMEN = Collections.unmodifiableSet(tmp);
+    DIGITAL_SPECIMEN_FIELDS = Collections.unmodifiableSet(tmp);
   }
 
   static { // Digital Specimen Botany Fields
-    Set<String> tmp = new HashSet<>(DIGITAL_SPECIMEN);
+    Set<String> tmp = new HashSet<>(DIGITAL_SPECIMEN_FIELDS);
     tmp.add(OBJECT_TYPE);
     tmp.add(PRESERVED_OR_LIVING);
-    DIGITAL_SPECIMEN_BOTANY = Collections.unmodifiableSet(tmp);
+    DIGITAL_SPECIMEN_BOTANY_FIELDS = Collections.unmodifiableSet(tmp);
   }
 
   static {
-    Set<String> tmp = new HashSet<>(HANDLE_RECORD);
+    Set<String> tmp = new HashSet<>(HANDLE_RECORD_FIELDS);
     tmp.add(TOMBSTONE_TEXT);
     tmp.add(TOMBSTONE_PIDS);
-    TOMBSTONE_RECORD = Collections.unmodifiableSet(tmp);
+    TOMBSTONE_RECORD_FIELDS = Collections.unmodifiableSet(tmp);
   }
 
+  // Request fields
+  static {
+    Set<String> tmp = new HashSet<>();
+    tmp.add("pidIssuerPid");
+    tmp.add("digitalObjectTypePid");
+    tmp.add("digitalObjectSubtypePid");
+    tmp.add("locations");
+    HANDLE_RECORD_REQ = Collections.unmodifiableSet(tmp);
+  }
+
+  static {
+    Set<String> tmp = new HashSet<>(HANDLE_RECORD_REQ);
+    tmp.add(REFERENT);
+    tmp.add("referentDoiNamePid");
+    DOI_RECORD_REQ = Collections.unmodifiableSet(tmp);
+  }
+
+  static {
+    Set<String> tmp = new HashSet<>(DOI_RECORD_REQ);
+    tmp.add(DIGITAL_OR_PHYSICAL);
+    tmp.add("specimenHostPid");
+    tmp.add("inCollectionFacilityPid");
+    DIGITAL_SPECIMEN_REQ = Collections.unmodifiableSet(tmp);
+  }
+
+  static {
+    Set<String> tmp = new HashSet<>(DIGITAL_SPECIMEN_REQ);
+    tmp.add(OBJECT_TYPE);
+    tmp.add(PRESERVED_OR_LIVING);
+    DIGITAL_SPECIMEN_BOTANY_REQ = Collections.unmodifiableSet(tmp);
+  }
+
+  // Fields with specific formatting requirements
   static {
     Set<String> tmp = new HashSet<>();
     tmp.add(PID_ISSUER);
@@ -130,7 +178,22 @@ public class PidRecords {
     tmp.put(OBJECT_TYPE, 17);
     tmp.put(PRESERVED_OR_LIVING, 18);
     FIELD_IDX = Collections.unmodifiableMap(tmp);
+  }
 
+  // Indexes of modifiable fields
+  static {
+    Map<String, Integer> tmp = new HashMap<>();
+    tmp.put(PID_ISSUER_REQ, FIELD_IDX.get(PID_ISSUER));
+    tmp.put(DIGITAL_OBJECT_TYPE_REQ, FIELD_IDX.get(DIGITAL_OBJECT_TYPE));
+    tmp.put(DIGITAL_OBJECT_SUBTYPE_REQ, FIELD_IDX.get(DIGITAL_OBJECT_SUBTYPE));
+    tmp.put(LOC_REQ, FIELD_IDX.get(LOC));
+    tmp.put(REFERENT_DOI_NAME_REQ, FIELD_IDX.get(REFERENT_DOI_NAME));
+    tmp.put(REFERENT, FIELD_IDX.get(REFERENT));
+    tmp.put(DIGITAL_OR_PHYSICAL, FIELD_IDX.get(DIGITAL_OR_PHYSICAL));
+    tmp.put(IN_COLLECTION_FACILITY_REQ, FIELD_IDX.get(IN_COLLECTION_FACILITY));
+    tmp.put(OBJECT_TYPE, FIELD_IDX.get(OBJECT_TYPE));
+    tmp.put(PRESERVED_OR_LIVING, FIELD_IDX.get(PRESERVED_OR_LIVING));
+    REQ_FIELD_IDX = Collections.unmodifiableMap(tmp);
   }
 
   private PidRecords(){

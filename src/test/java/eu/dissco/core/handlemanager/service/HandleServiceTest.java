@@ -120,7 +120,7 @@ class HandleServiceTest {
     var databaseResponse =  genObjectNodeRecord(handleRecord);
     var responseExpected = genHandleRecordJsonResponse(handle);
 
-    given(handleRep.createHandleRecordJson(handle, instant, handleRecord)).willReturn(databaseResponse);
+    given(handleRep.createRecord(handle, instant, handleRecord)).willReturn(databaseResponse);
     given(hgService.genHandleList(1)).willReturn(handlesList);
 
     // When
@@ -139,7 +139,7 @@ class HandleServiceTest {
     var databaseResponse =  genObjectNodeRecord(handleRecord);
     var responseExpected = genDoiRecordJsonResponse(handle);
 
-    given(handleRep.createDoiRecordJson(handle, instant, handleRecord)).willReturn(databaseResponse);
+    given(handleRep.createRecord(handle, instant, handleRecord)).willReturn(databaseResponse);
     given(hgService.genHandleList(1)).willReturn(handlesList);
 
     // When
@@ -158,7 +158,7 @@ class HandleServiceTest {
     var databaseResponse =  genObjectNodeRecord(handleRecord);
     var responseExpected = genDigitalSpecimenJsonResponse(handle);
 
-    given(handleRep.createDigitalSpecimenJson(handle, instant, handleRecord)).willReturn(databaseResponse);
+    given(handleRep.createRecord(handle, instant, handleRecord)).willReturn(databaseResponse);
     given(hgService.genHandleList(1)).willReturn(handlesList);
 
     // When
@@ -177,7 +177,7 @@ class HandleServiceTest {
     var databaseResponse =  genObjectNodeRecord(handleRecord);
     var responseExpected = genDigitalSpecimenBotanyJsonResponse(handle);
 
-    given(handleRep.createDigitalSpecimenBotanyJson(handle, instant, handleRecord)).willReturn(databaseResponse);
+    given(handleRep.createRecord(handle, instant, handleRecord)).willReturn(databaseResponse);
     given(hgService.genHandleList(1)).willReturn(handlesList);
 
     // When
@@ -203,7 +203,7 @@ class HandleServiceTest {
     List<ObjectNode> databaseResponse = genObjectNodeRecordBatch(aggrList);
     var responseExpected = genHandleRecordJsonResponseBatch(handlesList);
 
-    given(handleRep.createHandleRecordBatchJson(handlesList, instant, flatList)).willReturn(databaseResponse);
+    given(handleRep.createRecordBatchJson(handlesList, instant, flatList)).willReturn(databaseResponse);
     given(hgService.genHandleList(handlesList.size())).willReturn(handlesList);
 
     // When
@@ -229,7 +229,7 @@ class HandleServiceTest {
     List<ObjectNode> databaseResponse = genObjectNodeRecordBatch(aggrList);
     var responseExpected = genDoiRecordJsonResponseBatch(handlesList);
 
-    given(handleRep.createDoiRecordBatchJson(handlesList, instant, flatList)).willReturn(databaseResponse);
+    given(handleRep.createRecordBatchJson(handlesList, instant, flatList)).willReturn(databaseResponse);
     given(hgService.genHandleList(handlesList.size())).willReturn(handlesList);
 
     // When
@@ -255,7 +255,7 @@ class HandleServiceTest {
     List<ObjectNode> databaseResponse = genObjectNodeRecordBatch(aggrList);
     var responseExpected = genDigitalSpecimenJsonResponseBatch(handlesList);
 
-    given(handleRep.createDigitalSpecimenBatchJson(handlesList, instant, flatList)).willReturn(databaseResponse);
+    given(handleRep.createRecordBatchJson(handlesList, instant, flatList)).willReturn(databaseResponse);
     given(hgService.genHandleList(handlesList.size())).willReturn(handlesList);
 
     // When
@@ -281,7 +281,7 @@ class HandleServiceTest {
     List<ObjectNode> databaseResponse = genObjectNodeRecordBatch(aggrList);
     var responseExpected = genDigitalSpecimenBotanyJsonResponseBatch(handlesList);
 
-    given(handleRep.createDigitalSpecimenBotanyBatchJson(handlesList, instant, flatList)).willReturn(databaseResponse);
+    given(handleRep.createRecordBatchJson(handlesList, instant, flatList)).willReturn(databaseResponse);
     given(hgService.genHandleList(handlesList.size())).willReturn(handlesList);
 
     // When

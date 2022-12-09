@@ -108,7 +108,7 @@ class HandleGeneratorServiceTest {
     handleListInternalDuplicate.add(expectedHandle1);
 
     given(random.nextInt(anyInt())).willReturn(0, 1);
-    given(handleRep.checkDuplicateHandles(anyList()))
+    given(handleRep.checkHandlesExist(anyList()))
         .willReturn(handleListInternalDuplicate)
         .willReturn(new ArrayList<>());
 
