@@ -168,6 +168,7 @@ public class HandleController {
       throws InvalidRecordInput, PidResolutionException, ParserConfigurationException, IOException, TransformerException, PidCreationException {
     JsonNode data = request.get("data");
     byte[] handle = data.get("id").asText().getBytes(StandardCharsets.UTF_8);
+    log.info(data.toString());
     return ResponseEntity.status(HttpStatus.OK).body(service.archiveRecord(data, handle));
   }
 

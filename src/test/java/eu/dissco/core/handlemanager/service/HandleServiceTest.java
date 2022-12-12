@@ -301,18 +301,14 @@ class HandleServiceTest {
   }
 
   @Test
-  void updateRecordBatchLocTest() throws Exception {
+  void testUpdateRecordBatchLoc() throws Exception {
     // Given
     List<ObjectNode> updateRequest = genUpdateRequestBatch();
-    List<List<HandleAttribute>> attributesToUpdate = new ArrayList<>();
 
     List<List<HandleAttribute>> aggrList = new ArrayList<>();
-    List<HandleAttribute> flatList = new ArrayList<>();
     List<HandleAttribute> singleRecord;
     for (byte[] handle : handlesList) {
-      attributesToUpdate.add(genUpdateRecordAttributesAltLoc(handle));
       singleRecord = genHandleRecordAttributesAltLoc(handle);
-      flatList.addAll(singleRecord);
       aggrList.add(new ArrayList<>(singleRecord));
     }
 
@@ -331,7 +327,7 @@ class HandleServiceTest {
   }
 
   @Test
-  void updateRecordTest() throws Exception {
+  void testUpdateRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     JsonNode updateRequest = genUpdateRequestAltLoc();
@@ -352,15 +348,13 @@ class HandleServiceTest {
   }
 
   @Test
-  void archiveRecordBatchTest() throws Exception {
+  void updateArchiveRecordBatch() throws Exception {
     // Given
     List<ObjectNode> updateRequest = genTombstoneRequestBatch();
-    List<List<HandleAttribute>> attributesToUpdate = new ArrayList<>();
 
     List<List<HandleAttribute>> aggrList = new ArrayList<>();
     List<HandleAttribute> singleRecord;
     for (byte[] handle : handlesList) {
-      attributesToUpdate.add(genTombstoneRecordRequestAttributes(handle));
       singleRecord = genTombstoneRecordFullAttributes(handle);
       aggrList.add(new ArrayList<>(singleRecord));
     }
@@ -380,7 +374,7 @@ class HandleServiceTest {
   }
 
   @Test
-  void archiveRecordTest() throws Exception {
+  void testArchiveRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     JsonNode archiveRequest = genTombstoneRequest();

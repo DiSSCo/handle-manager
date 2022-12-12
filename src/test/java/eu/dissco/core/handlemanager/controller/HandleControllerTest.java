@@ -1,12 +1,19 @@
 package eu.dissco.core.handlemanager.controller;
 
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_TOMBSTONE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiData;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapper;
+import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
@@ -298,6 +305,116 @@ class HandleControllerTest {
         () -> controller.createHandleRecordJson(request));
 
     // Then
+  }
+
+  @Test
+  void testUpdateRecord() throws Exception {
+    // Given
+    ObjectMapper mapper = new ObjectMapper();
+    byte[] handle = HANDLE.getBytes();
+    var updateAttributes = genUpdateRequestAltLoc();
+    JsonApiData updateRequest = new JsonApiData(HANDLE, RECORD_TYPE_HANDLE, updateAttributes);
+    ObjectNode updateRequestNode = mapper.createObjectNode();
+    updateRequestNode.set("data", mapper.valueToTree(updateRequest));
+    log.info(updateRequestNode.toString());
+
+    JsonApiWrapper responseExpected = genHandleRecordJsonResponseAltLoc(handle);
+    given(service.updateRecord(updateAttributes, handle, RECORD_TYPE_HANDLE)).willReturn(responseExpected);
+
+    // When
+    ResponseEntity<JsonApiWrapper> responseReceived = controller.updateRecord(updateRequestNode);
+
+    // Then
+    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testUpdateRecordBatch() throws Exception {
+    // Given
+    List<byte[]> handles = List.of(
+        HANDLE.getBytes(StandardCharsets.UTF_8),
+        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
+
+    ObjectMapper mapper = new ObjectMapper();
+
+    List<ObjectNode> updateRequestList = new ArrayList<>();
+    List<JsonApiWrapper> responseExpected = new ArrayList<>();
+
+    for (byte[] handle : handles){
+      var updateAttributes = genUpdateRequestAltLoc();
+      JsonApiData updateRequest = new JsonApiData(new String(handle), RECORD_TYPE_HANDLE, updateAttributes);
+      ObjectNode updateRequestNode = mapper.createObjectNode();
+      updateRequestNode.set("data", mapper.valueToTree(updateRequest));
+      updateRequestList.add(updateRequestNode.deepCopy());
+
+      responseExpected.add(genHandleRecordJsonResponseAltLoc(handle));
+    }
+
+    given(service.updateRecordBatch(updateRequestList)).willReturn(responseExpected);
+
+    // When
+    var responseReceived = controller.updateRecords(updateRequestList);
+
+    // Then
+    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testArchiveRecord() throws Exception {
+    // Given
+    ObjectMapper mapper = new ObjectMapper();
+    byte[] handle = HANDLE.getBytes();
+    var archiveAttributes = genTombstoneRequest();
+    JsonApiData archiveRequest = new JsonApiData(HANDLE, RECORD_TYPE_TOMBSTONE, archiveAttributes);
+
+    ObjectNode archiveRequestNode = mapper.createObjectNode();
+    archiveRequestNode.set("data", mapper.valueToTree(archiveRequest));
+    log.info(archiveRequestNode.toString());
+
+    List<HandleAttribute> tombstoneAttributesFull = genTombstoneRecordFullAttributes(handle);
+    JsonApiWrapper responseExpected = genGenericRecordJsonResponse(handle, tombstoneAttributesFull,
+        RECORD_TYPE_TOMBSTONE);
+    given(service.archiveRecord(archiveRequestNode.get("data"), handle)).willReturn(responseExpected);
+
+    // When
+    ResponseEntity<JsonApiWrapper> responseReceived = controller.archiveRecord(archiveRequestNode);
+
+    // Then
+    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testArchiveRecordBatch() throws Exception {
+    // Given
+    List<byte[]> handles = List.of(
+        HANDLE.getBytes(StandardCharsets.UTF_8),
+        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
+
+    ObjectMapper mapper = new ObjectMapper();
+
+    List<ObjectNode> updateRequestList = new ArrayList<>();
+    List<JsonApiWrapper> responseExpected = new ArrayList<>();
+
+    for (byte[] handle : handles){
+      var updateAttributes = genTombstoneRequest();
+      JsonApiData updateRequest = new JsonApiData(new String(handle), RECORD_TYPE_TOMBSTONE, updateAttributes);
+      ObjectNode updateRequestNode = mapper.createObjectNode();
+      updateRequestNode.set("data", mapper.valueToTree(updateRequest));
+      updateRequestList.add(updateRequestNode.deepCopy());
+      responseExpected.add(genHandleRecordJsonResponseAltLoc(handle));
+    }
+
+    given(service.archiveRecordBatch(updateRequestList)).willReturn(responseExpected);
+
+    // When
+    var responseReceived = controller.archiveRecords(updateRequestList);
+
+    // Then
+    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
 
 
