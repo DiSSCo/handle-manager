@@ -317,7 +317,7 @@ class HandleServiceTest {
     var responseExpected = genUpdateAltLocResponseBatch(handlesList);
 
     given(handleRep.checkHandlesExist(anyList())).willReturn(handlesList);
-    given(handleRep.updateRecordBatch(anyList(), eq(instant), eq(attributesToUpdate))).willReturn(databaseResponse);
+    given(handleRep.resolveBatchRecord(anyList())).willReturn(databaseResponse);
 
     // When
     var responseReceived = service.updateRecordBatch(updateRequest);
@@ -348,6 +348,34 @@ class HandleServiceTest {
   }
 
   @Test
+  void archiveRecordBatchTest() throws Exception {
+    // Given
+    List<ObjectNode> updateRequest = genTombstoneRequestBatch();
+    List<List<HandleAttribute>> attributesToUpdate = new ArrayList<>();
+
+    List<List<HandleAttribute>> aggrList = new ArrayList<>();
+    List<HandleAttribute> singleRecord;
+    for (byte[] handle : handlesList){
+      attributesToUpdate.add(genTombstoneRecordRequestAttributes(handle));
+      singleRecord = genTombstoneRecordFullAttributes(handle);
+      aggrList.add(new ArrayList<>(singleRecord));
+    }
+
+    List<ObjectNode> databaseResponse = genObjectNodeRecordBatch(aggrList);
+
+    var responseExpected = genTombstoneResponseBatch(handlesList);
+
+    given(handleRep.checkHandlesExist(anyList())).willReturn(handlesList);
+    given(handleRep.resolveBatchRecord(anyList())).willReturn(databaseResponse);
+
+    // When
+    var responseReceived = service.archiveRecordBatch(updateRequest);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
   void archiveRecordTest() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
@@ -366,7 +394,6 @@ class HandleServiceTest {
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
-
   }
 
 

@@ -179,7 +179,7 @@ public class HandleRepository {
     return postedRecords;
   }
 
-  private void postAttributesToDb(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
+  public void postAttributesToDb(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
     var queryList = new ArrayList<Query>();
 
     for (var handleAttribute : handleAttributes) {
@@ -239,7 +239,7 @@ public class HandleRepository {
     return resolveSingleRecord(handle);
   }
 
-  public List<ObjectNode> updateRecordBatch(List<byte[]> handles, Instant recordTimestamp, List<List<HandleAttribute>> handleRecords)
+  public void updateRecordBatch(List<byte[]> handles, Instant recordTimestamp, List<List<HandleAttribute>> handleRecords)
       throws PidResolutionException {
 
     List<Query> queryList= new ArrayList<>();
@@ -247,8 +247,6 @@ public class HandleRepository {
       queryList.addAll(prepareUpdateQuery(handleRecord.get(0).handle(), recordTimestamp, handleRecord, true));
     }
     context.batch(queryList).execute();
-
-    return resolveBatchRecord(handles);
   }
 
   private ArrayList<Query> prepareUpdateQuery(byte[] handle, Instant recordTimestamp,

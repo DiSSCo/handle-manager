@@ -428,10 +428,21 @@ public class TestUtils {
     return wrapperList;
   }
 
+  public static List<JsonApiWrapper> genTombstoneResponseBatch(List<byte[]> handles)
+      throws JsonProcessingException, ParserConfigurationException, TransformerException {
+    List<JsonApiWrapper> wrapperList = new ArrayList<>();
+
+    for (byte[] handle : handles) {
+      var tombstoneAttributesFull = genTombstoneRecordFullAttributes(handle);
+      var singleTombstoneRecordResponse = genGenericRecordJsonResponse(handle, tombstoneAttributesFull, RECORD_TYPE_TOMBSTONE);
+      wrapperList.add(singleTombstoneRecordResponse);
+    }
+    return wrapperList;
+  }
+
   // Update Requests
 
-  public static List<ObjectNode> genUpdateRequestBatch()
-      throws ParserConfigurationException, TransformerException, JsonProcessingException {
+  public static List<ObjectNode> genUpdateRequestBatch() {
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode requestNodeRoot = mapper.createObjectNode();
     ObjectNode requestNodeData = mapper.createObjectNode();
@@ -448,7 +459,26 @@ public class TestUtils {
       requestNodeData.removeAll();
       requestNodeRoot.removeAll();
     }
+    return requestNodeList;
+  }
 
+  public static List<ObjectNode> genTombstoneRequestBatch() {
+    ObjectMapper mapper = new ObjectMapper();
+    ObjectNode requestNodeRoot = mapper.createObjectNode();
+    ObjectNode requestNodeData = mapper.createObjectNode();
+    List<ObjectNode> requestNodeList = new ArrayList<>();
+
+    for (String handle : HANDLE_LIST_STR){
+      requestNodeData.put("type", RECORD_TYPE_TOMBSTONE);
+      requestNodeData.put("id", handle);
+      requestNodeData.set("attributes", genTombstoneRequest());
+      requestNodeRoot.set("data", requestNodeData);
+
+      requestNodeList.add(requestNodeRoot.deepCopy());
+
+      requestNodeData.removeAll();
+      requestNodeRoot.removeAll();
+    }
     return requestNodeList;
   }
 

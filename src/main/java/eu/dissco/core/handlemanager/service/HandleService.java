@@ -286,7 +286,8 @@ public class HandleService {
     checkInternalDuplicates(handles);
     checkHandlesExist(handles);
 
-    List<ObjectNode> updatedRecords = handleRep.updateRecordBatch(handles, recordTimestamp, attributesToUpdate);
+    handleRep.updateRecordBatch(handles, recordTimestamp, attributesToUpdate);
+    var updatedRecords  = handleRep.resolveBatchRecord(handles);
 
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
     int i = 0;
@@ -305,17 +306,16 @@ public class HandleService {
       throws InvalidRecordInput, PidResolutionException, ParserConfigurationException, IOException, TransformerException, PidCreationException {
     var recordTimestamp = Instant.now();
     List<byte[]> handles = new ArrayList<>();
-    List<List<HandleAttribute>> attributesToArchive = new ArrayList<>();
-    List<HandleAttribute> newFields = new ArrayList<>();
+    List<HandleAttribute> archiveAttributesNew = new ArrayList<>();
+    List<List<HandleAttribute>> archiveAttributesUpdate = new ArrayList<>();
     for (JsonNode root : requests){
       JsonNode data = root.get("data");
       JsonNode requestAttributes = data.get("attributes");
       byte[] handle = data.get("id").asText().getBytes(StandardCharsets.UTF_8);
       handles.add(handle);
       requestAttributes = validateRequestData(requestAttributes, RECORD_TYPE_TOMBSTONE);
-      List<HandleAttribute> singleTombstoneRecord = prepareUpdateAttributes(handle, requestAttributes);
-      newFields.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS, "ARCHIVED".getBytes(StandardCharsets.UTF_8)));
-      attributesToArchive.add(new ArrayList<>(singleTombstoneRecord));
+      archiveAttributesNew.addAll(prepareUpdateAttributes(handle, requestAttributes));
+      archiveAttributesUpdate.add(List.of(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS, "ARCHIVED".getBytes(StandardCharsets.UTF_8))));
     }
     checkInternalDuplicates(handles);
     checkHandlesExist(handles);
@@ -323,8 +323,8 @@ public class HandleService {
     checkInternalDuplicates(handles);
     checkHandlesExist(handles);
 
-    handleRep.updateRecordBatch(handles, recordTimestamp, attributesToArchive);
-    //handleRep.createRecordBatchJson(handles, recordTimestamp, newFields);
+    handleRep.updateRecordBatch(handles, recordTimestamp, archiveAttributesUpdate);
+    handleRep.postAttributesToDb(recordTimestamp, archiveAttributesNew);
     var archivedRecords = handleRep.resolveBatchRecord(handles);
 
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
