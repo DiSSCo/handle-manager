@@ -16,7 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.database.jooq.tables.Handles;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.exceptions.PidCreationException;
+import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +43,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
-  void testCreateHandleJson() throws PidCreationException, JsonProcessingException {
+  void testCreateHandleJson() throws PidServiceInternalError, JsonProcessingException {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> attributes = genHandleRecordAttributes(handle);
@@ -59,7 +59,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
-  void testCreateDoiJson() throws PidCreationException, JsonProcessingException {
+  void testCreateDoiJson() throws PidServiceInternalError, JsonProcessingException {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> attributes = genDoiRecordAttributes(handle);
@@ -75,7 +75,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
-  void testCreateDigitalSpecimenJson() throws PidCreationException, JsonProcessingException {
+  void testCreateDigitalSpecimenJson() throws PidServiceInternalError, JsonProcessingException {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> attributes = genDigitalSpecimenAttributes(handle);
@@ -91,7 +91,8 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
-  void testCreateDigitalSpecimenBotanyJson() throws PidCreationException, JsonProcessingException {
+  void testCreateDigitalSpecimenBotanyJson()
+      throws PidServiceInternalError, JsonProcessingException {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> attributes = genDigitalSpecimenBotanyAttributes(handle);

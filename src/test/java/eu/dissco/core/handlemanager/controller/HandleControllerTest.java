@@ -319,7 +319,8 @@ class HandleControllerTest {
     log.info(updateRequestNode.toString());
 
     JsonApiWrapper responseExpected = genHandleRecordJsonResponseAltLoc(handle);
-    given(service.updateRecord(updateAttributes, handle, RECORD_TYPE_HANDLE)).willReturn(responseExpected);
+    given(service.updateRecord(updateAttributes, handle, RECORD_TYPE_HANDLE)).willReturn(
+        responseExpected);
 
     // When
     ResponseEntity<JsonApiWrapper> responseReceived = controller.updateRecord(updateRequestNode);
@@ -341,9 +342,10 @@ class HandleControllerTest {
     List<ObjectNode> updateRequestList = new ArrayList<>();
     List<JsonApiWrapper> responseExpected = new ArrayList<>();
 
-    for (byte[] handle : handles){
+    for (byte[] handle : handles) {
       var updateAttributes = genUpdateRequestAltLoc();
-      JsonApiData updateRequest = new JsonApiData(new String(handle), RECORD_TYPE_HANDLE, updateAttributes);
+      JsonApiData updateRequest = new JsonApiData(new String(handle), RECORD_TYPE_HANDLE,
+          updateAttributes);
       ObjectNode updateRequestNode = mapper.createObjectNode();
       updateRequestNode.set("data", mapper.valueToTree(updateRequest));
       updateRequestList.add(updateRequestNode.deepCopy());
@@ -376,7 +378,8 @@ class HandleControllerTest {
     List<HandleAttribute> tombstoneAttributesFull = genTombstoneRecordFullAttributes(handle);
     JsonApiWrapper responseExpected = genGenericRecordJsonResponse(handle, tombstoneAttributesFull,
         RECORD_TYPE_TOMBSTONE);
-    given(service.archiveRecord(archiveRequestNode.get("data"), handle)).willReturn(responseExpected);
+    given(service.archiveRecord(archiveRequestNode.get("data"), handle)).willReturn(
+        responseExpected);
 
     // When
     ResponseEntity<JsonApiWrapper> responseReceived = controller.archiveRecord(archiveRequestNode);
@@ -398,9 +401,10 @@ class HandleControllerTest {
     List<ObjectNode> updateRequestList = new ArrayList<>();
     List<JsonApiWrapper> responseExpected = new ArrayList<>();
 
-    for (byte[] handle : handles){
+    for (byte[] handle : handles) {
       var updateAttributes = genTombstoneRequest();
-      JsonApiData updateRequest = new JsonApiData(new String(handle), RECORD_TYPE_TOMBSTONE, updateAttributes);
+      JsonApiData updateRequest = new JsonApiData(new String(handle), RECORD_TYPE_TOMBSTONE,
+          updateAttributes);
       ObjectNode updateRequestNode = mapper.createObjectNode();
       updateRequestNode.set("data", mapper.valueToTree(updateRequest));
       updateRequestList.add(updateRequestNode.deepCopy());

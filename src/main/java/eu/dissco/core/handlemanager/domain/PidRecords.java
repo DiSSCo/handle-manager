@@ -112,25 +112,25 @@ public class PidRecords {
   // Request fields
   static {
     Set<String> tmp = new HashSet<>();
-    tmp.add("pidIssuerPid");
-    tmp.add("digitalObjectTypePid");
-    tmp.add("digitalObjectSubtypePid");
-    tmp.add("locations");
+    tmp.add(PID_ISSUER_REQ);
+    tmp.add(DIGITAL_OBJECT_TYPE_REQ);
+    tmp.add(DIGITAL_OBJECT_TYPE_REQ);
+    tmp.add(LOC_REQ);
     HANDLE_RECORD_REQ = Collections.unmodifiableSet(tmp);
   }
 
   static {
     Set<String> tmp = new HashSet<>(HANDLE_RECORD_REQ);
     tmp.add(REFERENT);
-    tmp.add("referentDoiNamePid");
+    tmp.add(REFERENT_DOI_NAME_REQ);
     DOI_RECORD_REQ = Collections.unmodifiableSet(tmp);
   }
 
   static {
     Set<String> tmp = new HashSet<>(DOI_RECORD_REQ);
     tmp.add(DIGITAL_OR_PHYSICAL);
-    tmp.add("specimenHostPid");
-    tmp.add("inCollectionFacilityPid");
+    tmp.add(SPECIMEN_HOST_REQ);
+    tmp.add(IN_COLLECTION_FACILITY_REQ);
     DIGITAL_SPECIMEN_REQ = Collections.unmodifiableSet(tmp);
   }
 

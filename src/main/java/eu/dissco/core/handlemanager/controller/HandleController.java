@@ -1,7 +1,6 @@
 package eu.dissco.core.handlemanager.controller;
 
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -11,7 +10,7 @@ import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.HandleRecordRequest;
 import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
-import eu.dissco.core.handlemanager.exceptions.PidCreationException;
+import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.service.HandleService;
 import java.io.IOException;
@@ -48,7 +47,7 @@ public class HandleController {
   @GetMapping("/record")
   public ResponseEntity<JsonApiWrapper> resolveSingleHandle(
       @RequestBody byte[] handle
-  ) throws JsonProcessingException, PidResolutionException {
+  ) throws PidResolutionException, PidServiceInternalError {
     JsonApiWrapper node = service.resolveSingleRecord(handle);
     return ResponseEntity.status(HttpStatus.OK).body(node);
   }
@@ -56,7 +55,7 @@ public class HandleController {
   @GetMapping("/records")
   public ResponseEntity<List<JsonApiWrapper>> resolveBatchHandle(
       @RequestBody List<String> handleStrings
-  ) throws JsonProcessingException, PidResolutionException {
+  ) throws PidResolutionException, PidServiceInternalError {
 
     List<byte[]> handles = new ArrayList<>();
     for (String hdlStr : handleStrings) {
@@ -70,7 +69,7 @@ public class HandleController {
   @PostMapping(value = "/records", params = "pidType=handle")
   public ResponseEntity<List<JsonApiWrapper>> createHandleRecordJsonBatch(
       @RequestBody List<HandleRecordRequest> requests)
-      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
+      throws PidResolutionException, PidServiceInternalError {
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(service.createHandleRecordBatchJson(requests));
   }
@@ -79,7 +78,7 @@ public class HandleController {
   @PostMapping(value = "/records", params = "pidType=doi")
   public ResponseEntity<List<JsonApiWrapper>> createDoiRecordJsonBatch(
       @RequestBody List<DoiRecordRequest> requests)
-      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
+      throws PidResolutionException, PidServiceInternalError {
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(service.createDoiRecordBatchJson(requests));
   }
@@ -88,7 +87,7 @@ public class HandleController {
   @PostMapping(value = "/records", params = "pidType=digitalSpecimen")
   public ResponseEntity<List<JsonApiWrapper>> createDigitalSpecimenJsonBatch(
       @RequestBody List<DigitalSpecimenRequest> requests)
-      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
+      throws PidResolutionException, PidServiceInternalError {
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(service.createDigitalSpecimenBatchJson(requests));
   }
@@ -97,7 +96,7 @@ public class HandleController {
   @PostMapping(value = "/records", params = "pidType=digitalSpecimenBotany")
   public ResponseEntity<List<JsonApiWrapper>> createDigitalSpecimenBotanyJsonBatch(
       @RequestBody List<DigitalSpecimenBotanyRequest> requests)
-      throws PidResolutionException, ParserConfigurationException, JsonProcessingException, TransformerException, PidCreationException {
+      throws PidResolutionException, PidServiceInternalError {
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(service.createDigitalSpecimenBotanyBatchJson(requests));
   }
@@ -107,7 +106,7 @@ public class HandleController {
   @PostMapping(value = "/record", params = "pidType=handle")
   public ResponseEntity<JsonApiWrapper> createHandleRecordJson(
       @RequestBody HandleRecordRequest request)
-      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
+      throws PidResolutionException, PidServiceInternalError {
     return ResponseEntity.status(HttpStatus.CREATED).body(service.createHandleRecordJson(request));
   }
 
@@ -115,7 +114,7 @@ public class HandleController {
   @PostMapping(value = "/record", params = "pidType=doi")
   public ResponseEntity<JsonApiWrapper> createDoiRecordJson(
       @RequestBody DoiRecordRequest request)
-      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
+      throws PidResolutionException, PidServiceInternalError {
     return ResponseEntity.status(HttpStatus.CREATED).body(service.createDoiRecordJson(request));
   }
 
@@ -123,7 +122,7 @@ public class HandleController {
   @PostMapping(value = "/record", params = "pidType=digitalSpecimen")
   public ResponseEntity<JsonApiWrapper> createDigitalSpecimenJson(
       @RequestBody DigitalSpecimenRequest request)
-      throws PidResolutionException, JsonProcessingException, ParserConfigurationException, TransformerException, PidCreationException {
+      throws PidResolutionException, PidServiceInternalError {
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(service.createDigitalSpecimenJson(request));
   }
@@ -132,7 +131,7 @@ public class HandleController {
   @PostMapping(value = "/record", params = "pidType=digitalSpecimenBotany")
   public ResponseEntity<JsonApiWrapper> createDigitalSpecimenBotanyJson(
       @RequestBody DigitalSpecimenBotanyRequest request)
-      throws PidResolutionException, PidCreationException, ParserConfigurationException, JsonProcessingException, TransformerException {
+      throws PidResolutionException, PidServiceInternalError {
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(service.createDigitalSpecimenBotanyJson(request));
   }
@@ -142,7 +141,7 @@ public class HandleController {
   @PatchMapping(value = "/record")
   public ResponseEntity<JsonApiWrapper> updateRecord(
       @RequestBody ObjectNode request)
-      throws InvalidRecordInput, PidResolutionException, IOException, ParserConfigurationException, TransformerException, PidCreationException {
+      throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
 
     JsonNode data = request.get("data");
     byte[] handle = data.get("id").asText().getBytes(StandardCharsets.UTF_8);
@@ -156,7 +155,7 @@ public class HandleController {
   @PatchMapping(value = "/records")
   public ResponseEntity<List<JsonApiWrapper>> updateRecords(
       @RequestBody List<ObjectNode> request)
-      throws InvalidRecordInput, PidResolutionException, IOException, ParserConfigurationException, TransformerException, PidCreationException {
+      throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
 
     return ResponseEntity.status(HttpStatus.OK).body(service.updateRecordBatch(request));
   }
@@ -165,7 +164,7 @@ public class HandleController {
   @DeleteMapping(value = "/record")
   public ResponseEntity<JsonApiWrapper> archiveRecord(
       @RequestBody ObjectNode request)
-      throws InvalidRecordInput, PidResolutionException, ParserConfigurationException, IOException, TransformerException, PidCreationException {
+      throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
     JsonNode data = request.get("data");
     byte[] handle = data.get("id").asText().getBytes(StandardCharsets.UTF_8);
     log.info(data.toString());
@@ -176,7 +175,7 @@ public class HandleController {
   @DeleteMapping(value = "/records")
   public ResponseEntity<List<JsonApiWrapper>> archiveRecords(
       @RequestBody List<ObjectNode> request)
-      throws InvalidRecordInput, PidResolutionException, IOException, ParserConfigurationException, TransformerException, PidCreationException {
+      throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
     return ResponseEntity.status(HttpStatus.OK).body(service.archiveRecordBatch(request));
   }
 
@@ -216,9 +215,16 @@ public class HandleController {
 
   //Error Handling
 
-  @ExceptionHandler(PidCreationException.class)
-  private ResponseEntity<String> pidCreationException(PidCreationException e) {
-    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+  @ExceptionHandler(PidServiceInternalError.class)
+  private ResponseEntity<String> pidCreationException(PidServiceInternalError e) {
+    String message;
+    if (e.getExceptionCause() != null) {
+      message = e.getMessage() + ". Cause: " + e.getExceptionCause().toString() + "\n "
+          + e.getExceptionCause().getLocalizedMessage();
+    } else {
+      message = e.getMessage();
+    }
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(message);
   }
 
   @ExceptionHandler(InvalidRecordInput.class)
@@ -229,12 +235,6 @@ public class HandleController {
   @ExceptionHandler(PidResolutionException.class)
   private ResponseEntity<String> pidResolutionException(PidResolutionException e) {
     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-  }
-
-  @ExceptionHandler(JsonProcessingException.class)
-  private ResponseEntity<String> jsonProcessingException(JsonProcessingException e) {
-    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .body(e.getMessage());
   }
 
   @ExceptionHandler(UnrecognizedPropertyException.class)
@@ -252,15 +252,6 @@ public class HandleController {
 
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
         .body(message);
-  }
-
-  //@ExceptionHandler(NullPointerException.class)
-  private ResponseEntity<String> missingArgument(NullPointerException e) {
-
-    String message = String.format(
-        "Invalid request body. Missing argument : %s",
-        e.getMessage());
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message);
   }
 
 }

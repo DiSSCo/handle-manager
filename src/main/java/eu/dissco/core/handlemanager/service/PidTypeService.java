@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.keycloak.adapters.OIDCAuthenticationError;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +24,7 @@ public class PidTypeService {
 
   @Cacheable(value = "cache")
   public String resolveTypePid(String typePid)
-      throws PidResolutionException, JsonProcessingException {
+      throws PidResolutionException {
     if (typePid == null) {
       throw new PidResolutionException("Missing a PID field in request body.");
     }
@@ -66,7 +67,12 @@ public class PidTypeService {
     if (pidType.equals("doi")) {
       objectNode.put("registrationAgencyDoiName", registrationAgencyDoiName);
     }
-    return mapper.writeValueAsString(objectNode);
+    try {
+      return mapper.writeValueAsString(objectNode);
+    } catch (JsonProcessingException e) {
+      throw new PidResolutionException("A JSON processing error has occurred. " + e.getMessage());
+    }
+
   }
 
   private String getDataFromType(String type, List<HandleAttribute> hList) {

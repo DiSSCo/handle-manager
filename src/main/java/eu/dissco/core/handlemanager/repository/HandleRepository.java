@@ -7,12 +7,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.exceptions.PidCreationException;
+import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -153,28 +152,28 @@ public class HandleRepository {
 
   // Post
   public ObjectNode createRecord(byte[] handle, Instant recordTimestamp,
-      List<HandleAttribute> handleAttributes) throws PidCreationException {
+      List<HandleAttribute> handleAttributes) throws PidServiceInternalError {
     postAttributesToDb(recordTimestamp, handleAttributes);
     ObjectNode postedRecord;
     try {
       postedRecord = resolveSingleRecord(handle);
     } catch (PidResolutionException e) {
       rollbackRecordCreation(handle);
-      throw new PidCreationException(String.format(PID_ROLLBACK_MESSAGE, "2"));
+      throw new PidServiceInternalError(String.format(PID_ROLLBACK_MESSAGE, "2"));
     }
     return postedRecord;
   }
 
   public List<ObjectNode> createRecordBatchJson(List<byte[]> handles
       , Instant recordTimestamp, List<HandleAttribute> handleAttributes)
-      throws PidCreationException {
+      throws PidServiceInternalError {
     postAttributesToDb(recordTimestamp, handleAttributes);
     List<ObjectNode> postedRecords;
     try {
       postedRecords = resolveBatchRecord(handles);
     } catch (PidResolutionException e) {
       rollbackRecordCreation(handles);
-      throw new PidCreationException(String.format(PID_ROLLBACK_MESSAGE, "1"));
+      throw new PidServiceInternalError(String.format(PID_ROLLBACK_MESSAGE, "1"));
     }
     return postedRecords;
   }
@@ -231,7 +230,7 @@ public class HandleRepository {
 
   // Update
   public ObjectNode updateRecord(Instant recordTimestamp, List<HandleAttribute> handleAttributes)
-      throws PidCreationException, PidResolutionException {
+      throws PidResolutionException {
     byte[] handle = handleAttributes.get(0).handle();
     var query = prepareUpdateQuery(handle, recordTimestamp, handleAttributes, true);
     context.batch(query).execute();
@@ -239,9 +238,8 @@ public class HandleRepository {
     return resolveSingleRecord(handle);
   }
 
-  public void updateRecordBatch(List<byte[]> handles, Instant recordTimestamp,
-      List<List<HandleAttribute>> handleRecords)
-      throws PidResolutionException {
+  public void updateRecordBatch(Instant recordTimestamp,
+      List<List<HandleAttribute>> handleRecords) {
 
     List<Query> queryList = new ArrayList<>();
     for (List<HandleAttribute> handleRecord : handleRecords) {
