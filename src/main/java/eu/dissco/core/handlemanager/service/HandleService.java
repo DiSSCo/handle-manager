@@ -273,7 +273,7 @@ public class HandleService {
     List<List<HandleAttribute>> attributesToUpdate = new ArrayList<>();
     List<String> recordTypes = new ArrayList<>();
 
-    for (JsonNode root : requests){
+    for (JsonNode root : requests) {
       JsonNode data = root.get("data");
       JsonNode requestAttributes = data.get("attributes");
       String recordType = data.get("type").asText();
@@ -287,7 +287,7 @@ public class HandleService {
     checkHandlesExist(handles);
 
     handleRep.updateRecordBatch(handles, recordTimestamp, attributesToUpdate);
-    var updatedRecords  = handleRep.resolveBatchRecord(handles);
+    var updatedRecords = handleRep.resolveBatchRecord(handles);
 
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
     int i = 0;
@@ -308,14 +308,16 @@ public class HandleService {
     List<byte[]> handles = new ArrayList<>();
     List<HandleAttribute> archiveAttributesNew = new ArrayList<>();
     List<List<HandleAttribute>> archiveAttributesUpdate = new ArrayList<>();
-    for (JsonNode root : requests){
+    for (JsonNode root : requests) {
       JsonNode data = root.get("data");
       JsonNode requestAttributes = data.get("attributes");
       byte[] handle = data.get("id").asText().getBytes(StandardCharsets.UTF_8);
       handles.add(handle);
       requestAttributes = validateRequestData(requestAttributes, RECORD_TYPE_TOMBSTONE);
       archiveAttributesNew.addAll(prepareUpdateAttributes(handle, requestAttributes));
-      archiveAttributesUpdate.add(List.of(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS, "ARCHIVED".getBytes(StandardCharsets.UTF_8))));
+      archiveAttributesUpdate.add(List.of(
+          new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS,
+              "ARCHIVED".getBytes(StandardCharsets.UTF_8))));
     }
     checkInternalDuplicates(handles);
     checkHandlesExist(handles);
@@ -348,11 +350,13 @@ public class HandleService {
 
     List<HandleAttribute> tombstoneAttributes = prepareUpdateAttributes(handle, request);
 
-    tombstoneAttributes.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS, "ARCHIVED".getBytes(StandardCharsets.UTF_8)));
+    tombstoneAttributes.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS,
+        "ARCHIVED".getBytes(StandardCharsets.UTF_8)));
     ObjectNode archivedRecord = handleRep.updateRecord(recordTimestamp, tombstoneAttributes);
 
     // Package response
-    JsonApiData jsonData = new JsonApiData(new String(handle), RECORD_TYPE_TOMBSTONE, archivedRecord);
+    JsonApiData jsonData = new JsonApiData(new String(handle), RECORD_TYPE_TOMBSTONE,
+        archivedRecord);
     JsonApiLinks links = new JsonApiLinks(
         mapper.writeValueAsString(archivedRecord.get("pid")));
     return new JsonApiWrapper(links, jsonData);
@@ -406,7 +410,7 @@ public class HandleService {
         return DOI_RECORD_REQ;
       }
       case RECORD_TYPE_DS -> {
-        return  DIGITAL_SPECIMEN_REQ;
+        return DIGITAL_SPECIMEN_REQ;
       }
       case RECORD_TYPE_DS_BOTANY -> {
         return DIGITAL_SPECIMEN_BOTANY_REQ;
@@ -438,20 +442,22 @@ public class HandleService {
     Set<byte[]> handlesToUpdate = new HashSet<>(handles);
 
     Set<byte[]> handlesExist = new HashSet<>(handleRep.checkHandlesExist(handles));
-    if (handlesExist.size() < handles.size()){
+    if (handlesExist.size() < handles.size()) {
       handlesToUpdate.removeAll(handlesExist);
       Set<String> handlesDontExist = new HashSet<>();
-      for (byte[] handle: handlesToUpdate){
+      for (byte[] handle : handlesToUpdate) {
         handlesDontExist.add(new String(handle));
       }
-      throw new PidResolutionException("INVALID INPUT. One or more handles in request do not exist. Verify the following handle(s): " + handlesDontExist);
+      throw new PidResolutionException(
+          "INVALID INPUT. One or more handles in request do not exist. Verify the following handle(s): "
+              + handlesDontExist);
     }
   }
 
   private void checkInternalDuplicates(List<byte[]> handles) throws InvalidRecordInput {
     Set<byte[]> handlesToUpdate = new HashSet<>(handles);
     Set<String> handlesToUpdateStr = new HashSet<>();
-    for (byte[] handle : handlesToUpdate){
+    for (byte[] handle : handlesToUpdate) {
       handlesToUpdateStr.add(new String(handle));
     }
 
@@ -464,10 +470,10 @@ public class HandleService {
   }
 
 
-  private Set<String> findDuplicates(List<byte[]> handles, Set<String> handlesToUpdate){
+  private Set<String> findDuplicates(List<byte[]> handles, Set<String> handlesToUpdate) {
     Set<String> duplicateHandles = new HashSet<>();
-    for(byte[] handle : handles ){
-      if (!handlesToUpdate.add(new String(handle))){
+    for (byte[] handle : handles) {
+      if (!handlesToUpdate.add(new String(handle))) {
         duplicateHandles.add(new String(handle));
       }
     }
@@ -492,7 +498,9 @@ public class HandleService {
 
   private List<HandleAttribute> prepareUpdateAttributes(byte[] handle, JsonNode request)
       throws PidResolutionException, JsonProcessingException {
-    Map<String, String> updateRecord = mapper.convertValue(request, new TypeReference<Map<String, String>>() {});
+    Map<String, String> updateRecord = mapper.convertValue(request,
+        new TypeReference<Map<String, String>>() {
+        });
     List<HandleAttribute> attributesToUpdate = new ArrayList<>();
 
     for (Map.Entry<String, String> requestField : updateRecord.entrySet()) {

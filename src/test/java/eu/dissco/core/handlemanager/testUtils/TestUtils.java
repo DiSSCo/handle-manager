@@ -150,7 +150,8 @@ public class TestUtils {
 
     // 7: Issue number
     handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(ISSUE_NUMBER), handle, ISSUE_NUMBER, "1".getBytes(StandardCharsets.UTF_8)));
+        new HandleAttribute(FIELD_IDX.get(ISSUE_NUMBER), handle, ISSUE_NUMBER,
+            "1".getBytes(StandardCharsets.UTF_8)));
 
     // 8: PidStatus
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS,
@@ -159,12 +160,13 @@ public class TestUtils {
     // 11: PidKernelMetadataLicense:
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(PID_KERNEL_METADATA_LICENSE), handle,
-            PID_KERNEL_METADATA_LICENSE, PID_KERNEL_METADATA_LICENSE_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+            PID_KERNEL_METADATA_LICENSE,
+            PID_KERNEL_METADATA_LICENSE_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     return handleRecord;
   }
 
-  public static List<HandleAttribute> genHandleRecordAttributesAltLoc (byte[] handle)
+  public static List<HandleAttribute> genHandleRecordAttributesAltLoc(byte[] handle)
       throws ParserConfigurationException, TransformerException {
     List<HandleAttribute> attributes = genHandleRecordAttributes(handle);
 
@@ -179,9 +181,10 @@ public class TestUtils {
     return attributes;
   }
 
-  public static List<HandleAttribute> genTombstoneRecordFullAttributes(byte[] handle){
+  public static List<HandleAttribute> genTombstoneRecordFullAttributes(byte[] handle) {
     List<HandleAttribute> attributes = genHandleRecordAttributes(handle);
-    HandleAttribute oldPidStatus = new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS, PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8));
+    HandleAttribute oldPidStatus = new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle,
+        PID_STATUS, PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8));
     attributes.remove(oldPidStatus);
     attributes.addAll(genTombstoneRecordRequestAttributes(handle));
 
@@ -194,10 +197,13 @@ public class TestUtils {
     return List.of(new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, locAlt));
   }
 
-  public static List<HandleAttribute> genTombstoneRecordRequestAttributes(byte[] handle){
+  public static List<HandleAttribute> genTombstoneRecordRequestAttributes(byte[] handle) {
     List<HandleAttribute> tombstoneAttributes = new ArrayList<>();
-    tombstoneAttributes.add(new HandleAttribute(FIELD_IDX.get(TOMBSTONE_TEXT), handle, TOMBSTONE_TEXT, TOMBSTONE_TEXT_TESTVAL.getBytes(StandardCharsets.UTF_8)));
-    tombstoneAttributes.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS, "ARCHIVED".getBytes(StandardCharsets.UTF_8)));
+    tombstoneAttributes.add(
+        new HandleAttribute(FIELD_IDX.get(TOMBSTONE_TEXT), handle, TOMBSTONE_TEXT,
+            TOMBSTONE_TEXT_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+    tombstoneAttributes.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS,
+        "ARCHIVED".getBytes(StandardCharsets.UTF_8)));
     return tombstoneAttributes;
   }
 
@@ -257,7 +263,7 @@ public class TestUtils {
         DIGITAL_OBJECT_SUBTYPE_PID,
         LOC_TESTVAL);
   }
-  
+
   public static DoiRecordRequest genDoiRecordRequest() {
     return new DoiRecordRequest(
         PID_ISSUER_PID,
@@ -318,7 +324,8 @@ public class TestUtils {
     return requestList;
   }
 
-  public static List<DigitalSpecimenBotanyRequest> genDigitalSpecimenBotanyRequestBatch(List<byte[]> handles) {
+  public static List<DigitalSpecimenBotanyRequest> genDigitalSpecimenBotanyRequestBatch(
+      List<byte[]> handles) {
     List<DigitalSpecimenBotanyRequest> requestList = new ArrayList<>();
     for (int i = 0; i < handles.size(); i++) {
       requestList.add(genDigitalSpecimenBotanyRequest());
@@ -332,7 +339,7 @@ public class TestUtils {
     var testDbRecord = genHandleRecordAttributes(handle);
     return genGenericRecordJsonResponse(handle, testDbRecord, RECORD_TYPE_HANDLE);
   }
-  
+
   public static JsonApiWrapper genHandleRecordJsonResponse(byte[] handle, String recordType)
       throws JsonProcessingException {
     var testDbRecord = genHandleRecordAttributes(handle);
@@ -356,7 +363,7 @@ public class TestUtils {
     var testDbRecord = genDigitalSpecimenBotanyAttributes(handle);
     return genGenericRecordJsonResponse(handle, testDbRecord, RECORD_TYPE_DS_BOTANY);
   }
-  
+
   public static JsonApiWrapper genGenericRecordJsonResponse(byte[] handle,
       List<HandleAttribute> testDbRecord, String recordType)
       throws JsonProcessingException {
@@ -378,7 +385,8 @@ public class TestUtils {
     return wrapperList;
   }
 
-  public static List<JsonApiWrapper> genHandleRecordJsonResponseBatch(List<byte[]> handles, String recordType)
+  public static List<JsonApiWrapper> genHandleRecordJsonResponseBatch(List<byte[]> handles,
+      String recordType)
       throws JsonProcessingException {
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
 
@@ -387,6 +395,7 @@ public class TestUtils {
     }
     return wrapperList;
   }
+
   public static List<JsonApiWrapper> genDoiRecordJsonResponseBatch(List<byte[]> handles)
       throws JsonProcessingException {
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
@@ -434,7 +443,8 @@ public class TestUtils {
 
     for (byte[] handle : handles) {
       var tombstoneAttributesFull = genTombstoneRecordFullAttributes(handle);
-      var singleTombstoneRecordResponse = genGenericRecordJsonResponse(handle, tombstoneAttributesFull, RECORD_TYPE_TOMBSTONE);
+      var singleTombstoneRecordResponse = genGenericRecordJsonResponse(handle,
+          tombstoneAttributesFull, RECORD_TYPE_TOMBSTONE);
       wrapperList.add(singleTombstoneRecordResponse);
     }
     return wrapperList;
@@ -448,7 +458,7 @@ public class TestUtils {
     ObjectNode requestNodeData = mapper.createObjectNode();
     List<ObjectNode> requestNodeList = new ArrayList<>();
 
-    for (String handle : HANDLE_LIST_STR){
+    for (String handle : HANDLE_LIST_STR) {
       requestNodeData.put("type", RECORD_TYPE_HANDLE);
       requestNodeData.put("id", handle);
       requestNodeData.set("attributes", genUpdateRequestAltLoc());
@@ -468,7 +478,7 @@ public class TestUtils {
     ObjectNode requestNodeData = mapper.createObjectNode();
     List<ObjectNode> requestNodeList = new ArrayList<>();
 
-    for (String handle : HANDLE_LIST_STR){
+    for (String handle : HANDLE_LIST_STR) {
       requestNodeData.put("type", RECORD_TYPE_TOMBSTONE);
       requestNodeData.put("id", handle);
       requestNodeData.set("attributes", genTombstoneRequest());
@@ -514,7 +524,7 @@ public class TestUtils {
     for (HandleAttribute row : dbRecord) {
       type = row.type();
       data = new String(row.data());
-      if (row.index() == FIELD_IDX.get(HS_ADMIN)){
+      if (row.index() == FIELD_IDX.get(HS_ADMIN)) {
         continue; // We never want HS_ADMIN in our json
       }
       if (FIELD_IS_PID_RECORD.contains(type)) {
@@ -530,7 +540,7 @@ public class TestUtils {
   public static List<ObjectNode> genObjectNodeRecordBatch(List<List<HandleAttribute>> dbRecords)
       throws JsonProcessingException {
     List<ObjectNode> nodeList = new ArrayList<>();
-    for (List<HandleAttribute> dbRecord : dbRecords){
+    for (List<HandleAttribute> dbRecord : dbRecords) {
       nodeList.add(genObjectNodeAttributeRecord(dbRecord));
     }
     return nodeList;

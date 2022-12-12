@@ -96,9 +96,11 @@ class PidTypeServiceTest {
     List<HandleAttribute> record = new ArrayList<>();
 
     record.add(new HandleAttribute(1, recordPid, "pid", pid.getBytes(StandardCharsets.UTF_8)));
-    record.add(new HandleAttribute(2, recordPid, "pidType", pidType.getBytes(StandardCharsets.UTF_8)));
     record.add(
-        new HandleAttribute(3, recordPid, "primaryNameFromPid", primaryNameFromPid.getBytes(StandardCharsets.UTF_8)));
+        new HandleAttribute(2, recordPid, "pidType", pidType.getBytes(StandardCharsets.UTF_8)));
+    record.add(
+        new HandleAttribute(3, recordPid, "primaryNameFromPid",
+            primaryNameFromPid.getBytes(StandardCharsets.UTF_8)));
 
     if (isDoi) {
       registrationAgencyDoiName = TestUtils.PTR_REGISTRATION_DOI_NAME;

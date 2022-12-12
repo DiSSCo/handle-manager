@@ -16,6 +16,7 @@ import org.jooq.impl.DefaultConfiguration;
 import org.jooq.impl.DefaultExecuteListenerProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
 @Configuration
 public class AppConfig {
 
@@ -46,7 +47,7 @@ public class AppConfig {
   }
 
   @Bean
-  public DSLContext dslContext(DataSource dataSource){
+  public DSLContext dslContext(DataSource dataSource) {
     DefaultConfiguration configuration = new DefaultConfiguration();
     configuration.set(new DefaultExecuteListenerProvider(new StatisticsListener()));
     configuration.set(dataSource);

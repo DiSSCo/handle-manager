@@ -197,7 +197,7 @@ public class PidRecords {
     REQ_FIELD_IDX = Collections.unmodifiableMap(tmp);
   }
 
-  private PidRecords(){
+  private PidRecords() {
     throw new IllegalStateException("Utility class");
   }
 

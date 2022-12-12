@@ -31,7 +31,8 @@ public class PidTypeService {
         StandardCharsets.UTF_8));
     if (typeRecord.isEmpty()) {
       log.info(typePid);
-      throw new PidResolutionException("Unable to resolve PID: " +typePid + ", Reason: Record is empty");
+      throw new PidResolutionException(
+          "Unable to resolve PID: " + typePid + ", Reason: Record is empty");
     }
     String pid = getDataFromType("pid", typeRecord);
     String primaryNameFromPid = getDataFromType("primaryNameFromPid", typeRecord);

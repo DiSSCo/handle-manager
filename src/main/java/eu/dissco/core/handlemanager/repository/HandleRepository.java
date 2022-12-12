@@ -65,15 +65,15 @@ public class HandleRepository {
     Set<String> resolvedHandles = new HashSet<>();
     Set<String> allHandles = handleMap.keySet();
 
-
-    for (Map.Entry<String, List<HandleAttribute>> handleRecord : handleMap.entrySet()){
+    for (Map.Entry<String, List<HandleAttribute>> handleRecord : handleMap.entrySet()) {
       rootNodeList.add(jsonFormatSingleRecord(handleRecord.getValue()));
       resolvedHandles.add(handleRecord.getKey());
     }
 
     allHandles.removeAll(resolvedHandles);
-    if (!allHandles.isEmpty()){
-      throw new PidResolutionException("PID RESOLUTION ERROR. Unable to resolve the following handles: " + allHandles);
+    if (!allHandles.isEmpty()) {
+      throw new PidResolutionException(
+          "PID RESOLUTION ERROR. Unable to resolve the following handles: " + allHandles);
     }
     return rootNodeList;
   }
@@ -165,7 +165,7 @@ public class HandleRepository {
     return postedRecord;
   }
 
-    public List<ObjectNode> createRecordBatchJson(List<byte[]> handles
+  public List<ObjectNode> createRecordBatchJson(List<byte[]> handles
       , Instant recordTimestamp, List<HandleAttribute> handleAttributes)
       throws PidCreationException {
     postAttributesToDb(recordTimestamp, handleAttributes);
@@ -205,12 +205,11 @@ public class HandleRepository {
 
     for (HandleAttribute row : flatList) {
       String handle = new String(row.handle());
-      if (handleMap.containsKey(handle)){
+      if (handleMap.containsKey(handle)) {
         List<HandleAttribute> tmpList = new ArrayList<>(handleMap.get(handle));
         tmpList.add(row);
         handleMap.replace(handle, tmpList);
-      }
-      else{
+      } else {
         handleMap.put(handle, List.of(row));
       }
     }
@@ -223,6 +222,7 @@ public class HandleRepository {
         .where(HANDLES.HANDLE.in(handles))
         .execute();
   }
+
   private void rollbackRecordCreation(byte[] handle) {
     context.delete(HANDLES)
         .where(HANDLES.HANDLE.eq(handle))
@@ -230,7 +230,7 @@ public class HandleRepository {
   }
 
   // Update
-  public ObjectNode updateRecord (Instant recordTimestamp, List<HandleAttribute> handleAttributes)
+  public ObjectNode updateRecord(Instant recordTimestamp, List<HandleAttribute> handleAttributes)
       throws PidCreationException, PidResolutionException {
     byte[] handle = handleAttributes.get(0).handle();
     var query = prepareUpdateQuery(handle, recordTimestamp, handleAttributes, true);
@@ -239,12 +239,14 @@ public class HandleRepository {
     return resolveSingleRecord(handle);
   }
 
-  public void updateRecordBatch(List<byte[]> handles, Instant recordTimestamp, List<List<HandleAttribute>> handleRecords)
+  public void updateRecordBatch(List<byte[]> handles, Instant recordTimestamp,
+      List<List<HandleAttribute>> handleRecords)
       throws PidResolutionException {
 
-    List<Query> queryList= new ArrayList<>();
-    for (List<HandleAttribute> handleRecord : handleRecords){
-      queryList.addAll(prepareUpdateQuery(handleRecord.get(0).handle(), recordTimestamp, handleRecord, true));
+    List<Query> queryList = new ArrayList<>();
+    for (List<HandleAttribute> handleRecord : handleRecords) {
+      queryList.addAll(
+          prepareUpdateQuery(handleRecord.get(0).handle(), recordTimestamp, handleRecord, true));
     }
     context.batch(queryList).execute();
   }
@@ -272,7 +274,7 @@ public class HandleRepository {
             .and(HANDLES.TYPE.eq(ISSUE_NUMBER.getBytes(StandardCharsets.UTF_8)))
             .fetchOne(dbRecord -> new String(dbRecord.value1()))));
     int version;
-    if (versionIncrement){
+    if (versionIncrement) {
       version = currentVersion + 1;
     } else {
       version = currentVersion - 1;

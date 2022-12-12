@@ -12,7 +12,7 @@ public class TombstoneRecordRequest {
   private final String tombstoneText;
   private final String[] tombstonePids = new String[]{};
 
-  public TombstoneRecordRequest(String handle, String tombstoneText){
+  public TombstoneRecordRequest(String handle, String tombstoneText) {
     this.handle = handle.getBytes(StandardCharsets.UTF_8);
     this.tombstoneText = tombstoneText;
   }

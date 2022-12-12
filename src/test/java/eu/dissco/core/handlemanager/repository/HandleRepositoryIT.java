@@ -26,6 +26,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class HandleRepositoryIT extends BaseRepositoryIT {
+
   private HandleRepository handleRep;
   private ObjectMapper mapper;
 
@@ -116,7 +117,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     List<HandleAttribute> flatList = new ArrayList<>();
     List<HandleAttribute> singleRecord;
 
-    for (byte[] handle : handles){
+    for (byte[] handle : handles) {
       singleRecord = genHandleRecordAttributes(handle);
       flatList.addAll(singleRecord);
       aggrList.add(new ArrayList<>(singleRecord));
@@ -143,7 +144,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     List<HandleAttribute> flatList = new ArrayList<>();
     List<HandleAttribute> singleRecord;
 
-    for (byte[] handle : handles){
+    for (byte[] handle : handles) {
       singleRecord = genDoiRecordAttributes(handle);
       flatList.addAll(singleRecord);
       aggrList.add(new ArrayList<>(singleRecord));
@@ -170,7 +171,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     List<HandleAttribute> flatList = new ArrayList<>();
     List<HandleAttribute> singleRecord;
 
-    for (byte[] handle : handles){
+    for (byte[] handle : handles) {
       singleRecord = genDigitalSpecimenAttributes(handle);
       flatList.addAll(singleRecord);
       aggrList.add(new ArrayList<>(singleRecord));
@@ -197,7 +198,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     List<HandleAttribute> flatList = new ArrayList<>();
     List<HandleAttribute> singleRecord;
 
-    for (byte[] handle : handles){
+    for (byte[] handle : handles) {
       singleRecord = genDigitalSpecimenBotanyAttributes(handle);
       flatList.addAll(singleRecord);
       aggrList.add(new ArrayList<>(singleRecord));
@@ -214,12 +215,15 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   // TODO - How to post to context?
-  void testCheckDuplicateHandlesNoCollision(){
+  void testCheckDuplicateHandlesNoCollision() {
     // Given
-    List<byte[]> handles = List.of(HANDLE.getBytes(StandardCharsets.UTF_8), HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
+    List<byte[]> handles = List.of(HANDLE.getBytes(StandardCharsets.UTF_8),
+        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
     List<HandleAttribute> rows = List.of(
-        new HandleAttribute(1, handles.get(0), PID_STATUS, PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8)),
-        new HandleAttribute(1, handles.get(1), PID_STATUS, PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+        new HandleAttribute(1, handles.get(0), PID_STATUS,
+            PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8)),
+        new HandleAttribute(1, handles.get(1), PID_STATUS,
+            PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8)));
     postAttributes(rows);
 
     // When
@@ -230,9 +234,9 @@ class HandleRepositoryIT extends BaseRepositoryIT {
 
   }
 
-  private void postAttributes(List<HandleAttribute> rows){
+  private void postAttributes(List<HandleAttribute> rows) {
     List<Query> queryList = new ArrayList<>();
-    for (var handleAttribute: rows){
+    for (var handleAttribute : rows) {
       var query = context.insertInto(Handles.HANDLES)
           .set(Handles.HANDLES.HANDLE, handleAttribute.handle())
           .set(Handles.HANDLES.IDX, handleAttribute.index())

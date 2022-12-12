@@ -73,7 +73,8 @@ class HandleControllerTest {
     given(service.getHandlesPaged(pageNum, pageSize, pidStatus)).willReturn(expectedHandles);
 
     // When
-    ResponseEntity<List<String>> response = controller.getAllHandlesByPidStatus(pageNum, pageSize, pidStatus);
+    ResponseEntity<List<String>> response = controller.getAllHandlesByPidStatus(pageNum, pageSize,
+        pidStatus);
 
     // Then
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -300,8 +301,4 @@ class HandleControllerTest {
   }
 
 
-
-
-
-  
 }
