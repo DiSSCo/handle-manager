@@ -272,7 +272,6 @@ public class HandleService {
     List<byte[]> handles = new ArrayList<>();
     List<List<HandleAttribute>> attributesToUpdate = new ArrayList<>();
     List<String> recordTypes = new ArrayList<>();
-    List<JsonNode> checkedRequests = new ArrayList<>();
 
     for (JsonNode root : requests){
       JsonNode data = root.get("data");
@@ -281,9 +280,12 @@ public class HandleService {
       recordTypes.add(recordType);
       byte[] handle = data.get("id").asText().getBytes(StandardCharsets.UTF_8);
       handles.add(handle);
-      validateRequestData(handle, requestAttributes, recordType);
+      requestAttributes = validateRequestData(requestAttributes, recordType);
       attributesToUpdate.add(prepareUpdateAttributes(handle, requestAttributes));
     }
+    checkInternalDuplicates(handles);
+    checkHandlesExist(handles);
+
     List<ObjectNode> updatedRecords = handleRep.updateRecordBatch(handles, recordTimestamp, attributesToUpdate);
 
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
@@ -292,13 +294,30 @@ public class HandleService {
     for (ObjectNode updatedRecord : updatedRecords) {
       String pidLink = mapper.writeValueAsString(updatedRecord.get("pid"));
       String pidName = getPidName(pidLink);
-      JsonApiData jsonData = new JsonApiData(pidName, recordTypes.get(i), updatedRecord);
+      JsonApiData jsonData = new JsonApiData(pidName, recordTypes.get(i++), updatedRecord);
       JsonApiLinks links = new JsonApiLinks(pidLink);
       wrapperList.add(new JsonApiWrapper(links, jsonData));
     }
     return wrapperList;
   }
 
+  public JsonApiWrapper archiveRecord(JsonNode request, byte[] handle)
+      throws InvalidRecordInput, PidResolutionException, ParserConfigurationException, IOException, TransformerException, PidCreationException {
+    var recordTimestamp = Instant.now();
+    validateRequestData(request, RECORD_TYPE_TOMBSTONE);
+    checkHandlesExist(List.of(handle));
+
+    List<HandleAttribute> tombstoneAttributes = prepareUpdateAttributes(handle, request);
+
+    tombstoneAttributes.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS, "ARCHIVED".getBytes(StandardCharsets.UTF_8)));
+    ObjectNode archivedRecord = handleRep.updateRecord(recordTimestamp, tombstoneAttributes);
+
+    // Package response
+    JsonApiData jsonData = new JsonApiData(new String(handle), RECORD_TYPE_TOMBSTONE, archivedRecord);
+    JsonApiLinks links = new JsonApiLinks(
+        mapper.writeValueAsString(archivedRecord.get("pid")));
+    return new JsonApiWrapper(links, jsonData);
+  }
 
 
   public JsonApiWrapper updateRecord(JsonNode request, byte[] handle, String recordType)
@@ -306,7 +325,8 @@ public class HandleService {
 
     var recordTimestamp = Instant.now();
 
-    request = validateRequestData(handle, request, recordType);
+    request = validateRequestData(request, recordType);
+    checkHandlesExist(List.of(handle));
     List<HandleAttribute> attributesToUpdate = prepareUpdateAttributes(handle, request);
 
     // Update record
@@ -319,18 +339,17 @@ public class HandleService {
     return new JsonApiWrapper(links, jsonData);
   }
 
-  private JsonNode validateRequestData(byte[] handle, JsonNode request, String recordType)
+  private JsonNode validateRequestData(JsonNode request, String recordType)
       throws ParserConfigurationException, IOException, TransformerException, InvalidRecordInput, PidResolutionException {
     List<String> keys = new ArrayList<>();
     Iterator<String> fieldItr = request.fieldNames();
     fieldItr.forEachRemaining(keys::add);
 
-    JsonNode requestUpdated = request;
+    JsonNode requestUpdated = request.deepCopy();
 
     // Data Ingestion Checks
     Set<String> recordFields = getRecordFields(recordType);
     checkFields(keys, recordFields, recordType);
-    checkHandles(List.of(handle));
 
     // Format 10320/loc
     if (keys.contains(LOC_REQ)) {
@@ -362,6 +381,7 @@ public class HandleService {
   private void checkFields(List<String> fields, Set<String> recordFields, String recordType)
       throws InvalidRecordInput {
     List<String> invalidFields = new ArrayList<>();
+
     for (String field : fields) {
       if (!recordFields.contains(field)) {
         invalidFields.add(field);
@@ -372,28 +392,41 @@ public class HandleService {
     }
   }
 
-  private void checkHandles(List<byte[]> handles) throws InvalidRecordInput, PidResolutionException {
-    // Check duplicates, check if it handles exist
+  private void checkHandlesExist(List<byte[]> handles) throws PidResolutionException {
     Set<byte[]> handlesToUpdate = new HashSet<>(handles);
-    if (handlesToUpdate.size() < handles.size()) {
-      Set<byte[]> duplicateHandles = findDuplicates(handles, handlesToUpdate);
+
+    Set<byte[]> handlesExist = new HashSet<>(handleRep.checkHandlesExist(handles));
+    if (handlesExist.size() < handles.size()){
+      handlesToUpdate.removeAll(handlesExist);
+      Set<String> handlesDontExist = new HashSet<>();
+      for (byte[] handle: handlesToUpdate){
+        handlesDontExist.add(new String(handle));
+      }
+      throw new PidResolutionException("INVALID INPUT. One or more handles in request do not exist. Verify the following handle(s): " + handlesDontExist);
+    }
+  }
+
+  private void checkInternalDuplicates(List<byte[]> handles) throws InvalidRecordInput {
+    Set<byte[]> handlesToUpdate = new HashSet<>(handles);
+    Set<String> handlesToUpdateStr = new HashSet<>();
+    for (byte[] handle : handlesToUpdate){
+      handlesToUpdateStr.add(new String(handle));
+    }
+
+    if (handlesToUpdateStr.size() < handles.size()) {
+      Set<String> duplicateHandles = findDuplicates(handles, handlesToUpdateStr);
       throw new InvalidRecordInput(
           "INVALID INPUT. Attempting to update the same record multiple times in one request. "
               + "The following handles are duplicated in the request: " + duplicateHandles);
     }
-    Set<byte[]> handlesExist = new HashSet<>(handleRep.checkHandlesExist(handles));
-    if (handlesExist.size() < handles.size()){
-      handlesToUpdate.removeAll(handlesExist);
-      throw new PidResolutionException("INVALID INPUT. One or more handles in request do not exist. Verify the following handles: " + handlesToUpdate);
-    }
   }
 
 
-  private Set<byte[]> findDuplicates(List<byte[]> handles, Set<byte[]> handlesToUpdate){
-    Set<byte[]> duplicateHandles = new HashSet<>();
+  private Set<String> findDuplicates(List<byte[]> handles, Set<String> handlesToUpdate){
+    Set<String> duplicateHandles = new HashSet<>();
     for(byte[] handle : handles ){
-      if (!handlesToUpdate.add(handle)){
-        duplicateHandles.add(handle);
+      if (!handlesToUpdate.add(new String(handle))){
+        duplicateHandles.add(new String(handle));
       }
     }
     return duplicateHandles;
@@ -402,15 +435,16 @@ public class HandleService {
   private JsonNode setLocationFromJson(JsonNode request)
       throws ParserConfigurationException, TransformerException, IOException {
     ObjectReader reader = mapper.readerFor(new TypeReference<List<String>>() {
-    }); // make this a bean
+    });
     JsonNode locNode = request.get(LOC_REQ);
+    ObjectNode requestObjectNode = request.deepCopy();
     if (locNode.isArray()) {
       List<String> locList = reader.readValue(locNode);
       String[] locArr = locList.toArray(new String[0]);
-      ((ObjectNode) request).put(LOC, new String(setLocations(locArr)));
-      ((ObjectNode) request).remove(LOC_REQ);
+      requestObjectNode.put(LOC, new String(setLocations(locArr)));
+      requestObjectNode.remove(LOC_REQ);
     }
-    return request;
+    return requestObjectNode;
   }
 
 
@@ -602,20 +636,6 @@ public class HandleService {
     return writer.getBuffer().toString();
   }
 
-  public void archiveHandleRecord(TombstoneRecordRequest request) {
-    byte[] handle = request.getHandle();
-    List<HandleAttribute> handleRecord = new ArrayList<>();
-    handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS,
-            "ARCHIVED".getBytes(StandardCharsets.UTF_8)));
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(TOMBSTONE_TEXT), handle, TOMBSTONE_TEXT,
-        request.getTombstoneText().getBytes(StandardCharsets.UTF_8)));
-
-    if (request.getTombstonePids().length == 0) {
-      handleRecord.add(new HandleAttribute(FIELD_IDX.get(TOMBSTONE_PIDS), handle, TOMBSTONE_PIDS,
-          "".getBytes(StandardCharsets.UTF_8)));
-    }
-  }
 
 }
 

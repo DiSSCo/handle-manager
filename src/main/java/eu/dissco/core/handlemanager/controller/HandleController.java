@@ -1,14 +1,5 @@
 package eu.dissco.core.handlemanager.controller;
 
-import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_SPECIMEN_BOTANY_REQ;
-import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_SPECIMEN_REQ;
-import static eu.dissco.core.handlemanager.domain.PidRecords.DOI_RECORD_REQ;
-import static eu.dissco.core.handlemanager.domain.PidRecords.HANDLE_RECORD_FIELDS;
-import static eu.dissco.core.handlemanager.domain.PidRecords.HANDLE_RECORD_REQ;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -27,7 +18,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -149,7 +140,7 @@ public class HandleController {
   // Update
   @PreAuthorize("isAuthenticated()")
   @PatchMapping(value = "/record")
-  public ResponseEntity<JsonApiWrapper> updateHandleRecord(
+  public ResponseEntity<JsonApiWrapper> updateRecord(
       @RequestBody ObjectNode request)
       throws InvalidRecordInput, PidResolutionException, IOException, ParserConfigurationException, TransformerException, PidCreationException {
 
@@ -163,11 +154,21 @@ public class HandleController {
 
   @PreAuthorize("isAuthenticated()")
   @PatchMapping(value = "/records")
-  public ResponseEntity<List<JsonApiWrapper>> updateHandleRecords(
+  public ResponseEntity<List<JsonApiWrapper>> updateRecords(
       @RequestBody List<ObjectNode> request)
       throws InvalidRecordInput, PidResolutionException, IOException, ParserConfigurationException, TransformerException, PidCreationException {
 
     return ResponseEntity.status(HttpStatus.OK).body(service.updateRecordBatch(request));
+  }
+
+  @PreAuthorize("isAuthenticated()")
+  @DeleteMapping(value = "/record")
+  public ResponseEntity<JsonApiWrapper> archiveRecord(
+      @RequestBody ObjectNode request)
+      throws InvalidRecordInput, PidResolutionException, ParserConfigurationException, IOException, TransformerException, PidCreationException {
+    JsonNode data = request.get("data");
+    byte[] handle = data.get("id").asText().getBytes(StandardCharsets.UTF_8);
+    return ResponseEntity.status(HttpStatus.OK).body(service.archiveRecord(data, handle));
   }
 
 
@@ -213,7 +214,7 @@ public class HandleController {
   }
 
   @ExceptionHandler(InvalidRecordInput.class)
-  private ResponseEntity<String> invalidRecordCreationException(PidCreationException e) {
+  private ResponseEntity<String> invalidRecordCreationException(InvalidRecordInput e) {
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
   }
 

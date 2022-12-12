@@ -206,13 +206,12 @@ public class HandleRepository {
     for (HandleAttribute row : flatList) {
       String handle = new String(row.handle());
       if (handleMap.containsKey(handle)){
-        var tmpList = new ArrayList<HandleAttribute>(handleMap.get(handle));
+        List<HandleAttribute> tmpList = new ArrayList<>(handleMap.get(handle));
         tmpList.add(row);
         handleMap.replace(handle, tmpList);
       }
       else{
         handleMap.put(handle, List.of(row));
-        log.info("adding");
       }
     }
     return handleMap;

@@ -1,31 +1,10 @@
 package eu.dissco.core.handlemanager.testUtils;
 
-import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_SUBTYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OR_PHYSICAL;
-import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
-import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IS_PID_RECORD;
-import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
-import static eu.dissco.core.handlemanager.domain.PidRecords.IN_COLLECTION_FACILITY;
-import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_DATE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_NUMBER;
-import static eu.dissco.core.handlemanager.domain.PidRecords.LOC;
-import static eu.dissco.core.handlemanager.domain.PidRecords.OBJECT_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_KERNEL_METADATA_LICENSE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PRESERVED_OR_LIVING;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT;
-import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
-import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
+import static eu.dissco.core.handlemanager.domain.PidRecords.*;
 import static eu.dissco.core.handlemanager.utils.Resources.genAdminHandle;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiData;
@@ -51,6 +30,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.parameters.P;
 import org.w3c.dom.Document;
 
 @Slf4j
@@ -73,6 +53,7 @@ public class TestUtils {
   public static final String DIGITAL_OBJECT_TYPE_PID = "20.5000.1025/DIGITAL-SPECIMEN";
   public static final String DIGITAL_OBJECT_SUBTYPE_PID = "20.5000.1025/BOTANY-SPECIMEN";
   public static final String[] LOC_TESTVAL = {"https://sandbox.dissco.tech/", "https://dissco.eu"};
+  public static final String[] LOC_ALT_TESTVAL = {"naturalis.nl"};
   public static final String PID_STATUS_TESTVAL = "TEST";
   public static final String PID_KERNEL_METADATA_LICENSE_TESTVAL = "https://creativecommons.org/publicdomain/zero/1.0/";
   //DOIs
@@ -179,6 +160,27 @@ public class TestUtils {
             PID_KERNEL_METADATA_LICENSE, PID_KERNEL_METADATA_LICENSE_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     return handleRecord;
+  }
+
+  public static List<HandleAttribute> genHandleRecordAttributesAltLoc (byte[] handle)
+      throws ParserConfigurationException, TransformerException {
+    List<HandleAttribute> attributes = genHandleRecordAttributes(handle);
+
+    byte[] locOriginal = setLocations(LOC_TESTVAL);
+    var locOriginalAttr = new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, locOriginal);
+
+    byte[] locAlt = setLocations(LOC_ALT_TESTVAL);
+    var locAltAttr = new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, locAlt);
+
+    attributes.set(attributes.indexOf(locOriginalAttr), locAltAttr);
+
+    return attributes;
+  }
+
+  public static List<HandleAttribute> genUpdateRecordAltLoc(byte[] handle)
+      throws ParserConfigurationException, TransformerException {
+    byte[] locAlt = setLocations(LOC_ALT_TESTVAL);
+    return List.of(new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, locAlt));
   }
 
   public static List<HandleAttribute> genDoiRecordAttributes(byte[] handle) {
@@ -337,11 +339,11 @@ public class TestUtils {
     return genGenericRecordJsonResponse(handle, testDbRecord, RECORD_TYPE_DS_BOTANY);
   }
   
-  private static JsonApiWrapper genGenericRecordJsonResponse(byte[] handle,
+  public static JsonApiWrapper genGenericRecordJsonResponse(byte[] handle,
       List<HandleAttribute> testDbRecord, String recordType)
       throws JsonProcessingException {
     ObjectMapper mapper = new ObjectMapper();
-    ObjectNode recordAttributes = genObjectNodeRecord(testDbRecord);
+    ObjectNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
     JsonApiData jsonData = new JsonApiData(new String(handle), recordType, recordAttributes);
     JsonApiLinks links = new JsonApiLinks(mapper.writeValueAsString(recordAttributes.get("pid")));
     return new JsonApiWrapper(links, jsonData);
@@ -397,8 +399,65 @@ public class TestUtils {
     return wrapperList;
   }
 
+  // Update test functions
+  public static List<JsonApiWrapper> genUpdateAltLocResponseBatch(List<byte[]> handles)
+      throws JsonProcessingException, ParserConfigurationException, TransformerException {
+    List<JsonApiWrapper> wrapperList = new ArrayList<>();
+
+    for (byte[] handle : handles) {
+      wrapperList.add(genHandleRecordJsonResponseAltLoc(handle));
+    }
+    return wrapperList;
+  }
+
+  // Update Requests
+
+  public static List<ObjectNode> genUpdateRequestBatch()
+      throws ParserConfigurationException, TransformerException, JsonProcessingException {
+    ObjectMapper mapper = new ObjectMapper();
+    ObjectNode requestNodeRoot = mapper.createObjectNode();
+    ObjectNode requestNodeData = mapper.createObjectNode();
+    List<ObjectNode> requestNodeList = new ArrayList<>();
+
+    for (String handle : HANDLE_LIST_STR){
+      requestNodeData.put("type", RECORD_TYPE_HANDLE);
+      requestNodeData.put("id", handle);
+      requestNodeData.set("attributes", genUpdateRequestAltLoc(handle.getBytes(StandardCharsets.UTF_8)));
+      requestNodeRoot.set("data", requestNodeData);
+
+      requestNodeList.add(requestNodeRoot.deepCopy());
+
+      requestNodeData.removeAll();
+      requestNodeRoot.removeAll();
+    }
+
+    return requestNodeList;
+  }
+
+  public static JsonNode genUpdateRequestAltLoc(byte[] handle)
+      throws ParserConfigurationException, TransformerException, JsonProcessingException {
+    ObjectMapper mapper = new ObjectMapper();
+    ObjectNode rootNode = mapper.createObjectNode();
+    rootNode.putArray(LOC_REQ).add(LOC_ALT_TESTVAL[0]);
+    return rootNode;
+  }
+
+  public static JsonNode genTombstoneRequest(byte[] handle)
+      throws ParserConfigurationException, TransformerException, JsonProcessingException {
+    ObjectMapper mapper = new ObjectMapper();
+    ObjectNode rootNode = mapper.createObjectNode();
+    rootNode.putArray(LOC_REQ).add(LOC_ALT_TESTVAL[0]);
+    return rootNode;
+  }
+
+  public static JsonApiWrapper genHandleRecordJsonResponseAltLoc(byte[] handle)
+      throws JsonProcessingException, ParserConfigurationException, TransformerException {
+    var testDbRecord = genHandleRecordAttributesAltLoc(handle);
+    return genGenericRecordJsonResponse(handle, testDbRecord, RECORD_TYPE_HANDLE);
+  }
+
   // Handle Attributes as ObjectNode 
-  public static ObjectNode genObjectNodeRecord(List<HandleAttribute> dbRecord)
+  public static ObjectNode genObjectNodeAttributeRecord(List<HandleAttribute> dbRecord)
       throws JsonProcessingException {
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode rootNode = mapper.createObjectNode();
@@ -426,7 +485,7 @@ public class TestUtils {
       throws JsonProcessingException {
     List<ObjectNode> nodeList = new ArrayList<>();
     for (List<HandleAttribute> dbRecord : dbRecords){
-      nodeList.add(genObjectNodeRecord(dbRecord));
+      nodeList.add(genObjectNodeAttributeRecord(dbRecord));
     }
     return nodeList;
   }

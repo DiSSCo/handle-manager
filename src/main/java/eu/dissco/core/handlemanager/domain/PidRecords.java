@@ -37,6 +37,7 @@ public class PidRecords {
   public static final String RECORD_TYPE_DOI = "doi";
   public static final String RECORD_TYPE_DS = "digitalSpecimen";
   public static final String RECORD_TYPE_DS_BOTANY = "digitalSpecimenBotany";
+  public static final String RECORD_TYPE_TOMBSTONE = "tombstone";
   // Fields for requests
   public static final String PID_ISSUER_REQ = "pidIssuerPid";
   public static final String DIGITAL_OBJECT_TYPE_REQ = "digitalObjectTypePid";

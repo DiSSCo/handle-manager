@@ -4,7 +4,7 @@ package eu.dissco.core.handlemanager.repository;
 import static eu.dissco.core.handlemanager.database.jooq.Tables.HANDLES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.*;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genObjectNodeRecord;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genObjectNodeAttributeRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDoiRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributes;
@@ -46,7 +46,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> attributes = genHandleRecordAttributes(handle);
-    ObjectNode responseExpected = genObjectNodeRecord(attributes);
+    ObjectNode responseExpected = genObjectNodeAttributeRecord(attributes);
 
     // When
     ObjectNode responseReceived = handleRep.createRecord(handle, CREATED, attributes);
@@ -62,7 +62,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> attributes = genDoiRecordAttributes(handle);
-    ObjectNode responseExpected = genObjectNodeRecord(attributes);
+    ObjectNode responseExpected = genObjectNodeAttributeRecord(attributes);
 
     // When
     ObjectNode responseReceived = handleRep.createRecord(handle, CREATED, attributes);
@@ -78,7 +78,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> attributes = genDigitalSpecimenAttributes(handle);
-    ObjectNode responseExpected = genObjectNodeRecord(attributes);
+    ObjectNode responseExpected = genObjectNodeAttributeRecord(attributes);
 
     // When
     ObjectNode responseReceived = handleRep.createRecord(handle, CREATED, attributes);
@@ -94,7 +94,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> attributes = genDigitalSpecimenBotanyAttributes(handle);
-    ObjectNode responseExpected = genObjectNodeRecord(attributes);
+    ObjectNode responseExpected = genObjectNodeAttributeRecord(attributes);
 
     // When
     ObjectNode responseReceived = handleRep.createRecord(handle, CREATED, attributes);
