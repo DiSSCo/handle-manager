@@ -1,6 +1,7 @@
 package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_TOMBSTONE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -27,18 +28,14 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import lombok.extern.slf4j.Slf4j;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -298,28 +295,9 @@ class HandleServiceTest {
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
-  @Test
-  void updateRecordTest() throws Exception{
-    // Given
-    byte[] handle = handlesList.get(0);
-    JsonNode updateRequest = genUpdateRequestAltLoc(handle);
-    List<HandleAttribute> updateAttributeList = genUpdateRecordAltLoc(handle);
-    List<HandleAttribute> updateAttributeListFull = genHandleRecordAttributesAltLoc(handle);
-    var databaseResponse =  genObjectNodeAttributeRecord(updateAttributeListFull);
-    JsonApiWrapper updateResponseExpected = genHandleRecordJsonResponseAltLoc(handle);
-
-    given(handleRep.checkHandlesExist(List.of(handle))).willReturn(List.of(handle));
-    given(handleRep.updateRecord(instant, updateAttributeList)).willReturn(databaseResponse);
-
-    // When
-    var updateResponseReceived = service.updateRecord(updateRequest, handle, RECORD_TYPE_HANDLE);
-
-    // Then
-    assertThat(updateResponseReceived).isEqualTo(updateResponseExpected);
-  }
 
   @Test
-  void updateRecordBatchLocTest() throws Exception{
+  void updateRecordBatchLocTest() throws Exception {
     // Given
     List<ObjectNode> updateRequest = genUpdateRequestBatch();
     List<List<HandleAttribute>> attributesToUpdate = new ArrayList<>();
@@ -328,7 +306,7 @@ class HandleServiceTest {
     List<HandleAttribute> flatList = new ArrayList<>();
     List<HandleAttribute> singleRecord;
     for (byte[] handle : handlesList){
-      attributesToUpdate.add(genUpdateRecordAltLoc(handle));
+      attributesToUpdate.add(genUpdateRecordAttributesAltLoc(handle));
       singleRecord = genHandleRecordAttributesAltLoc(handle);
       flatList.addAll(singleRecord);
       aggrList.add(new ArrayList<>(singleRecord));
@@ -336,17 +314,62 @@ class HandleServiceTest {
 
     List<ObjectNode> databaseResponse = genObjectNodeRecordBatch(aggrList);
 
-    var updateResponseExpected = genUpdateAltLocResponseBatch(handlesList);
+    var responseExpected = genUpdateAltLocResponseBatch(handlesList);
 
     given(handleRep.checkHandlesExist(anyList())).willReturn(handlesList);
     given(handleRep.updateRecordBatch(anyList(), eq(instant), eq(attributesToUpdate))).willReturn(databaseResponse);
 
     // When
-    var updateResponseReceived = service.updateRecordBatch(updateRequest);
+    var responseReceived = service.updateRecordBatch(updateRequest);
 
     // Then
-    assertThat(updateResponseReceived).isEqualTo(updateResponseExpected);
+    assertThat(responseReceived).isEqualTo(responseExpected);
   }
+
+  @Test
+  void updateRecordTest() throws Exception{
+    // Given
+    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
+    JsonNode updateRequest = genUpdateRequestAltLoc();
+    List<HandleAttribute> updateAttributeList = genUpdateRecordAttributesAltLoc(handle);
+
+    List<HandleAttribute> updateAttributeListFull = genHandleRecordAttributesAltLoc(handle);
+    var databaseResponse =  genObjectNodeAttributeRecord(updateAttributeListFull);
+    JsonApiWrapper responseExpected = genHandleRecordJsonResponseAltLoc(handle);
+
+    given(handleRep.checkHandlesExist(List.of(handle))).willReturn(List.of(handle));
+    given(handleRep.updateRecord(instant, updateAttributeList)).willReturn(databaseResponse);
+
+    // When
+    var responseReceived = service.updateRecord(updateRequest, handle, RECORD_TYPE_HANDLE);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void archiveRecordTest() throws Exception {
+    // Given
+    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
+    JsonNode archiveRequest = genTombstoneRequest();
+    List<HandleAttribute> tombstoneAttributes = genTombstoneRecordRequestAttributes(handle);
+    List<HandleAttribute> tombstoneAttributesFull = genTombstoneRecordFullAttributes(handle);
+
+    var databaseResponse = genObjectNodeAttributeRecord(tombstoneAttributesFull);
+    JsonApiWrapper responseExpected = genGenericRecordJsonResponse(handle, tombstoneAttributesFull, RECORD_TYPE_TOMBSTONE);
+
+    given(handleRep.checkHandlesExist(List.of(handle))).willReturn(List.of(handle));
+    given(handleRep.updateRecord(instant, tombstoneAttributes)).willReturn(databaseResponse);
+
+    // When
+    var responseReceived = service.archiveRecord(archiveRequest, handle);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+
+  }
+
+
 
   // TODO change a pid-type record (e.g. pid issuer
 

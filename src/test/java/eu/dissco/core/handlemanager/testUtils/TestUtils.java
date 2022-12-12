@@ -30,7 +30,6 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.parameters.P;
 import org.w3c.dom.Document;
 
 @Slf4j
@@ -68,7 +67,7 @@ public class TestUtils {
   public static final String OBJECT_TYPE_TESTVAL = "Herbarium Sheet";
   public static final String PRESERVED_OR_LIVING_TESTVAL = "preserved";
 
-  // Pid Type Record vars
+  // Pid Type Record vals
   public static final String PTR_PID = "http://hdl.handle.net/" + PID_ISSUER_PID;
   public static final String PTR_TYPE = "handle";
   public static final String PTR_PRIMARY_NAME = "DiSSCo";
@@ -77,6 +76,9 @@ public class TestUtils {
   public static final String PTR_REGISTRATION_DOI_NAME = "Registration Agency";
   public final static String PTR_HANDLE_RECORD = genPtrHandleRecord(false);
   public final static String PTR_DOI_RECORD = genPtrHandleRecord(true);
+
+  // Tombstone Record vals
+  public final static String TOMBSTONE_TEXT_TESTVAL = "pid was deleted";
 
 
   private TestUtils() {
@@ -177,10 +179,26 @@ public class TestUtils {
     return attributes;
   }
 
-  public static List<HandleAttribute> genUpdateRecordAltLoc(byte[] handle)
+  public static List<HandleAttribute> genTombstoneRecordFullAttributes(byte[] handle){
+    List<HandleAttribute> attributes = genHandleRecordAttributes(handle);
+    HandleAttribute oldPidStatus = new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS, PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8));
+    attributes.remove(oldPidStatus);
+    attributes.addAll(genTombstoneRecordRequestAttributes(handle));
+
+    return attributes;
+  }
+
+  public static List<HandleAttribute> genUpdateRecordAttributesAltLoc(byte[] handle)
       throws ParserConfigurationException, TransformerException {
     byte[] locAlt = setLocations(LOC_ALT_TESTVAL);
     return List.of(new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, locAlt));
+  }
+
+  public static List<HandleAttribute> genTombstoneRecordRequestAttributes(byte[] handle){
+    List<HandleAttribute> tombstoneAttributes = new ArrayList<>();
+    tombstoneAttributes.add(new HandleAttribute(FIELD_IDX.get(TOMBSTONE_TEXT), handle, TOMBSTONE_TEXT, TOMBSTONE_TEXT_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+    tombstoneAttributes.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS, "ARCHIVED".getBytes(StandardCharsets.UTF_8)));
+    return tombstoneAttributes;
   }
 
   public static List<HandleAttribute> genDoiRecordAttributes(byte[] handle) {
@@ -422,7 +440,7 @@ public class TestUtils {
     for (String handle : HANDLE_LIST_STR){
       requestNodeData.put("type", RECORD_TYPE_HANDLE);
       requestNodeData.put("id", handle);
-      requestNodeData.set("attributes", genUpdateRequestAltLoc(handle.getBytes(StandardCharsets.UTF_8)));
+      requestNodeData.set("attributes", genUpdateRequestAltLoc());
       requestNodeRoot.set("data", requestNodeData);
 
       requestNodeList.add(requestNodeRoot.deepCopy());
@@ -434,19 +452,17 @@ public class TestUtils {
     return requestNodeList;
   }
 
-  public static JsonNode genUpdateRequestAltLoc(byte[] handle)
-      throws ParserConfigurationException, TransformerException, JsonProcessingException {
+  public static JsonNode genUpdateRequestAltLoc() {
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode rootNode = mapper.createObjectNode();
     rootNode.putArray(LOC_REQ).add(LOC_ALT_TESTVAL[0]);
     return rootNode;
   }
 
-  public static JsonNode genTombstoneRequest(byte[] handle)
-      throws ParserConfigurationException, TransformerException, JsonProcessingException {
+  public static JsonNode genTombstoneRequest() {
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode rootNode = mapper.createObjectNode();
-    rootNode.putArray(LOC_REQ).add(LOC_ALT_TESTVAL[0]);
+    rootNode.put(TOMBSTONE_TEXT, TOMBSTONE_TEXT_TESTVAL);
     return rootNode;
   }
 

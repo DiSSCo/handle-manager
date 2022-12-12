@@ -171,6 +171,13 @@ public class HandleController {
     return ResponseEntity.status(HttpStatus.OK).body(service.archiveRecord(data, handle));
   }
 
+  @PreAuthorize("isAuthenticated()")
+  @DeleteMapping(value = "/records")
+  public ResponseEntity<List<JsonApiWrapper>> archiveRecords(
+      @RequestBody List<ObjectNode> request)
+      throws InvalidRecordInput, PidResolutionException, IOException, ParserConfigurationException, TransformerException, PidCreationException {
+    return ResponseEntity.status(HttpStatus.OK).body(service.archiveRecordBatch(request));
+  }
 
 
   // Hellos and getters
