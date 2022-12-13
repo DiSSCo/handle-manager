@@ -68,7 +68,7 @@ public class HandleRepository {
     return jsonFormatSingleRecord(dbRecord);
   }
 
-  public List<ObjectNode> resolveBatchRecord(List<byte[]> handles) throws PidResolutionException {
+  public List<ObjectNode> resolveBatchRecord(List<byte[]> handles) {
     var dbRecord = resolveHandleAttributes(handles);
     var handleMap = mapRecords(dbRecord);
 
@@ -175,14 +175,7 @@ public class HandleRepository {
     log.info("posting " + handles.size() + "records");
     log.info("posting " + handleAttributes.size() + "attributes");
 
-    List<ObjectNode> postedRecords;
-    try {
-      postedRecords = resolveBatchRecord(handles);
-    } catch (PidResolutionException e) {
-      rollbackRecordCreation(handles);
-      throw new PidServiceInternalError(String.format(PID_ROLLBACK_MESSAGE, "1"));
-    }
-    return postedRecords;
+    return resolveBatchRecord(handles);
   }
 
   private void postAttributesToDb(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
@@ -244,11 +237,6 @@ public class HandleRepository {
   }
 
   // Rollback
-  private void rollbackRecordCreation(List<byte[]> handles) {
-    context.delete(HANDLES)
-        .where(HANDLES.HANDLE.in(handles))
-        .execute();
-  }
 
   private void rollbackRecordCreation(byte[] handle) {
     context.delete(HANDLES)
