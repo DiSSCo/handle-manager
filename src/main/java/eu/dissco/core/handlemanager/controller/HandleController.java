@@ -2,6 +2,8 @@ package eu.dissco.core.handlemanager.controller;
 
 
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
+import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
+import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
@@ -135,15 +137,15 @@ public class HandleController {
     return ResponseEntity.status(HttpStatus.OK).body(service.updateRecordBatch(request));
   }
 
-  @PreAuthorize("isAuthenticated()")
+
   @DeleteMapping(value = "/record")
   public ResponseEntity<JsonApiWrapper> archiveRecord(
       @RequestBody ObjectNode request)
       throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
-    JsonNode data = request.get("data");
-    byte[] handle = data.get("id").asText().getBytes(StandardCharsets.UTF_8);
+    JsonNode data = request.get(NODE_DATA);
+    byte[] handle = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
     log.info(data.toString());
-    return ResponseEntity.status(HttpStatus.OK).body(service.archiveRecord(data, handle));
+    return ResponseEntity.status(HttpStatus.OK).body(service.archiveRecord(data.get(NODE_ATTRIBUTES), handle));
   }
 
   @PreAuthorize("isAuthenticated()")

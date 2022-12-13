@@ -200,7 +200,8 @@ public class HandleRepository {
 
   private void mergeAttributesToDb(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
     var queryList = new ArrayList<Query>();
-
+    log.info("merging ths record: " + handleAttributes.toString());
+    Set<byte[]> updatedHandles = new HashSet<>();
     for (var handleAttribute : handleAttributes) {
       var query = context.insertInto(HANDLES)
           .set(HANDLES.HANDLE, handleAttribute.handle())
@@ -213,8 +214,21 @@ public class HandleRepository {
           .set(HANDLES.ADMIN_WRITE, true)
           .set(HANDLES.PUB_READ, true)
           .set(HANDLES.PUB_WRITE, false)
-          .onDuplicateKeyIgnore();
+          .onDuplicateKeyUpdate()
+          .set(HANDLES.HANDLE, handleAttribute.handle())
+          .set(HANDLES.IDX, handleAttribute.index())
+          .set(HANDLES.TYPE, handleAttribute.type().getBytes(StandardCharsets.UTF_8))
+          .set(HANDLES.DATA, handleAttribute.data())
+          .set(HANDLES.TTL, 86400)
+          .set(HANDLES.TIMESTAMP, recordTimestamp.getEpochSecond())
+          .set(HANDLES.ADMIN_READ, true)
+          .set(HANDLES.ADMIN_WRITE, true)
+          .set(HANDLES.PUB_READ, true)
+          .set(HANDLES.PUB_WRITE, false);
       queryList.add(query);
+      if (updatedHandles.add(handleAttribute.handle())){
+        queryList.add(versionIncrement(handleAttribute.handle(), recordTimestamp, true));
+      }
     }
     context.batch(queryList).execute();
   }

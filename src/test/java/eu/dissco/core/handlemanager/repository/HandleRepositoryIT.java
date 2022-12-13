@@ -415,8 +415,6 @@ class HandleRepositoryIT extends BaseRepositoryIT {
         HANDLE.getBytes(StandardCharsets.UTF_8),
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
-    List<ObjectNode> updateRequest = genUpdateRequestBatch();
-
     List<List<HandleAttribute>> aggrList = new ArrayList<>();
     List<HandleAttribute> singleRecord;
 
@@ -446,17 +444,46 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     List<HandleAttribute> tombstoneAttributesFull = genTombstoneRecordFullAttributes(handle);
     postAttributes(genHandleRecordAttributes(handle));
     var responseExpected = genObjectNodeAttributeRecord(tombstoneAttributesFull);
-    log.info("*****" + responseExpected.toString());
-    log.info("*****" + tombstoneAttributes);
 
     // When
     handleRep.archiveRecord(CREATED, tombstoneAttributes);
     var responseReceived = handleRep.resolveSingleRecord(handle);
 
     // Then
-    //assertThat(responseExpected).isEqualTo(responseReceived);
+    assertThat(responseExpected).isEqualTo(responseReceived);
   }
 
+  @Test
+  void testArchiveRecordBatch() throws Exception {
+    List<byte[]> handles = List.of(
+        HANDLE.getBytes(StandardCharsets.UTF_8),
+        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
+
+    List<List<HandleAttribute>> aggrList = new ArrayList<>();
+    List<HandleAttribute> attributeList = new ArrayList<>();
+    List<HandleAttribute> singleRecord;
+
+    for (byte[] handle : handles) {
+      postAttributes(genHandleRecordAttributes(handle));
+      attributeList.addAll(incrementVersion(genTombstoneRecordRequestAttributes(handle)));
+      aggrList.add(new ArrayList<>(incrementVersion(genTombstoneRecordFullAttributes(handle))));
+      // TODO: Does version number increment when a record is tombstoned?
+    }
+    log.info("printing agg list");
+    for(var agg : aggrList){
+      log.info(agg.toString());
+    }
+
+    List<ObjectNode> responseExpected = genObjectNodeRecordBatch(aggrList);
+    log.info("response expected : " + responseExpected.toString());
+
+    // When
+    handleRep.archiveRecord(CREATED, attributeList);
+    var responseReceived = handleRep.resolveBatchRecord(handles);
+
+    // Then
+    assertThat(responseExpected).isEqualTo(responseReceived);
+  }
 
   private void postAttributes(List<HandleAttribute> rows) {
     List<Query> queryList = new ArrayList<>();
