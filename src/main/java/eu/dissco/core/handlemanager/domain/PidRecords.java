@@ -47,6 +47,10 @@ public class PidRecords {
   public static final String SPECIMEN_HOST_REQ = "specimenHostPid";
   public static final String IN_COLLECTION_FACILITY_REQ = "inCollectionFacilityPid";
 
+  public static final String NODE_ATTRIBUTES = "attributes";
+  public static final String NODE_DATA = "data";
+  public static final String NODE_ID = "id";
+  public static final String NODE_TYPE = "type";
   // Permitted fields for each record type
   public static final Set<String> HANDLE_RECORD_FIELDS;
   public static final Set<String> DOI_RECORD_FIELDS;
@@ -64,6 +68,7 @@ public class PidRecords {
   public static final Map<String, Integer> FIELD_IDX;
 
   public static final Map<String, Integer> REQ_FIELD_IDX;
+
 
 
   static { // Handle Record Fields

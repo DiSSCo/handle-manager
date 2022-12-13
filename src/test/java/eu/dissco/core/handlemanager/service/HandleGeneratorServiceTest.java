@@ -122,6 +122,18 @@ class HandleGeneratorServiceTest {
     assertThat(generatedHandle2).isEqualTo(expectedHandle2);
   }
 
+  @Test
+  void testInvalidNumberOfHandles(){
+    // Given
+    Random randomGen = new Random();
+
+    // When
+    var tooFew = hgService.newHandle(-1);
+
+    // Then
+    assertThat(tooFew).isEmpty();
+  }
+
 
 }
 

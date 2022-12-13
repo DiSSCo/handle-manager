@@ -126,7 +126,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     List<ObjectNode> responseExpected = genObjectNodeRecordBatch(aggrList);
 
     // When
-    List<ObjectNode> responseReceived = handleRep.createRecordBatchJson(handles, CREATED, flatList);
+    List<ObjectNode> responseReceived = handleRep.createRecords(handles, CREATED, flatList);
     var postedRecord = context.selectFrom(HANDLES).fetch();
 
     // Then
@@ -153,7 +153,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     List<ObjectNode> responseExpected = genObjectNodeRecordBatch(aggrList);
 
     // When
-    List<ObjectNode> responseReceived = handleRep.createRecordBatchJson(handles, CREATED, flatList);
+    List<ObjectNode> responseReceived = handleRep.createRecords(handles, CREATED, flatList);
     var postedRecord = context.selectFrom(HANDLES).fetch();
 
     // Then
@@ -180,7 +180,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     List<ObjectNode> responseExpected = genObjectNodeRecordBatch(aggrList);
 
     // When
-    List<ObjectNode> responseReceived = handleRep.createRecordBatchJson(handles, CREATED, flatList);
+    List<ObjectNode> responseReceived = handleRep.createRecords(handles, CREATED, flatList);
     var postedRecord = context.selectFrom(HANDLES).fetch();
 
     // Then
@@ -207,7 +207,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     List<ObjectNode> responseExpected = genObjectNodeRecordBatch(aggrList);
 
     // When
-    List<ObjectNode> responseReceived = handleRep.createRecordBatchJson(handles, CREATED, flatList);
+    List<ObjectNode> responseReceived = handleRep.createRecords(handles, CREATED, flatList);
     var postedRecord = context.selectFrom(HANDLES).fetch();
 
     // Then

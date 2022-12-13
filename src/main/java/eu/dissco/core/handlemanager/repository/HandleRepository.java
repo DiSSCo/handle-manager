@@ -47,6 +47,18 @@ public class HandleRepository {
         .getValues(HANDLES.HANDLE, byte[].class);
   }
 
+  public List<byte[]> checkHandlesWritable(List<byte[]> handles){
+
+    return context
+        .selectDistinct(HANDLES.HANDLE)
+        .from(HANDLES)
+        .where(HANDLES.HANDLE.in(handles))
+        .and(HANDLES.TYPE.eq(PID_STATUS.getBytes(StandardCharsets.UTF_8)))
+        .and(HANDLES.DATA.notEqual("ARCHIVED".getBytes()))
+        .fetch()
+        .getValues(HANDLES.HANDLE, byte[].class);
+  }
+
   // Resolving handles
   public ObjectNode resolveSingleRecord(byte[] handle) throws PidResolutionException {
     var dbRecord = resolveHandleAttributes(handle);
@@ -164,7 +176,7 @@ public class HandleRepository {
     return postedRecord;
   }
 
-  public List<ObjectNode> createRecordBatchJson(List<byte[]> handles
+  public List<ObjectNode> createRecords(List<byte[]> handles
       , Instant recordTimestamp, List<HandleAttribute> handleAttributes)
       throws PidServiceInternalError {
     postAttributesToDb(recordTimestamp, handleAttributes);
@@ -181,7 +193,7 @@ public class HandleRepository {
     return postedRecords;
   }
 
-  public void postAttributesToDb(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
+  private void postAttributesToDb(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
     var queryList = new ArrayList<Query>();
 
     for (var handleAttribute : handleAttributes) {
@@ -196,6 +208,27 @@ public class HandleRepository {
           .set(HANDLES.ADMIN_WRITE, true)
           .set(HANDLES.PUB_READ, true)
           .set(HANDLES.PUB_WRITE, false);
+      queryList.add(query);
+    }
+    context.batch(queryList).execute();
+  }
+
+  private void mergeAttributesToDb(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
+    var queryList = new ArrayList<Query>();
+
+    for (var handleAttribute : handleAttributes) {
+      var query = context.insertInto(HANDLES)
+          .set(HANDLES.HANDLE, handleAttribute.handle())
+          .set(HANDLES.IDX, handleAttribute.index())
+          .set(HANDLES.TYPE, handleAttribute.type().getBytes(StandardCharsets.UTF_8))
+          .set(HANDLES.DATA, handleAttribute.data())
+          .set(HANDLES.TTL, 86400)
+          .set(HANDLES.TIMESTAMP, recordTimestamp.getEpochSecond())
+          .set(HANDLES.ADMIN_READ, true)
+          .set(HANDLES.ADMIN_WRITE, true)
+          .set(HANDLES.PUB_READ, true)
+          .set(HANDLES.PUB_WRITE, false)
+          .onDuplicateKeyIgnore();
       queryList.add(query);
     }
     context.batch(queryList).execute();
@@ -230,6 +263,12 @@ public class HandleRepository {
         .where(HANDLES.HANDLE.eq(handle))
         .execute();
   }
+
+  // Archive
+  public void archiveRecord(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
+    mergeAttributesToDb(recordTimestamp, handleAttributes);
+  }
+
 
   // Update
   public ObjectNode updateRecord(Instant recordTimestamp, List<HandleAttribute> handleAttributes)

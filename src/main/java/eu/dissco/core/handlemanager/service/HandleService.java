@@ -97,17 +97,17 @@ public class HandleService {
     List<String> recordTypes = new ArrayList<>();
 
     for (JsonNode root : requests) {
-      JsonNode data = root.get("data");
-      JsonNode requestAttributes = data.get("attributes");
-      String recordType = data.get("type").asText();
+      JsonNode data = root.get(NODE_DATA);
+      JsonNode requestAttributes = data.get(NODE_ATTRIBUTES);
+      String recordType = data.get(NODE_TYPE).asText();
       recordTypes.add(recordType);
-      byte[] handle = data.get("id").asText().getBytes(StandardCharsets.UTF_8);
+      byte[] handle = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
       handles.add(handle);
       requestAttributes = validateRequestData(requestAttributes, recordType);
       attributesToUpdate.add(prepareUpdateAttributes(handle, requestAttributes));
     }
     checkInternalDuplicates(handles);
-    checkHandlesExist(handles);
+    checkHandlesWritable(handles);
 
     handleRep.updateRecordBatch(recordTimestamp, attributesToUpdate);
     var updatedRecords = handleRep.resolveBatchRecord(handles);
@@ -145,38 +145,35 @@ public class HandleService {
 
     for (var request: requests) {
       log.info("Request: " + request.toString());
-      ObjectNode dataNode = (ObjectNode) request.get("data");
+      ObjectNode dataNode = (ObjectNode) request.get(NODE_DATA);
       log.info(dataNode.toString());
-      String type = dataNode.get("type").asText();
+      String type = dataNode.get(NODE_TYPE).asText();
       try {
         switch (type) {
           case RECORD_TYPE_HANDLE -> {
-            HandleRecordRequest requestObject = mapper.treeToValue(dataNode.get("attributes"),
+            HandleRecordRequest requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 HandleRecordRequest.class);
             handleAttributes.addAll(
                 prepareHandleRecordAttributes(requestObject, handles.remove(0)));
           }
           case RECORD_TYPE_DOI -> {
-            DoiRecordRequest requestObject = mapper.treeToValue(dataNode.get("attributes"),
+            DoiRecordRequest requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 DoiRecordRequest.class);
             handleAttributes.addAll(prepareDoiRecordAttributes(requestObject, handles.remove(0)));
           }
           case RECORD_TYPE_DS -> {
-            DigitalSpecimenRequest requestObject = mapper.treeToValue(dataNode.get("attributes"),
+            DigitalSpecimenRequest requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 DigitalSpecimenRequest.class);
             handleAttributes.addAll(
                 prepareDigitalSpecimenRecordAttributes(requestObject, handles.remove(0)));
           }
           case RECORD_TYPE_DS_BOTANY -> {
             DigitalSpecimenBotanyRequest requestObject = mapper.treeToValue(
-                dataNode.get("attributes"), DigitalSpecimenBotanyRequest.class);
+                dataNode.get(NODE_ATTRIBUTES), DigitalSpecimenBotanyRequest.class);
             handleAttributes.addAll(
                 prepareDigitalSpecimenBotanyRecordAttributes(requestObject, handles.remove(0)));
           }
-          default -> {
-            throw new InvalidRecordInput(
-                "INVALID INPUT. REASON: unrecognized type. Check" + type + ".");
-          }
+          default -> throw new InvalidRecordInput("INVALID INPUT. REASON: unrecognized type. Check" + type + ".");
         }
       } catch (JsonProcessingException e) {
         throw new InvalidRecordInput(
@@ -185,7 +182,7 @@ public class HandleService {
       }
     }
 
-      var postedRecordAttributes = handleRep.createRecordBatchJson(handlesPost,
+      var postedRecordAttributes = handleRep.createRecords(handlesPost,
           recordTimestamp, handleAttributes);
 
       List<JsonApiWrapper> wrapperList = new ArrayList<>();
@@ -205,7 +202,7 @@ public class HandleService {
       handleAttributes.addAll(prepareHandleRecordAttributes(requests.get(i), handles.get(i)));
     }
     var recordTimestamp = Instant.now();
-    List<ObjectNode> postedRecordAttributes = handleRep.createRecordBatchJson(handles,
+    List<ObjectNode> postedRecordAttributes = handleRep.createRecords(handles,
         recordTimestamp, handleAttributes);
 
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
@@ -225,7 +222,7 @@ public class HandleService {
       handleAttributes.addAll(prepareDoiRecordAttributes(requests.get(i), handles.get(i)));
     }
     var recordTimestamp = Instant.now();
-    List<ObjectNode> postedRecordAttributes = handleRep.createRecordBatchJson(handles,
+    List<ObjectNode> postedRecordAttributes = handleRep.createRecords(handles,
         recordTimestamp, handleAttributes);
 
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
@@ -246,7 +243,7 @@ public class HandleService {
           prepareDigitalSpecimenRecordAttributes(requests.get(i), handles.get(i)));
     }
     var recordTimestamp = Instant.now();
-    List<ObjectNode> postedRecordAttributes = handleRep.createRecordBatchJson(handles,
+    List<ObjectNode> postedRecordAttributes = handleRep.createRecords(handles,
         recordTimestamp, handleAttributes);
 
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
@@ -268,7 +265,7 @@ public class HandleService {
           prepareDigitalSpecimenBotanyRecordAttributes(requests.get(i), handles.get(i)));
     }
     var recordTimestamp = Instant.now();
-    List<ObjectNode> postedRecordAttributes = handleRep.createRecordBatchJson(
+    List<ObjectNode> postedRecordAttributes = handleRep.createRecords(
         handles, recordTimestamp, handleAttributes);
 
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
@@ -385,27 +382,22 @@ public class HandleService {
       throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
     var recordTimestamp = Instant.now();
     List<byte[]> handles = new ArrayList<>();
-    List<HandleAttribute> archiveAttributesNew = new ArrayList<>();
-    List<List<HandleAttribute>> archiveAttributesUpdate = new ArrayList<>();
+    List<HandleAttribute> archiveAttributes = new ArrayList<>();
+
     for (JsonNode root : requests) {
-      JsonNode data = root.get("data");
-      JsonNode requestAttributes = data.get("attributes");
-      byte[] handle = data.get("id").asText().getBytes(StandardCharsets.UTF_8);
+      JsonNode data = root.get(NODE_DATA);
+      JsonNode requestAttributes = data.get(NODE_ATTRIBUTES);
+      byte[] handle = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
       handles.add(handle);
       requestAttributes = validateRequestData(requestAttributes, RECORD_TYPE_TOMBSTONE);
-      archiveAttributesNew.addAll(prepareUpdateAttributes(handle, requestAttributes));
-      archiveAttributesUpdate.add(List.of(
-          new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS,
-              "ARCHIVED".getBytes(StandardCharsets.UTF_8))));
+      archiveAttributes.addAll(prepareUpdateAttributes(handle, requestAttributes));
+      archiveAttributes.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS,
+              "ARCHIVED".getBytes(StandardCharsets.UTF_8)));
     }
     checkInternalDuplicates(handles);
-    checkHandlesExist(handles);
+    checkHandlesWritable(handles);
 
-    checkInternalDuplicates(handles);
-    checkHandlesExist(handles);
-
-    handleRep.updateRecordBatch(recordTimestamp, archiveAttributesUpdate);
-    handleRep.postAttributesToDb(recordTimestamp, archiveAttributesNew);
+    handleRep.archiveRecord(recordTimestamp, archiveAttributes);
     var archivedRecords = handleRep.resolveBatchRecord(handles);
 
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
@@ -429,15 +421,17 @@ public class HandleService {
       throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
     var recordTimestamp = Instant.now();
     validateRequestData(request, RECORD_TYPE_TOMBSTONE);
-    checkHandlesExist(List.of(handle));
+    checkHandlesWritable(List.of(handle));
 
     List<HandleAttribute> tombstoneAttributes = prepareUpdateAttributes(handle, request);
 
     tombstoneAttributes.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS,
         "ARCHIVED".getBytes(StandardCharsets.UTF_8)));
-    ObjectNode archivedRecord = handleRep.updateRecord(recordTimestamp, tombstoneAttributes);
+    handleRep.archiveRecord(recordTimestamp, tombstoneAttributes);
+    var archivedRecord = handleRep.resolveSingleRecord(handle);
 
-    // Package response
+
+        // Package response
     JsonApiData jsonData = new JsonApiData(new String(handle), RECORD_TYPE_TOMBSTONE,
         archivedRecord);
     JsonApiLinks links = null;
@@ -457,7 +451,7 @@ public class HandleService {
     var recordTimestamp = Instant.now();
 
     request = validateRequestData(request, recordType);
-    checkHandlesExist(List.of(handle));
+    checkHandlesWritable(List.of(handle));
     List<HandleAttribute> attributesToUpdate = prepareUpdateAttributes(handle, request);
 
     // Update record
@@ -529,10 +523,10 @@ public class HandleService {
     }
   }
 
-  private void checkHandlesExist(List<byte[]> handles) throws PidResolutionException {
+  private void checkHandlesWritable(List<byte[]> handles) throws PidResolutionException {
     Set<byte[]> handlesToUpdate = new HashSet<>(handles);
 
-    Set<byte[]> handlesExist = new HashSet<>(handleRep.checkHandlesExist(handles));
+    Set<byte[]> handlesExist = new HashSet<>(handleRep.checkHandlesWritable(handles));
     if (handlesExist.size() < handles.size()) {
       handlesToUpdate.removeAll(handlesExist);
       Set<String> handlesDontExist = new HashSet<>();
@@ -540,7 +534,7 @@ public class HandleService {
         handlesDontExist.add(new String(handle));
       }
       throw new PidResolutionException(
-          "INVALID INPUT. One or more handles in request do not exist. Verify the following handle(s): "
+          "INVALID INPUT. One or more handles in request do not exist or are archived. Verify the following handle(s): "
               + handlesDontExist);
     }
   }
@@ -774,7 +768,7 @@ public class HandleService {
     for (int i = 0; i < objectLocations.length; i++) {
 
       var locs = doc.createElement("location");
-      locs.setAttribute("id", String.valueOf(i));
+      locs.setAttribute(NODE_ID, String.valueOf(i));
       locs.setAttribute("href", objectLocations[i]);
       locs.setAttribute("weight", "0");
       locations.appendChild(locs);

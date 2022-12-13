@@ -1,11 +1,11 @@
 package eu.dissco.core.handlemanager.controller;
 
 
+import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_TOMBSTONE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -21,12 +21,9 @@ import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.service.HandleService;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -55,7 +52,7 @@ public class HandleController {
   private final ObjectMapper mapper;
 
   @GetMapping("/record")
-  public ResponseEntity<JsonApiWrapper> resolveSingleHandle(
+  public ResponseEntity<JsonApiWrapper> resolvePid(
       @RequestBody byte[] handle
   ) throws PidResolutionException, PidServiceInternalError {
     JsonApiWrapper node = service.resolveSingleRecord(handle);
@@ -63,7 +60,7 @@ public class HandleController {
   }
 
   @GetMapping("/records")
-  public ResponseEntity<List<JsonApiWrapper>> resolveBatchHandle(
+  public ResponseEntity<List<JsonApiWrapper>> resolvePids(
       @RequestBody List<String> handleStrings
   ) throws PidResolutionException, PidServiceInternalError {
 
@@ -73,51 +70,6 @@ public class HandleController {
     }
     List<JsonApiWrapper> node = service.resolveBatchRecord(handles);
     return ResponseEntity.status(HttpStatus.OK).body(node);
-  }
-
-  @PostMapping(value = "/records")
-  public ResponseEntity<List<JsonApiWrapper>> createRecordBatch(
-      @RequestBody List<ObjectNode> requests)
-      throws PidResolutionException, PidServiceInternalError, InvalidRecordInput {
-
-    return ResponseEntity.status(HttpStatus.CREATED)
-        .body(service.createRecordBatch(requests));
-  }
-
-  @PreAuthorize("isAuthenticated()")
-  @PostMapping(value = "/records", params = "pidType=handle")
-  public ResponseEntity<List<JsonApiWrapper>> createHandleRecordJsonBatch(
-      @RequestBody List<HandleRecordRequest> requests)
-      throws PidResolutionException, PidServiceInternalError {
-    return ResponseEntity.status(HttpStatus.CREATED)
-        .body(service.createHandleRecordBatchJson(requests));
-  }
-
-  @PreAuthorize("isAuthenticated()")
-  @PostMapping(value = "/records", params = "pidType=doi")
-  public ResponseEntity<List<JsonApiWrapper>> createDoiRecordJsonBatch(
-      @RequestBody List<DoiRecordRequest> requests)
-      throws PidResolutionException, PidServiceInternalError {
-    return ResponseEntity.status(HttpStatus.CREATED)
-        .body(service.createDoiRecordBatchJson(requests));
-  }
-
-  @PreAuthorize("isAuthenticated()")
-  @PostMapping(value = "/records", params = "pidType=digitalSpecimen")
-  public ResponseEntity<List<JsonApiWrapper>> createDigitalSpecimenJsonBatch(
-      @RequestBody List<DigitalSpecimenRequest> requests)
-      throws PidResolutionException, PidServiceInternalError {
-    return ResponseEntity.status(HttpStatus.CREATED)
-        .body(service.createDigitalSpecimenBatchJson(requests));
-  }
-
-  @PreAuthorize("isAuthenticated()")
-  @PostMapping(value = "/records", params = "pidType=digitalSpecimenBotany")
-  public ResponseEntity<List<JsonApiWrapper>> createDigitalSpecimenBotanyJsonBatch(
-      @RequestBody List<DigitalSpecimenBotanyRequest> requests)
-      throws PidResolutionException, PidServiceInternalError {
-    return ResponseEntity.status(HttpStatus.CREATED)
-        .body(service.createDigitalSpecimenBotanyBatchJson(requests));
   }
 
 
@@ -131,24 +83,32 @@ public class HandleController {
     String type = request.get("type").asText();
     switch(type){
       case RECORD_TYPE_HANDLE -> {
-        HandleRecordRequest requestAttributes = mapper.treeToValue(request.get("attributes"), HandleRecordRequest.class);
+        HandleRecordRequest requestAttributes = mapper.treeToValue(request.get(NODE_ATTRIBUTES), HandleRecordRequest.class);
         return ResponseEntity.status(HttpStatus.CREATED).body(service.createHandleRecordJson(requestAttributes));
       }
       case RECORD_TYPE_DOI -> {
-        DoiRecordRequest requestAttributes = mapper.treeToValue(request.get("attributes"), DoiRecordRequest.class);
+        DoiRecordRequest requestAttributes = mapper.treeToValue(request.get(NODE_ATTRIBUTES), DoiRecordRequest.class);
         return ResponseEntity.status(HttpStatus.CREATED).body(service.createDoiRecordJson(requestAttributes));
       }
       case RECORD_TYPE_DS -> {
-        DigitalSpecimenRequest requestAttributes = mapper.treeToValue(request.get("attributes"), DigitalSpecimenRequest.class);
+        DigitalSpecimenRequest requestAttributes = mapper.treeToValue(request.get(NODE_ATTRIBUTES), DigitalSpecimenRequest.class);
         return ResponseEntity.status(HttpStatus.CREATED).body(service.createDigitalSpecimenJson(requestAttributes));
       }
       case RECORD_TYPE_DS_BOTANY -> {
-        DigitalSpecimenBotanyRequest requestAttributes = mapper.treeToValue(request.get("attributes"), DigitalSpecimenBotanyRequest.class);
+        DigitalSpecimenBotanyRequest requestAttributes = mapper.treeToValue(request.get(NODE_ATTRIBUTES), DigitalSpecimenBotanyRequest.class);
         return ResponseEntity.status(HttpStatus.CREATED).body(service.createDigitalSpecimenBotanyJson(requestAttributes));
       }
-      default -> throw new InvalidRecordInput("INVALID INPUT. Unrecognized Type");
+      default -> throw new InvalidRecordInput("INVALID INPUT. Unrecognized Type: " + type);
     }
+  }
 
+  @PostMapping(value = "/records")
+  public ResponseEntity<List<JsonApiWrapper>> createRecords(
+      @RequestBody List<ObjectNode> requests)
+      throws PidResolutionException, PidServiceInternalError, InvalidRecordInput {
+
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(service.createRecordBatch(requests));
   }
 
   // Update
@@ -161,7 +121,7 @@ public class HandleController {
     JsonNode data = request.get("data");
     byte[] handle = data.get("id").asText().getBytes(StandardCharsets.UTF_8);
     String recordType = data.get("type").asText();
-    JsonNode requestAttributes = data.get("attributes");
+    JsonNode requestAttributes = data.get(NODE_ATTRIBUTES);
     return ResponseEntity.status(HttpStatus.OK)
         .body(service.updateRecord(requestAttributes, handle, recordType));
   }
@@ -228,7 +188,7 @@ public class HandleController {
     return ResponseEntity.ok(handleList);
   }
 
-  //Error Handling
+  //Exception Handling
 
   @ExceptionHandler(PidServiceInternalError.class)
   private ResponseEntity<String> pidCreationException(PidServiceInternalError e) {

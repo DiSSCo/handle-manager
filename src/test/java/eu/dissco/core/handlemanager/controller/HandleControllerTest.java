@@ -11,7 +11,6 @@ import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiData;
@@ -34,7 +33,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.parameters.P;
 
 @ExtendWith(MockitoExtension.class)
 @Slf4j
@@ -102,7 +100,7 @@ class HandleControllerTest {
     given(service.resolveSingleRecord(handle)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.resolveSingleHandle(handle);
+    var responseReceived = controller.resolvePid(handle);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -120,7 +118,7 @@ class HandleControllerTest {
     given(service.resolveBatchRecord(anyList())).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.resolveBatchHandle(HANDLE_LIST_STR);
+    var responseReceived = controller.resolvePids(HANDLE_LIST_STR);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -213,22 +211,22 @@ class HandleControllerTest {
 
 
   // Response Object
-
   @Test
-  void testCreateHandleRecordJsonBatch()
-      throws Exception {
+  void testCreateHandleRecordBatch() throws Exception {
     // Given
     List<byte[]> handles = List.of(
         HANDLE.getBytes(StandardCharsets.UTF_8),
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-    List<HandleRecordRequest> request = genHandleRecordRequestBatch(handles);
+
+    List<ObjectNode> requests = new ArrayList<>();
+    for (byte[] handle : handles) {
+      requests.add(genCreateRecordRequest(genHandleRecordRequestObject(), RECORD_TYPE_HANDLE));
+    }
     List<JsonApiWrapper> responseExpected = genHandleRecordJsonResponseBatch(handles);
-
-    given(service.createHandleRecordBatchJson(request)).willReturn(responseExpected);
+    given(service.createRecordBatch(requests)).willReturn(responseExpected);
 
     // When
-    ResponseEntity<List<JsonApiWrapper>> responseReceived = controller.createHandleRecordJsonBatch(
-        request);
+    var responseReceived = controller.createRecords(requests);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -236,20 +234,21 @@ class HandleControllerTest {
   }
 
   @Test
-  void testCreateDoiRecordJsonBatch()
-      throws Exception {
+  void testCreateDoiRecordBatch() throws Exception {
     // Given
     List<byte[]> handles = List.of(
         HANDLE.getBytes(StandardCharsets.UTF_8),
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-    List<DoiRecordRequest> request = genDoiRecordRequestBatch(handles);
+
+    List<ObjectNode> requests = new ArrayList<>();
+    for (byte[] handle : handles) {
+      requests.add(genCreateRecordRequest(genDoiRecordRequestObject(), RECORD_TYPE_DOI));
+    }
     List<JsonApiWrapper> responseExpected = genDoiRecordJsonResponseBatch(handles);
-
-    given(service.createDoiRecordBatchJson(request)).willReturn(responseExpected);
+    given(service.createRecordBatch(requests)).willReturn(responseExpected);
 
     // When
-    ResponseEntity<List<JsonApiWrapper>> responseReceived = controller.createDoiRecordJsonBatch(
-        request);
+    var responseReceived = controller.createRecords(requests);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -257,20 +256,21 @@ class HandleControllerTest {
   }
 
   @Test
-  void testCreateDigitalSpecimenJsonBatch()
-      throws Exception {
+  void testCreateDigitalSpecimenBatch() throws Exception {
     // Given
     List<byte[]> handles = List.of(
         HANDLE.getBytes(StandardCharsets.UTF_8),
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-    List<DigitalSpecimenRequest> request = genDigitalSpecimenRequestBatch(handles);
+
+    List<ObjectNode> requests = new ArrayList<>();
+    for (byte[] handle : handles) {
+      requests.add(genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_DS));
+    }
     List<JsonApiWrapper> responseExpected = genDigitalSpecimenJsonResponseBatch(handles);
-
-    given(service.createDigitalSpecimenBatchJson(request)).willReturn(responseExpected);
+    given(service.createRecordBatch(requests)).willReturn(responseExpected);
 
     // When
-    ResponseEntity<List<JsonApiWrapper>> responseReceived = controller.createDigitalSpecimenJsonBatch(
-        request);
+    var responseReceived = controller.createRecords(requests);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -278,20 +278,21 @@ class HandleControllerTest {
   }
 
   @Test
-  void testCreateDigitalSpecimenBotanyJsonBatch()
-      throws Exception {
+  void testCreateDigitalSpecimenBotanyBatch() throws Exception {
     // Given
     List<byte[]> handles = List.of(
         HANDLE.getBytes(StandardCharsets.UTF_8),
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-    List<DigitalSpecimenBotanyRequest> request = genDigitalSpecimenBotanyRequestBatch(handles);
-    List<JsonApiWrapper> responseExpected = genDigitalSpecimenBotanyJsonResponseBatch(handles);
 
-    given(service.createDigitalSpecimenBotanyBatchJson(request)).willReturn(responseExpected);
+    List<ObjectNode> requests = new ArrayList<>();
+    for (byte[] handle : handles) {
+      requests.add(genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_DS_BOTANY));
+    }
+    List<JsonApiWrapper> responseExpected = genDigitalSpecimenBotanyJsonResponseBatch(handles);
+    given(service.createRecordBatch(requests)).willReturn(responseExpected);
 
     // When
-    ResponseEntity<List<JsonApiWrapper>> responseReceived = controller.createDigitalSpecimenBotanyJsonBatch(
-        request);
+    var responseReceived = controller.createRecords(requests);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
