@@ -120,7 +120,7 @@ class HandleServiceTest {
   void testCreateHandleRecordJson() throws Exception {
     // Given
     byte[] handle = handlesList.get(0);
-    HandleRecordRequest request = genHandleRecordRequest();
+    HandleRecordRequest request = genHandleRecordRequestObject();
     List<HandleAttribute> handleRecord = genHandleRecordAttributes(handle);
     var databaseResponse = genObjectNodeAttributeRecord(handleRecord);
     var responseExpected = genHandleRecordJsonResponse(handle);
@@ -139,7 +139,7 @@ class HandleServiceTest {
   void testCreateDoiRecordJson() throws Exception {
     // Given
     byte[] handle = handlesList.get(0);
-    DoiRecordRequest request = genDoiRecordRequest();
+    DoiRecordRequest request = genDoiRecordRequestObject();
     List<HandleAttribute> handleRecord = genDoiRecordAttributes(handle);
     var databaseResponse = genObjectNodeAttributeRecord(handleRecord);
     var responseExpected = genDoiRecordJsonResponse(handle);
@@ -158,7 +158,7 @@ class HandleServiceTest {
   void testCreateDigitalSpecimenJson() throws Exception {
     // Given
     byte[] handle = handlesList.get(0);
-    DigitalSpecimenRequest request = genDigitalSpecimenRequest();
+    DigitalSpecimenRequest request = genDigitalSpecimenRequestObject();
     List<HandleAttribute> handleRecord = genDigitalSpecimenAttributes(handle);
     var databaseResponse = genObjectNodeAttributeRecord(handleRecord);
     var responseExpected = genDigitalSpecimenJsonResponse(handle);
@@ -177,7 +177,7 @@ class HandleServiceTest {
   void testCreateDigitalSpecimenBotanyJson() throws Exception {
     // Given
     byte[] handle = handlesList.get(0);
-    DigitalSpecimenBotanyRequest request = genDigitalSpecimenBotanyRequest();
+    DigitalSpecimenBotanyRequest request = genDigitalSpecimenBotanyRequestObject();
     List<HandleAttribute> handleRecord = genDigitalSpecimenBotanyAttributes(handle);
     var databaseResponse = genObjectNodeAttributeRecord(handleRecord);
     var responseExpected = genDigitalSpecimenBotanyJsonResponse(handle);

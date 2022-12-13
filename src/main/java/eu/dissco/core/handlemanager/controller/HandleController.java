@@ -1,7 +1,15 @@
 package eu.dissco.core.handlemanager.controller;
 
 
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_TOMBSTONE;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapper;
@@ -44,6 +52,8 @@ public class HandleController {
 
   private final HandleService service;
 
+  private final ObjectMapper mapper;
+
   @GetMapping("/record")
   public ResponseEntity<JsonApiWrapper> resolveSingleHandle(
       @RequestBody byte[] handle
@@ -63,6 +73,15 @@ public class HandleController {
     }
     List<JsonApiWrapper> node = service.resolveBatchRecord(handles);
     return ResponseEntity.status(HttpStatus.OK).body(node);
+  }
+
+  @PostMapping(value = "/records")
+  public ResponseEntity<List<JsonApiWrapper>> createRecordBatch(
+      @RequestBody List<ObjectNode> requests)
+      throws PidResolutionException, PidServiceInternalError, InvalidRecordInput {
+
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(service.createRecordBatch(requests));
   }
 
   @PreAuthorize("isAuthenticated()")
@@ -103,37 +122,33 @@ public class HandleController {
 
 
   @PreAuthorize("isAuthenticated()")
-  @PostMapping(value = "/record", params = "pidType=handle")
-  public ResponseEntity<JsonApiWrapper> createHandleRecordJson(
-      @RequestBody HandleRecordRequest request)
-      throws PidResolutionException, PidServiceInternalError {
-    return ResponseEntity.status(HttpStatus.CREATED).body(service.createHandleRecordJson(request));
-  }
+  @PostMapping(value = "/record")
+  public ResponseEntity<JsonApiWrapper> createRecord(
+      @RequestBody ObjectNode requestRoot)
+      throws PidResolutionException, PidServiceInternalError, JsonProcessingException, InvalidRecordInput {
 
-  @PreAuthorize("isAuthenticated()")
-  @PostMapping(value = "/record", params = "pidType=doi")
-  public ResponseEntity<JsonApiWrapper> createDoiRecordJson(
-      @RequestBody DoiRecordRequest request)
-      throws PidResolutionException, PidServiceInternalError {
-    return ResponseEntity.status(HttpStatus.CREATED).body(service.createDoiRecordJson(request));
-  }
+    JsonNode request = requestRoot.get("data");
+    String type = request.get("type").asText();
+    switch(type){
+      case RECORD_TYPE_HANDLE -> {
+        HandleRecordRequest requestAttributes = mapper.treeToValue(request.get("attributes"), HandleRecordRequest.class);
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.createHandleRecordJson(requestAttributes));
+      }
+      case RECORD_TYPE_DOI -> {
+        DoiRecordRequest requestAttributes = mapper.treeToValue(request.get("attributes"), DoiRecordRequest.class);
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.createDoiRecordJson(requestAttributes));
+      }
+      case RECORD_TYPE_DS -> {
+        DigitalSpecimenRequest requestAttributes = mapper.treeToValue(request.get("attributes"), DigitalSpecimenRequest.class);
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.createDigitalSpecimenJson(requestAttributes));
+      }
+      case RECORD_TYPE_DS_BOTANY -> {
+        DigitalSpecimenBotanyRequest requestAttributes = mapper.treeToValue(request.get("attributes"), DigitalSpecimenBotanyRequest.class);
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.createDigitalSpecimenBotanyJson(requestAttributes));
+      }
+      default -> throw new InvalidRecordInput("INVALID INPUT. Unrecognized Type");
+    }
 
-  @PreAuthorize("isAuthenticated()")
-  @PostMapping(value = "/record", params = "pidType=digitalSpecimen")
-  public ResponseEntity<JsonApiWrapper> createDigitalSpecimenJson(
-      @RequestBody DigitalSpecimenRequest request)
-      throws PidResolutionException, PidServiceInternalError {
-    return ResponseEntity.status(HttpStatus.CREATED)
-        .body(service.createDigitalSpecimenJson(request));
-  }
-
-  @PreAuthorize("isAuthenticated()")
-  @PostMapping(value = "/record", params = "pidType=digitalSpecimenBotany")
-  public ResponseEntity<JsonApiWrapper> createDigitalSpecimenBotanyJson(
-      @RequestBody DigitalSpecimenBotanyRequest request)
-      throws PidResolutionException, PidServiceInternalError {
-    return ResponseEntity.status(HttpStatus.CREATED)
-        .body(service.createDigitalSpecimenBotanyJson(request));
   }
 
   // Update

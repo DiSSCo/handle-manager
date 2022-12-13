@@ -1,5 +1,8 @@
 package eu.dissco.core.handlemanager.controller;
 
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_TOMBSTONE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.*;
@@ -31,6 +34,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.parameters.P;
 
 @ExtendWith(MockitoExtension.class)
 @Slf4j
@@ -41,9 +45,11 @@ class HandleControllerTest {
   private HandleService service;
   private HandleController controller;
 
+  ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
+
   @BeforeEach
   void setup() {
-    controller = new HandleController(service);
+    controller = new HandleController(service, mapper);
   }
 
   @Test
@@ -135,16 +141,19 @@ class HandleControllerTest {
   }
 
   // Single Handle Record Creation
+
+
   @Test
-  void testHandleRecordCreationJson() throws Exception {
+  void testCreateHandleRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    HandleRecordRequest request = genHandleRecordRequest();
+    HandleRecordRequest request = genHandleRecordRequestObject();
+    ObjectNode requestNode = genCreateRecordRequest(request, RECORD_TYPE_HANDLE);
     JsonApiWrapper responseExpected = genHandleRecordJsonResponse(handle);
     given(service.createHandleRecordJson(request)).willReturn(responseExpected);
 
     // When
-    ResponseEntity<JsonApiWrapper> responseReceived = controller.createHandleRecordJson(request);
+    var responseReceived = controller.createRecord(requestNode);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -152,15 +161,16 @@ class HandleControllerTest {
   }
 
   @Test
-  void testDoiRecordCreationJson() throws Exception {
+  void testCreateDoiRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    DoiRecordRequest request = genDoiRecordRequest();
+    DoiRecordRequest request = genDoiRecordRequestObject();
+    ObjectNode requestNode = genCreateRecordRequest(request, RECORD_TYPE_DOI);
     JsonApiWrapper responseExpected = genDoiRecordJsonResponse(handle);
     given(service.createDoiRecordJson(request)).willReturn(responseExpected);
 
     // When
-    ResponseEntity<JsonApiWrapper> responseReceived = controller.createDoiRecordJson(request);
+    var responseReceived = controller.createRecord(requestNode);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -168,15 +178,16 @@ class HandleControllerTest {
   }
 
   @Test
-  void testDigitalSpecimenCreationJson() throws Exception {
+  void testCreateDigitalSpecimen() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    DigitalSpecimenRequest request = genDigitalSpecimenRequest();
+    DigitalSpecimenRequest request = genDigitalSpecimenRequestObject();
+    ObjectNode requestNode = genCreateRecordRequest(request, RECORD_TYPE_DS);
     JsonApiWrapper responseExpected = genDigitalSpecimenJsonResponse(handle);
     given(service.createDigitalSpecimenJson(request)).willReturn(responseExpected);
 
     // When
-    ResponseEntity<JsonApiWrapper> responseReceived = controller.createDigitalSpecimenJson(request);
+    var responseReceived = controller.createRecord(requestNode);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -184,21 +195,22 @@ class HandleControllerTest {
   }
 
   @Test
-  void testDigitalSpecimenBotanyCreationJson() throws Exception {
+  void testCreateDigitalSpecimenBotany() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    DigitalSpecimenBotanyRequest request = genDigitalSpecimenBotanyRequest();
+    DigitalSpecimenBotanyRequest request = genDigitalSpecimenBotanyRequestObject();
+    ObjectNode requestNode = genCreateRecordRequest(request, RECORD_TYPE_DS_BOTANY);
     JsonApiWrapper responseExpected = genDigitalSpecimenBotanyJsonResponse(handle);
     given(service.createDigitalSpecimenBotanyJson(request)).willReturn(responseExpected);
 
     // When
-    ResponseEntity<JsonApiWrapper> responseReceived = controller.createDigitalSpecimenBotanyJson(
-        request);
+    var responseReceived = controller.createRecord(requestNode);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
+
 
   // Response Object
 
@@ -295,22 +307,9 @@ class HandleControllerTest {
   }
 
   @Test
-  void testPidCreationException() throws Exception {
-    // Given
-    HandleRecordRequest request = genHandleRecordRequest();
-    given(service.createHandleRecordJson(request)).willThrow(PidResolutionException.class);
-
-    // When
-    var exception = assertThrowsExactly(PidResolutionException.class,
-        () -> controller.createHandleRecordJson(request));
-
-    // Then
-  }
-
-  @Test
   void testUpdateRecord() throws Exception {
     // Given
-    ObjectMapper mapper = new ObjectMapper();
+
     byte[] handle = HANDLE.getBytes();
     var updateAttributes = genUpdateRequestAltLoc();
     JsonApiData updateRequest = new JsonApiData(HANDLE, RECORD_TYPE_HANDLE, updateAttributes);
@@ -336,8 +335,6 @@ class HandleControllerTest {
     List<byte[]> handles = List.of(
         HANDLE.getBytes(StandardCharsets.UTF_8),
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-
-    ObjectMapper mapper = new ObjectMapper();
 
     List<ObjectNode> updateRequestList = new ArrayList<>();
     List<JsonApiWrapper> responseExpected = new ArrayList<>();
@@ -366,7 +363,6 @@ class HandleControllerTest {
   @Test
   void testArchiveRecord() throws Exception {
     // Given
-    ObjectMapper mapper = new ObjectMapper();
     byte[] handle = HANDLE.getBytes();
     var archiveAttributes = genTombstoneRequest();
     JsonApiData archiveRequest = new JsonApiData(HANDLE, RECORD_TYPE_TOMBSTONE, archiveAttributes);
@@ -396,8 +392,6 @@ class HandleControllerTest {
         HANDLE.getBytes(StandardCharsets.UTF_8),
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
-    ObjectMapper mapper = new ObjectMapper();
-
     List<ObjectNode> updateRequestList = new ArrayList<>();
     List<JsonApiWrapper> responseExpected = new ArrayList<>();
 
@@ -419,6 +413,22 @@ class HandleControllerTest {
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  private <T extends HandleRecordRequest> ObjectNode genCreateRecordRequest(T request, String recordType){
+    ObjectNode rootNode = mapper.createObjectNode();
+    ObjectNode dataNode = mapper.createObjectNode();
+    ObjectNode attributeNode = mapper.valueToTree(request);
+
+    if (attributeNode.has("referent")){
+      attributeNode.remove("referent");
+    }
+
+    dataNode.put("type", recordType);
+    dataNode.set("attributes", attributeNode);
+    rootNode.set("data", dataNode);
+
+    return rootNode;
   }
 
 

@@ -168,6 +168,9 @@ public class HandleRepository {
       , Instant recordTimestamp, List<HandleAttribute> handleAttributes)
       throws PidServiceInternalError {
     postAttributesToDb(recordTimestamp, handleAttributes);
+    log.info("posting " + handles.size() + "records");
+    log.info("posting " + handleAttributes.size() + "attributes");
+
     List<ObjectNode> postedRecords;
     try {
       postedRecords = resolveBatchRecord(handles);

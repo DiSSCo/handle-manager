@@ -89,6 +89,113 @@ public class HandleService {
 
   // Batch Creation Json
 
+  public List<JsonApiWrapper> updateRecordBatch(List<ObjectNode> requests)
+      throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
+    var recordTimestamp = Instant.now();
+    List<byte[]> handles = new ArrayList<>();
+    List<List<HandleAttribute>> attributesToUpdate = new ArrayList<>();
+    List<String> recordTypes = new ArrayList<>();
+
+    for (JsonNode root : requests) {
+      JsonNode data = root.get("data");
+      JsonNode requestAttributes = data.get("attributes");
+      String recordType = data.get("type").asText();
+      recordTypes.add(recordType);
+      byte[] handle = data.get("id").asText().getBytes(StandardCharsets.UTF_8);
+      handles.add(handle);
+      requestAttributes = validateRequestData(requestAttributes, recordType);
+      attributesToUpdate.add(prepareUpdateAttributes(handle, requestAttributes));
+    }
+    checkInternalDuplicates(handles);
+    checkHandlesExist(handles);
+
+    handleRep.updateRecordBatch(recordTimestamp, attributesToUpdate);
+    var updatedRecords = handleRep.resolveBatchRecord(handles);
+
+    List<JsonApiWrapper> wrapperList = new ArrayList<>();
+    int i = 0;
+
+    for (ObjectNode updatedRecord : updatedRecords) {
+      String pidLink;
+      try {
+        pidLink = mapper.writeValueAsString(updatedRecord.get("pid"));
+      } catch (JsonProcessingException e) {
+        throw new PidServiceInternalError(
+            "A JSON processing error has occured reading the updated record's PID.", e);
+      }
+      String pidName = getPidName(pidLink);
+      JsonApiData jsonData = new JsonApiData(pidName, recordTypes.get(i++), updatedRecord);
+      JsonApiLinks links = new JsonApiLinks(pidLink);
+      wrapperList.add(new JsonApiWrapper(links, jsonData));
+    }
+    return wrapperList;
+  }
+
+
+  public List<JsonApiWrapper> createRecordBatch(List<ObjectNode> requests)
+      throws PidResolutionException, PidServiceInternalError, InvalidRecordInput {
+    var recordTimestamp = Instant.now();
+    List<byte[]> handles = hf.genHandleList(requests.size());
+    List<byte[]> handlesPost = new ArrayList<>(handles);
+    List<HandleAttribute> handleAttributes = new ArrayList<>();
+
+    log.info("number of handles: " + handles.size());
+    log.info("number of requests: " + requests.size());
+
+
+    for (var request: requests) {
+      log.info("Request: " + request.toString());
+      ObjectNode dataNode = (ObjectNode) request.get("data");
+      log.info(dataNode.toString());
+      String type = dataNode.get("type").asText();
+      try {
+        switch (type) {
+          case RECORD_TYPE_HANDLE -> {
+            HandleRecordRequest requestObject = mapper.treeToValue(dataNode.get("attributes"),
+                HandleRecordRequest.class);
+            handleAttributes.addAll(
+                prepareHandleRecordAttributes(requestObject, handles.remove(0)));
+          }
+          case RECORD_TYPE_DOI -> {
+            DoiRecordRequest requestObject = mapper.treeToValue(dataNode.get("attributes"),
+                DoiRecordRequest.class);
+            handleAttributes.addAll(prepareDoiRecordAttributes(requestObject, handles.remove(0)));
+          }
+          case RECORD_TYPE_DS -> {
+            DigitalSpecimenRequest requestObject = mapper.treeToValue(dataNode.get("attributes"),
+                DigitalSpecimenRequest.class);
+            handleAttributes.addAll(
+                prepareDigitalSpecimenRecordAttributes(requestObject, handles.remove(0)));
+          }
+          case RECORD_TYPE_DS_BOTANY -> {
+            DigitalSpecimenBotanyRequest requestObject = mapper.treeToValue(
+                dataNode.get("attributes"), DigitalSpecimenBotanyRequest.class);
+            handleAttributes.addAll(
+                prepareDigitalSpecimenBotanyRecordAttributes(requestObject, handles.remove(0)));
+          }
+          default -> {
+            throw new InvalidRecordInput(
+                "INVALID INPUT. REASON: unrecognized type. Check" + type + ".");
+          }
+        }
+      } catch (JsonProcessingException e) {
+        throw new InvalidRecordInput(
+            "An error has occurred parsing a record in request. More information: "
+                + e.getMessage());
+      }
+    }
+
+      var postedRecordAttributes = handleRep.createRecordBatchJson(handlesPost,
+          recordTimestamp, handleAttributes);
+
+      List<JsonApiWrapper> wrapperList = new ArrayList<>();
+
+      for (ObjectNode recordAttributes : postedRecordAttributes) {
+        wrapperList.add(wrapResponse(recordAttributes, "PID"));
+      }
+      return wrapperList;
+  }
+
   public List<JsonApiWrapper> createHandleRecordBatchJson(List<HandleRecordRequest> requests)
       throws PidResolutionException, PidServiceInternalError {
     List<byte[]> handles = hf.genHandleList(requests.size());
@@ -273,47 +380,6 @@ public class HandleService {
   }
 
   // Update
-  public List<JsonApiWrapper> updateRecordBatch(List<ObjectNode> requests)
-      throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
-    var recordTimestamp = Instant.now();
-    List<byte[]> handles = new ArrayList<>();
-    List<List<HandleAttribute>> attributesToUpdate = new ArrayList<>();
-    List<String> recordTypes = new ArrayList<>();
-
-    for (JsonNode root : requests) {
-      JsonNode data = root.get("data");
-      JsonNode requestAttributes = data.get("attributes");
-      String recordType = data.get("type").asText();
-      recordTypes.add(recordType);
-      byte[] handle = data.get("id").asText().getBytes(StandardCharsets.UTF_8);
-      handles.add(handle);
-      requestAttributes = validateRequestData(requestAttributes, recordType);
-      attributesToUpdate.add(prepareUpdateAttributes(handle, requestAttributes));
-    }
-    checkInternalDuplicates(handles);
-    checkHandlesExist(handles);
-
-    handleRep.updateRecordBatch(recordTimestamp, attributesToUpdate);
-    var updatedRecords = handleRep.resolveBatchRecord(handles);
-
-    List<JsonApiWrapper> wrapperList = new ArrayList<>();
-    int i = 0;
-
-    for (ObjectNode updatedRecord : updatedRecords) {
-      String pidLink;
-      try {
-        pidLink = mapper.writeValueAsString(updatedRecord.get("pid"));
-      } catch (JsonProcessingException e) {
-        throw new PidServiceInternalError(
-            "A JSON processing error has occured reading the updated record's PID.", e);
-      }
-      String pidName = getPidName(pidLink);
-      JsonApiData jsonData = new JsonApiData(pidName, recordTypes.get(i++), updatedRecord);
-      JsonApiLinks links = new JsonApiLinks(pidLink);
-      wrapperList.add(new JsonApiWrapper(links, jsonData));
-    }
-    return wrapperList;
-  }
 
   public List<JsonApiWrapper> archiveRecordBatch(List<ObjectNode> requests)
       throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {

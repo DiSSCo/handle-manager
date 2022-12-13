@@ -256,7 +256,7 @@ public class TestUtils {
   }
 
   // Single Requests
-  public static HandleRecordRequest genHandleRecordRequest() {
+  public static HandleRecordRequest genHandleRecordRequestObject() {
     return new HandleRecordRequest(
         PID_ISSUER_PID,
         DIGITAL_OBJECT_TYPE_PID,
@@ -264,7 +264,7 @@ public class TestUtils {
         LOC_TESTVAL);
   }
 
-  public static DoiRecordRequest genDoiRecordRequest() {
+  public static DoiRecordRequest genDoiRecordRequestObject() {
     return new DoiRecordRequest(
         PID_ISSUER_PID,
         DIGITAL_OBJECT_TYPE_PID,
@@ -273,7 +273,7 @@ public class TestUtils {
         REFERENT_DOI_NAME_PID);
   }
 
-  public static DigitalSpecimenRequest genDigitalSpecimenRequest() {
+  public static DigitalSpecimenRequest genDigitalSpecimenRequestObject() {
     return new DigitalSpecimenRequest(
         PID_ISSUER_PID,
         DIGITAL_OBJECT_TYPE_PID,
@@ -285,7 +285,7 @@ public class TestUtils {
         IN_COLLECTION_FACILITY_TESTVAL);
   }
 
-  public static DigitalSpecimenBotanyRequest genDigitalSpecimenBotanyRequest() {
+  public static DigitalSpecimenBotanyRequest genDigitalSpecimenBotanyRequestObject() {
     return new DigitalSpecimenBotanyRequest(PID_ISSUER_PID,
         DIGITAL_OBJECT_TYPE_PID,
         DIGITAL_OBJECT_SUBTYPE_PID,
@@ -303,7 +303,7 @@ public class TestUtils {
   public static List<HandleRecordRequest> genHandleRecordRequestBatch(List<byte[]> handles) {
     List<HandleRecordRequest> requestList = new ArrayList<>();
     for (int i = 0; i < handles.size(); i++) {
-      requestList.add(genDoiRecordRequest());
+      requestList.add(genDoiRecordRequestObject());
     }
     return requestList;
   }
@@ -311,7 +311,7 @@ public class TestUtils {
   public static List<DoiRecordRequest> genDoiRecordRequestBatch(List<byte[]> handles) {
     List<DoiRecordRequest> requestList = new ArrayList<>();
     for (int i = 0; i < handles.size(); i++) {
-      requestList.add(genDoiRecordRequest());
+      requestList.add(genDoiRecordRequestObject());
     }
     return requestList;
   }
@@ -319,7 +319,7 @@ public class TestUtils {
   public static List<DigitalSpecimenRequest> genDigitalSpecimenRequestBatch(List<byte[]> handles) {
     List<DigitalSpecimenRequest> requestList = new ArrayList<>();
     for (int i = 0; i < handles.size(); i++) {
-      requestList.add(genDigitalSpecimenRequest());
+      requestList.add(genDigitalSpecimenRequestObject());
     }
     return requestList;
   }
@@ -328,7 +328,7 @@ public class TestUtils {
       List<byte[]> handles) {
     List<DigitalSpecimenBotanyRequest> requestList = new ArrayList<>();
     for (int i = 0; i < handles.size(); i++) {
-      requestList.add(genDigitalSpecimenBotanyRequest());
+      requestList.add(genDigitalSpecimenBotanyRequestObject());
     }
     return requestList;
   }
