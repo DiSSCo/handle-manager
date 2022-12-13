@@ -73,19 +73,11 @@ public class HandleRepository {
     var handleMap = mapRecords(dbRecord);
 
     List<ObjectNode> rootNodeList = new ArrayList<>();
-    Set<String> resolvedHandles = new HashSet<>();
-    Set<String> allHandles = handleMap.keySet();
 
     for (Map.Entry<String, List<HandleAttribute>> handleRecord : handleMap.entrySet()) {
       rootNodeList.add(jsonFormatSingleRecord(handleRecord.getValue()));
-      resolvedHandles.add(handleRecord.getKey());
     }
 
-    allHandles.removeAll(resolvedHandles);
-    if (!allHandles.isEmpty()) {
-      throw new PidResolutionException(
-          "PID RESOLUTION ERROR. Unable to resolve the following handles: " + allHandles);
-    }
     return rootNodeList;
   }
 
@@ -266,6 +258,7 @@ public class HandleRepository {
 
   // Archive
   public void archiveRecord(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
+
     mergeAttributesToDb(recordTimestamp, handleAttributes);
   }
 

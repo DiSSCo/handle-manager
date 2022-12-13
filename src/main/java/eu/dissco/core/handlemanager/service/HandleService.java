@@ -75,6 +75,8 @@ public class HandleService {
   public List<JsonApiWrapper> resolveBatchRecord(List<byte[]> handles)
       throws PidResolutionException, PidServiceInternalError {
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
+
+    handleRep.checkHandlesExist(handles);
     var recordAttributeList = handleRep.resolveBatchRecord(handles);
 
     for (ObjectNode recordAttributes : recordAttributeList) {
