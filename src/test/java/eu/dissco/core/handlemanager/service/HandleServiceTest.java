@@ -8,6 +8,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_TOMBSTONE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
@@ -24,6 +25,9 @@ import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.HandleRecordRequest;
+import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
+import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
+import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
@@ -184,7 +188,7 @@ class HandleServiceTest {
     DigitalSpecimenBotanyRequest request = genDigitalSpecimenBotanyRequestObject();
     List<HandleAttribute> handleRecord = genDigitalSpecimenBotanyAttributes(handle);
     var databaseResponse = genObjectNodeAttributeRecord(handleRecord);
-    var responseExpected = genDigitalSpecimenBotanyJsonResponse(handle, RECORD_TYPE_DS);
+    var responseExpected = genDigitalSpecimenBotanyJsonResponse(handle, RECORD_TYPE_DS_BOTANY);
 
     given(handleRep.createRecord(handle, instant, handleRecord)).willReturn(databaseResponse);
     given(hgService.genHandleList(1)).willReturn(handlesList);
@@ -316,23 +320,25 @@ class HandleServiceTest {
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
+
   @Test
   void testUpdateRecordBatchLoc() throws Exception {
     // Given
-    List<ObjectNode> updateRequest = genUpdateRequestBatch();
+    List<byte[]> handles = initHandleList();
+    List<ObjectNode> updateRequest = genUpdateRequestBatch(handles);
 
     List<List<HandleAttribute>> aggrList = new ArrayList<>();
     List<HandleAttribute> singleRecord;
-    for (byte[] handle : handlesList) {
+    for (byte[] handle : handles) {
       singleRecord = genHandleRecordAttributesAltLoc(handle);
       aggrList.add(new ArrayList<>(singleRecord));
     }
 
     List<ObjectNode> databaseResponse = genObjectNodeRecordBatch(aggrList);
 
-    var responseExpected = genUpdateAltLocResponseBatch(handlesList);
+    var responseExpected = genUpdateAltLocResponseBatch(handles);
 
-    given(handleRep.checkHandlesWritable(anyList())).willReturn(handlesList);
+    given(handleRep.checkHandlesWritable(anyList())).willReturn(handles);
     given(handleRep.resolveBatchRecord(anyList())).willReturn(databaseResponse);
 
     // When
@@ -340,6 +346,35 @@ class HandleServiceTest {
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testUpdateRecordInternalDuplicates() throws Exception{
+
+    // Given
+    List<byte[]> handles = new ArrayList<>();
+    handles.add(HANDLE.getBytes());
+    handles.add(HANDLE.getBytes());
+
+    List<ObjectNode> updateRequest = genUpdateRequestBatch(handles);
+
+    // Then
+    assertThrows(InvalidRecordInput.class, () -> {
+      service.updateRecordBatch(updateRequest);
+    });
+  }
+
+  @Test
+  void testUpdateRecordNonWritable() throws Exception{
+    // Given
+    List<byte[]> handles = initHandleList();
+    List<ObjectNode> updateRequest = genUpdateRequestBatch(handles);
+    given(handleRep.checkHandlesWritable(anyList())).willReturn(new ArrayList<>());
+
+    // Then
+    assertThrows(PidResolutionException.class, () -> {
+      service.updateRecordBatch(updateRequest);
+    });
   }
 
   @Test
@@ -362,6 +397,7 @@ class HandleServiceTest {
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
+
 
 
   @Test
@@ -410,6 +446,26 @@ class HandleServiceTest {
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testGetHandlesPaged(){
+    // Given
+    int pageNum = 0;
+    int pageSize = 2;
+    byte[] pidStatus = PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8);
+    List<String> handles = HANDLE_LIST_STR;
+
+    given(handleRep.getAllHandles(pageNum, pageSize)).willReturn(handles);
+    given(handleRep.getAllHandles(pidStatus, pageNum, pageSize)).willReturn(handles);
+
+    // When
+    var responseExpectedFirst = service.getHandlesPaged(pageNum, pageSize);
+    var responseExpectedSecond = service.getHandlesPaged(pageNum, pageSize, new String(pidStatus));
+
+    // Then
+    assertThat(responseExpectedFirst).isEqualTo(handles);
+    assertThat(responseExpectedSecond).isEqualTo(handles);
   }
 
 

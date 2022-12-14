@@ -41,7 +41,6 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 
@@ -141,7 +140,6 @@ public class HandleService {
     List<byte[]> handles = hf.genHandleList(requests.size());
     List<byte[]> handlesPost = new ArrayList<>(handles);
     List<HandleAttribute> handleAttributes = new ArrayList<>();
-
 
     for (var request : requests) {
       ObjectNode dataNode = (ObjectNode) request.get(NODE_DATA);

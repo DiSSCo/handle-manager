@@ -470,15 +470,15 @@ public class TestUtils {
 
   // Update Requests
 
-  public static List<ObjectNode> genUpdateRequestBatch() {
+  public static List<ObjectNode> genUpdateRequestBatch(List<byte[]> handles) {
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode requestNodeRoot = mapper.createObjectNode();
     ObjectNode requestNodeData = mapper.createObjectNode();
     List<ObjectNode> requestNodeList = new ArrayList<>();
 
-    for (String handle : HANDLE_LIST_STR) {
+    for (byte[] handle : handles) {
       requestNodeData.put("type", RECORD_TYPE_HANDLE);
-      requestNodeData.put("id", handle);
+      requestNodeData.put("id", new String(handle));
       requestNodeData.set("attributes", genUpdateRequestAltLoc());
       requestNodeRoot.set("data", requestNodeData);
 
