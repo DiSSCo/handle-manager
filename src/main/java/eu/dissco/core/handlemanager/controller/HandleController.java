@@ -64,7 +64,7 @@ public class HandleController {
   @GetMapping("/records")
   public ResponseEntity<List<JsonApiWrapper>> resolvePids(
       @RequestBody List<String> handleStrings
-  ) throws PidResolutionException, PidServiceInternalError {
+  ) throws PidServiceInternalError {
 
     List<byte[]> handles = new ArrayList<>();
     for (String hdlStr : handleStrings) {
@@ -73,7 +73,6 @@ public class HandleController {
     List<JsonApiWrapper> node = service.resolveBatchRecord(handles);
     return ResponseEntity.status(HttpStatus.OK).body(node);
   }
-
 
   @PreAuthorize("isAuthenticated()")
   @PostMapping(value = "/record")
