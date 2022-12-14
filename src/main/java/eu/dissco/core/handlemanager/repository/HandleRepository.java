@@ -66,14 +66,26 @@ public class HandleRepository {
     return jsonFormatSingleRecord(dbRecord);
   }
 
-  public List<ObjectNode> resolveBatchRecord(List<byte[]> handles) {
+  public List<ObjectNode> resolveBatchRecord(List<byte[]> handles) throws PidResolutionException {
     var dbRecord = resolveHandleAttributes(handles);
     var handleMap = mapRecords(dbRecord);
+    Set<byte[]> resolvedHandles = new HashSet<>();
 
     List<ObjectNode> rootNodeList = new ArrayList<>();
 
     for (Map.Entry<String, List<HandleAttribute>> handleRecord : handleMap.entrySet()) {
       rootNodeList.add(jsonFormatSingleRecord(handleRecord.getValue()));
+      resolvedHandles.add(handleRecord.getValue().get(0).handle());
+    }
+
+    if (handles.size() > resolvedHandles.size()){
+      handles.forEach(resolvedHandles::remove); // Removes handles from resolved handle list, now it only contains unresolved handles
+
+      Set<String> unresolvedHandles = new HashSet<>();
+      for (byte[] handle : resolvedHandles){
+        unresolvedHandles.add(new String(handle));
+      }
+      throw new PidResolutionException("Unable to resolve the following handles: " + unresolvedHandles );
     }
 
     return rootNodeList;
@@ -168,11 +180,8 @@ public class HandleRepository {
 
   public List<ObjectNode> createRecords(List<byte[]> handles
       , Instant recordTimestamp, List<HandleAttribute> handleAttributes)
-      throws PidServiceInternalError {
+      throws PidResolutionException {
     postAttributesToDb(recordTimestamp, handleAttributes);
-    log.info("posting " + handles.size() + "records");
-    log.info("posting " + handleAttributes.size() + "attributes");
-
     return resolveBatchRecord(handles);
   }
 
@@ -254,6 +263,11 @@ public class HandleRepository {
   private void rollbackRecordCreation(byte[] handle) {
     context.delete(HANDLES)
         .where(HANDLES.HANDLE.eq(handle))
+        .execute();
+  }
+  private void rollbackRecordCreation(List<byte[]> handles){
+    context.delete(HANDLES)
+        .where(HANDLES.HANDLE.in(handles))
         .execute();
   }
 

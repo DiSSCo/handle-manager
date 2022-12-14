@@ -73,7 +73,7 @@ public class HandleService {
   }
 
   public List<JsonApiWrapper> resolveBatchRecord(List<byte[]> handles)
-      throws PidServiceInternalError {
+      throws PidServiceInternalError, PidResolutionException {
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
 
     handleRep.checkHandlesExist(handles);

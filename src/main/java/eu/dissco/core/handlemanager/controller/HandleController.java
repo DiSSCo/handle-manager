@@ -64,7 +64,7 @@ public class HandleController {
   @GetMapping("/records")
   public ResponseEntity<List<JsonApiWrapper>> resolvePids(
       @RequestBody List<String> handleStrings
-  ) throws PidServiceInternalError {
+  ) throws PidServiceInternalError, PidResolutionException {
 
     List<byte[]> handles = new ArrayList<>();
     for (String hdlStr : handleStrings) {
