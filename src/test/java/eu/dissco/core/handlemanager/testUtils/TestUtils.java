@@ -254,6 +254,24 @@ public class TestUtils {
             PRESERVED_OR_LIVING_TESTVAL.getBytes(StandardCharsets.UTF_8)));
     return handleRecord;
   }
+  public static <T extends HandleRecordRequest> ObjectNode genCreateRecordRequest(T request,
+      String recordType) {
+    ObjectMapper mapper = new ObjectMapper();
+
+    ObjectNode rootNode = mapper.createObjectNode();
+    ObjectNode dataNode = mapper.createObjectNode();
+    ObjectNode attributeNode = mapper.valueToTree(request);
+
+    if (attributeNode.has("referent")) {
+      attributeNode.remove("referent");
+    }
+
+    dataNode.put("type", recordType);
+    dataNode.set("attributes", attributeNode);
+    rootNode.set("data", dataNode);
+
+    return rootNode;
+  }
 
   // Single Requests
   public static HandleRecordRequest genHandleRecordRequestObject() {
@@ -346,22 +364,22 @@ public class TestUtils {
     return genGenericRecordJsonResponse(handle, testDbRecord, recordType);
   }
 
-  public static JsonApiWrapper genDoiRecordJsonResponse(byte[] handle)
+  public static JsonApiWrapper genDoiRecordJsonResponse(byte[] handle, String recordType)
       throws JsonProcessingException {
     var testDbRecord = genDoiRecordAttributes(handle);
-    return genGenericRecordJsonResponse(handle, testDbRecord, RECORD_TYPE_DOI);
+    return genGenericRecordJsonResponse(handle, testDbRecord, recordType);
   }
 
-  public static JsonApiWrapper genDigitalSpecimenJsonResponse(byte[] handle)
+  public static JsonApiWrapper genDigitalSpecimenJsonResponse(byte[] handle, String recordType)
       throws JsonProcessingException {
     var testDbRecord = genDigitalSpecimenAttributes(handle);
-    return genGenericRecordJsonResponse(handle, testDbRecord, RECORD_TYPE_DS);
+    return genGenericRecordJsonResponse(handle, testDbRecord, recordType);
   }
 
-  public static JsonApiWrapper genDigitalSpecimenBotanyJsonResponse(byte[] handle)
+  public static JsonApiWrapper genDigitalSpecimenBotanyJsonResponse(byte[] handle, String recordType)
       throws JsonProcessingException {
     var testDbRecord = genDigitalSpecimenBotanyAttributes(handle);
-    return genGenericRecordJsonResponse(handle, testDbRecord, RECORD_TYPE_DS_BOTANY);
+    return genGenericRecordJsonResponse(handle, testDbRecord, recordType);
   }
 
   public static JsonApiWrapper genGenericRecordJsonResponse(byte[] handle,
@@ -396,32 +414,32 @@ public class TestUtils {
     return wrapperList;
   }
 
-  public static List<JsonApiWrapper> genDoiRecordJsonResponseBatch(List<byte[]> handles)
+  public static List<JsonApiWrapper> genDoiRecordJsonResponseBatch(List<byte[]> handles, String recordType)
       throws JsonProcessingException {
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
 
     for (byte[] handle : handles) {
-      wrapperList.add(genDoiRecordJsonResponse(handle));
+      wrapperList.add(genDoiRecordJsonResponse(handle, recordType));
     }
     return wrapperList;
   }
 
-  public static List<JsonApiWrapper> genDigitalSpecimenJsonResponseBatch(List<byte[]> handles)
+  public static List<JsonApiWrapper> genDigitalSpecimenJsonResponseBatch(List<byte[]> handles, String recordType)
       throws JsonProcessingException {
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
 
     for (byte[] handle : handles) {
-      wrapperList.add(genDigitalSpecimenJsonResponse(handle));
+      wrapperList.add(genDigitalSpecimenJsonResponse(handle, recordType));
     }
     return wrapperList;
   }
 
-  public static List<JsonApiWrapper> genDigitalSpecimenBotanyJsonResponseBatch(List<byte[]> handles)
+  public static List<JsonApiWrapper> genDigitalSpecimenBotanyJsonResponseBatch(List<byte[]> handles, String recordType)
       throws JsonProcessingException {
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
 
     for (byte[] handle : handles) {
-      wrapperList.add(genDigitalSpecimenBotanyJsonResponse(handle));
+      wrapperList.add(genDigitalSpecimenBotanyJsonResponse(handle, recordType));
     }
     return wrapperList;
   }

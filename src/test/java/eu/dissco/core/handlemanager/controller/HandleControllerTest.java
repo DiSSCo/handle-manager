@@ -2,6 +2,7 @@ package eu.dissco.core.handlemanager.controller;
 
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
+import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
@@ -9,11 +10,13 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_TOMBSTONE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiData;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapper;
@@ -22,11 +25,14 @@ import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.HandleRecordRequest;
+import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
+import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import eu.dissco.core.handlemanager.service.HandleService;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -164,7 +170,7 @@ class HandleControllerTest {
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     DoiRecordRequest request = genDoiRecordRequestObject();
     ObjectNode requestNode = genCreateRecordRequest(request, RECORD_TYPE_DOI);
-    JsonApiWrapper responseExpected = genDoiRecordJsonResponse(handle);
+    JsonApiWrapper responseExpected = genDoiRecordJsonResponse(handle, RECORD_TYPE_DOI);
     given(service.createDoiRecordJson(request)).willReturn(responseExpected);
 
     // When
@@ -181,7 +187,7 @@ class HandleControllerTest {
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     DigitalSpecimenRequest request = genDigitalSpecimenRequestObject();
     ObjectNode requestNode = genCreateRecordRequest(request, RECORD_TYPE_DS);
-    JsonApiWrapper responseExpected = genDigitalSpecimenJsonResponse(handle);
+    JsonApiWrapper responseExpected = genDigitalSpecimenJsonResponse(handle, RECORD_TYPE_DS);
     given(service.createDigitalSpecimenJson(request)).willReturn(responseExpected);
 
     // When
@@ -198,7 +204,7 @@ class HandleControllerTest {
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     DigitalSpecimenBotanyRequest request = genDigitalSpecimenBotanyRequestObject();
     ObjectNode requestNode = genCreateRecordRequest(request, RECORD_TYPE_DS_BOTANY);
-    JsonApiWrapper responseExpected = genDigitalSpecimenBotanyJsonResponse(handle);
+    JsonApiWrapper responseExpected = genDigitalSpecimenBotanyJsonResponse(handle, RECORD_TYPE_DS_BOTANY);
     given(service.createDigitalSpecimenBotanyJson(request)).willReturn(responseExpected);
 
     // When
@@ -243,7 +249,7 @@ class HandleControllerTest {
     for (byte[] handle : handles) {
       requests.add(genCreateRecordRequest(genDoiRecordRequestObject(), RECORD_TYPE_DOI));
     }
-    List<JsonApiWrapper> responseExpected = genDoiRecordJsonResponseBatch(handles);
+    List<JsonApiWrapper> responseExpected = genDoiRecordJsonResponseBatch(handles, RECORD_TYPE_DOI);
     given(service.createRecordBatch(requests)).willReturn(responseExpected);
 
     // When
@@ -265,7 +271,7 @@ class HandleControllerTest {
     for (byte[] handle : handles) {
       requests.add(genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_DS));
     }
-    List<JsonApiWrapper> responseExpected = genDigitalSpecimenJsonResponseBatch(handles);
+    List<JsonApiWrapper> responseExpected = genDigitalSpecimenJsonResponseBatch(handles, RECORD_TYPE_DS);
     given(service.createRecordBatch(requests)).willReturn(responseExpected);
 
     // When
@@ -288,7 +294,7 @@ class HandleControllerTest {
       requests.add(
           genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_DS_BOTANY));
     }
-    List<JsonApiWrapper> responseExpected = genDigitalSpecimenBotanyJsonResponseBatch(handles);
+    List<JsonApiWrapper> responseExpected = genDigitalSpecimenBotanyJsonResponseBatch(handles, RECORD_TYPE_DS_BOTANY);
     given(service.createRecordBatch(requests)).willReturn(responseExpected);
 
     // When
@@ -418,22 +424,66 @@ class HandleControllerTest {
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
 
-  private <T extends HandleRecordRequest> ObjectNode genCreateRecordRequest(T request,
-      String recordType) {
-    ObjectNode rootNode = mapper.createObjectNode();
-    ObjectNode dataNode = mapper.createObjectNode();
-    ObjectNode attributeNode = mapper.valueToTree(request);
+  @Test
+  void testPidInternalServiceError() throws Exception{
+    // Given
+    HandleRecordRequest requestObject = genHandleRecordRequestObject();
+    ObjectNode requestNode = genCreateRecordRequest(requestObject, RECORD_TYPE_HANDLE);
+    given(service.createHandleRecordJson(requestObject)).willThrow(PidServiceInternalError.class);
 
-    if (attributeNode.has("referent")) {
-      attributeNode.remove("referent");
-    }
-
-    dataNode.put("type", recordType);
-    dataNode.set("attributes", attributeNode);
-    rootNode.set("data", dataNode);
-
-    return rootNode;
+    // Then
+    assertThrows(PidServiceInternalError.class, () -> {
+      controller.createRecord(requestNode);
+    });
   }
+
+  @Test
+  void testInvalidInputException(){
+    // Given
+    String invalidType = "INVALID TYPE";
+    String invalidMessage = "INVALID INPUT. Unrecognized Type: " + invalidType;
+
+    HandleRecordRequest request = genHandleRecordRequestObject();
+    ObjectNode requestNode = genCreateRecordRequest(request, invalidType);
+
+    // Then
+    Exception exception = assertThrows(InvalidRecordInput.class, () -> {
+      controller.createRecord(requestNode);
+    });
+    assertThat(exception.getMessage()).isEqualTo(invalidMessage);
+  }
+
+  @Test
+  void testPidResolutionError() {
+    // Given
+    int pageNum = 1;
+    int pageSize = 10;
+    given(service.getHandlesPaged(pageNum, pageSize)).willReturn(new ArrayList<>());
+
+    // Then
+    assertThrows(PidResolutionException.class, () -> {
+      controller.getAllHandles(pageNum, pageSize);
+    });
+  }
+
+  @Test
+  void testUnrecognizedPropertyException(){
+    // Given
+    DoiRecordRequest request = genDoiRecordRequestObject();
+    ObjectNode requestNode = genCreateRecordRequest(request, RECORD_TYPE_DOI);
+    ObjectNode dataNode = (ObjectNode) requestNode.get(NODE_DATA);
+    dataNode.remove(NODE_TYPE);
+    dataNode.put(NODE_TYPE, RECORD_TYPE_HANDLE);
+    requestNode.replace(NODE_DATA, dataNode);
+
+    // Then
+    assertThrows(UnrecognizedPropertyException.class, () -> {
+      controller.createRecord(requestNode);
+    });
+  }
+
+
+
 
 
 }

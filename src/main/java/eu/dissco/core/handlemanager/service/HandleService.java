@@ -41,6 +41,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 
@@ -141,19 +142,16 @@ public class HandleService {
     List<byte[]> handlesPost = new ArrayList<>(handles);
     List<HandleAttribute> handleAttributes = new ArrayList<>();
 
-    log.info("number of handles: " + handles.size());
-    log.info("number of requests: " + requests.size());
 
     for (var request : requests) {
-      log.info("Request: " + request.toString());
       ObjectNode dataNode = (ObjectNode) request.get(NODE_DATA);
-      log.info(dataNode.toString());
       String type = dataNode.get(NODE_TYPE).asText();
       try {
         switch (type) {
           case RECORD_TYPE_HANDLE -> {
             HandleRecordRequest requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 HandleRecordRequest.class);
+
             handleAttributes.addAll(
                 prepareHandleRecordAttributes(requestObject, handles.remove(0)));
           }
@@ -195,88 +193,6 @@ public class HandleService {
     return wrapperList;
   }
 
-  public List<JsonApiWrapper> createHandleRecordBatchJson(List<HandleRecordRequest> requests)
-      throws PidResolutionException, PidServiceInternalError {
-    List<byte[]> handles = hf.genHandleList(requests.size());
-    List<HandleAttribute> handleAttributes = new ArrayList<>();
-
-    for (int i = 0; i < requests.size(); i++) {
-      handleAttributes.addAll(prepareHandleRecordAttributes(requests.get(i), handles.get(i)));
-    }
-    var recordTimestamp = Instant.now();
-    List<ObjectNode> postedRecordAttributes = handleRep.createRecords(handles,
-        recordTimestamp, handleAttributes);
-
-    List<JsonApiWrapper> wrapperList = new ArrayList<>();
-
-    for (ObjectNode recordAttributes : postedRecordAttributes) {
-      wrapperList.add(wrapResponse(recordAttributes, RECORD_TYPE_HANDLE));
-    }
-    return wrapperList;
-  }
-
-  public List<JsonApiWrapper> createDoiRecordBatchJson(List<DoiRecordRequest> requests)
-      throws PidResolutionException, PidServiceInternalError {
-    List<byte[]> handles = hf.genHandleList(requests.size());
-    List<HandleAttribute> handleAttributes = new ArrayList<>();
-
-    for (int i = 0; i < requests.size(); i++) {
-      handleAttributes.addAll(prepareDoiRecordAttributes(requests.get(i), handles.get(i)));
-    }
-    var recordTimestamp = Instant.now();
-    List<ObjectNode> postedRecordAttributes = handleRep.createRecords(handles,
-        recordTimestamp, handleAttributes);
-
-    List<JsonApiWrapper> wrapperList = new ArrayList<>();
-
-    for (ObjectNode recordAttributes : postedRecordAttributes) {
-      wrapperList.add(wrapResponse(recordAttributes, RECORD_TYPE_DOI));
-    }
-    return wrapperList;
-  }
-
-  public List<JsonApiWrapper> createDigitalSpecimenBatchJson(List<DigitalSpecimenRequest> requests)
-      throws PidResolutionException, PidServiceInternalError {
-    List<byte[]> handles = hf.genHandleList(requests.size());
-    List<HandleAttribute> handleAttributes = new ArrayList<>();
-
-    for (int i = 0; i < requests.size(); i++) {
-      handleAttributes.addAll(
-          prepareDigitalSpecimenRecordAttributes(requests.get(i), handles.get(i)));
-    }
-    var recordTimestamp = Instant.now();
-    List<ObjectNode> postedRecordAttributes = handleRep.createRecords(handles,
-        recordTimestamp, handleAttributes);
-
-    List<JsonApiWrapper> wrapperList = new ArrayList<>();
-
-    for (ObjectNode recordAttributes : postedRecordAttributes) {
-      wrapperList.add(wrapResponse(recordAttributes, RECORD_TYPE_DS));
-    }
-    return wrapperList;
-  }
-
-  public List<JsonApiWrapper> createDigitalSpecimenBotanyBatchJson(
-      List<DigitalSpecimenBotanyRequest> requests)
-      throws PidResolutionException, PidServiceInternalError {
-    List<byte[]> handles = hf.genHandleList(requests.size());
-    List<HandleAttribute> handleAttributes = new ArrayList<>();
-
-    for (int i = 0; i < requests.size(); i++) {
-      handleAttributes.addAll(
-          prepareDigitalSpecimenBotanyRecordAttributes(requests.get(i), handles.get(i)));
-    }
-    var recordTimestamp = Instant.now();
-    List<ObjectNode> postedRecordAttributes = handleRep.createRecords(
-        handles, recordTimestamp, handleAttributes);
-
-    List<JsonApiWrapper> wrapperList = new ArrayList<>();
-
-    for (ObjectNode recordAttributes : postedRecordAttributes) {
-      wrapperList.add(wrapResponse(recordAttributes, RECORD_TYPE_DS_BOTANY));
-    }
-    return wrapperList;
-  }
 
   private JsonApiWrapper wrapResponse(ObjectNode recordAttributes, String recordType)
       throws PidServiceInternalError {

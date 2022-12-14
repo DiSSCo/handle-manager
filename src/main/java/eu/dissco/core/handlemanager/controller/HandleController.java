@@ -200,7 +200,7 @@ public class HandleController {
 
   //Exception Handling
   @ExceptionHandler(PidServiceInternalError.class)
-  private ResponseEntity<String> pidCreationException(PidServiceInternalError e) {
+  private ResponseEntity<String> pidServiceInternalError(PidServiceInternalError e) {
     String message;
     if (e.getExceptionCause() != null) {
       message = e.getMessage() + ". Cause: " + e.getExceptionCause().toString() + "\n "
