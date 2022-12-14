@@ -398,7 +398,6 @@ class HandleServiceTest {
   }
 
 
-
   private void initTime() {
     Clock clock = Clock.fixed(CREATED, ZoneOffset.UTC);
     instant = Instant.now(clock);

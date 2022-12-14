@@ -123,7 +123,7 @@ class HandleGeneratorServiceTest {
   }
 
   @Test
-  void testInvalidNumberOfHandles(){
+  void testInvalidNumberOfHandles() {
     // Given
     Random randomGen = new Random();
 

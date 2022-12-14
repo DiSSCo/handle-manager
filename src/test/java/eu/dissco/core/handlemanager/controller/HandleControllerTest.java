@@ -26,7 +26,6 @@ import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.service.HandleService;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -142,8 +141,6 @@ class HandleControllerTest {
   }
 
   // Single Handle Record Creation
-
-
   @Test
   void testCreateHandleRecord() throws Exception {
     // Given
@@ -211,7 +208,6 @@ class HandleControllerTest {
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
-
 
   // Response Object
   @Test
@@ -289,7 +285,8 @@ class HandleControllerTest {
 
     List<ObjectNode> requests = new ArrayList<>();
     for (byte[] handle : handles) {
-      requests.add(genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_DS_BOTANY));
+      requests.add(
+          genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_DS_BOTANY));
     }
     List<JsonApiWrapper> responseExpected = genDigitalSpecimenBotanyJsonResponseBatch(handles);
     given(service.createRecordBatch(requests)).willReturn(responseExpected);
@@ -374,7 +371,8 @@ class HandleControllerTest {
     ObjectNode archiveRootNode = mapper.createObjectNode();
     archiveRootNode.set("data", mapper.valueToTree(archiveRequest));
 
-    ObjectNode archiveRequestNode = (ObjectNode) archiveRootNode.get(NODE_DATA).get(NODE_ATTRIBUTES);
+    ObjectNode archiveRequestNode = (ObjectNode) archiveRootNode.get(NODE_DATA)
+        .get(NODE_ATTRIBUTES);
 
     List<HandleAttribute> tombstoneAttributesFull = genTombstoneRecordFullAttributes(handle);
     JsonApiWrapper responseExpected = genGenericRecordJsonResponse(handle, tombstoneAttributesFull,
@@ -384,7 +382,6 @@ class HandleControllerTest {
 
     // When
     ResponseEntity<JsonApiWrapper> responseReceived = controller.archiveRecord(archiveRootNode);
-
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -421,12 +418,13 @@ class HandleControllerTest {
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
 
-  private <T extends HandleRecordRequest> ObjectNode genCreateRecordRequest(T request, String recordType){
+  private <T extends HandleRecordRequest> ObjectNode genCreateRecordRequest(T request,
+      String recordType) {
     ObjectNode rootNode = mapper.createObjectNode();
     ObjectNode dataNode = mapper.createObjectNode();
     ObjectNode attributeNode = mapper.valueToTree(request);
 
-    if (attributeNode.has("referent")){
+    if (attributeNode.has("referent")) {
       attributeNode.remove("referent");
     }
 

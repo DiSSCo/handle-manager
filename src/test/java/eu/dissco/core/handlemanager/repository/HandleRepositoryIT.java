@@ -244,7 +244,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
 
     // Then
     assertThat(collisions).hasSize(handles.size());
-    assert(byteArrListsAreEqual(handles, collisions));
+    assert (byteArrListsAreEqual(handles, collisions));
   }
 
   @Test
@@ -262,7 +262,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
-  void testHandlesWritableTrue(){
+  void testHandlesWritableTrue() {
     List<byte[]> handles = List.of(
         HANDLE.getBytes(StandardCharsets.UTF_8),
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
@@ -279,11 +279,11 @@ class HandleRepositoryIT extends BaseRepositoryIT {
 
     // Then
     assertThat(collisions).hasSize(handles.size());
-    assert(byteArrListsAreEqual(handles, collisions));
+    assert (byteArrListsAreEqual(handles, collisions));
   }
 
   @Test
-  void testHandlesWritableFalse(){
+  void testHandlesWritableFalse() {
     List<byte[]> handles = List.of(HANDLE.getBytes(StandardCharsets.UTF_8),
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
     List<HandleAttribute> rows = List.of(
@@ -303,7 +303,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
-  void testResolveSingleRecord() throws Exception{
+  void testResolveSingleRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> rows = genHandleRecordAttributes(handle);
@@ -326,7 +326,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
 
     List<HandleAttribute> rows = new ArrayList<>();
     List<ObjectNode> responseExpected = new ArrayList<>();
-    for (byte[] handle: handles){
+    for (byte[] handle : handles) {
       rows.addAll(genHandleRecordAttributes(handle));
       responseExpected.add(genObjectNodeAttributeRecord(rows));
     }
@@ -340,7 +340,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
-  void testGetAllHandlesPaging(){
+  void testGetAllHandlesPaging() {
     // Given
     int pageNum = 0;
     int pageSize = 5;
@@ -348,8 +348,9 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     List<String> handles = genListofHandlesString(pageSize);
     List<HandleAttribute> rows = new ArrayList<>();
 
-    for(String handle : handles){
-      rows.add(new HandleAttribute(1, handle.getBytes(StandardCharsets.UTF_8), PID_STATUS, PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+    for (String handle : handles) {
+      rows.add(new HandleAttribute(1, handle.getBytes(StandardCharsets.UTF_8), PID_STATUS,
+          PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8)));
     }
     postAttributes(rows);
 
@@ -363,22 +364,24 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
-  void testGetAllHandlesPagingByPidStatus(){
+  void testGetAllHandlesPagingByPidStatus() {
     // Given
     int pageNum = 0;
     int pageSize = 5;
     byte[] pidStatusTarget = "ARCHIVED".getBytes(StandardCharsets.UTF_8);
 
-    List<String> handles = genListofHandlesString(pageSize+2);
+    List<String> handles = genListofHandlesString(pageSize + 2);
     List<String> responseExpected = handles.subList(0, pageSize);
     List<String> extraHandles = handles.subList(pageSize, handles.size());
     List<HandleAttribute> rows = new ArrayList<>();
 
-    for(String handle : responseExpected){
-      rows.add(new HandleAttribute(1, handle.getBytes(StandardCharsets.UTF_8), PID_STATUS, pidStatusTarget));
+    for (String handle : responseExpected) {
+      rows.add(new HandleAttribute(1, handle.getBytes(StandardCharsets.UTF_8), PID_STATUS,
+          pidStatusTarget));
     }
-    for(String handle : extraHandles){
-      rows.add(new HandleAttribute(1, handle.getBytes(StandardCharsets.UTF_8), PID_STATUS, PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+    for (String handle : extraHandles) {
+      rows.add(new HandleAttribute(1, handle.getBytes(StandardCharsets.UTF_8), PID_STATUS,
+          PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8)));
     }
     postAttributes(rows);
 
@@ -392,7 +395,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
-  void testUpdateRecord() throws Exception{
+  void testUpdateRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> attributesToUpdate = genUpdateRecordAttributesAltLoc(handle);
@@ -441,7 +444,8 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     JsonNode archiveRequest = genTombstoneRequest();
     List<HandleAttribute> tombstoneAttributes = genTombstoneRecordRequestAttributes(handle);
-    List<HandleAttribute> tombstoneAttributesFull = incrementVersion(genTombstoneRecordFullAttributes(handle));
+    List<HandleAttribute> tombstoneAttributesFull = incrementVersion(
+        genTombstoneRecordFullAttributes(handle));
     postAttributes(genHandleRecordAttributes(handle));
     var responseExpected = genObjectNodeAttributeRecord(tombstoneAttributesFull);
 
@@ -470,7 +474,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
       // TODO: Does version number increment when a record is tombstoned?
     }
     log.info("printing agg list");
-    for(var agg : aggrList){
+    for (var agg : aggrList) {
       log.info(agg.toString());
     }
 
@@ -504,15 +508,15 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     context.batch(queryList).execute();
   }
 
-  private boolean byteArrListsAreEqual(List<byte[]> a, List<byte[]> b){
-    if (a.size() != b.size()){
+  private boolean byteArrListsAreEqual(List<byte[]> a, List<byte[]> b) {
+    if (a.size() != b.size()) {
       return false;
     }
 
     List<String> aStr = new ArrayList<>();
     List<String> bStr = new ArrayList<>();
 
-    for (int i = 0; i< a.size(); i++){
+    for (int i = 0; i < a.size(); i++) {
       aStr.add(new String(a.get(i)));
       bStr.add(new String(b.get(i)));
     }
@@ -530,8 +534,8 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     char[] symbols = "ABCDEFGHJKLMNPQRSTUVWXYZ1234567890".toCharArray();
     Set<String> handles = new HashSet<>();
 
-    while(handles.size() < numberOfHandles){
-      for (int j = 0; j < length; j++){
+    while (handles.size() < numberOfHandles) {
+      for (int j = 0; j < length; j++) {
         buffer[j] = symbols[random.nextInt(symbols.length)];
       }
       handles.add(new String(buffer));
@@ -539,12 +543,15 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     return new ArrayList<>(handles);
   }
 
-  private List<HandleAttribute> incrementVersion(List<HandleAttribute> handleAttributes){
-    for (int i = 0; i < handleAttributes.size(); i++){
-      if (handleAttributes.get(i).type().equals(ISSUE_NUMBER)){
+  private List<HandleAttribute> incrementVersion(List<HandleAttribute> handleAttributes) {
+    for (int i = 0; i < handleAttributes.size(); i++) {
+      if (handleAttributes.get(i).type().equals(ISSUE_NUMBER)) {
         var removedRecord = handleAttributes.remove(i);
-        byte[] issueNum = String.valueOf(Integer.parseInt(new String(removedRecord.data()))+1).getBytes(StandardCharsets.UTF_8);
-        handleAttributes.add(i, new HandleAttribute(removedRecord.index(), removedRecord.handle(), removedRecord.type(),issueNum));
+        byte[] issueNum = String.valueOf(Integer.parseInt(new String(removedRecord.data())) + 1)
+            .getBytes(StandardCharsets.UTF_8);
+        handleAttributes.add(i,
+            new HandleAttribute(removedRecord.index(), removedRecord.handle(), removedRecord.type(),
+                issueNum));
       }
     }
     return handleAttributes;

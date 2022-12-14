@@ -144,8 +144,7 @@ public class HandleService {
     log.info("number of handles: " + handles.size());
     log.info("number of requests: " + requests.size());
 
-
-    for (var request: requests) {
+    for (var request : requests) {
       log.info("Request: " + request.toString());
       ObjectNode dataNode = (ObjectNode) request.get(NODE_DATA);
       log.info(dataNode.toString());
@@ -175,7 +174,8 @@ public class HandleService {
             handleAttributes.addAll(
                 prepareDigitalSpecimenBotanyRecordAttributes(requestObject, handles.remove(0)));
           }
-          default -> throw new InvalidRecordInput("INVALID INPUT. REASON: unrecognized type. Check" + type + ".");
+          default -> throw new InvalidRecordInput(
+              "INVALID INPUT. REASON: unrecognized type. Check" + type + ".");
         }
       } catch (JsonProcessingException e) {
         throw new InvalidRecordInput(
@@ -184,15 +184,15 @@ public class HandleService {
       }
     }
 
-      var postedRecordAttributes = handleRep.createRecords(handlesPost,
-          recordTimestamp, handleAttributes);
+    var postedRecordAttributes = handleRep.createRecords(handlesPost,
+        recordTimestamp, handleAttributes);
 
-      List<JsonApiWrapper> wrapperList = new ArrayList<>();
+    List<JsonApiWrapper> wrapperList = new ArrayList<>();
 
-      for (ObjectNode recordAttributes : postedRecordAttributes) {
-        wrapperList.add(wrapResponse(recordAttributes, "PID"));
-      }
-      return wrapperList;
+    for (ObjectNode recordAttributes : postedRecordAttributes) {
+      wrapperList.add(wrapResponse(recordAttributes, "PID"));
+    }
+    return wrapperList;
   }
 
   public List<JsonApiWrapper> createHandleRecordBatchJson(List<HandleRecordRequest> requests)
@@ -394,7 +394,7 @@ public class HandleService {
       requestAttributes = validateRequestData(requestAttributes, RECORD_TYPE_TOMBSTONE);
       archiveAttributes.addAll(prepareUpdateAttributes(handle, requestAttributes));
       archiveAttributes.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS,
-              "ARCHIVED".getBytes(StandardCharsets.UTF_8)));
+          "ARCHIVED".getBytes(StandardCharsets.UTF_8)));
     }
     checkInternalDuplicates(handles);
     checkHandlesWritable(handles);
@@ -432,8 +432,7 @@ public class HandleService {
     handleRep.archiveRecord(recordTimestamp, tombstoneAttributes);
     var archivedRecord = handleRep.resolveSingleRecord(handle);
 
-
-        // Package response
+    // Package response
     JsonApiData jsonData = new JsonApiData(new String(handle), RECORD_TYPE_TOMBSTONE,
         archivedRecord);
     JsonApiLinks links = null;

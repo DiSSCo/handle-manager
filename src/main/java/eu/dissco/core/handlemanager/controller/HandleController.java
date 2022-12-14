@@ -82,27 +82,36 @@ public class HandleController {
 
     JsonNode request = requestRoot.get("data");
     String type = request.get("type").asText();
-    switch(type){
+    switch (type) {
       case RECORD_TYPE_HANDLE -> {
-        HandleRecordRequest requestAttributes = mapper.treeToValue(request.get(NODE_ATTRIBUTES), HandleRecordRequest.class);
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.createHandleRecordJson(requestAttributes));
+        HandleRecordRequest requestAttributes = mapper.treeToValue(request.get(NODE_ATTRIBUTES),
+            HandleRecordRequest.class);
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(service.createHandleRecordJson(requestAttributes));
       }
       case RECORD_TYPE_DOI -> {
-        DoiRecordRequest requestAttributes = mapper.treeToValue(request.get(NODE_ATTRIBUTES), DoiRecordRequest.class);
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.createDoiRecordJson(requestAttributes));
+        DoiRecordRequest requestAttributes = mapper.treeToValue(request.get(NODE_ATTRIBUTES),
+            DoiRecordRequest.class);
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(service.createDoiRecordJson(requestAttributes));
       }
       case RECORD_TYPE_DS -> {
-        DigitalSpecimenRequest requestAttributes = mapper.treeToValue(request.get(NODE_ATTRIBUTES), DigitalSpecimenRequest.class);
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.createDigitalSpecimenJson(requestAttributes));
+        DigitalSpecimenRequest requestAttributes = mapper.treeToValue(request.get(NODE_ATTRIBUTES),
+            DigitalSpecimenRequest.class);
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(service.createDigitalSpecimenJson(requestAttributes));
       }
       case RECORD_TYPE_DS_BOTANY -> {
-        DigitalSpecimenBotanyRequest requestAttributes = mapper.treeToValue(request.get(NODE_ATTRIBUTES), DigitalSpecimenBotanyRequest.class);
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.createDigitalSpecimenBotanyJson(requestAttributes));
+        DigitalSpecimenBotanyRequest requestAttributes = mapper.treeToValue(
+            request.get(NODE_ATTRIBUTES), DigitalSpecimenBotanyRequest.class);
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(service.createDigitalSpecimenBotanyJson(requestAttributes));
       }
       default -> throw new InvalidRecordInput("INVALID INPUT. Unrecognized Type: " + type);
     }
   }
 
+  @PreAuthorize("isAuthenticated()")
   @PostMapping(value = "/records")
   public ResponseEntity<List<JsonApiWrapper>> createRecords(
       @RequestBody List<ObjectNode> requests)
@@ -136,14 +145,15 @@ public class HandleController {
     return ResponseEntity.status(HttpStatus.OK).body(service.updateRecordBatch(request));
   }
 
-
+  @PreAuthorize("isAuthenticated()")
   @DeleteMapping(value = "/record")
   public ResponseEntity<JsonApiWrapper> archiveRecord(
       @RequestBody ObjectNode request)
       throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
     JsonNode data = request.get(NODE_DATA);
     byte[] handle = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
-    return ResponseEntity.status(HttpStatus.OK).body(service.archiveRecord(data.get(NODE_ATTRIBUTES), handle));
+    return ResponseEntity.status(HttpStatus.OK)
+        .body(service.archiveRecord(data.get(NODE_ATTRIBUTES), handle));
   }
 
   @PreAuthorize("isAuthenticated()")
@@ -189,7 +199,6 @@ public class HandleController {
   }
 
   //Exception Handling
-
   @ExceptionHandler(PidServiceInternalError.class)
   private ResponseEntity<String> pidCreationException(PidServiceInternalError e) {
     String message;

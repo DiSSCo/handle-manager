@@ -31,8 +31,6 @@ import org.springframework.stereotype.Repository;
 public class HandleRepository {
 
   private static final int TTL = 86400;
-  private static final String INVALID_FIELD_ERROR = "Error: Attempting to add an invalid field into a pid record. Field: %s, Data: %s";
-  private static final String FIELD_MISMATCH_ERROR = "Field mismatch: attempting to add a forbidden field in the record schema. Check ";
   private static final String PID_ROLLBACK_MESSAGE = "An error has occured posting the record. Reason: %s. Rolling back";
   private final DSLContext context;
   private final ObjectMapper mapper;
@@ -47,7 +45,7 @@ public class HandleRepository {
         .getValues(HANDLES.HANDLE, byte[].class);
   }
 
-  public List<byte[]> checkHandlesWritable(List<byte[]> handles){
+  public List<byte[]> checkHandlesWritable(List<byte[]> handles) {
 
     return context
         .selectDistinct(HANDLES.HANDLE)
@@ -187,7 +185,7 @@ public class HandleRepository {
           .set(HANDLES.IDX, handleAttribute.index())
           .set(HANDLES.TYPE, handleAttribute.type().getBytes(StandardCharsets.UTF_8))
           .set(HANDLES.DATA, handleAttribute.data())
-          .set(HANDLES.TTL, 86400)
+          .set(HANDLES.TTL, TTL)
           .set(HANDLES.TIMESTAMP, recordTimestamp.getEpochSecond())
           .set(HANDLES.ADMIN_READ, true)
           .set(HANDLES.ADMIN_WRITE, true)
@@ -198,7 +196,8 @@ public class HandleRepository {
     context.batch(queryList).execute();
   }
 
-  private void mergeAttributesToDb(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
+  private void mergeAttributesToDb(Instant recordTimestamp,
+      List<HandleAttribute> handleAttributes) {
     var queryList = new ArrayList<Query>();
     log.info("merging ths record: " + handleAttributes.toString());
     Set<byte[]> updatedHandles = new HashSet<>();
@@ -208,7 +207,7 @@ public class HandleRepository {
           .set(HANDLES.IDX, handleAttribute.index())
           .set(HANDLES.TYPE, handleAttribute.type().getBytes(StandardCharsets.UTF_8))
           .set(HANDLES.DATA, handleAttribute.data())
-          .set(HANDLES.TTL, 86400)
+          .set(HANDLES.TTL, TTL)
           .set(HANDLES.TIMESTAMP, recordTimestamp.getEpochSecond())
           .set(HANDLES.ADMIN_READ, true)
           .set(HANDLES.ADMIN_WRITE, true)
@@ -219,14 +218,14 @@ public class HandleRepository {
           .set(HANDLES.IDX, handleAttribute.index())
           .set(HANDLES.TYPE, handleAttribute.type().getBytes(StandardCharsets.UTF_8))
           .set(HANDLES.DATA, handleAttribute.data())
-          .set(HANDLES.TTL, 86400)
+          .set(HANDLES.TTL, TTL)
           .set(HANDLES.TIMESTAMP, recordTimestamp.getEpochSecond())
           .set(HANDLES.ADMIN_READ, true)
           .set(HANDLES.ADMIN_WRITE, true)
           .set(HANDLES.PUB_READ, true)
           .set(HANDLES.PUB_WRITE, false);
       queryList.add(query);
-      if (updatedHandles.add(handleAttribute.handle())){
+      if (updatedHandles.add(handleAttribute.handle())) {
         queryList.add(versionIncrement(handleAttribute.handle(), recordTimestamp, true));
       }
     }

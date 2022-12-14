@@ -70,7 +70,6 @@ public class PidRecords {
   public static final Map<String, Integer> REQ_FIELD_IDX;
 
 
-
   static { // Handle Record Fields
     Set<String> tmp = new HashSet<>();
     tmp.add(PID);
