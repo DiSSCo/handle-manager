@@ -5,6 +5,7 @@ import static eu.dissco.core.handlemanager.database.jooq.Tables.HANDLES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_NUMBER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.*;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genObjectNodeAttributeRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenAttributes;
@@ -13,6 +14,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAt
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchNullPointerException;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -21,6 +23,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.database.jooq.tables.Handles;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
+import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
+import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -337,6 +341,28 @@ class HandleRepositoryIT extends BaseRepositoryIT {
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testResolveBatchRecordSomeUnresolvable() throws Exception {
+
+    // Given
+    List<byte[]> handles = List.of(
+        HANDLE.getBytes(StandardCharsets.UTF_8),
+        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
+
+    List<HandleAttribute> rows = new ArrayList<>();
+    List<ObjectNode> responseExpected = new ArrayList<>();
+    for (byte[] handle : handles) {
+      rows.addAll(genHandleRecordAttributes(handle));
+      responseExpected.add(genObjectNodeAttributeRecord(rows));
+    }
+
+    // Then
+    assertThrows(PidResolutionException.class, () ->{
+      handleRep.resolveBatchRecord(handles);
+    });
+
   }
 
   @Test

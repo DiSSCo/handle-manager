@@ -1,5 +1,9 @@
 package eu.dissco.core.handlemanager.service;
 
+import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
+import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
+import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
+import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
@@ -8,6 +12,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_TOMBSTONE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.map;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -165,7 +170,7 @@ class HandleServiceTest {
   @Test
   void testCreateDigitalSpecimenJson() throws Exception {
     // Given
-    byte[] handle = handlesList.get(0);
+    byte[] handle = HANDLE.getBytes();
     DigitalSpecimenRequest request = genDigitalSpecimenRequestObject();
     List<HandleAttribute> handleRecord = genDigitalSpecimenAttributes(handle);
     var databaseResponse = genObjectNodeAttributeRecord(handleRecord);
@@ -365,7 +370,29 @@ class HandleServiceTest {
   }
 
   @Test
-  void testUpdateRecordNonWritable() throws Exception{
+  void testUpdateRecordInvalidField() throws Exception {
+
+    // Given
+    ObjectNode requestRoot = mapper.createObjectNode();
+    ObjectNode requestData = mapper.createObjectNode();
+    ObjectNode requestAttributes = mapper.createObjectNode();
+
+    requestAttributes.put("invalidField", "invalidValue");
+    requestData.put(NODE_TYPE, RECORD_TYPE_HANDLE);
+    requestData.put(NODE_ID, HANDLE);
+    requestData.set(NODE_ATTRIBUTES, requestAttributes);
+
+    requestRoot.set(NODE_DATA, requestData);
+
+    // Then
+    assertThrows(InvalidRecordInput.class, () ->{
+      service.updateRecord(requestRoot, HANDLE.getBytes(StandardCharsets.UTF_8), RECORD_TYPE_HANDLE);
+    });
+
+  }
+
+  @Test
+  void testUpdateRecordNonWritable() {
     // Given
     List<byte[]> handles = initHandleList();
     List<ObjectNode> updateRequest = genUpdateRequestBatch(handles);
@@ -398,8 +425,6 @@ class HandleServiceTest {
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
-
-
   @Test
   void testArchiveRecord() throws Exception {
     // Given
@@ -423,7 +448,7 @@ class HandleServiceTest {
   }
 
   @Test
-  void testeRecordBatch() throws Exception {
+  void testRecordBatch() throws Exception {
     // Given
     List<ObjectNode> updateRequest = genTombstoneRequestBatch();
 
