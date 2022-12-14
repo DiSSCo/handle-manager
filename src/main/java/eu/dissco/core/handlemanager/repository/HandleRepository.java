@@ -180,9 +180,15 @@ public class HandleRepository {
 
   public List<ObjectNode> createRecords(List<byte[]> handles
       , Instant recordTimestamp, List<HandleAttribute> handleAttributes)
-      throws PidResolutionException {
+      throws PidServiceInternalError {
     postAttributesToDb(recordTimestamp, handleAttributes);
-    return resolveBatchRecord(handles);
+    try{
+      return resolveBatchRecord(handles);
+    } catch (PidResolutionException e){
+      rollbackRecordCreation(handles);
+      throw new PidServiceInternalError(PID_ROLLBACK_MESSAGE);
+    }
+
   }
 
   private void postAttributesToDb(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
