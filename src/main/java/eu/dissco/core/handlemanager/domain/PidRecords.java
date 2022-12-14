@@ -1,5 +1,6 @@
 package eu.dissco.core.handlemanager.domain;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -57,6 +58,7 @@ public class PidRecords {
   public static final Set<String> DIGITAL_SPECIMEN_FIELDS;
   public static final Set<String> DIGITAL_SPECIMEN_BOTANY_FIELDS;
   public static final Set<String> TOMBSTONE_RECORD_FIELDS;
+  public static final Set<byte[]> TOMBSTONE_RECORD_FIELDS_BYTES;
   // Fields for request type (For checking update requests)
   public static final Set<String> HANDLE_RECORD_REQ;
   public static final Set<String> DOI_RECORD_REQ;
@@ -111,6 +113,14 @@ public class PidRecords {
     tmp.add(TOMBSTONE_TEXT);
     tmp.add(TOMBSTONE_PIDS);
     TOMBSTONE_RECORD_FIELDS = Collections.unmodifiableSet(tmp);
+  }
+
+  static {
+    Set<byte[]> tmp = new HashSet<>();
+    for (String field : TOMBSTONE_RECORD_FIELDS){
+      tmp.add(field.getBytes(StandardCharsets.UTF_8));
+    }
+    TOMBSTONE_RECORD_FIELDS_BYTES = Collections.unmodifiableSet(tmp);
   }
 
   // Request fields

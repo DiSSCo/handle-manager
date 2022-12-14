@@ -214,7 +214,6 @@ public class HandleRepository {
   private void mergeAttributesToDb(Instant recordTimestamp,
       List<HandleAttribute> handleAttributes) {
     var queryList = new ArrayList<Query>();
-    log.info("merging ths record: " + handleAttributes.toString());
     Set<byte[]> updatedHandles = new HashSet<>();
     for (var handleAttribute : handleAttributes) {
       var query = context.insertInto(HANDLES)
@@ -279,10 +278,9 @@ public class HandleRepository {
 
   // Archive
   public void archiveRecord(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
-
     mergeAttributesToDb(recordTimestamp, handleAttributes);
+    removeNonTombstoneFields(List.of(handleAttributes.get(0).handle()));
   }
-
 
   // Update
   public ObjectNode updateRecord(Instant recordTimestamp, List<HandleAttribute> handleAttributes)
@@ -339,6 +337,13 @@ public class HandleRepository {
         .set(HANDLES.TIMESTAMP, recordTimestamp.getEpochSecond())
         .where(HANDLES.HANDLE.eq(handle))
         .and(HANDLES.TYPE.eq(ISSUE_NUMBER.getBytes(StandardCharsets.UTF_8)));
+  }
+
+  private void removeNonTombstoneFields(List<byte[]> handles){
+    context.delete(HANDLES)
+        .where(HANDLES.HANDLE.in(handles))
+        .and(HANDLES.TYPE.notIn(TOMBSTONE_RECORD_FIELDS_BYTES))
+        .execute();
   }
 
 }

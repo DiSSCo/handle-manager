@@ -2,6 +2,7 @@ package eu.dissco.core.handlemanager.controller;
 
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
+import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
@@ -15,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -63,10 +65,9 @@ class HandleControllerTest {
     // Given
     int pageSize = 10;
     int pageNum = 1;
-    String handle = HANDLE;
     List<String> expectedHandles = new ArrayList<>();
     for (int i = 0; i < pageSize; i++) {
-      expectedHandles.add(handle);
+      expectedHandles.add(HANDLE);
     }
     given(service.getHandlesPaged(pageNum, pageSize)).willReturn(expectedHandles);
 
@@ -107,8 +108,14 @@ class HandleControllerTest {
     JsonApiWrapper responseExpected = genHandleRecordJsonResponse(handle);
     given(service.resolveSingleRecord(handle)).willReturn(responseExpected);
 
+    ObjectNode requestData = mapper.createObjectNode();
+    ObjectNode requestId = mapper.createObjectNode();
+
+    requestId.put(NODE_ID, HANDLE);
+    requestData.set(NODE_DATA, requestId);
+
     // When
-    var responseReceived = controller.resolvePid(handle);
+    var responseReceived = controller.resolvePid(requestData);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -119,14 +126,23 @@ class HandleControllerTest {
   void testResolveBatchHandle() throws Exception {
     // Given
     List<byte[]> handles = new ArrayList<>();
+    List<JsonNode> requestRoot = new ArrayList<>();
+
     for (String hdlStr : HANDLE_LIST_STR) {
       handles.add(hdlStr.getBytes(StandardCharsets.UTF_8));
+      ObjectNode requestData = mapper.createObjectNode();
+      ObjectNode requestId = mapper.createObjectNode();
+
+      requestId.put(NODE_ID, hdlStr);
+      requestData.set(NODE_DATA, requestId);
+
+      requestRoot.add(requestData);
     }
     var responseExpected = genHandleRecordJsonResponseBatch(handles);
     given(service.resolveBatchRecord(anyList())).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.resolvePids(HANDLE_LIST_STR);
+    var responseReceived = controller.resolvePids(requestRoot);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);

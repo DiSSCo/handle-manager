@@ -18,10 +18,11 @@
   <properties>
     <java.version>17</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <sonar.coverage.jacoco.xmlReportPaths>../app-it/target/site/jacoco-aggregate/jacoco.xml
-    </sonar.coverage.jacoco.xmlReportPaths>
     <testcontainers.version>1.17.5</testcontainers.version>
     <keycloak-adapter-bom.version>16.1.1</keycloak-adapter-bom.version>
+    <sonar.coverage.jacoco.xmlReportPaths>
+      ../app-it/target/site/jacoco-aggregate/jacoco.xml
+    </sonar.coverage.jacoco.xmlReportPaths>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     <sonar.organization>dissco</sonar.organization>
   </properties>

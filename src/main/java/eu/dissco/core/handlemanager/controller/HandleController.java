@@ -55,20 +55,21 @@ public class HandleController {
 
   @GetMapping("/record")
   public ResponseEntity<JsonApiWrapper> resolvePid(
-      @RequestBody byte[] handle
+      @RequestBody JsonNode request
   ) throws PidResolutionException, PidServiceInternalError {
+    byte[] handle = request.get(NODE_DATA).get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
+
     JsonApiWrapper node = service.resolveSingleRecord(handle);
     return ResponseEntity.status(HttpStatus.OK).body(node);
   }
 
   @GetMapping("/records")
   public ResponseEntity<List<JsonApiWrapper>> resolvePids(
-      @RequestBody List<String> handleStrings
+      @RequestBody List<JsonNode> requests
   ) throws PidServiceInternalError, PidResolutionException {
-
     List<byte[]> handles = new ArrayList<>();
-    for (String hdlStr : handleStrings) {
-      handles.add(hdlStr.getBytes(StandardCharsets.UTF_8));
+    for (JsonNode request : requests) {
+      handles.add(request.get(NODE_DATA).get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8));
     }
     List<JsonApiWrapper> node = service.resolveBatchRecord(handles);
     return ResponseEntity.status(HttpStatus.OK).body(node);
