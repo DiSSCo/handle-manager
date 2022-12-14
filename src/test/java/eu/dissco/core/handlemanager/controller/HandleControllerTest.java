@@ -1,5 +1,7 @@
 package eu.dissco.core.handlemanager.controller;
 
+import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
+import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
@@ -24,6 +26,7 @@ import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.service.HandleService;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -368,18 +371,20 @@ class HandleControllerTest {
     var archiveAttributes = genTombstoneRequest();
     JsonApiData archiveRequest = new JsonApiData(HANDLE, RECORD_TYPE_TOMBSTONE, archiveAttributes);
 
-    ObjectNode archiveRequestNode = mapper.createObjectNode();
-    archiveRequestNode.set("data", mapper.valueToTree(archiveRequest));
-    log.info(archiveRequestNode.toString());
+    ObjectNode archiveRootNode = mapper.createObjectNode();
+    archiveRootNode.set("data", mapper.valueToTree(archiveRequest));
+
+    ObjectNode archiveRequestNode = (ObjectNode) archiveRootNode.get(NODE_DATA).get(NODE_ATTRIBUTES);
 
     List<HandleAttribute> tombstoneAttributesFull = genTombstoneRecordFullAttributes(handle);
     JsonApiWrapper responseExpected = genGenericRecordJsonResponse(handle, tombstoneAttributesFull,
         RECORD_TYPE_TOMBSTONE);
-    given(service.archiveRecord(archiveRequestNode.get("data"), handle)).willReturn(
+    given(service.archiveRecord(archiveRequestNode, handle)).willReturn(
         responseExpected);
 
     // When
-    ResponseEntity<JsonApiWrapper> responseReceived = controller.archiveRecord(archiveRequestNode);
+    ResponseEntity<JsonApiWrapper> responseReceived = controller.archiveRecord(archiveRootNode);
+
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);

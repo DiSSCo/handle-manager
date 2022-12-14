@@ -144,7 +144,6 @@ public class HandleController {
       throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
     JsonNode data = request.get(NODE_DATA);
     byte[] handle = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
-    log.info(data.toString());
     return ResponseEntity.status(HttpStatus.OK).body(service.archiveRecord(data.get(NODE_ATTRIBUTES), handle));
   }
 

@@ -441,7 +441,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     JsonNode archiveRequest = genTombstoneRequest();
     List<HandleAttribute> tombstoneAttributes = genTombstoneRecordRequestAttributes(handle);
-    List<HandleAttribute> tombstoneAttributesFull = genTombstoneRecordFullAttributes(handle);
+    List<HandleAttribute> tombstoneAttributesFull = incrementVersion(genTombstoneRecordFullAttributes(handle));
     postAttributes(genHandleRecordAttributes(handle));
     var responseExpected = genObjectNodeAttributeRecord(tombstoneAttributesFull);
 
