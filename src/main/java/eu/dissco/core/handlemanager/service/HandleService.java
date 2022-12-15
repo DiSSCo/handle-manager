@@ -313,7 +313,7 @@ public class HandleService {
     checkInternalDuplicates(handles);
     checkHandlesWritable(handles);
 
-    handleRep.archiveRecord(recordTimestamp, archiveAttributes);
+    handleRep.archiveRecords(recordTimestamp, archiveAttributes, handles);
     var archivedRecords = handleRep.resolveBatchRecord(handles);
 
     List<JsonApiWrapper> wrapperList = new ArrayList<>();

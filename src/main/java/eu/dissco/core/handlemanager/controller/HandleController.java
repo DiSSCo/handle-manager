@@ -239,8 +239,9 @@ public class HandleController {
         .body(message);
   }
 
+  // This is the error thrown when a request is missing a parameter. It's very broad, though. How to make it more specific to the target cause?
   @ExceptionHandler(NullPointerException.class)
   private ResponseEntity<String> nullPointerException(NullPointerException e) {
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("INVALID REQUEST. Missing parameter." + e.getMessage());
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("INVALID REQUEST. Missing parameter. " + e.getMessage());
   }
 }

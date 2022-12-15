@@ -508,7 +508,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     log.info("response expected : " + responseExpected.toString());
 
     // When
-    handleRep.archiveRecord(CREATED, attributeList);
+    handleRep.archiveRecords(CREATED, attributeList, handles);
     var responseReceived = handleRep.resolveBatchRecord(handles);
 
     // Then

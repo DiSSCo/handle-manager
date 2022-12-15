@@ -282,6 +282,11 @@ public class HandleRepository {
     removeNonTombstoneFields(List.of(handleAttributes.get(0).handle()));
   }
 
+  public void archiveRecords(Instant recordTimestamp, List<HandleAttribute> handleAttributes, List<byte[]> handles) {
+    mergeAttributesToDb(recordTimestamp, handleAttributes);
+    removeNonTombstoneFields(handles);
+  }
+
   // Update
   public ObjectNode updateRecord(Instant recordTimestamp, List<HandleAttribute> handleAttributes)
       throws PidResolutionException {
