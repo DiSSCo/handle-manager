@@ -405,29 +405,6 @@ public class HandleService {
     return keys;
   }
 
-  private void validatePostedRecordType(Map<byte[], HandleAttribute> handleRecordMap, byte[] handle, String requestRecordType, List<String> keys)
-      throws PidServiceInternalError, InvalidRecordInput {
-    String postedRecordTypeStr = new String(handleRecordMap.get(handle).handle());
-    ObjectNode postedRecordTypeJson;
-    String targetRecordType;
-    try {
-      postedRecordTypeJson = mapper.readValue(postedRecordTypeStr, ObjectNode.class);
-      targetRecordType = postedRecordTypeJson.get("primaryNameFromPid").asText();
-
-    } catch (JsonProcessingException | NullPointerException e){
-      throw new PidServiceInternalError("An error has Occurred processing the PID type of the "
-          + "requested object. The field digitalObjectType for record " + new String(handle) + " is corrupted", e);
-    }
-
-    if (!targetRecordType.equals(requestRecordType)){
-      throw new InvalidRecordInput(
-          "INVALID INPUT. Request type does not match record type. "
-          + "Request type: " + requestRecordType
-          + "Record type: " + targetRecordType
-          + "Check handle: " + new String(handle));
-    }
-  }
-
   private void validateRequestData(JsonNode request, String requestRecordType, List<String> keys)
       throws InvalidRecordInput, PidServiceInternalError {
 

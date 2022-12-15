@@ -69,9 +69,6 @@ public class PidRecords {
 
   public static final Map<String, Integer> FIELD_IDX;
 
-  public static final Map<String, Integer> REQ_FIELD_IDX;
-
-
   static { // Handle Record Fields
     Set<String> tmp = new HashSet<>();
     tmp.add(PID);
@@ -127,8 +124,6 @@ public class PidRecords {
   static {
     Set<String> tmp = new HashSet<>();
     tmp.add(PID_ISSUER_REQ);
-    tmp.add(DIGITAL_OBJECT_TYPE_REQ);
-    tmp.add(DIGITAL_OBJECT_TYPE_REQ);
     tmp.add(LOC_REQ);
     HANDLE_RECORD_REQ = Collections.unmodifiableSet(tmp);
   }
@@ -196,21 +191,6 @@ public class PidRecords {
   }
 
   // Indexes of modifiable fields
-  static {
-    Map<String, Integer> tmp = new HashMap<>();
-    tmp.put(PID_ISSUER_REQ, FIELD_IDX.get(PID_ISSUER));
-    tmp.put(DIGITAL_OBJECT_TYPE_REQ, FIELD_IDX.get(DIGITAL_OBJECT_TYPE));
-    tmp.put(DIGITAL_OBJECT_SUBTYPE_REQ, FIELD_IDX.get(DIGITAL_OBJECT_SUBTYPE));
-    tmp.put(LOC_REQ, FIELD_IDX.get(LOC));
-    tmp.put(REFERENT_DOI_NAME_REQ, FIELD_IDX.get(REFERENT_DOI_NAME));
-    tmp.put(REFERENT, FIELD_IDX.get(REFERENT));
-    tmp.put(DIGITAL_OR_PHYSICAL, FIELD_IDX.get(DIGITAL_OR_PHYSICAL));
-    tmp.put(IN_COLLECTION_FACILITY_REQ, FIELD_IDX.get(IN_COLLECTION_FACILITY));
-    tmp.put(OBJECT_TYPE, FIELD_IDX.get(OBJECT_TYPE));
-    tmp.put(PRESERVED_OR_LIVING, FIELD_IDX.get(PRESERVED_OR_LIVING));
-    REQ_FIELD_IDX = Collections.unmodifiableMap(tmp);
-  }
-
   private PidRecords() {
     throw new IllegalStateException("Utility class");
   }
