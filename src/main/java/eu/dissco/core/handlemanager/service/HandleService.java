@@ -25,6 +25,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -77,12 +78,53 @@ public class HandleService {
     return jsonFormatSingleRecord(dbRecord);
   }
 
+  public List<JsonNode> fetchResolvedRecords(List<byte[]> handles) throws PidResolutionException {
+    var dbRecord = handleRep.resolveHandleAttributes(handles);
+    var handleMap = mapRecords(dbRecord);
+    Set<byte[]> resolvedHandles = new HashSet<>();
+
+    List<JsonNode> rootNodeList = new ArrayList<>();
+
+    for (Map.Entry<String, List<HandleAttribute>> handleRecord : handleMap.entrySet()) {
+      rootNodeList.add(jsonFormatSingleRecord(handleRecord.getValue()));
+      resolvedHandles.add(handleRecord.getValue().get(0).handle());
+    }
+
+    if (handles.size() > resolvedHandles.size()){
+      handles.forEach(resolvedHandles::remove); // Removes handles from resolved handle list, now it only contains unresolved handles
+
+      Set<String> unresolvedHandles = new HashSet<>();
+      for (byte[] handle : resolvedHandles){
+        unresolvedHandles.add(new String(handle));
+      }
+      throw new PidResolutionException("Unable to resolve the following handles: " + unresolvedHandles );
+    }
+    return rootNodeList;
+  }
+
+  private HashMap<String, List<HandleAttribute>> mapRecords(List<HandleAttribute> flatList) {
+
+    HashMap<String, List<HandleAttribute>> handleMap = new HashMap<>();
+
+    for (HandleAttribute row : flatList) {
+      String handle = new String(row.handle());
+      if (handleMap.containsKey(handle)) {
+        List<HandleAttribute> tmpList = new ArrayList<>(handleMap.get(handle));
+        tmpList.add(row);
+        handleMap.replace(handle, tmpList);
+      } else {
+        handleMap.put(handle, List.of(row));
+      }
+    }
+    return handleMap;
+  }
+
   public List<JsonApiWrapper> resolveBatchRecord(List<byte[]> handles)
       throws PidServiceInternalError, PidResolutionException {
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
 
     handleRep.checkHandlesExist(handles);
-    var recordAttributeList = handleRep.resolveBatchRecord(handles);
+    var recordAttributeList = fetchResolvedRecords(handles);
 
     for (JsonNode recordAttributes : recordAttributeList) {
       wrapperList.add(wrapResponse(recordAttributes, "PID"));
@@ -123,7 +165,7 @@ public class HandleService {
     checkHandlesWritable(handles);
 
     handleRep.updateRecordBatch(recordTimestamp, attributesToUpdate);
-    var updatedRecords = handleRep.resolveBatchRecord(handles);
+    var updatedRecords = fetchResolvedRecords(handles);
 
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
     int i = 0;
@@ -185,8 +227,8 @@ public class HandleService {
       }
     }
 
-    var postedRecordAttributes = handleRep.createRecords(handlesPost,
-        recordTimestamp, handleAttributes);
+    handleRep.postAttributesToDb(recordTimestamp, handleAttributes);
+    var postedRecordAttributes = fetchResolvedRecords(handlesPost);
 
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
 
@@ -215,7 +257,7 @@ public class HandleService {
     List<HandleAttribute> handleRecord = prepareHandleRecordAttributes(request, handle);
     var recordTimestamp = Instant.now();
 
-    handleRep.createRecord(handle, recordTimestamp, handleRecord);
+    handleRep.postAttributesToDb(recordTimestamp, handleRecord);
     var postedRecordAttributes = getRecord(handle);
 
     JsonApiData jsonData = new JsonApiData(new String(handle), RECORD_TYPE_HANDLE,
@@ -231,7 +273,7 @@ public class HandleService {
     List<HandleAttribute> handleRecord = prepareDoiRecordAttributes(request, handle);
     var recordTimestamp = Instant.now();
 
-    handleRep.createRecord(handle, recordTimestamp, handleRecord);
+    handleRep.postAttributesToDb(recordTimestamp, handleRecord);
     var postedRecordAttributes = getRecord(handle);
     JsonApiData jsonData = new JsonApiData(new String(handle), RECORD_TYPE_DOI,
         postedRecordAttributes);
@@ -245,7 +287,7 @@ public class HandleService {
     List<HandleAttribute> handleRecord = prepareDigitalSpecimenRecordAttributes(request, handle);
     var recordTimestamp = Instant.now();
 
-   handleRep.createRecord(handle, recordTimestamp, handleRecord);
+   handleRep.postAttributesToDb(recordTimestamp, handleRecord);
    var postedRecordAttributes = getRecord(handle);
     JsonApiData jsonData = new JsonApiData(new String(handle), RECORD_TYPE_DS,
         postedRecordAttributes);
@@ -260,7 +302,7 @@ public class HandleService {
         handle);
     var recordTimestamp = Instant.now();
 
-    handleRep.createRecord(handle, recordTimestamp, handleRecord);
+    handleRep.postAttributesToDb(recordTimestamp, handleRecord);
     var postedRecordAttributes = getRecord(handle);
 
     JsonApiData jsonData = new JsonApiData(new String(handle), RECORD_TYPE_DS_BOTANY,
@@ -293,7 +335,7 @@ public class HandleService {
     checkHandlesWritable(handles);
 
     handleRep.archiveRecords(recordTimestamp, archiveAttributes, handles);
-    var archivedRecords = handleRep.resolveBatchRecord(handles);
+    var archivedRecords = fetchResolvedRecords(handles);
 
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
 

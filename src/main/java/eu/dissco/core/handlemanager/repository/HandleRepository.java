@@ -58,32 +58,6 @@ public class HandleRepository {
         .getValues(HANDLES.HANDLE, byte[].class);
   }
 
-  // Resolving handles
-
-  // TODO Move to Service
-  public List<JsonNode> resolveBatchRecord(List<byte[]> handles) throws PidResolutionException {
-    var dbRecord = resolveHandleAttributes(handles);
-    var handleMap = mapRecords(dbRecord);
-    Set<byte[]> resolvedHandles = new HashSet<>();
-
-    List<JsonNode> rootNodeList = new ArrayList<>();
-
-    for (Map.Entry<String, List<HandleAttribute>> handleRecord : handleMap.entrySet()) {
-      rootNodeList.add(jsonFormatSingleRecord(handleRecord.getValue()));
-      resolvedHandles.add(handleRecord.getValue().get(0).handle());
-    }
-
-    if (handles.size() > resolvedHandles.size()){
-      handles.forEach(resolvedHandles::remove); // Removes handles from resolved handle list, now it only contains unresolved handles
-
-      Set<String> unresolvedHandles = new HashSet<>();
-      for (byte[] handle : resolvedHandles){
-        unresolvedHandles.add(new String(handle));
-      }
-      throw new PidResolutionException("Unable to resolve the following handles: " + unresolvedHandles );
-    }
-    return rootNodeList;
-  }
 
 
   public List<HandleAttribute> resolveHandleAttributes(byte[] handle) {
@@ -95,7 +69,7 @@ public class HandleRepository {
         .fetch(this::mapToAttribute);
   }
 
-  private List<HandleAttribute> resolveHandleAttributes(List<byte[]> handles) {
+  public List<HandleAttribute> resolveHandleAttributes(List<byte[]> handles) {
     return context
         .select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
         .from(HANDLES)
@@ -136,24 +110,8 @@ public class HandleRepository {
   }
 
   // Post
-  public void createRecord(byte[] handle, Instant recordTimestamp,
-      List<HandleAttribute> handleAttributes) throws PidServiceInternalError {
-    postAttributesToDb(recordTimestamp, handleAttributes);
-  }
 
-  // TODO Move to service
-  public List<JsonNode> createRecords(List<byte[]> handles
-      , Instant recordTimestamp, List<HandleAttribute> handleAttributes)
-      throws PidServiceInternalError {
-    postAttributesToDb(recordTimestamp, handleAttributes);
-    try{
-      return resolveBatchRecord(handles);
-    } catch (PidResolutionException e){
-      throw new PidServiceInternalError(PID_ROLLBACK_MESSAGE);
-    }
-  }
-
-  private void postAttributesToDb(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
+  public void postAttributesToDb(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
     var queryList = new ArrayList<Query>();
 
     for (var handleAttribute : handleAttributes) {
@@ -206,24 +164,6 @@ public class HandleRepository {
       }
     }
     context.batch(queryList).execute();
-  }
-
-  // TODO Move to service
-  private HashMap<String, List<HandleAttribute>> mapRecords(List<HandleAttribute> flatList) {
-
-    HashMap<String, List<HandleAttribute>> handleMap = new HashMap<>();
-
-    for (HandleAttribute row : flatList) {
-      String handle = new String(row.handle());
-      if (handleMap.containsKey(handle)) {
-        List<HandleAttribute> tmpList = new ArrayList<>(handleMap.get(handle));
-        tmpList.add(row);
-        handleMap.replace(handle, tmpList);
-      } else {
-        handleMap.put(handle, List.of(row));
-      }
-    }
-    return handleMap;
   }
 
   // Archive
