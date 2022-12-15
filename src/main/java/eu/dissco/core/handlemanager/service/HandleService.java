@@ -103,9 +103,15 @@ public class HandleService {
       JsonNode requestAttributes = data.get(NODE_ATTRIBUTES);
       String recordType = data.get(NODE_TYPE).asText();
       recordTypes.add(recordType);
+
       byte[] handle = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
       handles.add(handle);
-      requestAttributes = validateRequestData(requestAttributes, recordType);
+
+      var keys = getKeys(requestAttributes);
+      validateRequestData(requestAttributes, recordType, keys);
+      if (keys.contains(LOC_REQ)) {
+        requestAttributes = setLocationFromJson(requestAttributes);
+      }
       attributesToUpdate.add(prepareUpdateAttributes(handle, requestAttributes));
     }
     checkInternalDuplicates(handles);
@@ -305,7 +311,9 @@ public class HandleService {
       JsonNode requestAttributes = data.get(NODE_ATTRIBUTES);
       byte[] handle = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
       handles.add(handle);
-      requestAttributes = validateRequestData(requestAttributes, RECORD_TYPE_TOMBSTONE);
+      List<String> keys = getKeys(requestAttributes);
+      validateRequestData(requestAttributes, RECORD_TYPE_TOMBSTONE, keys);
+
       archiveAttributes.addAll(prepareUpdateAttributes(handle, requestAttributes));
       archiveAttributes.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS,
           "ARCHIVED".getBytes(StandardCharsets.UTF_8)));
@@ -336,7 +344,9 @@ public class HandleService {
   public JsonApiWrapper archiveRecord(JsonNode request, byte[] handle)
       throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
     var recordTimestamp = Instant.now();
-    validateRequestData(request, RECORD_TYPE_TOMBSTONE);
+    List<String> keys = getKeys(request);
+
+    validateRequestData(request, RECORD_TYPE_TOMBSTONE, keys);
     checkHandlesWritable(List.of(handle));
 
     List<HandleAttribute> tombstoneAttributes = prepareUpdateAttributes(handle, request);
@@ -365,7 +375,11 @@ public class HandleService {
 
     var recordTimestamp = Instant.now();
 
-    request = validateRequestData(request, recordType);
+    List<String> keys = getKeys(request);
+    validateRequestData(request, recordType, keys);
+    if (keys.contains(LOC_REQ)) {
+      request = setLocationFromJson(request);
+    }
     checkHandlesWritable(List.of(handle));
     List<HandleAttribute> attributesToUpdate = prepareUpdateAttributes(handle, request);
 
@@ -384,23 +398,44 @@ public class HandleService {
     return new JsonApiWrapper(links, jsonData);
   }
 
-  private JsonNode validateRequestData(JsonNode request, String recordType)
-      throws InvalidRecordInput, PidServiceInternalError {
+  private List<String> getKeys(JsonNode request){
     List<String> keys = new ArrayList<>();
     Iterator<String> fieldItr = request.fieldNames();
     fieldItr.forEachRemaining(keys::add);
+    return keys;
+  }
+
+  private void validatePostedRecordType(Map<byte[], HandleAttribute> handleRecordMap, byte[] handle, String requestRecordType, List<String> keys)
+      throws PidServiceInternalError, InvalidRecordInput {
+    String postedRecordTypeStr = new String(handleRecordMap.get(handle).handle());
+    ObjectNode postedRecordTypeJson;
+    String targetRecordType;
+    try {
+      postedRecordTypeJson = mapper.readValue(postedRecordTypeStr, ObjectNode.class);
+      targetRecordType = postedRecordTypeJson.get("primaryNameFromPid").asText();
+
+    } catch (JsonProcessingException | NullPointerException e){
+      throw new PidServiceInternalError("An error has Occurred processing the PID type of the "
+          + "requested object. The field digitalObjectType for record " + new String(handle) + " is corrupted", e);
+    }
+
+    if (!targetRecordType.equals(requestRecordType)){
+      throw new InvalidRecordInput(
+          "INVALID INPUT. Request type does not match record type. "
+          + "Request type: " + requestRecordType
+          + "Record type: " + targetRecordType
+          + "Check handle: " + new String(handle));
+    }
+  }
+
+  private void validateRequestData(JsonNode request, String requestRecordType, List<String> keys)
+      throws InvalidRecordInput, PidServiceInternalError {
 
     JsonNode requestUpdated = request.deepCopy();
 
     // Data Ingestion Checks
-    Set<String> recordFields = getRecordFields(recordType);
-    checkFields(keys, recordFields, recordType);
-
-    // Format 10320/loc
-    if (keys.contains(LOC_REQ)) {
-      requestUpdated = setLocationFromJson(request);
-    }
-    return requestUpdated;
+    Set<String> requestRecordFields = getRecordFields(requestRecordType);
+    checkFields(keys, requestRecordFields, requestRecordType);
   }
 
   private Set<String> getRecordFields(String recordType) throws InvalidRecordInput {

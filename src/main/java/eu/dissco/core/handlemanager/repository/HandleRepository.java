@@ -115,6 +115,34 @@ public class HandleRepository {
     return rootNode;
   }
 
+  public Map<byte[], HandleAttribute> getRecordType(List<byte[]> handles){
+    var recordTypes = retrieveRecordType(handles);
+    Map<byte[], HandleAttribute> recordTypeMap = new HashMap<>();
+
+    for (var recordType: recordTypes){
+      recordTypeMap.put(recordType.handle(), recordType);
+    }
+    return recordTypeMap;
+  }
+
+  private List<HandleAttribute> retrieveRecordType(List<byte[]> handles){
+    return context
+        .select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
+        .from(HANDLES)
+        .where(HANDLES.HANDLE.in(handles))
+        .and(HANDLES.TYPE.eq(DIGITAL_OBJECT_TYPE.getBytes(StandardCharsets.UTF_8)))
+        .fetch(this::mapToAttribute);
+  }
+
+  public List<HandleAttribute> getRecordType(byte[] handle){
+    return context
+        .select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
+        .from(HANDLES)
+        .where(HANDLES.HANDLE.eq(handle))
+        .and(HANDLES.TYPE.eq(DIGITAL_OBJECT_TYPE.getBytes(StandardCharsets.UTF_8)))
+        .fetch(this::mapToAttribute);
+  }
+
   public List<HandleAttribute> resolveHandleAttributes(byte[] handle) {
     return context
         .select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
