@@ -98,6 +98,11 @@
       <groupId>org.keycloak</groupId>
       <artifactId>keycloak-spring-boot-starter</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-ui</artifactId>
+      <version>1.6.13</version>
+    </dependency>
 
     <!-- Testing Dependencies -->
     <dependency>

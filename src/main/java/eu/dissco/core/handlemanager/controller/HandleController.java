@@ -239,4 +239,8 @@ public class HandleController {
         .body(message);
   }
 
+  @ExceptionHandler(NullPointerException.class)
+  private ResponseEntity<String> nullPointerException(NullPointerException e) {
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("INVALID REQUEST. Missing parameter." + e.getMessage());
+  }
 }
