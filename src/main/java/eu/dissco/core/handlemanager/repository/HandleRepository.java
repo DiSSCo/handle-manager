@@ -59,14 +59,6 @@ public class HandleRepository {
   }
 
   // Resolving handles
-  // TODO Move to Service
-  public JsonNode resolveSingleRecord(byte[] handle) throws PidResolutionException {
-    var dbRecord = resolveHandleAttributes(handle);
-    if (dbRecord.isEmpty()) {
-      throw new PidResolutionException();
-    }
-    return jsonFormatSingleRecord(dbRecord);
-  }
 
   // TODO Move to Service
   public List<JsonNode> resolveBatchRecord(List<byte[]> handles) throws PidResolutionException {
@@ -90,11 +82,9 @@ public class HandleRepository {
       }
       throw new PidResolutionException("Unable to resolve the following handles: " + unresolvedHandles );
     }
-
     return rootNodeList;
   }
 
-  // TODO Move to Service
 
   public List<HandleAttribute> resolveHandleAttributes(byte[] handle) {
     return context
@@ -146,16 +136,9 @@ public class HandleRepository {
   }
 
   // Post
-  public JsonNode createRecord(byte[] handle, Instant recordTimestamp,
+  public void createRecord(byte[] handle, Instant recordTimestamp,
       List<HandleAttribute> handleAttributes) throws PidServiceInternalError {
     postAttributesToDb(recordTimestamp, handleAttributes);
-    JsonNode postedRecord;
-    try {
-      postedRecord = resolveSingleRecord(handle);
-    } catch (PidResolutionException e) {
-      throw new PidServiceInternalError(String.format(PID_ROLLBACK_MESSAGE, "2"));
-    }
-    return postedRecord;
   }
 
   // TODO Move to service

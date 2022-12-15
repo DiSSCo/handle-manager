@@ -215,8 +215,8 @@ public class HandleService {
     List<HandleAttribute> handleRecord = prepareHandleRecordAttributes(request, handle);
     var recordTimestamp = Instant.now();
 
-    JsonNode postedRecordAttributes = handleRep.createRecord(handle, recordTimestamp,
-        handleRecord);
+    handleRep.createRecord(handle, recordTimestamp, handleRecord);
+    var postedRecordAttributes = getRecord(handle);
 
     JsonApiData jsonData = new JsonApiData(new String(handle), RECORD_TYPE_HANDLE,
         postedRecordAttributes);
@@ -231,8 +231,8 @@ public class HandleService {
     List<HandleAttribute> handleRecord = prepareDoiRecordAttributes(request, handle);
     var recordTimestamp = Instant.now();
 
-    JsonNode postedRecordAttributes = handleRep.createRecord(handle, recordTimestamp,
-        handleRecord);
+    handleRep.createRecord(handle, recordTimestamp, handleRecord);
+    var postedRecordAttributes = getRecord(handle);
     JsonApiData jsonData = new JsonApiData(new String(handle), RECORD_TYPE_DOI,
         postedRecordAttributes);
     JsonApiLinks links = new JsonApiLinks(postedRecordAttributes.get(PID).asText());
@@ -245,8 +245,8 @@ public class HandleService {
     List<HandleAttribute> handleRecord = prepareDigitalSpecimenRecordAttributes(request, handle);
     var recordTimestamp = Instant.now();
 
-    JsonNode postedRecordAttributes = handleRep.createRecord(handle, recordTimestamp,
-        handleRecord);
+   handleRep.createRecord(handle, recordTimestamp, handleRecord);
+   var postedRecordAttributes = getRecord(handle);
     JsonApiData jsonData = new JsonApiData(new String(handle), RECORD_TYPE_DS,
         postedRecordAttributes);
     JsonApiLinks links = new JsonApiLinks(postedRecordAttributes.get(PID).asText());
@@ -260,8 +260,9 @@ public class HandleService {
         handle);
     var recordTimestamp = Instant.now();
 
-    JsonNode postedRecordAttributes = handleRep.createRecord(handle,
-        recordTimestamp, handleRecord);
+    handleRep.createRecord(handle, recordTimestamp, handleRecord);
+    var postedRecordAttributes = getRecord(handle);
+
     JsonApiData jsonData = new JsonApiData(new String(handle), RECORD_TYPE_DS_BOTANY,
         postedRecordAttributes);
     JsonApiLinks links = new JsonApiLinks(postedRecordAttributes.get(PID).asText());
