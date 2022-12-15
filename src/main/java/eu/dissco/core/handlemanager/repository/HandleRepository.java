@@ -63,7 +63,7 @@ public class HandleRepository {
   public JsonNode resolveSingleRecord(byte[] handle) throws PidResolutionException {
     var dbRecord = resolveHandleAttributes(handle);
     if (dbRecord.isEmpty()) {
-      throw new PidResolutionException("Unable to resolve handle");
+      throw new PidResolutionException();
     }
     return jsonFormatSingleRecord(dbRecord);
   }
@@ -95,29 +95,6 @@ public class HandleRepository {
   }
 
   // TODO Move to Service
-  private JsonNode jsonFormatSingleRecord(List<HandleAttribute> dbRecord) {
-    ObjectNode rootNode = mapper.createObjectNode();
-    ObjectNode subNode;
-    String data;
-    String type;
-    for (HandleAttribute row : dbRecord) {
-      type = row.type();
-      data = new String(row.data());
-      if (FIELD_IS_PID_RECORD.contains(type)) {
-        try {
-          subNode = mapper.readValue(data, ObjectNode.class);
-          rootNode.set(type, subNode);
-        } catch (JsonProcessingException e) {
-          // Not 100% sure if an exception should be thrown here. We don't want to make a poorly formatted record un-resolvable
-          log.warn("Type \"{}\" is noncompliant to the PID kernel model. Invalid data: {}", type,
-              data);
-        }
-      } else {
-        rootNode.put(type, data);
-      }
-    }
-    return rootNode;
-  }
 
   public List<HandleAttribute> resolveHandleAttributes(byte[] handle) {
     return context
@@ -278,13 +255,10 @@ public class HandleRepository {
   }
 
   // Update
-  public JsonNode updateRecord(Instant recordTimestamp, List<HandleAttribute> handleAttributes)
-      throws PidResolutionException {
+  public void updateRecord(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
     byte[] handle = handleAttributes.get(0).handle();
     var query = prepareUpdateQuery(handle, recordTimestamp, handleAttributes, true);
     context.batch(query).execute();
-
-    return resolveSingleRecord(handle);
   }
 
   public void updateRecordBatch(Instant recordTimestamp,

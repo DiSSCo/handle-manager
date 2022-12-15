@@ -60,11 +60,21 @@ public class HandleService {
 
   public JsonApiWrapper resolveSingleRecord(byte[] handle)
       throws PidResolutionException {
-    JsonNode recordAttributes = handleRep.resolveSingleRecord(handle);
+
+    var recordAttributes = getRecord(handle);
+
     JsonApiData jsonData = new JsonApiData(new String(handle), "PID", recordAttributes);
     String pidLink = recordAttributes.get(PID).asText();
     JsonApiLinks links = new JsonApiLinks(pidLink);
     return new JsonApiWrapper(links, jsonData);
+  }
+
+  private JsonNode getRecord(byte[] handle) throws PidResolutionException {
+    var dbRecord = handleRep.resolveHandleAttributes(handle);
+    if (dbRecord.isEmpty()){
+      throw new PidResolutionException("Unable to resolve handle");
+    }
+    return jsonFormatSingleRecord(dbRecord);
   }
 
   public List<JsonApiWrapper> resolveBatchRecord(List<byte[]> handles)
@@ -309,7 +319,8 @@ public class HandleService {
     tombstoneAttributes.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS,
         "ARCHIVED".getBytes(StandardCharsets.UTF_8)));
     handleRep.archiveRecord(recordTimestamp, tombstoneAttributes);
-    var archivedRecord = handleRep.resolveSingleRecord(handle);
+
+    var archivedRecord = getRecord(handle);
 
     // Package response
     JsonApiData jsonData = new JsonApiData(new String(handle), RECORD_TYPE_TOMBSTONE,
@@ -333,7 +344,8 @@ public class HandleService {
     List<HandleAttribute> attributesToUpdate = prepareUpdateAttributes(handle, request);
 
     // Update record
-    JsonNode updatedRecord = handleRep.updateRecord(recordTimestamp, attributesToUpdate);
+    handleRep.updateRecord(recordTimestamp, attributesToUpdate);
+    var updatedRecord = getRecord(handle);
 
     // Package response
     JsonApiData jsonData = new JsonApiData(new String(handle), recordType, updatedRecord);
@@ -349,9 +361,7 @@ public class HandleService {
   }
 
   private void validateRequestData(JsonNode request, String requestRecordType, List<String> keys)
-      throws InvalidRecordInput, PidServiceInternalError {
-
-    JsonNode requestUpdated = request.deepCopy();
+      throws InvalidRecordInput {
 
     // Data Ingestion Checks
     Set<String> requestRecordFields = getRecordFields(requestRecordType);
@@ -656,6 +666,33 @@ public class HandleService {
     StringWriter writer = new StringWriter();
     transformer.transform(new DOMSource(document), new StreamResult(writer));
     return writer.getBuffer().toString();
+  }
+
+
+
+
+  private JsonNode jsonFormatSingleRecord(List<HandleAttribute> dbRecord) {
+    ObjectNode rootNode = mapper.createObjectNode();
+    ObjectNode subNode;
+    String data;
+    String type;
+    for (HandleAttribute row : dbRecord) {
+      type = row.type();
+      data = new String(row.data());
+      if (FIELD_IS_PID_RECORD.contains(type)) {
+        try {
+          subNode = mapper.readValue(data, ObjectNode.class);
+          rootNode.set(type, subNode);
+        } catch (JsonProcessingException e) {
+          // Not 100% sure if an exception should be thrown here. We don't want to make a poorly formatted record un-resolvable
+          log.warn("Type \"{}\" is noncompliant to the PID kernel model. Invalid data: {}", type,
+              data);
+        }
+      } else {
+        rootNode.put(type, data);
+      }
+    }
+    return rootNode;
   }
 
 

@@ -420,6 +420,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
+  // TODO this will fail :(
   @Test
   void testUpdateRecord() throws Exception {
     // Given
@@ -431,7 +432,8 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     JsonNode responseExpected = genObjectNodeAttributeRecord(updatedRecord);
 
     // When
-    JsonNode responseReceived = handleRep.updateRecord(CREATED, attributesToUpdate);
+    handleRep.updateRecord(CREATED, attributesToUpdate);
+    var responseReceived = handleRep.resolveSingleRecord(handle);
 
     // Then
     assertThat(responseExpected).isEqualTo(responseReceived);
