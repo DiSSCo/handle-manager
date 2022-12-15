@@ -59,15 +59,10 @@ public class HandleService {
   private static final String INVALID_FIELD_ERROR = "Invalid request. Attempting to add forbidden fields to record type %s. Forbidden field: %s";
 
   public JsonApiWrapper resolveSingleRecord(byte[] handle)
-      throws PidResolutionException, PidServiceInternalError {
-    ObjectNode recordAttributes = handleRep.resolveSingleRecord(handle);
+      throws PidResolutionException {
+    JsonNode recordAttributes = handleRep.resolveSingleRecord(handle);
     JsonApiData jsonData = new JsonApiData(new String(handle), "PID", recordAttributes);
-    String pidLink = null;
-    try {
-      pidLink = mapper.writeValueAsString(recordAttributes.get("pid"));
-    } catch (JsonProcessingException e) {
-      throw new PidServiceInternalError(e.getMessage(), e);
-    }
+    String pidLink = recordAttributes.get(PID).asText();
     JsonApiLinks links = new JsonApiLinks(pidLink);
     return new JsonApiWrapper(links, jsonData);
   }
@@ -79,19 +74,19 @@ public class HandleService {
     handleRep.checkHandlesExist(handles);
     var recordAttributeList = handleRep.resolveBatchRecord(handles);
 
-    for (ObjectNode recordAttributes : recordAttributeList) {
+    for (JsonNode recordAttributes : recordAttributeList) {
       wrapperList.add(wrapResponse(recordAttributes, "PID"));
     }
     return wrapperList;
   }
 
   private String getPidName(String pidLink) {
-    return pidLink.substring(pidLink.length() - 25, pidLink.length() - 1);
+    return pidLink.substring(pidLink.length() - 24);
   }
 
   // Batch Creation Json
 
-  public List<JsonApiWrapper> updateRecordBatch(List<ObjectNode> requests)
+  public List<JsonApiWrapper> updateRecordBatch(List<JsonNode> requests)
       throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
     var recordTimestamp = Instant.now();
     List<byte[]> handles = new ArrayList<>();
@@ -123,14 +118,8 @@ public class HandleService {
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
     int i = 0;
 
-    for (ObjectNode updatedRecord : updatedRecords) {
-      String pidLink;
-      try {
-        pidLink = mapper.writeValueAsString(updatedRecord.get("pid"));
-      } catch (JsonProcessingException e) {
-        throw new PidServiceInternalError(
-            "A JSON processing error has occured reading the updated record's PID.", e);
-      }
+    for (JsonNode updatedRecord : updatedRecords) {
+      String pidLink = updatedRecord.get(PID).asText();
       String pidName = getPidName(pidLink);
       JsonApiData jsonData = new JsonApiData(pidName, recordTypes.get(i++), updatedRecord);
       JsonApiLinks links = new JsonApiLinks(pidLink);
@@ -140,7 +129,7 @@ public class HandleService {
   }
 
 
-  public List<JsonApiWrapper> createRecordBatch(List<ObjectNode> requests)
+  public List<JsonApiWrapper> createRecordBatch(List<JsonNode> requests)
       throws PidResolutionException, PidServiceInternalError, InvalidRecordInput {
     var recordTimestamp = Instant.now();
     List<byte[]> handles = hf.genHandleList(requests.size());
@@ -191,21 +180,16 @@ public class HandleService {
 
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
 
-    for (ObjectNode recordAttributes : postedRecordAttributes) {
+    for (JsonNode recordAttributes : postedRecordAttributes) {
       wrapperList.add(wrapResponse(recordAttributes, "PID"));
     }
     return wrapperList;
   }
 
 
-  private JsonApiWrapper wrapResponse(ObjectNode recordAttributes, String recordType)
+  private JsonApiWrapper wrapResponse(JsonNode recordAttributes, String recordType)
       throws PidServiceInternalError {
-    String pidLink = null;
-    try {
-      pidLink = mapper.writeValueAsString(recordAttributes.get("pid"));
-    } catch (JsonProcessingException e) {
-      throw new PidServiceInternalError(e.getMessage(), e);
-    }
+    String pidLink = recordAttributes.get(PID).asText();
     String pidName = getPidName(pidLink);
     var jsonData = new JsonApiData(pidName, recordType, recordAttributes);
     var links = new JsonApiLinks(pidLink);
@@ -221,18 +205,12 @@ public class HandleService {
     List<HandleAttribute> handleRecord = prepareHandleRecordAttributes(request, handle);
     var recordTimestamp = Instant.now();
 
-    ObjectNode postedRecordAttributes = handleRep.createRecord(handle, recordTimestamp,
+    JsonNode postedRecordAttributes = handleRep.createRecord(handle, recordTimestamp,
         handleRecord);
 
     JsonApiData jsonData = new JsonApiData(new String(handle), RECORD_TYPE_HANDLE,
         postedRecordAttributes);
-    JsonApiLinks links = null;
-    try {
-      links = new JsonApiLinks(
-          mapper.writeValueAsString(postedRecordAttributes.get("pid")));
-    } catch (JsonProcessingException e) {
-      throw new PidServiceInternalError(e.getMessage(), e);
-    }
+    JsonApiLinks links = new JsonApiLinks(postedRecordAttributes.get(PID).asText());
 
     return new JsonApiWrapper(links, jsonData);
   }
@@ -243,17 +221,11 @@ public class HandleService {
     List<HandleAttribute> handleRecord = prepareDoiRecordAttributes(request, handle);
     var recordTimestamp = Instant.now();
 
-    ObjectNode postedRecordAttributes = handleRep.createRecord(handle, recordTimestamp,
+    JsonNode postedRecordAttributes = handleRep.createRecord(handle, recordTimestamp,
         handleRecord);
     JsonApiData jsonData = new JsonApiData(new String(handle), RECORD_TYPE_DOI,
         postedRecordAttributes);
-    JsonApiLinks links = null;
-    try {
-      links = new JsonApiLinks(
-          mapper.writeValueAsString(postedRecordAttributes.get("pid")));
-    } catch (JsonProcessingException e) {
-      throw new PidServiceInternalError(e.getMessage(), e);
-    }
+    JsonApiLinks links = new JsonApiLinks(postedRecordAttributes.get(PID).asText());
     return new JsonApiWrapper(links, jsonData);
   }
 
@@ -263,17 +235,11 @@ public class HandleService {
     List<HandleAttribute> handleRecord = prepareDigitalSpecimenRecordAttributes(request, handle);
     var recordTimestamp = Instant.now();
 
-    ObjectNode postedRecordAttributes = handleRep.createRecord(handle, recordTimestamp,
+    JsonNode postedRecordAttributes = handleRep.createRecord(handle, recordTimestamp,
         handleRecord);
     JsonApiData jsonData = new JsonApiData(new String(handle), RECORD_TYPE_DS,
         postedRecordAttributes);
-    JsonApiLinks links = null;
-    try {
-      links = new JsonApiLinks(
-          mapper.writeValueAsString(postedRecordAttributes.get("pid")));
-    } catch (JsonProcessingException e) {
-      throw new PidServiceInternalError(e.getMessage(), e);
-    }
+    JsonApiLinks links = new JsonApiLinks(postedRecordAttributes.get(PID).asText());
     return new JsonApiWrapper(links, jsonData);
   }
 
@@ -284,23 +250,17 @@ public class HandleService {
         handle);
     var recordTimestamp = Instant.now();
 
-    ObjectNode postedRecordAttributes = handleRep.createRecord(handle,
+    JsonNode postedRecordAttributes = handleRep.createRecord(handle,
         recordTimestamp, handleRecord);
     JsonApiData jsonData = new JsonApiData(new String(handle), RECORD_TYPE_DS_BOTANY,
         postedRecordAttributes);
-    JsonApiLinks links = null;
-    try {
-      links = new JsonApiLinks(
-          mapper.writeValueAsString(postedRecordAttributes.get("pid")));
-    } catch (JsonProcessingException e) {
-      throw new PidServiceInternalError(e.getMessage(), e);
-    }
+    JsonApiLinks links = new JsonApiLinks(postedRecordAttributes.get(PID).asText());
     return new JsonApiWrapper(links, jsonData);
   }
 
   // Update
 
-  public List<JsonApiWrapper> archiveRecordBatch(List<ObjectNode> requests)
+  public List<JsonApiWrapper> archiveRecordBatch(List<JsonNode> requests)
       throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
     var recordTimestamp = Instant.now();
     List<byte[]> handles = new ArrayList<>();
@@ -326,13 +286,8 @@ public class HandleService {
 
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
 
-    for (ObjectNode updatedRecord : archivedRecords) {
-      String pidLink = null;
-      try {
-        pidLink = mapper.writeValueAsString(updatedRecord.get("pid"));
-      } catch (JsonProcessingException e) {
-        throw new PidServiceInternalError(e.getMessage(), e);
-      }
+    for (JsonNode updatedRecord : archivedRecords) {
+      String pidLink = updatedRecord.get(PID).asText();
       String pidName = getPidName(pidLink);
       JsonApiData jsonData = new JsonApiData(pidName, RECORD_TYPE_TOMBSTONE, updatedRecord);
       JsonApiLinks links = new JsonApiLinks(pidLink);
@@ -359,13 +314,7 @@ public class HandleService {
     // Package response
     JsonApiData jsonData = new JsonApiData(new String(handle), RECORD_TYPE_TOMBSTONE,
         archivedRecord);
-    JsonApiLinks links = null;
-    try {
-      links = new JsonApiLinks(
-          mapper.writeValueAsString(archivedRecord.get("pid")));
-    } catch (JsonProcessingException e) {
-      throw new PidServiceInternalError(e.getMessage(), e);
-    }
+    JsonApiLinks links = new JsonApiLinks(archivedRecord.get(PID).asText());
     return new JsonApiWrapper(links, jsonData);
   }
 
@@ -384,17 +333,11 @@ public class HandleService {
     List<HandleAttribute> attributesToUpdate = prepareUpdateAttributes(handle, request);
 
     // Update record
-    ObjectNode updatedRecord = handleRep.updateRecord(recordTimestamp, attributesToUpdate);
+    JsonNode updatedRecord = handleRep.updateRecord(recordTimestamp, attributesToUpdate);
 
     // Package response
     JsonApiData jsonData = new JsonApiData(new String(handle), recordType, updatedRecord);
-    JsonApiLinks links = null;
-    try {
-      links = new JsonApiLinks(
-          mapper.writeValueAsString(updatedRecord.get("pid")));
-    } catch (JsonProcessingException e) {
-      throw new PidServiceInternalError(e.getMessage(), e);
-    }
+    JsonApiLinks links = new JsonApiLinks(updatedRecord.get(PID).asText());
     return new JsonApiWrapper(links, jsonData);
   }
 

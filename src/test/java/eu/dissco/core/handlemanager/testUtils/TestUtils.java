@@ -385,10 +385,9 @@ public class TestUtils {
   public static JsonApiWrapper genGenericRecordJsonResponse(byte[] handle,
       List<HandleAttribute> testDbRecord, String recordType)
       throws JsonProcessingException {
-    ObjectMapper mapper = new ObjectMapper();
-    ObjectNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
+    JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
     JsonApiData jsonData = new JsonApiData(new String(handle), recordType, recordAttributes);
-    JsonApiLinks links = new JsonApiLinks(mapper.writeValueAsString(recordAttributes.get("pid")));
+    JsonApiLinks links = new JsonApiLinks(recordAttributes.get("pid").asText());
     return new JsonApiWrapper(links, jsonData);
   }
 
@@ -470,11 +469,11 @@ public class TestUtils {
 
   // Update Requests
 
-  public static List<ObjectNode> genUpdateRequestBatch(List<byte[]> handles) {
+  public static List<JsonNode> genUpdateRequestBatch(List<byte[]> handles) {
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode requestNodeRoot = mapper.createObjectNode();
     ObjectNode requestNodeData = mapper.createObjectNode();
-    List<ObjectNode> requestNodeList = new ArrayList<>();
+    List<JsonNode> requestNodeList = new ArrayList<>();
 
     for (byte[] handle : handles) {
       requestNodeData.put("type", RECORD_TYPE_HANDLE);
@@ -490,11 +489,11 @@ public class TestUtils {
     return requestNodeList;
   }
 
-  public static List<ObjectNode> genTombstoneRequestBatch() {
+  public static List<JsonNode> genTombstoneRequestBatch() {
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode requestNodeRoot = mapper.createObjectNode();
     ObjectNode requestNodeData = mapper.createObjectNode();
-    List<ObjectNode> requestNodeList = new ArrayList<>();
+    List<JsonNode> requestNodeList = new ArrayList<>();
 
     for (String handle : HANDLE_LIST_STR) {
       requestNodeData.put("type", RECORD_TYPE_TOMBSTONE);
@@ -507,6 +506,7 @@ public class TestUtils {
       requestNodeData.removeAll();
       requestNodeRoot.removeAll();
     }
+
     return requestNodeList;
   }
 
@@ -531,33 +531,32 @@ public class TestUtils {
   }
 
   // Handle Attributes as ObjectNode 
-  public static ObjectNode genObjectNodeAttributeRecord(List<HandleAttribute> dbRecord)
+  public static JsonNode genObjectNodeAttributeRecord(List<HandleAttribute> dbRecord)
       throws JsonProcessingException {
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode rootNode = mapper.createObjectNode();
     ObjectNode subNode;
-    String data;
-    String type;
 
     for (HandleAttribute row : dbRecord) {
-      type = row.type();
-      data = new String(row.data());
+      String type = row.type();
+      String data = new String(row.data());
       if (row.index() == FIELD_IDX.get(HS_ADMIN)) {
         continue; // We never want HS_ADMIN in our json
       }
       if (FIELD_IS_PID_RECORD.contains(type)) {
         subNode = mapper.readValue(data, ObjectNode.class);
         rootNode.set(type, subNode);
-      } else {
+      }
+      else {
         rootNode.put(type, data);
       }
     }
     return rootNode;
   }
 
-  public static List<ObjectNode> genObjectNodeRecordBatch(List<List<HandleAttribute>> dbRecords)
+  public static List<JsonNode> genObjectNodeRecordBatch(List<List<HandleAttribute>> dbRecords)
       throws JsonProcessingException {
-    List<ObjectNode> nodeList = new ArrayList<>();
+    List<JsonNode> nodeList = new ArrayList<>();
     for (List<HandleAttribute> dbRecord : dbRecords) {
       nodeList.add(genObjectNodeAttributeRecord(dbRecord));
     }

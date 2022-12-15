@@ -4,6 +4,7 @@ import static eu.dissco.core.handlemanager.database.jooq.tables.Handles.HANDLES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
@@ -58,7 +59,8 @@ public class HandleRepository {
   }
 
   // Resolving handles
-  public ObjectNode resolveSingleRecord(byte[] handle) throws PidResolutionException {
+  // TODO Move to Service
+  public JsonNode resolveSingleRecord(byte[] handle) throws PidResolutionException {
     var dbRecord = resolveHandleAttributes(handle);
     if (dbRecord.isEmpty()) {
       throw new PidResolutionException("Unable to resolve handle");
@@ -66,12 +68,13 @@ public class HandleRepository {
     return jsonFormatSingleRecord(dbRecord);
   }
 
-  public List<ObjectNode> resolveBatchRecord(List<byte[]> handles) throws PidResolutionException {
+  // TODO Move to Service
+  public List<JsonNode> resolveBatchRecord(List<byte[]> handles) throws PidResolutionException {
     var dbRecord = resolveHandleAttributes(handles);
     var handleMap = mapRecords(dbRecord);
     Set<byte[]> resolvedHandles = new HashSet<>();
 
-    List<ObjectNode> rootNodeList = new ArrayList<>();
+    List<JsonNode> rootNodeList = new ArrayList<>();
 
     for (Map.Entry<String, List<HandleAttribute>> handleRecord : handleMap.entrySet()) {
       rootNodeList.add(jsonFormatSingleRecord(handleRecord.getValue()));
@@ -92,7 +95,7 @@ public class HandleRepository {
   }
 
   // TODO Move to Service
-  private ObjectNode jsonFormatSingleRecord(List<HandleAttribute> dbRecord) {
+  private JsonNode jsonFormatSingleRecord(List<HandleAttribute> dbRecord) {
     ObjectNode rootNode = mapper.createObjectNode();
     ObjectNode subNode;
     String data;
@@ -166,27 +169,26 @@ public class HandleRepository {
   }
 
   // Post
-  public ObjectNode createRecord(byte[] handle, Instant recordTimestamp,
+  public JsonNode createRecord(byte[] handle, Instant recordTimestamp,
       List<HandleAttribute> handleAttributes) throws PidServiceInternalError {
     postAttributesToDb(recordTimestamp, handleAttributes);
-    ObjectNode postedRecord;
+    JsonNode postedRecord;
     try {
       postedRecord = resolveSingleRecord(handle);
     } catch (PidResolutionException e) {
-      rollbackRecordCreation(handle);
       throw new PidServiceInternalError(String.format(PID_ROLLBACK_MESSAGE, "2"));
     }
     return postedRecord;
   }
 
-  public List<ObjectNode> createRecords(List<byte[]> handles
+  // TODO Move to service
+  public List<JsonNode> createRecords(List<byte[]> handles
       , Instant recordTimestamp, List<HandleAttribute> handleAttributes)
       throws PidServiceInternalError {
     postAttributesToDb(recordTimestamp, handleAttributes);
     try{
       return resolveBatchRecord(handles);
     } catch (PidResolutionException e){
-      rollbackRecordCreation(handles);
       throw new PidServiceInternalError(PID_ROLLBACK_MESSAGE);
     }
   }
@@ -246,6 +248,7 @@ public class HandleRepository {
     context.batch(queryList).execute();
   }
 
+  // TODO Move to service
   private HashMap<String, List<HandleAttribute>> mapRecords(List<HandleAttribute> flatList) {
 
     HashMap<String, List<HandleAttribute>> handleMap = new HashMap<>();
@@ -263,19 +266,6 @@ public class HandleRepository {
     return handleMap;
   }
 
-  // Rollback
-
-  private void rollbackRecordCreation(byte[] handle) {
-    context.delete(HANDLES)
-        .where(HANDLES.HANDLE.eq(handle))
-        .execute();
-  }
-  private void rollbackRecordCreation(List<byte[]> handles){
-    context.delete(HANDLES)
-        .where(HANDLES.HANDLE.in(handles))
-        .execute();
-  }
-
   // Archive
   public void archiveRecord(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
     mergeAttributesToDb(recordTimestamp, handleAttributes);
@@ -288,7 +278,7 @@ public class HandleRepository {
   }
 
   // Update
-  public ObjectNode updateRecord(Instant recordTimestamp, List<HandleAttribute> handleAttributes)
+  public JsonNode updateRecord(Instant recordTimestamp, List<HandleAttribute> handleAttributes)
       throws PidResolutionException {
     byte[] handle = handleAttributes.get(0).handle();
     var query = prepareUpdateQuery(handle, recordTimestamp, handleAttributes, true);

@@ -4,6 +4,7 @@ package eu.dissco.core.handlemanager.controller;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
+import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
@@ -56,7 +57,10 @@ public class HandleController {
   @GetMapping("/record")
   public ResponseEntity<JsonApiWrapper> resolvePid(
       @RequestBody JsonNode request
-  ) throws PidResolutionException, PidServiceInternalError {
+  ) throws PidResolutionException, PidServiceInternalError, InvalidRecordInput {
+
+    checkRequestNodesPresent(request, true, false, true, false);
+
     byte[] handle = request.get(NODE_DATA).get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
 
     JsonApiWrapper node = service.resolveSingleRecord(handle);
@@ -66,23 +70,27 @@ public class HandleController {
   @GetMapping("/records")
   public ResponseEntity<List<JsonApiWrapper>> resolvePids(
       @RequestBody List<JsonNode> requests
-  ) throws PidServiceInternalError, PidResolutionException {
+  ) throws PidServiceInternalError, PidResolutionException, InvalidRecordInput {
+
     List<byte[]> handles = new ArrayList<>();
-    for (JsonNode request : requests) {
+
+    for (JsonNode request : requests){
+      checkRequestNodesPresent(request, true, false, true, false);
       handles.add(request.get(NODE_DATA).get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8));
     }
-    List<JsonApiWrapper> node = service.resolveBatchRecord(handles);
-    return ResponseEntity.status(HttpStatus.OK).body(node);
+    return ResponseEntity.status(HttpStatus.OK).body(service.resolveBatchRecord(handles));
   }
 
   @PreAuthorize("isAuthenticated()")
   @PostMapping(value = "/record")
   public ResponseEntity<JsonApiWrapper> createRecord(
-      @RequestBody ObjectNode requestRoot)
+      @RequestBody JsonNode requestRoot)
       throws PidResolutionException, PidServiceInternalError, JsonProcessingException, InvalidRecordInput {
 
-    JsonNode request = requestRoot.get("data");
-    String type = request.get("type").asText();
+    checkRequestNodesPresent(requestRoot, true, true, false, true);
+    JsonNode request = requestRoot.get(NODE_DATA);
+    String type = request.get(NODE_TYPE).asText();
+
     switch (type) {
       case RECORD_TYPE_HANDLE -> {
         HandleRecordRequest requestAttributes = mapper.treeToValue(request.get(NODE_ATTRIBUTES),
@@ -115,8 +123,12 @@ public class HandleController {
   @PreAuthorize("isAuthenticated()")
   @PostMapping(value = "/records")
   public ResponseEntity<List<JsonApiWrapper>> createRecords(
-      @RequestBody List<ObjectNode> requests)
+      @RequestBody List<JsonNode> requests)
       throws PidResolutionException, PidServiceInternalError, InvalidRecordInput {
+
+    for (JsonNode request : requests){
+      checkRequestNodesPresent(request, true, true, false, true);
+    }
 
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(service.createRecordBatch(requests));
@@ -126,12 +138,14 @@ public class HandleController {
   @PreAuthorize("isAuthenticated()")
   @PatchMapping(value = "/record")
   public ResponseEntity<JsonApiWrapper> updateRecord(
-      @RequestBody ObjectNode request)
+      @RequestBody JsonNode request)
       throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
 
-    JsonNode data = request.get("data");
-    byte[] handle = data.get("id").asText().getBytes(StandardCharsets.UTF_8);
-    String recordType = data.get("type").asText();
+    checkRequestNodesPresent(request, true, true, false, true);
+
+    JsonNode data = request.get(NODE_DATA);
+    byte[] handle = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
+    String recordType = data.get(NODE_TYPE).asText();
     JsonNode requestAttributes = data.get(NODE_ATTRIBUTES);
     return ResponseEntity.status(HttpStatus.OK)
         .body(service.updateRecord(requestAttributes, handle, recordType));
@@ -140,17 +154,23 @@ public class HandleController {
   @PreAuthorize("isAuthenticated()")
   @PatchMapping(value = "/records")
   public ResponseEntity<List<JsonApiWrapper>> updateRecords(
-      @RequestBody List<ObjectNode> request)
+      @RequestBody List<JsonNode> requests)
       throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
 
-    return ResponseEntity.status(HttpStatus.OK).body(service.updateRecordBatch(request));
+    for (JsonNode request: requests){
+      checkRequestNodesPresent(request, true, true, true, true);
+    }
+
+    return ResponseEntity.status(HttpStatus.OK).body(service.updateRecordBatch(requests));
   }
 
   @PreAuthorize("isAuthenticated()")
   @DeleteMapping(value = "/record")
   public ResponseEntity<JsonApiWrapper> archiveRecord(
-      @RequestBody ObjectNode request)
+      @RequestBody JsonNode request)
       throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
+    checkRequestNodesPresent(request, true, false, false, true);
+
     JsonNode data = request.get(NODE_DATA);
     byte[] handle = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
     return ResponseEntity.status(HttpStatus.OK)
@@ -160,9 +180,14 @@ public class HandleController {
   @PreAuthorize("isAuthenticated()")
   @DeleteMapping(value = "/records")
   public ResponseEntity<List<JsonApiWrapper>> archiveRecords(
-      @RequestBody List<ObjectNode> request)
+      @RequestBody List<JsonNode> requests)
       throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
-    return ResponseEntity.status(HttpStatus.OK).body(service.archiveRecordBatch(request));
+
+    for (JsonNode request: requests){
+      checkRequestNodesPresent(request, true, false, true, true);
+    }
+
+    return ResponseEntity.status(HttpStatus.OK).body(service.archiveRecordBatch(requests));
   }
 
 
@@ -238,6 +263,26 @@ public class HandleController {
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
         .body(message);
   }
+
+  private void checkRequestNodesPresent(JsonNode requestRoot,
+      boolean checkData, boolean checkType, boolean checkId, boolean checkAttributes)
+      throws InvalidRecordInput{
+    String errorMsg = "INVALID INPUT. Missing node \" %s \"";
+    if (checkData && !requestRoot.has(NODE_DATA)){
+      throw new InvalidRecordInput(String.format(errorMsg, NODE_DATA));
+    }
+    JsonNode requestData = requestRoot.get(NODE_DATA);
+    if (checkType && !requestData.has(NODE_TYPE)){
+      throw new InvalidRecordInput(String.format(errorMsg, NODE_TYPE));
+    }
+    if (checkId && !requestData.has(NODE_ID)){
+      throw new InvalidRecordInput(String.format(errorMsg, NODE_ID));
+    }
+    if (checkAttributes && !requestData.has(NODE_ATTRIBUTES)){
+      throw new InvalidRecordInput(String.format(errorMsg, NODE_ATTRIBUTES));
+    }
+  }
+
 
   // This is the error thrown when a request is missing a parameter. It's very broad, though. How to make it more specific to the target cause?
   @ExceptionHandler(NullPointerException.class)

@@ -239,7 +239,7 @@ class HandleControllerTest {
         HANDLE.getBytes(StandardCharsets.UTF_8),
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
-    List<ObjectNode> requests = new ArrayList<>();
+    List<JsonNode> requests = new ArrayList<>();
     for (byte[] handle : handles) {
       requests.add(genCreateRecordRequest(genHandleRecordRequestObject(), RECORD_TYPE_HANDLE));
     }
@@ -261,7 +261,7 @@ class HandleControllerTest {
         HANDLE.getBytes(StandardCharsets.UTF_8),
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
-    List<ObjectNode> requests = new ArrayList<>();
+    List<JsonNode> requests = new ArrayList<>();
     for (byte[] handle : handles) {
       requests.add(genCreateRecordRequest(genDoiRecordRequestObject(), RECORD_TYPE_DOI));
     }
@@ -283,7 +283,7 @@ class HandleControllerTest {
         HANDLE.getBytes(StandardCharsets.UTF_8),
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
-    List<ObjectNode> requests = new ArrayList<>();
+    List<JsonNode> requests = new ArrayList<>();
     for (byte[] handle : handles) {
       requests.add(genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_DS));
     }
@@ -305,7 +305,7 @@ class HandleControllerTest {
         HANDLE.getBytes(StandardCharsets.UTF_8),
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
-    List<ObjectNode> requests = new ArrayList<>();
+    List<JsonNode> requests = new ArrayList<>();
     for (byte[] handle : handles) {
       requests.add(
           genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_DS_BOTANY));
@@ -359,7 +359,7 @@ class HandleControllerTest {
         HANDLE.getBytes(StandardCharsets.UTF_8),
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
-    List<ObjectNode> updateRequestList = new ArrayList<>();
+    List<JsonNode> updateRequestList = new ArrayList<>();
     List<JsonApiWrapper> responseExpected = new ArrayList<>();
 
     for (byte[] handle : handles) {
@@ -417,7 +417,7 @@ class HandleControllerTest {
         HANDLE.getBytes(StandardCharsets.UTF_8),
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
-    List<ObjectNode> updateRequestList = new ArrayList<>();
+    List<JsonNode> updateRequestList = new ArrayList<>();
     List<JsonApiWrapper> responseExpected = new ArrayList<>();
 
     for (byte[] handle : handles) {

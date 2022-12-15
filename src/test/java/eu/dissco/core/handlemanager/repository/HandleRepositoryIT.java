@@ -62,10 +62,10 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> attributes = genHandleRecordAttributes(handle);
-    ObjectNode responseExpected = genObjectNodeAttributeRecord(attributes);
+    JsonNode responseExpected = genObjectNodeAttributeRecord(attributes);
 
     // When
-    ObjectNode responseReceived = handleRep.createRecord(handle, CREATED, attributes);
+    JsonNode responseReceived = handleRep.createRecord(handle, CREATED, attributes);
     var postedRecord = context.selectFrom(HANDLES).fetch();
 
     // Then
@@ -78,10 +78,10 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> attributes = genDoiRecordAttributes(handle);
-    ObjectNode responseExpected = genObjectNodeAttributeRecord(attributes);
+    JsonNode responseExpected = genObjectNodeAttributeRecord(attributes);
 
     // When
-    ObjectNode responseReceived = handleRep.createRecord(handle, CREATED, attributes);
+    JsonNode responseReceived = handleRep.createRecord(handle, CREATED, attributes);
     var postedRecord = context.selectFrom(HANDLES).fetch();
 
     // Then
@@ -94,10 +94,10 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> attributes = genDigitalSpecimenAttributes(handle);
-    ObjectNode responseExpected = genObjectNodeAttributeRecord(attributes);
+    JsonNode responseExpected = genObjectNodeAttributeRecord(attributes);
 
     // When
-    ObjectNode responseReceived = handleRep.createRecord(handle, CREATED, attributes);
+    JsonNode responseReceived = handleRep.createRecord(handle, CREATED, attributes);
     var postedRecord = context.selectFrom(HANDLES).fetch();
 
     // Then
@@ -111,10 +111,10 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> attributes = genDigitalSpecimenBotanyAttributes(handle);
-    ObjectNode responseExpected = genObjectNodeAttributeRecord(attributes);
+    JsonNode responseExpected = genObjectNodeAttributeRecord(attributes);
 
     // When
-    ObjectNode responseReceived = handleRep.createRecord(handle, CREATED, attributes);
+    JsonNode responseReceived = handleRep.createRecord(handle, CREATED, attributes);
     var postedRecord = context.selectFrom(HANDLES).fetch();
 
     // Then
@@ -138,10 +138,10 @@ class HandleRepositoryIT extends BaseRepositoryIT {
       flatList.addAll(singleRecord);
       aggrList.add(new ArrayList<>(singleRecord));
     }
-    List<ObjectNode> responseExpected = genObjectNodeRecordBatch(aggrList);
+    List<JsonNode> responseExpected = genObjectNodeRecordBatch(aggrList);
 
     // When
-    List<ObjectNode> responseReceived = handleRep.createRecords(handles, CREATED, flatList);
+    List<JsonNode> responseReceived = handleRep.createRecords(handles, CREATED, flatList);
     var postedRecord = context.selectFrom(HANDLES).fetch();
 
     // Then
@@ -165,10 +165,10 @@ class HandleRepositoryIT extends BaseRepositoryIT {
       flatList.addAll(singleRecord);
       aggrList.add(new ArrayList<>(singleRecord));
     }
-    List<ObjectNode> responseExpected = genObjectNodeRecordBatch(aggrList);
+    List<JsonNode> responseExpected = genObjectNodeRecordBatch(aggrList);
 
     // When
-    List<ObjectNode> responseReceived = handleRep.createRecords(handles, CREATED, flatList);
+    List<JsonNode> responseReceived = handleRep.createRecords(handles, CREATED, flatList);
     var postedRecord = context.selectFrom(HANDLES).fetch();
 
     // Then
@@ -192,10 +192,10 @@ class HandleRepositoryIT extends BaseRepositoryIT {
       flatList.addAll(singleRecord);
       aggrList.add(new ArrayList<>(singleRecord));
     }
-    List<ObjectNode> responseExpected = genObjectNodeRecordBatch(aggrList);
+    List<JsonNode> responseExpected = genObjectNodeRecordBatch(aggrList);
 
     // When
-    List<ObjectNode> responseReceived = handleRep.createRecords(handles, CREATED, flatList);
+    List<JsonNode> responseReceived = handleRep.createRecords(handles, CREATED, flatList);
     var postedRecord = context.selectFrom(HANDLES).fetch();
 
     // Then
@@ -219,10 +219,10 @@ class HandleRepositoryIT extends BaseRepositoryIT {
       flatList.addAll(singleRecord);
       aggrList.add(new ArrayList<>(singleRecord));
     }
-    List<ObjectNode> responseExpected = genObjectNodeRecordBatch(aggrList);
+    List<JsonNode> responseExpected = genObjectNodeRecordBatch(aggrList);
 
     // When
-    List<ObjectNode> responseReceived = handleRep.createRecords(handles, CREATED, flatList);
+    List<JsonNode> responseReceived = handleRep.createRecords(handles, CREATED, flatList);
     var postedRecord = context.selectFrom(HANDLES).fetch();
 
     // Then
@@ -329,7 +329,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
     List<HandleAttribute> rows = new ArrayList<>();
-    List<ObjectNode> responseExpected = new ArrayList<>();
+    List<JsonNode> responseExpected = new ArrayList<>();
     for (byte[] handle : handles) {
       rows.addAll(genHandleRecordAttributes(handle));
       responseExpected.add(genObjectNodeAttributeRecord(rows));
@@ -352,7 +352,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
     List<HandleAttribute> rows = new ArrayList<>();
-    List<ObjectNode> responseExpected = new ArrayList<>();
+    List<JsonNode> responseExpected = new ArrayList<>();
     for (byte[] handle : handles) {
       rows.addAll(genHandleRecordAttributes(handle));
       responseExpected.add(genObjectNodeAttributeRecord(rows));
@@ -428,10 +428,10 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     postAttributes(genHandleRecordAttributes(handle));
     List<HandleAttribute> updatedRecord = genHandleRecordAttributesAltLoc(handle);
     updatedRecord = incrementVersion(updatedRecord);
-    ObjectNode responseExpected = genObjectNodeAttributeRecord(updatedRecord);
+    JsonNode responseExpected = genObjectNodeAttributeRecord(updatedRecord);
 
     // When
-    ObjectNode responseReceived = handleRep.updateRecord(CREATED, attributesToUpdate);
+    JsonNode responseReceived = handleRep.updateRecord(CREATED, attributesToUpdate);
 
     // Then
     assertThat(responseExpected).isEqualTo(responseReceived);
@@ -453,7 +453,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
       aggrList.add(new ArrayList<>(incrementVersion(singleRecord)));
     }
 
-    List<ObjectNode> responseExpected = genObjectNodeRecordBatch(aggrList);
+    List<JsonNode> responseExpected = genObjectNodeRecordBatch(aggrList);
 
     // When
     handleRep.updateRecordBatch(CREATED, aggrList);
@@ -504,7 +504,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
       log.info(agg.toString());
     }
 
-    List<ObjectNode> responseExpected = genObjectNodeRecordBatch(aggrList);
+    List<JsonNode> responseExpected = genObjectNodeRecordBatch(aggrList);
     log.info("response expected : " + responseExpected.toString());
 
     // When
