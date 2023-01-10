@@ -207,6 +207,50 @@ public class HandleService {
     return new JsonApiWrapper(links, jsonData);
   }
 
+  public JsonApiWrapper createRecord(JsonNode request) throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
+    byte[] handle = hf.genHandleList(1).get(0);
+    var recordTimestamp = Instant.now();
+    ObjectNode dataNode = (ObjectNode) request.get(NODE_DATA);
+    String type = dataNode.get(NODE_TYPE).asText();
+    List<HandleAttribute> newRecord;
+
+    try {
+      switch (type) {
+        case RECORD_TYPE_HANDLE -> {
+          HandleRecordRequest requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
+              HandleRecordRequest.class);
+          newRecord = prepareHandleRecordAttributes(requestObject, handle);
+        }
+        case RECORD_TYPE_DOI -> {
+          DoiRecordRequest requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
+              DoiRecordRequest.class);
+          newRecord = prepareDoiRecordAttributes(requestObject, handle);
+        }
+        case RECORD_TYPE_DS -> {
+          DigitalSpecimenRequest requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
+              DigitalSpecimenRequest.class);
+          newRecord = prepareDigitalSpecimenRecordAttributes(requestObject, handle);
+        }
+        case RECORD_TYPE_DS_BOTANY -> {
+          DigitalSpecimenBotanyRequest requestObject = mapper.treeToValue(
+              dataNode.get(NODE_ATTRIBUTES), DigitalSpecimenBotanyRequest.class);
+          newRecord = prepareDigitalSpecimenBotanyRecordAttributes(requestObject, handle);
+        }
+        default -> throw new InvalidRecordInput(
+            "INVALID INPUT. REASON: unrecognized type. Check" + type + ".");
+      }
+    } catch (JsonProcessingException e) {
+      throw new InvalidRecordInput(
+          "An error has occurred parsing a record in request. More information: "
+              + e.getMessage());
+    }
+
+    handleRep.postAttributesToDb(recordTimestamp, newRecord);
+    var postedRecordAttributes = getRecord(handle);
+
+    return wrapResponse(postedRecordAttributes, type);
+
+  }
 
   public List<JsonApiWrapper> createRecordBatch(List<JsonNode> requests)
       throws PidResolutionException, PidServiceInternalError, InvalidRecordInput {
@@ -252,7 +296,6 @@ public class HandleService {
             "An error has occurred parsing a record in request. More information: "
                 + e.getMessage());
       }
-      handleRep.postAttributesToDb(recordTimestamp, handleAttributes);
     }
 
     handleRep.postAttributesToDb(recordTimestamp, handleAttributes);
