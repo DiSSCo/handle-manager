@@ -3,6 +3,7 @@ package eu.dissco.core.handlemanager.repository;
 
 import static eu.dissco.core.handlemanager.database.jooq.Tables.HANDLES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
+import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_NUMBER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
@@ -33,14 +34,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.Query;
+import org.jooq.Record4;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @Slf4j
 class HandleRepositoryIT extends BaseRepositoryIT {
+
 
   private HandleRepository handleRep;
   private ObjectMapper mapper;
@@ -58,177 +63,21 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
-  void testCreateHandleRecord() throws PidServiceInternalError, JsonProcessingException {
+  void testCreateRecord() throws PidServiceInternalError, JsonProcessingException {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    List<HandleAttribute> attributes = genHandleRecordAttributes(handle);
-    JsonNode responseExpected = genObjectNodeAttributeRecord(attributes);
+    List<HandleAttribute> attributesToPost = genHandleRecordAttributes(handle);
 
     // When
-    JsonNode responseReceived = handleRep.createRecord(handle, CREATED, attributes);
-    var postedRecord = context.selectFrom(HANDLES).fetch();
+    handleRep.postAttributesToDb(CREATED, attributesToPost);
+    var postedRecordContext = context.selectFrom(HANDLES).fetch();
+    var postedRecordAttributes = handleRep.resolveHandleAttributes(handle);
 
     // Then
-    assertThat(responseExpected).isEqualTo(responseReceived);
-    assertThat(postedRecord).hasSize(attributes.size());
+    assertThat(attributesToPost).isEqualTo(postedRecordAttributes);
+    assertThat(postedRecordContext).hasSize(attributesToPost.size());
   }
 
-  @Test
-  void testCreateDoiRecord() throws PidServiceInternalError, JsonProcessingException {
-    // Given
-    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    List<HandleAttribute> attributes = genDoiRecordAttributes(handle);
-    JsonNode responseExpected = genObjectNodeAttributeRecord(attributes);
-
-    // When
-    JsonNode responseReceived = handleRep.createRecord(handle, CREATED, attributes);
-    var postedRecord = context.selectFrom(HANDLES).fetch();
-
-    // Then
-    assertThat(responseExpected).isEqualTo(responseReceived);
-    assertThat(postedRecord).hasSize(attributes.size());
-  }
-
-  @Test
-  void testCreateDigitalSpecimen() throws PidServiceInternalError, JsonProcessingException {
-    // Given
-    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    List<HandleAttribute> attributes = genDigitalSpecimenAttributes(handle);
-    JsonNode responseExpected = genObjectNodeAttributeRecord(attributes);
-
-    // When
-    JsonNode responseReceived = handleRep.createRecord(handle, CREATED, attributes);
-    var postedRecord = context.selectFrom(HANDLES).fetch();
-
-    // Then
-    assertThat(responseExpected).isEqualTo(responseReceived);
-    assertThat(postedRecord).hasSize(attributes.size());
-  }
-
-  @Test
-  void testCreateDigitalSpecimenBotany()
-      throws PidServiceInternalError, JsonProcessingException {
-    // Given
-    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    List<HandleAttribute> attributes = genDigitalSpecimenBotanyAttributes(handle);
-    JsonNode responseExpected = genObjectNodeAttributeRecord(attributes);
-
-    // When
-    JsonNode responseReceived = handleRep.createRecord(handle, CREATED, attributes);
-    var postedRecord = context.selectFrom(HANDLES).fetch();
-
-    // Then
-    assertThat(responseExpected).isEqualTo(responseReceived);
-    assertThat(postedRecord).hasSize(attributes.size());
-  }
-
-  @Test
-  void testCreateHandleRecordBatch() throws Exception {
-    // Given
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
-        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-
-    List<List<HandleAttribute>> aggrList = new ArrayList<>();
-    List<HandleAttribute> flatList = new ArrayList<>();
-    List<HandleAttribute> singleRecord;
-
-    for (byte[] handle : handles) {
-      singleRecord = genHandleRecordAttributes(handle);
-      flatList.addAll(singleRecord);
-      aggrList.add(new ArrayList<>(singleRecord));
-    }
-    List<JsonNode> responseExpected = genObjectNodeRecordBatch(aggrList);
-
-    // When
-    List<JsonNode> responseReceived = handleRep.createRecords(handles, CREATED, flatList);
-    var postedRecord = context.selectFrom(HANDLES).fetch();
-
-    // Then
-    assertThat(responseExpected).isEqualTo(responseReceived);
-    assertThat(postedRecord).hasSize(flatList.size());
-  }
-
-  @Test
-  void testCreateDoiRecordBatch() throws Exception {
-    // Given
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
-        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-
-    List<List<HandleAttribute>> aggrList = new ArrayList<>();
-    List<HandleAttribute> flatList = new ArrayList<>();
-    List<HandleAttribute> singleRecord;
-
-    for (byte[] handle : handles) {
-      singleRecord = genDoiRecordAttributes(handle);
-      flatList.addAll(singleRecord);
-      aggrList.add(new ArrayList<>(singleRecord));
-    }
-    List<JsonNode> responseExpected = genObjectNodeRecordBatch(aggrList);
-
-    // When
-    List<JsonNode> responseReceived = handleRep.createRecords(handles, CREATED, flatList);
-    var postedRecord = context.selectFrom(HANDLES).fetch();
-
-    // Then
-    assertThat(responseExpected).isEqualTo(responseReceived);
-    assertThat(postedRecord).hasSize(flatList.size());
-  }
-
-  @Test
-  void testCreateDigitalSpecimenBatch() throws Exception {
-    // Given
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
-        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-
-    List<List<HandleAttribute>> aggrList = new ArrayList<>();
-    List<HandleAttribute> flatList = new ArrayList<>();
-    List<HandleAttribute> singleRecord;
-
-    for (byte[] handle : handles) {
-      singleRecord = genDigitalSpecimenAttributes(handle);
-      flatList.addAll(singleRecord);
-      aggrList.add(new ArrayList<>(singleRecord));
-    }
-    List<JsonNode> responseExpected = genObjectNodeRecordBatch(aggrList);
-
-    // When
-    List<JsonNode> responseReceived = handleRep.createRecords(handles, CREATED, flatList);
-    var postedRecord = context.selectFrom(HANDLES).fetch();
-
-    // Then
-    assertThat(responseExpected).isEqualTo(responseReceived);
-    assertThat(postedRecord).hasSize(flatList.size());
-  }
-
-  @Test
-  void testCreateDigitalSpecimenBotanyBatch() throws Exception {
-    // Given
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
-        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-
-    List<List<HandleAttribute>> aggrList = new ArrayList<>();
-    List<HandleAttribute> flatList = new ArrayList<>();
-    List<HandleAttribute> singleRecord;
-
-    for (byte[] handle : handles) {
-      singleRecord = genDigitalSpecimenBotanyAttributes(handle);
-      flatList.addAll(singleRecord);
-      aggrList.add(new ArrayList<>(singleRecord));
-    }
-    List<JsonNode> responseExpected = genObjectNodeRecordBatch(aggrList);
-
-    // When
-    List<JsonNode> responseReceived = handleRep.createRecords(handles, CREATED, flatList);
-    var postedRecord = context.selectFrom(HANDLES).fetch();
-
-    // Then
-    assertThat(responseExpected).isEqualTo(responseReceived);
-    assertThat(postedRecord).hasSize(flatList.size());
-  }
 
   @Test
   void testHandlesExistTrue() {
@@ -244,11 +93,11 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     postAttributes(rows);
 
     // When
-    List<byte[]> collisions = handleRep.checkHandlesExist(handles);
+    List<byte[]> collisions = handleRep.getHandlesExist(handles);
 
     // Then
     assertThat(collisions).hasSize(handles.size());
-    assert (byteArrListsAreEqual(handles, collisions));
+    assert(byteArrListsAreEqual(handles, collisions));
   }
 
   @Test
@@ -258,7 +107,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
     // When
-    List<byte[]> collisions = handleRep.checkHandlesExist(handles);
+    List<byte[]> collisions = handleRep.getHandlesExist(handles);
 
     // Then
     assertThat(collisions).isEmpty();
@@ -310,12 +159,11 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   void testResolveSingleRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    List<HandleAttribute> rows = genHandleRecordAttributes(handle);
-    postAttributes(rows);
-    var responseReceived = genObjectNodeAttributeRecord(rows);
+    List<HandleAttribute> responseExpected = genHandleRecordAttributes(handle);
+    postAttributes(responseExpected);
 
     // When
-    var responseExpected = handleRep.resolveSingleRecord(handle);
+    var responseReceived = handleRep.resolveHandleAttributes(handle);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -328,41 +176,18 @@ class HandleRepositoryIT extends BaseRepositoryIT {
         HANDLE.getBytes(StandardCharsets.UTF_8),
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
-    List<HandleAttribute> rows = new ArrayList<>();
-    List<JsonNode> responseExpected = new ArrayList<>();
+    List<HandleAttribute> responseExpected = new ArrayList<>();
     for (byte[] handle : handles) {
-      rows.addAll(genHandleRecordAttributes(handle));
-      responseExpected.add(genObjectNodeAttributeRecord(rows));
+      responseExpected.addAll(genHandleRecordAttributes(handle));
     }
-    postAttributes(rows);
+
+    postAttributes(responseExpected);
 
     // When
-    var responseReceived = handleRep.resolveBatchRecord(handles);
+    var responseReceived = handleRep.resolveHandleAttributes(handles);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
-  }
-
-  @Test
-  void testResolveBatchRecordSomeUnresolvable() throws Exception {
-
-    // Given
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
-        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-
-    List<HandleAttribute> rows = new ArrayList<>();
-    List<JsonNode> responseExpected = new ArrayList<>();
-    for (byte[] handle : handles) {
-      rows.addAll(genHandleRecordAttributes(handle));
-      responseExpected.add(genObjectNodeAttributeRecord(rows));
-    }
-
-    // Then
-    assertThrows(PidResolutionException.class, () ->{
-      handleRep.resolveBatchRecord(handles);
-    });
-
   }
 
   @Test
@@ -420,102 +245,113 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
-  // TODO this will fail :(
   @Test
   void testUpdateRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    List<HandleAttribute> attributesToUpdate = genUpdateRecordAttributesAltLoc(handle);
-    postAttributes(genHandleRecordAttributes(handle));
-    List<HandleAttribute> updatedRecord = genHandleRecordAttributesAltLoc(handle);
-    updatedRecord = incrementVersion(updatedRecord);
-    JsonNode responseExpected = genObjectNodeAttributeRecord(updatedRecord);
+    List<HandleAttribute> originalRecord = genHandleRecordAttributes(handle);
+    List<HandleAttribute> recordUpdate = genUpdateRecordAttributesAltLoc(handle);
+    var responseExpected = incrementVersion(genHandleRecordAttributesAltLoc(handle));
+    postAttributes(originalRecord);
 
     // When
-    handleRep.updateRecord(CREATED, attributesToUpdate);
-    var responseReceived = handleRep.resolveSingleRecord(handle);
+    handleRep.updateRecord(CREATED, recordUpdate);
+    var responseReceived = context
+        .select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE, Handles.HANDLES.TYPE, Handles.HANDLES.DATA)
+        .from(Handles.HANDLES)
+        .where(Handles.HANDLES.HANDLE.eq(handle))
+        .and(Handles.HANDLES.TYPE.notEqual(HS_ADMIN.getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
+        .fetch(this::mapToAttribute);
+
+    for (var elem : responseExpected){
+      log.info(elem.toString());
+    }
 
     // Then
-    assertThat(responseExpected).isEqualTo(responseReceived);
+    assertThat(responseReceived).hasSameElementsAs(responseExpected);
   }
 
   @Test
-  void testUpdateRecordBatch() throws Exception {
+  void testUpdateRecordBatch() throws ParserConfigurationException, TransformerException {
+
     // Given
     List<byte[]> handles = List.of(
         HANDLE.getBytes(StandardCharsets.UTF_8),
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
-    List<List<HandleAttribute>> aggrList = new ArrayList<>();
-    List<HandleAttribute> singleRecord;
-
+    List<List<HandleAttribute>> updateAttributes = new ArrayList<>();
+    List<HandleAttribute> responseExpected = new ArrayList<>();
     for (byte[] handle : handles) {
       postAttributes(genHandleRecordAttributes(handle));
-      singleRecord = genHandleRecordAttributesAltLoc(handle);
-      aggrList.add(new ArrayList<>(incrementVersion(singleRecord)));
+      updateAttributes.add(genUpdateRecordAttributesAltLoc(handle));
+      responseExpected.addAll(incrementVersion(genHandleRecordAttributesAltLoc(handle)));
     }
 
-    List<JsonNode> responseExpected = genObjectNodeRecordBatch(aggrList);
-
     // When
-    handleRep.updateRecordBatch(CREATED, aggrList);
-    var responseReceived = handleRep.resolveBatchRecord(handles);
+    handleRep.updateRecordBatch(CREATED, updateAttributes);
+    var responseReceived = context
+        .select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE, Handles.HANDLES.TYPE, Handles.HANDLES.DATA)
+        .from(Handles.HANDLES)
+        .where(Handles.HANDLES.HANDLE.in(handles))
+        .and(Handles.HANDLES.TYPE.notEqual(HS_ADMIN.getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
+        .fetch(this::mapToAttribute);
 
     // Then
-    assertThat(responseExpected).isEqualTo(responseReceived);
+    assertThat(responseReceived).hasSameElementsAs(responseExpected);
+  }
+
+  @Test
+  void testArchiveRecordBatch() throws ParserConfigurationException, TransformerException {
+
+    // Given
+    List<byte[]> handles = List.of(
+        HANDLE.getBytes(StandardCharsets.UTF_8),
+        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
+
+    List<HandleAttribute> archiveAttributes = new ArrayList<>();
+    List<HandleAttribute> responseExpected = new ArrayList<>();
+    for (byte[] handle : handles) {
+      postAttributes(genHandleRecordAttributes(handle));
+      archiveAttributes.addAll(genTombstoneRecordRequestAttributes(handle));
+      responseExpected.addAll(incrementVersion(genTombstoneRecordFullAttributes(handle)));
+    }
+
+    // When
+    handleRep.archiveRecords(CREATED, archiveAttributes, handles);
+    var responseReceived = context
+        .select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE, Handles.HANDLES.TYPE, Handles.HANDLES.DATA)
+        .from(Handles.HANDLES)
+        .where(Handles.HANDLES.HANDLE.in(handles))
+        .and(Handles.HANDLES.TYPE.notEqual(HS_ADMIN.getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
+        .fetch(this::mapToAttribute);
+
+    // Then
+    assertThat(responseReceived).hasSameElementsAs(responseExpected);
   }
 
   @Test
   void testArchiveRecord() throws Exception {
     // Given
-
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    JsonNode archiveRequest = genTombstoneRequest();
-    List<HandleAttribute> tombstoneAttributes = genTombstoneRecordRequestAttributes(handle);
-    List<HandleAttribute> tombstoneAttributesFull = incrementVersion(
-        genTombstoneRecordFullAttributes(handle));
-    postAttributes(genHandleRecordAttributes(handle));
-    var responseExpected = genObjectNodeAttributeRecord(tombstoneAttributesFull);
+    List<HandleAttribute> originalRecord = genHandleRecordAttributes(handle);
+    List<HandleAttribute> recordArchive = genTombstoneRecordRequestAttributes(handle);
+    var responseExpected = incrementVersion(genTombstoneRecordFullAttributes(handle));
+    postAttributes(originalRecord);
 
     // When
-    handleRep.archiveRecord(CREATED, tombstoneAttributes);
-    var responseReceived = handleRep.resolveSingleRecord(handle);
+    handleRep.archiveRecord(CREATED, recordArchive);
+    var responseReceived = context
+        .select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE, Handles.HANDLES.TYPE, Handles.HANDLES.DATA)
+        .from(Handles.HANDLES)
+        .where(Handles.HANDLES.HANDLE.eq(handle))
+        .and(Handles.HANDLES.TYPE.notEqual(HS_ADMIN.getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
+        .fetch(this::mapToAttribute);
 
     // Then
-    assertThat(responseExpected).isEqualTo(responseReceived);
+    assertThat(responseReceived).hasSameElementsAs(responseExpected);
   }
 
-  @Test
-  void testArchiveRecordBatch() throws Exception {
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
-        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
-    List<List<HandleAttribute>> aggrList = new ArrayList<>();
-    List<HandleAttribute> attributeList = new ArrayList<>();
-    List<HandleAttribute> singleRecord;
-
-    for (byte[] handle : handles) {
-      postAttributes(genHandleRecordAttributes(handle));
-      attributeList.addAll(incrementVersion(genTombstoneRecordRequestAttributes(handle)));
-      aggrList.add(new ArrayList<>(incrementVersion(genTombstoneRecordFullAttributes(handle))));
-      // TODO: Does version number increment when a record is tombstoned?
-    }
-    log.info("printing agg list");
-    for (var agg : aggrList) {
-      log.info(agg.toString());
-    }
-
-    List<JsonNode> responseExpected = genObjectNodeRecordBatch(aggrList);
-    log.info("response expected : " + responseExpected.toString());
-
-    // When
-    handleRep.archiveRecords(CREATED, attributeList, handles);
-    var responseReceived = handleRep.resolveBatchRecord(handles);
-
-    // Then
-    assertThat(responseExpected).isEqualTo(responseReceived);
-  }
 
   private void postAttributes(List<HandleAttribute> rows) {
     List<Query> queryList = new ArrayList<>();
@@ -583,6 +419,14 @@ class HandleRepositoryIT extends BaseRepositoryIT {
       }
     }
     return handleAttributes;
+  }
+
+  private HandleAttribute mapToAttribute(Record4<Integer, byte[], byte[], byte[]> row) {
+    return new HandleAttribute(
+        row.get(Handles.HANDLES.IDX),
+        row.get(Handles.HANDLES.HANDLE),
+        new String(row.get(Handles.HANDLES.TYPE)),
+        row.get(Handles.HANDLES.DATA));
   }
 
 }

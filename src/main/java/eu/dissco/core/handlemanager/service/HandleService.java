@@ -59,6 +59,8 @@ public class HandleService {
 
   private static final String INVALID_FIELD_ERROR = "Invalid request. Attempting to add forbidden fields to record type %s. Forbidden field: %s";
 
+  // Resolve Record
+
   public JsonApiWrapper resolveSingleRecord(byte[] handle)
       throws PidResolutionException {
 
@@ -69,6 +71,7 @@ public class HandleService {
     JsonApiLinks links = new JsonApiLinks(pidLink);
     return new JsonApiWrapper(links, jsonData);
   }
+
 
   private JsonNode getRecord(byte[] handle) throws PidResolutionException {
     var dbRecord = handleRep.resolveHandleAttributes(handle);
@@ -123,7 +126,7 @@ public class HandleService {
       throws PidServiceInternalError, PidResolutionException {
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
 
-    handleRep.checkHandlesExist(handles);
+    //handleRep.getHandlesExist(handles);
     var recordAttributeList = fetchResolvedRecords(handles);
 
     for (JsonNode recordAttributes : recordAttributeList) {
@@ -181,6 +184,32 @@ public class HandleService {
   }
 
 
+
+  public JsonApiWrapper updateRecord(JsonNode request, byte[] handle, String recordType)
+      throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
+
+    var recordTimestamp = Instant.now();
+
+    List<String> keys = getKeys(request);
+    validateRequestData(request, recordType, keys);
+    if (keys.contains(LOC_REQ)) {
+      request = setLocationFromJson(request);
+    }
+    checkHandlesWritable(List.of(handle));
+    List<HandleAttribute> attributesToUpdate = prepareUpdateAttributes(handle, request);
+
+    // Update record
+    handleRep.updateRecord(recordTimestamp, attributesToUpdate);
+    var updatedRecord = getRecord(handle);
+    //var updatedRecord = fetchResolvedRecords(List.of(handle)).get(0);
+
+    // Package response
+    JsonApiData jsonData = new JsonApiData(new String(handle), recordType, updatedRecord);
+    JsonApiLinks links = new JsonApiLinks(updatedRecord.get(PID).asText());
+    return new JsonApiWrapper(links, jsonData);
+  }
+
+
   public List<JsonApiWrapper> createRecordBatch(List<JsonNode> requests)
       throws PidResolutionException, PidServiceInternalError, InvalidRecordInput {
     var recordTimestamp = Instant.now();
@@ -225,6 +254,7 @@ public class HandleService {
             "An error has occurred parsing a record in request. More information: "
                 + e.getMessage());
       }
+      handleRep.postAttributesToDb(recordTimestamp, handleAttributes);
     }
 
     handleRep.postAttributesToDb(recordTimestamp, handleAttributes);
@@ -372,29 +402,6 @@ public class HandleService {
     return new JsonApiWrapper(links, jsonData);
   }
 
-
-  public JsonApiWrapper updateRecord(JsonNode request, byte[] handle, String recordType)
-      throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
-
-    var recordTimestamp = Instant.now();
-
-    List<String> keys = getKeys(request);
-    validateRequestData(request, recordType, keys);
-    if (keys.contains(LOC_REQ)) {
-      request = setLocationFromJson(request);
-    }
-    checkHandlesWritable(List.of(handle));
-    List<HandleAttribute> attributesToUpdate = prepareUpdateAttributes(handle, request);
-
-    // Update record
-    handleRep.updateRecord(recordTimestamp, attributesToUpdate);
-    var updatedRecord = getRecord(handle);
-
-    // Package response
-    JsonApiData jsonData = new JsonApiData(new String(handle), recordType, updatedRecord);
-    JsonApiLinks links = new JsonApiLinks(updatedRecord.get(PID).asText());
-    return new JsonApiWrapper(links, jsonData);
-  }
 
   private List<String> getKeys(JsonNode request){
     List<String> keys = new ArrayList<>();

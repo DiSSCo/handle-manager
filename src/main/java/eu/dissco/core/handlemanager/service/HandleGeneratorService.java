@@ -56,7 +56,7 @@ public class HandleGeneratorService {
     HashSet<ByteBuffer> handleHash = wrapBytes(handleList);
 
     // Check for duplicates from repository and wrap the duplicates
-    HashSet<ByteBuffer> duplicates = wrapBytes(handleRep.checkHandlesExist(handleList));
+    HashSet<ByteBuffer> duplicates = wrapBytes(handleRep.getHandlesExist(handleList));
 
     // If a duplicate was found, recursively call this function
     // Generate new handles for every duplicate found and add it to our hash list

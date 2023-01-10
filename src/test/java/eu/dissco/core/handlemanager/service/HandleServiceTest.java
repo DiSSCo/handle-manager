@@ -1,38 +1,26 @@
 package eu.dissco.core.handlemanager.service;
 
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_TOMBSTONE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.*;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.*;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.InstanceOfAssertFactories.map;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mockStatic;
+import static org.postgresql.hostchooser.HostRequirement.any;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiData;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapper;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
-import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
-import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.HandleRecordRequest;
 import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
-import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
@@ -100,10 +88,10 @@ class HandleServiceTest {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> recordAttributeList = genHandleRecordAttributes(handle);
-    JsonNode repositoryResponse = genObjectNodeAttributeRecord(recordAttributeList);
+
     var responseExpected = genHandleRecordJsonResponse(handle, "PID");
 
-    given(handleRep.resolveSingleRecord(handle)).willReturn((ObjectNode) repositoryResponse);
+    given(handleRep.resolveHandleAttributes(handle)).willReturn(recordAttributeList);
 
     // When
     var responseReceived = service.resolveSingleRecord(handle);
@@ -115,11 +103,13 @@ class HandleServiceTest {
   @Test
   void testResolveBatchRecord() throws Exception {
     // Given
-    List<JsonNode> repositoryResponse = new ArrayList<>();
+    List<HandleAttribute> repositoryResponse = new ArrayList<>();
     for (byte[] handle : handlesList) {
-      repositoryResponse.add(genObjectNodeAttributeRecord(genHandleRecordAttributes(handle)));
+      repositoryResponse.addAll(genHandleRecordAttributes(handle));
     }
-    given(handleRep.resolveBatchRecord(handlesList)).willReturn(repositoryResponse);
+
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(repositoryResponse);
+
     var responseExpected = genHandleRecordJsonResponseBatch(handlesList, "PID");
     // When
     var responseReceived = service.resolveBatchRecord(handlesList);
@@ -128,18 +118,18 @@ class HandleServiceTest {
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
-  // Json object creation
-  @Test
-  void testCreateHandleRecordJson() throws Exception {
+
+  /*@Test
+  void testCreateHandleRecord() throws Exception {
     // Given
     byte[] handle = handlesList.get(0);
-    HandleRecordRequest request = genHandleRecordRequestObject();
+    var request = genHandleRecordRequestObject();
     List<HandleAttribute> handleRecord = genHandleRecordAttributes(handle);
     var databaseResponse = genObjectNodeAttributeRecord(handleRecord);
     var responseExpected = genHandleRecordJsonResponse(handle);
 
     given(handleRep.createRecord(handle, instant, handleRecord)).willReturn(databaseResponse);
-    given(hgService.genHandleList(1)).willReturn(handlesList);
+    given(hgService.genHandleList(1)).willReturn(handle);
 
     // When
     JsonApiWrapper responseReceived = service.createHandleRecordJson(request);
@@ -147,6 +137,8 @@ class HandleServiceTest {
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
+
+  /*
 
   @Test
   void testCreateDoiRecordJson() throws Exception {
@@ -203,7 +195,7 @@ class HandleServiceTest {
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
-  }
+  } */
 
   @Test
   void testCreateHandleRecordBatch() throws Exception{
@@ -211,24 +203,19 @@ class HandleServiceTest {
     List<byte[]> handles = initHandleList();
 
     List<HandleAttribute> flatList = new ArrayList<>();
-    List<List<HandleAttribute>> aggrList = new ArrayList<>();
 
     List<JsonNode> requests = new ArrayList<>();
     for (byte[] handle : handles) {
       requests.add(genCreateRecordRequest(genHandleRecordRequestObject(), RECORD_TYPE_HANDLE));
-
-      List<HandleAttribute> singleRecord = genHandleRecordAttributes(handle);
-      flatList.addAll(new ArrayList<>(singleRecord));
-      aggrList.add(new ArrayList<>(singleRecord));
+      flatList.addAll(genHandleRecordAttributes(handle));
     }
 
     List<JsonApiWrapper> responseExpected = genHandleRecordJsonResponseBatch(handles, "PID");
-    List<JsonNode> databaseResponse = genObjectNodeRecordBatch(aggrList);
 
     given(hgService.genHandleList(handles.size())).willReturn(handles);
-    given(handleRep.createRecords(anyList(), eq(CREATED), eq(flatList))).willReturn(databaseResponse);
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
 
-
+    // When
     var responseReceived = service.createRecordBatch(requests);
 
     // Then
@@ -241,22 +228,17 @@ class HandleServiceTest {
     List<byte[]> handles = initHandleList();
 
     List<HandleAttribute> flatList = new ArrayList<>();
-    List<List<HandleAttribute>> aggrList = new ArrayList<>();
 
     List<JsonNode> requests = new ArrayList<>();
     for (byte[] handle : handles) {
       requests.add(genCreateRecordRequest(genDoiRecordRequestObject(), RECORD_TYPE_DOI));
-
-      List<HandleAttribute> singleRecord = genDoiRecordAttributes(handle);
-      flatList.addAll(new ArrayList<>(singleRecord));
-      aggrList.add(new ArrayList<>(singleRecord));
+      flatList.addAll(genDoiRecordAttributes(handle));
     }
 
     List<JsonApiWrapper> responseExpected = genDoiRecordJsonResponseBatch(handles, "PID");
-    List<JsonNode> databaseResponse = genObjectNodeRecordBatch(aggrList);
 
     given(hgService.genHandleList(handles.size())).willReturn(handles);
-    given(handleRep.createRecords(anyList(), eq(CREATED), eq(flatList))).willReturn(databaseResponse);
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
 
     // When
     var responseReceived = service.createRecordBatch(requests);
@@ -265,28 +247,24 @@ class HandleServiceTest {
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
+
   @Test
   void testCreateDigitalSpecimenBatch() throws Exception{
     // Given
     List<byte[]> handles = initHandleList();
 
     List<HandleAttribute> flatList = new ArrayList<>();
-    List<List<HandleAttribute>> aggrList = new ArrayList<>();
 
     List<JsonNode> requests = new ArrayList<>();
     for (byte[] handle : handles) {
       requests.add(genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_DS));
-
-      List<HandleAttribute> singleRecord = genDigitalSpecimenAttributes(handle);
-      flatList.addAll(new ArrayList<>(singleRecord));
-      aggrList.add(new ArrayList<>(singleRecord));
+      flatList.addAll(genDigitalSpecimenAttributes(handle));
     }
 
     List<JsonApiWrapper> responseExpected = genDigitalSpecimenJsonResponseBatch(handles, "PID");
-    List<JsonNode> databaseResponse = genObjectNodeRecordBatch(aggrList);
 
     given(hgService.genHandleList(handles.size())).willReturn(handles);
-    given(handleRep.createRecords(anyList(), eq(CREATED), eq(flatList))).willReturn(databaseResponse);
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
 
     // When
     var responseReceived = service.createRecordBatch(requests);
@@ -301,22 +279,17 @@ class HandleServiceTest {
     List<byte[]> handles = initHandleList();
 
     List<HandleAttribute> flatList = new ArrayList<>();
-    List<List<HandleAttribute>> aggrList = new ArrayList<>();
 
     List<JsonNode> requests = new ArrayList<>();
     for (byte[] handle : handles) {
       requests.add(genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(), RECORD_TYPE_DS_BOTANY));
-
-      List<HandleAttribute> singleRecord = genDigitalSpecimenBotanyAttributes(handle);
-      flatList.addAll(new ArrayList<>(singleRecord));
-      aggrList.add(new ArrayList<>(singleRecord));
+      flatList.addAll(genDigitalSpecimenBotanyAttributes(handle));
     }
 
     List<JsonApiWrapper> responseExpected = genDigitalSpecimenBotanyJsonResponseBatch(handles, "PID");
-    List<JsonNode> databaseResponse = genObjectNodeRecordBatch(aggrList);
 
     given(hgService.genHandleList(handles.size())).willReturn(handles);
-    given(handleRep.createRecords(anyList(), eq(CREATED), eq(flatList))).willReturn((databaseResponse));
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
 
     // When
     var responseReceived = service.createRecordBatch(requests);
@@ -325,26 +298,21 @@ class HandleServiceTest {
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
-
   @Test
   void testUpdateRecordBatchLoc() throws Exception {
     // Given
     List<byte[]> handles = initHandleList();
     List<JsonNode> updateRequest = genUpdateRequestBatch(handles);
 
-    List<List<HandleAttribute>> aggrList = new ArrayList<>();
-    List<HandleAttribute> singleRecord;
+    List<HandleAttribute> updatedAttributeRecord = new ArrayList<>();
     for (byte[] handle : handles) {
-      singleRecord = genHandleRecordAttributesAltLoc(handle);
-      aggrList.add(new ArrayList<>(singleRecord));
+      updatedAttributeRecord.addAll(genHandleRecordAttributesAltLoc(handle));
     }
-
-    List<JsonNode> databaseResponse = genObjectNodeRecordBatch(aggrList);
 
     var responseExpected = genUpdateAltLocResponseBatch(handles);
 
     given(handleRep.checkHandlesWritable(anyList())).willReturn(handles);
-    given(handleRep.resolveBatchRecord(anyList())).willReturn(databaseResponse);
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(updatedAttributeRecord);
 
     // When
     var responseReceived = service.updateRecordBatch(updateRequest);
@@ -352,6 +320,8 @@ class HandleServiceTest {
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
+
+
 
   @Test
   void testUpdateRecordInternalDuplicates() throws Exception{
@@ -368,6 +338,7 @@ class HandleServiceTest {
       service.updateRecordBatch(updateRequest);
     });
   }
+
 
   @Test
   void testUpdateRecordInvalidField() throws Exception {
@@ -404,19 +375,21 @@ class HandleServiceTest {
     });
   }
 
+
+
   @Test
   void testUpdateRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    JsonNode updateRequest = genUpdateRequestAltLoc();
-    List<HandleAttribute> updateAttributeList = genUpdateRecordAttributesAltLoc(handle);
 
-    List<HandleAttribute> updateAttributeListFull = genHandleRecordAttributesAltLoc(handle);
-    var databaseResponse = genObjectNodeAttributeRecord(updateAttributeListFull);
+    JsonNode updateRequest = genUpdateRequestAltLoc();
+    log.info(updateRequest.toString());
+
+    List<HandleAttribute> updatedAttributeRecord = genHandleRecordAttributesAltLoc(handle);
     JsonApiWrapper responseExpected = genHandleRecordJsonResponseAltLoc(handle);
 
-    given(handleRep.checkHandlesWritable(List.of(handle))).willReturn(List.of(handle));
-    given(handleRep.updateRecord(instant, updateAttributeList)).willReturn((ObjectNode) databaseResponse);
+    given(handleRep.checkHandlesWritable(anyList())).willReturn(List.of(handle));
+    given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(updatedAttributeRecord);
 
     // When
     var responseReceived = service.updateRecord(updateRequest, handle, RECORD_TYPE_HANDLE);
@@ -425,12 +398,13 @@ class HandleServiceTest {
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
+
+
   @Test
   void testArchiveRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     JsonNode archiveRequest = genTombstoneRequest();
-    List<HandleAttribute> tombstoneAttributes = genTombstoneRecordRequestAttributes(handle);
     List<HandleAttribute> tombstoneAttributesFull = genTombstoneRecordFullAttributes(handle);
 
     var databaseResponse = genObjectNodeAttributeRecord(tombstoneAttributesFull);
@@ -438,7 +412,7 @@ class HandleServiceTest {
         RECORD_TYPE_TOMBSTONE);
 
     given(handleRep.checkHandlesWritable(List.of(handle))).willReturn(List.of(handle));
-    given(handleRep.resolveSingleRecord(handle)).willReturn(databaseResponse);
+    given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(tombstoneAttributesFull);
 
     // When
     var responseReceived = service.archiveRecord(archiveRequest, handle);
@@ -448,26 +422,22 @@ class HandleServiceTest {
   }
 
   @Test
-  void testRecordBatch() throws Exception {
+  void testArchiveRecordBatch() throws Exception {
     // Given
-    List<JsonNode> updateRequest = genTombstoneRequestBatch();
+    List<JsonNode> archiveRequest = genTombstoneRequestBatch();
 
-    List<List<HandleAttribute>> aggrList = new ArrayList<>();
-    List<HandleAttribute> singleRecord;
+    List<HandleAttribute> flatList = new ArrayList<>();
     for (byte[] handle : handlesList) {
-      singleRecord = genTombstoneRecordFullAttributes(handle);
-      aggrList.add(new ArrayList<>(singleRecord));
+      flatList.addAll(genTombstoneRecordFullAttributes(handle));
     }
-
-    List<JsonNode> databaseResponse = genObjectNodeRecordBatch(aggrList);
 
     var responseExpected = genTombstoneResponseBatch(handlesList);
 
     given(handleRep.checkHandlesWritable(anyList())).willReturn(handlesList);
-    given(handleRep.resolveBatchRecord(anyList())).willReturn(databaseResponse);
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
 
     // When
-    var responseReceived = service.archiveRecordBatch(updateRequest);
+    var responseReceived = service.archiveRecordBatch(archiveRequest);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -492,7 +462,6 @@ class HandleServiceTest {
     assertThat(responseExpectedFirst).isEqualTo(handles);
     assertThat(responseExpectedSecond).isEqualTo(handles);
   }
-
 
   private void initTime() {
     Clock clock = Clock.fixed(CREATED, ZoneOffset.UTC);

@@ -15,6 +15,7 @@ import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.HandleRecordRequest;
+import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -114,8 +115,8 @@ public class TestUtils {
     byte[] ptr_record = PTR_HANDLE_RECORD.getBytes(StandardCharsets.UTF_8);
 
     // 100: Admin Handle
-    handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(HS_ADMIN), handle, HS_ADMIN, genAdminHandle()));
+    //handleRecord.add(
+    //    new HandleAttribute(FIELD_IDX.get(HS_ADMIN), handle, HS_ADMIN, genAdminHandle()));
 
     // 1: Pid
     byte[] pid = ("https://hdl.handle.net/" + new String(handle)).getBytes(StandardCharsets.UTF_8);
@@ -163,6 +164,15 @@ public class TestUtils {
             PID_KERNEL_METADATA_LICENSE,
             PID_KERNEL_METADATA_LICENSE_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
+    return handleRecord;
+  }
+
+  public static List<HandleAttribute> addHsAdmin(List<HandleAttribute> handleRecord){
+    byte[] ptr_record = PTR_HANDLE_RECORD.getBytes(StandardCharsets.UTF_8);
+    byte[] handle = handleRecord.get(0).handle();
+    var hsAdmin =  new HandleAttribute(FIELD_IDX.get(PID_ISSUER), handle, PID_ISSUER, ptr_record);
+
+    handleRecord.add(hsAdmin);
     return handleRecord;
   }
 

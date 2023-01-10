@@ -3,20 +3,13 @@ package eu.dissco.core.handlemanager.repository;
 import static eu.dissco.core.handlemanager.database.jooq.tables.Handles.HANDLES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.*;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
-import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +30,7 @@ public class HandleRepository {
   private final ObjectMapper mapper;
 
   // For Handle Name Generation
-  public List<byte[]> checkHandlesExist(List<byte[]> handles) {
+  public List<byte[]> getHandlesExist(List<byte[]> handles) {
     return context
         .selectDistinct(HANDLES.HANDLE)
         .from(HANDLES)
@@ -47,7 +40,6 @@ public class HandleRepository {
   }
 
   public List<byte[]> checkHandlesWritable(List<byte[]> handles) {
-
     return context
         .selectDistinct(HANDLES.HANDLE)
         .from(HANDLES)
@@ -57,7 +49,6 @@ public class HandleRepository {
         .fetch()
         .getValues(HANDLES.HANDLE, byte[].class);
   }
-
 
 
   public List<HandleAttribute> resolveHandleAttributes(byte[] handle) {
