@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapper;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
+import eu.dissco.core.handlemanager.domain.requests.HandleRecordRequest;
 import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
@@ -290,6 +291,86 @@ class HandleServiceTest {
 
     // When
     var responseReceived = service.createRecordBatch(requests);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testCreateHandleRecord() throws Exception {
+
+    // Given
+    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
+
+    var request = genHandleRecordRequestObject();
+    var responseAttributes = genHandleRecordAttributes(handle);
+    var responseExpected = genHandleRecordJsonResponse(handle);
+
+    given(hgService.genHandleList(1)).willReturn(List.of(handle));
+    given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(responseAttributes);
+
+    // When
+    var responseReceived = service.createHandleRecordJson(request);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testCreateDoiRecord() throws Exception {
+
+    // Given
+    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
+
+    var request = genDoiRecordRequestObject();
+    var responseAttributes = genDoiRecordAttributes(handle);
+    var responseExpected = genDoiRecordJsonResponse(handle, RECORD_TYPE_DOI);
+
+    given(hgService.genHandleList(1)).willReturn(List.of(handle));
+    given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(responseAttributes);
+
+    // When
+    var responseReceived = service.createDoiRecordJson(request);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testCreateDigitalSpecimenRecord() throws Exception {
+
+    // Given
+    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
+
+    var request = genDigitalSpecimenRequestObject();
+    var responseAttributes = genDigitalSpecimenAttributes(handle);
+    var responseExpected = genDigitalSpecimenJsonResponse(handle, RECORD_TYPE_DS);
+
+    given(hgService.genHandleList(1)).willReturn(List.of(handle));
+    given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(responseAttributes);
+
+    // When
+    var responseReceived = service.createDigitalSpecimenJson(request);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testCreateDigitalSpecimenBotany() throws Exception {
+
+    // Given
+    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
+
+    var request = genDigitalSpecimenBotanyRequestObject();
+    var responseAttributes = genDigitalSpecimenBotanyAttributes(handle);
+    var responseExpected = genDigitalSpecimenBotanyJsonResponse(handle, RECORD_TYPE_DS_BOTANY);
+
+    given(hgService.genHandleList(1)).willReturn(List.of(handle));
+    given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(responseAttributes);
+
+    // When
+    var responseReceived = service.createDigitalSpecimenBotanyJson(request);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);

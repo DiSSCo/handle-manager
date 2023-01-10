@@ -63,7 +63,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
-  void testCreateRecord() throws PidServiceInternalError, JsonProcessingException {
+  void testCreateRecord()  {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> attributesToPost = genHandleRecordAttributes(handle);
