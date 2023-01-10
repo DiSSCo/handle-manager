@@ -14,7 +14,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapper;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
@@ -57,7 +56,7 @@ public class HandleController {
   @GetMapping("/record")
   public ResponseEntity<JsonApiWrapper> resolvePid(
       @RequestBody JsonNode request
-  ) throws PidResolutionException, PidServiceInternalError, InvalidRecordInput {
+  ) throws PidResolutionException, InvalidRecordInput {
 
     checkRequestNodesPresent(request, true, false, true, false);
 
@@ -168,7 +167,7 @@ public class HandleController {
   @DeleteMapping(value = "/record")
   public ResponseEntity<JsonApiWrapper> archiveRecord(
       @RequestBody JsonNode request)
-      throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
+      throws InvalidRecordInput, PidResolutionException {
     checkRequestNodesPresent(request, true, false, false, true);
 
     JsonNode data = request.get(NODE_DATA);
@@ -181,7 +180,7 @@ public class HandleController {
   @DeleteMapping(value = "/records")
   public ResponseEntity<List<JsonApiWrapper>> archiveRecords(
       @RequestBody List<JsonNode> requests)
-      throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
+      throws InvalidRecordInput, PidResolutionException {
 
     for (JsonNode request: requests){
       checkRequestNodesPresent(request, true, false, true, true);
