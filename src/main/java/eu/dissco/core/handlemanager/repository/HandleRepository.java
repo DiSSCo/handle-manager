@@ -151,7 +151,7 @@ public class HandleRepository {
           .set(HANDLES.PUB_WRITE, false);
       queryList.add(query);
       if (updatedHandles.add(handleAttribute.handle())) {
-        queryList.add(versionIncrement(handleAttribute.handle(), recordTimestamp, true));
+        queryList.add(versionIncrement(handleAttribute.handle(), recordTimestamp));
       }
     }
     context.batch(queryList).execute();
@@ -171,7 +171,7 @@ public class HandleRepository {
   // Update
   public void updateRecord(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
     byte[] handle = handleAttributes.get(0).handle();
-    var query = prepareUpdateQuery(handle, recordTimestamp, handleAttributes, true);
+    var query = prepareUpdateQuery(handle, recordTimestamp, handleAttributes);
     context.batch(query).execute();
   }
 
@@ -181,13 +181,13 @@ public class HandleRepository {
     List<Query> queryList = new ArrayList<>();
     for (List<HandleAttribute> handleRecord : handleRecords) {
       queryList.addAll(
-          prepareUpdateQuery(handleRecord.get(0).handle(), recordTimestamp, handleRecord, true));
+          prepareUpdateQuery(handleRecord.get(0).handle(), recordTimestamp, handleRecord));
     }
     context.batch(queryList).execute();
   }
 
   private ArrayList<Query> prepareUpdateQuery(byte[] handle, Instant recordTimestamp,
-      List<HandleAttribute> handleAttributes, boolean versionIncrement) {
+      List<HandleAttribute> handleAttributes) {
     var queryList = new ArrayList<Query>();
     for (var handleAttribute : handleAttributes) {
       var query = context.update(HANDLES)
@@ -197,23 +197,18 @@ public class HandleRepository {
           .and(HANDLES.IDX.eq(handleAttribute.index()));
       queryList.add(query);
     }
-    queryList.add(versionIncrement(handle, recordTimestamp, versionIncrement));
+    queryList.add(versionIncrement(handle, recordTimestamp));
     return queryList;
   }
 
-  private Query versionIncrement(byte[] handle, Instant recordTimestamp, boolean versionIncrement) {
+  private Query versionIncrement(byte[] handle, Instant recordTimestamp) {
     var currentVersion =
         Integer.parseInt(Objects.requireNonNull(context.select(HANDLES.DATA)
             .from(HANDLES)
             .where(HANDLES.HANDLE.eq(handle))
             .and(HANDLES.TYPE.eq(ISSUE_NUMBER.getBytes(StandardCharsets.UTF_8)))
             .fetchOne(dbRecord -> new String(dbRecord.value1()))));
-    int version;
-    if (versionIncrement) {
-      version = currentVersion + 1;
-    } else {
-      version = currentVersion - 1;
-    }
+    int version = currentVersion + 1;
 
     return context.update(HANDLES)
         .set(HANDLES.DATA, String.valueOf(version).getBytes(StandardCharsets.UTF_8))
