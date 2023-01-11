@@ -59,6 +59,7 @@ public class HandleService {
   private final TransformerFactory tf;
 
   private static final String INVALID_FIELD_ERROR = "Invalid request. Attempting to add forbidden fields to record type %s. Forbidden field: %s";
+  private static final String INVALID_TYPE_ERROR = "Invalid request. Reason: unrecognized type. Check: ";
 
   // Resolve Record
 
@@ -220,7 +221,6 @@ public class HandleService {
         case RECORD_TYPE_HANDLE -> {
           HandleRecordRequest requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
               HandleRecordRequest.class);
-          log.info(requestObject.toString());
           newRecord = prepareHandleRecordAttributes(requestObject, handle);
         }
         case RECORD_TYPE_DOI -> {
@@ -239,13 +239,12 @@ public class HandleService {
           newRecord = prepareDigitalSpecimenBotanyRecordAttributes(requestObject, handle);
         }
         default -> throw new InvalidRecordInput(
-            "INVALID INPUT. REASON: unrecognized type. Check" + type + ".");
+            INVALID_TYPE_ERROR + type);
       }
     }
     catch (UnrecognizedPropertyException e){
       throw e;
     }
-
     catch (JsonProcessingException e) {
       throw new InvalidRecordInput(
           "An error has occurred parsing a record in request. More information: "
@@ -296,7 +295,7 @@ public class HandleService {
                 prepareDigitalSpecimenBotanyRecordAttributes(requestObject, handles.remove(0)));
           }
           default -> throw new InvalidRecordInput(
-              "INVALID INPUT. REASON: unrecognized type. Check" + type + ".");
+              INVALID_TYPE_ERROR + type);
         }
       } catch (JsonProcessingException e) {
         throw new InvalidRecordInput(

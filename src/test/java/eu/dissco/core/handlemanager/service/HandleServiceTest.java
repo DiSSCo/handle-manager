@@ -553,25 +553,228 @@ class HandleServiceTest {
     });
   }
 
-
+*/
   @Test
-  void testInvalidInputException() throws Exception{
+  void testInvalidInputExceptionCreateHandleRecord() throws Exception{
     // Given
     String invalidType = "INVALID TYPE";
-    String invalidMessage = "INVALID INPUT. Unrecognized Type: " + invalidType;
+    String invalidMessage = "Invalid request. Reason: unrecognized type. Check: " + invalidType;
 
     HandleRecordRequest request = genHandleRecordRequestObject();
     ObjectNode requestNode = genCreateRecordRequest(request, invalidType);
 
-    given(service.createRecord(requestNode)).willThrow(InvalidRecordInput.class);
+    given(hgService.genHandleList(1)).willReturn(List.of(HANDLE.getBytes(StandardCharsets.UTF_8)));
 
+    // When
+    Exception exception = assertThrows(InvalidRecordInput.class, () -> {
+      service.createRecord(requestNode);
+    });
 
     // Then
-    Exception exception = assertThrows(InvalidRecordInput.class, () -> {
-      controller.createRecord(requestNode);
-    });
-    //assertThat(exception.getMessage()).isEqualTo(invalidMessage);
+    assertThat(exception.getMessage()).isEqualTo(invalidMessage);
   }
+
+  @Test
+  void testInvalidInputExceptionCreateHandleRecordBatch() {
+    // Given
+    String invalidType = "INVALID TYPE";
+    String invalidMessage = "Invalid request. Reason: unrecognized type. Check: " + invalidType;
+
+    List<byte[]> handles = initHandleList();
+
+    List<JsonNode> requests = new ArrayList<>();
+    for (byte[] handle : handles) {
+      requests.add(genCreateRecordRequest(genHandleRecordRequestObject(), invalidType));
+    }
+
+    given(hgService.genHandleList(2)).willReturn(handles);
+
+    // When
+    Exception exception = assertThrows(InvalidRecordInput.class, () -> {
+      service.createRecordBatch(requests);
+    });
+
+    // Then
+    assertThat(exception.getMessage()).isEqualTo(invalidMessage);
+  }
+
+
+  @Test
+  void testMissingFieldCreateHandleRecord() {
+
+    HandleRecordRequest request = genHandleRecordRequestObject();
+    ObjectNode requestObjectNode = genCreateRecordRequest(request, RECORD_TYPE_HANDLE);
+
+    ((ObjectNode)requestObjectNode.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(PID_ISSUER_REQ);
+    log.info(requestObjectNode.toString());
+
+    given(hgService.genHandleList(1)).willReturn(List.of(HANDLE.getBytes(StandardCharsets.UTF_8)));
+
+    // When
+    Exception exception = assertThrows(InvalidRecordInput.class, () -> {
+      service.createRecord(requestObjectNode);
+    });
+
+    // Then
+    assertThat(exception.getMessage()).contains(PID_ISSUER_REQ);
+  }
+
+  @Test
+  void testMissingFieldCreateDoiRecord() {
+
+    HandleRecordRequest request = genDoiRecordRequestObject();
+    ObjectNode requestObjectNode = genCreateRecordRequest(request, RECORD_TYPE_DOI);
+
+    ((ObjectNode)requestObjectNode.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(REFERENT_DOI_NAME_REQ);
+    log.info(requestObjectNode.toString());
+
+    given(hgService.genHandleList(1)).willReturn(List.of(HANDLE.getBytes(StandardCharsets.UTF_8)));
+
+    // When
+    Exception exception = assertThrows(InvalidRecordInput.class, () -> {
+      service.createRecord(requestObjectNode);
+    });
+
+    // Then
+    assertThat(exception.getMessage()).contains(REFERENT_DOI_NAME_REQ);
+  }
+
+  @Test
+  void testMissingFieldCreateDigitalSpecimen() {
+
+    HandleRecordRequest request = genDigitalSpecimenBotanyRequestObject();
+    ObjectNode requestObjectNode = genCreateRecordRequest(request, RECORD_TYPE_DS);
+
+    ((ObjectNode)requestObjectNode.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(IN_COLLECTION_FACILITY_REQ);
+    log.info(requestObjectNode.toString());
+
+    given(hgService.genHandleList(1)).willReturn(List.of(HANDLE.getBytes(StandardCharsets.UTF_8)));
+
+    // When
+    Exception exception = assertThrows(InvalidRecordInput.class, () -> {
+      service.createRecord(requestObjectNode);
+    });
+
+    // Then
+    assertThat(exception.getMessage()).contains(IN_COLLECTION_FACILITY_REQ);
+  }
+
+  @Test
+  void testMissingFieldCreateDigitalSpecimenBotany() {
+
+    HandleRecordRequest request = genDigitalSpecimenBotanyRequestObject();
+    ObjectNode requestObjectNode = genCreateRecordRequest(request, RECORD_TYPE_DS_BOTANY);
+
+    ((ObjectNode)requestObjectNode.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(PRESERVED_OR_LIVING);
+    log.info(requestObjectNode.toString());
+
+    given(hgService.genHandleList(1)).willReturn(List.of(HANDLE.getBytes(StandardCharsets.UTF_8)));
+
+    // When
+    Exception exception = assertThrows(InvalidRecordInput.class, () -> {
+      service.createRecord(requestObjectNode);
+    });
+
+    // Then
+    assertThat(exception.getMessage()).contains(PRESERVED_OR_LIVING);
+  }
+
+  @Test
+  void testMissingFieldCreateHandleRecordBatch() {
+
+    List<byte[]> handles = initHandleList();
+
+    List<JsonNode> requests = new ArrayList<>();
+    for (byte[] handle : handles) {
+      ObjectNode request  = genCreateRecordRequest(genHandleRecordRequestObject(), RECORD_TYPE_HANDLE);
+      ((ObjectNode)request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(PID_ISSUER_REQ);
+
+      requests.add(request);
+    }
+
+    given(hgService.genHandleList(2)).willReturn(handles);
+
+    // When
+    Exception exception = assertThrows(InvalidRecordInput.class, () -> {
+      service.createRecordBatch(requests);
+    });
+
+    // Then
+    assertThat(exception.getMessage()).contains(PID_ISSUER_REQ);
+  }
+
+  @Test
+  void testMissingFieldDoiRecordBatch() {
+
+    List<byte[]> handles = initHandleList();
+    List<JsonNode> requests = new ArrayList<>();
+    for (byte[] handle : handles) {
+      ObjectNode request  = genCreateRecordRequest(genDoiRecordRequestObject(), RECORD_TYPE_DOI);
+      ((ObjectNode)request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(REFERENT_DOI_NAME_REQ);
+      requests.add(request);
+    }
+    log.info(requests.toString());
+
+    given(hgService.genHandleList(2)).willReturn(handles);
+
+    // When
+    Exception exception = assertThrows(InvalidRecordInput.class, () -> {
+      service.createRecordBatch(requests);
+    });
+
+    // Then
+    assertThat(exception.getMessage()).contains(REFERENT_DOI_NAME_REQ);
+  }
+
+  @Test
+  void testMissingFieldDigitalSpecimenRecordBatch() {
+
+    List<byte[]> handles = initHandleList();
+    List<JsonNode> requests = new ArrayList<>();
+    for (byte[] handle : handles) {
+      ObjectNode request  = genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_DS);
+      ((ObjectNode)request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(IN_COLLECTION_FACILITY_REQ);
+
+      requests.add(request);
+    }
+
+    given(hgService.genHandleList(2)).willReturn(handles);
+
+    // When
+    Exception exception = assertThrows(InvalidRecordInput.class, () -> {
+      service.createRecordBatch(requests);
+    });
+
+    // Then
+    assertThat(exception.getMessage()).contains(IN_COLLECTION_FACILITY_REQ);
+  }
+
+  @Test
+  void testMissingFieldDigitalSpecimenBotanyRecordBatch() {
+
+    List<byte[]> handles = initHandleList();
+    List<JsonNode> requests = new ArrayList<>();
+    for (byte[] handle : handles) {
+      ObjectNode request  = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(), RECORD_TYPE_DS_BOTANY);
+      ((ObjectNode)request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(PRESERVED_OR_LIVING);
+
+      requests.add(request);
+    }
+
+    given(hgService.genHandleList(2)).willReturn(handles);
+
+    // When
+    Exception exception = assertThrows(InvalidRecordInput.class, () -> {
+      service.createRecordBatch(requests);
+    });
+
+    // Then
+    assertThat(exception.getMessage()).contains(PRESERVED_OR_LIVING);
+  }
+
+
+
+  /*
 
     @Test
   void testUnrecognizedPropertyException(){
