@@ -536,6 +536,61 @@ class HandleServiceTest {
     assertThat(responseExpectedSecond).isEqualTo(handles);
   }
 
+  // Exceptions
+
+  /*
+    @Test
+  void testPidInternalServiceError() throws Exception{
+    // Given
+    HandleRecordRequest requestObject = genHandleRecordRequestObject();
+    ObjectNode requestNode = genCreateRecordRequest(requestObject, RECORD_TYPE_HANDLE);
+    given(service.createHandleRecordJson(requestObject)).willThrow(PidServiceInternalError.class);
+
+    // Then
+    assertThrows(PidServiceInternalError.class, () -> {
+      controller.createRecord(requestNode);
+    });
+  }
+
+
+  @Test
+  void testInvalidInputException() throws Exception{
+    // Given
+    String invalidType = "INVALID TYPE";
+    String invalidMessage = "INVALID INPUT. Unrecognized Type: " + invalidType;
+
+    HandleRecordRequest request = genHandleRecordRequestObject();
+    ObjectNode requestNode = genCreateRecordRequest(request, invalidType);
+
+    given(service.createRecord(requestNode)).willThrow(InvalidRecordInput.class);
+
+
+    // Then
+    Exception exception = assertThrows(InvalidRecordInput.class, () -> {
+      controller.createRecord(requestNode);
+    });
+    //assertThat(exception.getMessage()).isEqualTo(invalidMessage);
+  }
+
+    @Test
+  void testUnrecognizedPropertyException(){
+    // Given
+    DoiRecordRequest request = genDoiRecordRequestObject();
+    ObjectNode requestNode = genCreateRecordRequest(request, RECORD_TYPE_DOI);
+    ObjectNode dataNode = (ObjectNode) requestNode.get(NODE_DATA);
+    dataNode.remove(NODE_TYPE);
+    dataNode.put(NODE_TYPE, RECORD_TYPE_HANDLE);
+    requestNode.replace(NODE_DATA, dataNode);
+
+    // Then
+    assertThrows(UnrecognizedPropertyException.class, () -> {
+      controller.createRecord(requestNode);
+    });
+  }
+
+   */
+
+
   private void initTime() {
     Clock clock = Clock.fixed(CREATED, ZoneOffset.UTC);
     instant = Instant.now(clock);
