@@ -21,7 +21,7 @@ public class DigitalSpecimenBotanyRequest extends DigitalSpecimenRequest {
       String digitalObjectSubtypePid,
       String[] locations,
       // Referent
-      String referentDoiName,
+      String referentDoiNamePid,
       // Digital Specimen
       String digitalOrPhysical,
       String specimenHostPid,
@@ -30,7 +30,7 @@ public class DigitalSpecimenBotanyRequest extends DigitalSpecimenRequest {
       @NonNull String objectType,
       @NonNull String preservedOrLiving
   ) {
-    super(pidIssuerPid, digitalObjectTypePid, digitalObjectSubtypePid, locations, referentDoiName,
+    super(pidIssuerPid, digitalObjectTypePid, digitalObjectSubtypePid, locations, referentDoiNamePid,
         digitalOrPhysical,
         specimenHostPid, inCollectionFacilityPid);
     this.objectType = objectType;

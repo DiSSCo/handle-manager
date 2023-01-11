@@ -253,6 +253,8 @@ class HandleServiceTest {
       flatList.addAll(genDigitalSpecimenAttributes(handle));
     }
 
+    log.info(requests.toString());
+
     List<JsonApiWrapper> responseExpected = genDigitalSpecimenJsonResponseBatch(handles, "PID");
 
     given(hgService.genHandleList(handles.size())).willReturn(handles);
@@ -456,7 +458,6 @@ class HandleServiceTest {
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
 
     JsonNode updateRequest = genUpdateRequestAltLoc();
-    log.info(updateRequest.toString());
 
     List<HandleAttribute> updatedAttributeRecord = genHandleRecordAttributesAltLoc(handle);
     JsonApiWrapper responseExpected = genHandleRecordJsonResponseAltLoc(handle);
