@@ -220,6 +220,7 @@ public class HandleService {
         case RECORD_TYPE_HANDLE -> {
           HandleRecordRequest requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
               HandleRecordRequest.class);
+          log.info(requestObject.toString());
           newRecord = prepareHandleRecordAttributes(requestObject, handle);
         }
         case RECORD_TYPE_DOI -> {
@@ -246,6 +247,7 @@ public class HandleService {
     }
 
     catch (JsonProcessingException e) {
+      log.info(e.getMessage());
       throw new InvalidRecordInput(
           "An error has occurred parsing a record in request. More information: "
               + e.getMessage());

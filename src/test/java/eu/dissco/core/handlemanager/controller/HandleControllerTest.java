@@ -459,12 +459,30 @@ class HandleControllerTest {
     // Given
     DoiRecordRequest request = genDoiRecordRequestObject();
     ObjectNode requestNode = genCreateRecordRequest(request, RECORD_TYPE_DOI);
+    String message = "123";
     given(service.createRecord(requestNode)).willThrow(UnrecognizedPropertyException.class);
 
     // Then
-    assertThrows(UnrecognizedPropertyException.class, () -> {
+    Exception exception = assertThrows(UnrecognizedPropertyException.class, () -> {
       controller.createRecord(requestNode);
     });
+
+  }
+
+  @Test
+  void testPiDResolutionException() throws Exception{
+    // Given
+    DoiRecordRequest request = genDoiRecordRequestObject();
+    ObjectNode requestNode = genCreateRecordRequest(request, RECORD_TYPE_DOI);
+    String message = "123";
+    given(service.createRecord(requestNode)).willThrow(new PidResolutionException(message));
+
+    // Then
+    Exception exception = assertThrows(PidResolutionException.class, () -> {
+      controller.createRecord(requestNode);
+    });
+
+    assertThat(exception.getMessage()).isEqualTo(message);
   }
 
 }

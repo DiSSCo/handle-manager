@@ -2,14 +2,16 @@ package eu.dissco.core.handlemanager.domain.requests;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.ToString;
 
 @Getter
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public class DigitalSpecimenBotanyRequest extends DigitalSpecimenRequest {
-
+  @NonNull
   private final String objectType;
+  @NonNull
   private final String preservedOrLiving;
 
   public DigitalSpecimenBotanyRequest(
