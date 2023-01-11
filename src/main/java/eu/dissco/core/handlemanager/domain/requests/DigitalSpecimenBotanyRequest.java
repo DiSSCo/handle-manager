@@ -27,8 +27,8 @@ public class DigitalSpecimenBotanyRequest extends DigitalSpecimenRequest {
       String specimenHostPid,
       String inCollectionFacilityPid,
       // Botany Specimen
-      String objectType,
-      String preservedOrLiving
+      @NonNull String objectType,
+      @NonNull String preservedOrLiving
   ) {
     super(pidIssuerPid, digitalObjectTypePid, digitalObjectSubtypePid, locations, referentDoiName,
         digitalOrPhysical,

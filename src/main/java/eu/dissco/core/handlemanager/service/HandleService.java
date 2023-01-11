@@ -247,7 +247,6 @@ public class HandleService {
     }
 
     catch (JsonProcessingException e) {
-      log.info(e.getMessage());
       throw new InvalidRecordInput(
           "An error has occurred parsing a record in request. More information: "
               + e.getMessage());
