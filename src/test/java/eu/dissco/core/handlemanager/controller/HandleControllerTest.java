@@ -23,8 +23,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiData;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapper;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
-import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.HandleRecordRequest;
 import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
@@ -166,10 +164,11 @@ class HandleControllerTest {
   void testCreateHandleRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    HandleRecordRequest request = genHandleRecordRequestObject();
-    ObjectNode requestNode = genCreateRecordRequest(request, RECORD_TYPE_HANDLE);
+    HandleRecordRequest requestObject = genHandleRecordRequestObject();
+    ObjectNode requestNode = genCreateRecordRequest(requestObject, RECORD_TYPE_HANDLE);
     JsonApiWrapper responseExpected = genHandleRecordJsonResponse(handle);
-    given(service.createHandleRecordJson(request)).willReturn(responseExpected);
+
+    given(service.createRecord(requestNode)).willReturn(responseExpected);
 
     // When
     var responseReceived = controller.createRecord(requestNode);
@@ -183,10 +182,11 @@ class HandleControllerTest {
   void testCreateDoiRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    DoiRecordRequest request = genDoiRecordRequestObject();
-    ObjectNode requestNode = genCreateRecordRequest(request, RECORD_TYPE_DOI);
+    HandleRecordRequest requestObject = genDoiRecordRequestObject();
+    ObjectNode requestNode = genCreateRecordRequest(requestObject, RECORD_TYPE_DOI);
     JsonApiWrapper responseExpected = genDoiRecordJsonResponse(handle, RECORD_TYPE_DOI);
-    given(service.createDoiRecordJson(request)).willReturn(responseExpected);
+
+    given(service.createRecord(requestNode)).willReturn(responseExpected);
 
     // When
     var responseReceived = controller.createRecord(requestNode);
@@ -197,13 +197,14 @@ class HandleControllerTest {
   }
 
   @Test
-  void testCreateDigitalSpecimen() throws Exception {
+  void testCreateDigitalSpecimenRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    DigitalSpecimenRequest request = genDigitalSpecimenRequestObject();
-    ObjectNode requestNode = genCreateRecordRequest(request, RECORD_TYPE_DS);
+    HandleRecordRequest requestObject = genDigitalSpecimenRequestObject();
+    ObjectNode requestNode = genCreateRecordRequest(requestObject, RECORD_TYPE_DS);
     JsonApiWrapper responseExpected = genDigitalSpecimenJsonResponse(handle, RECORD_TYPE_DS);
-    given(service.createDigitalSpecimenJson(request)).willReturn(responseExpected);
+
+    given(service.createRecord(requestNode)).willReturn(responseExpected);
 
     // When
     var responseReceived = controller.createRecord(requestNode);
@@ -212,15 +213,15 @@ class HandleControllerTest {
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
-
   @Test
-  void testCreateDigitalSpecimenBotany() throws Exception {
+  void testCreateDigitalSpecimenBotanyRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    DigitalSpecimenBotanyRequest request = genDigitalSpecimenBotanyRequestObject();
-    ObjectNode requestNode = genCreateRecordRequest(request, RECORD_TYPE_DS_BOTANY);
+    HandleRecordRequest requestObject = genDigitalSpecimenBotanyRequestObject();
+    ObjectNode requestNode = genCreateRecordRequest(requestObject, RECORD_TYPE_DS_BOTANY);
     JsonApiWrapper responseExpected = genDigitalSpecimenBotanyJsonResponse(handle, RECORD_TYPE_DS_BOTANY);
-    given(service.createDigitalSpecimenBotanyJson(request)).willReturn(responseExpected);
+
+    given(service.createRecord(requestNode)).willReturn(responseExpected);
 
     // When
     var responseReceived = controller.createRecord(requestNode);
@@ -229,6 +230,8 @@ class HandleControllerTest {
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
+
+
 
   // Response Object
   @Test
@@ -480,7 +483,21 @@ class HandleControllerTest {
       controller.getAllHandles(pageNum, pageSize);
     });
   }
+  @Test
+  void testUnrecognizedPropertyException() throws Exception{
+    // Given
+    DoiRecordRequest request = genDoiRecordRequestObject();
+    ObjectNode requestNode = genCreateRecordRequest(request, RECORD_TYPE_DOI);
+    given(service.createRecord(requestNode)).willThrow(UnrecognizedPropertyException.class);
 
+    // Then
+    assertThrows(UnrecognizedPropertyException.class, () -> {
+      controller.createRecord(requestNode);
+    });
+  }
+
+
+  /*
   @Test
   void testUnrecognizedPropertyException(){
     // Given
@@ -495,10 +512,7 @@ class HandleControllerTest {
     assertThrows(UnrecognizedPropertyException.class, () -> {
       controller.createRecord(requestNode);
     });
-  }
-
-
-
+  } */
 
 
 }

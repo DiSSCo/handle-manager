@@ -5,20 +5,11 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapper;
-import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
-import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
-import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.HandleRecordRequest;
 import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -83,41 +74,14 @@ public class HandleController {
   @PreAuthorize("isAuthenticated()")
   @PostMapping(value = "/record")
   public ResponseEntity<JsonApiWrapper> createRecord(
-      @RequestBody JsonNode requestRoot)
-      throws PidResolutionException, PidServiceInternalError, JsonProcessingException, InvalidRecordInput {
+      @RequestBody JsonNode request)
+      throws PidResolutionException, PidServiceInternalError, InvalidRecordInput, UnrecognizedPropertyException {
 
-    checkRequestNodesPresent(requestRoot, true, true, false, true);
-    JsonNode request = requestRoot.get(NODE_DATA);
-    String type = request.get(NODE_TYPE).asText();
-
-    switch (type) {
-      case RECORD_TYPE_HANDLE -> {
-        HandleRecordRequest requestAttributes = mapper.treeToValue(request.get(NODE_ATTRIBUTES),
-            HandleRecordRequest.class);
-        return ResponseEntity.status(HttpStatus.CREATED)
-            .body(service.createHandleRecordJson(requestAttributes));
-      }
-      case RECORD_TYPE_DOI -> {
-        DoiRecordRequest requestAttributes = mapper.treeToValue(request.get(NODE_ATTRIBUTES),
-            DoiRecordRequest.class);
-        return ResponseEntity.status(HttpStatus.CREATED)
-            .body(service.createDoiRecordJson(requestAttributes));
-      }
-      case RECORD_TYPE_DS -> {
-        DigitalSpecimenRequest requestAttributes = mapper.treeToValue(request.get(NODE_ATTRIBUTES),
-            DigitalSpecimenRequest.class);
-        return ResponseEntity.status(HttpStatus.CREATED)
-            .body(service.createDigitalSpecimenJson(requestAttributes));
-      }
-      case RECORD_TYPE_DS_BOTANY -> {
-        DigitalSpecimenBotanyRequest requestAttributes = mapper.treeToValue(
-            request.get(NODE_ATTRIBUTES), DigitalSpecimenBotanyRequest.class);
-        return ResponseEntity.status(HttpStatus.CREATED)
-            .body(service.createDigitalSpecimenBotanyJson(requestAttributes));
-      }
-      default -> throw new InvalidRecordInput("INVALID INPUT. Unrecognized Type: " + type);
-    }
+    checkRequestNodesPresent(request, true, true, false, true);
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(service.createRecord(request));
   }
+
 
   @PreAuthorize("isAuthenticated()")
   @PostMapping(value = "/records")

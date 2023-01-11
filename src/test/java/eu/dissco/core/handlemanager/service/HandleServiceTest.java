@@ -116,84 +116,78 @@ class HandleServiceTest {
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
-
-  /*@Test
-  void testCreateHandleRecord() throws Exception {
+  @Test
+  void testCreateHandleRecord() throws Exception{
     // Given
     byte[] handle = handlesList.get(0);
-    var request = genHandleRecordRequestObject();
-    List<HandleAttribute> handleRecord = genHandleRecordAttributes(handle);
-    var databaseResponse = genObjectNodeAttributeRecord(handleRecord);
+    var request = genCreateRecordRequest(genHandleRecordRequestObject(), RECORD_TYPE_HANDLE);
     var responseExpected = genHandleRecordJsonResponse(handle);
+    List<HandleAttribute> handleRecord = genHandleRecordAttributes(handle);
 
-    given(handleRep.createRecord(handle, instant, handleRecord)).willReturn(databaseResponse);
-    given(hgService.genHandleList(1)).willReturn(handle);
+    given(hgService.genHandleList(1)).willReturn(List.of(handle));
+    given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(handleRecord);
 
     // When
-    JsonApiWrapper responseReceived = service.createHandleRecordJson(request);
+    var responseReceived = service.createRecord(request);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
-  /*
-
   @Test
-  void testCreateDoiRecordJson() throws Exception {
+  void testCreateDoiRecord() throws Exception{
     // Given
     byte[] handle = handlesList.get(0);
-    DoiRecordRequest request = genDoiRecordRequestObject();
-    List<HandleAttribute> handleRecord = genDoiRecordAttributes(handle);
-    var databaseResponse = genObjectNodeAttributeRecord(handleRecord);
+    var request = genCreateRecordRequest(genDoiRecordRequestObject(), RECORD_TYPE_DOI);
     var responseExpected = genDoiRecordJsonResponse(handle, RECORD_TYPE_DOI);
+    List<HandleAttribute> DoiRecord = genDoiRecordAttributes(handle);
 
-    given(handleRep.createRecord(handle, instant, handleRecord)).willReturn(databaseResponse);
-    given(hgService.genHandleList(1)).willReturn(handlesList);
+    given(hgService.genHandleList(1)).willReturn(List.of(handle));
+    given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(DoiRecord);
 
     // When
-    JsonApiWrapper responseReceived = service.createDoiRecordJson(request);
+    var responseReceived = service.createRecord(request);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
   @Test
-  void testCreateDigitalSpecimenJson() throws Exception {
-    // Given
-    byte[] handle = HANDLE.getBytes();
-    DigitalSpecimenRequest request = genDigitalSpecimenRequestObject();
-    List<HandleAttribute> handleRecord = genDigitalSpecimenAttributes(handle);
-    var databaseResponse = genObjectNodeAttributeRecord(handleRecord);
-    var responseExpected = genDigitalSpecimenJsonResponse(handle, RECORD_TYPE_DS);
-
-    given(handleRep.createRecord(handle, instant, handleRecord)).willReturn(databaseResponse);
-    given(hgService.genHandleList(1)).willReturn(handlesList);
-
-    // When
-    JsonApiWrapper responseReceived = service.createDigitalSpecimenJson(request);
-
-    // Then
-    assertThat(responseReceived).isEqualTo(responseExpected);
-  }
-
-  @Test
-  void testCreateDigitalSpecimenBotanyJson() throws Exception {
+  void testCreateDigitalSpecimen() throws Exception{
     // Given
     byte[] handle = handlesList.get(0);
-    DigitalSpecimenBotanyRequest request = genDigitalSpecimenBotanyRequestObject();
-    List<HandleAttribute> handleRecord = genDigitalSpecimenBotanyAttributes(handle);
-    var databaseResponse = genObjectNodeAttributeRecord(handleRecord);
-    var responseExpected = genDigitalSpecimenBotanyJsonResponse(handle, RECORD_TYPE_DS_BOTANY);
+    var request = genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_DS);
+    var responseExpected = genDigitalSpecimenJsonResponse(handle, RECORD_TYPE_DS);
+    List<HandleAttribute> DigitalSpecimen = genDigitalSpecimenAttributes(handle);
 
-    given(handleRep.createRecord(handle, instant, handleRecord)).willReturn(databaseResponse);
-    given(hgService.genHandleList(1)).willReturn(handlesList);
+    given(hgService.genHandleList(1)).willReturn(List.of(handle));
+    given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(DigitalSpecimen);
 
     // When
-    JsonApiWrapper responseReceived = service.createDigitalSpecimenBotanyJson(request);
+    var responseReceived = service.createRecord(request);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
-  } */
+  }
+
+  @Test
+  void testCreateDigitalSpecimenRecord() throws Exception{
+    // Given
+    byte[] handle = handlesList.get(0);
+    var request = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(), RECORD_TYPE_DS_BOTANY);
+    var responseExpected = genDigitalSpecimenBotanyJsonResponse(handle, RECORD_TYPE_DS_BOTANY);
+    List<HandleAttribute> DigitalSpecimenBotany = genDigitalSpecimenBotanyAttributes(handle);
+
+    given(hgService.genHandleList(1)).willReturn(List.of(handle));
+    given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(DigitalSpecimenBotany);
+
+    // When
+    var responseReceived = service.createRecord(request);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
 
   @Test
   void testCreateHandleRecordBatch() throws Exception{
@@ -296,8 +290,9 @@ class HandleServiceTest {
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
+  /*
   @Test
-  void testCreateHandleRecord() throws Exception {
+  void testCreateHandleRecord1() throws Exception {
 
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
@@ -374,10 +369,10 @@ class HandleServiceTest {
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
-  }
+  } */
 
   @Test
-  void testUpdateRecordBatchLoc() throws Exception {
+  void testUpdateRecordLocationBatch() throws Exception {
     // Given
     List<byte[]> handles = initHandleList();
     List<JsonNode> updateRequest = genUpdateRequestBatch(handles);
@@ -456,7 +451,7 @@ class HandleServiceTest {
 
 
   @Test
-  void testUpdateRecord() throws Exception {
+  void testUpdateRecordLocation() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
 

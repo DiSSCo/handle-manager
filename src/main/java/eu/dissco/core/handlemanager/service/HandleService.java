@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiData;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
@@ -207,7 +208,7 @@ public class HandleService {
     return new JsonApiWrapper(links, jsonData);
   }
 
-  public JsonApiWrapper createRecord(JsonNode request) throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
+  public JsonApiWrapper createRecord(JsonNode request) throws InvalidRecordInput, PidResolutionException, PidServiceInternalError, UnrecognizedPropertyException {
     byte[] handle = hf.genHandleList(1).get(0);
     var recordTimestamp = Instant.now();
     ObjectNode dataNode = (ObjectNode) request.get(NODE_DATA);
@@ -239,7 +240,12 @@ public class HandleService {
         default -> throw new InvalidRecordInput(
             "INVALID INPUT. REASON: unrecognized type. Check" + type + ".");
       }
-    } catch (JsonProcessingException e) {
+    }
+    catch (UnrecognizedPropertyException e){
+      throw e;
+    }
+
+    catch (JsonProcessingException e) {
       throw new InvalidRecordInput(
           "An error has occurred parsing a record in request. More information: "
               + e.getMessage());
