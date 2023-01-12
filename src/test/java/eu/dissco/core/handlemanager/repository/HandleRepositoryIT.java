@@ -209,9 +209,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     List<String> responseReceived = handleRep.getAllHandles(pageNum, pageSize);
 
     // Then
-    Collections.sort(responseReceived);
-    Collections.sort(handles);
-    assertThat(responseReceived).isEqualTo(handles);
+    assertThat(responseReceived).hasSameElementsAs(handles);
   }
 
   @Test
@@ -240,9 +238,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     List<String> responseReceived = handleRep.getAllHandles(pidStatusTarget, pageNum, pageSize);
 
     // Then
-    Collections.sort(responseReceived);
-    Collections.sort(responseExpected);
-    assertThat(responseReceived).isEqualTo(responseExpected);
+    assertThat(responseReceived).hasSameElementsAs(responseExpected);
   }
 
   @Test
