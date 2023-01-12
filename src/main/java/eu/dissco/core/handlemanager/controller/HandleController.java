@@ -187,6 +187,25 @@ public class HandleController {
     return ResponseEntity.ok(handleList);
   }
 
+  private void checkRequestNodesPresent(JsonNode requestRoot,
+      boolean checkData, boolean checkType, boolean checkId, boolean checkAttributes)
+      throws InvalidRecordInput{
+    String errorMsg = "INVALID INPUT. Missing node \" %s \"";
+    if (checkData && !requestRoot.has(NODE_DATA)){
+      throw new InvalidRecordInput(String.format(errorMsg, NODE_DATA));
+    }
+    JsonNode requestData = requestRoot.get(NODE_DATA);
+    if (checkType && !requestData.has(NODE_TYPE)){
+      throw new InvalidRecordInput(String.format(errorMsg, NODE_TYPE));
+    }
+    if (checkId && !requestData.has(NODE_ID)){
+      throw new InvalidRecordInput(String.format(errorMsg, NODE_ID));
+    }
+    if (checkAttributes && !requestData.has(NODE_ATTRIBUTES)){
+      throw new InvalidRecordInput(String.format(errorMsg, NODE_ATTRIBUTES));
+    }
+  }
+
   //Exception Handling
   @ExceptionHandler(PidServiceInternalError.class)
   private ResponseEntity<String> pidServiceInternalError(PidServiceInternalError e) {
@@ -227,29 +246,4 @@ public class HandleController {
         .body(message);
   }
 
-  private void checkRequestNodesPresent(JsonNode requestRoot,
-      boolean checkData, boolean checkType, boolean checkId, boolean checkAttributes)
-      throws InvalidRecordInput{
-    String errorMsg = "INVALID INPUT. Missing node \" %s \"";
-    if (checkData && !requestRoot.has(NODE_DATA)){
-      throw new InvalidRecordInput(String.format(errorMsg, NODE_DATA));
-    }
-    JsonNode requestData = requestRoot.get(NODE_DATA);
-    if (checkType && !requestData.has(NODE_TYPE)){
-      throw new InvalidRecordInput(String.format(errorMsg, NODE_TYPE));
-    }
-    if (checkId && !requestData.has(NODE_ID)){
-      throw new InvalidRecordInput(String.format(errorMsg, NODE_ID));
-    }
-    if (checkAttributes && !requestData.has(NODE_ATTRIBUTES)){
-      throw new InvalidRecordInput(String.format(errorMsg, NODE_ATTRIBUTES));
-    }
-  }
-
-
-  // This is the error thrown when a request is missing a parameter. It's very broad, though. How to make it more specific to the target cause?
-  @ExceptionHandler(NullPointerException.class)
-  private ResponseEntity<String> nullPointerException(NullPointerException e) {
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("INVALID REQUEST. Missing parameter. " + e.getMessage());
-  }
 }
