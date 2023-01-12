@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
 public class DigitalSpecimenRequest extends DoiRecordRequest {
+
   private final String digitalOrPhysical;
   private final String specimenHostPid;
   private final String inCollectionFacilityPid;
@@ -28,7 +29,8 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
       @NonNull String specimenHostPid,
       @NonNull String inCollectionFacilityPid
   ) {
-    super(pidIssuerPid, digitalObjectTypePid, digitalObjectSubtypePid, locations, referentDoiNamePid);
+    super(pidIssuerPid, digitalObjectTypePid, digitalObjectSubtypePid, locations,
+        referentDoiNamePid);
     this.digitalOrPhysical = digitalOrPhysical;
     this.specimenHostPid = specimenHostPid;
     this.inCollectionFacilityPid = inCollectionFacilityPid;

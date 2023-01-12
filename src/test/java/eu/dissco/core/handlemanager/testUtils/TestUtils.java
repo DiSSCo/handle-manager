@@ -167,10 +167,10 @@ public class TestUtils {
     return handleRecord;
   }
 
-  public static List<HandleAttribute> addHsAdmin(List<HandleAttribute> handleRecord){
+  public static List<HandleAttribute> addHsAdmin(List<HandleAttribute> handleRecord) {
     byte[] ptr_record = PTR_HANDLE_RECORD.getBytes(StandardCharsets.UTF_8);
     byte[] handle = handleRecord.get(0).handle();
-    var hsAdmin =  new HandleAttribute(FIELD_IDX.get(PID_ISSUER), handle, PID_ISSUER, ptr_record);
+    var hsAdmin = new HandleAttribute(FIELD_IDX.get(PID_ISSUER), handle, PID_ISSUER, ptr_record);
 
     handleRecord.add(hsAdmin);
     return handleRecord;
@@ -264,6 +264,7 @@ public class TestUtils {
             PRESERVED_OR_LIVING_TESTVAL.getBytes(StandardCharsets.UTF_8)));
     return handleRecord;
   }
+
   public static <T extends HandleRecordRequest> ObjectNode genCreateRecordRequest(T request,
       String recordType) {
     ObjectMapper mapper = new ObjectMapper();
@@ -386,7 +387,8 @@ public class TestUtils {
     return genGenericRecordJsonResponse(handle, testDbRecord, recordType);
   }
 
-  public static JsonApiWrapper genDigitalSpecimenBotanyJsonResponse(byte[] handle, String recordType)
+  public static JsonApiWrapper genDigitalSpecimenBotanyJsonResponse(byte[] handle,
+      String recordType)
       throws JsonProcessingException {
     var testDbRecord = genDigitalSpecimenBotanyAttributes(handle);
     return genGenericRecordJsonResponse(handle, testDbRecord, recordType);
@@ -423,7 +425,8 @@ public class TestUtils {
     return wrapperList;
   }
 
-  public static List<JsonApiWrapper> genDoiRecordJsonResponseBatch(List<byte[]> handles, String recordType)
+  public static List<JsonApiWrapper> genDoiRecordJsonResponseBatch(List<byte[]> handles,
+      String recordType)
       throws JsonProcessingException {
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
 
@@ -433,7 +436,8 @@ public class TestUtils {
     return wrapperList;
   }
 
-  public static List<JsonApiWrapper> genDigitalSpecimenJsonResponseBatch(List<byte[]> handles, String recordType)
+  public static List<JsonApiWrapper> genDigitalSpecimenJsonResponseBatch(List<byte[]> handles,
+      String recordType)
       throws JsonProcessingException {
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
 
@@ -443,7 +447,8 @@ public class TestUtils {
     return wrapperList;
   }
 
-  public static List<JsonApiWrapper> genDigitalSpecimenBotanyJsonResponseBatch(List<byte[]> handles, String recordType)
+  public static List<JsonApiWrapper> genDigitalSpecimenBotanyJsonResponseBatch(List<byte[]> handles,
+      String recordType)
       throws JsonProcessingException {
     List<JsonApiWrapper> wrapperList = new ArrayList<>();
 
@@ -556,8 +561,7 @@ public class TestUtils {
       if (FIELD_IS_PID_RECORD.contains(type)) {
         subNode = mapper.readValue(data, ObjectNode.class);
         rootNode.set(type, subNode);
-      }
-      else {
+      } else {
         rootNode.put(type, data);
       }
     }

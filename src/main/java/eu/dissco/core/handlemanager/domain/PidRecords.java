@@ -52,7 +52,8 @@ public class PidRecords {
   public static final String NODE_ID = "id";
   public static final String NODE_TYPE = "type";
   // Permitted fields for each record type
-  public static final Set<String> HANDLE_RECORD_FIELDS = Set.of(PID, PID_ISSUER, DIGITAL_OBJECT_TYPE, DIGITAL_OBJECT_SUBTYPE, LOC,
+  public static final Set<String> HANDLE_RECORD_FIELDS = Set.of(PID, PID_ISSUER,
+      DIGITAL_OBJECT_TYPE, DIGITAL_OBJECT_SUBTYPE, LOC,
       ISSUE_DATE, ISSUE_NUMBER, PID_STATUS, PID_KERNEL_METADATA_LICENSE);
   public static final Set<String> DOI_RECORD_FIELDS;
   public static final Set<String> DIGITAL_SPECIMEN_FIELDS;
@@ -65,7 +66,8 @@ public class PidRecords {
   public static final Set<String> DIGITAL_SPECIMEN_REQ;
   public static final Set<String> DIGITAL_SPECIMEN_BOTANY_REQ;
 
-  public static final Set<String> FIELD_IS_PID_RECORD = Set.of(PID_ISSUER, DIGITAL_OBJECT_TYPE, DIGITAL_OBJECT_SUBTYPE,
+  public static final Set<String> FIELD_IS_PID_RECORD = Set.of(PID_ISSUER, DIGITAL_OBJECT_TYPE,
+      DIGITAL_OBJECT_SUBTYPE,
       TOMBSTONE_PIDS, SPECIMEN_HOST, IN_COLLECTION_FACILITY, REFERENT_DOI_NAME);
 
   public static final Map<String, Integer> FIELD_IDX = Map.ofEntries(
@@ -110,7 +112,7 @@ public class PidRecords {
 
   static {
     Set<byte[]> tmp = new HashSet<>();
-    for (String field : TOMBSTONE_RECORD_FIELDS){
+    for (String field : TOMBSTONE_RECORD_FIELDS) {
       tmp.add(field.getBytes(StandardCharsets.UTF_8));
     }
     TOMBSTONE_RECORD_FIELDS_BYTES = Collections.unmodifiableSet(tmp);

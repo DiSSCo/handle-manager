@@ -64,7 +64,7 @@ public class HandleController {
 
     List<byte[]> handles = new ArrayList<>();
 
-    for (JsonNode request : requests){
+    for (JsonNode request : requests) {
       checkRequestNodesPresent(request, true, false, true, false);
       handles.add(request.get(NODE_DATA).get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8));
     }
@@ -89,7 +89,7 @@ public class HandleController {
       @RequestBody List<JsonNode> requests)
       throws PidResolutionException, PidServiceInternalError, InvalidRecordInput {
 
-    for (JsonNode request : requests){
+    for (JsonNode request : requests) {
       checkRequestNodesPresent(request, true, true, false, true);
     }
 
@@ -120,7 +120,7 @@ public class HandleController {
       @RequestBody List<JsonNode> requests)
       throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
 
-    for (JsonNode request: requests){
+    for (JsonNode request : requests) {
       checkRequestNodesPresent(request, true, true, true, true);
     }
 
@@ -146,7 +146,7 @@ public class HandleController {
       @RequestBody List<JsonNode> requests)
       throws InvalidRecordInput, PidResolutionException {
 
-    for (JsonNode request: requests){
+    for (JsonNode request : requests) {
       checkRequestNodesPresent(request, true, false, true, true);
     }
 
@@ -189,19 +189,19 @@ public class HandleController {
 
   private void checkRequestNodesPresent(JsonNode requestRoot,
       boolean checkData, boolean checkType, boolean checkId, boolean checkAttributes)
-      throws InvalidRecordInput{
+      throws InvalidRecordInput {
     String errorMsg = "INVALID INPUT. Missing node \" %s \"";
-    if (checkData && !requestRoot.has(NODE_DATA)){
+    if (checkData && !requestRoot.has(NODE_DATA)) {
       throw new InvalidRecordInput(String.format(errorMsg, NODE_DATA));
     }
     JsonNode requestData = requestRoot.get(NODE_DATA);
-    if (checkType && !requestData.has(NODE_TYPE)){
+    if (checkType && !requestData.has(NODE_TYPE)) {
       throw new InvalidRecordInput(String.format(errorMsg, NODE_TYPE));
     }
-    if (checkId && !requestData.has(NODE_ID)){
+    if (checkId && !requestData.has(NODE_ID)) {
       throw new InvalidRecordInput(String.format(errorMsg, NODE_ID));
     }
-    if (checkAttributes && !requestData.has(NODE_ATTRIBUTES)){
+    if (checkAttributes && !requestData.has(NODE_ATTRIBUTES)) {
       throw new InvalidRecordInput(String.format(errorMsg, NODE_ATTRIBUTES));
     }
   }
@@ -245,5 +245,4 @@ public class HandleController {
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
         .body(message);
   }
-
 }

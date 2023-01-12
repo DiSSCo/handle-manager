@@ -77,7 +77,7 @@ public class HandleService {
 
   private JsonNode getRecord(byte[] handle) throws PidResolutionException {
     var dbRecord = handleRep.resolveHandleAttributes(handle);
-    if (dbRecord.isEmpty()){
+    if (dbRecord.isEmpty()) {
       throw new PidResolutionException("Unable to resolve handle");
     }
     return jsonFormatSingleRecord(dbRecord);
@@ -95,14 +95,16 @@ public class HandleService {
       resolvedHandles.add(handleRecord.getValue().get(0).handle());
     }
 
-    if (handles.size() > resolvedHandles.size()){
-      handles.forEach(resolvedHandles::remove); // Removes handles from resolved handle list, now it only contains unresolved handles
+    if (handles.size() > resolvedHandles.size()) {
+      handles.forEach(
+          resolvedHandles::remove); // Removes handles from resolved handle list, now it only contains unresolved handles
 
       Set<String> unresolvedHandles = new HashSet<>();
-      for (byte[] handle : resolvedHandles){
+      for (byte[] handle : resolvedHandles) {
         unresolvedHandles.add(new String(handle));
       }
-      throw new PidResolutionException("Unable to resolve the following handles: " + unresolvedHandles );
+      throw new PidResolutionException(
+          "Unable to resolve the following handles: " + unresolvedHandles);
     }
     return rootNodeList;
   }
@@ -185,7 +187,6 @@ public class HandleService {
   }
 
 
-
   public JsonApiWrapper updateRecord(JsonNode request, byte[] handle, String recordType)
       throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
 
@@ -209,7 +210,8 @@ public class HandleService {
     return new JsonApiWrapper(links, jsonData);
   }
 
-  public JsonApiWrapper createRecord(JsonNode request) throws InvalidRecordInput, PidResolutionException, PidServiceInternalError, UnrecognizedPropertyException {
+  public JsonApiWrapper createRecord(JsonNode request)
+      throws InvalidRecordInput, PidResolutionException, PidServiceInternalError, UnrecognizedPropertyException {
     byte[] handle = hf.genHandleList(1).get(0);
     var recordTimestamp = Instant.now();
     ObjectNode dataNode = (ObjectNode) request.get(NODE_DATA);
@@ -241,11 +243,9 @@ public class HandleService {
         default -> throw new InvalidRecordInput(
             INVALID_TYPE_ERROR + type);
       }
-    }
-    catch (UnrecognizedPropertyException e){
+    } catch (UnrecognizedPropertyException e) {
       throw e;
-    }
-    catch (JsonProcessingException e) {
+    } catch (JsonProcessingException e) {
       throw new InvalidRecordInput(
           "An error has occurred parsing a record in request. More information: "
               + e.getMessage());
@@ -363,8 +363,8 @@ public class HandleService {
     List<HandleAttribute> handleRecord = prepareDigitalSpecimenRecordAttributes(request, handle);
     var recordTimestamp = Instant.now();
 
-   handleRep.postAttributesToDb(recordTimestamp, handleRecord);
-   var postedRecordAttributes = getRecord(handle);
+    handleRep.postAttributesToDb(recordTimestamp, handleRecord);
+    var postedRecordAttributes = getRecord(handle);
     JsonApiData jsonData = new JsonApiData(new String(handle), RECORD_TYPE_DS,
         postedRecordAttributes);
     JsonApiLinks links = new JsonApiLinks(postedRecordAttributes.get(PID).asText());
@@ -449,7 +449,7 @@ public class HandleService {
   }
 
 
-  private List<String> getKeys(JsonNode request){
+  private List<String> getKeys(JsonNode request) {
     List<String> keys = new ArrayList<>();
     Iterator<String> fieldItr = request.fieldNames();
     fieldItr.forEachRemaining(keys::add);
@@ -763,8 +763,6 @@ public class HandleService {
     transformer.transform(new DOMSource(document), new StreamResult(writer));
     return writer.getBuffer().toString();
   }
-
-
 
 
   private JsonNode jsonFormatSingleRecord(List<HandleAttribute> dbRecord) {

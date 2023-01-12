@@ -9,7 +9,9 @@ import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
+
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.*;
+
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.util.ArrayList;
@@ -75,13 +77,13 @@ class PidTypeServiceTest {
     // Then
     assertThat(expected).isEqualTo(returned);
   }
-  
+
   @Test
   void testResolutionException() throws Exception {
     // Given
     String typePid = PID_ISSUER_PID;
     given(handleRep.resolveHandleAttributes(typePid.getBytes())).willReturn(new ArrayList<>());
-    
+
     // Then
     assertThrows(PidResolutionException.class, () -> {
       pidTypeService.resolveTypePid(typePid);

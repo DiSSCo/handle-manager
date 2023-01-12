@@ -9,6 +9,7 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public class DigitalSpecimenBotanyRequest extends DigitalSpecimenRequest {
+
   @NonNull
   private final String objectType;
   @NonNull
@@ -30,7 +31,8 @@ public class DigitalSpecimenBotanyRequest extends DigitalSpecimenRequest {
       @NonNull String objectType,
       @NonNull String preservedOrLiving
   ) {
-    super(pidIssuerPid, digitalObjectTypePid, digitalObjectSubtypePid, locations, referentDoiNamePid,
+    super(pidIssuerPid, digitalObjectTypePid, digitalObjectSubtypePid, locations,
+        referentDoiNamePid,
         digitalOrPhysical,
         specimenHostPid, inCollectionFacilityPid);
     this.objectType = objectType;

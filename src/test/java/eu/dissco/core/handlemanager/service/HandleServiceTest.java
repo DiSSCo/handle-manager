@@ -117,7 +117,7 @@ class HandleServiceTest {
   }
 
   @Test
-  void testCreateHandleRecord() throws Exception{
+  void testCreateHandleRecord() throws Exception {
     // Given
     byte[] handle = handlesList.get(0);
     var request = genCreateRecordRequest(genHandleRecordRequestObject(), RECORD_TYPE_HANDLE);
@@ -135,7 +135,7 @@ class HandleServiceTest {
   }
 
   @Test
-  void testCreateDoiRecord() throws Exception{
+  void testCreateDoiRecord() throws Exception {
     // Given
     byte[] handle = handlesList.get(0);
     var request = genCreateRecordRequest(genDoiRecordRequestObject(), RECORD_TYPE_DOI);
@@ -153,7 +153,7 @@ class HandleServiceTest {
   }
 
   @Test
-  void testCreateDigitalSpecimen() throws Exception{
+  void testCreateDigitalSpecimen() throws Exception {
     // Given
     byte[] handle = handlesList.get(0);
     var request = genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_DS);
@@ -171,10 +171,11 @@ class HandleServiceTest {
   }
 
   @Test
-  void testCreateDigitalSpecimenRecord() throws Exception{
+  void testCreateDigitalSpecimenRecord() throws Exception {
     // Given
     byte[] handle = handlesList.get(0);
-    var request = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(), RECORD_TYPE_DS_BOTANY);
+    var request = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(),
+        RECORD_TYPE_DS_BOTANY);
     var responseExpected = genDigitalSpecimenBotanyJsonResponse(handle, RECORD_TYPE_DS_BOTANY);
     List<HandleAttribute> DigitalSpecimenBotany = genDigitalSpecimenBotanyAttributes(handle);
 
@@ -190,7 +191,7 @@ class HandleServiceTest {
 
 
   @Test
-  void testCreateHandleRecordBatch() throws Exception{
+  void testCreateHandleRecordBatch() throws Exception {
     // Given
     List<byte[]> handles = initHandleList();
 
@@ -215,7 +216,7 @@ class HandleServiceTest {
   }
 
   @Test
-  void testCreateDoiRecordBatch() throws Exception{
+  void testCreateDoiRecordBatch() throws Exception {
     // Given
     List<byte[]> handles = initHandleList();
 
@@ -241,7 +242,7 @@ class HandleServiceTest {
 
 
   @Test
-  void testCreateDigitalSpecimenBatch() throws Exception{
+  void testCreateDigitalSpecimenBatch() throws Exception {
     // Given
     List<byte[]> handles = initHandleList();
 
@@ -268,7 +269,7 @@ class HandleServiceTest {
   }
 
   @Test
-  void testCreateDigitalSpecimenBotanyBatch() throws Exception{
+  void testCreateDigitalSpecimenBotanyBatch() throws Exception {
     // Given
     List<byte[]> handles = initHandleList();
 
@@ -276,11 +277,13 @@ class HandleServiceTest {
 
     List<JsonNode> requests = new ArrayList<>();
     for (byte[] handle : handles) {
-      requests.add(genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(), RECORD_TYPE_DS_BOTANY));
+      requests.add(
+          genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(), RECORD_TYPE_DS_BOTANY));
       flatList.addAll(genDigitalSpecimenBotanyAttributes(handle));
     }
 
-    List<JsonApiWrapper> responseExpected = genDigitalSpecimenBotanyJsonResponseBatch(handles, "PID");
+    List<JsonApiWrapper> responseExpected = genDigitalSpecimenBotanyJsonResponseBatch(handles,
+        "PID");
 
     given(hgService.genHandleList(handles.size())).willReturn(handles);
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
@@ -397,9 +400,8 @@ class HandleServiceTest {
   }
 
 
-
   @Test
-  void testUpdateRecordInternalDuplicates() throws Exception{
+  void testUpdateRecordInternalDuplicates() throws Exception {
 
     // Given
     List<byte[]> handles = new ArrayList<>();
@@ -431,8 +433,9 @@ class HandleServiceTest {
     requestRoot.set(NODE_DATA, requestData);
 
     // Then
-    assertThrows(InvalidRecordInput.class, () ->{
-      service.updateRecord(requestRoot, HANDLE.getBytes(StandardCharsets.UTF_8), RECORD_TYPE_HANDLE);
+    assertThrows(InvalidRecordInput.class, () -> {
+      service.updateRecord(requestRoot, HANDLE.getBytes(StandardCharsets.UTF_8),
+          RECORD_TYPE_HANDLE);
     });
 
   }
@@ -449,7 +452,6 @@ class HandleServiceTest {
       service.updateRecordBatch(updateRequest);
     });
   }
-
 
 
   @Test
@@ -471,7 +473,6 @@ class HandleServiceTest {
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
-
 
 
   @Test
@@ -518,7 +519,7 @@ class HandleServiceTest {
   }
 
   @Test
-  void testGetHandlesPaged(){
+  void testGetHandlesPaged() {
     // Given
     int pageNum = 0;
     int pageSize = 2;
@@ -555,7 +556,7 @@ class HandleServiceTest {
 
 */
   @Test
-  void testInvalidInputExceptionCreateHandleRecord() throws Exception{
+  void testInvalidInputExceptionCreateHandleRecord() throws Exception {
     // Given
     String invalidType = "INVALID TYPE";
     String invalidMessage = "Invalid request. Reason: unrecognized type. Check: " + invalidType;
@@ -605,7 +606,7 @@ class HandleServiceTest {
     HandleRecordRequest request = genHandleRecordRequestObject();
     ObjectNode requestObjectNode = genCreateRecordRequest(request, RECORD_TYPE_HANDLE);
 
-    ((ObjectNode)requestObjectNode.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(PID_ISSUER_REQ);
+    ((ObjectNode) requestObjectNode.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(PID_ISSUER_REQ);
     log.info(requestObjectNode.toString());
 
     given(hgService.genHandleList(1)).willReturn(List.of(HANDLE.getBytes(StandardCharsets.UTF_8)));
@@ -625,7 +626,8 @@ class HandleServiceTest {
     HandleRecordRequest request = genDoiRecordRequestObject();
     ObjectNode requestObjectNode = genCreateRecordRequest(request, RECORD_TYPE_DOI);
 
-    ((ObjectNode)requestObjectNode.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(REFERENT_DOI_NAME_REQ);
+    ((ObjectNode) requestObjectNode.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(
+        REFERENT_DOI_NAME_REQ);
     log.info(requestObjectNode.toString());
 
     given(hgService.genHandleList(1)).willReturn(List.of(HANDLE.getBytes(StandardCharsets.UTF_8)));
@@ -645,7 +647,8 @@ class HandleServiceTest {
     HandleRecordRequest request = genDigitalSpecimenBotanyRequestObject();
     ObjectNode requestObjectNode = genCreateRecordRequest(request, RECORD_TYPE_DS);
 
-    ((ObjectNode)requestObjectNode.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(IN_COLLECTION_FACILITY_REQ);
+    ((ObjectNode) requestObjectNode.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(
+        IN_COLLECTION_FACILITY_REQ);
     log.info(requestObjectNode.toString());
 
     given(hgService.genHandleList(1)).willReturn(List.of(HANDLE.getBytes(StandardCharsets.UTF_8)));
@@ -665,7 +668,8 @@ class HandleServiceTest {
     HandleRecordRequest request = genDigitalSpecimenBotanyRequestObject();
     ObjectNode requestObjectNode = genCreateRecordRequest(request, RECORD_TYPE_DS_BOTANY);
 
-    ((ObjectNode)requestObjectNode.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(PRESERVED_OR_LIVING);
+    ((ObjectNode) requestObjectNode.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(
+        PRESERVED_OR_LIVING);
     log.info(requestObjectNode.toString());
 
     given(hgService.genHandleList(1)).willReturn(List.of(HANDLE.getBytes(StandardCharsets.UTF_8)));
@@ -686,8 +690,9 @@ class HandleServiceTest {
 
     List<JsonNode> requests = new ArrayList<>();
     for (byte[] handle : handles) {
-      ObjectNode request  = genCreateRecordRequest(genHandleRecordRequestObject(), RECORD_TYPE_HANDLE);
-      ((ObjectNode)request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(PID_ISSUER_REQ);
+      ObjectNode request = genCreateRecordRequest(genHandleRecordRequestObject(),
+          RECORD_TYPE_HANDLE);
+      ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(PID_ISSUER_REQ);
 
       requests.add(request);
     }
@@ -709,8 +714,8 @@ class HandleServiceTest {
     List<byte[]> handles = initHandleList();
     List<JsonNode> requests = new ArrayList<>();
     for (byte[] handle : handles) {
-      ObjectNode request  = genCreateRecordRequest(genDoiRecordRequestObject(), RECORD_TYPE_DOI);
-      ((ObjectNode)request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(REFERENT_DOI_NAME_REQ);
+      ObjectNode request = genCreateRecordRequest(genDoiRecordRequestObject(), RECORD_TYPE_DOI);
+      ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(REFERENT_DOI_NAME_REQ);
       requests.add(request);
     }
     log.info(requests.toString());
@@ -732,8 +737,9 @@ class HandleServiceTest {
     List<byte[]> handles = initHandleList();
     List<JsonNode> requests = new ArrayList<>();
     for (byte[] handle : handles) {
-      ObjectNode request  = genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_DS);
-      ((ObjectNode)request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(IN_COLLECTION_FACILITY_REQ);
+      ObjectNode request = genCreateRecordRequest(genDigitalSpecimenRequestObject(),
+          RECORD_TYPE_DS);
+      ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(IN_COLLECTION_FACILITY_REQ);
 
       requests.add(request);
     }
@@ -755,8 +761,9 @@ class HandleServiceTest {
     List<byte[]> handles = initHandleList();
     List<JsonNode> requests = new ArrayList<>();
     for (byte[] handle : handles) {
-      ObjectNode request  = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(), RECORD_TYPE_DS_BOTANY);
-      ((ObjectNode)request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(PRESERVED_OR_LIVING);
+      ObjectNode request = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(),
+          RECORD_TYPE_DS_BOTANY);
+      ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(PRESERVED_OR_LIVING);
 
       requests.add(request);
     }

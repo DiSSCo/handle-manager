@@ -163,7 +163,8 @@ public class HandleRepository {
     removeNonTombstoneFields(List.of(handleAttributes.get(0).handle()));
   }
 
-  public void archiveRecords(Instant recordTimestamp, List<HandleAttribute> handleAttributes, List<byte[]> handles) {
+  public void archiveRecords(Instant recordTimestamp, List<HandleAttribute> handleAttributes,
+      List<byte[]> handles) {
     mergeAttributesToDb(recordTimestamp, handleAttributes);
     removeNonTombstoneFields(handles);
   }
@@ -217,7 +218,7 @@ public class HandleRepository {
         .and(HANDLES.TYPE.eq(ISSUE_NUMBER.getBytes(StandardCharsets.UTF_8)));
   }
 
-  private void removeNonTombstoneFields(List<byte[]> handles){
+  private void removeNonTombstoneFields(List<byte[]> handles) {
     context.delete(HANDLES)
         .where(HANDLES.HANDLE.in(handles))
         .and(HANDLES.TYPE.notIn(TOMBSTONE_RECORD_FIELDS_BYTES))

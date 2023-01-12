@@ -213,13 +213,15 @@ class HandleControllerTest {
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
+
   @Test
   void testCreateDigitalSpecimenBotanyRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     HandleRecordRequest requestObject = genDigitalSpecimenBotanyRequestObject();
     ObjectNode requestNode = genCreateRecordRequest(requestObject, RECORD_TYPE_DS_BOTANY);
-    JsonApiWrapper responseExpected = genDigitalSpecimenBotanyJsonResponse(handle, RECORD_TYPE_DS_BOTANY);
+    JsonApiWrapper responseExpected = genDigitalSpecimenBotanyJsonResponse(handle,
+        RECORD_TYPE_DS_BOTANY);
 
     given(service.createRecord(requestNode)).willReturn(responseExpected);
 
@@ -230,7 +232,6 @@ class HandleControllerTest {
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
-
 
 
   // Response Object
@@ -289,7 +290,8 @@ class HandleControllerTest {
     for (byte[] handle : handles) {
       requests.add(genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_DS));
     }
-    List<JsonApiWrapper> responseExpected = genDigitalSpecimenJsonResponseBatch(handles, RECORD_TYPE_DS);
+    List<JsonApiWrapper> responseExpected = genDigitalSpecimenJsonResponseBatch(handles,
+        RECORD_TYPE_DS);
     given(service.createRecordBatch(requests)).willReturn(responseExpected);
 
     // When
@@ -312,7 +314,8 @@ class HandleControllerTest {
       requests.add(
           genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_DS_BOTANY));
     }
-    List<JsonApiWrapper> responseExpected = genDigitalSpecimenBotanyJsonResponseBatch(handles, RECORD_TYPE_DS_BOTANY);
+    List<JsonApiWrapper> responseExpected = genDigitalSpecimenBotanyJsonResponseBatch(handles,
+        RECORD_TYPE_DS_BOTANY);
     given(service.createRecordBatch(requests)).willReturn(responseExpected);
 
     // When
@@ -454,8 +457,9 @@ class HandleControllerTest {
       controller.getAllHandles(pageNum, pageSize);
     });
   }
+
   @Test
-  void testUnrecognizedPropertyException() throws Exception{
+  void testUnrecognizedPropertyException() throws Exception {
     // Given
     DoiRecordRequest request = genDoiRecordRequestObject();
     ObjectNode requestNode = genCreateRecordRequest(request, RECORD_TYPE_DOI);
@@ -470,7 +474,7 @@ class HandleControllerTest {
   }
 
   @Test
-  void testPiDResolutionException() throws Exception{
+  void testPiDResolutionException() throws Exception {
     // Given
     DoiRecordRequest request = genDoiRecordRequestObject();
     ObjectNode requestNode = genCreateRecordRequest(request, RECORD_TYPE_DOI);

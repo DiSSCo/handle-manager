@@ -63,7 +63,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
-  void testCreateRecord()  {
+  void testCreateRecord() {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> attributesToPost = genHandleRecordAttributes(handle);
@@ -97,7 +97,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
 
     // Then
     assertThat(collisions).hasSize(handles.size());
-    assert(byteArrListsAreEqual(handles, collisions));
+    assert (byteArrListsAreEqual(handles, collisions));
   }
 
   @Test
@@ -257,13 +257,15 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     // When
     handleRep.updateRecord(CREATED, recordUpdate);
     var responseReceived = context
-        .select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE, Handles.HANDLES.TYPE, Handles.HANDLES.DATA)
+        .select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE, Handles.HANDLES.TYPE,
+            Handles.HANDLES.DATA)
         .from(Handles.HANDLES)
         .where(Handles.HANDLES.HANDLE.eq(handle))
-        .and(Handles.HANDLES.TYPE.notEqual(HS_ADMIN.getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
+        .and(Handles.HANDLES.TYPE.notEqual(
+            HS_ADMIN.getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
         .fetch(this::mapToAttribute);
 
-    for (var elem : responseExpected){
+    for (var elem : responseExpected) {
       log.info(elem.toString());
     }
 
@@ -290,10 +292,12 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     // When
     handleRep.updateRecordBatch(CREATED, updateAttributes);
     var responseReceived = context
-        .select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE, Handles.HANDLES.TYPE, Handles.HANDLES.DATA)
+        .select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE, Handles.HANDLES.TYPE,
+            Handles.HANDLES.DATA)
         .from(Handles.HANDLES)
         .where(Handles.HANDLES.HANDLE.in(handles))
-        .and(Handles.HANDLES.TYPE.notEqual(HS_ADMIN.getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
+        .and(Handles.HANDLES.TYPE.notEqual(
+            HS_ADMIN.getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
         .fetch(this::mapToAttribute);
 
     // Then
@@ -319,10 +323,12 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     // When
     handleRep.archiveRecords(CREATED, archiveAttributes, handles);
     var responseReceived = context
-        .select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE, Handles.HANDLES.TYPE, Handles.HANDLES.DATA)
+        .select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE, Handles.HANDLES.TYPE,
+            Handles.HANDLES.DATA)
         .from(Handles.HANDLES)
         .where(Handles.HANDLES.HANDLE.in(handles))
-        .and(Handles.HANDLES.TYPE.notEqual(HS_ADMIN.getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
+        .and(Handles.HANDLES.TYPE.notEqual(
+            HS_ADMIN.getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
         .fetch(this::mapToAttribute);
 
     // Then
@@ -341,16 +347,17 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     // When
     handleRep.archiveRecord(CREATED, recordArchive);
     var responseReceived = context
-        .select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE, Handles.HANDLES.TYPE, Handles.HANDLES.DATA)
+        .select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE, Handles.HANDLES.TYPE,
+            Handles.HANDLES.DATA)
         .from(Handles.HANDLES)
         .where(Handles.HANDLES.HANDLE.eq(handle))
-        .and(Handles.HANDLES.TYPE.notEqual(HS_ADMIN.getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
+        .and(Handles.HANDLES.TYPE.notEqual(
+            HS_ADMIN.getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
         .fetch(this::mapToAttribute);
 
     // Then
     assertThat(responseReceived).hasSameElementsAs(responseExpected);
   }
-
 
 
   private void postAttributes(List<HandleAttribute> rows) {
