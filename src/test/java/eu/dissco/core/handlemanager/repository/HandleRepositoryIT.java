@@ -8,25 +8,14 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_NUMBER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.*;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genObjectNodeAttributeRecord;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenAttributes;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDoiRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributes;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchNullPointerException;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.database.jooq.tables.Handles;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
-import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
-import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -46,13 +35,11 @@ import org.junit.jupiter.api.Test;
 @Slf4j
 class HandleRepositoryIT extends BaseRepositoryIT {
 
-
   private HandleRepository handleRep;
-  private ObjectMapper mapper;
 
   @BeforeEach
   void setup() {
-    mapper = new ObjectMapper().findAndRegisterModules()
+    ObjectMapper mapper = new ObjectMapper().findAndRegisterModules()
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     handleRep = new HandleRepository(context, mapper);
   }
@@ -354,7 +341,6 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     // Then
     assertThat(responseReceived).hasSameElementsAs(responseExpected);
   }
-
 
   private void postAttributes(List<HandleAttribute> rows) {
     List<Query> queryList = new ArrayList<>();

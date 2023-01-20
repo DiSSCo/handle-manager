@@ -1,5 +1,6 @@
 package eu.dissco.core.handlemanager.domain.repsitoryobjects;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -28,10 +29,10 @@ public record HandleAttribute(int index, byte[] handle, String type, byte[] data
   @Override
   public String toString() {
     return "HandleAttribute{" +
-        "handle=" + new String(handle) +
+        "handle=" + new String(handle, StandardCharsets.UTF_8) +
         "index=" + index +
         ", type='" + type + '\'' +
-        ", data=" + new String(data) +
+        ", data=" + new String(data, StandardCharsets.UTF_8) +
         '}';
   }
 }

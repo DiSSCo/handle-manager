@@ -54,7 +54,7 @@ class HandleGeneratorServiceTest {
     given(random.nextInt(anyInt())).willReturn(0);
 
     // When
-    String generatedHandle = new String(hgService.genHandleList(1).get(0));
+    String generatedHandle = new String(hgService.genHandleList(1).get(0), StandardCharsets.UTF_8);
 
     // Then
     assertThat(generatedHandle).isEqualTo(expectedHandle);

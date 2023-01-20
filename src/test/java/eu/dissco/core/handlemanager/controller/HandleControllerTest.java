@@ -97,18 +97,14 @@ class HandleControllerTest {
   @Test
   void testResolveSingleHandle() throws Exception {
     // Given
+    String prefix = "20.5000.1025";
+    String suffix = "QRS-321-ABC";
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     JsonApiWrapper responseExpected = genHandleRecordJsonResponse(handle);
     given(service.resolveSingleRecord(handle)).willReturn(responseExpected);
 
-    ObjectNode requestData = mapper.createObjectNode();
-    ObjectNode requestId = mapper.createObjectNode();
-
-    requestId.put(NODE_ID, HANDLE);
-    requestData.set(NODE_DATA, requestId);
-
     // When
-    var responseReceived = controller.resolvePid(requestData);
+    var responseReceived = controller.resolvePid(prefix, suffix);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -335,6 +331,8 @@ class HandleControllerTest {
     // Given
 
     byte[] handle = HANDLE.getBytes();
+    String prefix = HANDLE.split("/")[0];
+    String suffix = HANDLE.split("/")[1];
     var updateAttributes = genUpdateRequestAltLoc();
     JsonApiData updateRequest = new JsonApiData(HANDLE, RECORD_TYPE_HANDLE, updateAttributes);
     ObjectNode updateRequestNode = mapper.createObjectNode();
@@ -346,7 +344,7 @@ class HandleControllerTest {
         responseExpected);
 
     // When
-    ResponseEntity<JsonApiWrapper> responseReceived = controller.updateRecord(updateRequestNode);
+    ResponseEntity<JsonApiWrapper> responseReceived = controller.updateRecord(prefix, suffix, updateRequestNode);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -365,7 +363,7 @@ class HandleControllerTest {
 
     for (byte[] handle : handles) {
       var updateAttributes = genUpdateRequestAltLoc();
-      JsonApiData updateRequest = new JsonApiData(new String(handle), RECORD_TYPE_HANDLE,
+      JsonApiData updateRequest = new JsonApiData(new String(handle, StandardCharsets.UTF_8), RECORD_TYPE_HANDLE,
           updateAttributes);
       ObjectNode updateRequestNode = mapper.createObjectNode();
       updateRequestNode.set("data", mapper.valueToTree(updateRequest));
@@ -388,6 +386,8 @@ class HandleControllerTest {
   void testArchiveRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes();
+    String prefix = HANDLE.split("/")[0];
+    String suffix = HANDLE.split("/")[1];
     var archiveAttributes = genTombstoneRequest();
     JsonApiData archiveRequest = new JsonApiData(HANDLE, RECORD_TYPE_TOMBSTONE, archiveAttributes);
 
@@ -404,7 +404,7 @@ class HandleControllerTest {
         responseExpected);
 
     // When
-    ResponseEntity<JsonApiWrapper> responseReceived = controller.archiveRecord(archiveRootNode);
+    ResponseEntity<JsonApiWrapper> responseReceived = controller.archiveRecord(prefix, suffix, archiveRootNode);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -423,7 +423,7 @@ class HandleControllerTest {
 
     for (byte[] handle : handles) {
       var updateAttributes = genTombstoneRequest();
-      JsonApiData updateRequest = new JsonApiData(new String(handle), RECORD_TYPE_TOMBSTONE,
+      JsonApiData updateRequest = new JsonApiData(new String(handle, StandardCharsets.UTF_8), RECORD_TYPE_TOMBSTONE,
           updateAttributes);
       ObjectNode updateRequestNode = mapper.createObjectNode();
       updateRequestNode.set("data", mapper.valueToTree(updateRequest));

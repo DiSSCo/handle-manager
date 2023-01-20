@@ -4,12 +4,10 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
 
 @Getter
 @ToString
 @EqualsAndHashCode(callSuper = true)
-@Slf4j
 public class DigitalSpecimenRequest extends DoiRecordRequest {
 
   private final String digitalOrPhysical;

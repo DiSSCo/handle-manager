@@ -71,13 +71,18 @@ public class HandleRepository {
 
   // Get List of Pids
   public List<String> getAllHandles(byte[] pidStatus, int pageNum, int pageSize) {
+    int offset = 0;
+    if (pageNum > 1) {
+      offset = offset + (pageSize * (pageNum - 1));
+    }
+
     return context
         .selectDistinct(HANDLES.HANDLE)
         .from(HANDLES)
         .where(HANDLES.TYPE.eq(PID_STATUS.getBytes(StandardCharsets.UTF_8)))
         .and(HANDLES.DATA.eq(pidStatus))
         .limit(pageSize)
-        .offset(pageNum)
+        .offset(offset)
         .fetch()
         .getValues(HANDLES.HANDLE, String.class);
   }
@@ -96,7 +101,7 @@ public class HandleRepository {
     return new HandleAttribute(
         row.get(HANDLES.IDX),
         row.get(HANDLES.HANDLE),
-        new String(row.get(HANDLES.TYPE)),
+        new String(row.get(HANDLES.TYPE), StandardCharsets.UTF_8),
         row.get(HANDLES.DATA));
   }
 
@@ -208,7 +213,7 @@ public class HandleRepository {
             .from(HANDLES)
             .where(HANDLES.HANDLE.eq(handle))
             .and(HANDLES.TYPE.eq(ISSUE_NUMBER.getBytes(StandardCharsets.UTF_8)))
-            .fetchOne(dbRecord -> new String(dbRecord.value1()))));
+            .fetchOne(dbRecord -> new String(dbRecord.value1(), StandardCharsets.UTF_8))));
     int version = currentVersion + 1;
 
     return context.update(HANDLES)

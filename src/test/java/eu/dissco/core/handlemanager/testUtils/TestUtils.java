@@ -492,7 +492,7 @@ public class TestUtils {
 
     for (byte[] handle : handles) {
       requestNodeData.put("type", RECORD_TYPE_HANDLE);
-      requestNodeData.put("id", new String(handle));
+      requestNodeData.put("id", new String(handle, StandardCharsets.UTF_8));
       requestNodeData.set("attributes", genUpdateRequestAltLoc());
       requestNodeRoot.set("data", requestNodeData);
 

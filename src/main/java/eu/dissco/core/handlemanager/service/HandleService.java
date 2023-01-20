@@ -68,7 +68,7 @@ public class HandleService {
 
     var recordAttributes = getRecord(handle);
 
-    JsonApiData jsonData = new JsonApiData(new String(handle), "PID", recordAttributes);
+    JsonApiData jsonData = new JsonApiData(new String(handle, StandardCharsets.UTF_8), "PID", recordAttributes);
     String pidLink = recordAttributes.get(PID).asText();
     JsonApiLinks links = new JsonApiLinks(pidLink);
     return new JsonApiWrapper(links, jsonData);
@@ -101,7 +101,7 @@ public class HandleService {
 
       Set<String> unresolvedHandles = new HashSet<>();
       for (byte[] handle : resolvedHandles) {
-        unresolvedHandles.add(new String(handle));
+        unresolvedHandles.add(new String(handle, StandardCharsets.UTF_8));
       }
       throw new PidResolutionException(
           "Unable to resolve the following handles: " + unresolvedHandles);
@@ -205,7 +205,7 @@ public class HandleService {
     var updatedRecord = getRecord(handle);
 
     // Package response
-    JsonApiData jsonData = new JsonApiData(new String(handle), recordType, updatedRecord);
+    JsonApiData jsonData = new JsonApiData(new String(handle, StandardCharsets.UTF_8), recordType, updatedRecord);
     JsonApiLinks links = new JsonApiLinks(updatedRecord.get(PID).asText());
     return new JsonApiWrapper(links, jsonData);
   }
@@ -336,7 +336,7 @@ public class HandleService {
     handleRep.postAttributesToDb(recordTimestamp, handleRecord);
     var postedRecordAttributes = getRecord(handle);
 
-    JsonApiData jsonData = new JsonApiData(new String(handle), RECORD_TYPE_HANDLE,
+    JsonApiData jsonData = new JsonApiData(new String(handle, StandardCharsets.UTF_8), RECORD_TYPE_HANDLE,
         postedRecordAttributes);
     JsonApiLinks links = new JsonApiLinks(postedRecordAttributes.get(PID).asText());
 
@@ -351,7 +351,7 @@ public class HandleService {
 
     handleRep.postAttributesToDb(recordTimestamp, handleRecord);
     var postedRecordAttributes = getRecord(handle);
-    JsonApiData jsonData = new JsonApiData(new String(handle), RECORD_TYPE_DOI,
+    JsonApiData jsonData = new JsonApiData(new String(handle, StandardCharsets.UTF_8), RECORD_TYPE_DOI,
         postedRecordAttributes);
     JsonApiLinks links = new JsonApiLinks(postedRecordAttributes.get(PID).asText());
     return new JsonApiWrapper(links, jsonData);
@@ -365,7 +365,7 @@ public class HandleService {
 
     handleRep.postAttributesToDb(recordTimestamp, handleRecord);
     var postedRecordAttributes = getRecord(handle);
-    JsonApiData jsonData = new JsonApiData(new String(handle), RECORD_TYPE_DS,
+    JsonApiData jsonData = new JsonApiData(new String(handle, StandardCharsets.UTF_8), RECORD_TYPE_DS,
         postedRecordAttributes);
     JsonApiLinks links = new JsonApiLinks(postedRecordAttributes.get(PID).asText());
     return new JsonApiWrapper(links, jsonData);
@@ -381,7 +381,7 @@ public class HandleService {
     handleRep.postAttributesToDb(recordTimestamp, handleRecord);
     var postedRecordAttributes = getRecord(handle);
 
-    JsonApiData jsonData = new JsonApiData(new String(handle), RECORD_TYPE_DS_BOTANY,
+    JsonApiData jsonData = new JsonApiData(new String(handle, StandardCharsets.UTF_8), RECORD_TYPE_DS_BOTANY,
         postedRecordAttributes);
     JsonApiLinks links = new JsonApiLinks(postedRecordAttributes.get(PID).asText());
     return new JsonApiWrapper(links, jsonData);
@@ -442,7 +442,7 @@ public class HandleService {
     var archivedRecord = getRecord(handle);
 
     // Package response
-    JsonApiData jsonData = new JsonApiData(new String(handle), RECORD_TYPE_TOMBSTONE,
+    JsonApiData jsonData = new JsonApiData(new String(handle, StandardCharsets.UTF_8), RECORD_TYPE_TOMBSTONE,
         archivedRecord);
     JsonApiLinks links = new JsonApiLinks(archivedRecord.get(PID).asText());
     return new JsonApiWrapper(links, jsonData);
@@ -507,7 +507,7 @@ public class HandleService {
       handlesToUpdate.removeAll(handlesExist);
       Set<String> handlesDontExist = new HashSet<>();
       for (byte[] handle : handlesToUpdate) {
-        handlesDontExist.add(new String(handle));
+        handlesDontExist.add(new String(handle, StandardCharsets.UTF_8));
       }
       throw new PidResolutionException(
           "INVALID INPUT. One or more handles in request do not exist or are archived. Verify the following handle(s): "
@@ -519,7 +519,7 @@ public class HandleService {
     Set<byte[]> handlesToUpdate = new HashSet<>(handles);
     Set<String> handlesToUpdateStr = new HashSet<>();
     for (byte[] handle : handlesToUpdate) {
-      handlesToUpdateStr.add(new String(handle));
+      handlesToUpdateStr.add(new String(handle, StandardCharsets.UTF_8));
     }
 
     if (handlesToUpdateStr.size() < handles.size()) {
@@ -534,14 +534,14 @@ public class HandleService {
   private Set<String> findDuplicates(List<byte[]> handles, Set<String> handlesToUpdate) {
     Set<String> duplicateHandles = new HashSet<>();
     for (byte[] handle : handles) {
-      if (!handlesToUpdate.add(new String(handle))) {
-        duplicateHandles.add(new String(handle));
+      if (!handlesToUpdate.add(new String(handle, StandardCharsets.UTF_8))) {
+        duplicateHandles.add(new String(handle, StandardCharsets.UTF_8));
       }
     }
     return duplicateHandles;
   }
 
-  private JsonNode setLocationFromJson(JsonNode request) throws PidServiceInternalError {
+  private JsonNode setLocationFromJson(JsonNode request) throws InvalidRecordInput, PidServiceInternalError{
     ObjectReader reader = mapper.readerFor(new TypeReference<List<String>>() {
     });
     JsonNode locNode = request.get(LOC_REQ);
@@ -550,13 +550,14 @@ public class HandleService {
       try {
         List<String> locList = reader.readValue(locNode);
         String[] locArr = locList.toArray(new String[0]);
-        requestObjectNode.put(LOC, new String(setLocations(locArr)));
+        requestObjectNode.put(LOC, new String(setLocations(locArr), StandardCharsets.UTF_8));
         requestObjectNode.remove(LOC_REQ);
       } catch (IOException e) {
-        throw new PidServiceInternalError(
-            "An error has occurred parsing \"locations\" array. " + e.getMessage(), e);
+        throw new InvalidRecordInput (
+            "An error has occurred parsing \"locations\" array. " + e.getMessage());
+      } catch (PidServiceInternalError e){
+        throw e;
       }
-
     }
     return requestObjectNode;
   }
@@ -576,7 +577,7 @@ public class HandleService {
 
       // Resolve data if it's a pid
       if (FIELD_IS_PID_RECORD.contains(type)) {
-        pidData = (pidTypeService.resolveTypePid(new String(data))).getBytes(
+        pidData = (pidTypeService.resolveTypePid(new String(data, StandardCharsets.UTF_8))).getBytes(
             StandardCharsets.UTF_8);
         data = pidData;
       }
@@ -607,7 +608,7 @@ public class HandleService {
         new HandleAttribute(FIELD_IDX.get(HS_ADMIN), handle, HS_ADMIN, genAdminHandle()));
 
     // 1: Pid
-    byte[] pid = ("https://hdl.handle.net/" + new String(handle)).getBytes(StandardCharsets.UTF_8);
+    byte[] pid = ("https://hdl.handle.net/" + new String(handle, StandardCharsets.UTF_8)).getBytes(StandardCharsets.UTF_8);
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(PID), handle, PID, pid));
 
     // 2: PidIssuer
@@ -728,8 +729,7 @@ public class HandleService {
     return dt.format(instant);
   }
 
-  public byte[] setLocations(String[] objectLocations)
-      throws PidServiceInternalError {
+  public byte[] setLocations(String[] objectLocations) throws PidServiceInternalError {
 
     DocumentBuilder documentBuilder = null;
     try {
@@ -768,11 +768,9 @@ public class HandleService {
   private JsonNode jsonFormatSingleRecord(List<HandleAttribute> dbRecord) {
     ObjectNode rootNode = mapper.createObjectNode();
     ObjectNode subNode;
-    String data;
-    String type;
     for (HandleAttribute row : dbRecord) {
-      type = row.type();
-      data = new String(row.data());
+      String type = row.type();
+      String data = new String(row.data());
       if (FIELD_IS_PID_RECORD.contains(type)) {
         try {
           subNode = mapper.readValue(data, ObjectNode.class);

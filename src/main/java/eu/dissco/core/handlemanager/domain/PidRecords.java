@@ -40,8 +40,6 @@ public class PidRecords {
   public static final String RECORD_TYPE_TOMBSTONE = "tombstone";
   // Fields for requests
   public static final String PID_ISSUER_REQ = "pidIssuerPid";
-  public static final String DIGITAL_OBJECT_TYPE_REQ = "digitalObjectTypePid";
-  public static final String DIGITAL_OBJECT_SUBTYPE_REQ = "digitalObjectSubtypePid";
   public static final String LOC_REQ = "locations";
   public static final String REFERENT_DOI_NAME_REQ = "referentDoiNamePid";
   public static final String SPECIMEN_HOST_REQ = "specimenHostPid";
