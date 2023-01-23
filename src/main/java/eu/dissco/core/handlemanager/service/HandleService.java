@@ -68,7 +68,8 @@ public class HandleService {
 
     var recordAttributes = getRecord(handle);
 
-    JsonApiData jsonData = new JsonApiData(new String(handle, StandardCharsets.UTF_8), "PID", recordAttributes);
+    JsonApiData jsonData = new JsonApiData(new String(handle, StandardCharsets.UTF_8), "PID",
+        recordAttributes);
     String pidLink = recordAttributes.get(PID).asText();
     JsonApiLinks links = new JsonApiLinks(pidLink);
     return new JsonApiWrapper(links, jsonData);
@@ -114,7 +115,7 @@ public class HandleService {
     HashMap<String, List<HandleAttribute>> handleMap = new HashMap<>();
 
     for (HandleAttribute row : flatList) {
-      String handle = new String(row.handle());
+      String handle = new String(row.handle(), StandardCharsets.UTF_8);
       if (handleMap.containsKey(handle)) {
         List<HandleAttribute> tmpList = new ArrayList<>(handleMap.get(handle));
         tmpList.add(row);
@@ -205,7 +206,8 @@ public class HandleService {
     var updatedRecord = getRecord(handle);
 
     // Package response
-    JsonApiData jsonData = new JsonApiData(new String(handle, StandardCharsets.UTF_8), recordType, updatedRecord);
+    JsonApiData jsonData = new JsonApiData(new String(handle, StandardCharsets.UTF_8), recordType,
+        updatedRecord);
     JsonApiLinks links = new JsonApiLinks(updatedRecord.get(PID).asText());
     return new JsonApiWrapper(links, jsonData);
   }
@@ -326,69 +328,6 @@ public class HandleService {
 
   // Create Single Record
 
-  // Json
-  public JsonApiWrapper createHandleRecordJson(HandleRecordRequest request)
-      throws PidResolutionException, PidServiceInternalError {
-    byte[] handle = hf.genHandleList(1).get(0);
-    List<HandleAttribute> handleRecord = prepareHandleRecordAttributes(request, handle);
-    var recordTimestamp = Instant.now();
-
-    handleRep.postAttributesToDb(recordTimestamp, handleRecord);
-    var postedRecordAttributes = getRecord(handle);
-
-    JsonApiData jsonData = new JsonApiData(new String(handle, StandardCharsets.UTF_8), RECORD_TYPE_HANDLE,
-        postedRecordAttributes);
-    JsonApiLinks links = new JsonApiLinks(postedRecordAttributes.get(PID).asText());
-
-    return new JsonApiWrapper(links, jsonData);
-  }
-
-  public JsonApiWrapper createDoiRecordJson(DoiRecordRequest request)
-      throws PidResolutionException, PidServiceInternalError {
-    byte[] handle = hf.genHandleList(1).get(0);
-    List<HandleAttribute> handleRecord = prepareDoiRecordAttributes(request, handle);
-    var recordTimestamp = Instant.now();
-
-    handleRep.postAttributesToDb(recordTimestamp, handleRecord);
-    var postedRecordAttributes = getRecord(handle);
-    JsonApiData jsonData = new JsonApiData(new String(handle, StandardCharsets.UTF_8), RECORD_TYPE_DOI,
-        postedRecordAttributes);
-    JsonApiLinks links = new JsonApiLinks(postedRecordAttributes.get(PID).asText());
-    return new JsonApiWrapper(links, jsonData);
-  }
-
-  public JsonApiWrapper createDigitalSpecimenJson(DigitalSpecimenRequest request)
-      throws PidResolutionException, PidServiceInternalError {
-    byte[] handle = hf.genHandleList(1).get(0);
-    List<HandleAttribute> handleRecord = prepareDigitalSpecimenRecordAttributes(request, handle);
-    var recordTimestamp = Instant.now();
-
-    handleRep.postAttributesToDb(recordTimestamp, handleRecord);
-    var postedRecordAttributes = getRecord(handle);
-    JsonApiData jsonData = new JsonApiData(new String(handle, StandardCharsets.UTF_8), RECORD_TYPE_DS,
-        postedRecordAttributes);
-    JsonApiLinks links = new JsonApiLinks(postedRecordAttributes.get(PID).asText());
-    return new JsonApiWrapper(links, jsonData);
-  }
-
-  public JsonApiWrapper createDigitalSpecimenBotanyJson(DigitalSpecimenBotanyRequest request)
-      throws PidResolutionException, PidServiceInternalError {
-    byte[] handle = hf.genHandleList(1).get(0);
-    List<HandleAttribute> handleRecord = prepareDigitalSpecimenBotanyRecordAttributes(request,
-        handle);
-    var recordTimestamp = Instant.now();
-
-    handleRep.postAttributesToDb(recordTimestamp, handleRecord);
-    var postedRecordAttributes = getRecord(handle);
-
-    JsonApiData jsonData = new JsonApiData(new String(handle, StandardCharsets.UTF_8), RECORD_TYPE_DS_BOTANY,
-        postedRecordAttributes);
-    JsonApiLinks links = new JsonApiLinks(postedRecordAttributes.get(PID).asText());
-    return new JsonApiWrapper(links, jsonData);
-  }
-
-  // Update
-
   public List<JsonApiWrapper> archiveRecordBatch(List<JsonNode> requests)
       throws InvalidRecordInput, PidResolutionException {
     var recordTimestamp = Instant.now();
@@ -442,7 +381,8 @@ public class HandleService {
     var archivedRecord = getRecord(handle);
 
     // Package response
-    JsonApiData jsonData = new JsonApiData(new String(handle, StandardCharsets.UTF_8), RECORD_TYPE_TOMBSTONE,
+    JsonApiData jsonData = new JsonApiData(new String(handle, StandardCharsets.UTF_8),
+        RECORD_TYPE_TOMBSTONE,
         archivedRecord);
     JsonApiLinks links = new JsonApiLinks(archivedRecord.get(PID).asText());
     return new JsonApiWrapper(links, jsonData);
@@ -541,7 +481,8 @@ public class HandleService {
     return duplicateHandles;
   }
 
-  private JsonNode setLocationFromJson(JsonNode request) throws InvalidRecordInput, PidServiceInternalError{
+  private JsonNode setLocationFromJson(JsonNode request)
+      throws InvalidRecordInput, PidServiceInternalError {
     ObjectReader reader = mapper.readerFor(new TypeReference<List<String>>() {
     });
     JsonNode locNode = request.get(LOC_REQ);
@@ -553,9 +494,9 @@ public class HandleService {
         requestObjectNode.put(LOC, new String(setLocations(locArr), StandardCharsets.UTF_8));
         requestObjectNode.remove(LOC_REQ);
       } catch (IOException e) {
-        throw new InvalidRecordInput (
+        throw new InvalidRecordInput(
             "An error has occurred parsing \"locations\" array. " + e.getMessage());
-      } catch (PidServiceInternalError e){
+      } catch (PidServiceInternalError e) {
         throw e;
       }
     }
@@ -577,7 +518,8 @@ public class HandleService {
 
       // Resolve data if it's a pid
       if (FIELD_IS_PID_RECORD.contains(type)) {
-        pidData = (pidTypeService.resolveTypePid(new String(data, StandardCharsets.UTF_8))).getBytes(
+        pidData = (pidTypeService.resolveTypePid(
+            new String(data, StandardCharsets.UTF_8))).getBytes(
             StandardCharsets.UTF_8);
         data = pidData;
       }
@@ -608,7 +550,8 @@ public class HandleService {
         new HandleAttribute(FIELD_IDX.get(HS_ADMIN), handle, HS_ADMIN, genAdminHandle()));
 
     // 1: Pid
-    byte[] pid = ("https://hdl.handle.net/" + new String(handle, StandardCharsets.UTF_8)).getBytes(StandardCharsets.UTF_8);
+    byte[] pid = ("https://hdl.handle.net/" + new String(handle, StandardCharsets.UTF_8)).getBytes(
+        StandardCharsets.UTF_8);
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(PID), handle, PID, pid));
 
     // 2: PidIssuer
@@ -770,7 +713,7 @@ public class HandleService {
     ObjectNode subNode;
     for (HandleAttribute row : dbRecord) {
       String type = row.type();
-      String data = new String(row.data());
+      String data = new String(row.data(), StandardCharsets.UTF_8);
       if (FIELD_IS_PID_RECORD.contains(type)) {
         try {
           subNode = mapper.readValue(data, ObjectNode.class);

@@ -52,8 +52,6 @@ class HandleServiceTest {
 
   private ObjectMapper mapper;
 
-  private Instant instant;
-
   private HandleService service;
 
   private List<byte[]> handlesList;
@@ -295,87 +293,6 @@ class HandleServiceTest {
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
-  /*
-  @Test
-  void testCreateHandleRecord1() throws Exception {
-
-    // Given
-    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-
-    var request = genHandleRecordRequestObject();
-    var responseAttributes = genHandleRecordAttributes(handle);
-    var responseExpected = genHandleRecordJsonResponse(handle);
-
-    given(hgService.genHandleList(1)).willReturn(List.of(handle));
-    given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(responseAttributes);
-
-    // When
-    var responseReceived = service.createHandleRecordJson(request);
-
-    // Then
-    assertThat(responseReceived).isEqualTo(responseExpected);
-  }
-
-  @Test
-  void testCreateDoiRecord() throws Exception {
-
-    // Given
-    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-
-    var request = genDoiRecordRequestObject();
-    var responseAttributes = genDoiRecordAttributes(handle);
-    var responseExpected = genDoiRecordJsonResponse(handle, RECORD_TYPE_DOI);
-
-    given(hgService.genHandleList(1)).willReturn(List.of(handle));
-    given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(responseAttributes);
-
-    // When
-    var responseReceived = service.createDoiRecordJson(request);
-
-    // Then
-    assertThat(responseReceived).isEqualTo(responseExpected);
-  }
-
-  @Test
-  void testCreateDigitalSpecimenRecord() throws Exception {
-
-    // Given
-    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-
-    var request = genDigitalSpecimenRequestObject();
-    var responseAttributes = genDigitalSpecimenAttributes(handle);
-    var responseExpected = genDigitalSpecimenJsonResponse(handle, RECORD_TYPE_DS);
-
-    given(hgService.genHandleList(1)).willReturn(List.of(handle));
-    given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(responseAttributes);
-
-    // When
-    var responseReceived = service.createDigitalSpecimenJson(request);
-
-    // Then
-    assertThat(responseReceived).isEqualTo(responseExpected);
-  }
-
-  @Test
-  void testCreateDigitalSpecimenBotany() throws Exception {
-
-    // Given
-    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-
-    var request = genDigitalSpecimenBotanyRequestObject();
-    var responseAttributes = genDigitalSpecimenBotanyAttributes(handle);
-    var responseExpected = genDigitalSpecimenBotanyJsonResponse(handle, RECORD_TYPE_DS_BOTANY);
-
-    given(hgService.genHandleList(1)).willReturn(List.of(handle));
-    given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(responseAttributes);
-
-    // When
-    var responseReceived = service.createDigitalSpecimenBotanyJson(request);
-
-    // Then
-    assertThat(responseReceived).isEqualTo(responseExpected);
-  } */
-
   @Test
   void testUpdateRecordLocationBatch() throws Exception {
     // Given
@@ -482,7 +399,6 @@ class HandleServiceTest {
     JsonNode archiveRequest = genTombstoneRequest();
     List<HandleAttribute> tombstoneAttributesFull = genTombstoneRecordFullAttributes(handle);
 
-    var databaseResponse = genObjectNodeAttributeRecord(tombstoneAttributesFull);
     JsonApiWrapper responseExpected = genGenericRecordJsonResponse(handle, tombstoneAttributesFull,
         RECORD_TYPE_TOMBSTONE);
 
@@ -540,23 +456,8 @@ class HandleServiceTest {
 
   // Exceptions
 
-  /*
-    @Test
-  void testPidInternalServiceError() throws Exception{
-    // Given
-    HandleRecordRequest requestObject = genHandleRecordRequestObject();
-    ObjectNode requestNode = genCreateRecordRequest(requestObject, RECORD_TYPE_HANDLE);
-    given(service.createHandleRecordJson(requestObject)).willThrow(PidServiceInternalError.class);
-
-    // Then
-    assertThrows(PidServiceInternalError.class, () -> {
-      controller.createRecord(requestNode);
-    });
-  }
-
-*/
   @Test
-  void testInvalidInputExceptionCreateHandleRecord() throws Exception {
+  void testInvalidInputExceptionCreateHandleRecord() {
     // Given
     String invalidType = "INVALID TYPE";
     String invalidMessage = "Invalid request. Reason: unrecognized type. Check: " + invalidType;
@@ -804,7 +705,7 @@ class HandleServiceTest {
 
   private void initTime() {
     Clock clock = Clock.fixed(CREATED, ZoneOffset.UTC);
-    instant = Instant.now(clock);
+    Instant instant = Instant.now(clock);
     mockedStatic = mockStatic(Instant.class);
     mockedStatic.when(Instant::now).thenReturn(instant);
     mockedStatic.when(() -> Instant.from(any())).thenReturn(instant);

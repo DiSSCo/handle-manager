@@ -44,11 +44,4 @@ public class AppConfig {
     return new Random();
   }
 
-  @Bean
-  public DSLContext dslContext(DataSource dataSource) {
-    DefaultConfiguration configuration = new DefaultConfiguration();
-    configuration.set(dataSource);
-    configuration.set(SQLDialect.POSTGRES);
-    return DSL.using(configuration);
-  }
 }

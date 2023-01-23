@@ -85,7 +85,7 @@ public class HandleController {
 
 
   @PreAuthorize("isAuthenticated()")
-  @PostMapping(value = "/records")
+  @PostMapping(value = "/records/batch")
   public ResponseEntity<List<JsonApiWrapper>> createRecords(
       @RequestBody List<JsonNode> requests)
       throws PidResolutionException, PidServiceInternalError, InvalidRecordInput {
