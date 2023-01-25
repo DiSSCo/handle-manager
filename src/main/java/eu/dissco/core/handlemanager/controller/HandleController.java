@@ -11,6 +11,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapper;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -36,10 +38,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.apache.commons.lang3.EnumUtils;
 
 @RestController
-@RequestMapping("/")
+@RequestMapping("/api/v1/pids")
 @RequiredArgsConstructor
 @ControllerAdvice
 @Slf4j
@@ -49,65 +50,66 @@ public class HandleController {
 
   private final ObjectMapper mapper;
 
-  @GetMapping("/records/{prefix}/{suffix}")
-  public ResponseEntity<JsonApiWrapper> resolvePid(
+  private final String SANDBOX_URI = "https://sandbox.dissco.tech";
+
+  @GetMapping("/{prefix}/{suffix}")
+  public ResponseEntity<JsonApiWrapperRead> resolvePid(
       @PathVariable("prefix") String prefix,
       @PathVariable("suffix") String suffix,
-      HttpServletRequest request
-  ) throws PidResolutionException, InvalidRecordInput {
-    log.info("uri: " + request.getRequestURI());
-
+      HttpServletRequest r
+  ) throws PidResolutionException {
+    String path = SANDBOX_URI + r.getRequestURI();
     byte[] handle = (prefix + "/" + suffix).getBytes(StandardCharsets.UTF_8);
 
-    JsonApiWrapper node = service.resolveSingleRecord(handle);
+    var node = service.resolveSingleRecord(handle, path);
     return ResponseEntity.status(HttpStatus.OK).body(node);
   }
 
-
-  @PostMapping("/records/view")
-  public ResponseEntity<List<JsonApiWrapper>> resolvePids(
-      @RequestBody List<JsonNode> requests
+  @PostMapping("/view")
+  public ResponseEntity<JsonApiWrapperRead> resolvePids(
+      @RequestBody List<JsonNode> requests,
+      HttpServletRequest r
   ) throws PidResolutionException, InvalidRecordInput {
-
+    String path = SANDBOX_URI + r.getRequestURI();
     List<byte[]> handles = new ArrayList<>();
 
     for (JsonNode request : requests) {
       checkRequestNodesPresent(request, true, false, true, false);
       handles.add(request.get(NODE_DATA).get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8));
     }
-    return ResponseEntity.status(HttpStatus.OK).body(service.resolveBatchRecord(handles));
+    return ResponseEntity.status(HttpStatus.OK).body(service.resolveBatchRecord(handles, path));
   }
 
   @PreAuthorize("isAuthenticated()")
-  @PostMapping(value = "/records")
-  public ResponseEntity<JsonApiWrapper> createRecord(
-      @RequestBody JsonNode request)
+  @PostMapping(value = "")
+  public ResponseEntity<JsonApiWrapperWrite> createRecord(
+      @RequestBody JsonNode request,
+      HttpServletRequest r)
       throws PidResolutionException, PidServiceInternalError, InvalidRecordInput, UnrecognizedPropertyException {
+    String path = SANDBOX_URI + r.getRequestURI();
 
     checkRequestNodesPresent(request, true, true, false, true);
-    return ResponseEntity.status(HttpStatus.CREATED)
-        .body(service.createRecord(request));
+    return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecord(request, path));
   }
 
-
   @PreAuthorize("isAuthenticated()")
-  @PostMapping(value = "/records/batch")
-  public ResponseEntity<List<JsonApiWrapper>> createRecords(
-      @RequestBody List<JsonNode> requests)
+  @PostMapping(value = "/batch")
+  public ResponseEntity<JsonApiWrapperWrite> createRecords(
+      @RequestBody List<JsonNode> requests,
+      HttpServletRequest r)
       throws PidResolutionException, PidServiceInternalError, InvalidRecordInput {
 
     for (JsonNode request : requests) {
       checkRequestNodesPresent(request, true, true, false, true);
     }
-
-    return ResponseEntity.status(HttpStatus.CREATED)
-        .body(service.createRecordBatch(requests));
+    String path = SANDBOX_URI + r.getRequestURI();
+    return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecordBatch(requests, path));
   }
 
   // Update
   @PreAuthorize("isAuthenticated()")
-  @PatchMapping(value = "/records/{prefix}/{suffix}")
-  public ResponseEntity<JsonApiWrapper> updateRecord(
+  @PatchMapping(value = "/{prefix}/{suffix}")
+  public ResponseEntity<JsonApiWrapperWrite> updateRecord(
       @PathVariable("prefix") String prefix,
       @PathVariable("suffix") String suffix,
       @RequestBody JsonNode request)
@@ -130,8 +132,8 @@ public class HandleController {
   }
 
   @PreAuthorize("isAuthenticated()")
-  @PatchMapping(value = "/records")
-  public ResponseEntity<List<JsonApiWrapper>> updateRecords(@RequestBody List<JsonNode> requests)
+  @PatchMapping(value = "/")
+  public ResponseEntity<JsonApiWrapperWrite> updateRecords(@RequestBody List<JsonNode> requests)
       throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
 
     for (JsonNode request : requests) {
@@ -140,9 +142,9 @@ public class HandleController {
     return ResponseEntity.status(HttpStatus.OK).body(service.updateRecordBatch(requests));
   }
 
-  @PreAuthorize("isAuthenticated()")
-  @PutMapping(value = "/records/{prefix}/{suffix}")
-  public ResponseEntity<JsonApiWrapper> archiveRecord(
+ // @PreAuthorize("isAuthenticated()")
+  @PutMapping(value = "/{prefix}/{suffix}")
+  public ResponseEntity<JsonApiWrapperWrite> archiveRecord(
       @PathVariable("prefix") String prefix,
       @PathVariable("suffix") String suffix,
       @RequestBody JsonNode request)
@@ -159,8 +161,8 @@ public class HandleController {
         .body(service.archiveRecord(data.get(NODE_ATTRIBUTES), handle));
   }
 
-  @PreAuthorize("isAuthenticated()")
-  @PutMapping(value = "/records")
+//  @PreAuthorize("isAuthenticated()")
+  @PutMapping(value = "/")
   public ResponseEntity<List<JsonApiWrapper>> archiveRecords(@RequestBody List<JsonNode> requests)
       throws InvalidRecordInput, PidResolutionException {
     for (JsonNode request : requests) {
@@ -177,27 +179,16 @@ public class HandleController {
   }
 
   // List all handle values
-  @GetMapping(value = "/all/rm")
-  public ResponseEntity<List<String>> getAllHandles(
-      @RequestParam(value = "pageNum", defaultValue = "0") int pageNum,
-      @RequestParam(value = "pageSize", defaultValue = "100") int pageSize)
-      throws PidResolutionException {
-    List<String> handleList = service.getHandlesPaged(pageNum, pageSize);
-    if (handleList.isEmpty()) {
-      throw new PidResolutionException("Unable to locate handles");
-    }
-    return ResponseEntity.ok(handleList);
-  }
-
   @GetMapping(value = "/all")
   public ResponseEntity<List<String>> getAllHandlesByPidStatus(
       @RequestParam(value = "pageNum", defaultValue = "0") int pageNum,
       @RequestParam(value = "pageSize", defaultValue = "100") int pageSize,
-      @RequestParam(name = "pidStatus", defaultValue = "ALL") String pidStatus)
+      @RequestParam(name = "pidStatus", defaultValue = "ALL") String pidStatus,
+      HttpServletRequest r)
       throws PidResolutionException, InvalidRecordInput {
 
     if (!VALID_PID_STATUS.contains(pidStatus)){
-      throw new InvalidRecordInput("Invalid Input. Pid Status not recognized. Available PidStatuses: " + VALID_PID_STATUS);
+      throw new InvalidRecordInput("Invalid Input. Pid Status not recognized. Available Pid Statuses: " + VALID_PID_STATUS);
     }
     List<String> handleList;
     if (pidStatus.equals("ALL")) {

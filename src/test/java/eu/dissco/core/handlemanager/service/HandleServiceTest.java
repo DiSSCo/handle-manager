@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.TransformerFactory;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -89,7 +88,7 @@ class HandleServiceTest {
     given(handleRep.resolveHandleAttributes(handle)).willReturn(recordAttributeList);
 
     // When
-    var responseReceived = service.resolveSingleRecord(handle);
+    var responseReceived = service.resolveSingleRecord(handle, null);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -107,7 +106,7 @@ class HandleServiceTest {
 
     var responseExpected = genHandleRecordJsonResponseBatch(handlesList, "PID");
     // When
-    var responseReceived = service.resolveBatchRecord(handlesList);
+    var responseReceived = service.resolveBatchRecord(handlesList, null);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -125,7 +124,7 @@ class HandleServiceTest {
     given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(handleRecord);
 
     // When
-    var responseReceived = service.createRecord(request);
+    var responseReceived = service.createRecord(request, null);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -143,7 +142,7 @@ class HandleServiceTest {
     given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(DoiRecord);
 
     // When
-    var responseReceived = service.createRecord(request);
+    var responseReceived = service.createRecord(request, null);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -161,7 +160,7 @@ class HandleServiceTest {
     given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(DigitalSpecimen);
 
     // When
-    var responseReceived = service.createRecord(request);
+    var responseReceived = service.createRecord(request, null);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -180,7 +179,7 @@ class HandleServiceTest {
     given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(DigitalSpecimenBotany);
 
     // When
-    var responseReceived = service.createRecord(request);
+    var responseReceived = service.createRecord(request, null);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -206,7 +205,7 @@ class HandleServiceTest {
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
 
     // When
-    var responseReceived = service.createRecordBatch(requests);
+    var responseReceived = service.createRecordBatch(requests, null);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -231,7 +230,7 @@ class HandleServiceTest {
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
 
     // When
-    var responseReceived = service.createRecordBatch(requests);
+    var responseReceived = service.createRecordBatch(requests, null);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -257,7 +256,7 @@ class HandleServiceTest {
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
 
     // When
-    var responseReceived = service.createRecordBatch(requests);
+    var responseReceived = service.createRecordBatch(requests, null);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -284,7 +283,7 @@ class HandleServiceTest {
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
 
     // When
-    var responseReceived = service.createRecordBatch(requests);
+    var responseReceived = service.createRecordBatch(requests, null);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -466,7 +465,7 @@ class HandleServiceTest {
 
     // When
     Exception exception = assertThrows(InvalidRecordInput.class, () -> {
-      service.createRecord(requestNode);
+      service.createRecord(requestNode, null);
     });
 
     // Then
@@ -490,7 +489,7 @@ class HandleServiceTest {
 
     // When
     Exception exception = assertThrows(InvalidRecordInput.class, () -> {
-      service.createRecordBatch(requests);
+      service.createRecordBatch(requests, null);
     });
 
     // Then
@@ -510,7 +509,7 @@ class HandleServiceTest {
 
     // When
     Exception exception = assertThrows(InvalidRecordInput.class, () -> {
-      service.createRecord(requestObjectNode);
+      service.createRecord(requestObjectNode, null);
     });
 
     // Then
@@ -530,7 +529,7 @@ class HandleServiceTest {
 
     // When
     Exception exception = assertThrows(InvalidRecordInput.class, () -> {
-      service.createRecord(requestObjectNode);
+      service.createRecord(requestObjectNode, null);
     });
 
     // Then
@@ -550,7 +549,7 @@ class HandleServiceTest {
 
     // When
     Exception exception = assertThrows(InvalidRecordInput.class, () -> {
-      service.createRecord(requestObjectNode);
+      service.createRecord(requestObjectNode, null);
     });
 
     // Then
@@ -570,7 +569,7 @@ class HandleServiceTest {
 
     // When
     Exception exception = assertThrows(InvalidRecordInput.class, () -> {
-      service.createRecord(requestObjectNode);
+      service.createRecord(requestObjectNode, null);
     });
 
     // Then
@@ -595,7 +594,7 @@ class HandleServiceTest {
 
     // When
     Exception exception = assertThrows(InvalidRecordInput.class, () -> {
-      service.createRecordBatch(requests);
+      service.createRecordBatch(requests, null);
     });
 
     // Then
@@ -617,7 +616,7 @@ class HandleServiceTest {
 
     // When
     Exception exception = assertThrows(InvalidRecordInput.class, () -> {
-      service.createRecordBatch(requests);
+      service.createRecordBatch(requests, null);
     });
 
     // Then
@@ -641,7 +640,7 @@ class HandleServiceTest {
 
     // When
     Exception exception = assertThrows(InvalidRecordInput.class, () -> {
-      service.createRecordBatch(requests);
+      service.createRecordBatch(requests, null);
     });
 
     // Then
@@ -665,7 +664,7 @@ class HandleServiceTest {
 
     // When
     Exception exception = assertThrows(InvalidRecordInput.class, () -> {
-      service.createRecordBatch(requests);
+      service.createRecordBatch(requests, null);
     });
 
     // Then

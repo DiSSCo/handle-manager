@@ -3,7 +3,6 @@ package eu.dissco.core.handlemanager.controller;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
@@ -101,7 +100,7 @@ class HandleControllerTest {
     String suffix = "QRS-321-ABC";
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     JsonApiWrapper responseExpected = genHandleRecordJsonResponse(handle);
-    given(service.resolveSingleRecord(handle)).willReturn(responseExpected);
+    given(service.resolveSingleRecord(handle, null)).willReturn(responseExpected);
 
     // When
     var responseReceived = controller.resolvePid(prefix, suffix, null);
@@ -128,10 +127,10 @@ class HandleControllerTest {
       requestRoot.add(requestData);
     }
     var responseExpected = genHandleRecordJsonResponseBatch(handles);
-    given(service.resolveBatchRecord(anyList())).willReturn(responseExpected);
+    given(service.resolveBatchRecord(anyList(), null)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.resolvePids(requestRoot);
+    var responseReceived = controller.resolvePids(requestRoot, null);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -160,10 +159,10 @@ class HandleControllerTest {
     ObjectNode requestNode = genCreateRecordRequest(requestObject, RECORD_TYPE_HANDLE);
     JsonApiWrapper responseExpected = genHandleRecordJsonResponse(handle);
 
-    given(service.createRecord(requestNode)).willReturn(responseExpected);
+    given(service.createRecord(requestNode, null)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecord(requestNode);
+    var responseReceived = controller.createRecord(requestNode, null);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -178,10 +177,10 @@ class HandleControllerTest {
     ObjectNode requestNode = genCreateRecordRequest(requestObject, RECORD_TYPE_DOI);
     JsonApiWrapper responseExpected = genDoiRecordJsonResponse(handle, RECORD_TYPE_DOI);
 
-    given(service.createRecord(requestNode)).willReturn(responseExpected);
+    given(service.createRecord(requestNode, null)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecord(requestNode);
+    var responseReceived = controller.createRecord(requestNode, null);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -196,10 +195,10 @@ class HandleControllerTest {
     ObjectNode requestNode = genCreateRecordRequest(requestObject, RECORD_TYPE_DS);
     JsonApiWrapper responseExpected = genDigitalSpecimenJsonResponse(handle, RECORD_TYPE_DS);
 
-    given(service.createRecord(requestNode)).willReturn(responseExpected);
+    given(service.createRecord(requestNode, null)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecord(requestNode);
+    var responseReceived = controller.createRecord(requestNode, null);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -215,10 +214,10 @@ class HandleControllerTest {
     JsonApiWrapper responseExpected = genDigitalSpecimenBotanyJsonResponse(handle,
         RECORD_TYPE_DS_BOTANY);
 
-    given(service.createRecord(requestNode)).willReturn(responseExpected);
+    given(service.createRecord(requestNode, null)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecord(requestNode);
+    var responseReceived = controller.createRecord(requestNode, null);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -239,7 +238,7 @@ class HandleControllerTest {
       requests.add(genCreateRecordRequest(genHandleRecordRequestObject(), RECORD_TYPE_HANDLE));
     }
     List<JsonApiWrapper> responseExpected = genHandleRecordJsonResponseBatch(handles);
-    given(service.createRecordBatch(requests)).willReturn(responseExpected);
+    given(service.createRecordBatch(requests, null)).willReturn(responseExpected);
 
     // When
     var responseReceived = controller.createRecords(requests);
@@ -261,7 +260,7 @@ class HandleControllerTest {
       requests.add(genCreateRecordRequest(genDoiRecordRequestObject(), RECORD_TYPE_DOI));
     }
     List<JsonApiWrapper> responseExpected = genDoiRecordJsonResponseBatch(handles, RECORD_TYPE_DOI);
-    given(service.createRecordBatch(requests)).willReturn(responseExpected);
+    given(service.createRecordBatch(requests, null)).willReturn(responseExpected);
 
     // When
     var responseReceived = controller.createRecords(requests);
@@ -284,7 +283,7 @@ class HandleControllerTest {
     }
     List<JsonApiWrapper> responseExpected = genDigitalSpecimenJsonResponseBatch(handles,
         RECORD_TYPE_DS);
-    given(service.createRecordBatch(requests)).willReturn(responseExpected);
+    given(service.createRecordBatch(requests, null)).willReturn(responseExpected);
 
     // When
     var responseReceived = controller.createRecords(requests);
@@ -308,7 +307,7 @@ class HandleControllerTest {
     }
     List<JsonApiWrapper> responseExpected = genDigitalSpecimenBotanyJsonResponseBatch(handles,
         RECORD_TYPE_DS_BOTANY);
-    given(service.createRecordBatch(requests)).willReturn(responseExpected);
+    given(service.createRecordBatch(requests, null)).willReturn(responseExpected);
 
     // When
     var responseReceived = controller.createRecords(requests);
@@ -460,11 +459,11 @@ class HandleControllerTest {
     DoiRecordRequest request = genDoiRecordRequestObject();
     ObjectNode requestNode = genCreateRecordRequest(request, RECORD_TYPE_DOI);
     String message = "123";
-    given(service.createRecord(requestNode)).willThrow(UnrecognizedPropertyException.class);
+    given(service.createRecord(requestNode, null)).willThrow(UnrecognizedPropertyException.class);
 
     // Then
     Exception exception = assertThrows(UnrecognizedPropertyException.class, () -> {
-      controller.createRecord(requestNode);
+      controller.createRecord(requestNode, null);
     });
 
   }
@@ -475,11 +474,11 @@ class HandleControllerTest {
     DoiRecordRequest request = genDoiRecordRequestObject();
     ObjectNode requestNode = genCreateRecordRequest(request, RECORD_TYPE_DOI);
     String message = "123";
-    given(service.createRecord(requestNode)).willThrow(new PidResolutionException(message));
+    given(service.createRecord(requestNode, null)).willThrow(new PidResolutionException(message));
 
     // Then
     Exception exception = assertThrows(PidResolutionException.class, () -> {
-      controller.createRecord(requestNode);
+      controller.createRecord(requestNode, null);
     });
 
     assertThat(exception.getMessage()).isEqualTo(message);

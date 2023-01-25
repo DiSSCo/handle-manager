@@ -12,8 +12,11 @@ import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.HandleObjectWrapper;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiData;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiDataLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapper;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.*;
 import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
@@ -62,21 +65,18 @@ public class HandleService {
   private static final String INVALID_FIELD_ERROR = "Invalid request. Attempting to add forbidden fields to record type %s. Forbidden field: %s";
   private static final String INVALID_TYPE_ERROR = "Invalid request. Reason: unrecognized type. Check: ";
 
-
   // Resolve Record
 
-  public JsonApiWrapper resolveSingleRecord(byte[] handle)
+  public JsonApiWrapperRead resolveSingleRecord(byte[] handle, String path)
       throws PidResolutionException {
 
     var recordAttributes = getRecord(handle);
-
-    JsonApiData jsonData = new JsonApiData(new String(handle, StandardCharsets.UTF_8), "PID",
-        recordAttributes);
     String pidLink = recordAttributes.get(PID).asText();
-    JsonApiLinks links = new JsonApiLinks(pidLink);
-    return new JsonApiWrapper(links, jsonData);
+    var jsonData = new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), "PID",
+        recordAttributes, new JsonApiLinks(pidLink));
+    JsonApiLinks links = new JsonApiLinks(path);
+    return new JsonApiWrapperRead(links, List.of(jsonData));
   }
-
 
   private JsonNode getRecord(byte[] handle) throws PidResolutionException {
     var dbRecord = handleRep.resolveHandleAttributes(handle);
@@ -99,7 +99,8 @@ public class HandleService {
     }
 
     if (handles.size() > resolvedHandles.size()) {
-      handles.forEach(resolvedHandles::remove); // Remove handles from resolved handle list, now it only contains unresolved handles
+      handles.forEach(
+          resolvedHandles::remove); // Remove handles from resolved handle list, now it only contains unresolved handles
 
       Set<String> unresolvedHandles = new HashSet<>();
       for (byte[] handle : resolvedHandles) {
@@ -128,96 +129,24 @@ public class HandleService {
     return handleMap;
   }
 
-  public List<JsonApiWrapper> resolveBatchRecord(List<byte[]> handles)
-      throws PidResolutionException {
-    List<JsonApiWrapper> wrapperList = new ArrayList<>();
-
-    var recordAttributeList = fetchResolvedRecords(handles);
-
-    for (JsonNode recordAttributes : recordAttributeList) {
-      wrapperList.add(wrapResponse(recordAttributes, "PID"));
-    }
-    return wrapperList;
-  }
-
   private String getPidName(String pidLink) {
     return pidLink.substring(pidLink.length() - 24);
   }
 
+  public JsonApiWrapperRead resolveBatchRecord(List<byte[]> handles, String path)
+      throws PidResolutionException {
+    List<JsonApiDataLinks> dataList = new ArrayList<>();
 
-  public List<JsonApiWrapper> updateRecordBatch(List<JsonNode> requests)
-      throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
-    var recordTimestamp = Instant.now();
-    List<byte[]> handles = new ArrayList<>();
-    List<List<HandleAttribute>> attributesToUpdate = new ArrayList<>();
-    List<String> recordTypes = new ArrayList<>();
-    List<HandleObjectWrapper> handleObjects = new ArrayList<>();
+    var recordAttributeList = fetchResolvedRecords(handles);
 
-    for (JsonNode root : requests) {
-      // Set update attributes
-      JsonNode data = root.get(NODE_DATA);
-      JsonNode requestAttributes = data.get(NODE_ATTRIBUTES);
-      String recordType = data.get(NODE_TYPE).asText();
-      recordTypes.add(recordType);
-      var keys = getKeys(requestAttributes);
-      validateRequestData(recordType, keys);
-      if (keys.contains(LOC_REQ)) {
-        requestAttributes = setLocationFromJson(requestAttributes);
-      }
-
-      byte[] handle = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
-      handles.add(handle);
-      var attributes = prepareUpdateAttributes(handle, requestAttributes);
-      handleObjects.add(new HandleObjectWrapper(handle, attributes, recordType));
-
-      // What we post to the database
-      attributesToUpdate.add(attributes);
+    for (JsonNode recordAttributes : recordAttributeList) {
+      dataList.add(wrapData(recordAttributes, "PID"));
     }
-    checkInternalDuplicates(handles);
-    checkHandlesWritable(handles);
-
-    handleRep.updateRecordBatch(recordTimestamp, attributesToUpdate);
-    var updatedRecords = fetchResolvedRecords(handles);
-
-    List<JsonApiWrapper> wrapperList = new ArrayList<>();
-    int i = 0;
-
-    for (JsonNode updatedRecord : updatedRecords) {
-      String pidLink = updatedRecord.get(PID).asText();
-      String pidName = getPidName(pidLink);
-      JsonApiData jsonData = new JsonApiData(pidName, recordTypes.get(i++), updatedRecord);
-      JsonApiLinks links = new JsonApiLinks(pidLink);
-      wrapperList.add(new JsonApiWrapper(links, jsonData));
-    }
-    return wrapperList;
+    return new JsonApiWrapperRead(new JsonApiLinks(path), dataList);
   }
 
 
-  public JsonApiWrapper updateRecord(JsonNode request, byte[] handle, String recordType)
-      throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
-
-    var recordTimestamp = Instant.now();
-
-    List<String> keys = getKeys(request);
-    validateRequestData(recordType, keys);
-    if (keys.contains(LOC_REQ)) {
-      request = setLocationFromJson(request);
-    }
-    checkHandlesWritable(List.of(handle));
-    List<HandleAttribute> attributesToUpdate = prepareUpdateAttributes(handle, request);
-
-    // Update record
-    handleRep.updateRecord(recordTimestamp, attributesToUpdate);
-    var updatedRecord = getRecord(handle);
-
-    // Package response
-    JsonApiData jsonData = new JsonApiData(new String(handle, StandardCharsets.UTF_8), recordType,
-        updatedRecord);
-    JsonApiLinks links = new JsonApiLinks(updatedRecord.get(PID).asText());
-    return new JsonApiWrapper(links, jsonData);
-  }
-
-  public JsonApiWrapper createRecord(JsonNode request)
+  public JsonApiWrapperWrite createRecord(JsonNode request, String path)
       throws InvalidRecordInput, PidResolutionException, PidServiceInternalError, UnrecognizedPropertyException {
     byte[] handle = hf.genHandleList(1).get(0);
     var recordTimestamp = Instant.now();
@@ -261,11 +190,11 @@ public class HandleService {
     handleRep.postAttributesToDb(recordTimestamp, newRecord);
     var postedRecordAttributes = getRecord(handle);
 
-    return wrapResponse(postedRecordAttributes, type);
+    return new JsonApiWrapperWrite(List.of(wrapData(postedRecordAttributes, type)));
 
   }
 
-  public List<JsonApiWrapper> createRecordBatch(List<JsonNode> requests)
+  public JsonApiWrapperWrite createRecordBatch(List<JsonNode> requests, String path)
       throws PidResolutionException, PidServiceInternalError, InvalidRecordInput {
     var recordTimestamp = Instant.now();
     List<byte[]> handles = hf.genHandleList(requests.size());
@@ -314,25 +243,82 @@ public class HandleService {
     handleRep.postAttributesToDb(recordTimestamp, handleAttributes);
     var postedRecordAttributes = fetchResolvedRecords(handlesPost);
 
-    List<JsonApiWrapper> wrapperList = new ArrayList<>();
+    List<JsonApiDataLinks> dataList = new ArrayList<>();
+
 
     for (JsonNode recordAttributes : postedRecordAttributes) {
-      wrapperList.add(wrapResponse(recordAttributes, "PID"));
+      dataList.add(wrapData(recordAttributes, "PID"));
     }
-    return wrapperList;
+    return new JsonApiWrapperWrite( dataList);
+  }
+
+  public JsonApiWrapperWrite updateRecordBatch(List<JsonNode> requests)
+      throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
+    var recordTimestamp = Instant.now();
+    List<byte[]> handles = new ArrayList<>();
+    List<List<HandleAttribute>> attributesToUpdate = new ArrayList<>();
+    List<String> recordTypes = new ArrayList<>();
+    List<HandleObjectWrapper> handleObjects = new ArrayList<>();
+
+    for (JsonNode root : requests) {
+      // Set update attributes
+      JsonNode data = root.get(NODE_DATA);
+      JsonNode requestAttributes = data.get(NODE_ATTRIBUTES);
+      String recordType = data.get(NODE_TYPE).asText();
+      recordTypes.add(recordType);
+      var keys = getKeys(requestAttributes);
+      validateRequestData(recordType, keys);
+      if (keys.contains(LOC_REQ)) {
+        requestAttributes = setLocationFromJson(requestAttributes);
+      }
+
+      byte[] handle = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
+      handles.add(handle);
+      var attributes = prepareUpdateAttributes(handle, requestAttributes);
+      handleObjects.add(new HandleObjectWrapper(handle, attributes, recordType));
+
+      // What we post to the database
+      attributesToUpdate.add(attributes);
+    }
+    checkInternalDuplicates(handles);
+    checkHandlesWritable(handles);
+
+    handleRep.updateRecordBatch(recordTimestamp, attributesToUpdate);
+    var updatedRecords = fetchResolvedRecords(handles);
+
+    List<JsonApiDataLinks> dataList = new ArrayList<>();
+    int i = 0;
+
+    for (JsonNode updatedRecord : updatedRecords) {
+      var recordType = recordTypes.get(i++);
+      dataList.add(wrapData(updatedRecord, recordType));
+    }
+    return new JsonApiWrapperWrite(dataList);
   }
 
 
-  private JsonApiWrapper wrapResponse(JsonNode recordAttributes, String recordType) {
-    String pidLink = recordAttributes.get(PID).asText();
-    String pidName = getPidName(pidLink);
-    var jsonData = new JsonApiData(pidName, recordType, recordAttributes);
-    var links = new JsonApiLinks(pidLink);
-    return new JsonApiWrapper(links, jsonData);
+  public JsonApiWrapperWrite updateRecord(JsonNode request, byte[] handle, String recordType)
+      throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
+
+    var recordTimestamp = Instant.now();
+
+    List<String> keys = getKeys(request);
+    validateRequestData(recordType, keys);
+    if (keys.contains(LOC_REQ)) {
+      request = setLocationFromJson(request);
+    }
+    checkHandlesWritable(List.of(handle));
+    List<HandleAttribute> attributesToUpdate = prepareUpdateAttributes(handle, request);
+
+    // Update record
+    handleRep.updateRecord(recordTimestamp, attributesToUpdate);
+    var updatedRecord = getRecord(handle);
+
+    // Package response
+    return new JsonApiWrapperWrite(List.of(wrapData(updatedRecord, recordType)));
   }
 
-  // Create Single Record
-
+  // Archive
   public List<JsonApiWrapper> archiveRecordBatch(List<JsonNode> requests)
       throws InvalidRecordInput, PidResolutionException {
     var recordTimestamp = Instant.now();
@@ -369,7 +355,7 @@ public class HandleService {
     return wrapperList;
   }
 
-  public JsonApiWrapper archiveRecord(JsonNode request, byte[] handle)
+  public JsonApiWrapperWrite archiveRecord(JsonNode request, byte[] handle)
       throws InvalidRecordInput, PidResolutionException {
     var recordTimestamp = Instant.now();
     List<String> keys = getKeys(request);
@@ -386,13 +372,24 @@ public class HandleService {
     var archivedRecord = getRecord(handle);
 
     // Package response
-    JsonApiData jsonData = new JsonApiData(new String(handle, StandardCharsets.UTF_8),
-        RECORD_TYPE_TOMBSTONE,
-        archivedRecord);
-    JsonApiLinks links = new JsonApiLinks(archivedRecord.get(PID).asText());
+    return new JsonApiWrapperWrite(List.of(wrapData(archivedRecord, RECORD_TYPE_TOMBSTONE)));
+  }
+
+
+  private JsonApiWrapper wrapResponse(JsonNode recordAttributes, String recordType) {
+    String pidLink = recordAttributes.get(PID).asText();
+    String pidName = getPidName(pidLink);
+    var jsonData = new JsonApiData(pidName, recordType, recordAttributes);
+    var links = new JsonApiLinks(pidLink);
     return new JsonApiWrapper(links, jsonData);
   }
 
+  private JsonApiDataLinks wrapData(JsonNode recordAttributes, String recordType) {
+    String pidLink = recordAttributes.get(PID).asText();
+    String pidName = getPidName(pidLink);
+    var handleLink = new JsonApiLinks(pidLink);
+    return new JsonApiDataLinks(pidName, recordType, recordAttributes, handleLink);
+  }
 
   private List<String> getKeys(JsonNode request) {
     List<String> keys = new ArrayList<>();

@@ -3,6 +3,7 @@ package eu.dissco.core.handlemanager.domain;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -51,7 +52,7 @@ public class PidRecords {
   public static final String NODE_TYPE = "type";
 
   // Pid Status
-  public static final Set<String> VALID_PID_STATUS = Set.of(
+  public static final Set<String> VALID_PID_STATUS = new HashSet<>(List.of(
       "ACTIVE",
       "ARCHIVED",
       "DRAFT",
@@ -59,7 +60,7 @@ public class PidRecords {
       "TEST",
       "TEST2",
       "ALL"
-  );
+  ));
 
   // Permitted fields for each record type
   public static final Set<String> HANDLE_RECORD_FIELDS = Set.of(PID, PID_ISSUER,
