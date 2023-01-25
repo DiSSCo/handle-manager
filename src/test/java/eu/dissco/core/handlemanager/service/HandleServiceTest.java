@@ -38,7 +38,6 @@ import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-@Slf4j
 class HandleServiceTest {
 
   @Mock
@@ -251,8 +250,6 @@ class HandleServiceTest {
       requests.add(genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_DS));
       flatList.addAll(genDigitalSpecimenAttributes(handle));
     }
-
-    log.info(requests.toString());
 
     List<JsonApiWrapper> responseExpected = genDigitalSpecimenJsonResponseBatch(handles, "PID");
 
@@ -508,7 +505,6 @@ class HandleServiceTest {
     ObjectNode requestObjectNode = genCreateRecordRequest(request, RECORD_TYPE_HANDLE);
 
     ((ObjectNode) requestObjectNode.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(PID_ISSUER_REQ);
-    log.info(requestObjectNode.toString());
 
     given(hgService.genHandleList(1)).willReturn(List.of(HANDLE.getBytes(StandardCharsets.UTF_8)));
 
@@ -529,7 +525,6 @@ class HandleServiceTest {
 
     ((ObjectNode) requestObjectNode.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(
         REFERENT_DOI_NAME_REQ);
-    log.info(requestObjectNode.toString());
 
     given(hgService.genHandleList(1)).willReturn(List.of(HANDLE.getBytes(StandardCharsets.UTF_8)));
 
@@ -550,7 +545,6 @@ class HandleServiceTest {
 
     ((ObjectNode) requestObjectNode.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(
         IN_COLLECTION_FACILITY_REQ);
-    log.info(requestObjectNode.toString());
 
     given(hgService.genHandleList(1)).willReturn(List.of(HANDLE.getBytes(StandardCharsets.UTF_8)));
 
@@ -571,7 +565,6 @@ class HandleServiceTest {
 
     ((ObjectNode) requestObjectNode.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(
         PRESERVED_OR_LIVING);
-    log.info(requestObjectNode.toString());
 
     given(hgService.genHandleList(1)).willReturn(List.of(HANDLE.getBytes(StandardCharsets.UTF_8)));
 
@@ -619,7 +612,6 @@ class HandleServiceTest {
       ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(REFERENT_DOI_NAME_REQ);
       requests.add(request);
     }
-    log.info(requests.toString());
 
     given(hgService.genHandleList(2)).willReturn(handles);
 

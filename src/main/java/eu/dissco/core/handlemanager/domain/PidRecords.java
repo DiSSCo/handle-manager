@@ -49,6 +49,18 @@ public class PidRecords {
   public static final String NODE_DATA = "data";
   public static final String NODE_ID = "id";
   public static final String NODE_TYPE = "type";
+
+  // Pid Status
+  public static final Set<String> VALID_PID_STATUS = Set.of(
+      "ACTIVE",
+      "ARCHIVED",
+      "DRAFT",
+      "RESERVED",
+      "TEST",
+      "TEST2",
+      "ALL"
+  );
+
   // Permitted fields for each record type
   public static final Set<String> HANDLE_RECORD_FIELDS = Set.of(PID, PID_ISSUER,
       DIGITAL_OBJECT_TYPE, DIGITAL_OBJECT_SUBTYPE, LOC,

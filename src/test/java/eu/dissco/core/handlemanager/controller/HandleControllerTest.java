@@ -104,7 +104,7 @@ class HandleControllerTest {
     given(service.resolveSingleRecord(handle)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.resolvePid(prefix, suffix);
+    var responseReceived = controller.resolvePid(prefix, suffix, null);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);

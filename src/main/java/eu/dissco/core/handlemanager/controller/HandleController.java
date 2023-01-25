@@ -5,6 +5,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.VALID_PID_STATUS;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -34,6 +36,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.apache.commons.lang3.EnumUtils;
 
 @RestController
 @RequestMapping("/")
@@ -49,14 +52,17 @@ public class HandleController {
   @GetMapping("/records/{prefix}/{suffix}")
   public ResponseEntity<JsonApiWrapper> resolvePid(
       @PathVariable("prefix") String prefix,
-      @PathVariable("suffix") String suffix
+      @PathVariable("suffix") String suffix,
+      HttpServletRequest request
   ) throws PidResolutionException, InvalidRecordInput {
+    log.info("uri: " + request.getRequestURI());
 
     byte[] handle = (prefix + "/" + suffix).getBytes(StandardCharsets.UTF_8);
 
     JsonApiWrapper node = service.resolveSingleRecord(handle);
     return ResponseEntity.status(HttpStatus.OK).body(node);
   }
+
 
   @PostMapping("/records/view")
   public ResponseEntity<List<JsonApiWrapper>> resolvePids(
@@ -171,7 +177,7 @@ public class HandleController {
   }
 
   // List all handle values
-  @GetMapping(value = "/all")
+  @GetMapping(value = "/all/rm")
   public ResponseEntity<List<String>> getAllHandles(
       @RequestParam(value = "pageNum", defaultValue = "0") int pageNum,
       @RequestParam(value = "pageSize", defaultValue = "100") int pageSize)
@@ -183,14 +189,23 @@ public class HandleController {
     return ResponseEntity.ok(handleList);
   }
 
-  @GetMapping(value = "/all", params = {"pidStatus", "pageNum", "pageSize"})
+  @GetMapping(value = "/all")
   public ResponseEntity<List<String>> getAllHandlesByPidStatus(
       @RequestParam(value = "pageNum", defaultValue = "0") int pageNum,
       @RequestParam(value = "pageSize", defaultValue = "100") int pageSize,
-      @RequestParam(name = "pidStatus") String pidStatus)
-      throws PidResolutionException {
+      @RequestParam(name = "pidStatus", defaultValue = "ALL") String pidStatus)
+      throws PidResolutionException, InvalidRecordInput {
 
-    List<String> handleList = service.getHandlesPaged(pageNum, pageSize, pidStatus);
+    if (!VALID_PID_STATUS.contains(pidStatus)){
+      throw new InvalidRecordInput("Invalid Input. Pid Status not recognized. Available PidStatuses: " + VALID_PID_STATUS);
+    }
+    List<String> handleList;
+    if (pidStatus.equals("ALL")) {
+      handleList = service.getHandlesPaged(pageNum, pageSize);
+    }
+    else {
+      handleList = service.getHandlesPaged(pageNum, pageSize, pidStatus);
+    }
     if (handleList.isEmpty()) {
       throw new PidResolutionException("Unable to resolve pids");
     }
@@ -219,9 +234,9 @@ public class HandleController {
   @ExceptionHandler(PidServiceInternalError.class)
   private ResponseEntity<String> pidServiceInternalError(PidServiceInternalError e) {
     String message;
-    if (e.getExceptionCause() != null) {
-      message = e.getMessage() + ". Cause: " + e.getExceptionCause().toString() + "\n "
-          + e.getExceptionCause().getLocalizedMessage();
+    if (e.getCause() != null) {
+      message = e.getMessage() + ". Cause: " + e.getCause().toString() + "\n "
+          + e.getCause().getLocalizedMessage();
     } else {
       message = e.getMessage();
     }

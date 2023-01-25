@@ -25,7 +25,6 @@ import org.springframework.stereotype.Repository;
 public class HandleRepository {
 
   private static final int TTL = 86400;
-  private static final String PID_ROLLBACK_MESSAGE = "An error has occured posting the record. Reason: %s. Rolling back";
   private final DSLContext context;
   private final ObjectMapper mapper;
 
@@ -56,7 +55,7 @@ public class HandleRepository {
         .select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
         .from(HANDLES)
         .where(HANDLES.HANDLE.eq(handle))
-        .and(HANDLES.TYPE.notEqual(HS_ADMIN.getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
+        .and(HANDLES.TYPE.notEqual(HS_ADMIN.getBytes(StandardCharsets.UTF_8)))
         .fetch(this::mapToAttribute);
   }
 
@@ -65,7 +64,7 @@ public class HandleRepository {
         .select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
         .from(HANDLES)
         .where(HANDLES.HANDLE.in(handles))
-        .and(HANDLES.TYPE.notEqual(HS_ADMIN.getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
+        .and(HANDLES.TYPE.notEqual(HS_ADMIN.getBytes(StandardCharsets.UTF_8)))
         .fetch(this::mapToAttribute);
   }
 

@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import eu.dissco.core.handlemanager.domain.HandleObjectWrapper;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiData;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapper;
@@ -61,6 +62,7 @@ public class HandleService {
   private static final String INVALID_FIELD_ERROR = "Invalid request. Attempting to add forbidden fields to record type %s. Forbidden field: %s";
   private static final String INVALID_TYPE_ERROR = "Invalid request. Reason: unrecognized type. Check: ";
 
+
   // Resolve Record
 
   public JsonApiWrapper resolveSingleRecord(byte[] handle)
@@ -97,8 +99,7 @@ public class HandleService {
     }
 
     if (handles.size() > resolvedHandles.size()) {
-      handles.forEach(
-          resolvedHandles::remove); // Removes handles from resolved handle list, now it only contains unresolved handles
+      handles.forEach(resolvedHandles::remove); // Remove handles from resolved handle list, now it only contains unresolved handles
 
       Set<String> unresolvedHandles = new HashSet<>();
       for (byte[] handle : resolvedHandles) {
@@ -143,7 +144,6 @@ public class HandleService {
     return pidLink.substring(pidLink.length() - 24);
   }
 
-  // Batch Creation Json
 
   public List<JsonApiWrapper> updateRecordBatch(List<JsonNode> requests)
       throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
@@ -151,22 +151,27 @@ public class HandleService {
     List<byte[]> handles = new ArrayList<>();
     List<List<HandleAttribute>> attributesToUpdate = new ArrayList<>();
     List<String> recordTypes = new ArrayList<>();
+    List<HandleObjectWrapper> handleObjects = new ArrayList<>();
 
     for (JsonNode root : requests) {
+      // Set update attributes
       JsonNode data = root.get(NODE_DATA);
       JsonNode requestAttributes = data.get(NODE_ATTRIBUTES);
       String recordType = data.get(NODE_TYPE).asText();
       recordTypes.add(recordType);
-
-      byte[] handle = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
-      handles.add(handle);
-
       var keys = getKeys(requestAttributes);
       validateRequestData(recordType, keys);
       if (keys.contains(LOC_REQ)) {
         requestAttributes = setLocationFromJson(requestAttributes);
       }
-      attributesToUpdate.add(prepareUpdateAttributes(handle, requestAttributes));
+
+      byte[] handle = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
+      handles.add(handle);
+      var attributes = prepareUpdateAttributes(handle, requestAttributes);
+      handleObjects.add(new HandleObjectWrapper(handle, attributes, recordType));
+
+      // What we post to the database
+      attributesToUpdate.add(attributes);
     }
     checkInternalDuplicates(handles);
     checkHandlesWritable(handles);
