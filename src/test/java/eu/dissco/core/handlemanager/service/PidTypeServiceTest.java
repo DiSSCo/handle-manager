@@ -1,5 +1,14 @@
 package eu.dissco.core.handlemanager.service;
 
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_ISSUER_PID;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PTR_DOI_RECORD;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PTR_HANDLE_RECORD;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PTR_PID;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PTR_PID_DOI;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PTR_PRIMARY_NAME;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PTR_REGISTRATION_DOI_NAME;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PTR_TYPE;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PTR_TYPE_DOI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
@@ -8,9 +17,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
-
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.*;
-
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.util.ArrayList;

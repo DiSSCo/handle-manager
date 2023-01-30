@@ -7,7 +7,6 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_TOMBSTONE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_LIST_STR;
@@ -34,7 +33,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiData;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
@@ -329,6 +327,14 @@ class HandleControllerTest {
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
   }
 
+  private JsonNode givenJsonNode(String id, String type, JsonNode attributes){
+    ObjectNode node = mapper.createObjectNode();
+    node.put("id", id);
+    node.put("type", type);
+    node.set("attributes", attributes);
+    return node;
+  }
+
   @Test
   void testUpdateRecord() throws Exception {
     // Given
@@ -336,10 +342,8 @@ class HandleControllerTest {
     String prefix = HANDLE.split("/")[0];
     String suffix = HANDLE.split("/")[1];
     var updateAttributes = genUpdateRequestAltLoc();
-    JsonApiData updateRequest = new JsonApiData(HANDLE, RECORD_TYPE_HANDLE, updateAttributes);
     ObjectNode updateRequestNode = mapper.createObjectNode();
-    updateRequestNode.set("data", mapper.valueToTree(updateRequest));
-    log.info(updateRequestNode.toString());
+    updateRequestNode.set("data", givenJsonNode(HANDLE, RECORD_TYPE_HANDLE, updateAttributes));
 
     var responseExpected = givenRecordResponseWriteAltLoc(List.of(handle));
     given(service.updateRecord(updateAttributes, handle, RECORD_TYPE_HANDLE)).willReturn(
@@ -353,6 +357,7 @@ class HandleControllerTest {
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
 
+
   @Test
   void testUpdateRecordBatch() throws Exception {
     // Given
@@ -365,13 +370,10 @@ class HandleControllerTest {
 
     for (byte[] handle : handles) {
       var updateAttributes = genUpdateRequestAltLoc();
-      JsonApiData updateRequest = new JsonApiData(new String(handle, StandardCharsets.UTF_8), RECORD_TYPE_HANDLE,
-          updateAttributes);
       ObjectNode updateRequestNode = mapper.createObjectNode();
-      updateRequestNode.set("data", mapper.valueToTree(updateRequest));
+      updateRequestNode.set("data", givenJsonNode(HANDLE, RECORD_TYPE_HANDLE, updateAttributes));
       updateRequestList.add(updateRequestNode.deepCopy());
     }
-
 
     given(service.updateRecordBatch(updateRequestList)).willReturn(responseExpected);
 
@@ -383,7 +385,6 @@ class HandleControllerTest {
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
 
-
   @Test
   void testArchiveRecord() throws Exception {
     // Given
@@ -391,11 +392,9 @@ class HandleControllerTest {
     String prefix = HANDLE.split("/")[0];
     String suffix = HANDLE.split("/")[1];
     var archiveAttributes = genTombstoneRequest();
-    JsonApiData archiveRequest = new JsonApiData(HANDLE, RECORD_TYPE_TOMBSTONE, archiveAttributes);
 
     ObjectNode archiveRootNode = mapper.createObjectNode();
-    archiveRootNode.set("data", mapper.valueToTree(archiveRequest));
-
+    archiveRootNode.set("data", givenJsonNode(HANDLE, RECORD_TYPE_HANDLE, archiveAttributes));
     ObjectNode archiveRequestNode = (ObjectNode) archiveRootNode.get(NODE_DATA)
         .get(NODE_ATTRIBUTES);
 
@@ -411,8 +410,6 @@ class HandleControllerTest {
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
-
-
   @Test
   void testArchiveRecordBatch() throws Exception {
     // Given
@@ -423,14 +420,11 @@ class HandleControllerTest {
     List<JsonNode> updateRequestList = new ArrayList<>();
 
     for (byte[] handle : handles) {
-      var updateAttributes = genTombstoneRequest();
-      JsonApiData updateRequest = new JsonApiData(new String(handle, StandardCharsets.UTF_8), RECORD_TYPE_TOMBSTONE,
-          updateAttributes);
-      ObjectNode updateRequestNode = mapper.createObjectNode();
-      updateRequestNode.set("data", mapper.valueToTree(updateRequest));
-      updateRequestList.add(updateRequestNode.deepCopy());
+      var archiveAttributes = genTombstoneRequest();
+      ObjectNode archiveRootNode = mapper.createObjectNode();
+      archiveRootNode.set("data", givenJsonNode(HANDLE, RECORD_TYPE_HANDLE, archiveAttributes));
+      updateRequestList.add(archiveRootNode.deepCopy());
     }
-
     var responseExpected = givenRecordResponseWriteArchive(handles);
 
     given(service.archiveRecordBatch(updateRequestList)).willReturn(responseExpected);

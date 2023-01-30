@@ -1,16 +1,38 @@
 package eu.dissco.core.handlemanager.testUtils;
 
-import static eu.dissco.core.handlemanager.domain.PidRecords.*;
-import static eu.dissco.core.handlemanager.utils.Resources.genAdminHandle;
+import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_SUBTYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OR_PHYSICAL;
+import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
+import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IS_PID_RECORD;
+import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
+import static eu.dissco.core.handlemanager.domain.PidRecords.IN_COLLECTION_FACILITY;
+import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_DATE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_NUMBER;
+import static eu.dissco.core.handlemanager.domain.PidRecords.LOC;
+import static eu.dissco.core.handlemanager.domain.PidRecords.LOC_REQ;
+import static eu.dissco.core.handlemanager.domain.PidRecords.OBJECT_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID_KERNEL_METADATA_LICENSE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PRESERVED_OR_LIVING;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_TOMBSTONE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT;
+import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
+import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
+import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_TEXT;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiData;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiDataLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
-import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapper;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
@@ -18,7 +40,6 @@ import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.HandleRecordRequest;
-import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -85,9 +106,6 @@ public class TestUtils {
   // Tombstone Record vals
   public final static String TOMBSTONE_TEXT_TESTVAL = "pid was deleted";
 
-
-
-
   private TestUtils() {
     throw new IllegalStateException("Utility class");
   }
@@ -119,10 +137,6 @@ public class TestUtils {
 
     List<HandleAttribute> handleRecord = new ArrayList<>();
     byte[] ptr_record = PTR_HANDLE_RECORD.getBytes(StandardCharsets.UTF_8);
-
-    // 100: Admin Handle
-    //handleRecord.add(
-    //    new HandleAttribute(FIELD_IDX.get(HS_ADMIN), handle, HS_ADMIN, genAdminHandle()));
 
     // 1: Pid
     byte[] pid = ("https://hdl.handle.net/" + new String(handle)).getBytes(StandardCharsets.UTF_8);
@@ -170,15 +184,6 @@ public class TestUtils {
             PID_KERNEL_METADATA_LICENSE,
             PID_KERNEL_METADATA_LICENSE_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
-    return handleRecord;
-  }
-
-  public static List<HandleAttribute> addHsAdmin(List<HandleAttribute> handleRecord) {
-    byte[] ptr_record = PTR_HANDLE_RECORD.getBytes(StandardCharsets.UTF_8);
-    byte[] handle = handleRecord.get(0).handle();
-    var hsAdmin = new HandleAttribute(FIELD_IDX.get(PID_ISSUER), handle, PID_ISSUER, ptr_record);
-
-    handleRecord.add(hsAdmin);
     return handleRecord;
   }
 
@@ -333,41 +338,6 @@ public class TestUtils {
         PRESERVED_OR_LIVING_TESTVAL);
   }
 
-  // Batch Requests
-
-  public static List<HandleRecordRequest> genHandleRecordRequestBatch(List<byte[]> handles) {
-    List<HandleRecordRequest> requestList = new ArrayList<>();
-    for (int i = 0; i < handles.size(); i++) {
-      requestList.add(genDoiRecordRequestObject());
-    }
-    return requestList;
-  }
-
-  public static List<DoiRecordRequest> genDoiRecordRequestBatch(List<byte[]> handles) {
-    List<DoiRecordRequest> requestList = new ArrayList<>();
-    for (int i = 0; i < handles.size(); i++) {
-      requestList.add(genDoiRecordRequestObject());
-    }
-    return requestList;
-  }
-
-  public static List<DigitalSpecimenRequest> genDigitalSpecimenRequestBatch(List<byte[]> handles) {
-    List<DigitalSpecimenRequest> requestList = new ArrayList<>();
-    for (int i = 0; i < handles.size(); i++) {
-      requestList.add(genDigitalSpecimenRequestObject());
-    }
-    return requestList;
-  }
-
-  public static List<DigitalSpecimenBotanyRequest> genDigitalSpecimenBotanyRequestBatch(
-      List<byte[]> handles) {
-    List<DigitalSpecimenBotanyRequest> requestList = new ArrayList<>();
-    for (int i = 0; i < handles.size(); i++) {
-      requestList.add(genDigitalSpecimenBotanyRequestObject());
-    }
-    return requestList;
-  }
-
   public static JsonApiWrapperRead givenRecordResponseRead(List<byte[]> handles, String path, String recordType)
       throws JsonProcessingException {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
@@ -460,126 +430,6 @@ public class TestUtils {
     }
   }
 
-
-  public static JsonApiWrapper genHandleRecordJsonResponse(byte[] handle)
-      throws JsonProcessingException {
-    var testDbRecord = genHandleRecordAttributes(handle);
-    return genGenericRecordJsonResponse(handle, testDbRecord, RECORD_TYPE_HANDLE);
-  }
-
-  public static JsonApiWrapper genHandleRecordJsonResponse(byte[] handle, String recordType)
-      throws JsonProcessingException {
-    var testDbRecord = genHandleRecordAttributes(handle);
-    return genGenericRecordJsonResponse(handle, testDbRecord, recordType);
-  }
-
-  public static JsonApiWrapper genDoiRecordJsonResponse(byte[] handle, String recordType)
-      throws JsonProcessingException {
-    var testDbRecord = genDoiRecordAttributes(handle);
-    return genGenericRecordJsonResponse(handle, testDbRecord, recordType);
-  }
-
-  public static JsonApiWrapper genDigitalSpecimenJsonResponse(byte[] handle, String recordType)
-      throws JsonProcessingException {
-    var testDbRecord = genDigitalSpecimenAttributes(handle);
-    return genGenericRecordJsonResponse(handle, testDbRecord, recordType);
-  }
-
-  public static JsonApiWrapper genDigitalSpecimenBotanyJsonResponse(byte[] handle,
-      String recordType)
-      throws JsonProcessingException {
-    var testDbRecord = genDigitalSpecimenBotanyAttributes(handle);
-    return genGenericRecordJsonResponse(handle, testDbRecord, recordType);
-  }
-
-  public static JsonApiWrapper genGenericRecordJsonResponse(byte[] handle,
-      List<HandleAttribute> testDbRecord, String recordType)
-      throws JsonProcessingException {
-    JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
-    JsonApiData jsonData = new JsonApiData(new String(handle), recordType, recordAttributes);
-    JsonApiLinks links = new JsonApiLinks(recordAttributes.get("pid").asText());
-    return new JsonApiWrapper(links, jsonData);
-  }
-
-  // Batch JsonApiWrapper Response
-  public static List<JsonApiWrapper> genHandleRecordJsonResponseBatch(List<byte[]> handles)
-      throws JsonProcessingException {
-    List<JsonApiWrapper> wrapperList = new ArrayList<>();
-
-    for (byte[] handle : handles) {
-      wrapperList.add(genHandleRecordJsonResponse(handle));
-    }
-    return wrapperList;
-  }
-
-  public static List<JsonApiWrapper> genHandleRecordJsonResponseBatch(List<byte[]> handles,
-      String recordType)
-      throws JsonProcessingException {
-    List<JsonApiWrapper> wrapperList = new ArrayList<>();
-
-    for (byte[] handle : handles) {
-      wrapperList.add(genHandleRecordJsonResponse(handle, recordType));
-    }
-    return wrapperList;
-  }
-
-  public static List<JsonApiWrapper> genDoiRecordJsonResponseBatch(List<byte[]> handles,
-      String recordType)
-      throws JsonProcessingException {
-    List<JsonApiWrapper> wrapperList = new ArrayList<>();
-
-    for (byte[] handle : handles) {
-      wrapperList.add(genDoiRecordJsonResponse(handle, recordType));
-    }
-    return wrapperList;
-  }
-
-  public static List<JsonApiWrapper> genDigitalSpecimenJsonResponseBatch(List<byte[]> handles,
-      String recordType)
-      throws JsonProcessingException {
-    List<JsonApiWrapper> wrapperList = new ArrayList<>();
-
-    for (byte[] handle : handles) {
-      wrapperList.add(genDigitalSpecimenJsonResponse(handle, recordType));
-    }
-    return wrapperList;
-  }
-
-  public static List<JsonApiWrapper> genDigitalSpecimenBotanyJsonResponseBatch(List<byte[]> handles,
-      String recordType)
-      throws JsonProcessingException {
-    List<JsonApiWrapper> wrapperList = new ArrayList<>();
-
-    for (byte[] handle : handles) {
-      wrapperList.add(genDigitalSpecimenBotanyJsonResponse(handle, recordType));
-    }
-    return wrapperList;
-  }
-
-  // Update test functions
-  public static List<JsonApiWrapper> genUpdateAltLocResponseBatch(List<byte[]> handles)
-      throws JsonProcessingException, ParserConfigurationException, TransformerException {
-    List<JsonApiWrapper> wrapperList = new ArrayList<>();
-
-    for (byte[] handle : handles) {
-      wrapperList.add(genHandleRecordJsonResponseAltLoc(handle));
-    }
-    return wrapperList;
-  }
-
-  public static List<JsonApiWrapper> genTombstoneResponseBatch(List<byte[]> handles)
-      throws JsonProcessingException, ParserConfigurationException, TransformerException {
-    List<JsonApiWrapper> wrapperList = new ArrayList<>();
-
-    for (byte[] handle : handles) {
-      var tombstoneAttributesFull = genTombstoneRecordFullAttributes(handle);
-      var singleTombstoneRecordResponse = genGenericRecordJsonResponse(handle,
-          tombstoneAttributesFull, RECORD_TYPE_TOMBSTONE);
-      wrapperList.add(singleTombstoneRecordResponse);
-    }
-    return wrapperList;
-  }
-
   // Update Requests
 
   public static List<JsonNode> genUpdateRequestBatch(List<byte[]> handles) {
@@ -637,13 +487,6 @@ public class TestUtils {
     return rootNode;
   }
 
-
-  public static JsonApiWrapper genHandleRecordJsonResponseAltLoc(byte[] handle)
-      throws JsonProcessingException, ParserConfigurationException, TransformerException {
-    var testDbRecord = genHandleRecordAttributesAltLoc(handle);
-    return genGenericRecordJsonResponse(handle, testDbRecord, RECORD_TYPE_HANDLE);
-  }
-
   // Handle Attributes as ObjectNode 
   public static JsonNode genObjectNodeAttributeRecord(List<HandleAttribute> dbRecord)
       throws JsonProcessingException {
@@ -667,26 +510,7 @@ public class TestUtils {
     return rootNode;
   }
 
-  public static List<JsonNode> genObjectNodeRecordBatch(List<List<HandleAttribute>> dbRecords)
-      throws JsonProcessingException {
-    List<JsonNode> nodeList = new ArrayList<>();
-    for (List<HandleAttribute> dbRecord : dbRecords) {
-      nodeList.add(genObjectNodeAttributeRecord(dbRecord));
-    }
-    return nodeList;
-  }
-
   // Other Functions
-
-  private static String getLocString() {
-    byte[] loc = "".getBytes(StandardCharsets.UTF_8);
-    try {
-      loc = setLocations(LOC_TESTVAL);
-    } catch (TransformerException | ParserConfigurationException e) {
-      e.printStackTrace();
-    }
-    return new String(loc);
-  }
 
   public static byte[] setLocations(String[] objectLocations)
       throws TransformerException, ParserConfigurationException {
