@@ -138,7 +138,7 @@ public class HandleController {
       @RequestBody JsonNode request)
       throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
 
-    checkRequestNodesPresent(request, true, true, false, true);
+    checkRequestNodesPresent(request, true, true, true, true);
 
     JsonNode data = request.get(NODE_DATA);
     byte[] handle = (prefix + "/" + suffix).getBytes(StandardCharsets.UTF_8);
@@ -196,6 +196,8 @@ public class HandleController {
 
   private void checkRequestNodesPresent(JsonNode requestRoot, boolean checkData, boolean checkType,
       boolean checkId, boolean checkAttributes) throws InvalidRecordInput {
+
+
     String errorMsg = "INVALID INPUT. Missing node \" %s \"";
     if (checkData && !requestRoot.has(NODE_DATA)) {
       throw new InvalidRecordInput(String.format(errorMsg, NODE_DATA));

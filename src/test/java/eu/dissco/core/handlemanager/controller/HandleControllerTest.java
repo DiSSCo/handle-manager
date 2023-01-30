@@ -7,6 +7,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.VALID_PID_STATUS;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_LIST_STR;
@@ -39,6 +40,7 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.HandleRecordRequest;
+import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.service.HandleService;
 import java.nio.charset.StandardCharsets;
@@ -58,6 +60,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 @ExtendWith(MockitoExtension.class)
 @Slf4j
 class HandleControllerTest {
+
   @Mock
   private HandleService service;
   private HandleController controller;
@@ -70,7 +73,6 @@ class HandleControllerTest {
   void setup() {
     controller = new HandleController(service);
   }
-
 
   @Test
   void testGetAllHandlesByPidStatus() throws Exception {
@@ -91,6 +93,19 @@ class HandleControllerTest {
     assertThat(expectedHandles).isEqualTo(response.getBody());
   }
 
+  @Test
+  void testGetAllHandlesByPidStatusInvalid() {
+    int pageSize = 10;
+    int pageNum = 1;
+    String pidStatus = "BAD";
+
+    var exception = assertThrowsExactly(InvalidRecordInput.class,
+        () -> controller.getAllHandlesByPidStatus(pageNum, pageSize, pidStatus));
+
+    // Then
+    assertThat(exception).hasMessage(
+        "Invalid Input. Pid Status not recognized. Available Pid Statuses: " + VALID_PID_STATUS);
+  }
 
   @Test
   void testResolveSingleHandle() throws Exception {
@@ -100,9 +115,10 @@ class HandleControllerTest {
     String path = SANDBOX_URI + prefix + "/" + suffix;
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     MockHttpServletRequest r = new MockHttpServletRequest();
-    r.setRequestURI(prefix + "/"+ suffix);
+    r.setRequestURI(prefix + "/" + suffix);
 
-    JsonApiWrapperRead responseExpected = givenRecordResponseRead(List.of(handle), path, RECORD_TYPE_HANDLE);
+    JsonApiWrapperRead responseExpected = givenRecordResponseRead(List.of(handle), path,
+        RECORD_TYPE_HANDLE);
     given(service.resolveSingleRecord(handle, path)).willReturn(responseExpected);
 
     // When
@@ -163,7 +179,8 @@ class HandleControllerTest {
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     HandleRecordRequest requestObject = genHandleRecordRequestObject();
     ObjectNode requestNode = genCreateRecordRequest(requestObject, RECORD_TYPE_HANDLE);
-    JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(handle), RECORD_TYPE_HANDLE);
+    JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(handle),
+        RECORD_TYPE_HANDLE);
 
     given(service.createRecord(requestNode)).willReturn(responseExpected);
 
@@ -181,7 +198,8 @@ class HandleControllerTest {
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     HandleRecordRequest requestObject = genDoiRecordRequestObject();
     ObjectNode requestNode = genCreateRecordRequest(requestObject, RECORD_TYPE_DOI);
-    JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(handle), RECORD_TYPE_DOI);
+    JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(handle),
+        RECORD_TYPE_DOI);
 
     given(service.createRecord(requestNode)).willReturn(responseExpected);
 
@@ -199,7 +217,8 @@ class HandleControllerTest {
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     HandleRecordRequest requestObject = genDigitalSpecimenRequestObject();
     ObjectNode requestNode = genCreateRecordRequest(requestObject, RECORD_TYPE_DS);
-    JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(handle), RECORD_TYPE_DS);
+    JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(handle),
+        RECORD_TYPE_DS);
 
     given(service.createRecord(requestNode)).willReturn(responseExpected);
 
@@ -217,7 +236,8 @@ class HandleControllerTest {
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     HandleRecordRequest requestObject = genDigitalSpecimenBotanyRequestObject();
     ObjectNode requestNode = genCreateRecordRequest(requestObject, RECORD_TYPE_DS_BOTANY);
-    JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(handle), RECORD_TYPE_DS_BOTANY);
+    JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(handle),
+        RECORD_TYPE_DS_BOTANY);
 
     given(service.createRecord(requestNode)).willReturn(responseExpected);
 
@@ -328,7 +348,7 @@ class HandleControllerTest {
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
   }
 
-  private JsonNode givenJsonNode(String id, String type, JsonNode attributes){
+  private JsonNode givenJsonNode(String id, String type, JsonNode attributes) {
     ObjectNode node = mapper.createObjectNode();
     node.put("id", id);
     node.put("type", type);
@@ -358,6 +378,21 @@ class HandleControllerTest {
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
 
+  @Test
+  void testUpdateRecordBadRequest() {
+
+    // Given
+    String prefix = HANDLE.split("/")[0];
+    String suffix = HANDLE.split("/")[1];
+    var updateAttributes = genUpdateRequestAltLoc();
+    ObjectNode updateRequestNode = mapper.createObjectNode();
+    updateRequestNode.set("data", givenJsonNode(HANDLE_ALT, RECORD_TYPE_HANDLE, updateAttributes));
+
+    // Then
+    assertThrows(InvalidRecordInput.class, () -> {
+      controller.updateRecord(prefix, suffix, updateRequestNode);
+    });
+  }
 
   @Test
   void testUpdateRecordBatch() throws Exception {
@@ -395,7 +430,8 @@ class HandleControllerTest {
     String suffix = HANDLE.split("/")[1];
 
     ObjectNode archiveRootNode = mapper.createObjectNode();
-    archiveRootNode.set("data", givenJsonNode(HANDLE, RECORD_TYPE_HANDLE, mapper.valueToTree(genTombstoneRecordRequestObject())));
+    archiveRootNode.set("data", givenJsonNode(HANDLE, RECORD_TYPE_HANDLE,
+        mapper.valueToTree(genTombstoneRecordRequestObject())));
     ObjectNode archiveRequestNode = (ObjectNode) archiveRootNode.get(NODE_DATA)
         .get(NODE_ATTRIBUTES);
 
@@ -410,6 +446,71 @@ class HandleControllerTest {
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
+
+  @Test
+  void testArchiveRecordBadRequest() {
+    // Given
+    String prefix = HANDLE.split("/")[0];
+    String suffix = HANDLE.split("/")[1];
+    var archiveAttributes = genTombstoneRequest();
+    ObjectNode archiveRequestNode = mapper.createObjectNode();
+    archiveRequestNode.set("data", givenJsonNode(HANDLE_ALT, RECORD_TYPE_HANDLE, archiveAttributes));
+
+    // Then
+    assertThrows(InvalidRecordInput.class, () -> {
+      controller.updateRecord(prefix, suffix, archiveRequestNode);
+    });
+  }
+
+  @Test
+  void testCheckRequestNodesPresent(){
+    String message = "INVALID INPUT. Missing node \" %s \"";
+    String prefix = HANDLE.split("/")[0];
+    String suffix = HANDLE.split("/")[1];
+
+    var noData = excludeValue("data");
+    var noType = excludeValue("type");
+    var noId = excludeValue("id");
+    var noAttributes = excludeValue("attributes");
+
+    // Then
+    Exception exData = assertThrows(InvalidRecordInput.class, () -> {
+      controller.updateRecord(prefix, suffix, noData);
+    });
+    assertThat(exData).hasMessage(String.format(message, "data"));
+
+    Exception exType = assertThrows(InvalidRecordInput.class, () -> {
+      controller.updateRecord(prefix, suffix, noType);
+    });
+    assertThat(exType).hasMessage(String.format(message, "type"));
+
+    Exception exId = assertThrows(InvalidRecordInput.class, () -> {
+      controller.updateRecord(prefix, suffix, noId);
+    });
+    assertThat(exId).hasMessage(String.format(message, "id"));
+
+    Exception exAttribute = assertThrows(InvalidRecordInput.class, () -> {
+      controller.updateRecord(prefix, suffix, noAttributes);
+    });
+    assertThat(exAttribute).hasMessage(String.format(message, "attributes"));
+  }
+
+  private JsonNode excludeValue(String val){
+
+    ObjectNode baseNode = mapper.createObjectNode();
+    baseNode.put("type", RECORD_TYPE_HANDLE);
+    baseNode.put("id", HANDLE);
+    baseNode.set("attributes", genUpdateRequestAltLoc());
+    if (val.equals("data")) return baseNode;
+
+    baseNode.remove(val);
+    ObjectNode baseNodeRoot = mapper.createObjectNode();
+    baseNodeRoot.set("data", baseNode);
+    return baseNodeRoot;
+  }
+
+
+
   @Test
   void testArchiveRecordBatch() throws Exception {
     // Given
@@ -421,7 +522,8 @@ class HandleControllerTest {
 
     for (byte[] handle : handles) {
       ObjectNode archiveRootNode = mapper.createObjectNode();
-      archiveRootNode.set("data", givenJsonNode(HANDLE, RECORD_TYPE_HANDLE, mapper.valueToTree(genTombstoneRecordRequestObject())));
+      archiveRootNode.set("data", givenJsonNode(HANDLE, RECORD_TYPE_HANDLE,
+          mapper.valueToTree(genTombstoneRecordRequestObject())));
       updateRequestList.add(archiveRootNode.deepCopy());
     }
     var responseExpected = givenRecordResponseWriteArchive(handles);
@@ -444,7 +546,7 @@ class HandleControllerTest {
     given(service.createRecord(requestNode)).willThrow(UnrecognizedPropertyException.class);
 
     // Then
-    Exception exception = assertThrows(UnrecognizedPropertyException.class, () -> {
+    assertThrows(UnrecognizedPropertyException.class, () -> {
       controller.createRecord(requestNode);
     });
   }
