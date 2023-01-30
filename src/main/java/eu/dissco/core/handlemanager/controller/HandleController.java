@@ -63,14 +63,14 @@ public class HandleController {
       @RequestParam(name = "pidStatus", defaultValue = "ALL") String pidStatus)
       throws PidResolutionException, InvalidRecordInput {
 
-    if (!VALID_PID_STATUS.contains(pidStatus)){
-      throw new InvalidRecordInput("Invalid Input. Pid Status not recognized. Available Pid Statuses: " + VALID_PID_STATUS);
+    if (!VALID_PID_STATUS.contains(pidStatus)) {
+      throw new InvalidRecordInput(
+          "Invalid Input. Pid Status not recognized. Available Pid Statuses: " + VALID_PID_STATUS);
     }
     List<String> handleList;
     if (pidStatus.equals("ALL")) {
       handleList = service.getHandlesPaged(pageNum, pageSize);
-    }
-    else {
+    } else {
       handleList = service.getHandlesPaged(pageNum, pageSize, pidStatus);
     }
     if (handleList.isEmpty()) {
@@ -85,7 +85,7 @@ public class HandleController {
       @PathVariable("suffix") String suffix,
       HttpServletRequest r
   ) throws PidResolutionException {
-    String path = SANDBOX_URI  +r.getRequestURI();
+    String path = SANDBOX_URI + r.getRequestURI();
     byte[] handle = (prefix + "/" + suffix).getBytes(StandardCharsets.UTF_8);
 
     var node = service.resolveSingleRecord(handle, path);
@@ -144,7 +144,7 @@ public class HandleController {
     byte[] handle = (prefix + "/" + suffix).getBytes(StandardCharsets.UTF_8);
     byte[] handleData = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
 
-    if(!Arrays.equals(handle, handleData)){
+    if (!Arrays.equals(handle, handleData)) {
       throw new InvalidRecordInput("Handle in request URL does not match id in request body.");
     }
 
@@ -176,7 +176,7 @@ public class HandleController {
     JsonNode data = request.get(NODE_DATA);
     byte[] handle = (prefix + "/" + suffix).getBytes(StandardCharsets.UTF_8);
     byte[] handleRequest = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
-    if(!Arrays.equals(handle, handleRequest)){
+    if (!Arrays.equals(handle, handleRequest)) {
       throw new InvalidRecordInput("Handle in request URL does not match id in request body.");
     }
 
@@ -196,7 +196,6 @@ public class HandleController {
 
   private void checkRequestNodesPresent(JsonNode requestRoot, boolean checkData, boolean checkType,
       boolean checkId, boolean checkAttributes) throws InvalidRecordInput {
-
 
     String errorMsg = "INVALID INPUT. Missing node \" %s \"";
     if (checkData && !requestRoot.has(NODE_DATA)) {

@@ -509,8 +509,6 @@ class HandleControllerTest {
     return baseNodeRoot;
   }
 
-
-
   @Test
   void testArchiveRecordBatch() throws Exception {
     // Given

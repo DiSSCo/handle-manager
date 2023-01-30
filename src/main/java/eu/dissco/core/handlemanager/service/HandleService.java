@@ -278,11 +278,10 @@ public class HandleService {
 
     List<JsonApiDataLinks> dataList = new ArrayList<>();
 
-
     for (JsonNode recordAttributes : postedRecordAttributes) {
       dataList.add(wrapData(recordAttributes, "PID"));
     }
-    return new JsonApiWrapperWrite( dataList);
+    return new JsonApiWrapperWrite(dataList);
   }
 
   public JsonApiWrapperWrite updateRecordBatch(List<JsonNode> requests)
@@ -378,7 +377,8 @@ public class HandleService {
     for (JsonNode updatedRecord : archivedRecords) {
       String pidLink = updatedRecord.get(PID).asText();
       String pidName = getPidName(pidLink);
-      dataList.add(new JsonApiDataLinks(pidName, RECORD_TYPE_TOMBSTONE, updatedRecord, new JsonApiLinks(pidLink)));
+      dataList.add(new JsonApiDataLinks(pidName, RECORD_TYPE_TOMBSTONE, updatedRecord,
+          new JsonApiLinks(pidLink)));
     }
     return new JsonApiWrapperWrite(dataList);
 

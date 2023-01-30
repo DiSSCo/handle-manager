@@ -11,6 +11,7 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode
 public class HandleRecordRequest {
+
   @NonNull
   private final String pidIssuerPid;
   @NonNull
