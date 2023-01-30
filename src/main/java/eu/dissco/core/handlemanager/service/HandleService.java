@@ -43,7 +43,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import eu.dissco.core.handlemanager.domain.HandleObjectWrapper;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiDataLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
@@ -292,7 +291,6 @@ public class HandleService {
     List<byte[]> handles = new ArrayList<>();
     List<List<HandleAttribute>> attributesToUpdate = new ArrayList<>();
     List<String> recordTypes = new ArrayList<>();
-    List<HandleObjectWrapper> handleObjects = new ArrayList<>();
 
     for (JsonNode root : requests) {
       // Set update attributes
@@ -309,8 +307,6 @@ public class HandleService {
       byte[] handle = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
       handles.add(handle);
       var attributes = prepareUpdateAttributes(handle, requestAttributes);
-      handleObjects.add(new HandleObjectWrapper(handle, attributes, recordType));
-
       // What we post to the database
       attributesToUpdate.add(attributes);
     }

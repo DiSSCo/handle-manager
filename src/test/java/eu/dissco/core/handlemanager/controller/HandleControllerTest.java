@@ -16,6 +16,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecime
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDoiRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordFullAttributes;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseRead;
@@ -388,17 +389,16 @@ class HandleControllerTest {
   @Test
   void testArchiveRecord() throws Exception {
     // Given
+
     byte[] handle = HANDLE.getBytes();
     String prefix = HANDLE.split("/")[0];
     String suffix = HANDLE.split("/")[1];
-    var archiveAttributes = genTombstoneRequest();
 
     ObjectNode archiveRootNode = mapper.createObjectNode();
-    archiveRootNode.set("data", givenJsonNode(HANDLE, RECORD_TYPE_HANDLE, archiveAttributes));
+    archiveRootNode.set("data", givenJsonNode(HANDLE, RECORD_TYPE_HANDLE, mapper.valueToTree(genTombstoneRecordRequestObject())));
     ObjectNode archiveRequestNode = (ObjectNode) archiveRootNode.get(NODE_DATA)
         .get(NODE_ATTRIBUTES);
 
-    List<HandleAttribute> tombstoneAttributesFull = genTombstoneRecordFullAttributes(handle);
     var responseExpected = givenRecordResponseWriteArchive(List.of(handle));
     given(service.archiveRecord(archiveRequestNode, handle)).willReturn(
         responseExpected);
@@ -420,9 +420,8 @@ class HandleControllerTest {
     List<JsonNode> updateRequestList = new ArrayList<>();
 
     for (byte[] handle : handles) {
-      var archiveAttributes = genTombstoneRequest();
       ObjectNode archiveRootNode = mapper.createObjectNode();
-      archiveRootNode.set("data", givenJsonNode(HANDLE, RECORD_TYPE_HANDLE, archiveAttributes));
+      archiveRootNode.set("data", givenJsonNode(HANDLE, RECORD_TYPE_HANDLE, mapper.valueToTree(genTombstoneRecordRequestObject())));
       updateRequestList.add(archiveRootNode.deepCopy());
     }
     var responseExpected = givenRecordResponseWriteArchive(handles);

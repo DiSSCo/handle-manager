@@ -40,6 +40,7 @@ import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.HandleRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.TombstoneRecordRequest;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -336,6 +337,13 @@ public class TestUtils {
         IN_COLLECTION_FACILITY_TESTVAL,
         OBJECT_TYPE_TESTVAL,
         PRESERVED_OR_LIVING_TESTVAL);
+  }
+
+  public static TombstoneRecordRequest genTombstoneRecordRequestObject(){
+    return new TombstoneRecordRequest(
+        HANDLE,
+        TOMBSTONE_TEXT
+    );
   }
 
   public static JsonApiWrapperRead givenRecordResponseRead(List<byte[]> handles, String path, String recordType)
