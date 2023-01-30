@@ -8,8 +8,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiData;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiDataLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapper;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
@@ -69,7 +72,8 @@ public class TestUtils {
   public static final String PRESERVED_OR_LIVING_TESTVAL = "preserved";
 
   // Pid Type Record vals
-  public static final String PTR_PID = "http://hdl.handle.net/" + PID_ISSUER_PID;
+  private final static String HANDLE_URI = "https://hdl.handle.net/";
+  public static final String PTR_PID = HANDLE_URI + PID_ISSUER_PID;
   public static final String PTR_TYPE = "handle";
   public static final String PTR_PRIMARY_NAME = "DiSSCo";
   public static final String PTR_PID_DOI = "http://doi.org/" + PID_ISSUER_PID;
@@ -80,6 +84,8 @@ public class TestUtils {
 
   // Tombstone Record vals
   public final static String TOMBSTONE_TEXT_TESTVAL = "pid was deleted";
+
+
 
 
   private TestUtils() {
@@ -362,7 +368,99 @@ public class TestUtils {
     return requestList;
   }
 
-  // Single JsonApiWrapper Response 
+  public static JsonApiWrapperRead givenRecordResponseRead(List<byte[]> handles, String path, String recordType)
+      throws JsonProcessingException {
+    List<JsonApiDataLinks> dataNodes = new ArrayList<>();
+
+    for (byte[] handle: handles){
+      var testDbRecord = genAttributes(recordType, handle);
+      JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
+
+      var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
+      dataNodes.add(new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), recordType, recordAttributes, pidLink));
+    }
+
+    var responseLink = new JsonApiLinks(path);
+    return new JsonApiWrapperRead(responseLink, dataNodes);
+  }
+
+  public static JsonApiWrapperWrite givenRecordResponseWrite(List<byte[]> handles, String recordType)
+      throws JsonProcessingException {
+    List<JsonApiDataLinks> dataNodes = new ArrayList<>();
+
+    for (byte[] handle: handles){
+      var testDbRecord = genAttributes(recordType, handle);
+      JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
+
+      var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
+      dataNodes.add(new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), recordType, recordAttributes, pidLink));
+    }
+    return new JsonApiWrapperWrite(dataNodes);
+  }
+
+  public static JsonApiWrapperWrite givenRecordResponseWrite(List<byte[]> handles, String attributeType, String recordType)
+      throws JsonProcessingException {
+    List<JsonApiDataLinks> dataNodes = new ArrayList<>();
+
+    for (byte[] handle: handles){
+      var testDbRecord = genAttributes(attributeType, handle);
+      JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
+
+      var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
+      dataNodes.add(new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), recordType, recordAttributes, pidLink));
+    }
+    return new JsonApiWrapperWrite(dataNodes);
+  }
+
+  public static JsonApiWrapperWrite givenRecordResponseWriteAltLoc(List<byte[]> handles)
+      throws Exception {
+    List<JsonApiDataLinks> dataNodes = new ArrayList<>();
+
+    for (byte[] handle: handles){
+      var testDbRecord = genHandleRecordAttributesAltLoc(handle);
+      JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
+
+      var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
+      dataNodes.add(new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), RECORD_TYPE_HANDLE, recordAttributes, pidLink));
+    }
+    return new JsonApiWrapperWrite(dataNodes);
+  }
+
+  public static JsonApiWrapperWrite givenRecordResponseWriteArchive(List<byte[]> handles)
+      throws Exception {
+    List<JsonApiDataLinks> dataNodes = new ArrayList<>();
+
+    for (byte[] handle: handles){
+      var testDbRecord = genTombstoneRecordFullAttributes(handle);
+      JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
+
+      var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
+      dataNodes.add(new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), RECORD_TYPE_TOMBSTONE, recordAttributes, pidLink));
+    }
+    return new JsonApiWrapperWrite(dataNodes);
+  }
+
+  private static List<HandleAttribute> genAttributes(String recordType, byte[] handle){
+    switch (recordType){
+      case RECORD_TYPE_HANDLE, "PID" -> {
+        return genHandleRecordAttributes(handle);
+      }
+      case RECORD_TYPE_DOI -> {
+        return genDoiRecordAttributes(handle);
+      }
+      case RECORD_TYPE_DS -> {
+        return genDigitalSpecimenAttributes(handle);
+      }
+      case RECORD_TYPE_DS_BOTANY -> {
+        return genDigitalSpecimenBotanyAttributes(handle);
+      }
+      default -> {
+        return null;
+      }
+    }
+  }
+
+
   public static JsonApiWrapper genHandleRecordJsonResponse(byte[] handle)
       throws JsonProcessingException {
     var testDbRecord = genHandleRecordAttributes(handle);
@@ -538,6 +636,7 @@ public class TestUtils {
     rootNode.put(TOMBSTONE_TEXT, TOMBSTONE_TEXT_TESTVAL);
     return rootNode;
   }
+
 
   public static JsonApiWrapper genHandleRecordJsonResponseAltLoc(byte[] handle)
       throws JsonProcessingException, ParserConfigurationException, TransformerException {

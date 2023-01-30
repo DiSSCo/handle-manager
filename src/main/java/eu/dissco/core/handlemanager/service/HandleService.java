@@ -23,6 +23,7 @@ import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
+import io.swagger.v3.core.util.Json;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
@@ -146,7 +147,7 @@ public class HandleService {
   }
 
 
-  public JsonApiWrapperWrite createRecord(JsonNode request, String path)
+  public JsonApiWrapperWrite createRecord(JsonNode request)
       throws InvalidRecordInput, PidResolutionException, PidServiceInternalError, UnrecognizedPropertyException {
     byte[] handle = hf.genHandleList(1).get(0);
     var recordTimestamp = Instant.now();
@@ -194,7 +195,7 @@ public class HandleService {
 
   }
 
-  public JsonApiWrapperWrite createRecordBatch(List<JsonNode> requests, String path)
+  public JsonApiWrapperWrite createRecordBatch(List<JsonNode> requests)
       throws PidResolutionException, PidServiceInternalError, InvalidRecordInput {
     var recordTimestamp = Instant.now();
     List<byte[]> handles = hf.genHandleList(requests.size());
@@ -319,7 +320,7 @@ public class HandleService {
   }
 
   // Archive
-  public List<JsonApiWrapper> archiveRecordBatch(List<JsonNode> requests)
+  public JsonApiWrapperWrite archiveRecordBatch(List<JsonNode> requests)
       throws InvalidRecordInput, PidResolutionException {
     var recordTimestamp = Instant.now();
     List<byte[]> handles = new ArrayList<>();
@@ -343,16 +344,15 @@ public class HandleService {
     handleRep.archiveRecords(recordTimestamp, archiveAttributes, handles);
     var archivedRecords = fetchResolvedRecords(handles);
 
-    List<JsonApiWrapper> wrapperList = new ArrayList<>();
+    List<JsonApiDataLinks> dataList = new ArrayList<>();
 
     for (JsonNode updatedRecord : archivedRecords) {
       String pidLink = updatedRecord.get(PID).asText();
       String pidName = getPidName(pidLink);
-      JsonApiData jsonData = new JsonApiData(pidName, RECORD_TYPE_TOMBSTONE, updatedRecord);
-      JsonApiLinks links = new JsonApiLinks(pidLink);
-      wrapperList.add(new JsonApiWrapper(links, jsonData));
+      dataList.add(new JsonApiDataLinks(pidName, RECORD_TYPE_TOMBSTONE, updatedRecord, new JsonApiLinks(pidLink)));
     }
-    return wrapperList;
+    return new JsonApiWrapperWrite(dataList);
+
   }
 
   public JsonApiWrapperWrite archiveRecord(JsonNode request, byte[] handle)
@@ -373,15 +373,6 @@ public class HandleService {
 
     // Package response
     return new JsonApiWrapperWrite(List.of(wrapData(archivedRecord, RECORD_TYPE_TOMBSTONE)));
-  }
-
-
-  private JsonApiWrapper wrapResponse(JsonNode recordAttributes, String recordType) {
-    String pidLink = recordAttributes.get(PID).asText();
-    String pidName = getPidName(pidLink);
-    var jsonData = new JsonApiData(pidName, recordType, recordAttributes);
-    var links = new JsonApiLinks(pidLink);
-    return new JsonApiWrapper(links, jsonData);
   }
 
   private JsonApiDataLinks wrapData(JsonNode recordAttributes, String recordType) {

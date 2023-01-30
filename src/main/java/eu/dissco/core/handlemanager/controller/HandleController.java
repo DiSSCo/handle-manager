@@ -10,7 +10,6 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.VALID_PID_STATUS;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
-import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapper;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
@@ -50,7 +49,7 @@ public class HandleController {
 
   private final ObjectMapper mapper;
 
-  private final String SANDBOX_URI = "https://sandbox.dissco.tech";
+  private static final String SANDBOX_URI = "https://sandbox.dissco.tech/";
 
   @GetMapping("/{prefix}/{suffix}")
   public ResponseEntity<JsonApiWrapperRead> resolvePid(
@@ -58,7 +57,7 @@ public class HandleController {
       @PathVariable("suffix") String suffix,
       HttpServletRequest r
   ) throws PidResolutionException {
-    String path = SANDBOX_URI + r.getRequestURI();
+    String path = SANDBOX_URI  +r.getRequestURI();
     byte[] handle = (prefix + "/" + suffix).getBytes(StandardCharsets.UTF_8);
 
     var node = service.resolveSingleRecord(handle, path);
@@ -70,6 +69,7 @@ public class HandleController {
       @RequestBody List<JsonNode> requests,
       HttpServletRequest r
   ) throws PidResolutionException, InvalidRecordInput {
+
     String path = SANDBOX_URI + r.getRequestURI();
     List<byte[]> handles = new ArrayList<>();
 
@@ -83,27 +83,22 @@ public class HandleController {
   @PreAuthorize("isAuthenticated()")
   @PostMapping(value = "")
   public ResponseEntity<JsonApiWrapperWrite> createRecord(
-      @RequestBody JsonNode request,
-      HttpServletRequest r)
+      @RequestBody JsonNode request)
       throws PidResolutionException, PidServiceInternalError, InvalidRecordInput, UnrecognizedPropertyException {
-    String path = SANDBOX_URI + r.getRequestURI();
-
     checkRequestNodesPresent(request, true, true, false, true);
-    return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecord(request, path));
+    return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecord(request));
   }
 
   @PreAuthorize("isAuthenticated()")
   @PostMapping(value = "/batch")
   public ResponseEntity<JsonApiWrapperWrite> createRecords(
-      @RequestBody List<JsonNode> requests,
-      HttpServletRequest r)
+      @RequestBody List<JsonNode> requests)
       throws PidResolutionException, PidServiceInternalError, InvalidRecordInput {
 
     for (JsonNode request : requests) {
       checkRequestNodesPresent(request, true, true, false, true);
     }
-    String path = SANDBOX_URI + r.getRequestURI();
-    return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecordBatch(requests, path));
+    return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecordBatch(requests));
   }
 
   // Update
@@ -132,7 +127,7 @@ public class HandleController {
   }
 
   @PreAuthorize("isAuthenticated()")
-  @PatchMapping(value = "/")
+  @PatchMapping(value = "")
   public ResponseEntity<JsonApiWrapperWrite> updateRecords(@RequestBody List<JsonNode> requests)
       throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
 
@@ -162,8 +157,8 @@ public class HandleController {
   }
 
 //  @PreAuthorize("isAuthenticated()")
-  @PutMapping(value = "/")
-  public ResponseEntity<List<JsonApiWrapper>> archiveRecords(@RequestBody List<JsonNode> requests)
+  @PutMapping(value = "")
+  public ResponseEntity<JsonApiWrapperWrite> archiveRecords(@RequestBody List<JsonNode> requests)
       throws InvalidRecordInput, PidResolutionException {
     for (JsonNode request : requests) {
       checkRequestNodesPresent(request, true, false, true, true);
@@ -183,8 +178,7 @@ public class HandleController {
   public ResponseEntity<List<String>> getAllHandlesByPidStatus(
       @RequestParam(value = "pageNum", defaultValue = "0") int pageNum,
       @RequestParam(value = "pageSize", defaultValue = "100") int pageSize,
-      @RequestParam(name = "pidStatus", defaultValue = "ALL") String pidStatus,
-      HttpServletRequest r)
+      @RequestParam(name = "pidStatus", defaultValue = "ALL") String pidStatus)
       throws PidResolutionException, InvalidRecordInput {
 
     if (!VALID_PID_STATUS.contains(pidStatus)){
