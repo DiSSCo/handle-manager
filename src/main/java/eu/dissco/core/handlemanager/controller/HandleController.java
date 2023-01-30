@@ -8,7 +8,6 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.VALID_PID_STATUS;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
@@ -47,9 +46,38 @@ public class HandleController {
 
   private final HandleService service;
 
-  private final ObjectMapper mapper;
-
   private static final String SANDBOX_URI = "https://sandbox.dissco.tech/";
+
+
+  // Hellos and getters
+  @GetMapping(value = "/health")
+  public ResponseEntity<String> hello() {
+    return new ResponseEntity<>("API is running", HttpStatus.OK);
+  }
+
+  // List all handle values
+  @GetMapping(value = "/names")
+  public ResponseEntity<List<String>> getAllHandlesByPidStatus(
+      @RequestParam(value = "pageNum", defaultValue = "0") int pageNum,
+      @RequestParam(value = "pageSize", defaultValue = "100") int pageSize,
+      @RequestParam(name = "pidStatus", defaultValue = "ALL") String pidStatus)
+      throws PidResolutionException, InvalidRecordInput {
+
+    if (!VALID_PID_STATUS.contains(pidStatus)){
+      throw new InvalidRecordInput("Invalid Input. Pid Status not recognized. Available Pid Statuses: " + VALID_PID_STATUS);
+    }
+    List<String> handleList;
+    if (pidStatus.equals("ALL")) {
+      handleList = service.getHandlesPaged(pageNum, pageSize);
+    }
+    else {
+      handleList = service.getHandlesPaged(pageNum, pageSize, pidStatus);
+    }
+    if (handleList.isEmpty()) {
+      throw new PidResolutionException("Unable to resolve pids");
+    }
+    return ResponseEntity.ok(handleList);
+  }
 
   @GetMapping("/{prefix}/{suffix}")
   public ResponseEntity<JsonApiWrapperRead> resolvePid(
@@ -64,7 +92,7 @@ public class HandleController {
     return ResponseEntity.status(HttpStatus.OK).body(node);
   }
 
-  @PostMapping("/view")
+  @PostMapping("/records")
   public ResponseEntity<JsonApiWrapperRead> resolvePids(
       @RequestBody List<JsonNode> requests,
       HttpServletRequest r
@@ -81,7 +109,7 @@ public class HandleController {
   }
 
   @PreAuthorize("isAuthenticated()")
-  @PostMapping(value = "")
+  @PostMapping(value = "/")
   public ResponseEntity<JsonApiWrapperWrite> createRecord(
       @RequestBody JsonNode request)
       throws PidResolutionException, PidServiceInternalError, InvalidRecordInput, UnrecognizedPropertyException {
@@ -137,7 +165,7 @@ public class HandleController {
     return ResponseEntity.status(HttpStatus.OK).body(service.updateRecordBatch(requests));
   }
 
- // @PreAuthorize("isAuthenticated()")
+  @PreAuthorize("isAuthenticated()")
   @PutMapping(value = "/{prefix}/{suffix}")
   public ResponseEntity<JsonApiWrapperWrite> archiveRecord(
       @PathVariable("prefix") String prefix,
@@ -156,7 +184,7 @@ public class HandleController {
         .body(service.archiveRecord(data.get(NODE_ATTRIBUTES), handle));
   }
 
-//  @PreAuthorize("isAuthenticated()")
+  @PreAuthorize("isAuthenticated()")
   @PutMapping(value = "")
   public ResponseEntity<JsonApiWrapperWrite> archiveRecords(@RequestBody List<JsonNode> requests)
       throws InvalidRecordInput, PidResolutionException {
@@ -164,37 +192,6 @@ public class HandleController {
       checkRequestNodesPresent(request, true, false, true, true);
     }
     return ResponseEntity.status(HttpStatus.OK).body(service.archiveRecordBatch(requests));
-  }
-
-
-  // Hellos and getters
-  @GetMapping(value = "/health")
-  public ResponseEntity<String> hello() {
-    return new ResponseEntity<>("API is running", HttpStatus.OK);
-  }
-
-  // List all handle values
-  @GetMapping(value = "/all")
-  public ResponseEntity<List<String>> getAllHandlesByPidStatus(
-      @RequestParam(value = "pageNum", defaultValue = "0") int pageNum,
-      @RequestParam(value = "pageSize", defaultValue = "100") int pageSize,
-      @RequestParam(name = "pidStatus", defaultValue = "ALL") String pidStatus)
-      throws PidResolutionException, InvalidRecordInput {
-
-    if (!VALID_PID_STATUS.contains(pidStatus)){
-      throw new InvalidRecordInput("Invalid Input. Pid Status not recognized. Available Pid Statuses: " + VALID_PID_STATUS);
-    }
-    List<String> handleList;
-    if (pidStatus.equals("ALL")) {
-      handleList = service.getHandlesPaged(pageNum, pageSize);
-    }
-    else {
-      handleList = service.getHandlesPaged(pageNum, pageSize, pidStatus);
-    }
-    if (handleList.isEmpty()) {
-      throw new PidResolutionException("Unable to resolve pids");
-    }
-    return ResponseEntity.ok(handleList);
   }
 
   private void checkRequestNodesPresent(JsonNode requestRoot, boolean checkData, boolean checkType,

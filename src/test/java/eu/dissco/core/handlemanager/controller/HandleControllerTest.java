@@ -68,7 +68,7 @@ class HandleControllerTest {
 
   @BeforeEach
   void setup() {
-    controller = new HandleController(service, mapper);
+    controller = new HandleController(service);
   }
 
 
