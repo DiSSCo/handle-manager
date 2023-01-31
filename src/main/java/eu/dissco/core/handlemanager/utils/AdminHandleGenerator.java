@@ -1,8 +1,8 @@
 package eu.dissco.core.handlemanager.utils;
 
-public class Resources {
+public class AdminHandleGenerator {
 
-  private Resources() {
+  private AdminHandleGenerator() {
     throw new IllegalStateException("Utility class");
   }
 
