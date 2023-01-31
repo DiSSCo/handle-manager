@@ -16,7 +16,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecime
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDoiRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordFullAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestAltLoc;
@@ -37,7 +36,6 @@ import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
-import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.HandleRecordRequest;
 import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
@@ -293,7 +291,6 @@ class HandleControllerTest {
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
 
-
   @Test
   void testCreateDigitalSpecimenBatch() throws Exception {
     // Given
@@ -315,7 +312,6 @@ class HandleControllerTest {
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
-
 
   @Test
   void testCreateDigitalSpecimenBotanyBatch() throws Exception {
@@ -454,7 +450,8 @@ class HandleControllerTest {
     String suffix = HANDLE.split("/")[1];
     var archiveAttributes = genTombstoneRequest();
     ObjectNode archiveRequestNode = mapper.createObjectNode();
-    archiveRequestNode.set("data", givenJsonNode(HANDLE_ALT, RECORD_TYPE_HANDLE, archiveAttributes));
+    archiveRequestNode.set("data",
+        givenJsonNode(HANDLE_ALT, RECORD_TYPE_HANDLE, archiveAttributes));
 
     // Then
     assertThrows(InvalidRecordInput.class, () -> {
@@ -463,7 +460,7 @@ class HandleControllerTest {
   }
 
   @Test
-  void testCheckRequestNodesPresent(){
+  void testCheckRequestNodesPresent() {
     String message = "INVALID INPUT. Missing node \" %s \"";
     String prefix = HANDLE.split("/")[0];
     String suffix = HANDLE.split("/")[1];
@@ -495,13 +492,15 @@ class HandleControllerTest {
     assertThat(exAttribute).hasMessage(String.format(message, "attributes"));
   }
 
-  private JsonNode excludeValue(String val){
+  private JsonNode excludeValue(String val) {
 
     ObjectNode baseNode = mapper.createObjectNode();
     baseNode.put("type", RECORD_TYPE_HANDLE);
     baseNode.put("id", HANDLE);
     baseNode.set("attributes", genUpdateRequestAltLoc());
-    if (val.equals("data")) return baseNode;
+    if (val.equals("data")) {
+      return baseNode;
+    }
 
     baseNode.remove(val);
     ObjectNode baseNodeRoot = mapper.createObjectNode();

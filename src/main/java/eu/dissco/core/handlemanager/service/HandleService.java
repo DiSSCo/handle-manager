@@ -492,7 +492,6 @@ public class HandleService {
     }
   }
 
-
   private Set<String> findDuplicates(List<byte[]> handles, Set<String> handlesToUpdate) {
     Set<String> duplicateHandles = new HashSet<>();
     for (byte[] handle : handles) {
@@ -524,7 +523,6 @@ public class HandleService {
     }
     return requestObjectNode;
   }
-
 
   private List<HandleAttribute> prepareUpdateAttributes(byte[] handle, JsonNode request)
       throws PidResolutionException {

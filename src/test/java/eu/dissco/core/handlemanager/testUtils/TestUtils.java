@@ -339,53 +339,59 @@ public class TestUtils {
         PRESERVED_OR_LIVING_TESTVAL);
   }
 
-  public static TombstoneRecordRequest genTombstoneRecordRequestObject(){
+  public static TombstoneRecordRequest genTombstoneRecordRequestObject() {
     return new TombstoneRecordRequest(
         HANDLE,
         TOMBSTONE_TEXT
     );
   }
 
-  public static JsonApiWrapperRead givenRecordResponseRead(List<byte[]> handles, String path, String recordType)
+  public static JsonApiWrapperRead givenRecordResponseRead(List<byte[]> handles, String path,
+      String recordType)
       throws JsonProcessingException {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
 
-    for (byte[] handle: handles){
+    for (byte[] handle : handles) {
       var testDbRecord = genAttributes(recordType, handle);
       JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
 
       var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
-      dataNodes.add(new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), recordType, recordAttributes, pidLink));
+      dataNodes.add(new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), recordType,
+          recordAttributes, pidLink));
     }
 
     var responseLink = new JsonApiLinks(path);
     return new JsonApiWrapperRead(responseLink, dataNodes);
   }
 
-  public static JsonApiWrapperWrite givenRecordResponseWrite(List<byte[]> handles, String recordType)
+  public static JsonApiWrapperWrite givenRecordResponseWrite(List<byte[]> handles,
+      String recordType)
       throws JsonProcessingException {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
 
-    for (byte[] handle: handles){
+    for (byte[] handle : handles) {
       var testDbRecord = genAttributes(recordType, handle);
       JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
 
       var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
-      dataNodes.add(new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), recordType, recordAttributes, pidLink));
+      dataNodes.add(new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), recordType,
+          recordAttributes, pidLink));
     }
     return new JsonApiWrapperWrite(dataNodes);
   }
 
-  public static JsonApiWrapperWrite givenRecordResponseWrite(List<byte[]> handles, String attributeType, String recordType)
+  public static JsonApiWrapperWrite givenRecordResponseWrite(List<byte[]> handles,
+      String attributeType, String recordType)
       throws JsonProcessingException {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
 
-    for (byte[] handle: handles){
+    for (byte[] handle : handles) {
       var testDbRecord = genAttributes(attributeType, handle);
       JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
 
       var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
-      dataNodes.add(new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), recordType, recordAttributes, pidLink));
+      dataNodes.add(new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), recordType,
+          recordAttributes, pidLink));
     }
     return new JsonApiWrapperWrite(dataNodes);
   }
@@ -394,12 +400,14 @@ public class TestUtils {
       throws Exception {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
 
-    for (byte[] handle: handles){
+    for (byte[] handle : handles) {
       var testDbRecord = genHandleRecordAttributesAltLoc(handle);
       JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
 
       var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
-      dataNodes.add(new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), RECORD_TYPE_HANDLE, recordAttributes, pidLink));
+      dataNodes.add(
+          new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), RECORD_TYPE_HANDLE,
+              recordAttributes, pidLink));
     }
     return new JsonApiWrapperWrite(dataNodes);
   }
@@ -408,18 +416,20 @@ public class TestUtils {
       throws Exception {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
 
-    for (byte[] handle: handles){
+    for (byte[] handle : handles) {
       var testDbRecord = genTombstoneRecordFullAttributes(handle);
       JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
 
       var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
-      dataNodes.add(new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), RECORD_TYPE_TOMBSTONE, recordAttributes, pidLink));
+      dataNodes.add(
+          new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), RECORD_TYPE_TOMBSTONE,
+              recordAttributes, pidLink));
     }
     return new JsonApiWrapperWrite(dataNodes);
   }
 
-  private static List<HandleAttribute> genAttributes(String recordType, byte[] handle){
-    switch (recordType){
+  private static List<HandleAttribute> genAttributes(String recordType, byte[] handle) {
+    switch (recordType) {
       case RECORD_TYPE_HANDLE, "PID" -> {
         return genHandleRecordAttributes(handle);
       }
@@ -437,8 +447,6 @@ public class TestUtils {
       }
     }
   }
-
-  // Update Requests
 
   public static List<JsonNode> genUpdateRequestBatch(List<byte[]> handles) {
     ObjectMapper mapper = new ObjectMapper();
