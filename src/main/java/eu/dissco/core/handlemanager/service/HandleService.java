@@ -291,7 +291,6 @@ public class HandleService {
     List<List<HandleAttribute>> attributesToUpdate = new ArrayList<>();
 
     for (JsonNode root : requests) {
-      // Set update attributes
       JsonNode data = root.get(NODE_DATA);
       byte[] handle = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
       handles.add(handle);
@@ -309,7 +308,6 @@ public class HandleService {
     var updatedRecords = fetchResolvedRecords(handles);
 
     List<JsonApiDataLinks> dataList = new ArrayList<>();
-
     for (JsonNode updatedRecord : updatedRecords) {
       dataList.add(wrapData(updatedRecord, "PID"));
     }
@@ -531,7 +529,7 @@ public class HandleService {
         });
     List<HandleAttribute> attributesToUpdate = new ArrayList<>();
 
-    for (Map.Entry<String, String> requestField : updateRecord.entrySet()) {
+    for (var requestField : updateRecord.entrySet()) {
       String type = requestField.getKey().replace("Pid", "");
       byte[] data = requestField.getValue().getBytes(StandardCharsets.UTF_8);
       byte[] pidData;

@@ -223,7 +223,7 @@ public class HandleController {
     } else {
       message = e.getMessage();
     }
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message);
+    return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(message);
   }
 
   @ExceptionHandler(InvalidRecordInput.class)
