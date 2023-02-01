@@ -42,7 +42,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
 
   @BeforeEach
   void setup() {
-    ObjectMapper mapper = new ObjectMapper().findAndRegisterModules()
+    var mapper = new ObjectMapper().findAndRegisterModules()
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     handleRep = new HandleRepository(context, mapper);
   }

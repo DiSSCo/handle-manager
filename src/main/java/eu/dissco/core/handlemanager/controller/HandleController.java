@@ -137,7 +137,7 @@ public class HandleController {
       @RequestBody JsonNode request)
       throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
 
-    checkRequestNodesPresent(request, true, true, true, true);
+    checkRequestNodesPresent(request, true, true, false, true);
 
     JsonNode data = request.get(NODE_DATA);
     byte[] handle = (prefix + "/" + suffix).getBytes(StandardCharsets.UTF_8);
