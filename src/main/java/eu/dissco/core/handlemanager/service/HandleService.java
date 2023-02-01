@@ -126,7 +126,7 @@ public class HandleService {
 
     List<JsonNode> rootNodeList = new ArrayList<>();
 
-    for (Map.Entry<String, List<HandleAttribute>> handleRecord : handleMap.entrySet()) {
+    for (var handleRecord : handleMap.entrySet()) {
       rootNodeList.add(jsonFormatSingleRecord(handleRecord.getValue()));
       resolvedHandles.add(handleRecord.getValue().get(0).handle());
     }
@@ -289,24 +289,17 @@ public class HandleService {
     var recordTimestamp = Instant.now();
     List<byte[]> handles = new ArrayList<>();
     List<List<HandleAttribute>> attributesToUpdate = new ArrayList<>();
-    List<String> recordTypes = new ArrayList<>();
 
     for (JsonNode root : requests) {
       // Set update attributes
       JsonNode data = root.get(NODE_DATA);
-      JsonNode requestAttributes = data.get(NODE_ATTRIBUTES);
-      String recordType = data.get(NODE_TYPE).asText();
-      recordTypes.add(recordType);
-      var keys = getKeys(requestAttributes);
-      validateRequestData(recordType, keys);
-      if (keys.contains(LOC_REQ)) {
-        requestAttributes = setLocationFromJson(requestAttributes);
-      }
-
       byte[] handle = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
       handles.add(handle);
-      var attributes = prepareUpdateAttributes(handle, requestAttributes);
-      // What we post to the database
+      JsonNode requestAttributes = data.get(NODE_ATTRIBUTES);
+      String recordType = data.get(NODE_TYPE).asText();
+
+      JsonNode validatedAttributes = validateUpdateAttributes(requestAttributes, recordType);
+      var attributes = prepareUpdateAttributes(handle, validatedAttributes);
       attributesToUpdate.add(attributes);
     }
     checkInternalDuplicates(handles);
@@ -316,28 +309,21 @@ public class HandleService {
     var updatedRecords = fetchResolvedRecords(handles);
 
     List<JsonApiDataLinks> dataList = new ArrayList<>();
-    int i = 0;
 
     for (JsonNode updatedRecord : updatedRecords) {
-      var recordType = recordTypes.get(i++);
-      dataList.add(wrapData(updatedRecord, recordType));
+      dataList.add(wrapData(updatedRecord, "PID"));
     }
     return new JsonApiWrapperWrite(dataList);
   }
-
 
   public JsonApiWrapperWrite updateRecord(JsonNode request, byte[] handle, String recordType)
       throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
 
     var recordTimestamp = Instant.now();
+    var validatedAttributes = validateUpdateAttributes(request, recordType);
 
-    List<String> keys = getKeys(request);
-    validateRequestData(recordType, keys);
-    if (keys.contains(LOC_REQ)) {
-      request = setLocationFromJson(request);
-    }
     checkHandlesWritable(List.of(handle));
-    List<HandleAttribute> attributesToUpdate = prepareUpdateAttributes(handle, request);
+    List<HandleAttribute> attributesToUpdate = prepareUpdateAttributes(handle, validatedAttributes);
 
     // Update record
     handleRep.updateRecord(recordTimestamp, attributesToUpdate);
@@ -345,6 +331,20 @@ public class HandleService {
 
     // Package response
     return new JsonApiWrapperWrite(List.of(wrapData(updatedRecord, recordType)));
+  }
+
+  private JsonNode validateUpdateAttributes(JsonNode requestAttributes, String recordType)
+      throws InvalidRecordInput, PidServiceInternalError {
+    var keys = getKeys(requestAttributes);
+    validateRequestData(recordType, keys);
+    JsonNode returnedAttributes;
+    if (keys.contains(LOC_REQ)) {
+      returnedAttributes = setLocationFromJson(requestAttributes);
+    }
+    else {
+      returnedAttributes = requestAttributes;
+    }
+    return returnedAttributes;
   }
 
   // Archive

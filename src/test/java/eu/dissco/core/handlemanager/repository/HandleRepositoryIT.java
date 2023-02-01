@@ -30,14 +30,12 @@ import java.util.Random;
 import java.util.Set;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
-import lombok.extern.slf4j.Slf4j;
 import org.jooq.Query;
 import org.jooq.Record4;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-@Slf4j
 class HandleRepositoryIT extends BaseRepositoryIT {
 
   private HandleRepository handleRep;
@@ -148,7 +146,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
-  void testResolveSingleRecord() throws Exception {
+  void testResolveSingleRecord() {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> responseExpected = genHandleRecordAttributes(handle);
@@ -162,7 +160,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
-  void testResolveBatchRecord() throws Exception {
+  void testResolveBatchRecord() {
     // Given
     List<byte[]> handles = List.of(
         HANDLE.getBytes(StandardCharsets.UTF_8),
@@ -253,10 +251,6 @@ class HandleRepositoryIT extends BaseRepositoryIT {
             HS_ADMIN.getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
         .fetch(this::mapToAttribute);
 
-    for (var elem : responseExpected) {
-      log.info(elem.toString());
-    }
-
     // Then
     assertThat(responseReceived).hasSameElementsAs(responseExpected);
   }
@@ -324,7 +318,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
-  void testArchiveRecord() throws Exception {
+  void testArchiveRecord() {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> originalRecord = genHandleRecordAttributes(handle);

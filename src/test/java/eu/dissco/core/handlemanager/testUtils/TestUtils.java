@@ -398,6 +398,11 @@ public class TestUtils {
 
   public static JsonApiWrapperWrite givenRecordResponseWriteAltLoc(List<byte[]> handles)
       throws Exception {
+    return givenRecordResponseWriteAltLoc(handles, RECORD_TYPE_HANDLE);
+  }
+
+  public static JsonApiWrapperWrite givenRecordResponseWriteAltLoc(List<byte[]> handles, String recordType)
+      throws Exception {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
 
     for (byte[] handle : handles) {
@@ -406,11 +411,12 @@ public class TestUtils {
 
       var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
       dataNodes.add(
-          new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), RECORD_TYPE_HANDLE,
+          new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), recordType,
               recordAttributes, pidLink));
     }
     return new JsonApiWrapperWrite(dataNodes);
   }
+
 
   public static JsonApiWrapperWrite givenRecordResponseWriteArchive(List<byte[]> handles)
       throws Exception {

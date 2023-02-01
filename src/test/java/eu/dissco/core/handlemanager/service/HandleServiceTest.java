@@ -75,7 +75,7 @@ class HandleServiceTest {
   @Mock
   private HandleRepository handleRep;
 
-  @Mock(lenient = true)
+  @Mock
   private PidTypeService pidTypeService;
 
   @Mock
@@ -100,7 +100,6 @@ class HandleServiceTest {
 
     service = new HandleService(handleRep, pidTypeService, hgService,
         documentBuilderFactory, mapper, transformerFactory);
-    given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
     initTime();
     initHandleList();
   }
@@ -157,6 +156,7 @@ class HandleServiceTest {
 
     given(hgService.genHandleList(1)).willReturn(List.of(handle));
     given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(handleRecord);
+    given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
 
     // When
     var responseReceived = service.createRecord(request);
@@ -175,6 +175,7 @@ class HandleServiceTest {
 
     given(hgService.genHandleList(1)).willReturn(List.of(handle));
     given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(DoiRecord);
+    given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
 
     // When
     var responseReceived = service.createRecord(request);
@@ -193,6 +194,7 @@ class HandleServiceTest {
 
     given(hgService.genHandleList(1)).willReturn(List.of(handle));
     given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(DigitalSpecimen);
+    given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
 
     // When
     var responseReceived = service.createRecord(request);
@@ -212,6 +214,7 @@ class HandleServiceTest {
 
     given(hgService.genHandleList(1)).willReturn(List.of(handle));
     given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(DigitalSpecimenBotany);
+    given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
 
     // When
     var responseReceived = service.createRecord(request);
@@ -235,6 +238,7 @@ class HandleServiceTest {
 
     given(hgService.genHandleList(handles.size())).willReturn(handles);
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
+    given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
 
     // When
     var responseReceived = service.createRecordBatch(requests);
@@ -258,6 +262,7 @@ class HandleServiceTest {
 
     given(hgService.genHandleList(handles.size())).willReturn(handles);
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
+    given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
 
     // When
     var responseReceived = service.createRecordBatch(requests);
@@ -278,7 +283,7 @@ class HandleServiceTest {
     }
 
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_DS, "PID");
-
+    given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
     given(hgService.genHandleList(handles.size())).willReturn(handles);
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
 
@@ -306,6 +311,7 @@ class HandleServiceTest {
 
     given(hgService.genHandleList(handles.size())).willReturn(handles);
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
+    given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
 
     // When
     var responseReceived = service.createRecordBatch(requests);
@@ -345,7 +351,7 @@ class HandleServiceTest {
       updatedAttributeRecord.addAll(genHandleRecordAttributesAltLoc(handle));
     }
 
-    var responseExpected = givenRecordResponseWriteAltLoc(handles);
+    var responseExpected = givenRecordResponseWriteAltLoc(handles, "PID");
 
     given(handleRep.checkHandlesWritable(anyList())).willReturn(handles);
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(updatedAttributeRecord);
@@ -658,7 +664,6 @@ class HandleServiceTest {
     // Then
     assertThat(exception.getMessage()).contains(IN_COLLECTION_FACILITY_REQ);
   }
-
   @Test
   void testMissingFieldDigitalSpecimenBotanyRecordBatch() {
 

@@ -56,7 +56,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 @ExtendWith(MockitoExtension.class)
-@Slf4j
 class HandleControllerTest {
 
   @Mock
@@ -255,9 +254,11 @@ class HandleControllerTest {
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
     List<JsonNode> requests = new ArrayList<>();
-    for (byte[] handle : handles) {
+
+    handles.forEach(handle -> {
       requests.add(genCreateRecordRequest(genHandleRecordRequestObject(), RECORD_TYPE_HANDLE));
-    }
+    });
+
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_HANDLE);
     given(service.createRecordBatch(requests)).willReturn(responseExpected);
 
@@ -277,9 +278,10 @@ class HandleControllerTest {
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
     List<JsonNode> requests = new ArrayList<>();
-    for (byte[] handle : handles) {
+    handles.forEach(handle -> {
       requests.add(genCreateRecordRequest(genDoiRecordRequestObject(), RECORD_TYPE_DOI));
-    }
+    });
+
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_DOI);
     given(service.createRecordBatch(requests)).willReturn(responseExpected);
 
@@ -299,9 +301,10 @@ class HandleControllerTest {
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
     List<JsonNode> requests = new ArrayList<>();
-    for (byte[] handle : handles) {
+
+    handles.forEach(handle -> {
       requests.add(genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_DS));
-    }
+    });
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_DS);
     given(service.createRecordBatch(requests)).willReturn(responseExpected);
 
@@ -321,10 +324,12 @@ class HandleControllerTest {
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
     List<JsonNode> requests = new ArrayList<>();
-    for (byte[] handle : handles) {
+
+    handles.forEach(handle -> {
       requests.add(
           genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_DS_BOTANY));
-    }
+    });
+
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_DS_BOTANY);
     given(service.createRecordBatch(requests)).willReturn(responseExpected);
 
