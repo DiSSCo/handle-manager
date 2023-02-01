@@ -112,7 +112,7 @@ public class HandleController {
   @PostMapping(value = "")
   public ResponseEntity<JsonApiWrapperWrite> createRecord(
       @RequestBody JsonNode request)
-      throws PidResolutionException, PidServiceInternalError, InvalidRecordInput, UnrecognizedPropertyException {
+      throws PidResolutionException, PidServiceInternalError, InvalidRecordInput {
     checkRequestNodesPresent(request, true, true, false, true);
     return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(List.of(request)));
   }
