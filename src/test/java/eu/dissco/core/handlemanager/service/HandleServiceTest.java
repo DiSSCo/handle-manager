@@ -31,7 +31,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordRe
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordFullAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequestBatch;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestBatch;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseRead;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWrite;
@@ -325,17 +324,15 @@ class HandleServiceTest {
   void testUpdateRecordLocation() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-
-    JsonNode updateRequest = genUpdateRequestAltLoc();
-
-    List<HandleAttribute> updatedAttributeRecord = genHandleRecordAttributesAltLoc(handle);
+    var updateRequest = genUpdateRequestBatch(List.of(handle));
+    var updatedAttributeRecord = genHandleRecordAttributesAltLoc(handle);
     var responseExpected = givenRecordResponseWriteAltLoc(List.of(handle));
 
     given(handleRep.checkHandlesWritable(anyList())).willReturn(List.of(handle));
-    given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(updatedAttributeRecord);
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(updatedAttributeRecord);
 
     // When
-    var responseReceived = service.updateRecord(updateRequest, handle, RECORD_TYPE_HANDLE);
+    var responseReceived = service.updateRecords(updateRequest);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -358,7 +355,7 @@ class HandleServiceTest {
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(updatedAttributeRecord);
 
     // When
-    var responseReceived = service.updateRecordBatch(updateRequest);
+    var responseReceived = service.updateRecords(updateRequest);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -376,13 +373,12 @@ class HandleServiceTest {
 
     // Then
     assertThrows(InvalidRecordInput.class, () -> {
-      service.updateRecordBatch(updateRequest);
+      service.updateRecords(updateRequest);
     });
   }
 
   @Test
   void testUpdateRecordInvalidField() throws Exception {
-
     // Given
     ObjectNode requestRoot = mapper.createObjectNode();
     ObjectNode requestData = mapper.createObjectNode();
@@ -392,13 +388,11 @@ class HandleServiceTest {
     requestData.put(NODE_TYPE, RECORD_TYPE_HANDLE);
     requestData.put(NODE_ID, HANDLE);
     requestData.set(NODE_ATTRIBUTES, requestAttributes);
-
     requestRoot.set(NODE_DATA, requestData);
 
     // Then
     assertThrows(InvalidRecordInput.class, () -> {
-      service.updateRecord(requestRoot, HANDLE.getBytes(StandardCharsets.UTF_8),
-          RECORD_TYPE_HANDLE);
+      service.updateRecords(List.of(requestRoot));
     });
   }
 
@@ -411,7 +405,7 @@ class HandleServiceTest {
 
     // Then
     assertThrows(PidResolutionException.class, () -> {
-      service.updateRecordBatch(updateRequest);
+      service.updateRecords(updateRequest);
     });
   }
 

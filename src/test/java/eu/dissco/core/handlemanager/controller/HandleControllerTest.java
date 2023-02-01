@@ -366,7 +366,7 @@ class HandleControllerTest {
     updateRequestNode.set("data", givenJsonNode(HANDLE, RECORD_TYPE_HANDLE, updateAttributes));
 
     var responseExpected = givenRecordResponseWriteAltLoc(List.of(handle));
-    given(service.updateRecord(updateAttributes, handle, RECORD_TYPE_HANDLE)).willReturn(
+    given(service.updateRecords(List.of(updateRequestNode))).willReturn(
         responseExpected);
 
     // When
@@ -410,7 +410,7 @@ class HandleControllerTest {
       updateRequestList.add(updateRequestNode.deepCopy());
     }
 
-    given(service.updateRecordBatch(updateRequestList)).willReturn(responseExpected);
+    given(service.updateRecords(updateRequestList)).willReturn(responseExpected);
 
     // When
     var responseReceived = controller.updateRecords(updateRequestList);

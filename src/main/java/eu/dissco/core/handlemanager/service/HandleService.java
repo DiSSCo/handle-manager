@@ -235,7 +235,7 @@ public class HandleService {
     return new JsonApiWrapperWrite(dataList);
   }
 
-  public JsonApiWrapperWrite updateRecordBatch(List<JsonNode> requests)
+  public JsonApiWrapperWrite updateRecords(List<JsonNode> requests)
       throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
     var recordTimestamp = Instant.now();
     List<byte[]> handles = new ArrayList<>();
@@ -271,23 +271,6 @@ public class HandleService {
   private String getRecordType(JsonNode recordAttributes, Map<String, String> recordTypes){
     String pid = getPidName(recordAttributes.get(PID).asText());
     return recordTypes.get(pid);
-  }
-
-  public JsonApiWrapperWrite updateRecord(JsonNode request, byte[] handle, String recordType)
-      throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
-
-    var recordTimestamp = Instant.now();
-    var validatedAttributes = validateUpdateAttributes(request, recordType);
-
-    checkHandlesWritable(List.of(handle));
-    List<HandleAttribute> attributesToUpdate = prepareUpdateAttributes(handle, validatedAttributes);
-
-    // Update record
-    handleRep.updateRecord(recordTimestamp, attributesToUpdate);
-    var updatedRecord = getRecord(handle);
-
-    // Package response
-    return new JsonApiWrapperWrite(List.of(wrapData(updatedRecord, recordType)));
   }
 
   private JsonNode validateUpdateAttributes(JsonNode requestAttributes, String recordType)

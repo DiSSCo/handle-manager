@@ -8,7 +8,6 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.VALID_PID_STATUS;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
@@ -108,7 +107,7 @@ public class HandleController {
     return ResponseEntity.status(HttpStatus.OK).body(service.resolveBatchRecord(handles, path));
   }
 
-  //@PreAuthorize("isAuthenticated()")
+  @PreAuthorize("isAuthenticated()")
   @PostMapping(value = "")
   public ResponseEntity<JsonApiWrapperWrite> createRecord(
       @RequestBody JsonNode request)
@@ -148,10 +147,8 @@ public class HandleController {
       throw new InvalidRecordInput("Handle in request URL does not match id in request body.");
     }
 
-    String recordType = data.get(NODE_TYPE).asText();
-    JsonNode requestAttributes = data.get(NODE_ATTRIBUTES);
     return ResponseEntity.status(HttpStatus.OK)
-        .body(service.updateRecord(requestAttributes, handle, recordType));
+        .body(service.updateRecords(List.of(request)));
   }
 
   @PreAuthorize("isAuthenticated()")
@@ -162,7 +159,7 @@ public class HandleController {
     for (JsonNode request : requests) {
       checkRequestNodesPresent(request, true, true, true, true);
     }
-    return ResponseEntity.status(HttpStatus.OK).body(service.updateRecordBatch(requests));
+    return ResponseEntity.status(HttpStatus.OK).body(service.updateRecords(requests));
   }
 
   @PreAuthorize("isAuthenticated()")
@@ -234,22 +231,5 @@ public class HandleController {
   @ExceptionHandler(PidResolutionException.class)
   private ResponseEntity<String> pidResolutionException(PidResolutionException e) {
     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-  }
-
-  @ExceptionHandler(UnrecognizedPropertyException.class)
-  private ResponseEntity<String> unrecognizedPropertyException(UnrecognizedPropertyException e) {
-    String message = String.format(
-        """
-            INVALID REQUEST: One or more request fields are inappropriate for the type of PID you are attempting to create.
-            Record Type: %s
-            Unrecognized Property: %s
-            This kind of record accepts these properties: %s
-            """,
-        e.getReferringClass().getSimpleName(),
-        e.getPropertyName(),
-        e.getKnownPropertyIds());
-
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-        .body(message);
   }
 }
