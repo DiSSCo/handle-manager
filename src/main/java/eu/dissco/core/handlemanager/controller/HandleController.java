@@ -108,13 +108,13 @@ public class HandleController {
     return ResponseEntity.status(HttpStatus.OK).body(service.resolveBatchRecord(handles, path));
   }
 
-  @PreAuthorize("isAuthenticated()")
-  @PostMapping(value = "/")
+  //@PreAuthorize("isAuthenticated()")
+  @PostMapping(value = "")
   public ResponseEntity<JsonApiWrapperWrite> createRecord(
       @RequestBody JsonNode request)
       throws PidResolutionException, PidServiceInternalError, InvalidRecordInput, UnrecognizedPropertyException {
     checkRequestNodesPresent(request, true, true, false, true);
-    return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecord(request));
+    return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(List.of(request)));
   }
 
   @PreAuthorize("isAuthenticated()")
@@ -126,7 +126,7 @@ public class HandleController {
     for (JsonNode request : requests) {
       checkRequestNodesPresent(request, true, true, false, true);
     }
-    return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecordBatch(requests));
+    return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(requests));
   }
 
   // Update

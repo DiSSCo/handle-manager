@@ -58,6 +58,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.TransformerFactory;
@@ -154,12 +155,12 @@ class HandleServiceTest {
     var responseExpected = givenRecordResponseWrite(List.of(handle), RECORD_TYPE_HANDLE);
     List<HandleAttribute> handleRecord = genHandleRecordAttributes(handle);
 
-    given(hgService.genHandleList(1)).willReturn(List.of(handle));
-    given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(handleRecord);
+    given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(handleRecord);
     given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
 
     // When
-    var responseReceived = service.createRecord(request);
+    var responseReceived = service.createRecords(Arrays.asList(request));
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -173,12 +174,12 @@ class HandleServiceTest {
     var responseExpected = givenRecordResponseWrite(List.of(handle), RECORD_TYPE_DOI);
     List<HandleAttribute> DoiRecord = genDoiRecordAttributes(handle);
 
-    given(hgService.genHandleList(1)).willReturn(List.of(handle));
-    given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(DoiRecord);
+    given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(DoiRecord);
     given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
 
     // When
-    var responseReceived = service.createRecord(request);
+    var responseReceived = service.createRecords(List.of(request));
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -192,12 +193,12 @@ class HandleServiceTest {
     var responseExpected = givenRecordResponseWrite(List.of(handle), RECORD_TYPE_DS);
     List<HandleAttribute> DigitalSpecimen = genDigitalSpecimenAttributes(handle);
 
-    given(hgService.genHandleList(1)).willReturn(List.of(handle));
-    given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(DigitalSpecimen);
+    given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(DigitalSpecimen);
     given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
 
     // When
-    var responseReceived = service.createRecord(request);
+    var responseReceived = service.createRecords(List.of(request));
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -212,12 +213,12 @@ class HandleServiceTest {
     var responseExpected = givenRecordResponseWrite(List.of(handle), RECORD_TYPE_DS_BOTANY);
     List<HandleAttribute> DigitalSpecimenBotany = genDigitalSpecimenBotanyAttributes(handle);
 
-    given(hgService.genHandleList(1)).willReturn(List.of(handle));
-    given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(DigitalSpecimenBotany);
+    given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(DigitalSpecimenBotany);
     given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
 
     // When
-    var responseReceived = service.createRecord(request);
+    var responseReceived = service.createRecords(List.of(request));
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -234,14 +235,14 @@ class HandleServiceTest {
       flatList.addAll(genHandleRecordAttributes(handle));
     }
 
-    var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_HANDLE, "PID");
+    var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_HANDLE);
 
     given(hgService.genHandleList(handles.size())).willReturn(handles);
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
     given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
 
     // When
-    var responseReceived = service.createRecordBatch(requests);
+    var responseReceived = service.createRecords(requests);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -258,14 +259,14 @@ class HandleServiceTest {
       flatList.addAll(genDoiRecordAttributes(handle));
     }
 
-    var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_DOI, "PID");
+    var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_DOI);
 
     given(hgService.genHandleList(handles.size())).willReturn(handles);
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
     given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
 
     // When
-    var responseReceived = service.createRecordBatch(requests);
+    var responseReceived = service.createRecords(requests);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -282,13 +283,13 @@ class HandleServiceTest {
       flatList.addAll(genDigitalSpecimenAttributes(handle));
     }
 
-    var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_DS, "PID");
+    var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_DS);
     given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
     given(hgService.genHandleList(handles.size())).willReturn(handles);
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
 
     // When
-    var responseReceived = service.createRecordBatch(requests);
+    var responseReceived = service.createRecords(requests);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -307,14 +308,14 @@ class HandleServiceTest {
       flatList.addAll(genDigitalSpecimenBotanyAttributes(handle));
     }
 
-    var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_DS_BOTANY, "PID");
+    var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_DS_BOTANY);
 
     given(hgService.genHandleList(handles.size())).willReturn(handles);
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
     given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
 
     // When
-    var responseReceived = service.createRecordBatch(requests);
+    var responseReceived = service.createRecords(requests);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -351,7 +352,7 @@ class HandleServiceTest {
       updatedAttributeRecord.addAll(genHandleRecordAttributesAltLoc(handle));
     }
 
-    var responseExpected = givenRecordResponseWriteAltLoc(handles, "PID");
+    var responseExpected = givenRecordResponseWriteAltLoc(handles);
 
     given(handleRep.checkHandlesWritable(anyList())).willReturn(handles);
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(updatedAttributeRecord);
@@ -490,7 +491,7 @@ class HandleServiceTest {
 
     // When
     Exception exception = assertThrows(InvalidRecordInput.class, () -> {
-      service.createRecord(requestNode);
+      service.createRecords(List.of(requestNode));
     });
 
     // Then
@@ -512,7 +513,7 @@ class HandleServiceTest {
 
     // When
     Exception exception = assertThrows(InvalidRecordInput.class, () -> {
-      service.createRecordBatch(requests);
+      service.createRecords(requests);
     });
 
     // Then
@@ -531,7 +532,7 @@ class HandleServiceTest {
 
     // When
     Exception exception = assertThrows(InvalidRecordInput.class, () -> {
-      service.createRecord(requestObjectNode);
+      service.createRecords(List.of(requestObjectNode));
     });
 
     // Then
@@ -551,7 +552,7 @@ class HandleServiceTest {
 
     // When
     Exception exception = assertThrows(InvalidRecordInput.class, () -> {
-      service.createRecord(requestObjectNode);
+      service.createRecords(List.of(requestObjectNode));
     });
 
     // Then
@@ -571,7 +572,7 @@ class HandleServiceTest {
 
     // When
     Exception exception = assertThrows(InvalidRecordInput.class, () -> {
-      service.createRecord(requestObjectNode);
+      service.createRecords(List.of(requestObjectNode));
     });
 
     // Then
@@ -591,7 +592,7 @@ class HandleServiceTest {
 
     // When
     Exception exception = assertThrows(InvalidRecordInput.class, () -> {
-      service.createRecord(requestObjectNode);
+      service.createRecords(List.of(requestObjectNode));
     });
 
     // Then
@@ -614,7 +615,7 @@ class HandleServiceTest {
 
     // When
     Exception exception = assertThrows(InvalidRecordInput.class, () -> {
-      service.createRecordBatch(requests);
+      service.createRecords(requests);
     });
 
     // Then
@@ -635,7 +636,7 @@ class HandleServiceTest {
 
     // When
     Exception exception = assertThrows(InvalidRecordInput.class, () -> {
-      service.createRecordBatch(requests);
+      service.createRecords(requests);
     });
 
     // Then
@@ -658,7 +659,7 @@ class HandleServiceTest {
 
     // When
     Exception exception = assertThrows(InvalidRecordInput.class, () -> {
-      service.createRecordBatch(requests);
+      service.createRecords(requests);
     });
 
     // Then
@@ -680,7 +681,7 @@ class HandleServiceTest {
 
     // When
     Exception exception = assertThrows(InvalidRecordInput.class, () -> {
-      service.createRecordBatch(requests);
+      service.createRecords(requests);
     });
 
     // Then

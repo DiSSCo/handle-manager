@@ -38,6 +38,13 @@ public class PidRecords {
   public static final String RECORD_TYPE_DS = "digitalSpecimen";
   public static final String RECORD_TYPE_DS_BOTANY = "digitalSpecimenBotany";
   public static final String RECORD_TYPE_TOMBSTONE = "tombstone";
+  public static final Set<String> RECORD_TYPES = (Set.of(
+      RECORD_TYPE_HANDLE,
+      RECORD_TYPE_DOI,
+      RECORD_TYPE_DS,
+      RECORD_TYPE_DS_BOTANY,
+      RECORD_TYPE_TOMBSTONE
+  ));
   // Fields for requests
   public static final String PID_ISSUER_REQ = "pidIssuerPid";
   public static final String LOC_REQ = "locations";

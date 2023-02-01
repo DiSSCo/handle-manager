@@ -41,7 +41,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
-import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiDataLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
@@ -178,71 +177,23 @@ public class HandleService {
     return new JsonApiWrapperRead(new JsonApiLinks(path), dataList);
   }
 
-
-  public JsonApiWrapperWrite createRecord(JsonNode request)
-      throws InvalidRecordInput, PidResolutionException, PidServiceInternalError, UnrecognizedPropertyException {
-    byte[] handle = hf.genHandleList(1).get(0);
-    var recordTimestamp = Instant.now();
-    ObjectNode dataNode = (ObjectNode) request.get(NODE_DATA);
-    String type = dataNode.get(NODE_TYPE).asText();
-    List<HandleAttribute> newRecord;
-
-    try {
-      switch (type) {
-        case RECORD_TYPE_HANDLE -> {
-          HandleRecordRequest requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
-              HandleRecordRequest.class);
-          newRecord = prepareHandleRecordAttributes(requestObject, handle);
-        }
-        case RECORD_TYPE_DOI -> {
-          DoiRecordRequest requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
-              DoiRecordRequest.class);
-          newRecord = prepareDoiRecordAttributes(requestObject, handle);
-        }
-        case RECORD_TYPE_DS -> {
-          DigitalSpecimenRequest requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
-              DigitalSpecimenRequest.class);
-          newRecord = prepareDigitalSpecimenRecordAttributes(requestObject, handle);
-        }
-        case RECORD_TYPE_DS_BOTANY -> {
-          DigitalSpecimenBotanyRequest requestObject = mapper.treeToValue(
-              dataNode.get(NODE_ATTRIBUTES), DigitalSpecimenBotanyRequest.class);
-          newRecord = prepareDigitalSpecimenBotanyRecordAttributes(requestObject, handle);
-        }
-        default -> throw new InvalidRecordInput(
-            INVALID_TYPE_ERROR + type);
-      }
-    } catch (UnrecognizedPropertyException e) {
-      throw e;
-    } catch (JsonProcessingException e) {
-      throw new InvalidRecordInput(
-          "An error has occurred parsing a record in request. More information: "
-              + e.getMessage());
-    }
-
-    handleRep.postAttributesToDb(recordTimestamp, newRecord);
-    var postedRecordAttributes = getRecord(handle);
-
-    return new JsonApiWrapperWrite(List.of(wrapData(postedRecordAttributes, type)));
-
-  }
-
-  public JsonApiWrapperWrite createRecordBatch(List<JsonNode> requests)
+  public JsonApiWrapperWrite createRecords(List<JsonNode> requests)
       throws PidResolutionException, PidServiceInternalError, InvalidRecordInput {
     var recordTimestamp = Instant.now();
     List<byte[]> handles = hf.genHandleList(requests.size());
     List<byte[]> handlesPost = new ArrayList<>(handles);
     List<HandleAttribute> handleAttributes = new ArrayList<>();
+    Map<String, String> recordTypes = new HashMap<>();
 
     for (var request : requests) {
       ObjectNode dataNode = (ObjectNode) request.get(NODE_DATA);
       String type = dataNode.get(NODE_TYPE).asText();
+      recordTypes.put(new String(handles.get(0), StandardCharsets.UTF_8), type);
       try {
         switch (type) {
           case RECORD_TYPE_HANDLE -> {
             HandleRecordRequest requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 HandleRecordRequest.class);
-
             handleAttributes.addAll(
                 prepareHandleRecordAttributes(requestObject, handles.remove(0)));
           }
@@ -279,7 +230,7 @@ public class HandleService {
     List<JsonApiDataLinks> dataList = new ArrayList<>();
 
     for (JsonNode recordAttributes : postedRecordAttributes) {
-      dataList.add(wrapData(recordAttributes, "PID"));
+      dataList.add(wrapData(recordAttributes, getRecordType(recordAttributes, recordTypes)));
     }
     return new JsonApiWrapperWrite(dataList);
   }
@@ -289,6 +240,7 @@ public class HandleService {
     var recordTimestamp = Instant.now();
     List<byte[]> handles = new ArrayList<>();
     List<List<HandleAttribute>> attributesToUpdate = new ArrayList<>();
+    Map<String, String> recordTypes = new HashMap<>();
 
     for (JsonNode root : requests) {
       JsonNode data = root.get(NODE_DATA);
@@ -296,6 +248,7 @@ public class HandleService {
       handles.add(handle);
       JsonNode requestAttributes = data.get(NODE_ATTRIBUTES);
       String recordType = data.get(NODE_TYPE).asText();
+      recordTypes.put(new String(handle, StandardCharsets.UTF_8), recordType);
 
       JsonNode validatedAttributes = validateUpdateAttributes(requestAttributes, recordType);
       var attributes = prepareUpdateAttributes(handle, validatedAttributes);
@@ -309,9 +262,15 @@ public class HandleService {
 
     List<JsonApiDataLinks> dataList = new ArrayList<>();
     for (JsonNode updatedRecord : updatedRecords) {
-      dataList.add(wrapData(updatedRecord, "PID"));
+      log.info(updatedRecord.get(PID).asText());
+      dataList.add(wrapData(updatedRecord, getRecordType(updatedRecord, recordTypes)));
     }
     return new JsonApiWrapperWrite(dataList);
+  }
+
+  private String getRecordType(JsonNode recordAttributes, Map<String, String> recordTypes){
+    String pid = getPidName(recordAttributes.get(PID).asText());
+    return recordTypes.get(pid);
   }
 
   public JsonApiWrapperWrite updateRecord(JsonNode request, byte[] handle, String recordType)
@@ -622,10 +581,9 @@ public class HandleService {
     return handleRecord;
   }
 
-
   private List<HandleAttribute> prepareDoiRecordAttributes(DoiRecordRequest request, byte[] handle)
       throws PidResolutionException, PidServiceInternalError {
-    List<HandleAttribute> handleRecord = prepareHandleRecordAttributes(request, handle);
+    var handleRecord = prepareHandleRecordAttributes(request, handle);
 
     // 12: Referent DOI Name
     String referentDoiName = pidTypeService.resolveTypePid(request.getReferentDoiNamePid());
@@ -643,7 +601,7 @@ public class HandleService {
   private List<HandleAttribute> prepareDigitalSpecimenRecordAttributes(
       DigitalSpecimenRequest request, byte[] handle)
       throws PidResolutionException, PidServiceInternalError {
-    List<HandleAttribute> handleRecord = prepareDoiRecordAttributes(request, handle);
+    var handleRecord = prepareDoiRecordAttributes(request, handle);
 
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(DIGITAL_OR_PHYSICAL), handle, DIGITAL_OR_PHYSICAL,
@@ -737,7 +695,6 @@ public class HandleService {
           subNode = mapper.readValue(data, ObjectNode.class);
           rootNode.set(type, subNode);
         } catch (JsonProcessingException e) {
-          // Not 100% sure if an exception should be thrown here. We don't want to make a poorly formatted record un-resolvable
           log.warn("Type \"{}\" is noncompliant to the PID kernel model. Invalid data: {}", type,
               data);
         }

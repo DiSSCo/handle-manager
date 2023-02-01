@@ -32,7 +32,6 @@ import static org.mockito.BDDMockito.given;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
@@ -45,7 +44,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -179,7 +177,7 @@ class HandleControllerTest {
     JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(handle),
         RECORD_TYPE_HANDLE);
 
-    given(service.createRecord(requestNode)).willReturn(responseExpected);
+    given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
 
     // When
     var responseReceived = controller.createRecord(requestNode);
@@ -198,7 +196,7 @@ class HandleControllerTest {
     JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(handle),
         RECORD_TYPE_DOI);
 
-    given(service.createRecord(requestNode)).willReturn(responseExpected);
+    given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
 
     // When
     var responseReceived = controller.createRecord(requestNode);
@@ -217,7 +215,7 @@ class HandleControllerTest {
     JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(handle),
         RECORD_TYPE_DS);
 
-    given(service.createRecord(requestNode)).willReturn(responseExpected);
+    given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
 
     // When
     var responseReceived = controller.createRecord(requestNode);
@@ -236,7 +234,7 @@ class HandleControllerTest {
     JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(handle),
         RECORD_TYPE_DS_BOTANY);
 
-    given(service.createRecord(requestNode)).willReturn(responseExpected);
+    given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
 
     // When
     var responseReceived = controller.createRecord(requestNode);
@@ -260,7 +258,7 @@ class HandleControllerTest {
     });
 
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_HANDLE);
-    given(service.createRecordBatch(requests)).willReturn(responseExpected);
+    given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When
     var responseReceived = controller.createRecords(requests);
@@ -283,7 +281,7 @@ class HandleControllerTest {
     });
 
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_DOI);
-    given(service.createRecordBatch(requests)).willReturn(responseExpected);
+    given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When
     var responseReceived = controller.createRecords(requests);
@@ -306,7 +304,7 @@ class HandleControllerTest {
       requests.add(genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_DS));
     });
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_DS);
-    given(service.createRecordBatch(requests)).willReturn(responseExpected);
+    given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When
     var responseReceived = controller.createRecords(requests);
@@ -331,7 +329,7 @@ class HandleControllerTest {
     });
 
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_DS_BOTANY);
-    given(service.createRecordBatch(requests)).willReturn(responseExpected);
+    given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When
     var responseReceived = controller.createRecords(requests);
@@ -541,25 +539,12 @@ class HandleControllerTest {
   }
 
   @Test
-  void testUnrecognizedPropertyException() throws Exception {
-    // Given
-    DoiRecordRequest request = genDoiRecordRequestObject();
-    ObjectNode requestNode = genCreateRecordRequest(request, RECORD_TYPE_DOI);
-    given(service.createRecord(requestNode)).willThrow(UnrecognizedPropertyException.class);
-
-    // Then
-    assertThrows(UnrecognizedPropertyException.class, () -> {
-      controller.createRecord(requestNode);
-    });
-  }
-
-  @Test
   void testPiDResolutionException() throws Exception {
     // Given
     DoiRecordRequest request = genDoiRecordRequestObject();
     ObjectNode requestNode = genCreateRecordRequest(request, RECORD_TYPE_DOI);
     String message = "123";
-    given(service.createRecord(requestNode)).willThrow(new PidResolutionException(message));
+    given(service.createRecords(List.of(requestNode))).willThrow(new PidResolutionException(message));
 
     // Then
     Exception exception = assertThrows(PidResolutionException.class, () -> {
