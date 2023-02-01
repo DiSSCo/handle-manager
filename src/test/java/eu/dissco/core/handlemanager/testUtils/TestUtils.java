@@ -474,13 +474,13 @@ public class TestUtils {
     return requestNodeList;
   }
 
-  public static List<JsonNode> genTombstoneRequestBatch() {
+  public static List<JsonNode> genTombstoneRequestBatch(List<String> handles) {
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode requestNodeRoot = mapper.createObjectNode();
     ObjectNode requestNodeData = mapper.createObjectNode();
     List<JsonNode> requestNodeList = new ArrayList<>();
 
-    for (String handle : HANDLE_LIST_STR) {
+    for (String handle : handles) {
       requestNodeData.put("type", RECORD_TYPE_TOMBSTONE);
       requestNodeData.put("id", handle);
       requestNodeData.set("attributes", genTombstoneRequest());

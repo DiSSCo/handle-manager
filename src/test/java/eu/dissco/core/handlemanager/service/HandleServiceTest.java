@@ -61,6 +61,7 @@ import java.util.Arrays;
 import java.util.List;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.TransformerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -69,6 +70,7 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+@Slf4j
 @ExtendWith(MockitoExtension.class)
 class HandleServiceTest {
 
@@ -413,16 +415,17 @@ class HandleServiceTest {
   void testArchiveRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    JsonNode archiveRequest = genTombstoneRequest();
-    List<HandleAttribute> tombstoneAttributesFull = genTombstoneRecordFullAttributes(handle);
+    var archiveRequest = genTombstoneRequestBatch(List.of(HANDLE));
+    var tombstoneAttributesFull = genTombstoneRecordFullAttributes(handle);
 
     var responseExpected = givenRecordResponseWriteArchive(List.of(handle));
 
-    given(handleRep.checkHandlesWritable(List.of(handle))).willReturn(List.of(handle));
-    given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(tombstoneAttributesFull);
+    given(handleRep.checkHandlesWritable(anyList())).willReturn(handles);
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(tombstoneAttributesFull);
+    log.info(archiveRequest.toString());
 
     // When
-    var responseReceived = service.archiveRecord(archiveRequest, handle);
+    var responseReceived = service.archiveRecordBatch(archiveRequest);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -431,7 +434,8 @@ class HandleServiceTest {
   @Test
   void testArchiveRecordBatch() throws Exception {
     // Given
-    List<JsonNode> archiveRequest = genTombstoneRequestBatch();
+    List<String> handlesString = handles.stream().map(e -> new String(e, StandardCharsets.UTF_8)).toList();
+    var archiveRequest = genTombstoneRequestBatch(handlesString);
 
     List<HandleAttribute> flatList = new ArrayList<>();
     for (byte[] handle : handles) {

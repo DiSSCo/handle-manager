@@ -324,26 +324,6 @@ public class HandleService {
 
   }
 
-  public JsonApiWrapperWrite archiveRecord(JsonNode request, byte[] handle)
-      throws InvalidRecordInput, PidResolutionException {
-    var recordTimestamp = Instant.now();
-    List<String> keys = getKeys(request);
-
-    validateRequestData(RECORD_TYPE_TOMBSTONE, keys);
-    checkHandlesWritable(List.of(handle));
-
-    List<HandleAttribute> tombstoneAttributes = prepareUpdateAttributes(handle, request);
-
-    tombstoneAttributes.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS,
-        "ARCHIVED".getBytes(StandardCharsets.UTF_8)));
-    handleRep.archiveRecord(recordTimestamp, tombstoneAttributes);
-
-    var archivedRecord = getRecord(handle);
-
-    // Package response
-    return new JsonApiWrapperWrite(List.of(wrapData(archivedRecord, RECORD_TYPE_TOMBSTONE)));
-  }
-
   private JsonApiDataLinks wrapData(JsonNode recordAttributes, String recordType) {
     String pidLink = recordAttributes.get(PID).asText();
     String pidName = getPidName(pidLink);

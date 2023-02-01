@@ -162,7 +162,7 @@ public class HandleController {
     return ResponseEntity.status(HttpStatus.OK).body(service.updateRecords(requests));
   }
 
-  @PreAuthorize("isAuthenticated()")
+  //@PreAuthorize("isAuthenticated()")
   @PutMapping(value = "/{prefix}/{suffix}")
   public ResponseEntity<JsonApiWrapperWrite> archiveRecord(
       @PathVariable("prefix") String prefix,
@@ -176,9 +176,8 @@ public class HandleController {
     if (!Arrays.equals(handle, handleRequest)) {
       throw new InvalidRecordInput("Handle in request URL does not match id in request body.");
     }
-
     return ResponseEntity.status(HttpStatus.OK)
-        .body(service.archiveRecord(data.get(NODE_ATTRIBUTES), handle));
+        .body(service.archiveRecordBatch(List.of(request)));
   }
 
   @PreAuthorize("isAuthenticated()")

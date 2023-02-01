@@ -26,6 +26,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordRespon
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -435,11 +436,38 @@ class HandleControllerTest {
         .get(NODE_ATTRIBUTES);
 
     var responseExpected = givenRecordResponseWriteArchive(List.of(handle));
-    given(service.archiveRecord(archiveRequestNode, handle)).willReturn(
+    given(service.archiveRecordBatch(List.of(archiveRootNode))).willReturn(
         responseExpected);
 
     // When
     var responseReceived = controller.archiveRecord(prefix, suffix, archiveRootNode);
+
+    // Then
+    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testArchiveRecordBatch() throws Exception {
+    // Given
+    List<byte[]> handles = List.of(
+        HANDLE.getBytes(StandardCharsets.UTF_8),
+        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
+
+    List<JsonNode> archiveRequestList = new ArrayList<>();
+
+    for (byte[] handle : handles) {
+      ObjectNode archiveRootNode = mapper.createObjectNode();
+      archiveRootNode.set("data", givenJsonNode(HANDLE, RECORD_TYPE_HANDLE,
+          mapper.valueToTree(genTombstoneRecordRequestObject())));
+      archiveRequestList.add(archiveRootNode.deepCopy());
+    }
+    var responseExpected = givenRecordResponseWriteArchive(handles);
+
+    given(service.archiveRecordBatch(archiveRequestList)).willReturn(responseExpected);
+
+    // When
+    var responseReceived = controller.archiveRecords(archiveRequestList);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -509,33 +537,6 @@ class HandleControllerTest {
     ObjectNode baseNodeRoot = mapper.createObjectNode();
     baseNodeRoot.set("data", baseNode);
     return baseNodeRoot;
-  }
-
-  @Test
-  void testArchiveRecordBatch() throws Exception {
-    // Given
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
-        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-
-    List<JsonNode> updateRequestList = new ArrayList<>();
-
-    for (byte[] handle : handles) {
-      ObjectNode archiveRootNode = mapper.createObjectNode();
-      archiveRootNode.set("data", givenJsonNode(HANDLE, RECORD_TYPE_HANDLE,
-          mapper.valueToTree(genTombstoneRecordRequestObject())));
-      updateRequestList.add(archiveRootNode.deepCopy());
-    }
-    var responseExpected = givenRecordResponseWriteArchive(handles);
-
-    given(service.archiveRecordBatch(updateRequestList)).willReturn(responseExpected);
-
-    // When
-    var responseReceived = controller.archiveRecords(updateRequestList);
-
-    // Then
-    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
 
   @Test
