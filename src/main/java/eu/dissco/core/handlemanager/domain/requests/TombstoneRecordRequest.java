@@ -8,7 +8,6 @@ import lombok.ToString;
 @Getter
 @ToString
 public class TombstoneRecordRequest {
-
   @NonNull
   private final byte[] handle;
   @NonNull
