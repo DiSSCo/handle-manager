@@ -513,7 +513,7 @@ class HandleControllerTest {
     assertThat(exType).hasMessage(String.format(message, "type"));
 
     Exception exId = assertThrows(InvalidRecordInput.class, () -> {
-      controller.updateRecord(prefix, suffix, noId);
+      controller.updateRecords(List.of(noId));
     });
     assertThat(exId).hasMessage(String.format(message, "id"));
 
