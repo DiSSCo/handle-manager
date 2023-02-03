@@ -9,10 +9,12 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public class DigitalSpecimenBotanyRequest extends DigitalSpecimenRequest {
+
   @NonNull
   private final String objectType;
   @NonNull
   private final String preservedOrLiving;
+
   public DigitalSpecimenBotanyRequest(
       // Handle
       String pidIssuerPid,

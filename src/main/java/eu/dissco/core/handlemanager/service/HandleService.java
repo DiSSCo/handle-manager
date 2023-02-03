@@ -268,7 +268,7 @@ public class HandleService {
     return new JsonApiWrapperWrite(dataList);
   }
 
-  private String getRecordType(JsonNode recordAttributes, Map<String, String> recordTypes){
+  private String getRecordType(JsonNode recordAttributes, Map<String, String> recordTypes) {
     String pid = getPidName(recordAttributes.get(PID).asText());
     return recordTypes.get(pid);
   }
@@ -280,8 +280,7 @@ public class HandleService {
     JsonNode returnedAttributes;
     if (keys.contains(LOC_REQ)) {
       returnedAttributes = setLocationFromJson(requestAttributes);
-    }
-    else {
+    } else {
       returnedAttributes = requestAttributes;
     }
     return returnedAttributes;

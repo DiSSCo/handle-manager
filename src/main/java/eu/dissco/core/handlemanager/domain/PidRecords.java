@@ -22,6 +22,10 @@ public class PidRecords {
   // Doi
   public static final String REFERENT_DOI_NAME = "referentDoiName";
   public static final String REFERENT = "referent";
+  // Media Object
+  public static final String MEIDA_HASH = "mediaHash";
+  public static final String MEDIA_URL = "mediaUrl";
+  public static final String PHYS_ID = "primaryPhysicalId";
   // Digital Specimen
   public static final String DIGITAL_OR_PHYSICAL = "digitalOrPhysical";
   public static final String SPECIMEN_HOST = "specimenHost";
@@ -38,40 +42,28 @@ public class PidRecords {
   public static final String RECORD_TYPE_DS = "digitalSpecimen";
   public static final String RECORD_TYPE_DS_BOTANY = "digitalSpecimenBotany";
   public static final String RECORD_TYPE_TOMBSTONE = "tombstone";
-  public static final Set<String> RECORD_TYPES = (Set.of(
-      RECORD_TYPE_HANDLE,
-      RECORD_TYPE_DOI,
-      RECORD_TYPE_DS,
-      RECORD_TYPE_DS_BOTANY,
-      RECORD_TYPE_TOMBSTONE
-  ));
+  public static final String RECORD_TYPE_MEDIA = "mediaObject";
+  public static final Set<String> RECORD_TYPES = (Set.of(RECORD_TYPE_HANDLE, RECORD_TYPE_DOI,
+      RECORD_TYPE_DS, RECORD_TYPE_DS_BOTANY, RECORD_TYPE_TOMBSTONE, RECORD_TYPE_MEDIA));
   // Fields for requests
   public static final String PID_ISSUER_REQ = "pidIssuerPid";
   public static final String LOC_REQ = "locations";
   public static final String REFERENT_DOI_NAME_REQ = "referentDoiNamePid";
   public static final String SPECIMEN_HOST_REQ = "specimenHostPid";
   public static final String IN_COLLECTION_FACILITY_REQ = "inCollectionFacilityPid";
-
   public static final String NODE_ATTRIBUTES = "attributes";
   public static final String NODE_DATA = "data";
   public static final String NODE_ID = "id";
   public static final String NODE_TYPE = "type";
 
   // Pid Status
-  public static final Set<String> VALID_PID_STATUS = (Set.of(
-      "ACTIVE",
-      "ARCHIVED",
-      "DRAFT",
-      "RESERVED",
-      "TEST",
-      "TEST2",
-      "ALL"
-  ));
+  public static final Set<String> VALID_PID_STATUS = (Set.of("ACTIVE", "ARCHIVED", "DRAFT",
+      "RESERVED", "TEST", "TEST2", "ALL"));
 
   // Permitted fields for each record type
   public static final Set<String> HANDLE_RECORD_FIELDS = Set.of(PID, PID_ISSUER,
-      DIGITAL_OBJECT_TYPE, DIGITAL_OBJECT_SUBTYPE, LOC,
-      ISSUE_DATE, ISSUE_NUMBER, PID_STATUS, PID_KERNEL_METADATA_LICENSE);
+      DIGITAL_OBJECT_TYPE, DIGITAL_OBJECT_SUBTYPE, LOC, ISSUE_DATE, ISSUE_NUMBER, PID_STATUS,
+      PID_KERNEL_METADATA_LICENSE);
   public static final Set<String> DOI_RECORD_FIELDS;
   public static final Set<String> DIGITAL_SPECIMEN_FIELDS;
   public static final Set<String> DIGITAL_SPECIMEN_BOTANY_FIELDS;
@@ -84,18 +76,17 @@ public class PidRecords {
   public static final Set<String> DIGITAL_SPECIMEN_BOTANY_REQ;
 
   public static final Set<String> FIELD_IS_PID_RECORD = Set.of(PID_ISSUER, DIGITAL_OBJECT_TYPE,
-      DIGITAL_OBJECT_SUBTYPE,
-      TOMBSTONE_PIDS, SPECIMEN_HOST, IN_COLLECTION_FACILITY, REFERENT_DOI_NAME);
+      DIGITAL_OBJECT_SUBTYPE, TOMBSTONE_PIDS, SPECIMEN_HOST, IN_COLLECTION_FACILITY,
+      REFERENT_DOI_NAME);
 
-  public static final Map<String, Integer> FIELD_IDX = Map.ofEntries(
-      Map.entry(HS_ADMIN, 100), Map.entry(PID, 1), Map.entry(PID_ISSUER, 2),
-      Map.entry(DIGITAL_OBJECT_TYPE, 3), Map.entry(DIGITAL_OBJECT_SUBTYPE, 4), Map.entry(LOC, 5),
-      Map.entry(ISSUE_DATE, 6), Map.entry(ISSUE_NUMBER, 7), Map.entry(PID_STATUS, 8),
-      Map.entry(TOMBSTONE_TEXT, 9), Map.entry(TOMBSTONE_PIDS, 10),
-      Map.entry(PID_KERNEL_METADATA_LICENSE, 11), Map.entry(REFERENT_DOI_NAME, 12),
-      Map.entry(REFERENT, 13), Map.entry(DIGITAL_OR_PHYSICAL, 14), Map.entry(SPECIMEN_HOST, 15),
-      Map.entry(IN_COLLECTION_FACILITY, 16), Map.entry(OBJECT_TYPE, 17),
-      Map.entry(PRESERVED_OR_LIVING, 18));
+  public static final Map<String, Integer> FIELD_IDX = Map.ofEntries(Map.entry(HS_ADMIN, 100),
+      Map.entry(PID, 1), Map.entry(PID_ISSUER, 2), Map.entry(DIGITAL_OBJECT_TYPE, 3),
+      Map.entry(DIGITAL_OBJECT_SUBTYPE, 4), Map.entry(LOC, 5), Map.entry(ISSUE_DATE, 6),
+      Map.entry(ISSUE_NUMBER, 7), Map.entry(PID_STATUS, 8), Map.entry(TOMBSTONE_TEXT, 9),
+      Map.entry(TOMBSTONE_PIDS, 10), Map.entry(PID_KERNEL_METADATA_LICENSE, 11),
+      Map.entry(REFERENT_DOI_NAME, 12), Map.entry(REFERENT, 13), Map.entry(DIGITAL_OR_PHYSICAL, 14),
+      Map.entry(SPECIMEN_HOST, 15), Map.entry(IN_COLLECTION_FACILITY, 16),
+      Map.entry(OBJECT_TYPE, 17), Map.entry(PRESERVED_OR_LIVING, 18));
 
 
   static { // Doi Record Fields
@@ -159,11 +150,9 @@ public class PidRecords {
     DIGITAL_SPECIMEN_BOTANY_REQ = Collections.unmodifiableSet(tmp);
   }
 
-
   // Indexes of modifiable fields
   private PidRecords() {
     throw new IllegalStateException("Utility class");
   }
-
 
 }

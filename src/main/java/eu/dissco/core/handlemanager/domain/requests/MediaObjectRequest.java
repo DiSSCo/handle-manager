@@ -9,6 +9,7 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public class MediaObjectRequest extends DoiRecordRequest {
+
   @NonNull
   private final String mediaHash;
   @NonNull

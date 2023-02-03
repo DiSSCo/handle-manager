@@ -401,7 +401,8 @@ public class TestUtils {
     return givenRecordResponseWriteAltLoc(handles, RECORD_TYPE_HANDLE);
   }
 
-  public static JsonApiWrapperWrite givenRecordResponseWriteAltLoc(List<byte[]> handles, String recordType)
+  public static JsonApiWrapperWrite givenRecordResponseWriteAltLoc(List<byte[]> handles,
+      String recordType)
       throws Exception {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
 

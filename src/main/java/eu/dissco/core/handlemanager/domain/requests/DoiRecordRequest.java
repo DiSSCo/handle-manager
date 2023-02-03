@@ -9,6 +9,7 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public class DoiRecordRequest extends HandleRecordRequest {
+
   private static final String REFERENT_PLACEHOLDER = "";
   private final String referentDoiNamePid;
   private final String referent;

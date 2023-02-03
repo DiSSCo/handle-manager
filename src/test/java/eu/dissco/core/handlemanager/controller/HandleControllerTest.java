@@ -26,7 +26,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordRespon
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -545,7 +544,8 @@ class HandleControllerTest {
     DoiRecordRequest request = genDoiRecordRequestObject();
     ObjectNode requestNode = genCreateRecordRequest(request, RECORD_TYPE_DOI);
     String message = "123";
-    given(service.createRecords(List.of(requestNode))).willThrow(new PidResolutionException(message));
+    given(service.createRecords(List.of(requestNode))).willThrow(
+        new PidResolutionException(message));
 
     // Then
     Exception exception = assertThrows(PidResolutionException.class, () -> {

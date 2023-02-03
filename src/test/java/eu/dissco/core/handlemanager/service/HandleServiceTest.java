@@ -29,7 +29,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAt
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributesAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordFullAttributes;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequestBatch;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestBatch;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseRead;
@@ -434,7 +433,8 @@ class HandleServiceTest {
   @Test
   void testArchiveRecordBatch() throws Exception {
     // Given
-    List<String> handlesString = handles.stream().map(e -> new String(e, StandardCharsets.UTF_8)).toList();
+    List<String> handlesString = handles.stream().map(e -> new String(e, StandardCharsets.UTF_8))
+        .toList();
     var archiveRequest = genTombstoneRequestBatch(handlesString);
 
     List<HandleAttribute> flatList = new ArrayList<>();
@@ -663,6 +663,7 @@ class HandleServiceTest {
     // Then
     assertThat(exception.getMessage()).contains(IN_COLLECTION_FACILITY_REQ);
   }
+
   @Test
   void testMissingFieldDigitalSpecimenBotanyRecordBatch() {
 
