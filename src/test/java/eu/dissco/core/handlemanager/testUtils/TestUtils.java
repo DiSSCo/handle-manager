@@ -1,19 +1,46 @@
 package eu.dissco.core.handlemanager.testUtils;
 
-import static eu.dissco.core.handlemanager.utils.Resources.genAdminHandle;
+import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_SUBTYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OR_PHYSICAL;
+import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
+import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IS_PID_RECORD;
+import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
+import static eu.dissco.core.handlemanager.domain.PidRecords.IN_COLLECTION_FACILITY;
+import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_DATE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_NUMBER;
+import static eu.dissco.core.handlemanager.domain.PidRecords.LOC;
+import static eu.dissco.core.handlemanager.domain.PidRecords.LOC_REQ;
+import static eu.dissco.core.handlemanager.domain.PidRecords.OBJECT_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID_KERNEL_METADATA_LICENSE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PRESERVED_OR_LIVING;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_TOMBSTONE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT;
+import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
+import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
+import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_TEXT;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiDataLinks;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenBotanyResponse;
-import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenResponse;
-import eu.dissco.core.handlemanager.domain.responses.DoiRecordResponse;
-import eu.dissco.core.handlemanager.domain.responses.HandleRecordResponse;
+import eu.dissco.core.handlemanager.domain.requests.TombstoneRecordRequest;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -35,46 +62,57 @@ import org.w3c.dom.Document;
 public class TestUtils {
 
   public static final Instant CREATED = Instant.parse("2022-11-01T09:59:24.00Z");
-  public static final String ISSUE_DATE = "2022-11-01";
+  public static final String ISSUE_DATE_TESTVAL = "2022-11-01";
+  public static final String HANDLE = "20.5000.1025/QRS-321-ABC";
+  public static final String HANDLE_ALT = "20.5000.1025/ABC-123-QRS";
+  public static final List<String> HANDLE_LIST_STR;
 
-  public static String HANDLE = "20.5000.1025/QRS-321-ABC";
-  public static String HANDLE_ALT = "20.5000.1025/ABC-123-QRS";
+  static {
+    HANDLE_LIST_STR = List.of(HANDLE, HANDLE_ALT);
+  }
 
   // Request Vars
   // Handles
-  public static String PID_ISSUER_PID = "20.5000.1025/PID-ISSUER";
-  public static String DIGITAL_OBJECT_TYPE_PID = "20.5000.1025/DIGITAL-SPECIMEN";
-  public static String DIGITAL_OBJECT_SUBTYPE_PID = "20.5000.1025/BOTANY-SPECIMEN";
-  public static String[] LOCATIONS = {"https://sandbox.dissco.tech/", "https://dissco.eu"};
-  public static final String PID_STATUS = "TEST";
-  public static final String LICENSE = "https://creativecommons.org/publicdomain/zero/1.0/";
-  //DOIs
-  public static String REFERENT_DOI_NAME_PID = "20.5000.1025/OTHER-TRIPLET";
-  public static String REFERENT = "";
-  //Digital Specimens
-  public static String DIGITAL_OR_PHYSICAL = "physical";
-  public static String SPECIMEN_HOST_PID = "20.5000.1025/OTHER-TRIPLET";
-  public static String IN_COLLECTION_FACILITY = "20.5000.1025/OTHER-TRIPLET";
-  //Botany Specimens
-  public static String OBJECT_TYPE = "Herbarium Sheet";
-  public static String PRESERVED_OR_LIVING = "preserved";
 
-  // Pid Type Record vars
-  public static String PTR_PID = "http://hdl.handle.net/" + PID_ISSUER_PID;
-  public static String PTR_TYPE = "handle";
-  public static String PTR_PRIMARY_NAME = "DiSSCo";
-  public static String PTR_PID_DOI = "http://doi.org/" + PID_ISSUER_PID;
-  public static String PTR_TYPE_DOI = "doi";
-  public static String PTR_REGISTRATION_DOI_NAME = "Registration Agency";
-  public static String PTR_HANDLE_RECORD = initPtrHandleRecord(false);
-  public static String PTR_DOI_RECORD = initPtrHandleRecord(true);
+  public static final String PID_ISSUER_PID = "20.5000.1025/PID-ISSUER";
+  public static final String DIGITAL_OBJECT_TYPE_PID = "20.5000.1025/DIGITAL-SPECIMEN";
+  public static final String DIGITAL_OBJECT_SUBTYPE_PID = "20.5000.1025/BOTANY-SPECIMEN";
+  public static final String[] LOC_TESTVAL = {"https://sandbox.dissco.tech/", "https://dissco.eu"};
+  public static final String[] LOC_ALT_TESTVAL = {"naturalis.nl"};
+  public static final String PID_STATUS_TESTVAL = "TEST";
+  public static final String PID_KERNEL_METADATA_LICENSE_TESTVAL = "https://creativecommons.org/publicdomain/zero/1.0/";
+  //DOIs
+  public static final String REFERENT_DOI_NAME_PID = "20.5000.1025/OTHER-TRIPLET";
+  public static final String REFERENT_TESTVAL = "";
+  //Digital Specimens
+  public static final String DIGITAL_OR_PHYSICAL_TESTVAL = "physical";
+  public static final String SPECIMEN_HOST_PID = "20.5000.1025/OTHER-TRIPLET";
+  public static final String IN_COLLECTION_FACILITY_TESTVAL = "20.5000.1025/OTHER-TRIPLET";
+
+  //Botany Specimens
+  public static final String OBJECT_TYPE_TESTVAL = "Herbarium Sheet";
+  public static final String PRESERVED_OR_LIVING_TESTVAL = "preserved";
+
+  // Pid Type Record vals
+  private final static String HANDLE_URI = "https://hdl.handle.net/";
+  public static final String PTR_PID = HANDLE_URI + PID_ISSUER_PID;
+  public static final String PTR_TYPE = "handle";
+  public static final String PTR_PRIMARY_NAME = "DiSSCo";
+  public static final String PTR_PID_DOI = "http://doi.org/" + PID_ISSUER_PID;
+  public static final String PTR_TYPE_DOI = "doi";
+  public static final String PTR_REGISTRATION_DOI_NAME = "Registration Agency";
+  public final static String PTR_HANDLE_RECORD = genPtrHandleRecord(false);
+  public final static String PTR_DOI_RECORD = genPtrHandleRecord(true);
+
+  // Tombstone Record vals
+  public final static String TOMBSTONE_TEXT_TESTVAL = "pid was deleted";
 
   private TestUtils() {
     throw new IllegalStateException("Utility class");
   }
 
   // Pid Type Records
-  private static String initPtrHandleRecord(boolean isDoi) {
+  private static String genPtrHandleRecord(boolean isDoi) {
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode objectNode = mapper.createObjectNode();
     if (isDoi) {
@@ -95,250 +133,407 @@ public class TestUtils {
     }
   }
 
-  // Handle Attribute Lists
-  public static List<HandleAttribute> generateTestHandleAttributes(byte[] handle) {
+  // Single Handle Attribute Lists
+  public static List<HandleAttribute> genHandleRecordAttributes(byte[] handle) {
 
     List<HandleAttribute> handleRecord = new ArrayList<>();
-    byte[] ptr_record = PTR_HANDLE_RECORD.getBytes();
-
-    // 100: Admin Handle
-    handleRecord.add(new HandleAttribute(100, handle, "HS_ADMIN", genAdminHandle()));
+    byte[] ptr_record = PTR_HANDLE_RECORD.getBytes(StandardCharsets.UTF_8);
 
     // 1: Pid
-    byte[] pid = ("https://hdl.handle.net/" + new String(handle)).getBytes();
-    handleRecord.add(new HandleAttribute(1, handle, "pid", pid));
+    byte[] pid = ("https://hdl.handle.net/" + new String(handle)).getBytes(StandardCharsets.UTF_8);
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(PID), handle, PID, pid));
 
     // 2: PidIssuer
-    handleRecord.add(new HandleAttribute(2, handle, "pidIssuer", ptr_record));
+    handleRecord.add(
+        new HandleAttribute(FIELD_IDX.get(PID_ISSUER), handle, PID_ISSUER, ptr_record));
 
     // 3: Digital Object Type
-    handleRecord.add(new HandleAttribute(3, handle, "digitalObjectType", ptr_record));
+    handleRecord.add(
+        new HandleAttribute(FIELD_IDX.get(DIGITAL_OBJECT_TYPE), handle, DIGITAL_OBJECT_TYPE,
+            ptr_record));
 
     // 4: Digital Object Subtype
-    handleRecord.add(new HandleAttribute(4, handle, "digitalObjectSubtype", ptr_record));
+    handleRecord.add(
+        new HandleAttribute(FIELD_IDX.get(DIGITAL_OBJECT_SUBTYPE), handle, DIGITAL_OBJECT_SUBTYPE,
+            ptr_record));
 
     // 5: 10320/loc
-    byte[] loc = "".getBytes();
+    byte[] loc = "".getBytes(StandardCharsets.UTF_8);
     try {
-      loc = setLocations(LOCATIONS);
+      loc = setLocations(LOC_TESTVAL);
     } catch (TransformerException | ParserConfigurationException e) {
       e.printStackTrace();
     }
-    handleRecord.add(new HandleAttribute(5, handle, "10320/loc", loc));
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, loc));
 
     // 6: Issue Date
-    handleRecord.add(new HandleAttribute(6, handle, "issueDate", ISSUE_DATE.getBytes()));
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(ISSUE_DATE), handle, ISSUE_DATE,
+        ISSUE_DATE_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     // 7: Issue number
-    handleRecord.add(new HandleAttribute(7, handle, "issueNumber", "1".getBytes()));
+    handleRecord.add(
+        new HandleAttribute(FIELD_IDX.get(ISSUE_NUMBER), handle, ISSUE_NUMBER,
+            "1".getBytes(StandardCharsets.UTF_8)));
 
     // 8: PidStatus
-    handleRecord.add(new HandleAttribute(8, handle, "pidStatus", PID_STATUS.getBytes()));
-
-    // 9, 10: tombstone text, tombstone pids -> Skip
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS,
+        PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     // 11: PidKernelMetadataLicense:
     handleRecord.add(
-        new HandleAttribute(11, handle, "pidKernelMetadataLicense", LICENSE.getBytes()));
+        new HandleAttribute(FIELD_IDX.get(PID_KERNEL_METADATA_LICENSE), handle,
+            PID_KERNEL_METADATA_LICENSE,
+            PID_KERNEL_METADATA_LICENSE_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     return handleRecord;
   }
 
-  public static List<HandleAttribute> generateTestDoiAttributes(byte[] handle) {
-    List<HandleAttribute> handleRecord = generateTestHandleAttributes(handle);
-    byte[] ptr_record = PTR_HANDLE_RECORD.getBytes();
+  public static List<HandleAttribute> genHandleRecordAttributesAltLoc(byte[] handle)
+      throws ParserConfigurationException, TransformerException {
+    List<HandleAttribute> attributes = genHandleRecordAttributes(handle);
+
+    byte[] locOriginal = setLocations(LOC_TESTVAL);
+    var locOriginalAttr = new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, locOriginal);
+
+    byte[] locAlt = setLocations(LOC_ALT_TESTVAL);
+    var locAltAttr = new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, locAlt);
+
+    attributes.set(attributes.indexOf(locOriginalAttr), locAltAttr);
+
+    return attributes;
+  }
+
+  public static List<HandleAttribute> genTombstoneRecordFullAttributes(byte[] handle) {
+    List<HandleAttribute> attributes = genHandleRecordAttributes(handle);
+    HandleAttribute oldPidStatus = new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle,
+        PID_STATUS, PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8));
+    attributes.remove(oldPidStatus);
+    attributes.addAll(genTombstoneRecordRequestAttributes(handle));
+
+    return attributes;
+  }
+
+  public static List<HandleAttribute> genUpdateRecordAttributesAltLoc(byte[] handle)
+      throws ParserConfigurationException, TransformerException {
+    byte[] locAlt = setLocations(LOC_ALT_TESTVAL);
+    return List.of(new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, locAlt));
+  }
+
+  public static List<HandleAttribute> genTombstoneRecordRequestAttributes(byte[] handle) {
+    List<HandleAttribute> tombstoneAttributes = new ArrayList<>();
+    tombstoneAttributes.add(
+        new HandleAttribute(FIELD_IDX.get(TOMBSTONE_TEXT), handle, TOMBSTONE_TEXT,
+            TOMBSTONE_TEXT_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+    tombstoneAttributes.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS,
+        "ARCHIVED".getBytes(StandardCharsets.UTF_8)));
+    return tombstoneAttributes;
+  }
+
+  public static List<HandleAttribute> genDoiRecordAttributes(byte[] handle) {
+    List<HandleAttribute> handleRecord = genHandleRecordAttributes(handle);
+    byte[] ptr_record = PTR_HANDLE_RECORD.getBytes(StandardCharsets.UTF_8);
 
     // 12: Referent DOI Name
-    handleRecord.add(new HandleAttribute(12, handle, "referentDoiName", ptr_record));
+    handleRecord.add(
+        new HandleAttribute(FIELD_IDX.get(REFERENT_DOI_NAME), handle, REFERENT_DOI_NAME,
+            ptr_record));
     // 13: Referent
-    handleRecord.add(new HandleAttribute(13, handle, "referent", REFERENT.getBytes()));
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(REFERENT), handle, REFERENT,
+        REFERENT_TESTVAL.getBytes(StandardCharsets.UTF_8)));
     return handleRecord;
   }
 
-  public static List<HandleAttribute> generateTestDigitalSpecimenAttributes(byte[] handle) {
-    List<HandleAttribute> handleRecord = generateTestDoiAttributes(handle);
-    byte[] ptr_record = PTR_HANDLE_RECORD.getBytes();
+  public static List<HandleAttribute> genDigitalSpecimenAttributes(byte[] handle) {
+    List<HandleAttribute> handleRecord = genDoiRecordAttributes(handle);
+    byte[] ptr_record = PTR_HANDLE_RECORD.getBytes(StandardCharsets.UTF_8);
 
     // 14: digitalOrPhysical
     handleRecord.add(
-        new HandleAttribute(14, handle, "digitalOrPhysical", DIGITAL_OR_PHYSICAL.getBytes()));
+        new HandleAttribute(FIELD_IDX.get(DIGITAL_OR_PHYSICAL), handle, DIGITAL_OR_PHYSICAL,
+            DIGITAL_OR_PHYSICAL_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     // 15: specimenHost
-    handleRecord.add(new HandleAttribute(15, handle, "specimenHost", ptr_record));
+    handleRecord.add(
+        new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST), handle, SPECIMEN_HOST, ptr_record));
 
     // 16: In collectionFacility
     handleRecord.add(
-        new HandleAttribute(16, handle, "inCollectionFacility", ptr_record));
+        new HandleAttribute(FIELD_IDX.get(IN_COLLECTION_FACILITY), handle, IN_COLLECTION_FACILITY,
+            ptr_record));
     return handleRecord;
   }
 
-  public static List<HandleAttribute> generateTestDigitalSpecimenBotanyAttributes(byte[] handle) {
-    List<HandleAttribute> handleRecord = generateTestDigitalSpecimenAttributes(handle);
+  public static List<HandleAttribute> genDigitalSpecimenBotanyAttributes(byte[] handle) {
+    List<HandleAttribute> handleRecord = genDigitalSpecimenAttributes(handle);
 
     // 17: ObjectType
-    handleRecord.add(new HandleAttribute(17, handle, "objectType", OBJECT_TYPE.getBytes()));
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(OBJECT_TYPE), handle, OBJECT_TYPE,
+        OBJECT_TYPE_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     // 18: preservedOrLiving
     handleRecord.add(
-        new HandleAttribute(18, handle, "preservedOrLiving", PRESERVED_OR_LIVING.getBytes()));
+        new HandleAttribute(FIELD_IDX.get(PRESERVED_OR_LIVING), handle, PRESERVED_OR_LIVING,
+            PRESERVED_OR_LIVING_TESTVAL.getBytes(StandardCharsets.UTF_8)));
     return handleRecord;
   }
 
-  // Requests
+  public static <T extends HandleRecordRequest> ObjectNode genCreateRecordRequest(T request,
+      String recordType) {
+    ObjectMapper mapper = new ObjectMapper();
 
-  public static HandleRecordRequest generateTestHandleRequest() {
+    ObjectNode rootNode = mapper.createObjectNode();
+    ObjectNode dataNode = mapper.createObjectNode();
+    ObjectNode attributeNode = mapper.valueToTree(request);
+
+    if (attributeNode.has("referent")) {
+      attributeNode.remove("referent");
+    }
+
+    dataNode.put("type", recordType);
+    dataNode.set("attributes", attributeNode);
+    rootNode.set("data", dataNode);
+
+    return rootNode;
+  }
+
+  // Single Requests
+  public static HandleRecordRequest genHandleRecordRequestObject() {
     return new HandleRecordRequest(
         PID_ISSUER_PID,
         DIGITAL_OBJECT_TYPE_PID,
         DIGITAL_OBJECT_SUBTYPE_PID,
-        LOCATIONS);
+        LOC_TESTVAL);
   }
 
-
-  public static DoiRecordRequest generateTestDoiRequest() {
+  public static DoiRecordRequest genDoiRecordRequestObject() {
     return new DoiRecordRequest(
         PID_ISSUER_PID,
         DIGITAL_OBJECT_TYPE_PID,
         DIGITAL_OBJECT_SUBTYPE_PID,
-        LOCATIONS,
+        LOC_TESTVAL,
         REFERENT_DOI_NAME_PID);
   }
 
-
-  public static DigitalSpecimenRequest generateTestDigitalSpecimenRequest() {
+  public static DigitalSpecimenRequest genDigitalSpecimenRequestObject() {
     return new DigitalSpecimenRequest(
         PID_ISSUER_PID,
         DIGITAL_OBJECT_TYPE_PID,
         DIGITAL_OBJECT_SUBTYPE_PID,
-        LOCATIONS,
+        LOC_TESTVAL,
         REFERENT_DOI_NAME_PID,
-        DIGITAL_OR_PHYSICAL,
+        DIGITAL_OR_PHYSICAL_TESTVAL,
         SPECIMEN_HOST_PID,
-        IN_COLLECTION_FACILITY);
+        IN_COLLECTION_FACILITY_TESTVAL);
   }
 
-  public static DigitalSpecimenBotanyRequest generateTestDigitalSpecimenBotanyRequest() {
+  public static DigitalSpecimenBotanyRequest genDigitalSpecimenBotanyRequestObject() {
     return new DigitalSpecimenBotanyRequest(PID_ISSUER_PID,
         DIGITAL_OBJECT_TYPE_PID,
         DIGITAL_OBJECT_SUBTYPE_PID,
-        LOCATIONS,
+        LOC_TESTVAL,
         REFERENT_DOI_NAME_PID,
-        DIGITAL_OR_PHYSICAL,
+        DIGITAL_OR_PHYSICAL_TESTVAL,
         SPECIMEN_HOST_PID,
-        IN_COLLECTION_FACILITY,
-        OBJECT_TYPE,
-        PRESERVED_OR_LIVING);
+        IN_COLLECTION_FACILITY_TESTVAL,
+        OBJECT_TYPE_TESTVAL,
+        PRESERVED_OR_LIVING_TESTVAL);
   }
 
-  // Responses
-  public static HandleRecordResponse generateTestHandleResponse(byte[] handle) {
-    String pid = "https://hdl.handle.net/" + new String(handle);
-    String locs = getLocString();
-
-    String admin = new String(genAdminHandle());
-
-    return new HandleRecordResponse(
-        pid,                  // Pid
-        PTR_HANDLE_RECORD,    // pidIssuer
-        PTR_HANDLE_RECORD,    // digitalObjectType
-        PTR_HANDLE_RECORD,    // digitalObjectSubtype
-        locs,                 // 10320/loc
-        ISSUE_DATE,           // issueDate
-        "1",                  // issueNumber
-        PID_STATUS,           // pidStatus
-        LICENSE,              // Pid Kernel Metadata License
-        admin
+  public static TombstoneRecordRequest genTombstoneRecordRequestObject() {
+    return new TombstoneRecordRequest(
+        HANDLE,
+        TOMBSTONE_TEXT
     );
   }
 
-  public static DoiRecordResponse generateTestDoiResponse(byte[] handle) {
-    String pid = "https://hdl.handle.net/" + new String(handle);
-    String locs = getLocString();
+  public static JsonApiWrapperRead givenRecordResponseRead(List<byte[]> handles, String path,
+      String recordType)
+      throws JsonProcessingException {
+    List<JsonApiDataLinks> dataNodes = new ArrayList<>();
 
-    String admin = new String(genAdminHandle());
+    for (byte[] handle : handles) {
+      var testDbRecord = genAttributes(recordType, handle);
+      JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
 
-    return new DoiRecordResponse(
-        pid,                  // Pid
-        PTR_HANDLE_RECORD,    // pidIssuer
-        PTR_HANDLE_RECORD,    // digitalObjectType
-        PTR_HANDLE_RECORD,    // digitalObjectSubtype
-        locs,                 // 10320/loc
-        ISSUE_DATE,           // issueDate
-        "1",                  // issueNumber
-        PID_STATUS,           // pidStatus
-        LICENSE,              // Pid Kernel Metadata License
-        admin,
-        PTR_HANDLE_RECORD,
-        REFERENT
-    );
-  }
-
-  public static DigitalSpecimenResponse generateTestDigitalSpecimenResponse(byte[] handle) {
-    String pid = "https://hdl.handle.net/" + new String(handle);
-    String locs = getLocString();
-
-    String admin = new String(genAdminHandle());
-
-    return new DigitalSpecimenResponse(
-        pid,                  // Pid
-        PTR_HANDLE_RECORD,    // pidIssuer
-        PTR_HANDLE_RECORD,    // digitalObjectType
-        PTR_HANDLE_RECORD,    // digitalObjectSubtype
-        locs,                 // 10320/loc
-        ISSUE_DATE,           // issueDate
-        "1",                  // issueNumber
-        PID_STATUS,           // pidStatus
-        LICENSE,              // Pid Kernel Metadata License
-        admin,
-        PTR_HANDLE_RECORD,
-        REFERENT,
-        DIGITAL_OR_PHYSICAL,
-        PTR_HANDLE_RECORD,
-        PTR_HANDLE_RECORD
-    );
-  }
-
-  public static DigitalSpecimenBotanyResponse generateTestDigitalSpecimenBotanyResponse(
-      byte[] handle) {
-    String pid = "https://hdl.handle.net/" + new String(handle);
-    String locs = getLocString();
-
-    String admin = new String(genAdminHandle());
-
-    return new DigitalSpecimenBotanyResponse(
-        pid,                  // Pid
-        PTR_HANDLE_RECORD,    // pidIssuer
-        PTR_HANDLE_RECORD,    // digitalObjectType
-        PTR_HANDLE_RECORD,    // digitalObjectSubtype
-        locs,                 // 10320/loc
-        ISSUE_DATE,           // issueDate
-        "1",                  // issueNumber
-        PID_STATUS,           // pidStatus
-        LICENSE,              // Pid Kernel Metadata License
-        admin,
-        PTR_HANDLE_RECORD,
-        REFERENT,
-        DIGITAL_OR_PHYSICAL,
-        PTR_HANDLE_RECORD,
-        PTR_HANDLE_RECORD,
-        OBJECT_TYPE,
-        PRESERVED_OR_LIVING
-    );
-  }
-
-  public static long initTime() {
-    return CREATED.getEpochSecond();
-  }
-
-  private static String getLocString() {
-    byte[] loc = "".getBytes();
-    try {
-      loc = setLocations(LOCATIONS);
-    } catch (TransformerException | ParserConfigurationException e) {
-      e.printStackTrace();
+      var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
+      dataNodes.add(new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), recordType,
+          recordAttributes, pidLink));
     }
-    return new String(loc);
+
+    var responseLink = new JsonApiLinks(path);
+    return new JsonApiWrapperRead(responseLink, dataNodes);
   }
+
+  public static JsonApiWrapperWrite givenRecordResponseWrite(List<byte[]> handles,
+      String recordType)
+      throws JsonProcessingException {
+    List<JsonApiDataLinks> dataNodes = new ArrayList<>();
+
+    for (byte[] handle : handles) {
+      var testDbRecord = genAttributes(recordType, handle);
+      JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
+
+      var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
+      dataNodes.add(new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), recordType,
+          recordAttributes, pidLink));
+    }
+    return new JsonApiWrapperWrite(dataNodes);
+  }
+
+  public static JsonApiWrapperWrite givenRecordResponseWrite(List<byte[]> handles,
+      String attributeType, String recordType)
+      throws JsonProcessingException {
+    List<JsonApiDataLinks> dataNodes = new ArrayList<>();
+
+    for (byte[] handle : handles) {
+      var testDbRecord = genAttributes(attributeType, handle);
+      JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
+
+      var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
+      dataNodes.add(new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), recordType,
+          recordAttributes, pidLink));
+    }
+    return new JsonApiWrapperWrite(dataNodes);
+  }
+
+  public static JsonApiWrapperWrite givenRecordResponseWriteAltLoc(List<byte[]> handles)
+      throws Exception {
+    return givenRecordResponseWriteAltLoc(handles, RECORD_TYPE_HANDLE);
+  }
+
+  public static JsonApiWrapperWrite givenRecordResponseWriteAltLoc(List<byte[]> handles,
+      String recordType)
+      throws Exception {
+    List<JsonApiDataLinks> dataNodes = new ArrayList<>();
+
+    for (byte[] handle : handles) {
+      var testDbRecord = genHandleRecordAttributesAltLoc(handle);
+      JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
+
+      var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
+      dataNodes.add(
+          new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), recordType,
+              recordAttributes, pidLink));
+    }
+    return new JsonApiWrapperWrite(dataNodes);
+  }
+
+
+  public static JsonApiWrapperWrite givenRecordResponseWriteArchive(List<byte[]> handles)
+      throws Exception {
+    List<JsonApiDataLinks> dataNodes = new ArrayList<>();
+
+    for (byte[] handle : handles) {
+      var testDbRecord = genTombstoneRecordFullAttributes(handle);
+      JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
+
+      var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
+      dataNodes.add(
+          new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), RECORD_TYPE_TOMBSTONE,
+              recordAttributes, pidLink));
+    }
+    return new JsonApiWrapperWrite(dataNodes);
+  }
+
+  private static List<HandleAttribute> genAttributes(String recordType, byte[] handle) {
+    switch (recordType) {
+      case RECORD_TYPE_HANDLE, "PID" -> {
+        return genHandleRecordAttributes(handle);
+      }
+      case RECORD_TYPE_DOI -> {
+        return genDoiRecordAttributes(handle);
+      }
+      case RECORD_TYPE_DS -> {
+        return genDigitalSpecimenAttributes(handle);
+      }
+      case RECORD_TYPE_DS_BOTANY -> {
+        return genDigitalSpecimenBotanyAttributes(handle);
+      }
+      default -> {
+        return null;
+      }
+    }
+  }
+
+  public static List<JsonNode> genUpdateRequestBatch(List<byte[]> handles) {
+    ObjectMapper mapper = new ObjectMapper();
+    ObjectNode requestNodeRoot = mapper.createObjectNode();
+    ObjectNode requestNodeData = mapper.createObjectNode();
+    List<JsonNode> requestNodeList = new ArrayList<>();
+
+    for (byte[] handle : handles) {
+      requestNodeData.put("type", RECORD_TYPE_HANDLE);
+      requestNodeData.put("id", new String(handle, StandardCharsets.UTF_8));
+      requestNodeData.set("attributes", genUpdateRequestAltLoc());
+      requestNodeRoot.set("data", requestNodeData);
+
+      requestNodeList.add(requestNodeRoot.deepCopy());
+
+      requestNodeData.removeAll();
+      requestNodeRoot.removeAll();
+    }
+    return requestNodeList;
+  }
+
+  public static List<JsonNode> genTombstoneRequestBatch(List<String> handles) {
+    ObjectMapper mapper = new ObjectMapper();
+    ObjectNode requestNodeRoot = mapper.createObjectNode();
+    ObjectNode requestNodeData = mapper.createObjectNode();
+    List<JsonNode> requestNodeList = new ArrayList<>();
+
+    for (String handle : handles) {
+      requestNodeData.put("type", RECORD_TYPE_TOMBSTONE);
+      requestNodeData.put("id", handle);
+      requestNodeData.set("attributes", genTombstoneRequest());
+      requestNodeRoot.set("data", requestNodeData);
+
+      requestNodeList.add(requestNodeRoot.deepCopy());
+
+      requestNodeData.removeAll();
+      requestNodeRoot.removeAll();
+    }
+
+    return requestNodeList;
+  }
+
+  public static JsonNode genUpdateRequestAltLoc() {
+    ObjectMapper mapper = new ObjectMapper();
+    ObjectNode rootNode = mapper.createObjectNode();
+    rootNode.putArray(LOC_REQ).add(LOC_ALT_TESTVAL[0]);
+    return rootNode;
+  }
+
+  public static JsonNode genTombstoneRequest() {
+    ObjectMapper mapper = new ObjectMapper();
+    ObjectNode rootNode = mapper.createObjectNode();
+    rootNode.put(TOMBSTONE_TEXT, TOMBSTONE_TEXT_TESTVAL);
+    return rootNode;
+  }
+
+  // Handle Attributes as ObjectNode 
+  public static JsonNode genObjectNodeAttributeRecord(List<HandleAttribute> dbRecord)
+      throws JsonProcessingException {
+    ObjectMapper mapper = new ObjectMapper();
+    ObjectNode rootNode = mapper.createObjectNode();
+    ObjectNode subNode;
+
+    for (HandleAttribute row : dbRecord) {
+      String type = row.type();
+      String data = new String(row.data());
+      if (row.index() == FIELD_IDX.get(HS_ADMIN)) {
+        continue; // We never want HS_ADMIN in our json
+      }
+      if (FIELD_IS_PID_RECORD.contains(type)) {
+        subNode = mapper.readValue(data, ObjectNode.class);
+        rootNode.set(type, subNode);
+      } else {
+        rootNode.put(type, data);
+      }
+    }
+    return rootNode;
+  }
+
+  // Other Functions
 
   public static byte[] setLocations(String[] objectLocations)
       throws TransformerException, ParserConfigurationException {

@@ -1,16 +1,26 @@
 package eu.dissco.core.handlemanager.service;
 
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_ISSUER_PID;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PTR_DOI_RECORD;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PTR_HANDLE_RECORD;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PTR_PID;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PTR_PID_DOI;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PTR_PRIMARY_NAME;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PTR_REGISTRATION_DOI_NAME;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PTR_TYPE;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PTR_TYPE_DOI;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
+import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
-import eu.dissco.core.handlemanager.testUtils.TestUtils;
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,7 +28,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-@Slf4j
 class PidTypeServiceTest {
   // NOTE: Pid Type Record => PTR in naming convention because these
   // PTR refers to the handle record that stores information about a type
@@ -47,12 +56,12 @@ class PidTypeServiceTest {
   void testPidTypeRecordResolutionHandle() throws Exception {
     // Given
     initTestPidTypeRecordHandle();
-    String expected = TestUtils.PTR_HANDLE_RECORD;
+    String expected = PTR_HANDLE_RECORD;
 
-    given(handleRep.resolveHandle(recordPid)).willReturn(typeRecord);
+    given(handleRep.resolveHandleAttributes(recordPid)).willReturn(typeRecord);
 
     // When
-    String returned = pidTypeService.resolveTypePid(TestUtils.PID_ISSUER_PID);
+    String returned = pidTypeService.resolveTypePid(PID_ISSUER_PID);
 
     // Then
     assertThat(expected).isEqualTo(returned);
@@ -62,31 +71,43 @@ class PidTypeServiceTest {
   void testPidTypeRecordResolutionDoi() throws Exception {
     //Given
     initTestPidTypeRecordDoi();
-    String expected = TestUtils.PTR_DOI_RECORD;
-    given(handleRep.resolveHandle(recordPid)).willReturn(typeRecord);
+    String expected = PTR_DOI_RECORD;
+    given(handleRep.resolveHandleAttributes(recordPid)).willReturn(typeRecord);
 
     // When
-    String returned = pidTypeService.resolveTypePid(TestUtils.PID_ISSUER_PID);
+    String returned = pidTypeService.resolveTypePid(PID_ISSUER_PID);
 
     // Then
     assertThat(expected).isEqualTo(returned);
   }
 
+  @Test
+  void testResolutionException() throws Exception {
+    // Given
+    String typePid = PID_ISSUER_PID;
+    given(handleRep.resolveHandleAttributes(typePid.getBytes())).willReturn(new ArrayList<>());
+
+    // Then
+    assertThrows(PidResolutionException.class, () -> {
+      pidTypeService.resolveTypePid(typePid);
+    });
+  }
+
   private void initTestPidTypeRecordHandle() {
-    recordPid = TestUtils.PID_ISSUER_PID.getBytes();
-    pid = TestUtils.PTR_PID;
-    pidType = TestUtils.PTR_TYPE;
-    primaryNameFromPid = TestUtils.PTR_PRIMARY_NAME;
+    recordPid = PID_ISSUER_PID.getBytes(StandardCharsets.UTF_8);
+    pid = PTR_PID;
+    pidType = PTR_TYPE;
+    primaryNameFromPid = PTR_PRIMARY_NAME;
 
     typeRecord = initTestPidTypeRecord(false);
   }
 
   private void initTestPidTypeRecordDoi() {
-    recordPid = TestUtils.PID_ISSUER_PID.getBytes();
-    pid = TestUtils.PTR_PID_DOI;
-    pidType = TestUtils.PTR_TYPE_DOI;
-    primaryNameFromPid = TestUtils.PTR_PRIMARY_NAME;
-    registrationAgencyDoiName = TestUtils.PTR_REGISTRATION_DOI_NAME;
+    recordPid = PID_ISSUER_PID.getBytes(StandardCharsets.UTF_8);
+    pid = PTR_PID_DOI;
+    pidType = PTR_TYPE_DOI;
+    primaryNameFromPid = PTR_PRIMARY_NAME;
+    registrationAgencyDoiName = PTR_REGISTRATION_DOI_NAME;
 
     typeRecord = initTestPidTypeRecord(true);
   }
@@ -94,15 +115,17 @@ class PidTypeServiceTest {
   private List<HandleAttribute> initTestPidTypeRecord(boolean isDoi) {
     List<HandleAttribute> record = new ArrayList<>();
 
-    record.add(new HandleAttribute(1, recordPid, "pid", pid.getBytes()));
-    record.add(new HandleAttribute(2, recordPid, "pidType", pidType.getBytes()));
+    record.add(new HandleAttribute(1, recordPid, "pid", pid.getBytes(StandardCharsets.UTF_8)));
     record.add(
-        new HandleAttribute(3, recordPid, "primaryNameFromPid", primaryNameFromPid.getBytes()));
+        new HandleAttribute(2, recordPid, "pidType", pidType.getBytes(StandardCharsets.UTF_8)));
+    record.add(
+        new HandleAttribute(3, recordPid, "primaryNameFromPid",
+            primaryNameFromPid.getBytes(StandardCharsets.UTF_8)));
 
     if (isDoi) {
-      registrationAgencyDoiName = TestUtils.PTR_REGISTRATION_DOI_NAME;
+      registrationAgencyDoiName = PTR_REGISTRATION_DOI_NAME;
       record.add(new HandleAttribute(4, recordPid, "registrationAgencyDoiName",
-          registrationAgencyDoiName.getBytes()));
+          registrationAgencyDoiName.getBytes(StandardCharsets.UTF_8)));
     }
     return record;
   }

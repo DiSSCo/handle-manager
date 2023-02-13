@@ -2,6 +2,7 @@ package eu.dissco.core.handlemanager.domain.requests;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.ToString;
 
 @Getter
@@ -20,10 +21,9 @@ public class DoiRecordRequest extends HandleRecordRequest {
       String digitalObjectSubtypePid,
       String[] locations,
       // Doi
-      String referentDoiNamePid) {
+      @NonNull String referentDoiNamePid) {
     super(pidIssuerPid, digitalObjectTypePid, digitalObjectSubtypePid, locations);
     this.referentDoiNamePid = referentDoiNamePid;
     this.referent = REFERENT_PLACEHOLDER;
   }
-
 }

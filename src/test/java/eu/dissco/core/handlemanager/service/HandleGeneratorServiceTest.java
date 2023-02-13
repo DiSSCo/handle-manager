@@ -1,15 +1,15 @@
 package eu.dissco.core.handlemanager.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
 
 import eu.dissco.core.handlemanager.repository.HandleRepository;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,7 +17,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-@Slf4j
 class HandleGeneratorServiceTest {
 
   @Mock
@@ -52,7 +51,7 @@ class HandleGeneratorServiceTest {
     given(random.nextInt(anyInt())).willReturn(0);
 
     // When
-    String generatedHandle = new String(hgService.genHandleList(1).get(0));
+    String generatedHandle = new String(hgService.genHandleList(1).get(0), StandardCharsets.UTF_8);
 
     // Then
     assertThat(generatedHandle).isEqualTo(expectedHandle);
@@ -99,14 +98,14 @@ class HandleGeneratorServiceTest {
   void testDbCollision() {
 
     // Given
-    byte[] expectedHandle1 = "20.5000.1025/BBB-BBB-BBB".getBytes();
-    byte[] expectedHandle2 = "20.5000.1025/ABB-BBB-BBB".getBytes();
+    byte[] expectedHandle1 = "20.5000.1025/BBB-BBB-BBB".getBytes(StandardCharsets.UTF_8);
+    byte[] expectedHandle2 = "20.5000.1025/ABB-BBB-BBB".getBytes(StandardCharsets.UTF_8);
 
     List<byte[]> handleListInternalDuplicate = new ArrayList<>();
     handleListInternalDuplicate.add(expectedHandle1);
 
     given(random.nextInt(anyInt())).willReturn(0, 1);
-    given(handleRep.checkDuplicateHandles(any(List.class)))
+    given(handleRep.getHandlesExist(anyList()))
         .willReturn(handleListInternalDuplicate)
         .willReturn(new ArrayList<>());
 
@@ -118,6 +117,18 @@ class HandleGeneratorServiceTest {
     // Then
     assertThat(generatedHandle1).isEqualTo(expectedHandle1);
     assertThat(generatedHandle2).isEqualTo(expectedHandle2);
+  }
+
+  @Test
+  void testInvalidNumberOfHandles() {
+    // Given
+    Random randomGen = new Random();
+
+    // When
+    var tooFew = hgService.newHandle(-1);
+
+    // Then
+    assertThat(tooFew).isEmpty();
   }
 
 

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,13 +23,16 @@ public class PidTypeService {
 
   @Cacheable(value = "cache")
   public String resolveTypePid(String typePid)
-      throws PidResolutionException, JsonProcessingException {
+      throws PidResolutionException {
     if (typePid == null) {
-      throw new PidResolutionException("Missing PID in request body.");
+      throw new PidResolutionException("Missing a PID field in request body.");
     }
-    List<HandleAttribute> typeRecord = handleRep.resolveHandle(typePid.getBytes());
+    List<HandleAttribute> typeRecord = handleRep.resolveHandleAttributes(typePid.getBytes(
+        StandardCharsets.UTF_8));
     if (typeRecord.isEmpty()) {
-      throw new PidResolutionException("Unable to resolve type PID");
+      log.info(typePid);
+      throw new PidResolutionException(
+          "Unable to resolve PID: " + typePid + ", Reason: Record is empty");
     }
     String pid = getDataFromType("pid", typeRecord);
     String primaryNameFromPid = getDataFromType("primaryNameFromPid", typeRecord);
@@ -62,7 +66,12 @@ public class PidTypeService {
     if (pidType.equals("doi")) {
       objectNode.put("registrationAgencyDoiName", registrationAgencyDoiName);
     }
-    return mapper.writeValueAsString(objectNode);
+    try {
+      return mapper.writeValueAsString(objectNode);
+    } catch (JsonProcessingException e) {
+      throw new PidResolutionException("A JSON processing error has occurred. " + e.getMessage());
+    }
+
   }
 
   private String getDataFromType(String type, List<HandleAttribute> hList) {

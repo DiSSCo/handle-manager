@@ -1,6 +1,5 @@
 package eu.dissco.core.handlemanager.configuration;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Random;
 import javax.xml.XMLConstants;
@@ -32,14 +31,12 @@ public class AppConfig {
 
   @Bean
   public ObjectMapper objectMapper() {
-    return new ObjectMapper().findAndRegisterModules()
-        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    return new ObjectMapper().findAndRegisterModules();
   }
 
   @Bean
   public Random random() {
     return new Random();
   }
-
 
 }

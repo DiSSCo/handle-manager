@@ -1,29 +1,25 @@
 package eu.dissco.core.handlemanager.repository;
 
 import static eu.dissco.core.handlemanager.database.jooq.tables.Handles.HANDLES;
+import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
+import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_NUMBER;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
+import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_RECORD_FIELDS_BYTES;
 
-import eu.dissco.core.handlemanager.database.jooq.tables.records.HandlesRecord;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenBotanyResponse;
-import eu.dissco.core.handlemanager.domain.responses.DigitalSpecimenResponse;
-import eu.dissco.core.handlemanager.domain.responses.DoiRecordResponse;
-import eu.dissco.core.handlemanager.domain.responses.HandleRecordResponse;
-import eu.dissco.core.handlemanager.exceptions.PidCreationException;
-import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
 import org.jooq.Query;
-import org.jooq.Record3;
 import org.jooq.Record4;
-import org.jooq.Result;
-import org.jooq.TableField;
 import org.springframework.stereotype.Repository;
 
 @Slf4j
@@ -32,18 +28,11 @@ import org.springframework.stereotype.Repository;
 public class HandleRepository {
 
   private static final int TTL = 86400;
-  private static final String INVALID_FIELD_ERROR = "Error: Attempting to add an invalid field into a pid record. Field: %s, Data: %s";
-  private static final String FIELD_MISMATCH_ERROR = "Field mismatch: attempting to add a forbidden field in the record schema. Check ";
   private final DSLContext context;
+  private final ObjectMapper mapper;
 
-  private final Map<String, TableField<HandlesRecord, ? extends Serializable>> attributeMapping = Map.of(
-      "index", HANDLES.IDX,
-      "handle", HANDLES.HANDLE,
-      "type", HANDLES.TYPE,
-      "data", HANDLES.DATA
-  );
-
-  public List<byte[]> checkDuplicateHandles(List<byte[]> handles) {
+  // For Handle Name Generation
+  public List<byte[]> getHandlesExist(List<byte[]> handles) {
     return context
         .selectDistinct(HANDLES.HANDLE)
         .from(HANDLES)
@@ -52,32 +41,50 @@ public class HandleRepository {
         .getValues(HANDLES.HANDLE, byte[].class);
   }
 
-  // Resolve Pid
-  public List<HandleAttribute> resolveHandle(byte[] handle) {
+  public List<byte[]> checkHandlesWritable(List<byte[]> handles) {
+    return context
+        .selectDistinct(HANDLES.HANDLE)
+        .from(HANDLES)
+        .where(HANDLES.HANDLE.in(handles))
+        .and(HANDLES.TYPE.eq(PID_STATUS.getBytes(StandardCharsets.UTF_8)))
+        .and(HANDLES.DATA.notEqual("ARCHIVED".getBytes()))
+        .fetch()
+        .getValues(HANDLES.HANDLE, byte[].class);
+  }
+
+
+  public List<HandleAttribute> resolveHandleAttributes(byte[] handle) {
     return context
         .select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
         .from(HANDLES)
         .where(HANDLES.HANDLE.eq(handle))
+        .and(HANDLES.TYPE.notEqual(HS_ADMIN.getBytes(StandardCharsets.UTF_8)))
         .fetch(this::mapToAttribute);
   }
 
-  private HandleAttribute mapToAttribute(Record4<Integer, byte[], byte[], byte[]> row) {
-    return new HandleAttribute(
-        row.get(HANDLES.IDX),
-        row.get(HANDLES.HANDLE),
-        new String(row.get(HANDLES.TYPE)),
-        row.get(HANDLES.DATA));
+  public List<HandleAttribute> resolveHandleAttributes(List<byte[]> handles) {
+    return context
+        .select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
+        .from(HANDLES)
+        .where(HANDLES.HANDLE.in(handles))
+        .and(HANDLES.TYPE.notEqual(HS_ADMIN.getBytes(StandardCharsets.UTF_8)))
+        .fetch(this::mapToAttribute);
   }
 
   // Get List of Pids
   public List<String> getAllHandles(byte[] pidStatus, int pageNum, int pageSize) {
+    int offset = 0;
+    if (pageNum > 1) {
+      offset = offset + (pageSize * (pageNum - 1));
+    }
+
     return context
         .selectDistinct(HANDLES.HANDLE)
         .from(HANDLES)
-        .where(HANDLES.TYPE.eq("pidStatus".getBytes(StandardCharsets.UTF_8)))
+        .where(HANDLES.TYPE.eq(PID_STATUS.getBytes(StandardCharsets.UTF_8)))
         .and(HANDLES.DATA.eq(pidStatus))
         .limit(pageSize)
-        .offset(pageNum)
+        .offset(offset)
         .fetch()
         .getValues(HANDLES.HANDLE, String.class);
   }
@@ -92,15 +99,17 @@ public class HandleRepository {
         .getValues(HANDLES.HANDLE, String.class);
   }
 
-  private void rollbackHandleCreation(List<byte[]> handles) {
-    context.delete(HANDLES)
-        .where(HANDLES.HANDLE.in(handles))
-        .execute();
+  private HandleAttribute mapToAttribute(Record4<Integer, byte[], byte[], byte[]> row) {
+    return new HandleAttribute(
+        row.get(HANDLES.IDX),
+        row.get(HANDLES.HANDLE),
+        new String(row.get(HANDLES.TYPE), StandardCharsets.UTF_8),
+        row.get(HANDLES.DATA));
   }
 
-  // Record Creation
-  // Batch Record Posting  - Same for Handle, DOI, DigitalSpecimen, DigitalSpecimenBotany
-  private void postBatchRecord(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
+  // Post
+
+  public void postAttributesToDb(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
     var queryList = new ArrayList<Query>();
 
     for (var handleAttribute : handleAttributes) {
@@ -109,7 +118,7 @@ public class HandleRepository {
           .set(HANDLES.IDX, handleAttribute.index())
           .set(HANDLES.TYPE, handleAttribute.type().getBytes(StandardCharsets.UTF_8))
           .set(HANDLES.DATA, handleAttribute.data())
-          .set(HANDLES.TTL, 86400)
+          .set(HANDLES.TTL, TTL)
           .set(HANDLES.TIMESTAMP, recordTimestamp.getEpochSecond())
           .set(HANDLES.ADMIN_READ, true)
           .set(HANDLES.ADMIN_WRITE, true)
@@ -120,474 +129,107 @@ public class HandleRepository {
     context.batch(queryList).execute();
   }
 
-  // Handle Batch Creation
-  public List<HandleRecordResponse> createHandleRecordBatch(List<byte[]> handles,
-      Instant recordTimestamp, List<HandleAttribute> handleAttributes) throws PidCreationException {
-    postBatchRecord(recordTimestamp, handleAttributes);
-    try {
-      return mapPostedRecordToHandleRecordResponse(handles);
-    } catch (PidCreationException e) {
-      rollbackHandleCreation(handles); // If an error has occurred, delete any handles we've posted
-      throw new PidCreationException(e.getMessage());
-    }
-  }
-
-  private List<HandleRecordResponse> mapPostedRecordToHandleRecordResponse(List<byte[]> handles)
-      throws PidCreationException {
-
-    // Fetch all posted handles
-    Map<byte[], Result<Record3<byte[], byte[], byte[]>>> posted = context
-        .select(HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
-        .from(HANDLES)
-        .where(HANDLES.HANDLE.in(handles))
-        .fetchGroups(HANDLES.HANDLE);
-
-    /* The result of this fetch is a "map" (wherein keys are not unique) of handle, result(handle, type, data)
-    So it would look like:
-      20.10/123,   (20.10/123, pidStatus, ACTIVE)
-      20.10/123,   (20.10/123, issueDate, 2022-10-10)
-      20.10/ABC,   (20.10/ABC, pidStatus, DRAFT)
-      20.10/ABC,   (20.10/ABC, issueDate, 2022-06-06)
-
-    And so on.
-    This next code block goes through the "map" sequentially and groups rows with the same handle into a list.
-    The list gets turned into a HandleRecordResponse object, then we aggregate the next group of handle rows.
-
-    It's this complicated because of how records are stored in the database. I'm open to other approaches.
-     */
-
-    byte[] handle = posted.keySet().iterator().next(); // First handle retrieved
-    List<Record3<byte[], byte[], byte[]>> aggregatedRecord = new ArrayList<>();
-    List<HandleRecordResponse> responses = new ArrayList<>();
-
-    int endOfList = posted.size() - 1;
-    int i = 0;
-
-    // Our database result is a list of all rows posted (functionally decoupled from their handle id)
-    // In this loop, we create a HandleRecordResponse for each group of handles
-    // Where each "group" of handles is a handle record
-    for (Map.Entry<byte[], Result<Record3<byte[], byte[], byte[]>>> entry : posted.entrySet()) {
-      if (Arrays.equals(handle, entry.getKey()) && i < endOfList) {
-        // While previous handle = current handle, add this row to the handle record
-        aggregatedRecord.add(entry.getValue().get(0));
-      } else if (i == endOfList) {
-        // Special case for end of list
-        aggregatedRecord.add(entry.getValue().get(0));
-        responses.add(buildHandleRecordResponse(aggregatedRecord));
-      } else {
-        // If we've found all rows under a given handle, create a response from those rows
-        responses.add(buildHandleRecordResponse(aggregatedRecord));
-        if (i < endOfList - 1) {
-          // if this is not the last record in the list, we clear the list for the next handle record
-          aggregatedRecord.clear();
-        }
-        aggregatedRecord.add(entry.getValue().get(0));
-        handle = entry.getKey();
-      }
-      i++;
-    }
-    return responses;
-  }
-
-  // Given a list of database rows, return a HandleRecordResponse
-  private HandleRecordResponse buildHandleRecordResponse(
-      List<Record3<byte[], byte[], byte[]>> records)
-      throws PidCreationException {
-    HandleRecordResponse response = new HandleRecordResponse();
-    String type;
-    String data;
-
-    for (Record3<byte[], byte[], byte[]> r : records) {
-      type = new String((byte[]) r.getValue(1));
-      data = new String((byte[]) r.getValue(2));
-
-      try {
-        response = setHandleRecordAttribute(type, data, response);
-      } catch (NoSuchFieldException e) {
-        throw new PidCreationException(
-            FIELD_MISMATCH_ERROR + type);
-      }
-    }
-    return response;
-  }
-
-  // Given an attribute (type) and value (data), set the Response object's attribute to that value
-  private <T extends HandleRecordResponse> T setHandleRecordAttribute(String type, String data,
-      T response)
-      throws NoSuchFieldException {
-    switch (type) {
-      case "pid" -> response.setPid(data);
-      case "pidIssuer" -> response.setPidIssuer(data);
-      case "digitalObjectType" -> response.setDigitalObjectType(data);
-      case "digitalObjectSubtype" -> response.setDigitalObjectSubtype(data);
-      case "10320/loc" -> response.setLocs(data);
-      case "issueDate" -> response.setIssueDate(data);
-      case "issueNumber" -> response.setIssueNumber(data);
-      case "pidStatus" -> response.setPidStatus(data);
-      case "pidKernelMetadataLicense" -> response.setPidKernelMetadataLicense(data);
-      case "HS_ADMIN" -> response.setHsAdmin(data);
-      default -> throw new NoSuchFieldException();
-    }
-    return response;
-  }
-
-  private <T extends DoiRecordResponse> T setDoiRecordAttribute(String type, String data,
-      T response)
-      throws NoSuchFieldException {
-    switch (type) {
-      case "referentDoiName" -> response.setReferentDoiName(data);
-      case "referent" -> response.setReferent(data);
-      default -> {
-        return setHandleRecordAttribute(type, data, response);
-      }
-    }
-    return response;
-  }
-
-  private <T extends DigitalSpecimenResponse> T setDigitalSpecimenRecordAttribute(String type,
-      String data, T response)
-      throws NoSuchFieldException {
-    switch (type) {
-      case "digitalOrPhysical" -> response.setDigitalOrPhysical(data);
-      case "specimenHost" -> response.setSpecimenHost(data);
-      case "inCollectionFacility" -> response.setInCollectionFacility(data);
-      default -> {
-        return setDoiRecordAttribute(type, data, response);
-      }
-    }
-    return response;
-  }
-
-  private DigitalSpecimenBotanyResponse setDigitalSpecimenBotanyRecordAttribute(String type,
-      String data, DigitalSpecimenBotanyResponse response)
-      throws NoSuchFieldException {
-    switch (type) {
-      case "objectType" -> response.setObjectType(data);
-      case "preservedOrLiving" -> response.setPreservedOrLiving(data);
-      default -> {
-        return setDigitalSpecimenRecordAttribute(type, data, response);
-      }
-    }
-    return response;
-  }
-
-  // Doi Batch Creation
-  public List<DoiRecordResponse> createDoiRecordBatch(List<byte[]> handles, Instant recordTimestamp,
-      List<HandleAttribute> handleAttributes)
-      throws PidCreationException {
-    postBatchRecord(recordTimestamp, handleAttributes);
-    return mapPostedRecordToDoiResponse(handles);
-  }
-
-  private List<DoiRecordResponse> mapPostedRecordToDoiResponse(List<byte[]> handles)
-      throws PidCreationException {
-
-    // Fetch all posted handles
-    Map<byte[], Result<Record3<byte[], byte[], byte[]>>> posted = context
-        .select(HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
-        .from(HANDLES)
-        .where(HANDLES.HANDLE.in(handles))
-        .fetchGroups(HANDLES.HANDLE);
-
-    byte[] handle = posted.keySet().iterator().next();
-    List<Record3<byte[], byte[], byte[]>> aggregatedRecord = new ArrayList<>();
-    List<DoiRecordResponse> responses = new ArrayList<>();
-
-    int endOfList = posted.size() - 1;
-    int i = 0;
-
-    // Create a handle record response for each group of handles
-    for (Map.Entry<byte[], Result<Record3<byte[], byte[], byte[]>>> entry : posted.entrySet()) {
-      if (Arrays.equals(handle, entry.getKey()) && i < endOfList) {
-        aggregatedRecord.add(entry.getValue().get(0));
-      } else if (i == endOfList) {
-        aggregatedRecord.add(entry.getValue().get(0));
-        responses.add(buildDoiRecordResponse(aggregatedRecord));
-      } else {
-        responses.add(buildDoiRecordResponse(aggregatedRecord));
-        if (i < endOfList - 1) {
-          aggregatedRecord.clear();
-        }
-        aggregatedRecord.add(entry.getValue().get(0));
-        handle = entry.getKey();
-      }
-      i++;
-    }
-    return responses;
-  }
-
-  private DoiRecordResponse buildDoiRecordResponse(
-      List<Record3<byte[], byte[], byte[]>> records)
-      throws PidCreationException {
-    DoiRecordResponse response = new DoiRecordResponse();
-
-    String type;
-    String data;
-    for (Record3<byte[], byte[], byte[]> r : records) {
-      type = new String((byte[]) r.getValue(1));
-      data = new String((byte[]) r.getValue(2));
-
-      try {
-        response = setDoiRecordAttribute(type, data, response);
-      } catch (NoSuchFieldException e) {
-        throw new PidCreationException(
-            FIELD_MISMATCH_ERROR + type);
-      }
-    }
-    return response;
-  }
-
-  // Batch Digital Specimen Creation
-  public List<DigitalSpecimenResponse> createDigitalSpecimenBatch(List<byte[]> handles,
-      Instant recordTimestamp, List<HandleAttribute> handleAttributes)
-      throws PidCreationException {
-    postBatchRecord(recordTimestamp, handleAttributes);
-    return mapPostedRecordToDigitalSpecimenResponse(handles);
-  }
-
-  private List<DigitalSpecimenResponse> mapPostedRecordToDigitalSpecimenResponse(
-      List<byte[]> handles)
-      throws PidCreationException {
-
-    // Fetch all posted handles
-    Map<byte[], Result<Record3<byte[], byte[], byte[]>>> posted = context
-        .select(HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
-        .from(HANDLES)
-        .where(HANDLES.HANDLE.in(handles))
-        .fetchGroups(HANDLES.HANDLE);
-
-    byte[] handle = posted.keySet().iterator().next();
-    List<Record3<byte[], byte[], byte[]>> aggregatedRecord = new ArrayList<>();
-    List<DigitalSpecimenResponse> responses = new ArrayList<>();
-
-    int endOfList = posted.size() - 1;
-    int i = 0;
-
-    // Create a handle record response for each group of handles
-    for (Map.Entry<byte[], Result<Record3<byte[], byte[], byte[]>>> entry : posted.entrySet()) {
-      if (Arrays.equals(handle, entry.getKey()) && i < endOfList) {
-        aggregatedRecord.add(entry.getValue().get(0));
-      } else if (i == endOfList) {
-        aggregatedRecord.add(entry.getValue().get(0));
-        responses.add(buildDigitalSpecimenResponse(aggregatedRecord));
-      } else {
-        responses.add(buildDigitalSpecimenResponse(aggregatedRecord));
-        if (i < endOfList - 1) {
-          aggregatedRecord.clear();
-        }
-        aggregatedRecord.add(entry.getValue().get(0));
-        handle = entry.getKey();
-      }
-      i++;
-    }
-    return responses;
-  }
-
-  private DigitalSpecimenResponse buildDigitalSpecimenResponse(
-      List<Record3<byte[], byte[], byte[]>> records)
-      throws PidCreationException {
-    DigitalSpecimenResponse response = new DigitalSpecimenResponse();
-
-    String type;
-    String data;
-    for (Record3<byte[], byte[], byte[]> r : records) {
-      type = new String((byte[]) r.getValue(1));
-      data = new String((byte[]) r.getValue(2));
-
-      try {
-        response = setDigitalSpecimenRecordAttribute(type, data, response);
-      } catch (NoSuchFieldException e) {
-        throw new PidCreationException(
-            FIELD_MISMATCH_ERROR + type);
-      }
-    }
-    return response;
-  }
-
-  // DigitalSpecimenBotany Batch Creation
-
-  public List<DigitalSpecimenBotanyResponse> createDigitalSpecimenBotanyBatch(List<byte[]> handles,
-      Instant recordTimestamp, List<HandleAttribute> handleAttributes)
-      throws PidCreationException {
-    postBatchRecord(recordTimestamp, handleAttributes);
-    return mapPostedRecordToDigitalSpecimenBotanyResponse(handles);
-  }
-
-  private List<DigitalSpecimenBotanyResponse> mapPostedRecordToDigitalSpecimenBotanyResponse(
-      List<byte[]> handles)
-      throws PidCreationException {
-
-    // Fetch all posted handles
-    Map<byte[], Result<Record3<byte[], byte[], byte[]>>> posted = context
-        .select(HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
-        .from(HANDLES)
-        .where(HANDLES.HANDLE.in(handles))
-        .fetchGroups(HANDLES.HANDLE);
-
-    byte[] handle = posted.keySet().iterator().next();
-    List<Record3<byte[], byte[], byte[]>> aggregatedRecord = new ArrayList<>();
-    List<DigitalSpecimenBotanyResponse> responses = new ArrayList<>();
-
-    int endOfList = posted.size() - 1;
-    int i = 0;
-
-    // Create a handle record response for each group of handles
-    for (Map.Entry<byte[], Result<Record3<byte[], byte[], byte[]>>> entry : posted.entrySet()) {
-      if (Arrays.equals(handle, entry.getKey()) && i < endOfList) {
-        aggregatedRecord.add(entry.getValue().get(0));
-      } else if (i == endOfList) {
-        aggregatedRecord.add(entry.getValue().get(0));
-        responses.add(buildDigitalSpecimenBotanyResponse(aggregatedRecord));
-      } else {
-        responses.add(buildDigitalSpecimenBotanyResponse(aggregatedRecord));
-        if (i < endOfList - 1) {
-          aggregatedRecord.clear();
-        }
-        aggregatedRecord.add(entry.getValue().get(0));
-        handle = entry.getKey();
-      }
-      i++;
-    }
-    return responses;
-  }
-
-  private DigitalSpecimenBotanyResponse buildDigitalSpecimenBotanyResponse(
-      List<Record3<byte[], byte[], byte[]>> records)
-      throws PidCreationException {
-    DigitalSpecimenBotanyResponse response = new DigitalSpecimenBotanyResponse();
-
-    String type;
-    String data;
-    for (Record3<byte[], byte[], byte[]> r : records) {
-      type = new String((byte[]) r.getValue(1));
-      data = new String((byte[]) r.getValue(2));
-
-      try {
-        response = setDigitalSpecimenBotanyRecordAttribute(type, data, response);
-      } catch (NoSuchFieldException e) {
-        throw new PidCreationException(
-            FIELD_MISMATCH_ERROR + type);
-      }
-    }
-    return response;
-  }
-
-  // Create Individual Records
-  public HandleRecordResponse createHandle(byte[] handle, Instant recordTimestamp,
-      List<HandleAttribute> handleAttributes) throws PidCreationException {
+  private void mergeAttributesToDb(Instant recordTimestamp,
+      List<HandleAttribute> handleAttributes) {
     var queryList = new ArrayList<Query>();
-    HandleRecordResponse response = new HandleRecordResponse();
-
+    Set<byte[]> updatedHandles = new HashSet<>();
     for (var handleAttribute : handleAttributes) {
-      try {
-        response = setHandleRecordAttribute(handleAttribute.type(),
-            new String(handleAttribute.data()), response);
-      } catch (NoSuchFieldException e) {
-        throw new PidCreationException(
-            String.format(INVALID_FIELD_ERROR, handleAttribute.type(), handleAttribute.type()));
-      }
       var query = context.insertInto(HANDLES)
-          .set(HANDLES.HANDLE, handle)
+          .set(HANDLES.HANDLE, handleAttribute.handle())
           .set(HANDLES.IDX, handleAttribute.index())
           .set(HANDLES.TYPE, handleAttribute.type().getBytes(StandardCharsets.UTF_8))
           .set(HANDLES.DATA, handleAttribute.data())
-          .set(HANDLES.TTL, 86400)
+          .set(HANDLES.TTL, TTL)
           .set(HANDLES.TIMESTAMP, recordTimestamp.getEpochSecond())
           .set(HANDLES.ADMIN_READ, true)
           .set(HANDLES.ADMIN_WRITE, true)
           .set(HANDLES.PUB_READ, true)
-          .set(HANDLES.PUB_WRITE, false);
-      queryList.add(query);
-    }
-    context.batch(queryList).execute();
-    return response;
-  }
-
-  public DoiRecordResponse createDoi(byte[] handle, Instant recordTimestamp,
-      List<HandleAttribute> handleAttributes) throws PidCreationException {
-    var queryList = new ArrayList<Query>();
-    DoiRecordResponse response = new DoiRecordResponse();
-    for (var handleAttribute : handleAttributes) {
-      try {
-        response = setDoiRecordAttribute(handleAttribute.type(), new String(handleAttribute.data()),
-            response);
-      } catch (NoSuchFieldException e) {
-        throw new PidCreationException(
-            String.format(INVALID_FIELD_ERROR, handleAttribute.type(), handleAttribute.type()));
-      }
-      var query = context.insertInto(HANDLES)
-          .set(HANDLES.HANDLE, handle)
+          .set(HANDLES.PUB_WRITE, false)
+          .onDuplicateKeyUpdate()
+          .set(HANDLES.HANDLE, handleAttribute.handle())
           .set(HANDLES.IDX, handleAttribute.index())
           .set(HANDLES.TYPE, handleAttribute.type().getBytes(StandardCharsets.UTF_8))
           .set(HANDLES.DATA, handleAttribute.data())
-          .set(HANDLES.TTL, 86400)
+          .set(HANDLES.TTL, TTL)
           .set(HANDLES.TIMESTAMP, recordTimestamp.getEpochSecond())
           .set(HANDLES.ADMIN_READ, true)
           .set(HANDLES.ADMIN_WRITE, true)
           .set(HANDLES.PUB_READ, true)
           .set(HANDLES.PUB_WRITE, false);
       queryList.add(query);
+      if (updatedHandles.add(handleAttribute.handle())) {
+        queryList.add(versionIncrement(handleAttribute.handle(), recordTimestamp));
+      }
     }
     context.batch(queryList).execute();
-    return response;
   }
 
-  public DigitalSpecimenResponse createDigitalSpecimen(byte[] handle, Instant recordTimestamp,
-      List<HandleAttribute> handleAttributes) throws PidCreationException {
-    var queryList = new ArrayList<Query>();
-    DigitalSpecimenResponse response = new DigitalSpecimenResponse();
-    for (var handleAttribute : handleAttributes) {
-      try {
-        response = setDigitalSpecimenRecordAttribute(handleAttribute.type(),
-            new String(handleAttribute.data()), response);
-      } catch (NoSuchFieldException e) {
-        throw new PidCreationException(
-            String.format(INVALID_FIELD_ERROR, handleAttribute.type(), handleAttribute.type()));
-      }
-      var query = context.insertInto(HANDLES)
-          .set(HANDLES.HANDLE, handle)
-          .set(HANDLES.IDX, handleAttribute.index())
-          .set(HANDLES.TYPE, handleAttribute.type().getBytes(StandardCharsets.UTF_8))
-          .set(HANDLES.DATA, handleAttribute.data())
-          .set(HANDLES.TTL, 86400)
-          .set(HANDLES.TIMESTAMP, recordTimestamp.getEpochSecond())
-          .set(HANDLES.ADMIN_READ, true)
-          .set(HANDLES.ADMIN_WRITE, true)
-          .set(HANDLES.PUB_READ, true)
-          .set(HANDLES.PUB_WRITE, false);
-      queryList.add(query);
-    }
-    context.batch(queryList).execute();
-    return response;
+  // Archive
+  public void archiveRecord(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
+    mergeAttributesToDb(recordTimestamp, handleAttributes);
+    removeNonTombstoneFields(List.of(handleAttributes.get(0).handle()));
   }
 
-  public DigitalSpecimenBotanyResponse createDigitalSpecimenBotany(byte[] handle,
-      Instant recordTimestamp, List<HandleAttribute> handleAttributes) throws PidCreationException {
-    var queryList = new ArrayList<Query>();
-    DigitalSpecimenBotanyResponse response = new DigitalSpecimenBotanyResponse();
-    for (var handleAttribute : handleAttributes) {
-      try {
-        response = setDigitalSpecimenBotanyRecordAttribute(handleAttribute.type(),
-            new String(handleAttribute.data()), response);
-      } catch (NoSuchFieldException e) {
-        throw new PidCreationException(
-            String.format(INVALID_FIELD_ERROR, handleAttribute.type(), handleAttribute.type()));
-      }
-      var query = context.insertInto(HANDLES)
-          .set(HANDLES.HANDLE, handle)
-          .set(HANDLES.IDX, handleAttribute.index())
-          .set(HANDLES.TYPE, handleAttribute.type().getBytes(StandardCharsets.UTF_8))
-          .set(HANDLES.DATA, handleAttribute.data())
-          .set(HANDLES.TTL, 86400)
-          .set(HANDLES.TIMESTAMP, recordTimestamp.getEpochSecond())
-          .set(HANDLES.ADMIN_READ, true)
-          .set(HANDLES.ADMIN_WRITE, true)
-          .set(HANDLES.PUB_READ, true)
-          .set(HANDLES.PUB_WRITE, false);
-      queryList.add(query);
+  public void archiveRecords(Instant recordTimestamp, List<HandleAttribute> handleAttributes,
+      List<byte[]> handles) {
+    mergeAttributesToDb(recordTimestamp, handleAttributes);
+    removeNonTombstoneFields(handles);
+  }
+
+  // Update
+  public void updateRecord(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
+    byte[] handle = handleAttributes.get(0).handle();
+    var query = prepareUpdateQuery(handle, recordTimestamp, handleAttributes);
+    context.batch(query).execute();
+  }
+
+  public void updateRecordBatch(Instant recordTimestamp,
+      List<List<HandleAttribute>> handleRecords) {
+
+    List<Query> queryList = new ArrayList<>();
+    for (List<HandleAttribute> handleRecord : handleRecords) {
+      queryList.addAll(
+          prepareUpdateQuery(handleRecord.get(0).handle(), recordTimestamp, handleRecord));
     }
     context.batch(queryList).execute();
-    return response;
+  }
+
+  private ArrayList<Query> prepareUpdateQuery(byte[] handle, Instant recordTimestamp,
+      List<HandleAttribute> handleAttributes) {
+    var queryList = new ArrayList<Query>();
+    for (var handleAttribute : handleAttributes) {
+      var query = context.update(HANDLES)
+          .set(HANDLES.DATA, handleAttribute.data())
+          .set(HANDLES.TIMESTAMP, recordTimestamp.getEpochSecond())
+          .where(HANDLES.HANDLE.eq(handle))
+          .and(HANDLES.IDX.eq(handleAttribute.index()));
+      queryList.add(query);
+    }
+    queryList.add(versionIncrement(handle, recordTimestamp));
+    return queryList;
+  }
+
+  private Query versionIncrement(byte[] handle, Instant recordTimestamp) {
+    var currentVersion =
+        Integer.parseInt(Objects.requireNonNull(context.select(HANDLES.DATA)
+            .from(HANDLES)
+            .where(HANDLES.HANDLE.eq(handle))
+            .and(HANDLES.TYPE.eq(ISSUE_NUMBER.getBytes(StandardCharsets.UTF_8)))
+            .fetchOne(dbRecord -> new String(dbRecord.value1(), StandardCharsets.UTF_8))));
+    int version = currentVersion + 1;
+
+    return context.update(HANDLES)
+        .set(HANDLES.DATA, String.valueOf(version).getBytes(StandardCharsets.UTF_8))
+        .set(HANDLES.TIMESTAMP, recordTimestamp.getEpochSecond())
+        .where(HANDLES.HANDLE.eq(handle))
+        .and(HANDLES.TYPE.eq(ISSUE_NUMBER.getBytes(StandardCharsets.UTF_8)));
+  }
+
+  private void removeNonTombstoneFields(List<byte[]> handles) {
+    context.delete(HANDLES)
+        .where(HANDLES.HANDLE.in(handles))
+        .and(HANDLES.TYPE.notIn(TOMBSTONE_RECORD_FIELDS_BYTES))
+        .execute();
   }
 
 }

@@ -2,6 +2,7 @@ package eu.dissco.core.handlemanager.service;
 
 import eu.dissco.core.handlemanager.repository.HandleRepository;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -55,7 +56,7 @@ public class HandleGeneratorService {
     HashSet<ByteBuffer> handleHash = wrapBytes(handleList);
 
     // Check for duplicates from repository and wrap the duplicates
-    HashSet<ByteBuffer> duplicates = wrapBytes(handleRep.checkDuplicateHandles(handleList));
+    HashSet<ByteBuffer> duplicates = wrapBytes(handleRep.getHandlesExist(handleList));
 
     // If a duplicate was found, recursively call this function
     // Generate new handles for every duplicate found and add it to our hash list
@@ -108,7 +109,7 @@ public class HandleGeneratorService {
   }
 
   public byte[] newHandleBytes() {
-    return newHandle().getBytes();
+    return newHandle().getBytes(StandardCharsets.UTF_8);
   }
 
   public List<byte[]> newHandle(int numberOfHandles) { // Generates h number of handles

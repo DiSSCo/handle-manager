@@ -2,6 +2,7 @@ package eu.dissco.core.handlemanager.domain.requests;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.ToString;
 
 @Getter
@@ -20,13 +21,14 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
       String digitalObjectSubtypePid,
       String[] locations,
       // Doi
-      String referentDoiName,
+      @NonNull String referentDoiNamePid,
       // Digital Specimen
-      String digitalOrPhysical,
-      String specimenHostPid,
-      String inCollectionFacilityPid
+      @NonNull String digitalOrPhysical,
+      @NonNull String specimenHostPid,
+      @NonNull String inCollectionFacilityPid
   ) {
-    super(pidIssuerPid, digitalObjectTypePid, digitalObjectSubtypePid, locations, referentDoiName);
+    super(pidIssuerPid, digitalObjectTypePid, digitalObjectSubtypePid, locations,
+        referentDoiNamePid);
     this.digitalOrPhysical = digitalOrPhysical;
     this.specimenHostPid = specimenHostPid;
     this.inCollectionFacilityPid = inCollectionFacilityPid;
