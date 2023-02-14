@@ -91,6 +91,20 @@ public class HandleController {
     return ResponseEntity.status(HttpStatus.OK).body(node);
   }
 
+  @GetMapping("/{prefix}/{suffix}/{version}")
+  public ResponseEntity<JsonApiWrapperRead> resolvePidVersion(
+      @PathVariable("prefix") String prefix,
+      @PathVariable("suffix") String suffix,
+      @PathVariable("version") String version,
+      HttpServletRequest r
+  ) throws PidResolutionException {
+    String path = SANDBOX_URI + r.getRequestURI();
+    byte[] handle = (prefix + "/" + suffix).getBytes(StandardCharsets.UTF_8);
+
+    var node = service.resolveSingleRecord(handle, path);
+    return ResponseEntity.status(HttpStatus.OK).body(node);
+  }
+
   @PostMapping("/records")
   public ResponseEntity<JsonApiWrapperRead> resolvePids(
       @RequestBody List<JsonNode> requests,
