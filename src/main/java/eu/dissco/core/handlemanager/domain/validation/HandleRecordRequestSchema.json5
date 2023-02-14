@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/abc/pid",
+  "$id": "sandbox.dissco.tech/schema.json",
+  "title": "PID Kernel",
+  "description": "All PIDs have these attributes",
+  "type": "object",
+  "properties": {
+    "pidIssuerPid": {
+      "description": "Pid for the Issuing agency for the PID.",
+      "type": "string"
+    },
+    "digitalObjectTypePid": {
+      "description": "PID for the Type of Digital Object",
+      "type": "string"
+    },
+    "digitalObjectSubTypePid": {
+      "description": "PID for the Subtype of Digital Object.",
+      "type": "string"
+    },
+    "locations": {
+      "description": "PID for the Subtype of Digital Object.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": "1",
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "pidIssuerPid",
+    "digitalObjectTypePid",
+    "digitalObjectSubtypePid",
+    "locations"
+  ]
+}

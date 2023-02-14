@@ -17,6 +17,9 @@ public class MediaObjectRequest extends DoiRecordRequest {
   @NonNull
   private final String primaryPhysicalId;
 
+  @NonNull
+  private final InstitutionalIdentifier institutionalIdentifier;
+
 
   public MediaObjectRequest(
       String pidIssuerPid,
@@ -26,11 +29,13 @@ public class MediaObjectRequest extends DoiRecordRequest {
       @NonNull String referentDoiNamePid,
       @NonNull String mediaHash,
       @NonNull String mediaUrl,
-      @NonNull String primaryPhysicalId) {
+      @NonNull String primaryPhysicalId,
+      @NonNull InstitutionalIdentifier institutionalIdentifier) {
     super(pidIssuerPid, digitalObjectTypePid, digitalObjectSubtypePid, locations,
         referentDoiNamePid);
     this.mediaHash = mediaHash;
     this.mediaUrl = mediaUrl;
     this.primaryPhysicalId = primaryPhysicalId;
+    this.institutionalIdentifier = institutionalIdentifier;
   }
 }

@@ -51,6 +51,7 @@ import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.HandleRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.InstitutionalIdentifier;
 import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
@@ -581,6 +582,8 @@ public class HandleService {
         new HandleAttribute(FIELD_IDX.get(IN_COLLECTION_FACILITY), handle, IN_COLLECTION_FACILITY,
             inCollectionFacility.getBytes(StandardCharsets.UTF_8)));
 
+    // 17 : Institutional Identifier
+    JsonNode institutionalIdentifier = mapper.valueToTree(request.getInstitutionalIdentifier());
     return handleRecord;
   }
 

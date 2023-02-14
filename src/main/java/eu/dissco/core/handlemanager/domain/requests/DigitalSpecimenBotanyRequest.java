@@ -1,5 +1,6 @@
 package eu.dissco.core.handlemanager.domain.requests;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
@@ -27,6 +28,7 @@ public class DigitalSpecimenBotanyRequest extends DigitalSpecimenRequest {
       String digitalOrPhysical,
       String specimenHostPid,
       String inCollectionFacilityPid,
+      InstitutionalIdentifier institutionalIdentifier,
       // Botany Specimen
       @NonNull String objectType,
       @NonNull String preservedOrLiving
@@ -34,7 +36,7 @@ public class DigitalSpecimenBotanyRequest extends DigitalSpecimenRequest {
     super(pidIssuerPid, digitalObjectTypePid, digitalObjectSubtypePid, locations,
         referentDoiNamePid,
         digitalOrPhysical,
-        specimenHostPid, inCollectionFacilityPid);
+        specimenHostPid, inCollectionFacilityPid, institutionalIdentifier);
     this.objectType = objectType;
     this.preservedOrLiving = preservedOrLiving;
   }

@@ -86,6 +86,7 @@ public class PidRecords {
       Map.entry(TOMBSTONE_PIDS, 10), Map.entry(PID_KERNEL_METADATA_LICENSE, 11),
       Map.entry(REFERENT_DOI_NAME, 12), Map.entry(REFERENT, 13), Map.entry(DIGITAL_OR_PHYSICAL, 14),
       Map.entry(SPECIMEN_HOST, 15), Map.entry(IN_COLLECTION_FACILITY, 16),
+
       Map.entry(OBJECT_TYPE, 17), Map.entry(PRESERVED_OR_LIVING, 18));
 
 
