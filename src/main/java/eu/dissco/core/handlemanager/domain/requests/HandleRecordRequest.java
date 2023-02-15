@@ -1,8 +1,8 @@
 package eu.dissco.core.handlemanager.domain.requests;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 
@@ -11,14 +11,13 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode
 public class HandleRecordRequest {
-
-  @NonNull
+  @JsonProperty(required = true)
   private final String pidIssuerPid;
-  @NonNull
+  @JsonProperty(required = true)
   private final String digitalObjectTypePid;
-  @NonNull
+  @JsonProperty(required = true)
   private final String digitalObjectSubtypePid;
-  @NonNull
+  @JsonProperty(required = true)
   private final String[] locations;
 
 }

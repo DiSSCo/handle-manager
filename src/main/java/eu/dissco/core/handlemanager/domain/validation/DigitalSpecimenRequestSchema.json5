@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/dissco/DigitalSpecimenRequest",
+  "$id": "https://sandbox.dissco.tech/DigitalSpecimenRequest.schema.json",
+  "title": "Digital Specimen Schema",
+  "description": "Schema for a Digital Specimen POST Request",
+  "type": "object",
+  "properties": {
+    "pidIssuerPid": {
+      "description": "Pid for the Issuing agency for the PID.",
+      "type": "string"
+    },
+    "digitalObjectTypePid": {
+      "description": "PID for the Type of Digital Object",
+      "type": "string"
+    },
+    "digitalObjectSubTypePid": {
+      "description": "PID for the Subtype of Digital Object.",
+      "type": "string"
+    },
+    "locations": {
+      "description": "PID for the Subtype of Digital Object.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": "1",
+      "uniqueItems": true
+    },
+    "referentDoiNamePid": {
+      "description": "PID for the authority issuing the referent",
+      "type": "string"
+    },
+    "digitalOrPhysical": {
+      "description ": "Identifies specimen as digital or physical",
+      "type": "string",
+      "enum": [
+        "digital",
+        "physical"
+      ]
+    },
+    "specimenHostPid": {
+      "description": "PID of the host institution.",
+      "type": "string"
+    },
+    "inCollectionFacilityPid": {
+      "desccription": "PID of the collection the specimen is hosted in",
+      "type": "string"
+    },
+    "physicalIdentifier": {
+      "description": "Primary identifier used by host institution",
+      "type": "object",
+      "properties": {
+        "physicalId": {
+          "type": "string"
+        },
+        "physicalIdType": {
+          "type": "string"
+        },
+        "required": [
+          "physicalId"
+        ]
+      }
+    }
+  },
+  "required": [
+    "pidIssuerPid",
+    "digitalObjectTypePid",
+    "digitalObjectSubtypePid",
+    "locations",
+    "referentDoiNamePid",
+    "digitalOrPhysical",
+    "specimenHostPid",
+    "inCollectionFacilityPid",
+    "physicalIdentifier"
+  ]
+}

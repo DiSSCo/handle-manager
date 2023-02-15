@@ -1,41 +1,33 @@
 package eu.dissco.core.handlemanager.domain.requests;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.ToString;
 
 @Getter
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public class MediaObjectRequest extends DoiRecordRequest {
-
-  @NonNull
+  @JsonProperty(required = true)
   private final String mediaHash;
-  @NonNull
+  @JsonProperty(required = true)
   private final String mediaUrl;
-  @NonNull
-  private final String primaryPhysicalId;
-
-  @NonNull
-  private final InstitutionalIdentifier institutionalIdentifier;
-
-
+  @JsonProperty(required = true)
+  private final PhysicalIdentifier physicalIdentifier;
   public MediaObjectRequest(
       String pidIssuerPid,
       String digitalObjectTypePid,
       String digitalObjectSubtypePid,
       String[] locations,
-      @NonNull String referentDoiNamePid,
-      @NonNull String mediaHash,
-      @NonNull String mediaUrl,
-      @NonNull String primaryPhysicalId,
-      @NonNull InstitutionalIdentifier institutionalIdentifier) {
+      String referentDoiNamePid,
+      String mediaHash,
+      String mediaUrl,
+      PhysicalIdentifier physicalIdentifier) {
     super(pidIssuerPid, digitalObjectTypePid, digitalObjectSubtypePid, locations,
         referentDoiNamePid);
     this.mediaHash = mediaHash;
     this.mediaUrl = mediaUrl;
-    this.primaryPhysicalId = primaryPhysicalId;
-    this.institutionalIdentifier = institutionalIdentifier;
+    this.physicalIdentifier = physicalIdentifier;
   }
 }

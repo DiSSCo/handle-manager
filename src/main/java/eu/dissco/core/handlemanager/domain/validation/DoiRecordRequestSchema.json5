@@ -1,8 +1,8 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://sandbox.dissco.tech/handleRecordRequest.schema.json",
-  "title": "PID Kernel",
-  "description": "Schema for a Handle Record POST Request",
+  "$schema": "https://json-schema.org/dissco/DoiRecordRequest",
+  "$id": "https://sandbox.dissco.tech/DoiRecordRequest.schema.json",
+  "title": "DOI Request Schema",
+  "description": "Schema for a Doi Record POST Request",
   "type": "object",
   "properties": {
     "pidIssuerPid": {
@@ -25,12 +25,17 @@
       },
       "minItems": "1",
       "uniqueItems": true
+    },
+    "referentDoiNamePid": {
+      "description": "PID for the authority issuing the referent",
+      "type": "string"
     }
   },
   "required": [
     "pidIssuerPid",
     "digitalObjectTypePid",
     "digitalObjectSubtypePid",
-    "locations"
+    "locations",
+    "referentDoiNamePid"
   ]
 }

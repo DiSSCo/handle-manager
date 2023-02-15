@@ -1,9 +1,8 @@
 package eu.dissco.core.handlemanager.domain.requests;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.ToString;
 
 @Getter
@@ -11,9 +10,9 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 public class DigitalSpecimenBotanyRequest extends DigitalSpecimenRequest {
 
-  @NonNull
+  @JsonProperty(required = true)
   private final String objectType;
-  @NonNull
+  @JsonProperty(required = true)
   private final String preservedOrLiving;
 
   public DigitalSpecimenBotanyRequest(
@@ -28,15 +27,15 @@ public class DigitalSpecimenBotanyRequest extends DigitalSpecimenRequest {
       String digitalOrPhysical,
       String specimenHostPid,
       String inCollectionFacilityPid,
-      InstitutionalIdentifier institutionalIdentifier,
+      PhysicalIdentifier physicalIdentifier,
       // Botany Specimen
-      @NonNull String objectType,
-      @NonNull String preservedOrLiving
+      String objectType,
+      String preservedOrLiving
   ) {
     super(pidIssuerPid, digitalObjectTypePid, digitalObjectSubtypePid, locations,
         referentDoiNamePid,
         digitalOrPhysical,
-        specimenHostPid, inCollectionFacilityPid, institutionalIdentifier);
+        specimenHostPid, inCollectionFacilityPid, physicalIdentifier);
     this.objectType = objectType;
     this.preservedOrLiving = preservedOrLiving;
   }

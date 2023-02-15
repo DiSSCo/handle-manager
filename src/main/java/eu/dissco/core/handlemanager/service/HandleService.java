@@ -10,6 +10,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
 import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IS_PID_RECORD;
 import static eu.dissco.core.handlemanager.domain.PidRecords.HANDLE_RECORD_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_INSTITUTIONAL_OBJECT_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.IN_COLLECTION_FACILITY;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_DATE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_NUMBER;
@@ -51,7 +52,6 @@ import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.InstitutionalIdentifier;
 import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
@@ -180,6 +180,13 @@ public class HandleService {
 
   public JsonApiWrapperWrite createRecords(List<JsonNode> requests)
       throws PidResolutionException, PidServiceInternalError, InvalidRecordInput {
+
+    log.info(requests.get(0).toString());
+    log.info(requests.get(0).get("data").get("attributes").get("digitalOrPhysical").toString());
+    log.info(requests.get(0).get("data").get("attributes").get("physicalIdentifier").toString());
+    log.info(getKeys(requests.get(0).get("data").get("attributes")).toString());
+
+
     var recordTimestamp = Instant.now();
     List<byte[]> handles = hf.genHandleList(requests.size());
     List<byte[]> handlesPost = new ArrayList<>(handles);
@@ -563,7 +570,7 @@ public class HandleService {
 
   private List<HandleAttribute> prepareDigitalSpecimenRecordAttributes(
       DigitalSpecimenRequest request, byte[] handle)
-      throws PidResolutionException, PidServiceInternalError {
+      throws PidResolutionException, PidServiceInternalError, JsonProcessingException {
     var handleRecord = prepareDoiRecordAttributes(request, handle);
 
     handleRecord.add(
@@ -583,14 +590,18 @@ public class HandleService {
             inCollectionFacility.getBytes(StandardCharsets.UTF_8)));
 
     // 17 : Institutional Identifier
-    JsonNode institutionalIdentifier = mapper.valueToTree(request.getInstitutionalIdentifier());
+    // Encoding here is UTF-8
+    var physicalIdentifier = mapper.writeValueAsBytes(request.getPhysicalIdentifier());
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(PRIMARY_INSTITUTIONAL_OBJECT_IDENTIFIER), handle,
+        PRIMARY_INSTITUTIONAL_OBJECT_IDENTIFIER, physicalIdentifier));
+
     return handleRecord;
   }
 
   private List<HandleAttribute> prepareDigitalSpecimenBotanyRecordAttributes(
       DigitalSpecimenBotanyRequest request,
       byte[] handle)
-      throws PidResolutionException, PidServiceInternalError {
+      throws PidResolutionException, PidServiceInternalError, JsonProcessingException {
     List<HandleAttribute> handleRecord = prepareDigitalSpecimenRecordAttributes(request, handle);
 
     // 17: ObjectType
@@ -655,7 +666,7 @@ public class HandleService {
     for (HandleAttribute row : dbRecord) {
       String type = row.type();
       String data = new String(row.data(), StandardCharsets.UTF_8);
-      if (FIELD_IS_PID_RECORD.contains(type)) {
+      if (FIELD_IS_PID_RECORD.contains(type) || type.equals(PRIMARY_INSTITUTIONAL_OBJECT_IDENTIFIER)) {
         try {
           subNode = mapper.readValue(data, ObjectNode.class);
           rootNode.set(type, subNode);
@@ -663,7 +674,8 @@ public class HandleService {
           log.warn("Type \"{}\" is noncompliant to the PID kernel model. Invalid data: {}", type,
               data);
         }
-      } else {
+      }
+      else {
         rootNode.put(type, data);
       }
     }

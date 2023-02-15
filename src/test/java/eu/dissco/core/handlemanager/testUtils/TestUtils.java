@@ -40,7 +40,7 @@ import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.InstitutionalIdentifier;
+import eu.dissco.core.handlemanager.domain.requests.PhysicalIdentifier;
 import eu.dissco.core.handlemanager.domain.requests.TombstoneRecordRequest;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
@@ -104,7 +104,7 @@ public class TestUtils {
   public static final String PTR_REGISTRATION_DOI_NAME = "Registration Agency";
   public final static String PTR_HANDLE_RECORD = genPtrHandleRecord(false);
   public final static String PTR_DOI_RECORD = genPtrHandleRecord(true);
-  public final static InstitutionalIdentifier INSTITUTIONAL_IDENTIFIER = new InstitutionalIdentifier(
+  public final static PhysicalIdentifier PRIMARY_INSTITUTIONAL_OBJECT_ID = new PhysicalIdentifier(
       "BOTANICAL.QRS.123",
       "physicalSpecimenId"
   );
@@ -329,7 +329,7 @@ public class TestUtils {
         DIGITAL_OR_PHYSICAL_TESTVAL,
         SPECIMEN_HOST_PID,
         IN_COLLECTION_FACILITY_TESTVAL,
-        INSTITUTIONAL_IDENTIFIER);
+        PRIMARY_INSTITUTIONAL_OBJECT_ID);
   }
 
   public static DigitalSpecimenBotanyRequest genDigitalSpecimenBotanyRequestObject() {
@@ -341,7 +341,7 @@ public class TestUtils {
         DIGITAL_OR_PHYSICAL_TESTVAL,
         SPECIMEN_HOST_PID,
         IN_COLLECTION_FACILITY_TESTVAL,
-        INSTITUTIONAL_IDENTIFIER,
+        PRIMARY_INSTITUTIONAL_OBJECT_ID,
         OBJECT_TYPE_TESTVAL,
         PRESERVED_OR_LIVING_TESTVAL);
   }

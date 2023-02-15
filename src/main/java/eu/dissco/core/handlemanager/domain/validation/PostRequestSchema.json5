@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/dissco/PostRecordRequest",
+  "$id": "sandbox.dissco.tech/PostRequest.schema.json",
+  "title": "General Request",
+  "description": "Schema for a PID POST Request",
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "attributes": {
+          "type": "object",
+          "oneOf": [
+            {
+              "$ref": "https://sandbox.dissco.tech/pidKernel.schema.json"
+            },
+            {
+              "$ref": "https://sandbox.dissco.tech/DoiRecordRequest.schema.json"
+            },
+            {
+              "$ref": "https://sandbox.dissco.tech/DigitalSpecimenRequest.schema.json"
+            }
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "attributes"
+      ]
+    }
+  },
+  "required": [
+    "data"
+  ]
+}
