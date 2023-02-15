@@ -1,6 +1,7 @@
 package eu.dissco.core.handlemanager.domain.requests;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -9,10 +10,11 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public class DigitalSpecimenBotanyRequest extends DigitalSpecimenRequest {
-
   @JsonProperty(required = true)
+  @JsonPropertyDescription("Type of object (e.g. herbarium sheet)")
   private final String objectType;
   @JsonProperty(required = true)
+  @JsonPropertyDescription("Indicates specimen is preserved or living")
   private final String preservedOrLiving;
 
   public DigitalSpecimenBotanyRequest(
@@ -24,7 +26,7 @@ public class DigitalSpecimenBotanyRequest extends DigitalSpecimenRequest {
       // Referent
       String referentDoiNamePid,
       // Digital Specimen
-      String digitalOrPhysical,
+      DigitalOrPhysical digitalOrPhysical,
       String specimenHostPid,
       String inCollectionFacilityPid,
       PhysicalIdentifier physicalIdentifier,

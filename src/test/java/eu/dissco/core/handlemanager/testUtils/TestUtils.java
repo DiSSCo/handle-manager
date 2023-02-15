@@ -36,6 +36,7 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
+import eu.dissco.core.handlemanager.domain.requests.DigitalOrPhysical;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
@@ -86,7 +87,7 @@ public class TestUtils {
   public static final String REFERENT_DOI_NAME_PID = "20.5000.1025/OTHER-TRIPLET";
   public static final String REFERENT_TESTVAL = "";
   //Digital Specimens
-  public static final String DIGITAL_OR_PHYSICAL_TESTVAL = "physical";
+  public static final DigitalOrPhysical DIGITAL_OR_PHYSICAL_TESTVAL = DigitalOrPhysical.PHYSICAL;
   public static final String SPECIMEN_HOST_PID = "20.5000.1025/OTHER-TRIPLET";
   public static final String IN_COLLECTION_FACILITY_TESTVAL = "20.5000.1025/OTHER-TRIPLET";
 
@@ -255,7 +256,7 @@ public class TestUtils {
     // 14: digitalOrPhysical
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(DIGITAL_OR_PHYSICAL), handle, DIGITAL_OR_PHYSICAL,
-            DIGITAL_OR_PHYSICAL_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+            DIGITAL_OR_PHYSICAL_TESTVAL.getType().getBytes(StandardCharsets.UTF_8)));
 
     // 15: specimenHost
     handleRecord.add(
@@ -284,10 +285,16 @@ public class TestUtils {
 
   public static <T extends HandleRecordRequest> ObjectNode genCreateRecordRequest(T request,
       String recordType) {
-    ObjectMapper mapper = new ObjectMapper();
+    ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
 
     ObjectNode rootNode = mapper.createObjectNode();
     ObjectNode dataNode = mapper.createObjectNode();
+    try {
+      var badNode = mapper.writeValueAsString(request);
+    } catch(Exception e){
+
+    }
+
     ObjectNode attributeNode = mapper.valueToTree(request);
 
     if (attributeNode.has("referent")) {

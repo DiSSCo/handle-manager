@@ -1,6 +1,7 @@
 package eu.dissco.core.handlemanager.domain.requests;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -11,12 +12,16 @@ import lombok.ToString;
 public class DigitalSpecimenRequest extends DoiRecordRequest {
 
   @JsonProperty(required = true)
-  private final String digitalOrPhysical;
+  @JsonPropertyDescription("Identifies specimen as digital or physical")
+  private final DigitalOrPhysical digitalOrPhysical;
   @JsonProperty(required = true)
+  @JsonPropertyDescription("PID of the host institution.")
   private final String specimenHostPid;
   @JsonProperty(required = true)
+  @JsonPropertyDescription("PID of the collection the specimen is hosted in")
   private final String inCollectionFacilityPid;
   @JsonProperty(required = true)
+  @JsonPropertyDescription("Primary identifier used by host institution")
   private final PhysicalIdentifier physicalIdentifier;
 
   public DigitalSpecimenRequest(
@@ -28,7 +33,7 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
       // Doi
       String referentDoiNamePid,
       // Digital Specimen
-      String digitalOrPhysical,
+      DigitalOrPhysical digitalOrPhysical,
       String specimenHostPid,
       String inCollectionFacilityPid,
       PhysicalIdentifier physicalIdentifier

@@ -15,6 +15,8 @@ import eu.dissco.core.handlemanager.domain.requests.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.TombstoneRecordRequest;
 import java.util.Random;
+import java.util.stream.Stream;
+import javax.validation.constraints.NotEmpty;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -69,6 +71,22 @@ public class AppConfig {
         SchemaVersion.DRAFT_2019_09, OptionPreset.PLAIN_JSON)
         .with(module);
 
+    configBuilder.forTypesInGeneral()
+        .withEnumResolver(scope -> scope.getType().getErasedType().isEnum()
+            ? Stream.of(scope.getType().getErasedType().getEnumConstants())
+            .map(v -> ((Enum) v).name()).toList()
+            : null);
+
+    // Min items in array must be 1
+    configBuilder.forFields()
+        .withArrayMinItemsResolver(field -> field
+            .getAnnotationConsideringFieldAndGetterIfSupported(NotEmpty.class) == null ? null : 1);
+
+    // Array items must be unique
+    configBuilder.forTypesInGeneral()
+        .withArrayUniqueItemsResolver(scope -> scope.getType().isInstanceOf(String[].class) ? true : null);
+
+    // Add Identifiers to Schema
     configBuilder.forTypesInGeneral()
         .withIdResolver(scope -> scope.getType().getErasedType() == HandleRecordRequest.class ?  handleId: null);
 

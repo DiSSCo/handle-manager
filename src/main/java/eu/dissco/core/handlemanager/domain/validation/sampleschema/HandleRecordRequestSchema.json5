@@ -6,7 +6,7 @@
   "type": "object",
   "properties": {
     "pidIssuerPid": {
-      "description": "Pid for the Issuing agency for the PID.",
+      "description": "dentifier for the agency issuing the PID.",
       "type": "string"
     },
     "digitalObjectTypePid": {
@@ -18,7 +18,7 @@
       "type": "string"
     },
     "locations": {
-      "description": "PID for the Subtype of Digital Object.",
+      "description": "Array containing the locations of the object.",
       "type": "array",
       "items": {
         "type": "string"

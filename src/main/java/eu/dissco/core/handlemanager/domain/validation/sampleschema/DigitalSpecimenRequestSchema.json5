@@ -43,7 +43,7 @@
       "type": "string"
     },
     "inCollectionFacilityPid": {
-      "desccription": "PID of the collection the specimen is hosted in",
+      "description": "PID of the collection the specimen is hosted in",
       "type": "string"
     },
     "physicalIdentifier": {

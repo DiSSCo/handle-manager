@@ -180,7 +180,7 @@ public class HandleService {
 
   public JsonApiWrapperWrite createRecords(List<JsonNode> requests)
       throws PidResolutionException, PidServiceInternalError, InvalidRecordInput {
-    
+
     var recordTimestamp = Instant.now();
     List<byte[]> handles = hf.genHandleList(requests.size());
     List<byte[]> handlesPost = new ArrayList<>(handles);
@@ -569,7 +569,7 @@ public class HandleService {
 
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(DIGITAL_OR_PHYSICAL), handle, DIGITAL_OR_PHYSICAL,
-            request.getDigitalOrPhysical().getBytes(StandardCharsets.UTF_8)));
+            request.getDigitalOrPhysical().getType().getBytes(StandardCharsets.UTF_8)));
 
     // 15: specimenHost
     String specimenHost = pidTypeService.resolveTypePid(request.getSpecimenHostPid());

@@ -22,8 +22,8 @@ public class JsonSchemaGenerator {
     var schemaGenerator = new SchemaGenerator(config);
     handleRequestSchema = schemaGenerator.generateSchema(HandleRecordRequest.class);
     doiRequestSchema = schemaGenerator.generateSchema(DoiRecordRequest.class);
-    digitalRequestSpecimenSchema = schemaGenerator.generateSchema(DigitalSpecimenRequest.class);
-    digitalRequestSpecimenBotanySchema = schemaGenerator.generateSchema(DigitalSpecimenBotanyRequest.class);
+    digitalSpecimenRequestSchema = schemaGenerator.generateSchema(DigitalSpecimenRequest.class);
+    digitalSpecimenBotanyRequestSchema = schemaGenerator.generateSchema(DigitalSpecimenBotanyRequest.class);
     tombstoneRequestSchema = schemaGenerator.generateSchema(TombstoneRecordRequest.class);
     requestSchema = schemaGenerator.generateSchema(GeneralRequest.class);
     mediaObjectRequestSchema = schemaGenerator.generateSchema(MediaObjectRequest.class);
@@ -35,9 +35,9 @@ public class JsonSchemaGenerator {
   @Getter
   private static JsonNode doiRequestSchema;
   @Getter
-  private static JsonNode digitalRequestSpecimenSchema;
+  private static JsonNode digitalSpecimenRequestSchema;
   @Getter
-  private static JsonNode digitalRequestSpecimenBotanySchema;
+  private static JsonNode digitalSpecimenBotanyRequestSchema;
   @Getter
   private static JsonNode tombstoneRequestSchema;
   @Getter
