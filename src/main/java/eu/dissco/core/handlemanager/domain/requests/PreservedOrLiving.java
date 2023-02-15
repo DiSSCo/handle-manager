@@ -3,13 +3,13 @@ package eu.dissco.core.handlemanager.domain.requests;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.nio.charset.StandardCharsets;
 
-public enum DigitalOrPhysical {
-  @JsonProperty("digital") DIGITAL("digital"),
-  @JsonProperty("physical") PHYSICAL("physical");
+public enum PreservedOrLiving {
+  @JsonProperty("preserved") PRESERVED("preserved"),
+  @JsonProperty("living") LIVING("living");
 
   private final String state;
 
-  private DigitalOrPhysical(@JsonProperty("digitalOrPhysical") String state){
+  private PreservedOrLiving(@JsonProperty("preservedOrLiving") String state){
     this.state = state;
   }
 
@@ -17,7 +17,7 @@ public enum DigitalOrPhysical {
     return state;
   }
 
-  public byte[] getBytes(){
+  public byte[] getBytes() {
     return state.getBytes(StandardCharsets.UTF_8);
   }
 

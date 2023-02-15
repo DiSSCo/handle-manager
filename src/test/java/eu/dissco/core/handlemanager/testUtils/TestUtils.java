@@ -42,6 +42,7 @@ import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.PhysicalIdentifier;
+import eu.dissco.core.handlemanager.domain.requests.PreservedOrLiving;
 import eu.dissco.core.handlemanager.domain.requests.TombstoneRecordRequest;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
@@ -93,7 +94,7 @@ public class TestUtils {
 
   //Botany Specimens
   public static final String OBJECT_TYPE_TESTVAL = "Herbarium Sheet";
-  public static final String PRESERVED_OR_LIVING_TESTVAL = "preserved";
+  public static final PreservedOrLiving PRESERVED_OR_LIVING_TESTVAL = PreservedOrLiving.PRESERVED;
 
   // Pid Type Record vals
   private final static String HANDLE_URI = "https://hdl.handle.net/";
@@ -256,7 +257,7 @@ public class TestUtils {
     // 14: digitalOrPhysical
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(DIGITAL_OR_PHYSICAL), handle, DIGITAL_OR_PHYSICAL,
-            DIGITAL_OR_PHYSICAL_TESTVAL.getType().getBytes(StandardCharsets.UTF_8)));
+            DIGITAL_OR_PHYSICAL_TESTVAL.getBytes()));
 
     // 15: specimenHost
     handleRecord.add(
@@ -279,7 +280,7 @@ public class TestUtils {
     // 18: preservedOrLiving
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(PRESERVED_OR_LIVING), handle, PRESERVED_OR_LIVING,
-            PRESERVED_OR_LIVING_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+            PRESERVED_OR_LIVING_TESTVAL.getBytes()));
     return handleRecord;
   }
 

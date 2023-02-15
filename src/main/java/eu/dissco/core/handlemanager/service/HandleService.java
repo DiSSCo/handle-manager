@@ -569,7 +569,7 @@ public class HandleService {
 
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(DIGITAL_OR_PHYSICAL), handle, DIGITAL_OR_PHYSICAL,
-            request.getDigitalOrPhysical().getType().getBytes(StandardCharsets.UTF_8)));
+            request.getDigitalOrPhysical().getBytes()));
 
     // 15: specimenHost
     String specimenHost = pidTypeService.resolveTypePid(request.getSpecimenHostPid());
@@ -606,7 +606,7 @@ public class HandleService {
     // 18: preservedOrLiving
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(PRESERVED_OR_LIVING), handle, PRESERVED_OR_LIVING,
-            request.getPreservedOrLiving().getBytes(StandardCharsets.UTF_8)));
+            request.getPreservedOrLiving().getBytes()));
 
     return handleRecord;
   }

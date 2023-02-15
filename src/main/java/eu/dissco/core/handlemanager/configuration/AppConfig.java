@@ -55,7 +55,7 @@ public class AppConfig {
   }
 
   @Bean
-  public SchemaGeneratorConfig schemaGeneratorConfig () {
+  public SchemaGeneratorConfig schemaGeneratorConfig() {
 
     String baseId = "https://sandbox.dissco.tech/schema/";
     String handleId = baseId + "handle";
@@ -66,11 +66,12 @@ public class AppConfig {
     String reqId = baseId + "request";
     String mediaId = baseId + "media-object";
 
-    JacksonModule module = new JacksonModule(JacksonOption.RESPECT_JSONPROPERTY_REQUIRED);
+    JacksonModule module = new JacksonModule(JacksonOption.RESPECT_JSONPROPERTY_REQUIRED, JacksonOption.FLATTENED_ENUMS_FROM_JSONPROPERTY);
     SchemaGeneratorConfigBuilder configBuilder = new SchemaGeneratorConfigBuilder(
         SchemaVersion.DRAFT_2019_09, OptionPreset.PLAIN_JSON)
         .with(module);
 
+    // Restrict enum values
     configBuilder.forTypesInGeneral()
         .withEnumResolver(scope -> scope.getType().getErasedType().isEnum()
             ? Stream.of(scope.getType().getErasedType().getEnumConstants())
@@ -84,29 +85,40 @@ public class AppConfig {
 
     // Array items must be unique
     configBuilder.forTypesInGeneral()
-        .withArrayUniqueItemsResolver(scope -> scope.getType().isInstanceOf(String[].class) ? true : null);
+        .withArrayUniqueItemsResolver(
+            scope -> scope.getType().isInstanceOf(String[].class) ? true : null);
 
-    // Add Identifiers to Schema
+    // Add $ids to each schema
     configBuilder.forTypesInGeneral()
-        .withIdResolver(scope -> scope.getType().getErasedType() == HandleRecordRequest.class ?  handleId: null);
-
-    configBuilder.forTypesInGeneral()
-        .withIdResolver(scope -> scope.getType().getErasedType() == DoiRecordRequest.class ? doiId : null);
-
-    configBuilder.forTypesInGeneral()
-        .withIdResolver(scope -> scope.getType().getErasedType() == DigitalSpecimenRequest.class ? dsId : null);
+        .withIdResolver(
+            scope -> scope.getType().getErasedType() == HandleRecordRequest.class ? handleId
+                : null);
 
     configBuilder.forTypesInGeneral()
-        .withIdResolver(scope -> scope.getType().getErasedType() == DigitalSpecimenBotanyRequest.class ? dsBotId : null);
+        .withIdResolver(
+            scope -> scope.getType().getErasedType() == DoiRecordRequest.class ? doiId : null);
 
     configBuilder.forTypesInGeneral()
-        .withIdResolver(scope -> scope.getType().getErasedType() == GeneralRequest.class ? reqId : null);
+        .withIdResolver(
+            scope -> scope.getType().getErasedType() == DigitalSpecimenRequest.class ? dsId : null);
 
     configBuilder.forTypesInGeneral()
-        .withIdResolver(scope -> scope.getType().getErasedType() == TombstoneRecordRequest.class ? tombId : null);
+        .withIdResolver(
+            scope -> scope.getType().getErasedType() == DigitalSpecimenBotanyRequest.class ? dsBotId
+                : null);
 
     configBuilder.forTypesInGeneral()
-        .withIdResolver(scope -> scope.getType().getErasedType() == MediaObjectRequest.class ? mediaId : null);
+        .withIdResolver(
+            scope -> scope.getType().getErasedType() == GeneralRequest.class ? reqId : null);
+
+    configBuilder.forTypesInGeneral()
+        .withIdResolver(
+            scope -> scope.getType().getErasedType() == TombstoneRecordRequest.class ? tombId
+                : null);
+
+    configBuilder.forTypesInGeneral()
+        .withIdResolver(
+            scope -> scope.getType().getErasedType() == MediaObjectRequest.class ? mediaId : null);
 
     return configBuilder.build();
   }

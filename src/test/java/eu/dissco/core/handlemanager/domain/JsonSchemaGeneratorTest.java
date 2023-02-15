@@ -1,4 +1,4 @@
-package eu.dissco.core.handlemanager.testUtils;
+package eu.dissco.core.handlemanager.domain;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -13,7 +13,9 @@ import com.github.victools.jsonschema.module.jackson.JacksonOption;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.GeneralRequest;
 import eu.dissco.core.handlemanager.domain.requests.HandleRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.TombstoneRecordRequest;
 import eu.dissco.core.handlemanager.domain.validation.JsonSchemaGenerator;
 import eu.dissco.core.handlemanager.domain.validation.JsonSchemaStaticContextInitializer;
@@ -27,7 +29,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 @Slf4j
 @SpringBootTest(properties="spring.main.lazy-initialization=true")
 class JsonSchemaGeneratorTest {
-  JacksonModule module = new JacksonModule(JacksonOption.RESPECT_JSONPROPERTY_REQUIRED);
+  JacksonModule module = new JacksonModule(JacksonOption.RESPECT_JSONPROPERTY_REQUIRED,
+      JacksonOption.FLATTENED_ENUMS_FROM_JSONPROPERTY);
   SchemaGeneratorConfigBuilder configBuilder = new SchemaGeneratorConfigBuilder(SchemaVersion.DRAFT_2019_09, OptionPreset.PLAIN_JSON)
       .with(module);
   SchemaGeneratorConfig config = configBuilder.build();
@@ -116,13 +119,41 @@ class JsonSchemaGeneratorTest {
   }
 
   @Test
-  void Tombstone()  {
+  void testTombstoneSchema()  {
     configBuilder.forTypesInGeneral()
         .withIdResolver(scope -> scope.getType().getErasedType() == TombstoneRecordRequest.class ? tombId : null);
     JsonNode expectedResponse = generator.generateSchema(TombstoneRecordRequest.class);
 
     // When
     JsonNode receivedResponse = JsonSchemaGenerator.getTombstoneRequestSchema();
+    log.info(receivedResponse.toPrettyString());
+
+    // Then
+    assertThat(receivedResponse).isEqualTo(expectedResponse);
+  }
+
+  @Test
+  void testRequestSchema(){
+    configBuilder.forTypesInGeneral()
+        .withIdResolver(scope -> scope.getType().getErasedType() == GeneralRequest.class ? reqId : null);
+    JsonNode expectedResponse = generator.generateSchema(GeneralRequest.class);
+
+    // When
+    JsonNode receivedResponse = JsonSchemaGenerator.getRequestSchema();
+    log.info(receivedResponse.toPrettyString());
+
+    // Then
+    assertThat(receivedResponse).isEqualTo(expectedResponse);
+  }
+
+  @Test
+  void testMediaSchema(){
+    configBuilder.forTypesInGeneral()
+        .withIdResolver(scope -> scope.getType().getErasedType() == MediaObjectRequest.class ? mediaId : null);
+    JsonNode expectedResponse = generator.generateSchema(MediaObjectRequest.class);
+
+    // When
+    JsonNode receivedResponse = JsonSchemaGenerator.getMediaObjectRequestSchema();
     log.info(receivedResponse.toPrettyString());
 
     // Then

@@ -15,7 +15,7 @@ public class DigitalSpecimenBotanyRequest extends DigitalSpecimenRequest {
   private final String objectType;
   @JsonProperty(required = true)
   @JsonPropertyDescription("Indicates specimen is preserved or living")
-  private final String preservedOrLiving;
+  private final PreservedOrLiving preservedOrLiving;
 
   public DigitalSpecimenBotanyRequest(
       // Handle
@@ -32,7 +32,7 @@ public class DigitalSpecimenBotanyRequest extends DigitalSpecimenRequest {
       PhysicalIdentifier physicalIdentifier,
       // Botany Specimen
       String objectType,
-      String preservedOrLiving
+      PreservedOrLiving preservedOrLiving
   ) {
     super(pidIssuerPid, digitalObjectTypePid, digitalObjectSubtypePid, locations,
         referentDoiNamePid,
