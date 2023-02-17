@@ -62,7 +62,7 @@ class HandleControllerTest {
 
   private final String SANDBOX_URI = "https://sandbox.dissco.tech/";
 
-  ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
+  public ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
 
   @BeforeEach
   void setup() {

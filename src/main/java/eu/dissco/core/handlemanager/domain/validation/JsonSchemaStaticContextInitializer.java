@@ -3,16 +3,22 @@ package eu.dissco.core.handlemanager.domain.validation;
 import com.github.victools.jsonschema.generator.SchemaGeneratorConfig;
 import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 @Component
 public class JsonSchemaStaticContextInitializer {
   @Autowired
-  private SchemaGeneratorConfig config;
+  @Qualifier("createRequestConfig")
+  private SchemaGeneratorConfig createRequestSchemaConfig;
+
+  @Autowired
+  @Qualifier("updateRequestConfig")
+  private SchemaGeneratorConfig updateRequestSchemaConfig;
 
   @PostConstruct
   private void initSchemaGenerator(){
-    JsonSchemaGenerator.setConfig(config);
+    JsonSchemaGenerator.init(createRequestSchemaConfig, updateRequestSchemaConfig);
   }
 
 }
