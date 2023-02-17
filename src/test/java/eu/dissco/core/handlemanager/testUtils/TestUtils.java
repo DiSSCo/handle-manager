@@ -63,6 +63,7 @@ import org.w3c.dom.Document;
 
 @Slf4j
 public class TestUtils {
+  public static ObjectMapper MAPPER = new ObjectMapper().findAndRegisterModules();
 
   public static final Instant CREATED = Instant.parse("2022-11-01T09:59:24.00Z");
   public static final String ISSUE_DATE_TESTVAL = "2022-11-01";

@@ -1,5 +1,14 @@
 package eu.dissco.core.handlemanager.domain.requests.validation;
 
+import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
+import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
+import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_MEDIA;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.victools.jsonschema.generator.SchemaGenerator;
 import com.github.victools.jsonschema.generator.SchemaGeneratorConfig;
@@ -14,6 +23,7 @@ import eu.dissco.core.handlemanager.domain.requests.attributes.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.TombstoneRecordRequest;
+import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
 import lombok.Getter;
 
 public class JsonSchemaLibrary {
@@ -57,6 +67,7 @@ public class JsonSchemaLibrary {
   private static JsonSchema mediaObjectPatchReqSchema;
   @Getter
   private static JsonSchema tombstoneReqSchema;
+
   private JsonSchemaLibrary() {
     throw new IllegalStateException("Utility class");
   }
@@ -72,12 +83,10 @@ public class JsonSchemaLibrary {
     var schemaGenerator = new SchemaGenerator(postRequestConfig);
     handlePostReqJsonNode = schemaGenerator.generateSchema(HandleRecordRequest.class);
     doiPostReqJsonNode = schemaGenerator.generateSchema(DoiRecordRequest.class);
-    digitalSpecimenPostReqJsonNode = schemaGenerator.generateSchema(
-        DigitalSpecimenRequest.class);
+    digitalSpecimenPostReqJsonNode = schemaGenerator.generateSchema(DigitalSpecimenRequest.class);
     digitalSpecimenBotanyPostReqJsonNode = schemaGenerator.generateSchema(
         DigitalSpecimenBotanyRequest.class);
-    mediaObjectPostReqJsonNode = schemaGenerator.generateSchema(
-        MediaObjectRequest.class);
+    mediaObjectPostReqJsonNode = schemaGenerator.generateSchema(MediaObjectRequest.class);
     tombstoneReqJsonNode = schemaGenerator.generateSchema(TombstoneRecordRequest.class);
     postReqJsonNode = schemaGenerator.generateSchema(PostRequest.class);
     patchReqJsonNode = schemaGenerator.generateSchema(PatchRequest.class);
@@ -87,12 +96,10 @@ public class JsonSchemaLibrary {
     var schemaGenerator = new SchemaGenerator(patchRequestConfig);
     handlePatchReqJsonNode = schemaGenerator.generateSchema(HandleRecordRequest.class);
     doiPatchReqJsonNode = schemaGenerator.generateSchema(DoiRecordRequest.class);
-    digitalSpecimenPatchReqJsonNode = schemaGenerator.generateSchema(
-        DigitalSpecimenRequest.class);
+    digitalSpecimenPatchReqJsonNode = schemaGenerator.generateSchema(DigitalSpecimenRequest.class);
     digitalSpecimenBotanyPatchReqJsonNode = schemaGenerator.generateSchema(
         DigitalSpecimenBotanyRequest.class);
-    mediaObjectPatchReqJsonNode = schemaGenerator.generateSchema(
-        MediaObjectRequest.class);
+    mediaObjectPatchReqJsonNode = schemaGenerator.generateSchema(MediaObjectRequest.class);
   }
 
   private static void setJsonSchemas() {
@@ -112,5 +119,31 @@ public class JsonSchemaLibrary {
     tombstoneReqSchema = factory.getSchema(tombstoneReqJsonNode);
   }
 
+  public static void validatePostRequest(JsonNode requestRoot) throws InvalidRecordInput {
+    var validationErrors = postReqSchema.validate(requestRoot);
+    if (!validationErrors.isEmpty()) {
+      throw new InvalidRecordInput("Invalid Request. Reason: " + validationErrors + "from POST request");
+    }
+    String type = requestRoot.get(NODE_DATA).get(NODE_TYPE).asText();
+    var attributes = requestRoot.get(NODE_DATA).get(NODE_ATTRIBUTES);
+    switch (type) {
+      case RECORD_TYPE_HANDLE -> validatePostRequestAttributes(attributes, handlePostReqSchema, type);
+      case RECORD_TYPE_DOI -> validatePostRequestAttributes(attributes, doiPostReqSchema, type);
+      case RECORD_TYPE_DS ->
+          validatePostRequestAttributes(attributes, digitalSpecimenPostReqSchema, type);
+      case RECORD_TYPE_DS_BOTANY ->
+          validatePostRequestAttributes(attributes, digitalSpecimenBotanyPostReqSchema, type);
+      case RECORD_TYPE_MEDIA -> validatePostRequestAttributes(attributes, mediaObjectPostReqSchema, type);
+      default -> throw new InvalidRecordInput("Invalid Request. Reason: Invalid type");
+    }
+  }
+
+  private static void validatePostRequestAttributes(JsonNode requestAttributes, JsonSchema schema, String type)
+      throws InvalidRecordInput {
+    var validationErrors = schema.validate(requestAttributes);
+    if (!validationErrors.isEmpty()) {
+      throw new InvalidRecordInput("Invalid Request. Reason: " + validationErrors + " for record type " + type);
+    }
+  }
 
 }

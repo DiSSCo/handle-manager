@@ -10,6 +10,8 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.VALID_PID_STATUS;
 import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
+import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaLibrary;
+import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaStaticContextInitializer;
 import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
@@ -21,6 +23,7 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -44,6 +47,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class HandleController {
 
   private final HandleService service;
+
+  @Autowired
+  private final JsonSchemaStaticContextInitializer initializer;
 
   private static final String SANDBOX_URI = "https://sandbox.dissco.tech/";
 
@@ -136,8 +142,10 @@ public class HandleController {
       @RequestBody List<JsonNode> requests)
       throws PidResolutionException, PidServiceInternalError, InvalidRecordInput {
 
+
     for (JsonNode request : requests) {
       checkRequestNodesPresent(request, true, true, false, true);
+      JsonSchemaLibrary.validatePostRequest(request);
     }
     return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(requests));
   }

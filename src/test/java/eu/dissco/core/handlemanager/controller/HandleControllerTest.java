@@ -37,6 +37,7 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaStaticContextInitializer;
 import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.service.HandleService;
@@ -49,15 +50,21 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 @ExtendWith(MockitoExtension.class)
+@SpringBootTest(properties = "spring.main.lazy-initialization=true")
 class HandleControllerTest {
 
   @Mock
   private HandleService service;
+  @Autowired
+  JsonSchemaStaticContextInitializer schemaInitializer;
+
   private HandleController controller;
 
   private final String SANDBOX_URI = "https://sandbox.dissco.tech/";
@@ -66,7 +73,7 @@ class HandleControllerTest {
 
   @BeforeEach
   void setup() {
-    controller = new HandleController(service);
+    controller = new HandleController(service, schemaInitializer);
   }
 
   @Test
@@ -325,7 +332,7 @@ class HandleControllerTest {
 
     handles.forEach(handle -> {
       requests.add(
-          genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_DS_BOTANY));
+          genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(), RECORD_TYPE_DS_BOTANY));
     });
 
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_DS_BOTANY);
