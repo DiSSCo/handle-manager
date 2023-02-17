@@ -6,14 +6,14 @@ import com.github.victools.jsonschema.generator.SchemaGeneratorConfigBuilder;
 import com.github.victools.jsonschema.generator.SchemaVersion;
 import com.github.victools.jsonschema.module.jackson.JacksonModule;
 import com.github.victools.jsonschema.module.jackson.JacksonOption;
-import eu.dissco.core.handlemanager.domain.requests.CreateRequest;
-import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
-import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
-import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.MediaObjectRequest;
-import eu.dissco.core.handlemanager.domain.requests.TombstoneRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.UpdateRequest;
+import eu.dissco.core.handlemanager.domain.requests.PostRequest;
+import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenBotanyRequest;
+import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
+import eu.dissco.core.handlemanager.domain.requests.attributes.DoiRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.attributes.MediaObjectRequest;
+import eu.dissco.core.handlemanager.domain.requests.attributes.TombstoneRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
 import java.util.stream.Stream;
 import javax.validation.constraints.NotEmpty;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -23,14 +23,14 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class JsonSchemaConfig {
 
-  private static final String baseId = "https://sandbox.dissco.tech/schema/";
-  private static final String handleId = baseId + "handle";
-  private static final String doiId = baseId + "doi";
-  private static final String dsId = baseId + "digital-specimen";
-  private static final String dsBotId = baseId + "digital-specimen-botany";
-  private static final String tombId = baseId + "tombstone";
-  private static final String reqId = baseId + "request";
-  private static final String mediaId = baseId + "media-object";
+  private static final String BASE_ID = "https://sandbox.dissco.tech/schema/";
+  private static final String HANDLE_ID = BASE_ID + "handle";
+  private static final String DOI_ID = BASE_ID + "doi";
+  private static final String DS_ID = BASE_ID + "digital-specimen";
+  private static final String DS_BOT_ID = BASE_ID + "digital-specimen-botany";
+  private static final String TOMB_ID = BASE_ID + "tombstone";
+  private static final String POST_REQ_ID = BASE_ID + "post-request";
+  private static final String MEDIA_ID = BASE_ID + "media-object";
 
   @Bean
   @Qualifier("createRequestConfig")
@@ -62,38 +62,38 @@ public class JsonSchemaConfig {
     // Add $ids to each schema
     configBuilder.forTypesInGeneral()
         .withIdResolver(
-            scope -> scope.getType().getErasedType() == HandleRecordRequest.class ? handleId
+            scope -> scope.getType().getErasedType() == HandleRecordRequest.class ? HANDLE_ID
                 : null);
 
     configBuilder.forTypesInGeneral()
         .withIdResolver(
-            scope -> scope.getType().getErasedType() == DoiRecordRequest.class ? doiId : null);
+            scope -> scope.getType().getErasedType() == DoiRecordRequest.class ? DOI_ID : null);
 
     configBuilder.forTypesInGeneral()
         .withIdResolver(
-            scope -> scope.getType().getErasedType() == DigitalSpecimenRequest.class ? dsId : null);
+            scope -> scope.getType().getErasedType() == DigitalSpecimenRequest.class ? DS_ID : null);
 
     configBuilder.forTypesInGeneral()
         .withIdResolver(
-            scope -> scope.getType().getErasedType() == DigitalSpecimenBotanyRequest.class ? dsBotId
+            scope -> scope.getType().getErasedType() == DigitalSpecimenBotanyRequest.class ? DS_BOT_ID
                 : null);
 
     configBuilder.forTypesInGeneral()
         .withIdResolver(
-            scope -> scope.getType().getErasedType() == CreateRequest.class ? reqId : null);
+            scope -> scope.getType().getErasedType() == PostRequest.class ? POST_REQ_ID : null);
 
     configBuilder.forTypesInGeneral()
         .withIdResolver(
-            scope -> scope.getType().getErasedType() == UpdateRequest.class ? reqId : null);
+            scope -> scope.getType().getErasedType() == PatchRequest.class ? POST_REQ_ID : null);
 
     configBuilder.forTypesInGeneral()
         .withIdResolver(
-            scope -> scope.getType().getErasedType() == TombstoneRecordRequest.class ? tombId
+            scope -> scope.getType().getErasedType() == TombstoneRecordRequest.class ? TOMB_ID
                 : null);
 
     configBuilder.forTypesInGeneral()
         .withIdResolver(
-            scope -> scope.getType().getErasedType() == MediaObjectRequest.class ? mediaId : null);
+            scope -> scope.getType().getErasedType() == MediaObjectRequest.class ? MEDIA_ID : null);
 
     return configBuilder.build();
   }
@@ -123,25 +123,25 @@ public class JsonSchemaConfig {
     // Add $ids to each schema
     configBuilder.forTypesInGeneral()
         .withIdResolver(
-            scope -> scope.getType().getErasedType() == HandleRecordRequest.class ? handleId
+            scope -> scope.getType().getErasedType() == HandleRecordRequest.class ? HANDLE_ID
                 : null);
 
     configBuilder.forTypesInGeneral()
         .withIdResolver(
-            scope -> scope.getType().getErasedType() == DoiRecordRequest.class ? doiId : null);
+            scope -> scope.getType().getErasedType() == DoiRecordRequest.class ? DOI_ID : null);
 
     configBuilder.forTypesInGeneral()
         .withIdResolver(
-            scope -> scope.getType().getErasedType() == DigitalSpecimenRequest.class ? dsId : null);
+            scope -> scope.getType().getErasedType() == DigitalSpecimenRequest.class ? DS_ID : null);
 
     configBuilder.forTypesInGeneral()
         .withIdResolver(
-            scope -> scope.getType().getErasedType() == DigitalSpecimenBotanyRequest.class ? dsBotId
+            scope -> scope.getType().getErasedType() == DigitalSpecimenBotanyRequest.class ? DS_BOT_ID
                 : null);
 
     configBuilder.forTypesInGeneral()
         .withIdResolver(
-            scope -> scope.getType().getErasedType() == MediaObjectRequest.class ? mediaId : null);
+            scope -> scope.getType().getErasedType() == MediaObjectRequest.class ? MEDIA_ID : null);
 
     return configBuilder.build();
   }

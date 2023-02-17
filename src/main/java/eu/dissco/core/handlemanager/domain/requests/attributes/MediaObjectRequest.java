@@ -1,7 +1,6 @@
-package eu.dissco.core.handlemanager.domain.requests;
+package eu.dissco.core.handlemanager.domain.requests.attributes;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import eu.dissco.core.handlemanager.domain.requests.helpers.PhysicalIdentifier;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

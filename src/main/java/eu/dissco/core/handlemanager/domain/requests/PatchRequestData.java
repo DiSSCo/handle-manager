@@ -1,12 +1,12 @@
-package eu.dissco.core.handlemanager.domain.requests.helpers;
+package eu.dissco.core.handlemanager.domain.requests;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.databind.JsonNode;
 
-public record RequestDataWithId(
+public record PatchRequestData(
     @JsonProperty(required = true)
-    @JsonPropertyDescription("type of object")
+    @JsonPropertyDescription("Type of object")
     String type,
     @JsonProperty(required = true)
     @JsonPropertyDescription("DiSSCo Identifier of object")

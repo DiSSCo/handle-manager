@@ -1,4 +1,4 @@
-package eu.dissco.core.handlemanager.domain.validation;
+package eu.dissco.core.handlemanager.domain.requests.validation;
 
 import com.github.victools.jsonschema.generator.SchemaGeneratorConfig;
 import javax.annotation.PostConstruct;

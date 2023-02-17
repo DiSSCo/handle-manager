@@ -1,11 +1,10 @@
 package eu.dissco.core.handlemanager.domain.requests;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import eu.dissco.core.handlemanager.domain.requests.helpers.RequestData;
 
-public record CreateRequest(
+public record PatchRequest(
     @JsonProperty(required = true)
-    RequestData data
+    PatchRequestData data
 ) {
 
 }

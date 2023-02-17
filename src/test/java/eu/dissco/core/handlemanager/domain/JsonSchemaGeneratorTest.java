@@ -11,13 +11,10 @@ import com.github.victools.jsonschema.generator.SchemaGenerator;
 import com.github.victools.jsonschema.generator.SchemaGeneratorConfig;
 import com.github.victools.jsonschema.generator.SchemaGeneratorConfigBuilder;
 import com.github.victools.jsonschema.generator.SchemaVersion;
-import com.github.victools.jsonschema.module.jackson.JacksonModule;
-import com.github.victools.jsonschema.module.jackson.JacksonOption;
-import eu.dissco.core.handlemanager.domain.requests.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.validation.JsonSchemaGenerator;
-import eu.dissco.core.handlemanager.domain.validation.JsonSchemaStaticContextInitializer;
+import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaGenerator;
+import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaStaticContextInitializer;
 import java.util.Map;
-import javax.validation.constraints.NotEmpty;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,9 +36,9 @@ class JsonSchemaGeneratorTest {
   }
 
   @Test
-  void testValidCreateRequest(){
+  void testValidPostRequest(){
     var request = genCreateRecordRequest(genHandleRecordRequestObject(), "handle");
-    var schema = JsonSchemaGenerator.getCreateReqSchema();
+    var schema = JsonSchemaGenerator.getPostReqSchema();
 
     // When
     var validationMessages = schema.validate(request);
@@ -51,11 +48,11 @@ class JsonSchemaGeneratorTest {
   }
 
   @Test
-  void testValidUpdateRequest(){
+  void testValidPatchRequest(){
     var requestAttributes = genUpdateRequestAltLoc();
     var request = mapper.createObjectNode();
 
-    var schema = JsonSchemaGenerator.getCreateReqSchema();
+    var schema = JsonSchemaGenerator.getPostReqSchema();
 
     // When
     var validationMessages = schema.validate(request);
@@ -66,10 +63,10 @@ class JsonSchemaGeneratorTest {
 
 
   @Test
-  void testValidCreateHandleRequest(){
+  void testValidPostHandleRequest(){
     // Given
     var request = genCreateRecordRequest(genHandleRecordRequestObject(), "handle").get("data").get("attributes");
-    var schema = JsonSchemaGenerator.getHandleCreateReqSchema();
+    var schema = JsonSchemaGenerator.getHandlePostReqSchema();
 
     // When
     var validationMessages = schema.validate(request);
