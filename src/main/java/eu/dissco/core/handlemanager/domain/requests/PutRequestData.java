@@ -2,6 +2,7 @@ package eu.dissco.core.handlemanager.domain.requests;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.domain.requests.attributes.TombstoneRecordRequest;
 
 public record PutRequestData(
@@ -9,7 +10,7 @@ public record PutRequestData(
     @JsonPropertyDescription("DiSSCo Identifier of object")
     String id,
     @JsonProperty(required = true)
-    TombstoneRecordRequest attributes
+    JsonNode attributes
 ) {
 
 }

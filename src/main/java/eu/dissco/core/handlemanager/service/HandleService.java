@@ -94,8 +94,6 @@ public class HandleService {
   private final DocumentBuilderFactory dbf;
   private final ObjectMapper mapper;
   private final TransformerFactory tf;
-
-  private static final String INVALID_FIELD_ERROR = "Invalid request. Attempting to add forbidden fields to record type %s. Forbidden field: %s";
   private static final String INVALID_TYPE_ERROR = "Invalid request. Reason: unrecognized type. Check: ";
 
   // Resolve Record
@@ -252,7 +250,7 @@ public class HandleService {
       String recordType = data.get(NODE_TYPE).asText();
       recordTypes.put(new String(handle, StandardCharsets.UTF_8), recordType);
 
-      JsonNode validatedAttributes = validateUpdateAttributes(requestAttributes, recordType);
+      JsonNode validatedAttributes = validateUpdateAttributes(requestAttributes);
       var attributes = prepareUpdateAttributes(handle, validatedAttributes);
       attributesToUpdate.add(attributes);
     }
@@ -275,10 +273,9 @@ public class HandleService {
     return recordTypes.get(pid);
   }
 
-  private JsonNode validateUpdateAttributes(JsonNode requestAttributes, String recordType)
+  private JsonNode validateUpdateAttributes(JsonNode requestAttributes)
       throws InvalidRecordInput, PidServiceInternalError {
     var keys = getKeys(requestAttributes);
-    validateRequestData(recordType, keys);
     JsonNode returnedAttributes;
     if (keys.contains(LOC_REQ)) {
       returnedAttributes = setLocationFromJson(requestAttributes);
@@ -300,9 +297,6 @@ public class HandleService {
       JsonNode requestAttributes = data.get(NODE_ATTRIBUTES);
       byte[] handle = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
       handles.add(handle);
-      List<String> keys = getKeys(requestAttributes);
-      validateRequestData(RECORD_TYPE_TOMBSTONE, keys);
-
       archiveAttributes.addAll(prepareUpdateAttributes(handle, requestAttributes));
       archiveAttributes.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS,
           "ARCHIVED".getBytes(StandardCharsets.UTF_8)));
@@ -337,49 +331,6 @@ public class HandleService {
     Iterator<String> fieldItr = request.fieldNames();
     fieldItr.forEachRemaining(keys::add);
     return keys;
-  }
-
-  private void validateRequestData(String requestRecordType, List<String> keys)
-      throws InvalidRecordInput {
-
-    // Data Ingestion Checks
-    Set<String> requestRecordFields = getRecordFields(requestRecordType);
-    checkFields(keys, requestRecordFields, requestRecordType);
-  }
-
-  private Set<String> getRecordFields(String recordType) throws InvalidRecordInput {
-    switch (recordType) {
-      case RECORD_TYPE_HANDLE -> {
-        return HANDLE_RECORD_REQ;
-      }
-      case RECORD_TYPE_DOI -> {
-        return DOI_RECORD_REQ;
-      }
-      case RECORD_TYPE_DS -> {
-        return DIGITAL_SPECIMEN_REQ;
-      }
-      case RECORD_TYPE_DS_BOTANY -> {
-        return DIGITAL_SPECIMEN_BOTANY_REQ;
-      }
-      case RECORD_TYPE_TOMBSTONE -> {
-        return TOMBSTONE_RECORD_FIELDS;
-      }
-      default -> throw new InvalidRecordInput("Invalid request. Reason: unknown record type.");
-    }
-  }
-
-  private void checkFields(List<String> fields, Set<String> recordFields, String recordType)
-      throws InvalidRecordInput {
-    List<String> invalidFields = new ArrayList<>();
-
-    for (String field : fields) {
-      if (!recordFields.contains(field)) {
-        invalidFields.add(field);
-      }
-    }
-    if (!invalidFields.isEmpty()) {
-      throw new InvalidRecordInput(String.format(INVALID_FIELD_ERROR, recordType, invalidFields));
-    }
   }
 
   private void checkHandlesWritable(List<byte[]> handles) throws PidResolutionException {

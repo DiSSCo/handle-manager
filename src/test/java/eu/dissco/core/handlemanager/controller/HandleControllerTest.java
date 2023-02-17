@@ -11,6 +11,8 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.VALID_PID_STATUS;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_LIST_STR;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PREFIX;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.SUFFIX;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenRequestObject;
@@ -112,19 +114,17 @@ class HandleControllerTest {
   @Test
   void testResolveSingleHandle() throws Exception {
     // Given
-    String prefix = "20.5000.1025";
-    String suffix = "QRS-321-ABC";
-    String path = SANDBOX_URI + prefix + "/" + suffix;
+    String path = SANDBOX_URI + PREFIX + "/" + SUFFIX;
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     MockHttpServletRequest r = new MockHttpServletRequest();
-    r.setRequestURI(prefix + "/" + suffix);
+    r.setRequestURI(PREFIX + "/" + SUFFIX);
 
     JsonApiWrapperRead responseExpected = givenRecordResponseRead(List.of(handle), path,
         RECORD_TYPE_HANDLE);
     given(service.resolveSingleRecord(handle, path)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.resolvePid(prefix, suffix, r);
+    var responseReceived = controller.resolvePid(PREFIX, SUFFIX, r);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -366,8 +366,6 @@ class HandleControllerTest {
   void testUpdateRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes();
-    String prefix = HANDLE.split("/")[0];
-    String suffix = HANDLE.split("/")[1];
     var updateAttributes = genUpdateRequestAltLoc();
     ObjectNode updateRequestNode = mapper.createObjectNode();
     updateRequestNode.set("data", givenJsonNode(HANDLE, RECORD_TYPE_HANDLE, updateAttributes));
@@ -377,7 +375,7 @@ class HandleControllerTest {
         responseExpected);
 
     // When
-    var responseReceived = controller.updateRecord(prefix, suffix, updateRequestNode);
+    var responseReceived = controller.updateRecord(PREFIX, SUFFIX, updateRequestNode);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -388,15 +386,13 @@ class HandleControllerTest {
   void testUpdateRecordBadRequest() {
 
     // Given
-    String prefix = HANDLE.split("/")[0];
-    String suffix = HANDLE.split("/")[1];
     var updateAttributes = genUpdateRequestAltLoc();
     ObjectNode updateRequestNode = mapper.createObjectNode();
     updateRequestNode.set("data", givenJsonNode(HANDLE_ALT, RECORD_TYPE_HANDLE, updateAttributes));
 
     // Then
     assertThrows(InvalidRecordInput.class, () -> {
-      controller.updateRecord(prefix, suffix, updateRequestNode);
+      controller.updateRecord(PREFIX, SUFFIX, updateRequestNode);
     });
   }
 
@@ -432,9 +428,6 @@ class HandleControllerTest {
     // Given
 
     byte[] handle = HANDLE.getBytes();
-    String prefix = HANDLE.split("/")[0];
-    String suffix = HANDLE.split("/")[1];
-
     ObjectNode archiveRootNode = mapper.createObjectNode();
     archiveRootNode.set("data", givenJsonNode(HANDLE, RECORD_TYPE_HANDLE,
         mapper.valueToTree(genTombstoneRecordRequestObject())));
@@ -446,7 +439,7 @@ class HandleControllerTest {
         responseExpected);
 
     // When
-    var responseReceived = controller.archiveRecord(prefix, suffix, archiveRootNode);
+    var responseReceived = controller.archiveRecord(PREFIX, SUFFIX, archiveRootNode);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -483,8 +476,6 @@ class HandleControllerTest {
   @Test
   void testArchiveRecordBadRequest() {
     // Given
-    String prefix = HANDLE.split("/")[0];
-    String suffix = HANDLE.split("/")[1];
     var archiveAttributes = genTombstoneRequest();
     ObjectNode archiveRequestNode = mapper.createObjectNode();
     archiveRequestNode.set("data",
@@ -492,16 +483,14 @@ class HandleControllerTest {
 
     // Then
     assertThrows(InvalidRecordInput.class, () -> {
-      controller.updateRecord(prefix, suffix, archiveRequestNode);
+      controller.updateRecord(PREFIX, SUFFIX, archiveRequestNode);
     });
   }
+
 
   @Test
   void testCheckRequestNodesPresent() {
     String message = "INVALID INPUT. Missing node \" %s \"";
-    String prefix = HANDLE.split("/")[0];
-    String suffix = HANDLE.split("/")[1];
-
     var noData = excludeValue("data");
     var noType = excludeValue("type");
     var noId = excludeValue("id");
@@ -509,12 +498,12 @@ class HandleControllerTest {
 
     // Then
     Exception exData = assertThrows(InvalidRecordInput.class, () -> {
-      controller.updateRecord(prefix, suffix, noData);
+      controller.updateRecord(PREFIX, SUFFIX, noData);
     });
     assertThat(exData).hasMessage(String.format(message, "data"));
 
     Exception exType = assertThrows(InvalidRecordInput.class, () -> {
-      controller.updateRecord(prefix, suffix, noType);
+      controller.updateRecord(PREFIX, SUFFIX, noType);
     });
     assertThat(exType).hasMessage(String.format(message, "type"));
 
@@ -524,7 +513,7 @@ class HandleControllerTest {
     assertThat(exId).hasMessage(String.format(message, "id"));
 
     Exception exAttribute = assertThrows(InvalidRecordInput.class, () -> {
-      controller.updateRecord(prefix, suffix, noAttributes);
+      controller.updateRecord(PREFIX, SUFFIX, noAttributes);
     });
     assertThat(exAttribute).hasMessage(String.format(message, "attributes"));
   }

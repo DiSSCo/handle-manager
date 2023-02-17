@@ -6,6 +6,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.VALID_PID_STATUS;
+import static eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaLibrary.validatePutRequest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
@@ -46,13 +47,10 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class HandleController {
 
+  private static final String SANDBOX_URI = "https://sandbox.dissco.tech/";
   private final HandleService service;
-
   @Autowired
   private final JsonSchemaStaticContextInitializer initializer;
-
-  private static final String SANDBOX_URI = "https://sandbox.dissco.tech/";
-
 
   // Hellos and getters
   @GetMapping(value = "/health")
@@ -132,7 +130,7 @@ public class HandleController {
   public ResponseEntity<JsonApiWrapperWrite> createRecord(
       @RequestBody JsonNode request)
       throws PidResolutionException, PidServiceInternalError, InvalidRecordInput {
-    checkRequestNodesPresent(request, true, true, false, true);
+    JsonSchemaLibrary.validatePostRequest(request);
     return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(List.of(request)));
   }
 
@@ -142,9 +140,7 @@ public class HandleController {
       @RequestBody List<JsonNode> requests)
       throws PidResolutionException, PidServiceInternalError, InvalidRecordInput {
 
-
     for (JsonNode request : requests) {
-      checkRequestNodesPresent(request, true, true, false, true);
       JsonSchemaLibrary.validatePostRequest(request);
     }
     return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(requests));
@@ -159,7 +155,7 @@ public class HandleController {
       @RequestBody JsonNode request)
       throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
 
-    checkRequestNodesPresent(request, true, true, false, true);
+    JsonSchemaLibrary.validatePatchRequest(request);
 
     JsonNode data = request.get(NODE_DATA);
     byte[] handle = (prefix + "/" + suffix).getBytes(StandardCharsets.UTF_8);
@@ -179,7 +175,7 @@ public class HandleController {
       throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
 
     for (JsonNode request : requests) {
-      checkRequestNodesPresent(request, true, true, true, true);
+      JsonSchemaLibrary.validatePatchRequest(request);
     }
     return ResponseEntity.status(HttpStatus.OK).body(service.updateRecords(requests));
   }
@@ -191,12 +187,16 @@ public class HandleController {
       @PathVariable("suffix") String suffix,
       @RequestBody JsonNode request)
       throws InvalidRecordInput, PidResolutionException {
-    checkRequestNodesPresent(request, true, false, false, true);
+
+    validatePutRequest(request);
+
     JsonNode data = request.get(NODE_DATA);
     byte[] handle = (prefix + "/" + suffix).getBytes(StandardCharsets.UTF_8);
     byte[] handleRequest = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
     if (!Arrays.equals(handle, handleRequest)) {
-      throw new InvalidRecordInput("Handle in request URL does not match id in request body.");
+      throw new InvalidRecordInput(
+          "Handle in request URL does not match id in request body. URL: " + handle + ", body: "
+              + handleRequest);
     }
     return ResponseEntity.status(HttpStatus.OK)
         .body(service.archiveRecordBatch(List.of(request)));
@@ -207,7 +207,7 @@ public class HandleController {
   public ResponseEntity<JsonApiWrapperWrite> archiveRecords(@RequestBody List<JsonNode> requests)
       throws InvalidRecordInput, PidResolutionException {
     for (JsonNode request : requests) {
-      checkRequestNodesPresent(request, true, false, true, true);
+      validatePutRequest(request);
     }
     return ResponseEntity.status(HttpStatus.OK).body(service.archiveRecordBatch(requests));
   }

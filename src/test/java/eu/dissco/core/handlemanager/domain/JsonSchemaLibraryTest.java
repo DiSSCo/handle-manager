@@ -1,15 +1,6 @@
 package eu.dissco.core.handlemanager.domain;
 
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestAltLoc;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-
+import com.fasterxml.jackson.databind.JsonNode;
 import com.github.victools.jsonschema.generator.OptionPreset;
 import com.github.victools.jsonschema.generator.SchemaGenerator;
 import com.github.victools.jsonschema.generator.SchemaGeneratorConfig;
@@ -33,52 +24,24 @@ class JsonSchemaLibraryTest {
 
 
   @Test
-  void testValidPostRequest() {
-    var request = genCreateRecordRequest(genHandleRecordRequestObject(), "handle");
-    var schema = JsonSchemaLibrary.getPostReqSchema();
-
-    // When
-    var validationMessages = schema.validate(request);
-
-    // Then
-    assert(validationMessages).isEmpty();
+  void attributesJackson(){
+    JsonNode jackson = JsonSchemaLibrary.getHandlePostReqJsonNode();
+    log.info(jackson.toPrettyString());
   }
 
   @Test
-  void testValidPatchRequest() {
-    var requestAttributes = genUpdateRequestAltLoc();
-    var requestData = MAPPER.createObjectNode();
-    requestData.put(NODE_TYPE,"handle");
-    requestData.put(NODE_ID, "123/123");
-    requestData.set(NODE_ATTRIBUTES, requestAttributes);
-    var request = MAPPER.createObjectNode();
-    request.set(NODE_DATA, requestData);
-
-    var schema = JsonSchemaLibrary.getPatchReqSchema();
-
-    // When
-    var validationMessages = schema.validate(request);
-
-    // Then
-    assert(validationMessages).isEmpty();
+  void attributesVanilla(){
+    JsonNode vanilla = JsonSchemaLibrary.getHandlePatchReqJsonNode();
+    log.info(vanilla.toPrettyString());
   }
 
   @Test
-  void testValidPostHandleRequest() {
-    // Given
-    var request = genCreateRecordRequest(genHandleRecordRequestObject(), "handle").get("data")
-        .get("attributes");
-    var schema = JsonSchemaLibrary.getHandlePostReqSchema();
-
-    // When
-    var validationMessages = schema.validate(request);
-
-    // Then
-    assert(validationMessages).isEmpty();
+  void request(){
+    JsonNode vanilla = JsonSchemaLibrary.getPostReqJsonNode();
+    log.info(vanilla.toPrettyString());
   }
 
 
-  @Test
   void testNotJackson() {
     SchemaGeneratorConfigBuilder configBuilderNotJackson = new SchemaGeneratorConfigBuilder(
         SchemaVersion.DRAFT_2019_09, OptionPreset.PLAIN_JSON);

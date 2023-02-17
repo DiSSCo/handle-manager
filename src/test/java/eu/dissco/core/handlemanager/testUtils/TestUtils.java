@@ -68,6 +68,8 @@ public class TestUtils {
   public static final Instant CREATED = Instant.parse("2022-11-01T09:59:24.00Z");
   public static final String ISSUE_DATE_TESTVAL = "2022-11-01";
   public static final String HANDLE = "20.5000.1025/QRS-321-ABC";
+  public static final String PREFIX = "20.5000.1025";
+  public static final String SUFFIX = "QRS-321-ABC";
   public static final String HANDLE_ALT = "20.5000.1025/ABC-123-QRS";
   public static final List<String> HANDLE_LIST_STR;
 
@@ -291,12 +293,6 @@ public class TestUtils {
 
     ObjectNode rootNode = mapper.createObjectNode();
     ObjectNode dataNode = mapper.createObjectNode();
-    try {
-      var badNode = mapper.writeValueAsString(request);
-    } catch(Exception e){
-
-    }
-
     ObjectNode attributeNode = mapper.valueToTree(request);
 
     if (attributeNode.has("referent")) {
@@ -498,7 +494,7 @@ public class TestUtils {
     List<JsonNode> requestNodeList = new ArrayList<>();
 
     for (String handle : handles) {
-      requestNodeData.put("type", RECORD_TYPE_TOMBSTONE);
+      requestNodeData.put("type", RECORD_TYPE_HANDLE);
       requestNodeData.put("id", handle);
       requestNodeData.set("attributes", genTombstoneRequest());
       requestNodeRoot.set("data", requestNodeData);
