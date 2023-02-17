@@ -16,7 +16,7 @@ import eu.dissco.core.handlemanager.domain.requests.attributes.MediaObjectReques
 import eu.dissco.core.handlemanager.domain.requests.attributes.TombstoneRecordRequest;
 import lombok.Getter;
 
-public class JsonSchemaGenerator {
+public class JsonSchemaLibrary {
 
   private static JsonNode handlePostReqJsonNode;
   private static JsonNode handlePatchReqJsonNode;
@@ -57,13 +57,12 @@ public class JsonSchemaGenerator {
   private static JsonSchema mediaObjectPatchReqSchema;
   @Getter
   private static JsonSchema tombstoneReqSchema;
-  private JsonSchemaGenerator() {
+  private JsonSchemaLibrary() {
     throw new IllegalStateException("Utility class");
   }
 
   public static void init(SchemaGeneratorConfig postRequestConfig,
       SchemaGeneratorConfig patchRequestConfig) {
-
     setJsonNodesJacksonProperties(postRequestConfig);
     setJsonNodesLenientRequirements(patchRequestConfig);
     setJsonSchemas();

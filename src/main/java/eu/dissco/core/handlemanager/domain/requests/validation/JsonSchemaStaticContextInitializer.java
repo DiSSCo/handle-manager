@@ -9,16 +9,16 @@ import org.springframework.stereotype.Component;
 @Component
 public class JsonSchemaStaticContextInitializer {
   @Autowired
-  @Qualifier("createRequestConfig")
+  @Qualifier("JacksonModuleRequestConfig")
   private SchemaGeneratorConfig createRequestSchemaConfig;
 
   @Autowired
-  @Qualifier("updateRequestConfig")
+  @Qualifier("RequestConfig")
   private SchemaGeneratorConfig updateRequestSchemaConfig;
 
   @PostConstruct
   private void initSchemaGenerator(){
-    JsonSchemaGenerator.init(createRequestSchemaConfig, updateRequestSchemaConfig);
+    JsonSchemaLibrary.init(createRequestSchemaConfig, updateRequestSchemaConfig);
   }
 
 }
