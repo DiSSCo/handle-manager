@@ -12,6 +12,7 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaLibrary;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaStaticContextInitializer;
+import eu.dissco.core.handlemanager.exceptions.ExceptionResponse;
 import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
@@ -82,11 +83,8 @@ public class HandleController {
   }
 
   @GetMapping("/{prefix}/{suffix}")
-  public ResponseEntity<JsonApiWrapperRead> resolvePid(
-      @PathVariable("prefix") String prefix,
-      @PathVariable("suffix") String suffix,
-      HttpServletRequest r
-  ) throws PidResolutionException {
+  public ResponseEntity<JsonApiWrapperRead> resolvePid(@PathVariable("prefix") String prefix,
+      @PathVariable("suffix") String suffix, HttpServletRequest r) throws PidResolutionException {
     String path = SANDBOX_URI + r.getRequestURI();
     byte[] handle = (prefix + "/" + suffix).getBytes(StandardCharsets.UTF_8);
 
@@ -95,12 +93,9 @@ public class HandleController {
   }
 
   @GetMapping("/{prefix}/{suffix}/{version}")
-  public ResponseEntity<JsonApiWrapperRead> resolvePidVersion(
-      @PathVariable("prefix") String prefix,
-      @PathVariable("suffix") String suffix,
-      @PathVariable("version") String version,
-      HttpServletRequest r
-  ) throws PidResolutionException {
+  public ResponseEntity<JsonApiWrapperRead> resolvePidVersion(@PathVariable("prefix") String prefix,
+      @PathVariable("suffix") String suffix, @PathVariable("version") String version,
+      HttpServletRequest r) throws PidResolutionException {
     String path = SANDBOX_URI + r.getRequestURI();
     byte[] handle = (prefix + "/" + suffix).getBytes(StandardCharsets.UTF_8);
 
@@ -109,10 +104,8 @@ public class HandleController {
   }
 
   @PostMapping("/records")
-  public ResponseEntity<JsonApiWrapperRead> resolvePids(
-      @RequestBody List<JsonNode> requests,
-      HttpServletRequest r
-  ) throws PidResolutionException, InvalidRecordInput {
+  public ResponseEntity<JsonApiWrapperRead> resolvePids(@RequestBody List<JsonNode> requests,
+      HttpServletRequest r) throws PidResolutionException, InvalidRecordInput {
 
     String path = SANDBOX_URI + r.getRequestURI();
     List<byte[]> handles = new ArrayList<>();
@@ -126,8 +119,7 @@ public class HandleController {
 
   @PreAuthorize("isAuthenticated()")
   @PostMapping(value = "")
-  public ResponseEntity<JsonApiWrapperWrite> createRecord(
-      @RequestBody JsonNode request)
+  public ResponseEntity<JsonApiWrapperWrite> createRecord(@RequestBody JsonNode request)
       throws PidResolutionException, PidServiceInternalError, InvalidRecordInput {
     JsonSchemaLibrary.validatePostRequest(request);
     return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(List.of(request)));
@@ -135,8 +127,7 @@ public class HandleController {
 
   @PreAuthorize("isAuthenticated()")
   @PostMapping(value = "/batch")
-  public ResponseEntity<JsonApiWrapperWrite> createRecords(
-      @RequestBody List<JsonNode> requests)
+  public ResponseEntity<JsonApiWrapperWrite> createRecords(@RequestBody List<JsonNode> requests)
       throws PidResolutionException, PidServiceInternalError, InvalidRecordInput {
 
     for (JsonNode request : requests) {
@@ -148,10 +139,8 @@ public class HandleController {
   // Update
   @PreAuthorize("isAuthenticated()")
   @PatchMapping(value = "/{prefix}/{suffix}")
-  public ResponseEntity<JsonApiWrapperWrite> updateRecord(
-      @PathVariable("prefix") String prefix,
-      @PathVariable("suffix") String suffix,
-      @RequestBody JsonNode request)
+  public ResponseEntity<JsonApiWrapperWrite> updateRecord(@PathVariable("prefix") String prefix,
+      @PathVariable("suffix") String suffix, @RequestBody JsonNode request)
       throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
 
     JsonSchemaLibrary.validatePatchRequest(request);
@@ -164,8 +153,7 @@ public class HandleController {
       throw new InvalidRecordInput("Handle in request URL does not match id in request body.");
     }
 
-    return ResponseEntity.status(HttpStatus.OK)
-        .body(service.updateRecords(List.of(request)));
+    return ResponseEntity.status(HttpStatus.OK).body(service.updateRecords(List.of(request)));
   }
 
   @PreAuthorize("isAuthenticated()")
@@ -181,10 +169,8 @@ public class HandleController {
 
   //@PreAuthorize("isAuthenticated()")
   @PutMapping(value = "/{prefix}/{suffix}")
-  public ResponseEntity<JsonApiWrapperWrite> archiveRecord(
-      @PathVariable("prefix") String prefix,
-      @PathVariable("suffix") String suffix,
-      @RequestBody JsonNode request)
+  public ResponseEntity<JsonApiWrapperWrite> archiveRecord(@PathVariable("prefix") String prefix,
+      @PathVariable("suffix") String suffix, @RequestBody JsonNode request)
       throws InvalidRecordInput, PidResolutionException {
 
     validatePutRequest(request);
@@ -197,8 +183,7 @@ public class HandleController {
           "Handle in request URL does not match id in request body. URL: " + handle + ", body: "
               + handleRequest);
     }
-    return ResponseEntity.status(HttpStatus.OK)
-        .body(service.archiveRecordBatch(List.of(request)));
+    return ResponseEntity.status(HttpStatus.OK).body(service.archiveRecordBatch(List.of(request)));
   }
 
   @PreAuthorize("isAuthenticated()")
@@ -213,24 +198,35 @@ public class HandleController {
 
   //Exception Handling
   @ExceptionHandler(PidServiceInternalError.class)
-  private ResponseEntity<String> pidServiceInternalError(PidServiceInternalError e) {
+  private ResponseEntity<ExceptionResponse> pidServiceInternalError(PidServiceInternalError e) {
     String message;
     if (e.getCause() != null) {
-      message = e.getMessage() + ". Cause: " + e.getCause().toString() + "\n "
-          + e.getCause().getLocalizedMessage();
+      message = e.getMessage() + ". Cause: " + e.getCause().toString() + "\n " + e.getCause()
+          .getLocalizedMessage();
     } else {
       message = e.getMessage();
     }
-    return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(message);
+    ExceptionResponse exceptionResponse = new ExceptionResponse(
+        String.valueOf(HttpStatus.UNPROCESSABLE_ENTITY),
+        e.getClass().getSimpleName(), message
+    );
+    return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(exceptionResponse);
   }
 
   @ExceptionHandler(InvalidRecordInput.class)
-  private ResponseEntity<String> invalidRecordCreationException(InvalidRecordInput e) {
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+  private ResponseEntity<ExceptionResponse> invalidRecordInputException(InvalidRecordInput e) {
+    ExceptionResponse exceptionResponse = new ExceptionResponse(
+        String.valueOf(HttpStatus.BAD_REQUEST),
+        e.getClass().getSimpleName(), e.getMessage()
+    );
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exceptionResponse);
   }
 
   @ExceptionHandler(PidResolutionException.class)
-  private ResponseEntity<String> pidResolutionException(PidResolutionException e) {
-    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+  private ResponseEntity<ExceptionResponse> pidResolutionException(PidResolutionException e) {
+    ExceptionResponse exceptionResponse = new ExceptionResponse(
+        String.valueOf(HttpStatus.NOT_FOUND),
+        e.getClass().getSimpleName(), e.getMessage());
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exceptionResponse);
   }
 }
