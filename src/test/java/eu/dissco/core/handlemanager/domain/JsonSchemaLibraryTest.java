@@ -1,9 +1,12 @@
 package eu.dissco.core.handlemanager.domain;
 
+import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.LOC_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.DIGITAL_OBJECT_SUBTYPE_PID;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordRequestObject;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -41,8 +44,9 @@ class JsonSchemaLibraryTest {
 
     var request = genCreateRecordRequest(genHandleRecordRequestObject(), RECORD_TYPE_HANDLE);
     ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(missingAttribute);
+    ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(LOC_REQ);
     ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).put(unknownAttribute, "badVal");
-
+    ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).put("badKey2", "badVal");
     // Then
     Exception e = assertThrows(InvalidRecordInput.class, () -> {
       JsonSchemaLibrary.validatePostRequest(request);

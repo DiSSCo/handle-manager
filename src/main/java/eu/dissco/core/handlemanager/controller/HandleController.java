@@ -207,26 +207,21 @@ public class HandleController {
       message = e.getMessage();
     }
     ExceptionResponse exceptionResponse = new ExceptionResponse(
-        String.valueOf(HttpStatus.UNPROCESSABLE_ENTITY),
-        e.getClass().getSimpleName(), message
-    );
+        String.valueOf(HttpStatus.UNPROCESSABLE_ENTITY), e.getClass().getSimpleName(), message);
     return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(exceptionResponse);
   }
 
   @ExceptionHandler(InvalidRecordInput.class)
   private ResponseEntity<ExceptionResponse> invalidRecordInputException(InvalidRecordInput e) {
     ExceptionResponse exceptionResponse = new ExceptionResponse(
-        String.valueOf(HttpStatus.BAD_REQUEST),
-        e.getClass().getSimpleName(), e.getMessage()
-    );
+        String.valueOf(HttpStatus.BAD_REQUEST), e.getClass().getSimpleName(), e.getMessage());
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exceptionResponse);
   }
 
   @ExceptionHandler(PidResolutionException.class)
   private ResponseEntity<ExceptionResponse> pidResolutionException(PidResolutionException e) {
     ExceptionResponse exceptionResponse = new ExceptionResponse(
-        String.valueOf(HttpStatus.NOT_FOUND),
-        e.getClass().getSimpleName(), e.getMessage());
+        String.valueOf(HttpStatus.NOT_FOUND), e.getClass().getSimpleName(), e.getMessage());
     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exceptionResponse);
   }
 }

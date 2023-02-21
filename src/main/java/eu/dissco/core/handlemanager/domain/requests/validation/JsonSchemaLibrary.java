@@ -16,6 +16,7 @@ import com.github.victools.jsonschema.generator.SchemaGeneratorConfig;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion.VersionFlag;
+import com.networknt.schema.ValidationMessage;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
 import eu.dissco.core.handlemanager.domain.requests.PutRequest;
@@ -27,12 +28,14 @@ import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordReque
 import eu.dissco.core.handlemanager.domain.requests.attributes.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.TombstoneRecordRequest;
 import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class JsonSchemaLibrary {
   private static final String ERROR_MESSAGE = "Invalid Request. Reason: %s for request type %s";
-
   private static JsonNode handlePostReqJsonNode;
   private static JsonNode handlePatchReqJsonNode;
   private static JsonNode doiPostReqJsonNode;
@@ -206,11 +209,38 @@ public class JsonSchemaLibrary {
       String type) throws InvalidRecordInput {
     var validationErrors = schema.validate(requestAttributes);
     if (!validationErrors.isEmpty()) {
-      throw new InvalidRecordInput(
-          String.format(ERROR_MESSAGE, validationErrors, type));
+      throw new InvalidRecordInput(setErrorMessage(validationErrors, type));
     }
   }
 
+  private static String setErrorMessage(Set<ValidationMessage> validationErrors, String type){
+    Set<String> missingAttributes = new HashSet<>();
+    Set<String> unrecognizedAttributes = new HashSet<>();
+    Set<String> otherErrors = new HashSet<>();
+
+    for (var validationError: validationErrors){
+      if (validationError.getType().equals("required")){
+        missingAttributes.add(Arrays.toString(validationError.getArguments()));
+      }
+      else if (validationError.getType().equals("additionalProperties")){
+        unrecognizedAttributes.add(Arrays.toString(validationError.getArguments()));
+      }
+      else {
+        otherErrors.add(validationError.getMessage());
+      }
+    }
+    String message = "Invalid request body for request type " + type + ".";
+    if (!missingAttributes.isEmpty()){
+      message = message + "\nMissing attributes: " + missingAttributes;
+    }
+    if (!unrecognizedAttributes.isEmpty()){
+      message = message + "\nUnrecognized attributes: " + unrecognizedAttributes;
+    }
+    if (!otherErrors.isEmpty()){
+      message = message + "\nOther errors: " + otherErrors;
+    }
+    return message;
+  }
 
 
 }
