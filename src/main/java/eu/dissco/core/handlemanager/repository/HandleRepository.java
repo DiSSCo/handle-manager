@@ -2,12 +2,15 @@ package eu.dissco.core.handlemanager.repository;
 
 import static eu.dissco.core.handlemanager.database.jooq.tables.Handles.HANDLES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
+import static eu.dissco.core.handlemanager.domain.PidRecords.IN_COLLECTION_FACILITY;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_NUMBER;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PHYSICAL_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_RECORD_FIELDS_BYTES;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
+import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdentifier;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -52,7 +55,6 @@ public class HandleRepository {
         .getValues(HANDLES.HANDLE, byte[].class);
   }
 
-
   public List<HandleAttribute> resolveHandleAttributes(byte[] handle) {
     return context
         .select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
@@ -68,6 +70,31 @@ public class HandleRepository {
         .from(HANDLES)
         .where(HANDLES.HANDLE.in(handles))
         .and(HANDLES.TYPE.notEqual(HS_ADMIN.getBytes(StandardCharsets.UTF_8)))
+        .fetch(this::mapToAttribute);
+  }
+
+  public List<HandleAttribute> resolveHandleAttributesByPhysicalIdentifier(byte[] physicalIdentifier, byte[] inCollectionFacility){
+    log.info("physical identifier: " + physicalIdentifier);
+    log.info("in collection: " + inCollectionFacility);
+
+    var collectionFacilityTable = context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
+        .from(HANDLES)
+        .where(HANDLES.TYPE.eq(IN_COLLECTION_FACILITY.getBytes(StandardCharsets.UTF_8)))
+        .and((HANDLES.DATA).eq(inCollectionFacility))
+        .asTable("collectionFacilityTable");
+
+    var physicalIdentifierTable = context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
+        .from(HANDLES)
+        .where(HANDLES.TYPE.eq(PHYSICAL_IDENTIFIER.getBytes(StandardCharsets.UTF_8)))
+        .and((HANDLES.DATA).eq(physicalIdentifier))
+        .asTable("physicalIdentifierTable");
+
+    return context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
+        .from(HANDLES)
+        .join(collectionFacilityTable)
+        .on(HANDLES.HANDLE.eq(collectionFacilityTable.field(HANDLES.HANDLE)))
+        .join(physicalIdentifierTable)
+        .on(HANDLES.HANDLE.eq(physicalIdentifierTable.field(HANDLES.HANDLE)))
         .fetch(this::mapToAttribute);
   }
 

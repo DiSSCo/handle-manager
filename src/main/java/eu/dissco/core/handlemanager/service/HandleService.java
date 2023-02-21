@@ -3,12 +3,8 @@ package eu.dissco.core.handlemanager.service;
 import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_SUBTYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OR_PHYSICAL;
-import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_SPECIMEN_BOTANY_REQ;
-import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_SPECIMEN_REQ;
-import static eu.dissco.core.handlemanager.domain.PidRecords.DOI_RECORD_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
 import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IS_PID_RECORD;
-import static eu.dissco.core.handlemanager.domain.PidRecords.HANDLE_RECORD_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.IN_COLLECTION_FACILITY;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_DATE;
@@ -25,7 +21,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_KERNEL_METADATA_LICENSE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PRESERVED_OR_LIVING;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_INSTITUTIONAL_OBJECT_IDENTIFIER;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PHYSICAL_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
@@ -34,7 +30,6 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_TOMBSTO
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
-import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_RECORD_FIELDS;
 import static eu.dissco.core.handlemanager.utils.AdminHandleGenerator.genAdminHandle;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -88,13 +83,13 @@ import org.w3c.dom.Document;
 @Slf4j
 public class HandleService {
 
+  private static final String INVALID_TYPE_ERROR = "Invalid request. Reason: unrecognized type. Check: ";
   private final HandleRepository handleRep;
   private final PidTypeService pidTypeService;
   private final HandleGeneratorService hf;
   private final DocumentBuilderFactory dbf;
   private final ObjectMapper mapper;
   private final TransformerFactory tf;
-  private static final String INVALID_TYPE_ERROR = "Invalid request. Reason: unrecognized type. Check: ";
 
   // Resolve Record
 
@@ -115,6 +110,28 @@ public class HandleService {
       throw new PidResolutionException("Unable to resolve handle");
     }
     return jsonFormatSingleRecord(dbRecord);
+  }
+
+  public JsonApiWrapperWrite searchByPhysicalSpecimenId(JsonNode request) {
+    byte[] physicalIdentifier = request.get(NODE_DATA).get(NODE_ATTRIBUTES).get(PHYSICAL_IDENTIFIER)
+        .asText().getBytes(
+            StandardCharsets.UTF_8);
+    byte[] inCollectionFacility = request.get(NODE_DATA).get(NODE_ATTRIBUTES)
+        .get(IN_COLLECTION_FACILITY).asText().getBytes(
+            StandardCharsets.UTF_8);
+
+    var returnedRows = handleRep.resolveHandleAttributesByPhysicalIdentifier(physicalIdentifier, inCollectionFacility);
+    var recordMap = mapRecords(returnedRows);
+    if (recordMap.size() >1){
+      log.warn("More than one handle record corresponds to the provided collection facility and physical identifier.");
+    }
+    List<JsonApiDataLinks> dataNode = new ArrayList<>();
+
+    for (var handleRecord : recordMap.entrySet()) {
+      var jsonFormattedRecord = jsonFormatSingleRecord(handleRecord.getValue());
+      dataNode.add(wrapData(jsonFormattedRecord, "PID"));
+    }
+    return new JsonApiWrapperWrite(dataNode);
   }
 
   public List<JsonNode> fetchResolvedRecords(List<byte[]> handles) throws PidResolutionException {
@@ -537,8 +554,8 @@ public class HandleService {
     // 17 : Institutional Identifier
     // Encoding here is UTF-8
     var physicalIdentifier = mapper.writeValueAsBytes(request.getPhysicalIdentifier());
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(PRIMARY_INSTITUTIONAL_OBJECT_IDENTIFIER), handle,
-        PRIMARY_INSTITUTIONAL_OBJECT_IDENTIFIER, physicalIdentifier));
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(PHYSICAL_IDENTIFIER), handle,
+        PHYSICAL_IDENTIFIER, physicalIdentifier));
 
     return handleRecord;
   }
@@ -611,7 +628,7 @@ public class HandleService {
     for (HandleAttribute row : dbRecord) {
       String type = row.type();
       String data = new String(row.data(), StandardCharsets.UTF_8);
-      if (FIELD_IS_PID_RECORD.contains(type) || type.equals(PRIMARY_INSTITUTIONAL_OBJECT_IDENTIFIER)) {
+      if (FIELD_IS_PID_RECORD.contains(type) || type.equals(PHYSICAL_IDENTIFIER)) {
         try {
           subNode = mapper.readValue(data, ObjectNode.class);
           rootNode.set(type, subNode);
@@ -619,8 +636,7 @@ public class HandleService {
           log.warn("Type \"{}\" is noncompliant to the PID kernel model. Invalid data: {}", type,
               data);
         }
-      }
-      else {
+      } else {
         rootNode.put(type, data);
       }
     }

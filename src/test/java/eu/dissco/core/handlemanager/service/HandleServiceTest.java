@@ -1,21 +1,20 @@
 package eu.dissco.core.handlemanager.service;
 
-import static eu.dissco.core.handlemanager.domain.PidRecords.IN_COLLECTION_FACILITY_REQ;
+import static eu.dissco.core.handlemanager.domain.PidRecords.IN_COLLECTION_FACILITY;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER_REQ;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PRESERVED_OR_LIVING;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PHYSICAL_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME_REQ;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_LIST_STR;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.IN_COLLECTION_FACILITY_TESTVAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PHYSICAL_IDENTIFIER_OBJ;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_STATUS_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PTR_HANDLE_RECORD;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
@@ -35,6 +34,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordRespon
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWrite;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteArchive;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteGeneric;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -46,6 +46,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import eu.dissco.core.handlemanager.domain.PidRecords;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
 import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
@@ -73,24 +75,17 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class HandleServiceTest {
 
+  private final String SANDBOX_URI = "https://sandbox.dissco.tech/";
   @Mock
   private HandleRepository handleRep;
-
   @Mock
   private PidTypeService pidTypeService;
-
   @Mock
   private HandleGeneratorService hgService;
-
   private ObjectMapper mapper;
-
   private HandleService service;
-
   private List<byte[]> handles;
-
   private MockedStatic<Instant> mockedStatic;
-  private final String SANDBOX_URI = "https://sandbox.dissco.tech/";
-
 
   @BeforeEach
   void setup() throws Exception {
@@ -142,6 +137,32 @@ class HandleServiceTest {
     var responseExpected = givenRecordResponseRead(handles, path, "PID");
     // When
     var responseReceived = service.resolveBatchRecord(handles, path);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testSearchByPhysicalSpecimenId() throws Exception {
+    // Given
+    var physicalSpecimenId = MAPPER.writeValueAsString(PHYSICAL_IDENTIFIER_OBJ);
+    var request = MAPPER.createObjectNode();
+    var dataNode = MAPPER.createObjectNode();
+    var attributeNode = MAPPER.createObjectNode();
+    attributeNode.put(PHYSICAL_IDENTIFIER, physicalSpecimenId);
+    attributeNode.put(IN_COLLECTION_FACILITY, IN_COLLECTION_FACILITY_TESTVAL);
+    dataNode.set(NODE_ATTRIBUTES, attributeNode);
+    request.set(NODE_DATA, dataNode);
+    var expectedAttributes = genDigitalSpecimenAttributes(HANDLE.getBytes(StandardCharsets.UTF_8));
+    var responseExpected = givenRecordResponseWriteGeneric(
+        List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), RECORD_TYPE_DS);
+
+    given(handleRep.resolveHandleAttributesByPhysicalIdentifier(physicalSpecimenId.getBytes(
+            StandardCharsets.UTF_8), IN_COLLECTION_FACILITY_TESTVAL.getBytes(StandardCharsets.UTF_8)))
+        .willReturn(expectedAttributes);
+
+    // When
+    var responseReceived = service.searchByPhysicalSpecimenId(request);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -378,24 +399,6 @@ class HandleServiceTest {
     });
   }
 
-  @Test
-  void testUpdateRecordInvalidField() throws Exception {
-    // Given
-    ObjectNode requestRoot = mapper.createObjectNode();
-    ObjectNode requestData = mapper.createObjectNode();
-    ObjectNode requestAttributes = mapper.createObjectNode();
-
-    requestAttributes.put("invalidField", "invalidValue");
-    requestData.put(NODE_TYPE, RECORD_TYPE_HANDLE);
-    requestData.put(NODE_ID, HANDLE);
-    requestData.set(NODE_ATTRIBUTES, requestAttributes);
-    requestRoot.set(NODE_DATA, requestData);
-
-    // Then
-    assertThrows(InvalidRecordInput.class, () -> {
-      service.updateRecords(List.of(requestRoot));
-    });
-  }
 
   @Test
   void testUpdateRecordNonWritable() {
@@ -516,156 +519,6 @@ class HandleServiceTest {
 
     // Then
     assertThat(exception.getMessage()).isEqualTo(invalidMessage);
-  }
-/*
-  @Test
-  void testMissingFieldCreateHandleRecord() {
-
-    HandleRecordRequest request = genHandleRecordRequestObject();
-    ObjectNode requestObjectNode = genCreateRecordRequest(request, RECORD_TYPE_HANDLE);
-
-    ((ObjectNode) requestObjectNode.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(PID_ISSUER_REQ);
-
-    given(hgService.genHandleList(1)).willReturn(List.of(HANDLE.getBytes(StandardCharsets.UTF_8)));
-
-    // Then
-    assertThrows(UnsupportedOperationException.class, () -> {
-      service.createRecords(List.of(requestObjectNode));
-    });
-
-  }
-
-  @Test
-  void testMissingFieldCreateDoiRecord() {
-
-    HandleRecordRequest request = genDoiRecordRequestObject();
-    ObjectNode requestObjectNode = genCreateRecordRequest(request, RECORD_TYPE_DOI);
-
-    ((ObjectNode) requestObjectNode.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(
-        REFERENT_DOI_NAME_REQ);
-
-    given(hgService.genHandleList(1)).willReturn(List.of(HANDLE.getBytes(StandardCharsets.UTF_8)));
-
-    // Then
-    assertThrows(UnsupportedOperationException.class, () -> {
-      service.createRecords(List.of(requestObjectNode));
-    });
-  }
-  @Test
-  void testMissingFieldCreateDigitalSpecimen() {
-
-    HandleRecordRequest request = genDigitalSpecimenBotanyRequestObject();
-    ObjectNode requestObjectNode = genCreateRecordRequest(request, RECORD_TYPE_DS);
-
-    ((ObjectNode) requestObjectNode.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(
-        IN_COLLECTION_FACILITY_REQ);
-
-    given(hgService.genHandleList(1)).willReturn(List.of(HANDLE.getBytes(StandardCharsets.UTF_8)));
-
-    // Then
-    assertThrows(UnsupportedOperationException.class, () -> {
-      service.createRecords(List.of(requestObjectNode));
-    });
-
-  }
-
-  @Test
-  void testMissingFieldCreateDigitalSpecimenBotany() {
-
-    HandleRecordRequest request = genDigitalSpecimenBotanyRequestObject();
-    ObjectNode requestObjectNode = genCreateRecordRequest(request, RECORD_TYPE_DS_BOTANY);
-
-    ((ObjectNode) requestObjectNode.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(
-        PRESERVED_OR_LIVING);
-
-    given(hgService.genHandleList(1)).willReturn(List.of(HANDLE.getBytes(StandardCharsets.UTF_8)));
-
-    // When
-    assertThrows(UnsupportedOperationException.class, () -> {
-      service.createRecords(List.of(requestObjectNode));
-    });
-  }*/
-
-  @Test
-  void testMissingFieldCreateHandleRecordBatch() {
-
-    List<JsonNode> requests = new ArrayList<>();
-    for (byte[] handle : handles) {
-      ObjectNode request = genCreateRecordRequest(genHandleRecordRequestObject(),
-          RECORD_TYPE_HANDLE);
-      ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(PID_ISSUER_REQ);
-
-      requests.add(request);
-    }
-
-    given(hgService.genHandleList(2)).willReturn(handles);
-
-    // Then
-    assertThrows(NullPointerException.class, () -> {
-      service.createRecords(requests);
-    });
-
-  }
-
-  @Test
-  void testMissingFieldDoiRecordBatch() {
-
-    List<JsonNode> requests = new ArrayList<>();
-    for (byte[] handle : handles) {
-      ObjectNode request = genCreateRecordRequest(genDoiRecordRequestObject(), RECORD_TYPE_DOI);
-      ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(REFERENT_DOI_NAME_REQ);
-      requests.add(request);
-    }
-
-    given(hgService.genHandleList(2)).willReturn(handles);
-
-    // Then
-    assertThrows(NullPointerException.class, () -> {
-      service.createRecords(requests);
-    });
-
-  }
-
-  @Test
-  void testMissingFieldDigitalSpecimenRecordBatch() {
-
-    List<JsonNode> requests = new ArrayList<>();
-    for (byte[] handle : handles) {
-      ObjectNode request = genCreateRecordRequest(genDigitalSpecimenRequestObject(),
-          RECORD_TYPE_DS);
-      ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(IN_COLLECTION_FACILITY_REQ);
-
-      requests.add(request);
-    }
-
-    given(hgService.genHandleList(2)).willReturn(handles);
-
-    // Then
-    Exception exception = assertThrows(NullPointerException.class, () -> {
-      service.createRecords(requests);
-    });
-
-    //assertThat(exception.getMessage()).contains(IN_COLLECTION_FACILITY_REQ);
-  }
-
-  @Test
-  void testMissingFieldDigitalSpecimenBotanyRecordBatch() {
-
-    List<JsonNode> requests = new ArrayList<>();
-    for (byte[] handle : handles) {
-      ObjectNode request = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(),
-          RECORD_TYPE_DS_BOTANY);
-      ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(PRESERVED_OR_LIVING);
-
-      requests.add(request);
-    }
-
-    given(hgService.genHandleList(2)).willReturn(handles);
-
-    // Then
-    assertThrows(NullPointerException.class, () -> {
-      service.createRecords(requests);
-    });
   }
 
   private void initTime() {

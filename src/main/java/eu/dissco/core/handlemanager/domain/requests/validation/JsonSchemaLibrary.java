@@ -35,7 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class JsonSchemaLibrary {
-  private static final String ERROR_MESSAGE = "Invalid Request. Reason: %s for request type %s";
   private static JsonNode handlePostReqJsonNode;
   private static JsonNode handlePatchReqJsonNode;
   private static JsonNode doiPostReqJsonNode;
@@ -147,7 +146,7 @@ public class JsonSchemaLibrary {
     var validationErrors = postReqSchema.validate(requestRoot);
     if (!validationErrors.isEmpty()) {
       throw new InvalidRecordInput(
-          String.format(ERROR_MESSAGE, validationErrors, "POST"));
+          setErrorMessage(validationErrors, "POST"));
     }
     String type = requestRoot.get(NODE_DATA).get(NODE_TYPE).asText();
     var attributes = requestRoot.get(NODE_DATA).get(NODE_ATTRIBUTES);
@@ -161,15 +160,14 @@ public class JsonSchemaLibrary {
           validateRequestAttributes(attributes, digitalSpecimenBotanyPostReqSchema, type);
       case RECORD_TYPE_MEDIA ->
           validateRequestAttributes(attributes, mediaObjectPostReqSchema, type);
-      default -> throw new InvalidRecordInput("Invalid Request. Reason: Invalid type");
+      default -> throw new InvalidRecordInput("Invalid Request. Reason: Invalid type: "+ type);
     }
   }
 
   public static void validatePutRequest(JsonNode requestRoot) throws InvalidRecordInput {
     var validationErrors = putReqSchema.validate(requestRoot);
     if (!validationErrors.isEmpty()) {
-      throw new InvalidRecordInput(
-          String.format(ERROR_MESSAGE, validationErrors, "PUT (tombstone)"));
+      throw new InvalidRecordInput(setErrorMessage(validationErrors, "PUT (tombstone)"));
     }
     var attributes = requestRoot.get(NODE_DATA).get(NODE_ATTRIBUTES);
     validateRequestAttributes(attributes, tombstoneReqSchema, RECORD_TYPE_TOMBSTONE);
@@ -178,8 +176,7 @@ public class JsonSchemaLibrary {
   public static void validatePatchRequest(JsonNode requestRoot) throws InvalidRecordInput {
     var validationErrors = patchReqSchema.validate(requestRoot);
     if (!validationErrors.isEmpty()) {
-      throw new InvalidRecordInput(
-          String.format(ERROR_MESSAGE, validationErrors, "PATCH (update)"));
+      throw new InvalidRecordInput(setErrorMessage(validationErrors, "PATCH (update)"));
     }
     String type = requestRoot.get(NODE_DATA).get(NODE_TYPE).asText();
     var attributes = requestRoot.get(NODE_DATA).get(NODE_ATTRIBUTES);
@@ -193,15 +190,14 @@ public class JsonSchemaLibrary {
           validateRequestAttributes(attributes, digitalSpecimenBotanyPatchReqSchema, type);
       case RECORD_TYPE_MEDIA ->
           validateRequestAttributes(attributes, mediaObjectPatchReqSchema, type);
-      default -> throw new InvalidRecordInput("Invalid Request. Reason: Invalid type");
+      default -> throw new InvalidRecordInput("Invalid Request. Reason: Invalid type: " + type);
     }
   }
 
   public static void validateResolveRequest(JsonNode requestRoot) throws InvalidRecordInput {
     var validationErrors = resolveReqSchema.validate(requestRoot);
     if (!validationErrors.isEmpty()) {
-      throw new InvalidRecordInput(
-          String.format(ERROR_MESSAGE, validationErrors, "POST (Resolve)"));
+      throw new InvalidRecordInput(setErrorMessage(validationErrors, "POST (Resolve)"));
     }
   }
   
