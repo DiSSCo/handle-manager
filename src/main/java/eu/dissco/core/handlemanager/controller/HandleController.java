@@ -117,6 +117,14 @@ public class HandleController {
     return ResponseEntity.status(HttpStatus.OK).body(service.resolveBatchRecord(handles, path));
   }
 
+  @PostMapping("/records/localId")
+  public ResponseEntity<JsonApiWrapperWrite> searchByPhysicalSpecimenId(@RequestBody JsonNode request){
+
+    // TODO validate schema, test
+
+    return ResponseEntity.status(HttpStatus.OK).body(service.searchByPhysicalSpecimenId(request));
+  }
+
   @PreAuthorize("isAuthenticated()")
   @PostMapping(value = "")
   public ResponseEntity<JsonApiWrapperWrite> createRecord(@RequestBody JsonNode request)
