@@ -41,6 +41,7 @@ import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenBo
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.attributes.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdentifier;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PreservedOrLiving;
 import eu.dissco.core.handlemanager.domain.requests.attributes.TombstoneRecordRequest;
@@ -99,6 +100,11 @@ public class TestUtils {
   public static final String OBJECT_TYPE_TESTVAL = "Herbarium Sheet";
   public static final PreservedOrLiving PRESERVED_OR_LIVING_TESTVAL = PreservedOrLiving.PRESERVED;
 
+  // Media Objects
+  public static final String MEDIA_URL_TESTVAL = "https://naturalis.nl/media/123";
+  public static final String MEDIA_HASH_TESTVAL = "47bce5c74f589f48";
+
+
   // Pid Type Record vals
   private final static String HANDLE_URI = "https://hdl.handle.net/";
   public static final String PTR_PID = HANDLE_URI + PID_ISSUER_PID;
@@ -109,7 +115,7 @@ public class TestUtils {
   public static final String PTR_REGISTRATION_DOI_NAME = "Registration Agency";
   public final static String PTR_HANDLE_RECORD = genPtrHandleRecord(false);
   public final static String PTR_DOI_RECORD = genPtrHandleRecord(true);
-  public final static PhysicalIdentifier PRIMARY_INSTITUTIONAL_OBJECT_ID = new PhysicalIdentifier(
+  public final static PhysicalIdentifier PHYSICAL_IDENTIFIER = new PhysicalIdentifier(
       "BOTANICAL.QRS.123",
       "physicalSpecimenId"
   );
@@ -334,11 +340,12 @@ public class TestUtils {
         DIGITAL_OR_PHYSICAL_TESTVAL,
         SPECIMEN_HOST_PID,
         IN_COLLECTION_FACILITY_TESTVAL,
-        PRIMARY_INSTITUTIONAL_OBJECT_ID);
+        PHYSICAL_IDENTIFIER);
   }
 
   public static DigitalSpecimenBotanyRequest genDigitalSpecimenBotanyRequestObject() {
-    return new DigitalSpecimenBotanyRequest(PID_ISSUER_PID,
+    return new DigitalSpecimenBotanyRequest(
+        PID_ISSUER_PID,
         DIGITAL_OBJECT_TYPE_PID,
         DIGITAL_OBJECT_SUBTYPE_PID,
         LOC_TESTVAL,
@@ -346,9 +353,22 @@ public class TestUtils {
         DIGITAL_OR_PHYSICAL_TESTVAL,
         SPECIMEN_HOST_PID,
         IN_COLLECTION_FACILITY_TESTVAL,
-        PRIMARY_INSTITUTIONAL_OBJECT_ID,
+        PHYSICAL_IDENTIFIER,
         OBJECT_TYPE_TESTVAL,
         PRESERVED_OR_LIVING_TESTVAL);
+  }
+
+  public static MediaObjectRequest genMediaRequestObject(){
+    return new MediaObjectRequest(
+        PID_ISSUER_PID,
+        DIGITAL_OBJECT_TYPE_PID,
+        DIGITAL_OBJECT_SUBTYPE_PID,
+        LOC_TESTVAL,
+        REFERENT_DOI_NAME_PID,
+        MEDIA_HASH_TESTVAL,
+        MEDIA_URL_TESTVAL,
+        PHYSICAL_IDENTIFIER
+    );
   }
 
   public static TombstoneRecordRequest genTombstoneRecordRequestObject() {

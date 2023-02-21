@@ -1,5 +1,6 @@
 package eu.dissco.core.handlemanager.controller;
 
+import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_URL;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
@@ -42,16 +43,18 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mock.web.MockHttpServletRequest;
 
 @ExtendWith(MockitoExtension.class)
 @SpringBootTest(properties = "spring.main.lazy-initialization=true")
 class HandleControllerBadRequestsTest {
 
-  @Mock
-  private HandleService service;
+  private static final String UNKNOWN_ATTRIBUTE = "badKey";
+  private static final String UNKNOWN_VAL = "badVal";
   @Autowired
   JsonSchemaStaticContextInitializer schemaInitializer;
-
+  @Mock
+  private HandleService service;
   private HandleController controller;
 
   @BeforeEach
@@ -60,7 +63,7 @@ class HandleControllerBadRequestsTest {
   }
 
   @Test
-  void testBadPostRequest(){
+  void testBadPostRequest() {
     // Given
     var request = genCreateRecordRequest(genHandleRecordRequestObject(), RECORD_TYPE_HANDLE);
     ((ObjectNode) request.get(NODE_DATA)).remove(NODE_TYPE);
@@ -73,7 +76,7 @@ class HandleControllerBadRequestsTest {
   }
 
   @Test
-  void testBadPostHandleRequest(){
+  void testBadPostHandleRequestMissingProperty() {
     // Given
     String missingAttribute = PID_ISSUER_REQ;
     var request = genCreateRecordRequest(genHandleRecordRequestObject(), RECORD_TYPE_HANDLE);
@@ -87,7 +90,20 @@ class HandleControllerBadRequestsTest {
   }
 
   @Test
-  void testBadPostDoiRequest(){
+  void testBadPostHandleRequestUnknownProperty() {
+    // Given
+    var request = genCreateRecordRequest(genHandleRecordRequestObject(), RECORD_TYPE_HANDLE);
+    ((ObjectNode) request.get(NODE_DATA)).put(UNKNOWN_ATTRIBUTE, UNKNOWN_VAL);
+
+    // Then
+    Exception e = assertThrows(InvalidRecordInput.class, () -> {
+      controller.createRecord(request);
+    });
+    assertThat(e.getMessage()).contains(UNKNOWN_ATTRIBUTE);
+  }
+
+  @Test
+  void testBadPostDoiRequestMissingProperty() {
     // Given
     String missingAttribute = REFERENT_DOI_NAME_REQ;
     var request = genCreateRecordRequest(genDoiRecordRequestObject(), RECORD_TYPE_DOI);
@@ -101,7 +117,20 @@ class HandleControllerBadRequestsTest {
   }
 
   @Test
-  void testBadPostDigitalSpecimenRequest(){
+  void testBadPostDoiRequestUnknownProperty() {
+    // Given
+    var request = genCreateRecordRequest(genDoiRecordRequestObject(), RECORD_TYPE_DOI);
+    ((ObjectNode) request.get(NODE_DATA)).put(UNKNOWN_ATTRIBUTE, UNKNOWN_VAL);
+
+    // Then
+    Exception e = assertThrows(InvalidRecordInput.class, () -> {
+      controller.createRecord(request);
+    });
+    assertThat(e.getMessage()).contains(UNKNOWN_ATTRIBUTE);
+  }
+
+  @Test
+  void testBadPostDigitalSpecimenRequestMissingProperty() {
     // Given
     String missingAttribute = SPECIMEN_HOST_REQ;
     var request = genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_DS);
@@ -115,10 +144,24 @@ class HandleControllerBadRequestsTest {
   }
 
   @Test
-  void testBadPostDigitalSpecimenBotanyRequest(){
+  void testBadPostDigitalSpecimenRequestUnknownProperty() {
+    // Given
+    var request = genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_DS);
+    ((ObjectNode) request.get(NODE_DATA)).put(UNKNOWN_ATTRIBUTE, UNKNOWN_VAL);
+
+    // Then
+    Exception e = assertThrows(InvalidRecordInput.class, () -> {
+      controller.createRecord(request);
+    });
+    assertThat(e.getMessage()).contains(UNKNOWN_ATTRIBUTE);
+  }
+
+  @Test
+  void testBadPostDigitalSpecimenBotanyRequestMissingProperty() {
     // Given
     String missingAttribute = OBJECT_TYPE;
-    var request = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(), RECORD_TYPE_DS_BOTANY);
+    var request = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(),
+        RECORD_TYPE_DS_BOTANY);
     ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(missingAttribute);
 
     // Then
@@ -129,7 +172,49 @@ class HandleControllerBadRequestsTest {
   }
 
   @Test
-  void testBadPatchRequest(){
+  void testBadPostDigitalSpecimenBotanyRequestUnknownProperty() {
+    // Given
+    var request = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(),
+        RECORD_TYPE_DS_BOTANY);
+    ((ObjectNode) request.get(NODE_DATA)).put(UNKNOWN_ATTRIBUTE, UNKNOWN_VAL);
+
+    // Then
+    Exception e = assertThrows(InvalidRecordInput.class, () -> {
+      controller.createRecord(request);
+    });
+    assertThat(e.getMessage()).contains(UNKNOWN_ATTRIBUTE);
+  }
+
+  @Test
+  void testBadPostMediaObjectRequestUnknownProperty() {
+    // Given
+    var request = genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_MEDIA);
+    ((ObjectNode) request.get(NODE_DATA)).put(UNKNOWN_ATTRIBUTE, UNKNOWN_VAL);
+
+    // Then
+    Exception e = assertThrows(InvalidRecordInput.class, () -> {
+      controller.createRecord(request);
+    });
+    assertThat(e.getMessage()).contains(UNKNOWN_ATTRIBUTE);
+  }
+
+  @Test
+  void testBadPostMediaObjectRequestMissingProperty() {
+    // Given
+    String missingAttribute = MEDIA_URL;
+    var request = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(),
+        RECORD_TYPE_MEDIA);
+    ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(missingAttribute);
+
+    // Then
+    Exception e = assertThrows(InvalidRecordInput.class, () -> {
+      controller.createRecord(request);
+    });
+    assertThat(e.getMessage()).contains(missingAttribute);
+  }
+
+  @Test
+  void testBadPatchRequest() {
     // Given
     var request = givenPatchRequest(null, "");
 
@@ -141,21 +226,21 @@ class HandleControllerBadRequestsTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {RECORD_TYPE_HANDLE, RECORD_TYPE_DOI, RECORD_TYPE_DS, RECORD_TYPE_DS_BOTANY, RECORD_TYPE_MEDIA})
-  void testBadPatchAttributeRequest(String recordType){
+  @ValueSource(strings = {RECORD_TYPE_HANDLE, RECORD_TYPE_DOI, RECORD_TYPE_DS,
+      RECORD_TYPE_DS_BOTANY, RECORD_TYPE_MEDIA})
+  void testBadPatchRequestUnknownProperty(String recordType) {
     // Given
-    String badKey = "badKey";
-    var request = givenPatchRequest(recordType, badKey);
+    var request = givenPatchRequest(recordType, UNKNOWN_ATTRIBUTE);
 
     // Then
     Exception e = assertThrows(InvalidRecordInput.class, () -> {
       controller.updateRecord(PREFIX, SUFFIX, request);
     });
-    assertThat(e.getMessage()).contains(badKey);
+    assertThat(e.getMessage()).contains(UNKNOWN_ATTRIBUTE);
   }
 
   @Test
-  void testBadArchiveRequest(){
+  void testBadArchiveRequest() {
     // Given
     var request = genTombstoneRequestBatch(List.of(HANDLE)).get(0);
     ((ObjectNode) request.get(NODE_DATA)).remove(NODE_TYPE);
@@ -171,7 +256,7 @@ class HandleControllerBadRequestsTest {
   }
 
   @Test
-  void testBadArchiveAttributesRequest(){
+  void testBadArchiveRequestMissingProperty() {
     // Given
     var request = genTombstoneRequestBatch(List.of(HANDLE)).get(0);
     ((ObjectNode) request.get(NODE_DATA)).remove(NODE_TYPE);
@@ -186,7 +271,24 @@ class HandleControllerBadRequestsTest {
     assertThat(e.getMessage()).contains(TOMBSTONE_TEXT);
   }
 
-  private ObjectNode givenPatchRequest(String type, String badKey){
+  @Test
+  void testBadResolveRequestMissingProperty(){
+    // Given
+    var request = MAPPER.createObjectNode();
+    request.put("data", "");
+    MockHttpServletRequest r = new MockHttpServletRequest();
+    r.setRequestURI("a");
+
+    // When
+    Exception e = assertThrows(InvalidRecordInput.class, () -> {
+      controller.resolvePids(List.of(request), r);
+    });
+
+    // Then
+    assertThat(e.getMessage()).contains(NODE_ID);
+  }
+
+  private ObjectNode givenPatchRequest(String type, String badKey) {
     ObjectNode attributeNode = MAPPER.createObjectNode();
     attributeNode.put(badKey, "val");
 
@@ -199,11 +301,4 @@ class HandleControllerBadRequestsTest {
     request.set(NODE_DATA, dataNode);
     return request;
   }
-
-
-
-
-
-
-
 }

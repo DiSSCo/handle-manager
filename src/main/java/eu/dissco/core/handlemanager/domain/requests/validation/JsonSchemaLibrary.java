@@ -19,6 +19,7 @@ import com.networknt.schema.SpecVersion.VersionFlag;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
 import eu.dissco.core.handlemanager.domain.requests.PutRequest;
+import eu.dissco.core.handlemanager.domain.requests.ResolveRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DoiRecordRequest;
@@ -26,15 +27,13 @@ import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordReque
 import eu.dissco.core.handlemanager.domain.requests.attributes.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.TombstoneRecordRequest;
 import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class JsonSchemaLibrary {
+  private static final String ERROR_MESSAGE = "Invalid Request. Reason: %s for request type %s";
 
-  @Getter
   private static JsonNode handlePostReqJsonNode;
-  @Getter
   private static JsonNode handlePatchReqJsonNode;
   private static JsonNode doiPostReqJsonNode;
   private static JsonNode doiPatchReqJsonNode;
@@ -43,15 +42,16 @@ public class JsonSchemaLibrary {
   private static JsonNode digitalSpecimenBotanyPostReqJsonNode;
   private static JsonNode digitalSpecimenBotanyPatchReqJsonNode;
   private static JsonNode tombstoneReqJsonNode;
-  @Getter
   private static JsonNode postReqJsonNode;
   private static JsonNode patchReqJsonNode;
   private static JsonNode putReqJsonNode;
+  private static JsonNode resolveReqJsonNode;
   private static JsonNode mediaObjectPostReqJsonNode;
   private static JsonNode mediaObjectPatchReqJsonNode;
   private static JsonSchema postReqSchema;
   private static JsonSchema patchReqSchema;
   private static JsonSchema putReqSchema;
+  private static JsonSchema resolveReqSchema;
 
   private static JsonSchema handlePostReqSchema;
 
@@ -114,6 +114,7 @@ public class JsonSchemaLibrary {
     postReqJsonNode = schemaGenerator.generateSchema(PostRequest.class);
     patchReqJsonNode = schemaGenerator.generateSchema(PatchRequest.class);
     putReqJsonNode = schemaGenerator.generateSchema(PutRequest.class);
+    resolveReqJsonNode = schemaGenerator.generateSchema(ResolveRequest.class);
   }
 
   private static void setJsonSchemas() {
@@ -122,6 +123,7 @@ public class JsonSchemaLibrary {
     postReqSchema = factory.getSchema(postReqJsonNode);
     patchReqSchema = factory.getSchema(patchReqJsonNode);
     putReqSchema = factory.getSchema(putReqJsonNode);
+    resolveReqSchema = factory.getSchema(resolveReqJsonNode);
 
     handlePostReqSchema = factory.getSchema(handlePostReqJsonNode);
     doiPostReqSchema = factory.getSchema(doiPostReqJsonNode);
@@ -142,7 +144,7 @@ public class JsonSchemaLibrary {
     var validationErrors = postReqSchema.validate(requestRoot);
     if (!validationErrors.isEmpty()) {
       throw new InvalidRecordInput(
-          "Invalid Request. Reason: " + validationErrors + "from POST request");
+          String.format(ERROR_MESSAGE, validationErrors, "POST"));
     }
     String type = requestRoot.get(NODE_DATA).get(NODE_TYPE).asText();
     var attributes = requestRoot.get(NODE_DATA).get(NODE_ATTRIBUTES);
@@ -164,18 +166,17 @@ public class JsonSchemaLibrary {
     var validationErrors = putReqSchema.validate(requestRoot);
     if (!validationErrors.isEmpty()) {
       throw new InvalidRecordInput(
-          "Invalid Request. Reason: " + validationErrors + "from POST request");
+          String.format(ERROR_MESSAGE, validationErrors, "PUT (tombstone)"));
     }
     var attributes = requestRoot.get(NODE_DATA).get(NODE_ATTRIBUTES);
     validateRequestAttributes(attributes, tombstoneReqSchema, RECORD_TYPE_TOMBSTONE);
-
   }
 
   public static void validatePatchRequest(JsonNode requestRoot) throws InvalidRecordInput {
     var validationErrors = patchReqSchema.validate(requestRoot);
     if (!validationErrors.isEmpty()) {
       throw new InvalidRecordInput(
-          "Invalid Request. Reason: " + validationErrors + "from PATCH request");
+          String.format(ERROR_MESSAGE, validationErrors, "PATCH (update)"));
     }
     String type = requestRoot.get(NODE_DATA).get(NODE_TYPE).asText();
     var attributes = requestRoot.get(NODE_DATA).get(NODE_ATTRIBUTES);
@@ -192,14 +193,21 @@ public class JsonSchemaLibrary {
       default -> throw new InvalidRecordInput("Invalid Request. Reason: Invalid type");
     }
   }
+
+  public static void validateResolveRequest(JsonNode requestRoot) throws InvalidRecordInput {
+    var validationErrors = resolveReqSchema.validate(requestRoot);
+    if (!validationErrors.isEmpty()) {
+      throw new InvalidRecordInput(
+          String.format(ERROR_MESSAGE, validationErrors, "POST (Resolve)"));
+    }
+  }
   
   private static void validateRequestAttributes(JsonNode requestAttributes, JsonSchema schema,
       String type) throws InvalidRecordInput {
     var validationErrors = schema.validate(requestAttributes);
-    log.info("validating request attributes: " + requestAttributes.toPrettyString());
     if (!validationErrors.isEmpty()) {
       throw new InvalidRecordInput(
-          "Really Invalid Request. Reason: " + validationErrors + " for record type " + type);
+          String.format(ERROR_MESSAGE, validationErrors, type));
     }
   }
 

@@ -1,12 +1,11 @@
 package eu.dissco.core.handlemanager.controller;
 
 
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.VALID_PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaLibrary.validatePutRequest;
+import static eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaLibrary.validateResolveRequest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
@@ -119,7 +118,7 @@ public class HandleController {
     List<byte[]> handles = new ArrayList<>();
 
     for (JsonNode request : requests) {
-      checkRequestNodesPresent(request, true, false, true, false);
+      validateResolveRequest(request);
       handles.add(request.get(NODE_DATA).get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8));
     }
     return ResponseEntity.status(HttpStatus.OK).body(service.resolveBatchRecord(handles, path));
@@ -210,25 +209,6 @@ public class HandleController {
       validatePutRequest(request);
     }
     return ResponseEntity.status(HttpStatus.OK).body(service.archiveRecordBatch(requests));
-  }
-
-  private void checkRequestNodesPresent(JsonNode requestRoot, boolean checkData, boolean checkType,
-      boolean checkId, boolean checkAttributes) throws InvalidRecordInput {
-
-    String errorMsg = "INVALID INPUT. Missing node \" %s \"";
-    if (checkData && !requestRoot.has(NODE_DATA)) {
-      throw new InvalidRecordInput(String.format(errorMsg, NODE_DATA));
-    }
-    JsonNode requestData = requestRoot.get(NODE_DATA);
-    if (checkType && !requestData.has(NODE_TYPE)) {
-      throw new InvalidRecordInput(String.format(errorMsg, NODE_TYPE));
-    }
-    if (checkId && !requestData.has(NODE_ID)) {
-      throw new InvalidRecordInput(String.format(errorMsg, NODE_ID));
-    }
-    if (checkAttributes && !requestData.has(NODE_ATTRIBUTES)) {
-      throw new InvalidRecordInput(String.format(errorMsg, NODE_ATTRIBUTES));
-    }
   }
 
   //Exception Handling

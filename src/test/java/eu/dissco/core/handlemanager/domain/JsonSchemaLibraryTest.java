@@ -1,6 +1,16 @@
 package eu.dissco.core.handlemanager.domain;
 
+import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
+import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER_REQ;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordRequestObject;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.victools.jsonschema.generator.OptionPreset;
 import com.github.victools.jsonschema.generator.SchemaGenerator;
 import com.github.victools.jsonschema.generator.SchemaGeneratorConfig;
@@ -9,6 +19,7 @@ import com.github.victools.jsonschema.generator.SchemaVersion;
 import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaLibrary;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaStaticContextInitializer;
+import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -22,41 +33,24 @@ class JsonSchemaLibraryTest {
   @Autowired
   JsonSchemaStaticContextInitializer schemaInitializer;
 
-
   @Test
-  void attributesJackson(){
-    JsonNode jackson = JsonSchemaLibrary.getHandlePostReqJsonNode();
-    log.info(jackson.toPrettyString());
-  }
+  void testPostRequestSchema() {
+    // Given
+    String missingAttribute = PID_ISSUER_REQ;
+    String unknownAttribute = "badKey";
 
-  @Test
-  void attributesVanilla(){
-    JsonNode vanilla = JsonSchemaLibrary.getHandlePatchReqJsonNode();
-    log.info(vanilla.toPrettyString());
-  }
+    var request = genCreateRecordRequest(genHandleRecordRequestObject(), RECORD_TYPE_HANDLE);
+    ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(missingAttribute);
+    ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).put(unknownAttribute, "badVal");
 
-  @Test
-  void request(){
-    JsonNode vanilla = JsonSchemaLibrary.getPostReqJsonNode();
-    log.info(vanilla.toPrettyString());
-  }
-
-
-  void testNotJackson() {
-    SchemaGeneratorConfigBuilder configBuilderNotJackson = new SchemaGeneratorConfigBuilder(
-        SchemaVersion.DRAFT_2019_09, OptionPreset.PLAIN_JSON);
-    configBuilderNotJackson.forTypesInGeneral().withAdditionalPropertiesResolver((scope) -> {
-      if (scope.getType().isInstanceOf(Map.class)) {
-        return scope.getTypeParameterFor(Map.class, 1);
-      }
-      return null;
+    // Then
+    Exception e = assertThrows(InvalidRecordInput.class, () -> {
+      JsonSchemaLibrary.validatePostRequest(request);
     });
 
-    SchemaGeneratorConfig configNotJackson = configBuilderNotJackson.build();
-    SchemaGenerator generatorNotJackson = new SchemaGenerator(configNotJackson);
-
-    var handleSchemaNotJackson = generatorNotJackson.generateSchema(HandleRecordRequest.class);
-    log.info(handleSchemaNotJackson.toPrettyString());
+    assertThat(e.getMessage()).contains(missingAttribute);
   }
+
+
 
 }
