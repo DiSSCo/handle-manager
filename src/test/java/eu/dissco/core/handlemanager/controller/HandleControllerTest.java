@@ -151,13 +151,6 @@ class HandleControllerTest {
   }
 
   @Test
-  void testSearchByPhysSpecId(){
-
-
-
-  }
-
-  @Test
   void testResolveBatchHandle() throws Exception {
     // Given
     List<byte[]> handles = new ArrayList<>();
