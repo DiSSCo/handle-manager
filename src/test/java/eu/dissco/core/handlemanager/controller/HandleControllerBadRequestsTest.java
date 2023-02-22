@@ -25,7 +25,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecime
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDoiRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequestBatch;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSearchByPhysIdRequest;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;

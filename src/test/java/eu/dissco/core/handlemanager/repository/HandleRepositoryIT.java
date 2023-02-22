@@ -3,7 +3,6 @@ package eu.dissco.core.handlemanager.repository;
 
 import static eu.dissco.core.handlemanager.database.jooq.Tables.HANDLES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
-import static eu.dissco.core.handlemanager.domain.PidRecords.IN_COLLECTION_FACILITY;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_NUMBER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PHYSICAL_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
@@ -49,9 +48,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
 
   @BeforeEach
   void setup() {
-    var mapper = new ObjectMapper().findAndRegisterModules()
-        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    handleRep = new HandleRepository(context, mapper);
+    handleRep = new HandleRepository(context);
   }
 
   @AfterEach

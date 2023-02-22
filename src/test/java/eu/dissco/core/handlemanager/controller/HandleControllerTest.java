@@ -11,6 +11,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.VALID_PID_STATUS;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_LIST_STR;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PREFIX;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SUFFIX;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
@@ -453,18 +454,14 @@ class HandleControllerTest {
     // Given
 
     byte[] handle = HANDLE.getBytes();
-    ObjectNode archiveRootNode = mapper.createObjectNode();
-    archiveRootNode.set("data", givenJsonNode(HANDLE, RECORD_TYPE_HANDLE,
-        mapper.valueToTree(genTombstoneRecordRequestObject())));
-    ObjectNode archiveRequestNode = (ObjectNode) archiveRootNode.get(NODE_DATA)
-        .get(NODE_ATTRIBUTES);
 
     var responseExpected = givenRecordResponseWriteArchive(List.of(handle));
-    given(service.archiveRecordBatch(List.of(archiveRootNode))).willReturn(
+    var archiveRequest = givenArchiveRequest();
+    given(service.archiveRecordBatch(List.of(archiveRequest))).willReturn(
         responseExpected);
 
     // When
-    var responseReceived = controller.archiveRecord(PREFIX, SUFFIX, archiveRootNode);
+    var responseReceived = controller.archiveRecord(PREFIX, SUFFIX, archiveRequest);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -477,17 +474,9 @@ class HandleControllerTest {
     List<byte[]> handles = List.of(
         HANDLE.getBytes(StandardCharsets.UTF_8),
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-
     List<JsonNode> archiveRequestList = new ArrayList<>();
-
-    for (byte[] handle : handles) {
-      ObjectNode archiveRootNode = mapper.createObjectNode();
-      archiveRootNode.set("data", givenJsonNode(HANDLE, RECORD_TYPE_HANDLE,
-          mapper.valueToTree(genTombstoneRecordRequestObject())));
-      archiveRequestList.add(archiveRootNode.deepCopy());
-    }
+    handles.forEach(h -> archiveRequestList.add(givenArchiveRequest()));
     var responseExpected = givenRecordResponseWriteArchive(handles);
-
     given(service.archiveRecordBatch(archiveRequestList)).willReturn(responseExpected);
 
     // When
@@ -497,6 +486,16 @@ class HandleControllerTest {
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
+
+  private JsonNode givenArchiveRequest(){
+    ObjectNode archiveRequest = MAPPER.createObjectNode();
+    ObjectNode archiveRequestData = MAPPER.createObjectNode();
+    archiveRequestData.put(NODE_ID, HANDLE);
+    archiveRequestData.set(NODE_ATTRIBUTES, MAPPER.valueToTree(genTombstoneRecordRequestObject()));
+    archiveRequest.set(NODE_DATA, archiveRequestData);
+    return archiveRequest;
+  }
+
 
   @Test
   void testArchiveRecordBadRequest() {
@@ -510,37 +509,6 @@ class HandleControllerTest {
     assertThrows(InvalidRecordInput.class, () -> {
       controller.updateRecord(PREFIX, SUFFIX, archiveRequestNode);
     });
-  }
-
-
-  @Test
-  void testCheckRequestNodesPresent() {
-    String message = "INVALID INPUT. Missing node \" %s \"";
-    var noData = excludeValue("data");
-    var noType = excludeValue("type");
-    var noId = excludeValue("id");
-    var noAttributes = excludeValue("attributes");
-
-    // Then
-    Exception exData = assertThrows(InvalidRecordInput.class, () -> {
-      controller.updateRecord(PREFIX, SUFFIX, noData);
-    });
-    assertThat(exData).hasMessage(String.format(message, "data"));
-
-    Exception exType = assertThrows(InvalidRecordInput.class, () -> {
-      controller.updateRecord(PREFIX, SUFFIX, noType);
-    });
-    assertThat(exType).hasMessage(String.format(message, "type"));
-
-    Exception exId = assertThrows(InvalidRecordInput.class, () -> {
-      controller.updateRecords(List.of(noId));
-    });
-    assertThat(exId).hasMessage(String.format(message, "id"));
-
-    Exception exAttribute = assertThrows(InvalidRecordInput.class, () -> {
-      controller.updateRecord(PREFIX, SUFFIX, noAttributes);
-    });
-    assertThat(exAttribute).hasMessage(String.format(message, "attributes"));
   }
 
   private JsonNode excludeValue(String val) {

@@ -1,9 +1,6 @@
 package eu.dissco.core.handlemanager.domain.requests.attributes;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-import java.nio.charset.StandardCharsets;
 import lombok.Getter;
 import lombok.ToString;
 
@@ -14,11 +11,11 @@ public class TombstoneRecordRequest {
   @JsonProperty(required = true)
   private final String tombstoneText;
 
-  private final String[] tombstonePids;;
+  private final String[] tombstonePids;
 
   public TombstoneRecordRequest(String tombstoneText) {
     this.tombstoneText = tombstoneText;
-    this.tombstonePids = null;
+    this.tombstonePids = new String[]{};
   }
 
   public TombstoneRecordRequest(String tombstoneText, String[] tombstonePids) {
