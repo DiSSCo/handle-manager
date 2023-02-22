@@ -56,7 +56,6 @@ class PidTypeServiceTest {
   void testPidTypeRecordResolutionHandle() throws Exception {
     // Given
     initTestPidTypeRecordHandle();
-    String expected = PTR_HANDLE_RECORD;
 
     given(handleRep.resolveHandleAttributes(recordPid)).willReturn(typeRecord);
 
@@ -64,7 +63,7 @@ class PidTypeServiceTest {
     String returned = pidTypeService.resolveTypePid(PID_ISSUER_PID);
 
     // Then
-    assertThat(expected).isEqualTo(returned);
+    assertThat(returned).isEqualTo(PTR_HANDLE_RECORD);
   }
 
   @Test

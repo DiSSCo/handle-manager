@@ -61,7 +61,7 @@ public class PidTypeService {
 
     objectNode.put("pid", pid);
     objectNode.put("pidType", pidType);
-    objectNode.put("primaryNamefromPid", primaryNameFromPid);
+    objectNode.put("primaryNameFromPid", primaryNameFromPid);
 
     if (pidType.equals("doi")) {
       objectNode.put("registrationAgencyDoiName", registrationAgencyDoiName);

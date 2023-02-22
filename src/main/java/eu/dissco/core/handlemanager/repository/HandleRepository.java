@@ -89,6 +89,7 @@ public class HandleRepository {
         .on(HANDLES.HANDLE.eq(hostInstitutionTable.field(HANDLES.HANDLE)))
         .join(physicalIdentifierTable)
         .on(HANDLES.HANDLE.eq(physicalIdentifierTable.field(HANDLES.HANDLE)))
+        .where(HANDLES.TYPE.notEqual(HS_ADMIN.getBytes(StandardCharsets.UTF_8)))
         .fetch(this::mapToAttribute);
   }
 

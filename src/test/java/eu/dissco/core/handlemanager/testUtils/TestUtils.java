@@ -146,12 +146,12 @@ public class TestUtils {
     if (isDoi) {
       objectNode.put("pid", PTR_PID_DOI);
       objectNode.put("pidType", PTR_TYPE_DOI);
-      objectNode.put("primaryNamefromPid", PTR_PRIMARY_NAME);
+      objectNode.put("primaryNameFromPid", PTR_PRIMARY_NAME);
       objectNode.put("registrationAgencyDoiName", PTR_REGISTRATION_DOI_NAME);
     } else {
       objectNode.put("pid", PTR_PID);
       objectNode.put("pidType", PTR_TYPE);
-      objectNode.put("primaryNamefromPid", PTR_PRIMARY_NAME);
+      objectNode.put("primaryNameFromPid", PTR_PRIMARY_NAME);
     }
     try {
       return mapper.writeValueAsString(objectNode);
