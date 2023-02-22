@@ -11,6 +11,8 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_DATE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_NUMBER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LOC;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LOC_REQ;
+import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
+import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.OBJECT_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PHYSICAL_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID;
@@ -44,6 +46,7 @@ import eu.dissco.core.handlemanager.domain.requests.attributes.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdentifier;
+import eu.dissco.core.handlemanager.domain.requests.attributes.PidTypeName;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PreservedOrLiving;
 import eu.dissco.core.handlemanager.domain.requests.attributes.TombstoneRecordRequest;
 import java.io.StringWriter;
@@ -89,6 +92,11 @@ public class TestUtils {
   //Digital Specimens
   public static final DigitalOrPhysical DIGITAL_OR_PHYSICAL_TESTVAL = DigitalOrPhysical.PHYSICAL;
   public static final String SPECIMEN_HOST_PID = "20.5000.1025/OTHER-TRIPLET";
+  public static final PidTypeName SPECIMEN_HOST_TESTVAL = new PidTypeName(
+      SPECIMEN_HOST_PID,
+      "ROR",
+      "Host institution"
+  );
   public static final String IN_COLLECTION_FACILITY_TESTVAL = "20.5000.1025/OTHER-TRIPLET";
   //Botany Specimens
   public static final String OBJECT_TYPE_TESTVAL = "Herbarium Sheet";
@@ -384,9 +392,19 @@ public class TestUtils {
 
   public static TombstoneRecordRequest genTombstoneRecordRequestObject() {
     return new TombstoneRecordRequest(
-        HANDLE,
         TOMBSTONE_TEXT
     );
+  }
+
+  public static ObjectNode givenSearchByPhysIdRequest() {
+    var request = MAPPER.createObjectNode();
+    var dataNode = MAPPER.createObjectNode();
+    var attributeNode = MAPPER.createObjectNode();
+    attributeNode.set(PHYSICAL_IDENTIFIER, MAPPER.valueToTree(PHYSICAL_IDENTIFIER_OBJ));
+    attributeNode.set(SPECIMEN_HOST, MAPPER.valueToTree(SPECIMEN_HOST_TESTVAL));
+    dataNode.set(NODE_ATTRIBUTES, attributeNode);
+    request.set(NODE_DATA, dataNode);
+    return request;
   }
 
   public static JsonApiWrapperRead givenRecordResponseRead(List<byte[]> handles, String path,

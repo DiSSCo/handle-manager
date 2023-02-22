@@ -6,6 +6,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.OBJECT_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PHYSICAL_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
@@ -26,6 +27,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDoiRecordReque
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequestBatch;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSearchByPhysIdRequest;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -60,6 +62,33 @@ class HandleControllerBadRequestsTest {
   @BeforeEach
   void setup() {
     controller = new HandleController(service, schemaInitializer);
+  }
+
+  @Test
+  void testBadSearchByPhysIdRequestMissingAttribute(){
+    // Given
+    var request = givenSearchByPhysIdRequest();
+    ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(PHYSICAL_IDENTIFIER);
+
+    // Then
+    Exception e = assertThrows(InvalidRecordInput.class, () -> {
+      controller.searchByPhysicalSpecimenId(request);
+    });
+    assertThat(e.getMessage()).contains(PHYSICAL_IDENTIFIER);
+  }
+
+  @Test
+  void testBadSearchByPhysIdRequestUnknownProperty(){
+    // Given
+    var request = givenSearchByPhysIdRequest();
+    String badKey = "badKey";
+    request.put(badKey, "badVal");
+
+    // Then
+    Exception e = assertThrows(InvalidRecordInput.class, () -> {
+      controller.searchByPhysicalSpecimenId(request);
+    });
+    assertThat(e.getMessage()).contains(badKey);
   }
 
   @Test

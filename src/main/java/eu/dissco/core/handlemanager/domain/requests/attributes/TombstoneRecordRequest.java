@@ -12,16 +12,18 @@ import lombok.ToString;
 public class TombstoneRecordRequest {
 
   @JsonProperty(required = true)
-  @JsonAlias("id")
-  private final byte[] handle;
-  @JsonProperty(required = true)
   private final String tombstoneText;
-  @JsonProperty(required = true)
-  private final String[] tombstonePids = new String[]{};
 
-  public TombstoneRecordRequest(String handle, String tombstoneText) {
-    this.handle = handle.getBytes(StandardCharsets.UTF_8);
+  private final String[] tombstonePids;;
+
+  public TombstoneRecordRequest(String tombstoneText) {
     this.tombstoneText = tombstoneText;
+    this.tombstonePids = null;
+  }
+
+  public TombstoneRecordRequest(String tombstoneText, String[] tombstonePids) {
+    this.tombstoneText = tombstoneText;
+    this.tombstonePids = tombstonePids;
   }
 
 }

@@ -8,6 +8,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
@@ -17,6 +18,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PHYSICAL_IDENTIFIER_OBJ;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_STATUS_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PTR_HANDLE_RECORD;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyAttributes;
@@ -35,6 +37,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordRespon
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteArchive;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteGeneric;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSearchByPhysIdRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -145,20 +148,15 @@ class HandleServiceTest {
   @Test
   void testSearchByPhysicalSpecimenId() throws Exception {
     // Given
-    var physicalSpecimenId = MAPPER.writeValueAsString(PHYSICAL_IDENTIFIER_OBJ);
-    var request = MAPPER.createObjectNode();
-    var dataNode = MAPPER.createObjectNode();
-    var attributeNode = MAPPER.createObjectNode();
-    attributeNode.put(PHYSICAL_IDENTIFIER, physicalSpecimenId);
-    attributeNode.put(IN_COLLECTION_FACILITY, IN_COLLECTION_FACILITY_TESTVAL);
-    dataNode.set(NODE_ATTRIBUTES, attributeNode);
-    request.set(NODE_DATA, dataNode);
+    var request = givenSearchByPhysIdRequest();
+    var physicalSpecimenId = MAPPER.writeValueAsBytes(PHYSICAL_IDENTIFIER_OBJ);
+    var specimenHost = MAPPER.writeValueAsBytes(SPECIMEN_HOST_TESTVAL);
+
     var expectedAttributes = genDigitalSpecimenAttributes(HANDLE.getBytes(StandardCharsets.UTF_8));
     var responseExpected = givenRecordResponseWriteGeneric(
         List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), RECORD_TYPE_DS);
 
-    given(handleRep.resolveHandleAttributesByPhysicalIdentifier(physicalSpecimenId.getBytes(
-            StandardCharsets.UTF_8), IN_COLLECTION_FACILITY_TESTVAL.getBytes(StandardCharsets.UTF_8)))
+    given(handleRep.resolveHandleAttributesByPhysicalIdentifier(physicalSpecimenId, specimenHost))
         .willReturn(expectedAttributes);
 
     // When

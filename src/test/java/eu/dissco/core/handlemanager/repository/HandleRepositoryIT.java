@@ -7,11 +7,13 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.IN_COLLECTION_FACIL
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_NUMBER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PHYSICAL_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
+import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_STATUS_TESTVAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributesAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordFullAttributes;
@@ -185,11 +187,11 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     // Given
     PhysicalIdentifier physId = new PhysicalIdentifier("abc", "physicalId");
     String physicalIdentifier = MAPPER.writeValueAsString(physId);
-    String targetHostFacility = "naturalis";
+    String targetHostFacility = MAPPER.writeValueAsString(SPECIMEN_HOST_TESTVAL);
     String nonTargetHostFacility = "NHM";
     List<HandleAttribute> expectedResponse = new ArrayList<>() {
       {
-        add(new HandleAttribute(1, HANDLE.getBytes(StandardCharsets.UTF_8), IN_COLLECTION_FACILITY,
+        add(new HandleAttribute(1, HANDLE.getBytes(StandardCharsets.UTF_8), SPECIMEN_HOST,
             targetHostFacility.getBytes(StandardCharsets.UTF_8)));
         add(new HandleAttribute(2, HANDLE.getBytes(StandardCharsets.UTF_8), PHYSICAL_IDENTIFIER,
             physicalIdentifier.getBytes(StandardCharsets.UTF_8)));
@@ -198,7 +200,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
 
     List<HandleAttribute> postAttributes = new ArrayList<>(expectedResponse);
     postAttributes.add(
-        new HandleAttribute(1, HANDLE_ALT.getBytes(StandardCharsets.UTF_8), IN_COLLECTION_FACILITY,
+        new HandleAttribute(1, HANDLE_ALT.getBytes(StandardCharsets.UTF_8), SPECIMEN_HOST,
             nonTargetHostFacility.getBytes(StandardCharsets.UTF_8)));
     postAttributes.add(
         new HandleAttribute(2, HANDLE_ALT.getBytes(StandardCharsets.UTF_8), PHYSICAL_IDENTIFIER,

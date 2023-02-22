@@ -112,15 +112,13 @@ public class HandleService {
     return jsonFormatSingleRecord(dbRecord);
   }
 
-  public JsonApiWrapperWrite searchByPhysicalSpecimenId(JsonNode request) {
-    byte[] physicalIdentifier = request.get(NODE_DATA).get(NODE_ATTRIBUTES).get(PHYSICAL_IDENTIFIER)
-        .asText().getBytes(
-            StandardCharsets.UTF_8);
-    byte[] inCollectionFacility = request.get(NODE_DATA).get(NODE_ATTRIBUTES)
-        .get(IN_COLLECTION_FACILITY).asText().getBytes(
-            StandardCharsets.UTF_8);
+  public JsonApiWrapperWrite searchByPhysicalSpecimenId(JsonNode request)
+      throws JsonProcessingException {
+    var physicalIdentifier = mapper.writeValueAsBytes(request.get(NODE_DATA).get(NODE_ATTRIBUTES).get(PHYSICAL_IDENTIFIER));
+    var specimenHost = mapper.writeValueAsBytes(request.get(NODE_DATA).get(NODE_ATTRIBUTES)
+        .get(SPECIMEN_HOST));
 
-    var returnedRows = handleRep.resolveHandleAttributesByPhysicalIdentifier(physicalIdentifier, inCollectionFacility);
+    var returnedRows = handleRep.resolveHandleAttributesByPhysicalIdentifier(physicalIdentifier, specimenHost);
     var recordMap = mapRecords(returnedRows);
     if (recordMap.size() >1){
       log.warn("More than one handle record corresponds to the provided collection facility and physical identifier.");

@@ -6,7 +6,9 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.VALID_PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaLibrary.validatePutRequest;
 import static eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaLibrary.validateResolveRequest;
+import static eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaLibrary.validateSearchByPhysIdRequest;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
@@ -118,10 +120,9 @@ public class HandleController {
   }
 
   @PostMapping("/records/localId")
-  public ResponseEntity<JsonApiWrapperWrite> searchByPhysicalSpecimenId(@RequestBody JsonNode request){
-
-    // TODO validate schema, test
-
+  public ResponseEntity<JsonApiWrapperWrite> searchByPhysicalSpecimenId(@RequestBody JsonNode request)
+      throws InvalidRecordInput, JsonProcessingException {
+    validateSearchByPhysIdRequest(request);
     return ResponseEntity.status(HttpStatus.OK).body(service.searchByPhysicalSpecimenId(request));
   }
 

@@ -6,6 +6,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.IN_COLLECTION_FACIL
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_NUMBER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PHYSICAL_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
+import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_RECORD_FIELDS_BYTES;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -73,15 +74,12 @@ public class HandleRepository {
         .fetch(this::mapToAttribute);
   }
 
-  public List<HandleAttribute> resolveHandleAttributesByPhysicalIdentifier(byte[] physicalIdentifier, byte[] inCollectionFacility){
-    log.info("physical identifier: " + physicalIdentifier);
-    log.info("in collection: " + inCollectionFacility);
-
-    var collectionFacilityTable = context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
+  public List<HandleAttribute> resolveHandleAttributesByPhysicalIdentifier(byte[] physicalIdentifier, byte[] hostInstitution){
+    var hostInstitutionTable = context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
         .from(HANDLES)
-        .where(HANDLES.TYPE.eq(IN_COLLECTION_FACILITY.getBytes(StandardCharsets.UTF_8)))
-        .and((HANDLES.DATA).eq(inCollectionFacility))
-        .asTable("collectionFacilityTable");
+        .where(HANDLES.TYPE.eq(SPECIMEN_HOST.getBytes(StandardCharsets.UTF_8)))
+        .and((HANDLES.DATA).eq(hostInstitution))
+        .asTable("hostInstitutionTable");
 
     var physicalIdentifierTable = context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
         .from(HANDLES)
@@ -91,8 +89,8 @@ public class HandleRepository {
 
     return context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
         .from(HANDLES)
-        .join(collectionFacilityTable)
-        .on(HANDLES.HANDLE.eq(collectionFacilityTable.field(HANDLES.HANDLE)))
+        .join(hostInstitutionTable)
+        .on(HANDLES.HANDLE.eq(hostInstitutionTable.field(HANDLES.HANDLE)))
         .join(physicalIdentifierTable)
         .on(HANDLES.HANDLE.eq(physicalIdentifierTable.field(HANDLES.HANDLE)))
         .fetch(this::mapToAttribute);

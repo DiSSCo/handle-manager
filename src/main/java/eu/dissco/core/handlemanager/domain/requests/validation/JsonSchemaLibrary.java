@@ -21,6 +21,7 @@ import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
 import eu.dissco.core.handlemanager.domain.requests.PutRequest;
 import eu.dissco.core.handlemanager.domain.requests.ResolveRequest;
+import eu.dissco.core.handlemanager.domain.requests.SearchByPhysIdRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DoiRecordRequest;
@@ -35,6 +36,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class JsonSchemaLibrary {
+  // JsonNodes
+  private static JsonNode postReqJsonNode;
+  private static JsonNode patchReqJsonNode;
+  private static JsonNode putReqJsonNode;
+  private static JsonNode resolveReqJsonNode;
+  private static JsonNode searchByPhysIdReqJsonNode;
   private static JsonNode handlePostReqJsonNode;
   private static JsonNode handlePatchReqJsonNode;
   private static JsonNode doiPostReqJsonNode;
@@ -43,38 +50,25 @@ public class JsonSchemaLibrary {
   private static JsonNode digitalSpecimenPatchReqJsonNode;
   private static JsonNode digitalSpecimenBotanyPostReqJsonNode;
   private static JsonNode digitalSpecimenBotanyPatchReqJsonNode;
-  private static JsonNode tombstoneReqJsonNode;
-  private static JsonNode postReqJsonNode;
-  private static JsonNode patchReqJsonNode;
-  private static JsonNode putReqJsonNode;
-  private static JsonNode resolveReqJsonNode;
   private static JsonNode mediaObjectPostReqJsonNode;
   private static JsonNode mediaObjectPatchReqJsonNode;
+  private static JsonNode tombstoneReqJsonNode;
+  // Schemas
   private static JsonSchema postReqSchema;
   private static JsonSchema patchReqSchema;
   private static JsonSchema putReqSchema;
   private static JsonSchema resolveReqSchema;
-
+  private static JsonSchema searchByPhysIdReqSchema;
   private static JsonSchema handlePostReqSchema;
-
   private static JsonSchema handlePatchReqSchema;
-
   private static JsonSchema doiPostReqSchema;
-
   private static JsonSchema doiPatchReqSchema;
-
   private static JsonSchema digitalSpecimenPostReqSchema;
-
   private static JsonSchema digitalSpecimenPatchReqSchema;
-
   private static JsonSchema digitalSpecimenBotanyPostReqSchema;
-
   private static JsonSchema digitalSpecimenBotanyPatchReqSchema;
-
   private static JsonSchema mediaObjectPostReqSchema;
-
   private static JsonSchema mediaObjectPatchReqSchema;
-
   private static JsonSchema tombstoneReqSchema;
 
   private JsonSchemaLibrary() {
@@ -82,8 +76,7 @@ public class JsonSchemaLibrary {
   }
 
   public static void init(SchemaGeneratorConfig postRequestConfig,
-      SchemaGeneratorConfig patchRequestConfig,
-      SchemaGeneratorConfig requestConfig) {
+      SchemaGeneratorConfig patchRequestConfig, SchemaGeneratorConfig requestConfig) {
     setJsonNodesJacksonProperties(postRequestConfig);
     setJsonNodesLenientRequirements(patchRequestConfig);
     setJsonNodesRequests(requestConfig);
@@ -99,6 +92,7 @@ public class JsonSchemaLibrary {
         DigitalSpecimenBotanyRequest.class);
     mediaObjectPostReqJsonNode = schemaGenerator.generateSchema(MediaObjectRequest.class);
     tombstoneReqJsonNode = schemaGenerator.generateSchema(TombstoneRecordRequest.class);
+    searchByPhysIdReqJsonNode = schemaGenerator.generateSchema(SearchByPhysIdRequest.class);
   }
 
   private static void setJsonNodesLenientRequirements(SchemaGeneratorConfig patchRequestConfig) {
@@ -111,7 +105,7 @@ public class JsonSchemaLibrary {
     mediaObjectPatchReqJsonNode = schemaGenerator.generateSchema(MediaObjectRequest.class);
   }
 
-  private static void setJsonNodesRequests(SchemaGeneratorConfig requestConfig){
+  private static void setJsonNodesRequests(SchemaGeneratorConfig requestConfig) {
     var schemaGenerator = new SchemaGenerator(requestConfig);
     postReqJsonNode = schemaGenerator.generateSchema(PostRequest.class);
     patchReqJsonNode = schemaGenerator.generateSchema(PatchRequest.class);
@@ -126,6 +120,7 @@ public class JsonSchemaLibrary {
     patchReqSchema = factory.getSchema(patchReqJsonNode);
     putReqSchema = factory.getSchema(putReqJsonNode);
     resolveReqSchema = factory.getSchema(resolveReqJsonNode);
+    searchByPhysIdReqSchema = factory.getSchema(searchByPhysIdReqJsonNode);
 
     handlePostReqSchema = factory.getSchema(handlePostReqJsonNode);
     doiPostReqSchema = factory.getSchema(doiPostReqJsonNode);
@@ -145,14 +140,12 @@ public class JsonSchemaLibrary {
   public static void validatePostRequest(JsonNode requestRoot) throws InvalidRecordInput {
     var validationErrors = postReqSchema.validate(requestRoot);
     if (!validationErrors.isEmpty()) {
-      throw new InvalidRecordInput(
-          setErrorMessage(validationErrors, "POST"));
+      throw new InvalidRecordInput(setErrorMessage(validationErrors, "POST"));
     }
     String type = requestRoot.get(NODE_DATA).get(NODE_TYPE).asText();
     var attributes = requestRoot.get(NODE_DATA).get(NODE_ATTRIBUTES);
     switch (type) {
-      case RECORD_TYPE_HANDLE ->
-          validateRequestAttributes(attributes, handlePostReqSchema, type);
+      case RECORD_TYPE_HANDLE -> validateRequestAttributes(attributes, handlePostReqSchema, type);
       case RECORD_TYPE_DOI -> validateRequestAttributes(attributes, doiPostReqSchema, type);
       case RECORD_TYPE_DS ->
           validateRequestAttributes(attributes, digitalSpecimenPostReqSchema, type);
@@ -160,7 +153,7 @@ public class JsonSchemaLibrary {
           validateRequestAttributes(attributes, digitalSpecimenBotanyPostReqSchema, type);
       case RECORD_TYPE_MEDIA ->
           validateRequestAttributes(attributes, mediaObjectPostReqSchema, type);
-      default -> throw new InvalidRecordInput("Invalid Request. Reason: Invalid type: "+ type);
+      default -> throw new InvalidRecordInput("Invalid Request. Reason: Invalid type: " + type);
     }
   }
 
@@ -181,8 +174,7 @@ public class JsonSchemaLibrary {
     String type = requestRoot.get(NODE_DATA).get(NODE_TYPE).asText();
     var attributes = requestRoot.get(NODE_DATA).get(NODE_ATTRIBUTES);
     switch (type) {
-      case RECORD_TYPE_HANDLE ->
-          validateRequestAttributes(attributes, handlePatchReqSchema, type);
+      case RECORD_TYPE_HANDLE -> validateRequestAttributes(attributes, handlePatchReqSchema, type);
       case RECORD_TYPE_DOI -> validateRequestAttributes(attributes, doiPatchReqSchema, type);
       case RECORD_TYPE_DS ->
           validateRequestAttributes(attributes, digitalSpecimenPatchReqSchema, type);
@@ -200,7 +192,15 @@ public class JsonSchemaLibrary {
       throw new InvalidRecordInput(setErrorMessage(validationErrors, "POST (Resolve)"));
     }
   }
-  
+
+  public static void validateSearchByPhysIdRequest(JsonNode requestRoot) throws InvalidRecordInput {
+    var validationErrors = searchByPhysIdReqSchema.validate(requestRoot);
+    if (!validationErrors.isEmpty()){
+      throw new InvalidRecordInput(setErrorMessage(validationErrors, "Search by physical specimen id"));
+    }
+
+  }
+
   private static void validateRequestAttributes(JsonNode requestAttributes, JsonSchema schema,
       String type) throws InvalidRecordInput {
     var validationErrors = schema.validate(requestAttributes);
@@ -209,30 +209,28 @@ public class JsonSchemaLibrary {
     }
   }
 
-  private static String setErrorMessage(Set<ValidationMessage> validationErrors, String type){
+  private static String setErrorMessage(Set<ValidationMessage> validationErrors, String type) {
     Set<String> missingAttributes = new HashSet<>();
     Set<String> unrecognizedAttributes = new HashSet<>();
     Set<String> otherErrors = new HashSet<>();
 
-    for (var validationError: validationErrors){
-      if (validationError.getType().equals("required")){
+    for (var validationError : validationErrors) {
+      if (validationError.getType().equals("required")) {
         missingAttributes.add(Arrays.toString(validationError.getArguments()));
-      }
-      else if (validationError.getType().equals("additionalProperties")){
+      } else if (validationError.getType().equals("additionalProperties")) {
         unrecognizedAttributes.add(Arrays.toString(validationError.getArguments()));
-      }
-      else {
+      } else {
         otherErrors.add(validationError.getMessage());
       }
     }
     String message = "Invalid request body for request type " + type + ".";
-    if (!missingAttributes.isEmpty()){
+    if (!missingAttributes.isEmpty()) {
       message = message + "\nMissing attributes: " + missingAttributes;
     }
-    if (!unrecognizedAttributes.isEmpty()){
+    if (!unrecognizedAttributes.isEmpty()) {
       message = message + "\nUnrecognized attributes: " + unrecognizedAttributes;
     }
-    if (!otherErrors.isEmpty()){
+    if (!otherErrors.isEmpty()) {
       message = message + "\nOther errors: " + otherErrors;
     }
     return message;
