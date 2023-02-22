@@ -7,6 +7,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_MEDIA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.VALID_PID_STATUS;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
@@ -19,6 +20,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecime
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDoiRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestAltLoc;
@@ -271,6 +273,25 @@ class HandleControllerTest {
   }
 
   @Test
+  void testCreateMediaObjectRecord() throws Exception {
+    // Given
+    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
+    HandleRecordRequest requestObject = genMediaRequestObject();
+    ObjectNode requestNode = genCreateRecordRequest(requestObject, RECORD_TYPE_MEDIA);
+    JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(handle),
+        RECORD_TYPE_MEDIA);
+
+    given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
+
+    // When
+    var responseReceived = controller.createRecord(requestNode);
+
+    // Then
+    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  @Test
   void testCreateHandleRecordBatch() throws Exception {
     // Given
     List<byte[]> handles = List.of(
@@ -355,6 +376,29 @@ class HandleControllerTest {
     });
 
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_DS_BOTANY);
+    given(service.createRecords(requests)).willReturn(responseExpected);
+
+    // When
+    var responseReceived = controller.createRecords(requests);
+
+    // Then
+    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testCreateMediaRecordBatch() throws Exception {
+    // Given
+    List<byte[]> handles = List.of(
+        HANDLE.getBytes(StandardCharsets.UTF_8),
+        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
+
+    List<JsonNode> requests = new ArrayList<>();
+    handles.forEach(handle -> {
+      requests.add(genCreateRecordRequest(genMediaRequestObject(), RECORD_TYPE_MEDIA));
+    });
+
+    var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_DOI);
     given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When

@@ -11,6 +11,8 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_DATE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_NUMBER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LOC;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LOC_REQ;
+import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_URL;
+import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_HASH;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.OBJECT_TYPE;
@@ -24,6 +26,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_MEDIA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_TOMBSTONE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
@@ -312,6 +315,27 @@ public class TestUtils {
     return handleRecord;
   }
 
+  public static List<HandleAttribute> genMediaObjectAttributes(byte[] handle)
+      throws JsonProcessingException {
+    List<HandleAttribute> handleRecord = genDoiRecordAttributes(handle);
+
+    // 14 Media Hash
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(MEDIA_HASH), handle,
+        MEDIA_HASH, MEDIA_HASH_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+
+    // 15 Media Url
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(MEDIA_URL), handle,
+        MEDIA_URL, MEDIA_URL_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+
+    // 17 : Physical Identifier
+    // Encoding here is UTF-8
+    var physicalIdentifier = MAPPER.writeValueAsBytes(PHYSICAL_IDENTIFIER_OBJ);
+    handleRecord.add(
+        new HandleAttribute(FIELD_IDX.get(PHYSICAL_IDENTIFIER), handle, PHYSICAL_IDENTIFIER,
+            physicalIdentifier));
+    return handleRecord;
+  }
+
   public static <T extends HandleRecordRequest> ObjectNode genCreateRecordRequest(T request,
       String recordType) {
     ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
@@ -527,6 +551,9 @@ public class TestUtils {
       case RECORD_TYPE_DS_BOTANY -> {
         return genDigitalSpecimenBotanyAttributes(handle);
       }
+      case RECORD_TYPE_MEDIA -> {
+        return genMediaObjectAttributes(handle);
+      }
       default -> {
         return null;
       }
@@ -593,7 +620,6 @@ public class TestUtils {
       throws JsonProcessingException {
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode rootNode = mapper.createObjectNode();
-    ObjectNode subNode;
 
     for (HandleAttribute row : dbRecord) {
       String type = row.type();
@@ -602,7 +628,7 @@ public class TestUtils {
         continue; // We never want HS_ADMIN in our json
       }
       if (FIELD_IS_PID_RECORD.contains(type) || type.equals(PHYSICAL_IDENTIFIER)) {
-        subNode = mapper.readValue(data, ObjectNode.class);
+        ObjectNode subNode = mapper.readValue(data, ObjectNode.class);
         rootNode.set(type, subNode);
       } else {
         rootNode.put(type, data);

@@ -11,6 +11,8 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_DATE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_NUMBER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LOC;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LOC_REQ;
+import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_URL;
+import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_HASH;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
@@ -26,6 +28,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_MEDIA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_TOMBSTONE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
@@ -47,6 +50,7 @@ import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenBo
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.attributes.MediaObjectRequest;
 import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
@@ -229,6 +233,12 @@ public class HandleService {
             handleAttributes.addAll(
                 prepareDigitalSpecimenBotanyRecordAttributes(requestObject, handles.remove(0)));
           }
+          case RECORD_TYPE_MEDIA -> {
+            MediaObjectRequest requestObject = mapper.treeToValue(
+                dataNode.get(NODE_ATTRIBUTES), MediaObjectRequest.class);
+            handleAttributes.addAll(
+                prepareMediaObjectAttributes(requestObject, handles.remove(0)));
+          }
           default -> throw new InvalidRecordInput(
               INVALID_TYPE_ERROR + type);
         }
@@ -238,7 +248,6 @@ public class HandleService {
                 + e.getMessage());
       }
     }
-
     handleRep.postAttributesToDb(recordTimestamp, handleAttributes);
     var postedRecordAttributes = fetchResolvedRecords(handlesPost);
 
@@ -277,7 +286,6 @@ public class HandleService {
 
     List<JsonApiDataLinks> dataList = new ArrayList<>();
     for (JsonNode updatedRecord : updatedRecords) {
-      log.info(updatedRecord.get(PID).asText());
       dataList.add(wrapData(updatedRecord, getRecordType(updatedRecord, recordTypes)));
     }
     return new JsonApiWrapperWrite(dataList);
@@ -573,6 +581,28 @@ public class HandleService {
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(PRESERVED_OR_LIVING), handle, PRESERVED_OR_LIVING,
             request.getPreservedOrLiving().getBytes()));
+
+    return handleRecord;
+  }
+
+  private List<HandleAttribute> prepareMediaObjectAttributes(
+      MediaObjectRequest request, byte[] handle)
+      throws PidResolutionException, PidServiceInternalError, JsonProcessingException {
+    var handleRecord = prepareDoiRecordAttributes(request, handle);
+
+    // 14 Media Hash
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(MEDIA_HASH), handle,
+        PHYSICAL_IDENTIFIER, request.getMediaHash().getBytes(StandardCharsets.UTF_8)));
+
+    // 15 Media Url
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(MEDIA_URL), handle,
+        PHYSICAL_IDENTIFIER, request.getMediaUrl().getBytes(StandardCharsets.UTF_8)));
+
+    // 17 : Physical Identifier
+    // Encoding here is UTF-8
+    var physicalIdentifier = mapper.writeValueAsBytes(request.getPhysicalIdentifier());
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(PHYSICAL_IDENTIFIER), handle,
+        PHYSICAL_IDENTIFIER, physicalIdentifier));
 
     return handleRecord;
   }

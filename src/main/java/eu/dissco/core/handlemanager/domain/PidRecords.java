@@ -23,7 +23,7 @@ public class PidRecords {
   public static final String REFERENT_DOI_NAME = "referentDoiName";
   public static final String REFERENT = "referent";
   // Media Object
-  public static final String MEIDA_HASH = "mediaHash";
+  public static final String MEDIA_HASH = "mediaHash";
   public static final String MEDIA_URL = "mediaUrl";
   // Digital Specimen
   public static final String DIGITAL_OR_PHYSICAL = "digitalOrPhysical";
@@ -87,7 +87,7 @@ public class PidRecords {
       Map.entry(REFERENT_DOI_NAME, 12), Map.entry(REFERENT, 13), Map.entry(DIGITAL_OR_PHYSICAL, 14),
       Map.entry(SPECIMEN_HOST, 15), Map.entry(IN_COLLECTION_FACILITY, 16),
       Map.entry(PHYSICAL_IDENTIFIER, 17), Map.entry(OBJECT_TYPE, 18),
-      Map.entry(PRESERVED_OR_LIVING, 19));
+      Map.entry(PRESERVED_OR_LIVING, 19), Map.entry(MEDIA_HASH, 14), Map.entry(MEDIA_URL, 15));
 
   static { // Doi Record Fields
     Set<String> tmp = new HashSet<>(HANDLE_RECORD_FIELDS);

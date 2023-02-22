@@ -4,6 +4,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_MEDIA;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
@@ -23,6 +24,8 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDoiRecordReque
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributesAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaObjectAttributes;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordFullAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequestBatch;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestBatch;
@@ -77,20 +80,17 @@ class HandleServiceTest {
   private PidTypeService pidTypeService;
   @Mock
   private HandleGeneratorService hgService;
-  private ObjectMapper mapper;
   private HandleService service;
   private List<byte[]> handles;
   private MockedStatic<Instant> mockedStatic;
 
   @BeforeEach
-  void setup() throws Exception {
-    mapper = new ObjectMapper().findAndRegisterModules()
-        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+  void setup() {
     DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
     TransformerFactory transformerFactory = TransformerFactory.newInstance();
 
     service = new HandleService(handleRep, pidTypeService, hgService,
-        documentBuilderFactory, mapper, transformerFactory);
+        documentBuilderFactory, MAPPER, transformerFactory);
     initTime();
     initHandleList();
   }
@@ -236,6 +236,26 @@ class HandleServiceTest {
   }
 
   @Test
+  void testCreateMediaObjectRecord() throws Exception {
+    // Given
+    byte[] handle = handles.get(0);
+    var request = genCreateRecordRequest(genMediaRequestObject(),
+        RECORD_TYPE_MEDIA);
+    var responseExpected = givenRecordResponseWrite(List.of(handle), RECORD_TYPE_MEDIA);
+    List<HandleAttribute> mediaObject = genMediaObjectAttributes(handle);
+
+    given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(mediaObject);
+    given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
+
+    // When
+    var responseReceived = service.createRecords(List.of(request));
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
   void testCreateHandleRecordBatch() throws Exception {
     // Given
     List<HandleAttribute> flatList = new ArrayList<>();
@@ -333,6 +353,30 @@ class HandleServiceTest {
   }
 
   @Test
+  void testCreateMediaObjectBatch() throws Exception {
+    // Given
+    List<HandleAttribute> flatList = new ArrayList<>();
+
+    List<JsonNode> requests = new ArrayList<>();
+    for (byte[] handle : handles) {
+      requests.add(genCreateRecordRequest(genMediaRequestObject(), RECORD_TYPE_MEDIA));
+      flatList.addAll(genMediaObjectAttributes(handle));
+    }
+
+    var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_MEDIA);
+
+    given(hgService.genHandleList(handles.size())).willReturn(handles);
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
+    given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
+
+    // When
+    var responseReceived = service.createRecords(requests);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
   void testUpdateRecordLocation() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
@@ -414,7 +458,6 @@ class HandleServiceTest {
 
     given(handleRep.checkHandlesWritable(anyList())).willReturn(handles);
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(tombstoneAttributesFull);
-    log.info(archiveRequest.toString());
 
     // When
     var responseReceived = service.archiveRecordBatch(archiveRequest);
