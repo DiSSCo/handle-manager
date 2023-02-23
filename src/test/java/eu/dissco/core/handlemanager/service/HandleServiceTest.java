@@ -157,6 +157,24 @@ class HandleServiceTest {
   }
 
   @Test
+  void testSearchByPhysicalSpecimenIdBulk() throws Exception {
+    var request = givenSearchByPhysIdRequest();
+
+    var expectedAttributes = genDigitalSpecimenAttributes(HANDLE.getBytes(StandardCharsets.UTF_8));
+    var responseExpected = givenRecordResponseWriteGeneric(
+        List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), RECORD_TYPE_DS);
+
+    given(handleRep.searchByPhysicalIdentifier(anyList()))
+        .willReturn(expectedAttributes);
+
+    // When
+    var responseReceived = service.searchByPhysicalSpecimenId(List.of(request));
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
   void testCreateHandleRecord() throws Exception {
     // Given
     byte[] handle = handles.get(0);

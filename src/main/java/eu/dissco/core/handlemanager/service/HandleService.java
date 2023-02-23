@@ -102,7 +102,7 @@ public class HandleService {
   // Resolve Record
 
   public JsonApiWrapperRead resolveSingleRecord(byte[] handle, String path) throws PidResolutionException{
-   var recordAttributeList = fetchResolvedRecords(List.of(handle)).get(0);
+   var recordAttributeList = resolveAndFormatRecords(List.of(handle)).get(0);
    var dataNode = wrapData(recordAttributeList, "PID");
    JsonApiLinks links = new JsonApiLinks(path);
    return new JsonApiWrapperRead(links, List.of(dataNode));
@@ -112,7 +112,7 @@ public class HandleService {
       throws PidResolutionException {
     List<JsonApiDataLinks> dataList = new ArrayList<>();
 
-    var recordAttributeList = fetchResolvedRecords(handles);
+    var recordAttributeList = resolveAndFormatRecords(handles);
     for (JsonNode recordAttributes : recordAttributeList) {
       dataList.add(wrapData(recordAttributes, "PID"));
     }
@@ -120,7 +120,7 @@ public class HandleService {
   }
 
 
-  private List<JsonNode> fetchResolvedRecords(List<byte[]> handles) throws PidResolutionException {
+  private List<JsonNode> resolveAndFormatRecords(List<byte[]> handles) throws PidResolutionException {
     var dbRecord = handleRep.resolveHandleAttributes(handles);
     var handleMap = mapRecords(dbRecord);
     Set<byte[]> resolvedHandles = new HashSet<>();
@@ -146,12 +146,67 @@ public class HandleService {
     return rootNodeList;
   }
 
+  // Other Getters
 
+  // Getters
+
+  public List<String> getHandlesPaged(int pageNum, int pageSize, String pidStatus) {
+    return handleRep.getAllHandles(pidStatus.getBytes(StandardCharsets.UTF_8), pageNum, pageSize);
+  }
+
+  public List<String> getHandlesPaged(int pageNum, int pageSize) {
+    return handleRep.getAllHandles(pageNum, pageSize);
+  }
 
   // Response Formatting
 
   private String getPidName(String pidLink) {
     return pidLink.substring(pidLink.length() - 24);
+  }
+
+  private HashMap<String, List<HandleAttribute>> mapRecords(List<HandleAttribute> flatList) {
+
+    HashMap<String, List<HandleAttribute>> handleMap = new HashMap<>();
+
+    for (HandleAttribute row : flatList) {
+      String handle = new String(row.handle(), StandardCharsets.UTF_8);
+      if (handleMap.containsKey(handle)) {
+        List<HandleAttribute> tmpList = new ArrayList<>(handleMap.get(handle));
+        tmpList.add(row);
+        handleMap.replace(handle, tmpList);
+      } else {
+        handleMap.put(handle, List.of(row));
+      }
+    }
+    return handleMap;
+  }
+
+  private JsonApiDataLinks wrapData(JsonNode recordAttributes, String recordType) {
+    String pidLink = recordAttributes.get(PID).asText();
+    String pidName = getPidName(pidLink);
+    var handleLink = new JsonApiLinks(pidLink);
+    return new JsonApiDataLinks(pidName, recordType, recordAttributes, handleLink);
+  }
+
+  private JsonNode jsonFormatSingleRecord(List<HandleAttribute> dbRecord) {
+    ObjectNode rootNode = mapper.createObjectNode();
+    ObjectNode subNode;
+    for (HandleAttribute row : dbRecord) {
+      String type = row.type();
+      String data = new String(row.data(), StandardCharsets.UTF_8);
+      if (FIELD_IS_PID_RECORD.contains(type) || type.equals(PHYSICAL_IDENTIFIER)) {
+        try {
+          subNode = mapper.readValue(data, ObjectNode.class);
+          rootNode.set(type, subNode);
+        } catch (JsonProcessingException e) {
+          log.warn("Type \"{}\" is noncompliant to the PID kernel model. Invalid data: {}", type,
+              data);
+        }
+      } else {
+        rootNode.put(type, data);
+      }
+    }
+    return rootNode;
   }
 
   // Search by Physical Specimen Id and Institution
@@ -214,6 +269,14 @@ public class HandleService {
     return removeNoMatchRows(physIdSearchResults, fullMatchHandles);
   }
 
+  private List<byte[]> listHandleNamesReturnedFromQuery(List<HandleAttribute> rows) {
+    Set<String> handlesStr = new HashSet<>(); // Sets and byte[] don't work well together
+    List<byte[]> handles = new ArrayList<>();
+    rows.forEach(row -> handlesStr.add((new String(row.handle(), StandardCharsets.UTF_8))));
+    handlesStr.forEach(handle -> handles.add(handle.getBytes(StandardCharsets.UTF_8)));
+    return handles;
+  }
+
   private String getHandleWithFullMatch(String targetPhysId, String targetHostId,
       List<HandleAttribute> physIdSearchResults) throws PidResolutionException {
     List<String> handles = new ArrayList<>();
@@ -259,35 +322,8 @@ public class HandleService {
   }
 
 
-  private List<byte[]> listHandleNamesReturnedFromQuery(List<HandleAttribute> rows) {
-    Set<String> handlesStr = new HashSet<>(); // Sets and byte[] don't work well together
-    List<byte[]> handles = new ArrayList<>();
-    rows.forEach(row -> handlesStr.add((new String(row.handle(), StandardCharsets.UTF_8))));
-    handlesStr.forEach(handle -> handles.add(handle.getBytes(StandardCharsets.UTF_8)));
-    return handles;
-  }
-
-
-  private HashMap<String, List<HandleAttribute>> mapRecords(List<HandleAttribute> flatList) {
-
-    HashMap<String, List<HandleAttribute>> handleMap = new HashMap<>();
-
-    for (HandleAttribute row : flatList) {
-      String handle = new String(row.handle(), StandardCharsets.UTF_8);
-      if (handleMap.containsKey(handle)) {
-        List<HandleAttribute> tmpList = new ArrayList<>(handleMap.get(handle));
-        tmpList.add(row);
-        handleMap.replace(handle, tmpList);
-      } else {
-        handleMap.put(handle, List.of(row));
-      }
-    }
-    return handleMap;
-  }
-
 
   // Pid Record Creation
-
   public JsonApiWrapperWrite createRecords(List<JsonNode> requests)
       throws PidResolutionException, PidServiceInternalError, InvalidRecordInput {
 
@@ -341,13 +377,14 @@ public class HandleService {
     }
     handleRep.postAttributesToDb(recordTimestamp, handleAttributes);
 
-    var postedRecordAttributes = fetchResolvedRecords(handlesPost);
+    var postedRecordAttributes = resolveAndFormatRecords(handlesPost);
     List<JsonApiDataLinks> dataList = new ArrayList<>();
     for (JsonNode recordAttributes : postedRecordAttributes) {
-      dataList.add(wrapData(recordAttributes, getRecordType(recordAttributes, recordTypes)));
+      dataList.add(wrapData(recordAttributes, getRecordTypeFromTypeList(recordAttributes, recordTypes)));
     }
     return new JsonApiWrapperWrite(dataList);
   }
+  // Update Records
 
   public JsonApiWrapperWrite updateRecords(List<JsonNode> requests)
       throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
@@ -372,16 +409,16 @@ public class HandleService {
     checkHandlesWritable(handles);
 
     handleRep.updateRecordBatch(recordTimestamp, attributesToUpdate);
-    var updatedRecords = fetchResolvedRecords(handles);
+    var updatedRecords = resolveAndFormatRecords(handles);
 
     List<JsonApiDataLinks> dataList = new ArrayList<>();
     for (JsonNode updatedRecord : updatedRecords) {
-      dataList.add(wrapData(updatedRecord, getRecordType(updatedRecord, recordTypes)));
+      dataList.add(wrapData(updatedRecord, getRecordTypeFromTypeList(updatedRecord, recordTypes)));
     }
     return new JsonApiWrapperWrite(dataList);
   }
 
-  private String getRecordType(JsonNode recordAttributes, Map<String, String> recordTypes) {
+  private String getRecordTypeFromTypeList(JsonNode recordAttributes, Map<String, String> recordTypes) {
     String pid = getPidName(recordAttributes.get(PID).asText());
     return recordTypes.get(pid);
   }
@@ -419,47 +456,6 @@ public class HandleService {
     return keys;
   }
 
-  // Archive
-  public JsonApiWrapperWrite archiveRecordBatch(List<JsonNode> requests)
-      throws InvalidRecordInput, PidResolutionException {
-    var recordTimestamp = Instant.now().getEpochSecond();
-    List<byte[]> handles = new ArrayList<>();
-    List<HandleAttribute> archiveAttributes = new ArrayList<>();
-
-    for (JsonNode root : requests) {
-      JsonNode data = root.get(NODE_DATA);
-      JsonNode requestAttributes = data.get(NODE_ATTRIBUTES);
-      byte[] handle = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
-      handles.add(handle);
-      archiveAttributes.addAll(prepareUpdateAttributes(handle, requestAttributes));
-      archiveAttributes.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS,
-          "ARCHIVED".getBytes(StandardCharsets.UTF_8)));
-    }
-    checkInternalDuplicates(handles);
-    checkHandlesWritable(handles);
-
-    handleRep.archiveRecords(recordTimestamp, archiveAttributes, handles);
-    var archivedRecords = fetchResolvedRecords(handles);
-
-    List<JsonApiDataLinks> dataList = new ArrayList<>();
-
-    for (JsonNode updatedRecord : archivedRecords) {
-      String pidLink = updatedRecord.get(PID).asText();
-      String pidName = getPidName(pidLink);
-      dataList.add(new JsonApiDataLinks(pidName, RECORD_TYPE_TOMBSTONE, updatedRecord,
-          new JsonApiLinks(pidLink)));
-    }
-    return new JsonApiWrapperWrite(dataList);
-
-  }
-
-  private JsonApiDataLinks wrapData(JsonNode recordAttributes, String recordType) {
-    String pidLink = recordAttributes.get(PID).asText();
-    String pidName = getPidName(pidLink);
-    var handleLink = new JsonApiLinks(pidLink);
-    return new JsonApiDataLinks(pidName, recordType, recordAttributes, handleLink);
-  }
-
   private void checkHandlesWritable(List<byte[]> handles) throws PidResolutionException {
     Set<byte[]> handlesToUpdate = new HashSet<>(handles);
 
@@ -476,11 +472,9 @@ public class HandleService {
     }
   }
 
-  // TODO will this catch duplicates?
   private void checkInternalDuplicates(List<byte[]> handles) throws InvalidRecordInput {
-    Set<byte[]> handlesToUpdate = new HashSet<>(handles);
     Set<String> handlesToUpdateStr = new HashSet<>();
-    for (byte[] handle : handlesToUpdate) {
+    for (byte[] handle : handles) {
       handlesToUpdateStr.add(new String(handle, StandardCharsets.UTF_8));
     }
 
@@ -525,14 +519,38 @@ public class HandleService {
     return attributesToUpdate;
   }
 
-  // Getters
+  // Archive
+  public JsonApiWrapperWrite archiveRecordBatch(List<JsonNode> requests)
+      throws InvalidRecordInput, PidResolutionException {
+    var recordTimestamp = Instant.now().getEpochSecond();
+    List<byte[]> handles = new ArrayList<>();
+    List<HandleAttribute> archiveAttributes = new ArrayList<>();
 
-  public List<String> getHandlesPaged(int pageNum, int pageSize, String pidStatus) {
-    return handleRep.getAllHandles(pidStatus.getBytes(StandardCharsets.UTF_8), pageNum, pageSize);
-  }
+    for (JsonNode root : requests) {
+      JsonNode data = root.get(NODE_DATA);
+      JsonNode requestAttributes = data.get(NODE_ATTRIBUTES);
+      byte[] handle = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
+      handles.add(handle);
+      archiveAttributes.addAll(prepareUpdateAttributes(handle, requestAttributes));
+      archiveAttributes.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS,
+          "ARCHIVED".getBytes(StandardCharsets.UTF_8)));
+    }
+    checkInternalDuplicates(handles);
+    checkHandlesWritable(handles);
 
-  public List<String> getHandlesPaged(int pageNum, int pageSize) {
-    return handleRep.getAllHandles(pageNum, pageSize);
+    handleRep.archiveRecords(recordTimestamp, archiveAttributes, handles);
+    var archivedRecords = resolveAndFormatRecords(handles);
+
+    List<JsonApiDataLinks> dataList = new ArrayList<>();
+
+    for (JsonNode updatedRecord : archivedRecords) {
+      String pidLink = updatedRecord.get(PID).asText();
+      String pidName = getPidName(pidLink);
+      dataList.add(new JsonApiDataLinks(pidName, RECORD_TYPE_TOMBSTONE, updatedRecord,
+          new JsonApiLinks(pidLink)));
+    }
+    return new JsonApiWrapperWrite(dataList);
+
   }
 
   // Prepare Attribute lists
@@ -723,26 +741,6 @@ public class HandleService {
   }
 
 
-  private JsonNode jsonFormatSingleRecord(List<HandleAttribute> dbRecord) {
-    ObjectNode rootNode = mapper.createObjectNode();
-    ObjectNode subNode;
-    for (HandleAttribute row : dbRecord) {
-      String type = row.type();
-      String data = new String(row.data(), StandardCharsets.UTF_8);
-      if (FIELD_IS_PID_RECORD.contains(type) || type.equals(PHYSICAL_IDENTIFIER)) {
-        try {
-          subNode = mapper.readValue(data, ObjectNode.class);
-          rootNode.set(type, subNode);
-        } catch (JsonProcessingException e) {
-          log.warn("Type \"{}\" is noncompliant to the PID kernel model. Invalid data: {}", type,
-              data);
-        }
-      } else {
-        rootNode.put(type, data);
-      }
-    }
-    return rootNode;
-  }
 
 
 }

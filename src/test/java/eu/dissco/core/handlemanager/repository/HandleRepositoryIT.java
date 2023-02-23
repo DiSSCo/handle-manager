@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import eu.dissco.core.handlemanager.database.jooq.tables.Handles;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
+import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdentifier;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -179,7 +180,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   @Test
   void resolveRecordByPhysicalId() throws JsonProcessingException {
     // Given
-    PhysicalIdentifier physId = new PhysicalIdentifier("abc", "physicalId");
+    PhysicalIdentifier physId = new PhysicalIdentifier("abc", PhysicalIdType.CETAF);
     String physicalIdentifier = MAPPER.writeValueAsString(physId);
     String targetHostFacility = MAPPER.writeValueAsString(SPECIMEN_HOST_TESTVAL);
     String nonTargetHostFacility = "NHM";

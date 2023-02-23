@@ -48,6 +48,7 @@ import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRe
 import eu.dissco.core.handlemanager.domain.requests.attributes.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.MediaObjectRequest;
+import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdentifier;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PidTypeName;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PreservedOrLiving;
@@ -114,7 +115,7 @@ public class TestUtils {
   public static final String PTR_REGISTRATION_DOI_NAME = "Registration Agency";
   public final static PhysicalIdentifier PHYSICAL_IDENTIFIER_OBJ = new PhysicalIdentifier(
       "BOTANICAL.QRS.123",
-      "physicalSpecimenId"
+      PhysicalIdType.CETAF
   );
   public final static String PHYSICAL_IDENTIFIER_TO_STR;
   // Tombstone Record vals
