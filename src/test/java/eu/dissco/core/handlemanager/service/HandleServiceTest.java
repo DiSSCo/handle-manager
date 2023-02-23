@@ -10,7 +10,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_LIST_STR;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.PHYSICAL_IDENTIFIER_OBJ;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PHYSICAL_IDENTIFIER_CETAF;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_STATUS_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PTR_HANDLE_RECORD;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
@@ -139,7 +139,7 @@ class HandleServiceTest {
   void testSearchByPhysicalSpecimenId() throws Exception {
     // Given
     var request = givenSearchByPhysIdRequest();
-    var physicalSpecimenId = MAPPER.writeValueAsBytes(PHYSICAL_IDENTIFIER_OBJ);
+    var physicalSpecimenId = MAPPER.writeValueAsBytes(PHYSICAL_IDENTIFIER_CETAF);
     var specimenHost = MAPPER.writeValueAsBytes(SPECIMEN_HOST_TESTVAL);
 
     var expectedAttributes = genDigitalSpecimenAttributes(HANDLE.getBytes(StandardCharsets.UTF_8));

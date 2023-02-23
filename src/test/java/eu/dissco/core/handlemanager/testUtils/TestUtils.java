@@ -113,11 +113,12 @@ public class TestUtils {
   public static final String PTR_PID_DOI = "http://doi.org/" + PID_ISSUER_PID;
   public static final String PTR_TYPE_DOI = "doi";
   public static final String PTR_REGISTRATION_DOI_NAME = "Registration Agency";
-  public final static PhysicalIdentifier PHYSICAL_IDENTIFIER_OBJ = new PhysicalIdentifier(
-      "BOTANICAL.QRS.123",
+  public final static String PHYSICAL_IDENTIFIER_LOCAL = "BOTANICAL.QRS.123";
+  public final static PhysicalIdentifier PHYSICAL_IDENTIFIER_CETAF = new PhysicalIdentifier(
+      PHYSICAL_IDENTIFIER_LOCAL,
       PhysicalIdType.CETAF
   );
-  public final static String PHYSICAL_IDENTIFIER_TO_STR;
+
   // Tombstone Record vals
   public final static String TOMBSTONE_TEXT_TESTVAL = "pid was deleted";
   // Pid Type Record vals
@@ -129,14 +130,6 @@ public class TestUtils {
 
   static {
     HANDLE_LIST_STR = List.of(HANDLE, HANDLE_ALT);
-  }
-
-  static {
-    try {
-      PHYSICAL_IDENTIFIER_TO_STR = MAPPER.writeValueAsString(PHYSICAL_IDENTIFIER_OBJ);
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
-    }
   }
 
   private TestUtils() {
@@ -294,10 +287,9 @@ public class TestUtils {
         new HandleAttribute(FIELD_IDX.get(IN_COLLECTION_FACILITY), handle, IN_COLLECTION_FACILITY,
             ptr_record));
 
-    var physicalIdentifier = MAPPER.writeValueAsBytes(PHYSICAL_IDENTIFIER_OBJ);
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(PHYSICAL_IDENTIFIER), handle, PHYSICAL_IDENTIFIER,
-            physicalIdentifier));
+            PHYSICAL_IDENTIFIER_LOCAL.getBytes(StandardCharsets.UTF_8)));
     return handleRecord;
   }
 
@@ -330,7 +322,7 @@ public class TestUtils {
 
     // 17 : Physical Identifier
     // Encoding here is UTF-8
-    var physicalIdentifier = MAPPER.writeValueAsBytes(PHYSICAL_IDENTIFIER_OBJ);
+    var physicalIdentifier = MAPPER.writeValueAsBytes(PHYSICAL_IDENTIFIER_CETAF);
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(PHYSICAL_IDENTIFIER), handle, PHYSICAL_IDENTIFIER,
             physicalIdentifier));
@@ -384,7 +376,7 @@ public class TestUtils {
         DIGITAL_OR_PHYSICAL_TESTVAL,
         SPECIMEN_HOST_PID,
         IN_COLLECTION_FACILITY_TESTVAL,
-        PHYSICAL_IDENTIFIER_OBJ);
+        PHYSICAL_IDENTIFIER_CETAF);
   }
 
   public static DigitalSpecimenBotanyRequest genDigitalSpecimenBotanyRequestObject() {
@@ -397,7 +389,7 @@ public class TestUtils {
         DIGITAL_OR_PHYSICAL_TESTVAL,
         SPECIMEN_HOST_PID,
         IN_COLLECTION_FACILITY_TESTVAL,
-        PHYSICAL_IDENTIFIER_OBJ,
+        PHYSICAL_IDENTIFIER_CETAF,
         OBJECT_TYPE_TESTVAL,
         PRESERVED_OR_LIVING_TESTVAL);
   }
@@ -411,7 +403,7 @@ public class TestUtils {
         REFERENT_DOI_NAME_PID,
         MEDIA_HASH_TESTVAL,
         MEDIA_URL_TESTVAL,
-        PHYSICAL_IDENTIFIER_OBJ
+        PHYSICAL_IDENTIFIER_CETAF
     );
   }
 
@@ -425,7 +417,7 @@ public class TestUtils {
     var request = MAPPER.createObjectNode();
     var dataNode = MAPPER.createObjectNode();
     var attributeNode = MAPPER.createObjectNode();
-    attributeNode.set(PHYSICAL_IDENTIFIER, MAPPER.valueToTree(PHYSICAL_IDENTIFIER_OBJ));
+    attributeNode.set(PHYSICAL_IDENTIFIER, MAPPER.valueToTree(PHYSICAL_IDENTIFIER_CETAF));
     attributeNode.set(SPECIMEN_HOST, MAPPER.valueToTree(SPECIMEN_HOST_TESTVAL));
     dataNode.set(NODE_ATTRIBUTES, attributeNode);
     request.set(NODE_DATA, dataNode);
@@ -628,7 +620,7 @@ public class TestUtils {
       if (row.index() == FIELD_IDX.get(HS_ADMIN)) {
         continue; // We never want HS_ADMIN in our json
       }
-      if (FIELD_IS_PID_RECORD.contains(type) || type.equals(PHYSICAL_IDENTIFIER)) {
+      if (FIELD_IS_PID_RECORD.contains(type)) {
         ObjectNode subNode = mapper.readValue(data, ObjectNode.class);
         rootNode.set(type, subNode);
       } else {
