@@ -1,6 +1,5 @@
 package eu.dissco.core.handlemanager.repository;
 
-
 import static eu.dissco.core.handlemanager.database.jooq.Tables.HANDLES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_NUMBER;
@@ -22,8 +21,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.database.jooq.tables.Handles;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdentifier;
@@ -63,7 +60,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     List<HandleAttribute> attributesToPost = genHandleRecordAttributes(handle);
 
     // When
-    handleRep.postAttributesToDb(CREATED, attributesToPost);
+    handleRep.postAttributesToDb(CREATED.getEpochSecond(), attributesToPost);
     var postedRecordContext = context.selectFrom(HANDLES).fetch();
     var postedRecordAttributes = handleRep.resolveHandleAttributes(handle);
 
@@ -275,7 +272,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     postAttributes(originalRecord);
 
     // When
-    handleRep.updateRecord(CREATED, recordUpdate);
+    handleRep.updateRecord(CREATED.getEpochSecond(), recordUpdate);
     var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
             Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
         .where(Handles.HANDLES.HANDLE.eq(handle)).and(Handles.HANDLES.TYPE.notEqual(
@@ -302,7 +299,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     }
 
     // When
-    handleRep.updateRecordBatch(CREATED, updateAttributes);
+    handleRep.updateRecordBatch(CREATED.getEpochSecond(), updateAttributes);
     var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
             Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
         .where(Handles.HANDLES.HANDLE.in(handles)).and(Handles.HANDLES.TYPE.notEqual(
@@ -329,7 +326,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     }
 
     // When
-    handleRep.archiveRecords(CREATED, archiveAttributes, handles);
+    handleRep.archiveRecords(CREATED.getEpochSecond(), archiveAttributes, handles);
     var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
             Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
         .where(Handles.HANDLES.HANDLE.in(handles)).and(Handles.HANDLES.TYPE.notEqual(
@@ -350,7 +347,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     postAttributes(originalRecord);
 
     // When
-    handleRep.archiveRecord(CREATED, recordArchive);
+    handleRep.archiveRecord(CREATED.getEpochSecond(), recordArchive);
     var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
             Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
         .where(Handles.HANDLES.HANDLE.eq(handle)).and(Handles.HANDLES.TYPE.notEqual(

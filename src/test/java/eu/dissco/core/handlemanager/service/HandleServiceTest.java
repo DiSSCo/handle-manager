@@ -42,9 +42,7 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mockStatic;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
@@ -101,15 +99,15 @@ class HandleServiceTest {
   }
 
   @Test
-  void testResolveSingleRecord() throws Exception {
-    // Given
+  void resolveSingleRecord() throws Exception {
+
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     String path = SANDBOX_URI + HANDLE;
     List<HandleAttribute> recordAttributeList = genHandleRecordAttributes(handle);
 
     var responseExpected = givenRecordResponseRead(List.of(handle), path, "PID");
 
-    given(handleRep.resolveHandleAttributes(handle)).willReturn(recordAttributeList);
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(recordAttributeList);
 
     // When
     var responseReceived = service.resolveSingleRecord(handle, path);

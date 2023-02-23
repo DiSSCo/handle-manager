@@ -14,7 +14,7 @@ public class PidRecords {
   public static final String PID_ISSUER = "pidIssuer";
   public static final String DIGITAL_OBJECT_TYPE = "digitalObjectType";
   public static final String DIGITAL_OBJECT_SUBTYPE = "digitalObjectSubtype";
-  public static final String LOC = "10230/loc";
+  public static final String LOC = "10320/loc";
   public static final String ISSUE_DATE = "issueDate";
   public static final String ISSUE_NUMBER = "issueNumber";
   public static final String PID_STATUS = "pidStatus";

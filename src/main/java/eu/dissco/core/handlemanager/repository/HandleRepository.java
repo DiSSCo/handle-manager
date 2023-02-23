@@ -10,7 +10,6 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_RECORD_FI
 
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -93,6 +92,16 @@ public class HandleRepository {
         .fetch(this::mapToAttribute);
   }
 
+  public List<HandleAttribute> searchByPhysicalIdentifier(List<byte[]> physicalIdentifier){
+    return context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
+        .from(HANDLES)
+        .where(HANDLES.TYPE.eq(PHYSICAL_IDENTIFIER.getBytes(StandardCharsets.UTF_8)))
+        .and(HANDLES.DATA.in(physicalIdentifier))
+        .fetch(this::mapToAttribute);
+  }
+
+
+
   // Get List of Pids
   public List<String> getAllHandles(byte[] pidStatus, int pageNum, int pageSize) {
     int offset = 0;
@@ -131,7 +140,7 @@ public class HandleRepository {
 
   // Post
 
-  public void postAttributesToDb(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
+  public void postAttributesToDb(long recordTimestamp, List<HandleAttribute> handleAttributes) {
     var queryList = new ArrayList<Query>();
 
     for (var handleAttribute : handleAttributes) {
@@ -141,7 +150,7 @@ public class HandleRepository {
           .set(HANDLES.TYPE, handleAttribute.type().getBytes(StandardCharsets.UTF_8))
           .set(HANDLES.DATA, handleAttribute.data())
           .set(HANDLES.TTL, TTL)
-          .set(HANDLES.TIMESTAMP, recordTimestamp.getEpochSecond())
+          .set(HANDLES.TIMESTAMP, recordTimestamp)
           .set(HANDLES.ADMIN_READ, true)
           .set(HANDLES.ADMIN_WRITE, true)
           .set(HANDLES.PUB_READ, true)
@@ -151,7 +160,7 @@ public class HandleRepository {
     context.batch(queryList).execute();
   }
 
-  private void mergeAttributesToDb(Instant recordTimestamp,
+  private void mergeAttributesToDb(long recordTimestamp,
       List<HandleAttribute> handleAttributes) {
     var queryList = new ArrayList<Query>();
     Set<byte[]> updatedHandles = new HashSet<>();
@@ -162,7 +171,7 @@ public class HandleRepository {
           .set(HANDLES.TYPE, handleAttribute.type().getBytes(StandardCharsets.UTF_8))
           .set(HANDLES.DATA, handleAttribute.data())
           .set(HANDLES.TTL, TTL)
-          .set(HANDLES.TIMESTAMP, recordTimestamp.getEpochSecond())
+          .set(HANDLES.TIMESTAMP, recordTimestamp)
           .set(HANDLES.ADMIN_READ, true)
           .set(HANDLES.ADMIN_WRITE, true)
           .set(HANDLES.PUB_READ, true)
@@ -173,7 +182,7 @@ public class HandleRepository {
           .set(HANDLES.TYPE, handleAttribute.type().getBytes(StandardCharsets.UTF_8))
           .set(HANDLES.DATA, handleAttribute.data())
           .set(HANDLES.TTL, TTL)
-          .set(HANDLES.TIMESTAMP, recordTimestamp.getEpochSecond())
+          .set(HANDLES.TIMESTAMP, recordTimestamp)
           .set(HANDLES.ADMIN_READ, true)
           .set(HANDLES.ADMIN_WRITE, true)
           .set(HANDLES.PUB_READ, true)
@@ -187,25 +196,25 @@ public class HandleRepository {
   }
 
   // Archive
-  public void archiveRecord(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
+  public void archiveRecord(long recordTimestamp, List<HandleAttribute> handleAttributes) {
     mergeAttributesToDb(recordTimestamp, handleAttributes);
     removeNonTombstoneFields(List.of(handleAttributes.get(0).handle()));
   }
 
-  public void archiveRecords(Instant recordTimestamp, List<HandleAttribute> handleAttributes,
+  public void archiveRecords(long recordTimestamp, List<HandleAttribute> handleAttributes,
       List<byte[]> handles) {
     mergeAttributesToDb(recordTimestamp, handleAttributes);
     removeNonTombstoneFields(handles);
   }
 
   // Update
-  public void updateRecord(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
+  public void updateRecord(long recordTimestamp, List<HandleAttribute> handleAttributes) {
     byte[] handle = handleAttributes.get(0).handle();
     var query = prepareUpdateQuery(handle, recordTimestamp, handleAttributes);
     context.batch(query).execute();
   }
 
-  public void updateRecordBatch(Instant recordTimestamp,
+  public void updateRecordBatch(long recordTimestamp,
       List<List<HandleAttribute>> handleRecords) {
 
     List<Query> queryList = new ArrayList<>();
@@ -216,13 +225,13 @@ public class HandleRepository {
     context.batch(queryList).execute();
   }
 
-  private ArrayList<Query> prepareUpdateQuery(byte[] handle, Instant recordTimestamp,
+  private ArrayList<Query> prepareUpdateQuery(byte[] handle, long recordTimestamp,
       List<HandleAttribute> handleAttributes) {
     var queryList = new ArrayList<Query>();
     for (var handleAttribute : handleAttributes) {
       var query = context.update(HANDLES)
           .set(HANDLES.DATA, handleAttribute.data())
-          .set(HANDLES.TIMESTAMP, recordTimestamp.getEpochSecond())
+          .set(HANDLES.TIMESTAMP, recordTimestamp)
           .where(HANDLES.HANDLE.eq(handle))
           .and(HANDLES.IDX.eq(handleAttribute.index()));
       queryList.add(query);
@@ -231,7 +240,7 @@ public class HandleRepository {
     return queryList;
   }
 
-  private Query versionIncrement(byte[] handle, Instant recordTimestamp) {
+  private Query versionIncrement(byte[] handle, long recordTimestamp) {
     var currentVersion =
         Integer.parseInt(Objects.requireNonNull(context.select(HANDLES.DATA)
             .from(HANDLES)
@@ -242,7 +251,7 @@ public class HandleRepository {
 
     return context.update(HANDLES)
         .set(HANDLES.DATA, String.valueOf(version).getBytes(StandardCharsets.UTF_8))
-        .set(HANDLES.TIMESTAMP, recordTimestamp.getEpochSecond())
+        .set(HANDLES.TIMESTAMP, recordTimestamp)
         .where(HANDLES.HANDLE.eq(handle))
         .and(HANDLES.TYPE.eq(ISSUE_NUMBER.getBytes(StandardCharsets.UTF_8)));
   }
