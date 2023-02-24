@@ -156,25 +156,6 @@ class HandleServiceTest {
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
-  /*
-
-  @Test
-  void testSearchByPhysicalSpecimenIdBulk() throws Exception {
-    var request = givenSearchByPhysIdRequest();
-
-    var expectedAttributes = genDigitalSpecimenAttributes(HANDLE.getBytes(StandardCharsets.UTF_8));
-    var responseExpected = givenRecordResponseWriteGeneric(
-        List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), RECORD_TYPE_DS);
-
-    given(handleRep.searchByPhysicalIdentifier(anyList()))
-        .willReturn(expectedAttributes);
-
-    // When
-    var responseReceived = service.searchByPhysicalSpecimenId(List.of(request));
-
-    // Then
-    assertThat(responseReceived).isEqualTo(responseExpected);
-  } */
 
   @Test
   void testCreateHandleRecord() throws Exception {
@@ -224,6 +205,7 @@ class HandleServiceTest {
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(DigitalSpecimen);
+    given(handleRep.searchByPhysicalIdentifier(anyList())).willReturn(new ArrayList<>());
     given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
 
     // When
@@ -244,6 +226,7 @@ class HandleServiceTest {
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(DigitalSpecimenBotany);
+    given(handleRep.searchByPhysicalIdentifier(anyList())).willReturn(new ArrayList<>());
     given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
 
     // When
