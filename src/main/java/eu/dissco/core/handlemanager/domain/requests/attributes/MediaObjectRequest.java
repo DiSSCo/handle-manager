@@ -14,7 +14,7 @@ public class MediaObjectRequest extends DoiRecordRequest {
   @JsonProperty(required = true)
   private final String mediaUrl;
   @JsonProperty(required = true)
-  private final PhysicalIdentifier physicalIdentifier;
+  private final PhysicalIdentifier subjectPhysicalIdentifier;
   public MediaObjectRequest(
       String pidIssuerPid,
       String digitalObjectTypePid,
@@ -28,6 +28,6 @@ public class MediaObjectRequest extends DoiRecordRequest {
         referentDoiNamePid);
     this.mediaHash = mediaHash;
     this.mediaUrl = mediaUrl;
-    this.physicalIdentifier = physicalIdentifier;
+    this.subjectPhysicalIdentifier = physicalIdentifier;
   }
 }

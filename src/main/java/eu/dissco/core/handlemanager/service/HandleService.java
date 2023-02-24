@@ -33,6 +33,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_TOMBSTO
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
+import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_PHYSICAL_IDENTIFIER;
 import static eu.dissco.core.handlemanager.utils.AdminHandleGenerator.genAdminHandle;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -46,7 +47,6 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalOrPhysical;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DoiRecordRequest;
@@ -214,6 +214,7 @@ public class HandleService {
   }
 
   // Search by Physical Specimen Id and Institution
+
 
   public JsonApiWrapperWrite searchByPhysicalSpecimenId(JsonNode request)
       throws JsonProcessingException {
@@ -641,7 +642,7 @@ public class HandleService {
 
   private List<HandleAttribute> prepareDigitalSpecimenRecordAttributes(
       DigitalSpecimenRequest request, byte[] handle)
-      throws PidResolutionException, PidServiceInternalError, JsonProcessingException {
+      throws PidResolutionException, PidServiceInternalError {
     var handleRecord = prepareDoiRecordAttributes(request, handle);
 
     handleRecord.add(
@@ -670,7 +671,7 @@ public class HandleService {
 
   private List<HandleAttribute> prepareDigitalSpecimenBotanyRecordAttributes(
       DigitalSpecimenBotanyRequest request, byte[] handle)
-      throws PidResolutionException, PidServiceInternalError, JsonProcessingException {
+      throws PidResolutionException, PidServiceInternalError {
     List<HandleAttribute> handleRecord = prepareDigitalSpecimenRecordAttributes(request, handle);
 
     // 17: ObjectType
@@ -707,11 +708,11 @@ public class HandleService {
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(MEDIA_URL), handle, PHYSICAL_IDENTIFIER,
         request.getMediaUrl().getBytes(StandardCharsets.UTF_8)));
 
-    // 17 : Physical Identifier
+    // 16 : Physical Identifier
     // Encoding here is UTF-8
-    var physicalIdentifier = mapper.writeValueAsBytes(request.getPhysicalIdentifier());
+    var physicalIdentifier = mapper.writeValueAsBytes(request.getSubjectPhysicalIdentifier());
     handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(PHYSICAL_IDENTIFIER), handle, PHYSICAL_IDENTIFIER,
+        new HandleAttribute(FIELD_IDX.get(SUBJECT_PHYSICAL_IDENTIFIER), handle, SUBJECT_PHYSICAL_IDENTIFIER,
             physicalIdentifier));
 
     return handleRecord;

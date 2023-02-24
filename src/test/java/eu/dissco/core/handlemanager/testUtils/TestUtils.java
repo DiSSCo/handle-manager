@@ -31,6 +31,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_TOMBSTO
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
+import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_PHYSICAL_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_TEXT;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -320,11 +321,11 @@ public class TestUtils {
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(MEDIA_URL), handle,
         MEDIA_URL, MEDIA_URL_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
-    // 17 : Physical Identifier
+    // 16 : Subject Physical Identifier
     // Encoding here is UTF-8
     var physicalIdentifier = MAPPER.writeValueAsBytes(PHYSICAL_IDENTIFIER_CETAF);
     handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(PHYSICAL_IDENTIFIER), handle, PHYSICAL_IDENTIFIER,
+        new HandleAttribute(FIELD_IDX.get(SUBJECT_PHYSICAL_IDENTIFIER), handle, SUBJECT_PHYSICAL_IDENTIFIER,
             physicalIdentifier));
     return handleRecord;
   }
