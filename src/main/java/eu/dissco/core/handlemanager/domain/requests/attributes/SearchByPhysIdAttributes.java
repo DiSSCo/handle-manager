@@ -5,8 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public record SearchByPhysIdAttributes(
     @JsonProperty(required = true)
     PhysicalIdentifier physicalIdentifier,
-    @JsonProperty(required = true)
-    PidTypeName specimenHost
+    String specimenHostPid
 ) {
 
 }

@@ -92,14 +92,21 @@ public class HandleRepository {
         .fetch(this::mapToAttribute);
   }
 
-  public List<HandleAttribute> searchByPhysicalIdentifier(List<byte[]> physicalIdentifier){
-    return context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
+  public List<HandleAttribute> searchByPhysicalIdentifier(List<byte[]> physicalIdentifiers){
+    var physicalIdentifierTable = context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
         .from(HANDLES)
         .where(HANDLES.TYPE.eq(PHYSICAL_IDENTIFIER.getBytes(StandardCharsets.UTF_8)))
-        .and(HANDLES.DATA.in(physicalIdentifier))
+        .and((HANDLES.DATA).in(physicalIdentifiers))
+        .asTable("physicalIdentifierTable");
+
+
+    return context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
+        .from(HANDLES)
+        .join(physicalIdentifierTable)
+        .on(HANDLES.HANDLE.eq(physicalIdentifierTable.field(HANDLES.HANDLE)))
+        .where(HANDLES.TYPE.notEqual(HS_ADMIN.getBytes(StandardCharsets.UTF_8)))
         .fetch(this::mapToAttribute);
   }
-
 
 
   // Get List of Pids

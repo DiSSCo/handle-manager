@@ -156,6 +156,8 @@ class HandleServiceTest {
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
+  /*
+
   @Test
   void testSearchByPhysicalSpecimenIdBulk() throws Exception {
     var request = givenSearchByPhysIdRequest();
@@ -172,7 +174,7 @@ class HandleServiceTest {
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
-  }
+  } */
 
   @Test
   void testCreateHandleRecord() throws Exception {

@@ -16,6 +16,7 @@ import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaLibrary
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaStaticContextInitializer;
 import eu.dissco.core.handlemanager.exceptions.ExceptionResponse;
 import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
+import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import eu.dissco.core.handlemanager.service.HandleService;
@@ -121,7 +122,7 @@ public class HandleController {
 
   @PostMapping("/records/localId")
   public ResponseEntity<JsonApiWrapperWrite> searchByPhysicalSpecimenId(@RequestBody JsonNode request)
-      throws InvalidRecordInput, JsonProcessingException {
+      throws InvalidRecordInput, JsonProcessingException, PidResolutionException {
     validateSearchByPhysIdRequest(request);
     return ResponseEntity.status(HttpStatus.OK).body(service.searchByPhysicalSpecimenId(request));
   }
@@ -129,7 +130,7 @@ public class HandleController {
   @PreAuthorize("isAuthenticated()")
   @PostMapping(value = "")
   public ResponseEntity<JsonApiWrapperWrite> createRecord(@RequestBody JsonNode request)
-      throws PidResolutionException, PidServiceInternalError, InvalidRecordInput {
+      throws PidResolutionException, PidServiceInternalError, InvalidRecordInput, PidCreationException {
     JsonSchemaLibrary.validatePostRequest(request);
     return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(List.of(request)));
   }
@@ -137,7 +138,7 @@ public class HandleController {
   @PreAuthorize("isAuthenticated()")
   @PostMapping(value = "/batch")
   public ResponseEntity<JsonApiWrapperWrite> createRecords(@RequestBody List<JsonNode> requests)
-      throws PidResolutionException, PidServiceInternalError, InvalidRecordInput {
+      throws PidResolutionException, PidServiceInternalError, InvalidRecordInput, PidCreationException {
 
     for (JsonNode request : requests) {
       JsonSchemaLibrary.validatePostRequest(request);
