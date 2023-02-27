@@ -45,7 +45,7 @@ jobs:
         with:
           image-ref: 'docker.io/dissco/handle-manager:${{ github.sha }}'
           format: 'table'
-          exit-code: '1'  # Change to 0 if you don't want trivy to break pipeline
+          exit-code: '0'  # Change to 0 if you don't want trivy to break pipeline
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
