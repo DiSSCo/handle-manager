@@ -47,6 +47,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
 import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
+import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
 import java.nio.charset.StandardCharsets;
@@ -139,14 +140,12 @@ class HandleServiceTest {
   void testSearchByPhysicalSpecimenId() throws Exception {
     // Given
     var request = givenSearchByPhysIdRequest();
-    var physicalSpecimenId = MAPPER.writeValueAsBytes(PHYSICAL_IDENTIFIER_CETAF);
-    var specimenHost = MAPPER.writeValueAsBytes(SPECIMEN_HOST_TESTVAL);
 
     var expectedAttributes = genDigitalSpecimenAttributes(HANDLE.getBytes(StandardCharsets.UTF_8));
     var responseExpected = givenRecordResponseWriteGeneric(
         List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), RECORD_TYPE_DS);
 
-    given(handleRep.resolveHandleAttributesByPhysicalIdentifier(physicalSpecimenId, specimenHost))
+    given(handleRep.searchByPhysicalIdentifier(anyList()))
         .willReturn(expectedAttributes);
 
     // When
@@ -155,7 +154,6 @@ class HandleServiceTest {
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
-
 
   @Test
   void testCreateHandleRecord() throws Exception {
@@ -216,7 +214,28 @@ class HandleServiceTest {
   }
 
   @Test
-  void testCreateDigitalSpecimenRecord() throws Exception {
+  void testCreateDigitalSpecimenSpecimenExists() throws Exception {
+    // Given
+    byte[] handle = handles.get(0);
+    var request = genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_DS);
+    List<HandleAttribute> digitalSpecimen = genDigitalSpecimenAttributes(handle);
+
+    given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
+    given(handleRep.searchByPhysicalIdentifier(anyList())).willReturn(digitalSpecimen);
+    given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
+
+    // When
+    Exception e = assertThrows(PidCreationException.class, () -> {
+      service.createRecords(List.of(request));
+    });
+
+    // Then
+    assertThat(e).hasMessage("Unable to create PID records. Some requested records are already registered. Verify the following digital specimens:"
+        + List.of(new String(handle, StandardCharsets.UTF_8)));
+  }
+
+  @Test
+  void testCreateDigitalSpecimenBotany() throws Exception {
     // Given
     byte[] handle = handles.get(0);
     var request = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(),
@@ -234,6 +253,27 @@ class HandleServiceTest {
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testCreateDigitalSpecimenBotanySpecimenExists() throws Exception {
+    // Given
+    byte[] handle = handles.get(0);
+    var request = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(), RECORD_TYPE_DS_BOTANY);
+    List<HandleAttribute> digitalSpecimenBotany = genDigitalSpecimenBotanyAttributes(handle);
+
+    given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
+    given(handleRep.searchByPhysicalIdentifier(anyList())).willReturn(digitalSpecimenBotany);
+    given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
+
+    // When
+    Exception e = assertThrows(PidCreationException.class, () -> {
+      service.createRecords(List.of(request));
+    });
+
+    // Then
+    assertThat(e).hasMessage("Unable to create PID records. Some requested records are already registered. Verify the following digital specimens:"
+        + List.of(new String(handle, StandardCharsets.UTF_8)));
   }
 
   @Test

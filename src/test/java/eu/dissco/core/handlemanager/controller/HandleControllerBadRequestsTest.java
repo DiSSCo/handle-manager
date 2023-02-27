@@ -80,14 +80,13 @@ class HandleControllerBadRequestsTest {
   void testBadSearchByPhysIdRequestUnknownProperty(){
     // Given
     var request = givenSearchByPhysIdRequest();
-    String badKey = "badKey";
-    request.put(badKey, "badVal");
+    request.put(UNKNOWN_ATTRIBUTE, UNKNOWN_VAL);
 
     // Then
     Exception e = assertThrows(InvalidRecordInput.class, () -> {
       controller.searchByPhysicalSpecimenId(request);
     });
-    assertThat(e.getMessage()).contains(badKey);
+    assertThat(e.getMessage()).contains(UNKNOWN_ATTRIBUTE);
   }
 
   @Test
@@ -303,7 +302,7 @@ class HandleControllerBadRequestsTest {
   void testBadResolveRequestMissingProperty(){
     // Given
     var request = MAPPER.createObjectNode();
-    request.put("data", "");
+    request.put(NODE_DATA, "");
     MockHttpServletRequest r = new MockHttpServletRequest();
     r.setRequestURI("a");
 

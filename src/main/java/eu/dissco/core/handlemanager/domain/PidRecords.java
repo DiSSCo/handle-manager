@@ -24,7 +24,9 @@ public class PidRecords {
   public static final String REFERENT = "referent";
   // Media Object
   public static final String MEDIA_HASH = "mediaHash";
+  public static final String SUBJECT_SPECIMEN_HOST = "subjectSpecimenHost";
   public static final String MEDIA_URL = "mediaUrl";
+  public static final String SUBJECT_PHYSICAL_IDENTIFIER = "subjectPhysicalIdentifier";
   // Digital Specimen
   public static final String DIGITAL_OR_PHYSICAL = "digitalOrPhysical";
   public static final String SPECIMEN_HOST = "specimenHost";
@@ -33,7 +35,6 @@ public class PidRecords {
   public static final String OBJECT_TYPE = "objectType";
   public static final String PRESERVED_OR_LIVING = "preservedOrLiving";
   public static final String PHYSICAL_IDENTIFIER = "physicalIdentifier";
-  public static final String SUBJECT_PHYSICAL_IDENTIFIER = "subjectPhysicalIdentifier";
   // Tombstone
   public static final String TOMBSTONE_TEXT = "tombstoneText";
   public static final String TOMBSTONE_PIDS = "tombstonePids";
@@ -86,9 +87,11 @@ public class PidRecords {
       Map.entry(ISSUE_NUMBER, 7), Map.entry(PID_STATUS, 8), Map.entry(TOMBSTONE_TEXT, 9),
       Map.entry(TOMBSTONE_PIDS, 10), Map.entry(PID_KERNEL_METADATA_LICENSE, 11),
       Map.entry(REFERENT_DOI_NAME, 12), Map.entry(REFERENT, 13), Map.entry(DIGITAL_OR_PHYSICAL, 14),
-      Map.entry(SPECIMEN_HOST, 15), Map.entry(IN_COLLECTION_FACILITY, 16), Map.entry(SUBJECT_PHYSICAL_IDENTIFIER, 17),
-      Map.entry(PHYSICAL_IDENTIFIER, 17), Map.entry(OBJECT_TYPE, 18),
-      Map.entry(PRESERVED_OR_LIVING, 19), Map.entry(MEDIA_HASH, 14), Map.entry(MEDIA_URL, 15));
+      Map.entry(SPECIMEN_HOST, 15), Map.entry(SUBJECT_SPECIMEN_HOST, 15),
+      Map.entry(IN_COLLECTION_FACILITY, 16),
+      Map.entry(SUBJECT_PHYSICAL_IDENTIFIER, 17), Map.entry(PHYSICAL_IDENTIFIER, 17),
+      Map.entry(OBJECT_TYPE, 18), Map.entry(PRESERVED_OR_LIVING, 19), Map.entry(MEDIA_HASH, 14),
+      Map.entry(MEDIA_URL, 15));
 
   static { // Doi Record Fields
     Set<String> tmp = new HashSet<>(HANDLE_RECORD_FIELDS);

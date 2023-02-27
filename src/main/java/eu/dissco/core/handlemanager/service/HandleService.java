@@ -35,6 +35,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_PHYSICAL_IDENTIFIER;
+import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.utils.AdminHandleGenerator.genAdminHandle;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -100,11 +101,10 @@ public class HandleService {
   private final ObjectMapper mapper;
   private final TransformerFactory tf;
 
-  private final DateTimeFormatter dt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+  private final DateTimeFormatter dt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS",
       Locale.ENGLISH).withZone(ZoneId.of("UTC"));
 
   // Resolve Record
-
   public JsonApiWrapperRead resolveSingleRecord(byte[] handle, String path)
       throws PidResolutionException {
     var recordAttributeList = resolveAndFormatRecords(List.of(handle)).get(0);
@@ -216,6 +216,23 @@ public class HandleService {
   }
 
   // Search by Physical Specimen Identifier
+  public JsonApiWrapperWrite searchByPhysicalSpecimenId(JsonNode request)
+      throws JsonProcessingException, PidResolutionException {
+    byte[] physicalIdentifier = getPhysicalIdFromRequest(request);
+
+    var returnedRows = handleRep.searchByPhysicalIdentifier(List.of(physicalIdentifier));
+    var handleNames = listHandleNamesReturnedFromQuery(returnedRows);
+    if (handleNames.size() > 1) {
+      throw new PidResolutionException(
+          "More than one handle record corresponds to the provided collection facility and physical identifier.");
+    }
+    List<JsonApiDataLinks> dataNode = new ArrayList<>();
+
+    var jsonFormattedRecord = jsonFormatSingleRecord(returnedRows);
+    dataNode.add(wrapData(jsonFormattedRecord, "PID"));
+    return new JsonApiWrapperWrite(dataNode);
+  }
+
   private <T extends DigitalSpecimenRequest> void verifyNoRegisteredSpecimens(List<T> requests)
       throws PidCreationException {
     List<byte[]> physicalIds = new ArrayList<>();
@@ -237,43 +254,6 @@ public class HandleService {
     return handles;
   }
 
-  public JsonApiWrapperWrite searchByPhysicalSpecimenId(JsonNode request)
-      throws JsonProcessingException, PidResolutionException {
-    byte[] physicalIdentifier = getPhysicalIdFromRequest(request);
-
-    var returnedRows = handleRep.searchByPhysicalIdentifier(List.of(physicalIdentifier));
-    var recordMap = mapRecords(returnedRows);
-    if (recordMap.size() > 1) {
-      throw new PidResolutionException(
-          "More than one handle record corresponds to the provided collection facility and physical identifier.");
-    }
-    List<JsonApiDataLinks> dataNode = new ArrayList<>();
-
-    for (var handleRecord : recordMap.entrySet()) {
-      var jsonFormattedRecord = jsonFormatSingleRecord(handleRecord.getValue());
-      dataNode.add(wrapData(jsonFormattedRecord, "PID"));
-    }
-    return new JsonApiWrapperWrite(dataNode);
-  }
-
-  private JsonApiWrapperWrite searchByPhysicalSpecimenId(List<JsonNode> requests)
-      throws JsonProcessingException {
-    List<byte[]> physicalIds = new ArrayList<>();
-    for (var request : requests) {
-      physicalIds.add(getPhysicalIdFromRequest(request));
-    }
-
-    var returnedRows = handleRep.searchByPhysicalIdentifier(physicalIds);
-
-    var recordMap = mapRecords(returnedRows);
-    List<JsonApiDataLinks> dataNode = new ArrayList<>();
-    for (var handleRecord : recordMap.entrySet()) {
-      var jsonFormattedRecord = jsonFormatSingleRecord(handleRecord.getValue());
-      dataNode.add(wrapData(jsonFormattedRecord, "PID"));
-    }
-    return new JsonApiWrapperWrite(dataNode);
-  }
-
   private byte[] getPhysicalIdFromRequest(JsonNode request) throws JsonProcessingException {
     var physicalIdentifier = mapper.treeToValue(
         request.get(NODE_DATA).get(NODE_ATTRIBUTES).get(PHYSICAL_IDENTIFIER),
@@ -286,7 +266,6 @@ public class HandleService {
       return concatIds(physicalIdentifier, specimenHostPid);
     }
   }
-
 
   // Pid Record Creation
   public <T extends DigitalSpecimenRequest> JsonApiWrapperWrite createRecords(
@@ -356,8 +335,8 @@ public class HandleService {
     }
     return new JsonApiWrapperWrite(dataList);
   }
-  // Update Records
 
+  // Update Records
   public JsonApiWrapperWrite updateRecords(List<JsonNode> requests)
       throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
     var recordTimestamp = Instant.now().getEpochSecond();
@@ -603,6 +582,31 @@ public class HandleService {
     return handleRecord;
   }
 
+  private List<HandleAttribute> prepareMediaObjectAttributes(MediaObjectRequest request,
+      byte[] handle)
+      throws PidResolutionException, PidServiceInternalError {
+    var handleRecord = prepareDoiRecordAttributes(request, handle);
+
+    // 14 Media Hash
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(MEDIA_HASH), handle, PHYSICAL_IDENTIFIER,
+        request.getMediaHash().getBytes(StandardCharsets.UTF_8)));
+
+    // 15 Subject Specimen Host
+    String specimenHost = pidTypeService.resolveTypePid(request.getSubjectSpecimenHostPid());
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(SUBJECT_SPECIMEN_HOST), handle, SUBJECT_SPECIMEN_HOST,
+        specimenHost.getBytes(StandardCharsets.UTF_8)));
+
+    // 16 Media Url
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(MEDIA_URL), handle, PHYSICAL_IDENTIFIER,
+        request.getMediaUrl().getBytes(StandardCharsets.UTF_8)));
+
+    // 17 : Subject Physical Identifier
+    // Encoding here is UTF-8
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(SUBJECT_PHYSICAL_IDENTIFIER), handle,
+        SUBJECT_PHYSICAL_IDENTIFIER,  setUniquePhysicalIdentifierId(request)));
+    return handleRecord;
+  }
+
   private List<HandleAttribute> prepareDigitalSpecimenRecordAttributes(
       DigitalSpecimenRequest request, byte[] handle)
       throws PidResolutionException, PidServiceInternalError {
@@ -658,32 +662,18 @@ public class HandleService {
     return concatIds(physicalIdentifier, request.getSpecimenHostPid());
   }
 
+  private byte[] setUniquePhysicalIdentifierId(MediaObjectRequest request) {
+    var physicalIdentifier = request.getSubjectPhysicalIdentifier();
+    if (physicalIdentifier.physicalIdType() == PhysicalIdType.CETAF) {
+      return physicalIdentifier.physicalId().getBytes(StandardCharsets.UTF_8);
+    }
+    return concatIds(physicalIdentifier, request.getSubjectSpecimenHostPid());
+  }
+
   private byte[] concatIds(PhysicalIdentifier physicalIdentifier, String specimenHostPid) {
     var hostIdArr = specimenHostPid.split("/");
     var hostId = hostIdArr[hostIdArr.length - 1];
     return (physicalIdentifier.physicalId() + ":" + hostId).getBytes(StandardCharsets.UTF_8);
-  }
-
-  private List<HandleAttribute> prepareMediaObjectAttributes(MediaObjectRequest request,
-      byte[] handle)
-      throws PidResolutionException, PidServiceInternalError, JsonProcessingException {
-    var handleRecord = prepareDoiRecordAttributes(request, handle);
-
-    // 14 Media Hash
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(MEDIA_HASH), handle, PHYSICAL_IDENTIFIER,
-        request.getMediaHash().getBytes(StandardCharsets.UTF_8)));
-
-    // 15 Media Url
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(MEDIA_URL), handle, PHYSICAL_IDENTIFIER,
-        request.getMediaUrl().getBytes(StandardCharsets.UTF_8)));
-
-    // 16 : Physical Identifier
-    // Encoding here is UTF-8
-    var physicalIdentifier = mapper.writeValueAsBytes(request.getSubjectPhysicalIdentifier());
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(SUBJECT_PHYSICAL_IDENTIFIER), handle,
-        SUBJECT_PHYSICAL_IDENTIFIER, physicalIdentifier));
-
-    return handleRecord;
   }
 
   private String getDate() {

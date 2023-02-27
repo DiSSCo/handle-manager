@@ -198,7 +198,6 @@ public class JsonSchemaLibrary {
     if (!validationErrors.isEmpty()){
       throw new InvalidRecordInput(setErrorMessage(validationErrors, "Search by physical specimen id"));
     }
-
   }
 
   private static void validateRequestAttributes(JsonNode requestAttributes, JsonSchema schema,

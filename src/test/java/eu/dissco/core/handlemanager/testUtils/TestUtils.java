@@ -31,6 +31,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_TOMBSTO
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
+import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_PHYSICAL_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_TEXT;
 
@@ -288,6 +289,7 @@ public class TestUtils {
         new HandleAttribute(FIELD_IDX.get(IN_COLLECTION_FACILITY), handle, IN_COLLECTION_FACILITY,
             ptr_record));
 
+    // 17 Physical Specimen Identifier
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(PHYSICAL_IDENTIFIER), handle, PHYSICAL_IDENTIFIER,
             PHYSICAL_IDENTIFIER_LOCAL.getBytes(StandardCharsets.UTF_8)));
@@ -312,21 +314,23 @@ public class TestUtils {
   public static List<HandleAttribute> genMediaObjectAttributes(byte[] handle)
       throws JsonProcessingException {
     List<HandleAttribute> handleRecord = genDoiRecordAttributes(handle);
+    byte[] ptr_record = PTR_HANDLE_RECORD.getBytes(StandardCharsets.UTF_8);
 
     // 14 Media Hash
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(MEDIA_HASH), handle,
         MEDIA_HASH, MEDIA_HASH_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
-    // 15 Media Url
+    // 15 Subject Specimen Host
+    handleRecord.add(
+        new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST), handle, SPECIMEN_HOST, ptr_record));
+
+    // 16 media hash
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(MEDIA_URL), handle,
         MEDIA_URL, MEDIA_URL_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
-    // 16 : Subject Physical Identifier
-    // Encoding here is UTF-8
-    var physicalIdentifier = MAPPER.writeValueAsBytes(PHYSICAL_IDENTIFIER_CETAF);
-    handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(SUBJECT_PHYSICAL_IDENTIFIER), handle, SUBJECT_PHYSICAL_IDENTIFIER,
-            physicalIdentifier));
+    // 17 : Subject Physical Identifier
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(SUBJECT_PHYSICAL_IDENTIFIER), handle,
+        SUBJECT_PHYSICAL_IDENTIFIER, PHYSICAL_IDENTIFIER_LOCAL.getBytes(StandardCharsets.UTF_8)));
     return handleRecord;
   }
 
@@ -404,6 +408,7 @@ public class TestUtils {
         REFERENT_DOI_NAME_PID,
         MEDIA_HASH_TESTVAL,
         MEDIA_URL_TESTVAL,
+        SPECIMEN_HOST_PID,
         PHYSICAL_IDENTIFIER_CETAF
     );
   }
@@ -419,7 +424,7 @@ public class TestUtils {
     var dataNode = MAPPER.createObjectNode();
     var attributeNode = MAPPER.createObjectNode();
     attributeNode.set(PHYSICAL_IDENTIFIER, MAPPER.valueToTree(PHYSICAL_IDENTIFIER_CETAF));
-    attributeNode.set(SPECIMEN_HOST, MAPPER.valueToTree(SPECIMEN_HOST_TESTVAL));
+    attributeNode.put(SPECIMEN_HOST_REQ, SPECIMEN_HOST_PID);
     dataNode.set(NODE_ATTRIBUTES, attributeNode);
     request.set(NODE_DATA, dataNode);
     return request;
