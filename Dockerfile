@@ -1,6 +1,7 @@
 FROM eclipse-temurin:17-alpine as builder
 WORKDIR application
-COPY target/*.jar application.jar
+ARG JAR_FILE=target/*spring-boot.jar
+COPY ${JAR_FILE} application.jar
 RUN java -Djarmode=layertools -jar application.jar extract
 FROM eclipse-temurin:17-alpine
 RUN adduser -D -u 1000 java
