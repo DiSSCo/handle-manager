@@ -17,6 +17,18 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 17
+      - name: Build an image from Dockerfile
+        run: |
+          docker build -t docker.io/DiSSCo/handle-manager:${{ github.sha }} .
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'docker.io/DiSSCo/handle-manager:${{ github.sha }}'
+          format: 'table'
+          exit-code: '1'  # Change to 0 if you don't want trivy to break pipeline
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
       - name: Cache SonarCloud packages
         uses: actions/cache@v1
         with:
