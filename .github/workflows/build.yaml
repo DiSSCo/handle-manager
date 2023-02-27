@@ -43,7 +43,7 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'docker.io/DiSSCo/handle-manager:${{ github.sha }}'
+          image-ref: 'docker.io/dissco/handle-manager:${{ github.sha }}'
           format: 'table'
           exit-code: '1'  # Change to 0 if you don't want trivy to break pipeline
           ignore-unfixed: true
