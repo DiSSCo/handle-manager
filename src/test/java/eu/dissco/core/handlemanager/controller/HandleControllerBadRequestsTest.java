@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaStaticContextInitializer;
-import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
+import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.service.HandleService;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -70,7 +70,7 @@ class HandleControllerBadRequestsTest {
     ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(PHYSICAL_IDENTIFIER);
 
     // Then
-    Exception e = assertThrows(InvalidRecordInput.class, () -> {
+    Exception e = assertThrows(InvalidRequestException.class, () -> {
       controller.searchByPhysicalSpecimenId(request);
     });
     assertThat(e.getMessage()).contains(PHYSICAL_IDENTIFIER);
@@ -83,7 +83,7 @@ class HandleControllerBadRequestsTest {
     request.put(UNKNOWN_ATTRIBUTE, UNKNOWN_VAL);
 
     // Then
-    Exception e = assertThrows(InvalidRecordInput.class, () -> {
+    Exception e = assertThrows(InvalidRequestException.class, () -> {
       controller.searchByPhysicalSpecimenId(request);
     });
     assertThat(e.getMessage()).contains(UNKNOWN_ATTRIBUTE);
@@ -96,7 +96,7 @@ class HandleControllerBadRequestsTest {
     ((ObjectNode) request.get(NODE_DATA)).remove(NODE_TYPE);
 
     // Then
-    Exception e = assertThrows(InvalidRecordInput.class, () -> {
+    Exception e = assertThrows(InvalidRequestException.class, () -> {
       controller.createRecord(request);
     });
     assertThat(e.getMessage()).contains(NODE_TYPE);
@@ -110,7 +110,7 @@ class HandleControllerBadRequestsTest {
     ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(missingAttribute);
 
     // Then
-    Exception e = assertThrows(InvalidRecordInput.class, () -> {
+    Exception e = assertThrows(InvalidRequestException.class, () -> {
       controller.createRecord(request);
     });
     assertThat(e.getMessage()).contains(missingAttribute);
@@ -123,7 +123,7 @@ class HandleControllerBadRequestsTest {
     ((ObjectNode) request.get(NODE_DATA)).put(UNKNOWN_ATTRIBUTE, UNKNOWN_VAL);
 
     // Then
-    Exception e = assertThrows(InvalidRecordInput.class, () -> {
+    Exception e = assertThrows(InvalidRequestException.class, () -> {
       controller.createRecord(request);
     });
     assertThat(e.getMessage()).contains(UNKNOWN_ATTRIBUTE);
@@ -137,7 +137,7 @@ class HandleControllerBadRequestsTest {
     ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(missingAttribute);
 
     // Then
-    Exception e = assertThrows(InvalidRecordInput.class, () -> {
+    Exception e = assertThrows(InvalidRequestException.class, () -> {
       controller.createRecord(request);
     });
     assertThat(e.getMessage()).contains(missingAttribute);
@@ -150,7 +150,7 @@ class HandleControllerBadRequestsTest {
     ((ObjectNode) request.get(NODE_DATA)).put(UNKNOWN_ATTRIBUTE, UNKNOWN_VAL);
 
     // Then
-    Exception e = assertThrows(InvalidRecordInput.class, () -> {
+    Exception e = assertThrows(InvalidRequestException.class, () -> {
       controller.createRecord(request);
     });
     assertThat(e.getMessage()).contains(UNKNOWN_ATTRIBUTE);
@@ -164,7 +164,7 @@ class HandleControllerBadRequestsTest {
     ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(missingAttribute);
 
     // Then
-    Exception e = assertThrows(InvalidRecordInput.class, () -> {
+    Exception e = assertThrows(InvalidRequestException.class, () -> {
       controller.createRecord(request);
     });
     assertThat(e.getMessage()).contains(missingAttribute);
@@ -177,7 +177,7 @@ class HandleControllerBadRequestsTest {
     ((ObjectNode) request.get(NODE_DATA)).put(UNKNOWN_ATTRIBUTE, UNKNOWN_VAL);
 
     // Then
-    Exception e = assertThrows(InvalidRecordInput.class, () -> {
+    Exception e = assertThrows(InvalidRequestException.class, () -> {
       controller.createRecord(request);
     });
     assertThat(e.getMessage()).contains(UNKNOWN_ATTRIBUTE);
@@ -192,7 +192,7 @@ class HandleControllerBadRequestsTest {
     ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(missingAttribute);
 
     // Then
-    Exception e = assertThrows(InvalidRecordInput.class, () -> {
+    Exception e = assertThrows(InvalidRequestException.class, () -> {
       controller.createRecord(request);
     });
     assertThat(e.getMessage()).contains(missingAttribute);
@@ -206,7 +206,7 @@ class HandleControllerBadRequestsTest {
     ((ObjectNode) request.get(NODE_DATA)).put(UNKNOWN_ATTRIBUTE, UNKNOWN_VAL);
 
     // Then
-    Exception e = assertThrows(InvalidRecordInput.class, () -> {
+    Exception e = assertThrows(InvalidRequestException.class, () -> {
       controller.createRecord(request);
     });
     assertThat(e.getMessage()).contains(UNKNOWN_ATTRIBUTE);
@@ -219,7 +219,7 @@ class HandleControllerBadRequestsTest {
     ((ObjectNode) request.get(NODE_DATA)).put(UNKNOWN_ATTRIBUTE, UNKNOWN_VAL);
 
     // Then
-    Exception e = assertThrows(InvalidRecordInput.class, () -> {
+    Exception e = assertThrows(InvalidRequestException.class, () -> {
       controller.createRecord(request);
     });
     assertThat(e.getMessage()).contains(UNKNOWN_ATTRIBUTE);
@@ -234,7 +234,7 @@ class HandleControllerBadRequestsTest {
     ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(missingAttribute);
 
     // Then
-    Exception e = assertThrows(InvalidRecordInput.class, () -> {
+    Exception e = assertThrows(InvalidRequestException.class, () -> {
       controller.createRecord(request);
     });
     assertThat(e.getMessage()).contains(missingAttribute);
@@ -246,7 +246,7 @@ class HandleControllerBadRequestsTest {
     var request = givenPatchRequest(null, "");
 
     // Then
-    Exception e = assertThrows(InvalidRecordInput.class, () -> {
+    Exception e = assertThrows(InvalidRequestException.class, () -> {
       controller.updateRecord(PREFIX, SUFFIX, request);
     });
     assertThat(e.getMessage()).contains(NODE_TYPE);
@@ -260,7 +260,7 @@ class HandleControllerBadRequestsTest {
     var request = givenPatchRequest(recordType, UNKNOWN_ATTRIBUTE);
 
     // Then
-    Exception e = assertThrows(InvalidRecordInput.class, () -> {
+    Exception e = assertThrows(InvalidRequestException.class, () -> {
       controller.updateRecord(PREFIX, SUFFIX, request);
     });
     assertThat(e.getMessage()).contains(UNKNOWN_ATTRIBUTE);
@@ -274,7 +274,7 @@ class HandleControllerBadRequestsTest {
     ((ObjectNode) request.get(NODE_DATA)).remove(NODE_ID);
 
     // When
-    Exception e = assertThrows(InvalidRecordInput.class, () -> {
+    Exception e = assertThrows(InvalidRequestException.class, () -> {
       controller.archiveRecord(PREFIX, SUFFIX, request);
     });
 
@@ -290,7 +290,7 @@ class HandleControllerBadRequestsTest {
     ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(TOMBSTONE_TEXT);
 
     // When
-    Exception e = assertThrows(InvalidRecordInput.class, () -> {
+    Exception e = assertThrows(InvalidRequestException.class, () -> {
       controller.archiveRecord(PREFIX, SUFFIX, request);
     });
 
@@ -307,7 +307,7 @@ class HandleControllerBadRequestsTest {
     r.setRequestURI("a");
 
     // When
-    Exception e = assertThrows(InvalidRecordInput.class, () -> {
+    Exception e = assertThrows(InvalidRequestException.class, () -> {
       controller.resolvePids(List.of(request), r);
     });
 

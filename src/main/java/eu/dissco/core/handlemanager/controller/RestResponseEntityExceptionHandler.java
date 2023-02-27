@@ -1,7 +1,7 @@
 package eu.dissco.core.handlemanager.controller;
 
 import eu.dissco.core.handlemanager.exceptions.ExceptionResponse;
-import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
+import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
@@ -24,8 +24,8 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
   }
 
   @ResponseStatus(HttpStatus.BAD_REQUEST)
-  @ExceptionHandler(InvalidRecordInput.class)
-  public ResponseEntity<ExceptionResponse> invalidRecordInputException(InvalidRecordInput e) {
+  @ExceptionHandler(InvalidRequestException.class)
+  public ResponseEntity<ExceptionResponse> invalidRecordInputException(InvalidRequestException e) {
     ExceptionResponse exceptionResponse = new ExceptionResponse(
         String.valueOf(HttpStatus.BAD_REQUEST), e.getClass().getSimpleName(), e.getMessage());
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exceptionResponse);

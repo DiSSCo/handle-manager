@@ -56,7 +56,7 @@ import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordReque
 import eu.dissco.core.handlemanager.domain.requests.attributes.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdentifier;
-import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
+import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
@@ -269,7 +269,7 @@ public class HandleService {
   // Pid Record Creation
   public <T extends DigitalSpecimenRequest> JsonApiWrapperWrite createRecords(
       List<JsonNode> requests)
-      throws PidResolutionException, PidServiceInternalError, InvalidRecordInput, PidCreationException {
+      throws PidResolutionException, PidServiceInternalError, InvalidRequestException, PidCreationException {
 
     var recordTimestamp = Instant.now().getEpochSecond();
     List<byte[]> handles = hf.genHandleList(requests.size());
@@ -315,10 +315,10 @@ public class HandleService {
                 MediaObjectRequest.class);
             handleAttributes.addAll(prepareMediaObjectAttributes(requestObject, handles.remove(0)));
           }
-          default -> throw new InvalidRecordInput(INVALID_TYPE_ERROR + type);
+          default -> throw new InvalidRequestException(INVALID_TYPE_ERROR + type);
         }
       } catch (JsonProcessingException e) {
-        throw new InvalidRecordInput(
+        throw new InvalidRequestException(
             "An error has occurred parsing a record in request. More information: "
                 + e.getMessage());
       }
@@ -337,7 +337,7 @@ public class HandleService {
 
   // Update Records
   public JsonApiWrapperWrite updateRecords(List<JsonNode> requests)
-      throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
+      throws InvalidRequestException, PidResolutionException, PidServiceInternalError {
     var recordTimestamp = Instant.now().getEpochSecond();
     List<byte[]> handles = new ArrayList<>();
     List<List<HandleAttribute>> attributesToUpdate = new ArrayList<>();
@@ -375,7 +375,7 @@ public class HandleService {
   }
 
   private JsonNode setLocationFromJson(JsonNode request)
-      throws InvalidRecordInput, PidServiceInternalError {
+      throws InvalidRequestException, PidServiceInternalError {
     var keys = getKeys(request);
     if (!keys.contains(LOC_REQ)) {
       return request;
@@ -391,7 +391,7 @@ public class HandleService {
         requestObjectNode.put(LOC, new String(setLocations(locArr), StandardCharsets.UTF_8));
         requestObjectNode.remove(LOC_REQ);
       } catch (IOException e) {
-        throw new InvalidRecordInput(
+        throw new InvalidRequestException(
             "An error has occurred parsing \"locations\" array. " + e.getMessage());
       } catch (PidServiceInternalError e) {
         throw e;
@@ -423,7 +423,7 @@ public class HandleService {
     }
   }
 
-  private void checkInternalDuplicates(List<byte[]> handles) throws InvalidRecordInput {
+  private void checkInternalDuplicates(List<byte[]> handles) throws InvalidRequestException {
     Set<String> handlesToUpdateStr = new HashSet<>();
     for (byte[] handle : handles) {
       handlesToUpdateStr.add(new String(handle, StandardCharsets.UTF_8));
@@ -431,7 +431,7 @@ public class HandleService {
 
     if (handlesToUpdateStr.size() < handles.size()) {
       Set<String> duplicateHandles = findDuplicates(handles, handlesToUpdateStr);
-      throw new InvalidRecordInput(
+      throw new InvalidRequestException(
           "INVALID INPUT. Attempting to update the same record multiple times in one request. "
               + "The following handles are duplicated in the request: " + duplicateHandles);
     }
@@ -472,7 +472,7 @@ public class HandleService {
 
   // Archive
   public JsonApiWrapperWrite archiveRecordBatch(List<JsonNode> requests)
-      throws InvalidRecordInput, PidResolutionException {
+      throws InvalidRequestException, PidResolutionException {
     var recordTimestamp = Instant.now().getEpochSecond();
     List<byte[]> handles = new ArrayList<>();
     List<HandleAttribute> archiveAttributes = new ArrayList<>();

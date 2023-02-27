@@ -52,7 +52,7 @@ import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdentifier;
-import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
+import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
@@ -528,7 +528,7 @@ class HandleServiceTest {
     List<JsonNode> updateRequest = genUpdateRequestBatch(handles);
 
     // Then
-    assertThrows(InvalidRecordInput.class, () -> {
+    assertThrows(InvalidRequestException.class, () -> {
       service.updateRecords(updateRequest);
     });
   }
@@ -624,7 +624,7 @@ class HandleServiceTest {
     given(hgService.genHandleList(1)).willReturn(List.of(HANDLE.getBytes(StandardCharsets.UTF_8)));
 
     // When
-    Exception exception = assertThrows(InvalidRecordInput.class, () -> {
+    Exception exception = assertThrows(InvalidRequestException.class, () -> {
       service.createRecords(List.of(requestNode));
     });
 
@@ -646,7 +646,7 @@ class HandleServiceTest {
     given(hgService.genHandleList(2)).willReturn(handles);
 
     // When
-    Exception exception = assertThrows(InvalidRecordInput.class, () -> {
+    Exception exception = assertThrows(InvalidRequestException.class, () -> {
       service.createRecords(requests);
     });
 

@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaLibrary;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaStaticContextInitializer;
-import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
+import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +38,7 @@ class JsonSchemaLibraryTest {
     ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).put(unknownAttribute, "badVal");
     ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).put("badKey2", "badVal");
     // Then
-    Exception e = assertThrows(InvalidRecordInput.class, () -> {
+    Exception e = assertThrows(InvalidRequestException.class, () -> {
       JsonSchemaLibrary.validatePostRequest(request);
     });
 

@@ -28,7 +28,7 @@ import eu.dissco.core.handlemanager.domain.requests.attributes.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.TombstoneRecordRequest;
-import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
+import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -138,10 +138,10 @@ public class JsonSchemaLibrary {
     tombstoneReqSchema = factory.getSchema(tombstoneReqJsonNode);
   }
 
-  public static void validatePostRequest(JsonNode requestRoot) throws InvalidRecordInput {
+  public static void validatePostRequest(JsonNode requestRoot) throws InvalidRequestException {
     var validationErrors = postReqSchema.validate(requestRoot);
     if (!validationErrors.isEmpty()) {
-      throw new InvalidRecordInput(setErrorMessage(validationErrors, "POST"));
+      throw new InvalidRequestException(setErrorMessage(validationErrors, "POST"));
     }
     String type = requestRoot.get(NODE_DATA).get(NODE_TYPE).asText();
     var attributes = requestRoot.get(NODE_DATA).get(NODE_ATTRIBUTES);
@@ -154,23 +154,23 @@ public class JsonSchemaLibrary {
           validateRequestAttributes(attributes, digitalSpecimenBotanyPostReqSchema, type);
       case RECORD_TYPE_MEDIA ->
           validateRequestAttributes(attributes, mediaObjectPostReqSchema, type);
-      default -> throw new InvalidRecordInput("Invalid Request. Reason: Invalid type: " + type);
+      default -> throw new InvalidRequestException("Invalid Request. Reason: Invalid type: " + type);
     }
   }
 
-  public static void validatePutRequest(JsonNode requestRoot) throws InvalidRecordInput {
+  public static void validatePutRequest(JsonNode requestRoot) throws InvalidRequestException {
     var validationErrors = putReqSchema.validate(requestRoot);
     if (!validationErrors.isEmpty()) {
-      throw new InvalidRecordInput(setErrorMessage(validationErrors, "PUT (tombstone)"));
+      throw new InvalidRequestException(setErrorMessage(validationErrors, "PUT (tombstone)"));
     }
     var attributes = requestRoot.get(NODE_DATA).get(NODE_ATTRIBUTES);
     validateRequestAttributes(attributes, tombstoneReqSchema, RECORD_TYPE_TOMBSTONE);
   }
 
-  public static void validatePatchRequest(JsonNode requestRoot) throws InvalidRecordInput {
+  public static void validatePatchRequest(JsonNode requestRoot) throws InvalidRequestException {
     var validationErrors = patchReqSchema.validate(requestRoot);
     if (!validationErrors.isEmpty()) {
-      throw new InvalidRecordInput(setErrorMessage(validationErrors, "PATCH (update)"));
+      throw new InvalidRequestException(setErrorMessage(validationErrors, "PATCH (update)"));
     }
     String type = requestRoot.get(NODE_DATA).get(NODE_TYPE).asText();
     var attributes = requestRoot.get(NODE_DATA).get(NODE_ATTRIBUTES);
@@ -183,30 +183,30 @@ public class JsonSchemaLibrary {
           validateRequestAttributes(attributes, digitalSpecimenBotanyPatchReqSchema, type);
       case RECORD_TYPE_MEDIA ->
           validateRequestAttributes(attributes, mediaObjectPatchReqSchema, type);
-      default -> throw new InvalidRecordInput("Invalid Request. Reason: Invalid type: " + type);
+      default -> throw new InvalidRequestException("Invalid Request. Reason: Invalid type: " + type);
     }
   }
 
-  public static void validateResolveRequest(JsonNode requestRoot) throws InvalidRecordInput {
+  public static void validateResolveRequest(JsonNode requestRoot) throws InvalidRequestException {
     var validationErrors = resolveReqSchema.validate(requestRoot);
     if (!validationErrors.isEmpty()) {
-      throw new InvalidRecordInput(setErrorMessage(validationErrors, "POST (Resolve)"));
+      throw new InvalidRequestException(setErrorMessage(validationErrors, "POST (Resolve)"));
     }
   }
 
-  public static void validateSearchByPhysIdRequest(JsonNode requestRoot) throws InvalidRecordInput {
+  public static void validateSearchByPhysIdRequest(JsonNode requestRoot) throws InvalidRequestException {
     var validationErrors = searchByPhysIdReqSchema.validate(requestRoot);
     if (!validationErrors.isEmpty()) {
-      throw new InvalidRecordInput(
+      throw new InvalidRequestException(
           setErrorMessage(validationErrors, "Search by physical specimen id"));
     }
   }
 
   private static void validateRequestAttributes(JsonNode requestAttributes, JsonSchema schema,
-      String type) throws InvalidRecordInput {
+      String type) throws InvalidRequestException {
     var validationErrors = schema.validate(requestAttributes);
     if (!validationErrors.isEmpty()) {
-      throw new InvalidRecordInput(setErrorMessage(validationErrors, type));
+      throw new InvalidRequestException(setErrorMessage(validationErrors, type));
     }
   }
 

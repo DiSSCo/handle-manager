@@ -3,7 +3,7 @@ package eu.dissco.core.handlemanager.controller;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import eu.dissco.core.handlemanager.exceptions.ExceptionResponse;
-import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
+import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
@@ -45,10 +45,10 @@ class HandleControllerExceptionHandlerTest {
   void testInvalidRecordInput() throws Exception {
     // Given
     var expectedBody = new ExceptionResponse(HttpStatus.BAD_REQUEST.toString(),
-        InvalidRecordInput.class.getSimpleName(), errorMessage);
+        InvalidRequestException.class.getSimpleName(), errorMessage);
 
     // When
-    var result = exceptionHandler.invalidRecordInputException(new InvalidRecordInput(errorMessage));
+    var result = exceptionHandler.invalidRecordInputException(new InvalidRequestException(errorMessage));
 
     // Then
     assertThat(result.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);

@@ -46,7 +46,7 @@ import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRe
 import eu.dissco.core.handlemanager.domain.requests.attributes.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaStaticContextInitializer;
-import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
+import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.service.HandleService;
 import java.nio.charset.StandardCharsets;
@@ -109,7 +109,7 @@ class HandleControllerTest {
     int pageNum = 1;
     String pidStatus = "BAD";
 
-    var exception = assertThrowsExactly(InvalidRecordInput.class,
+    var exception = assertThrowsExactly(InvalidRequestException.class,
         () -> controller.getAllHandlesByPidStatus(pageNum, pageSize, pidStatus));
 
     // Then
@@ -455,7 +455,7 @@ class HandleControllerTest {
     updateRequestNode.set("data", givenJsonNode(HANDLE_ALT, RECORD_TYPE_HANDLE, updateAttributes));
 
     // Then
-    assertThrows(InvalidRecordInput.class, () -> {
+    assertThrows(InvalidRequestException.class, () -> {
       controller.updateRecord(PREFIX, SUFFIX, updateRequestNode);
     });
   }
@@ -544,7 +544,7 @@ class HandleControllerTest {
         givenJsonNode(HANDLE_ALT, RECORD_TYPE_HANDLE, archiveAttributes));
 
     // Then
-    assertThrows(InvalidRecordInput.class, () -> {
+    assertThrows(InvalidRequestException.class, () -> {
       controller.updateRecord(PREFIX, SUFFIX, archiveRequestNode);
     });
   }

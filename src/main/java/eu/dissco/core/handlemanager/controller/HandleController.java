@@ -14,7 +14,7 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaLibrary;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaStaticContextInitializer;
-import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
+import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
@@ -65,10 +65,10 @@ public class HandleController {
       @RequestParam(value = "pageNum", defaultValue = "0") int pageNum,
       @RequestParam(value = "pageSize", defaultValue = "100") int pageSize,
       @RequestParam(name = "pidStatus", defaultValue = "ALL") String pidStatus)
-      throws PidResolutionException, InvalidRecordInput {
+      throws PidResolutionException, InvalidRequestException {
 
     if (!VALID_PID_STATUS.contains(pidStatus)) {
-      throw new InvalidRecordInput(
+      throw new InvalidRequestException(
           "Invalid Input. Pid Status not recognized. Available Pid Statuses: " + VALID_PID_STATUS);
     }
     List<String> handleList;
@@ -95,7 +95,7 @@ public class HandleController {
 
   @PostMapping("/records")
   public ResponseEntity<JsonApiWrapperRead> resolvePids(@RequestBody List<JsonNode> requests,
-      HttpServletRequest r) throws PidResolutionException, InvalidRecordInput {
+      HttpServletRequest r) throws PidResolutionException, InvalidRequestException {
 
     String path = SANDBOX_URI + r.getRequestURI();
     List<byte[]> handles = new ArrayList<>();
@@ -110,7 +110,7 @@ public class HandleController {
   @PostMapping("/records/physicalId")
   public ResponseEntity<JsonApiWrapperWrite> searchByPhysicalSpecimenId(
       @RequestBody JsonNode request)
-      throws InvalidRecordInput, JsonProcessingException, PidResolutionException {
+      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
     validateSearchByPhysIdRequest(request);
     return ResponseEntity.status(HttpStatus.OK).body(service.searchByPhysicalSpecimenId(request));
   }
@@ -118,7 +118,7 @@ public class HandleController {
   @PreAuthorize("isAuthenticated()")
   @PostMapping(value = "")
   public ResponseEntity<JsonApiWrapperWrite> createRecord(@RequestBody JsonNode request)
-      throws PidResolutionException, PidServiceInternalError, InvalidRecordInput, PidCreationException {
+      throws PidResolutionException, PidServiceInternalError, InvalidRequestException, PidCreationException {
     JsonSchemaLibrary.validatePostRequest(request);
     return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(List.of(request)));
   }
@@ -126,7 +126,7 @@ public class HandleController {
   @PreAuthorize("isAuthenticated()")
   @PostMapping(value = "/batch")
   public ResponseEntity<JsonApiWrapperWrite> createRecords(@RequestBody List<JsonNode> requests)
-      throws PidResolutionException, PidServiceInternalError, InvalidRecordInput, PidCreationException {
+      throws PidResolutionException, PidServiceInternalError, InvalidRequestException, PidCreationException {
 
     for (JsonNode request : requests) {
       JsonSchemaLibrary.validatePostRequest(request);
@@ -139,7 +139,7 @@ public class HandleController {
   @PatchMapping(value = "/{prefix}/{suffix}")
   public ResponseEntity<JsonApiWrapperWrite> updateRecord(@PathVariable("prefix") String prefix,
       @PathVariable("suffix") String suffix, @RequestBody JsonNode request)
-      throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
+      throws InvalidRequestException, PidResolutionException, PidServiceInternalError {
 
     JsonSchemaLibrary.validatePatchRequest(request);
 
@@ -148,7 +148,7 @@ public class HandleController {
     byte[] handleData = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
 
     if (!Arrays.equals(handle, handleData)) {
-      throw new InvalidRecordInput("Handle in request URL does not match id in request body.");
+      throw new InvalidRequestException("Handle in request URL does not match id in request body.");
     }
 
     return ResponseEntity.status(HttpStatus.OK).body(service.updateRecords(List.of(request)));
@@ -157,7 +157,7 @@ public class HandleController {
   @PreAuthorize("isAuthenticated()")
   @PatchMapping(value = "")
   public ResponseEntity<JsonApiWrapperWrite> updateRecords(@RequestBody List<JsonNode> requests)
-      throws InvalidRecordInput, PidResolutionException, PidServiceInternalError {
+      throws InvalidRequestException, PidResolutionException, PidServiceInternalError {
 
     for (JsonNode request : requests) {
       JsonSchemaLibrary.validatePatchRequest(request);
@@ -169,7 +169,7 @@ public class HandleController {
   @PutMapping(value = "/{prefix}/{suffix}")
   public ResponseEntity<JsonApiWrapperWrite> archiveRecord(@PathVariable("prefix") String prefix,
       @PathVariable("suffix") String suffix, @RequestBody JsonNode request)
-      throws InvalidRecordInput, PidResolutionException {
+      throws InvalidRequestException, PidResolutionException {
 
     validatePutRequest(request);
 
@@ -177,7 +177,7 @@ public class HandleController {
     byte[] handle = (prefix + "/" + suffix).getBytes(StandardCharsets.UTF_8);
     byte[] handleRequest = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
     if (!Arrays.equals(handle, handleRequest)) {
-      throw new InvalidRecordInput(
+      throw new InvalidRequestException(
           "Handle in request URL does not match id in request body. URL: " + handle + ", body: "
               + handleRequest);
     }
@@ -187,7 +187,7 @@ public class HandleController {
   @PreAuthorize("isAuthenticated()")
   @PutMapping(value = "")
   public ResponseEntity<JsonApiWrapperWrite> archiveRecords(@RequestBody List<JsonNode> requests)
-      throws InvalidRecordInput, PidResolutionException {
+      throws InvalidRequestException, PidResolutionException {
     for (JsonNode request : requests) {
       validatePutRequest(request);
     }
