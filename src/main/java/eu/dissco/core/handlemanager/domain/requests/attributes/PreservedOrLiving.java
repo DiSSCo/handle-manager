@@ -9,11 +9,11 @@ public enum PreservedOrLiving {
 
   private final String state;
 
-  private PreservedOrLiving(@JsonProperty("preservedOrLiving") String state){
+  private PreservedOrLiving(@JsonProperty("preservedOrLiving") String state) {
     this.state = state;
   }
 
-  public String getType(){
+  public String getType() {
     return state;
   }
 

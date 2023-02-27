@@ -9,6 +9,7 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public class MediaObjectRequest extends DoiRecordRequest {
+
   @JsonProperty(required = true)
   private final String mediaHash;
   @JsonProperty(required = true)
@@ -17,6 +18,7 @@ public class MediaObjectRequest extends DoiRecordRequest {
   private final String subjectSpecimenHostPid;
   @JsonProperty(required = true)
   private final PhysicalIdentifier subjectPhysicalIdentifier;
+
   public MediaObjectRequest(
       String pidIssuerPid,
       String digitalObjectTypePid,

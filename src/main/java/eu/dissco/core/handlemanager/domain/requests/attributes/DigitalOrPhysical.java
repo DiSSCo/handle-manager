@@ -9,15 +9,15 @@ public enum DigitalOrPhysical {
 
   private final String state;
 
-  private DigitalOrPhysical(@JsonProperty("digitalOrPhysical") String state){
+  private DigitalOrPhysical(@JsonProperty("digitalOrPhysical") String state) {
     this.state = state;
   }
 
-  public String getType(){
+  public String getType() {
     return state;
   }
 
-  public byte[] getBytes(){
+  public byte[] getBytes() {
     return state.getBytes(StandardCharsets.UTF_8);
   }
 

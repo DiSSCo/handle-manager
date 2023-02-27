@@ -10,11 +10,11 @@ public enum PhysicalIdType {
 
   private final String state;
 
-  private PhysicalIdType(@JsonProperty("physicalIdType") String state){
+  private PhysicalIdType(@JsonProperty("physicalIdType") String state) {
     this.state = state;
   }
 
-  public String getType(){
+  public String getType() {
     return state;
   }
 

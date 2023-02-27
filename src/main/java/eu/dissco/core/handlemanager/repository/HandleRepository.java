@@ -69,14 +69,17 @@ public class HandleRepository {
         .fetch(this::mapToAttribute);
   }
 
-  public List<HandleAttribute> resolveHandleAttributesByPhysicalIdentifier(byte[] physicalIdentifier, byte[] hostInstitution){
-    var hostInstitutionTable = context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
+  public List<HandleAttribute> resolveHandleAttributesByPhysicalIdentifier(
+      byte[] physicalIdentifier, byte[] hostInstitution) {
+    var hostInstitutionTable = context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE,
+            HANDLES.DATA)
         .from(HANDLES)
         .where(HANDLES.TYPE.eq(SPECIMEN_HOST.getBytes(StandardCharsets.UTF_8)))
         .and((HANDLES.DATA).eq(hostInstitution))
         .asTable("hostInstitutionTable");
 
-    var physicalIdentifierTable = context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
+    var physicalIdentifierTable = context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE,
+            HANDLES.DATA)
         .from(HANDLES)
         .where(HANDLES.TYPE.eq(PHYSICAL_IDENTIFIER.getBytes(StandardCharsets.UTF_8)))
         .and((HANDLES.DATA).eq(physicalIdentifier))
@@ -92,13 +95,13 @@ public class HandleRepository {
         .fetch(this::mapToAttribute);
   }
 
-  public List<HandleAttribute> searchByPhysicalIdentifier(List<byte[]> physicalIdentifiers){
-    var physicalIdentifierTable = context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
+  public List<HandleAttribute> searchByPhysicalIdentifier(List<byte[]> physicalIdentifiers) {
+    var physicalIdentifierTable = context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE,
+            HANDLES.DATA)
         .from(HANDLES)
         .where(HANDLES.TYPE.eq(PHYSICAL_IDENTIFIER.getBytes(StandardCharsets.UTF_8)))
         .and((HANDLES.DATA).in(physicalIdentifiers))
         .asTable("physicalIdentifierTable");
-
 
     return context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
         .from(HANDLES)

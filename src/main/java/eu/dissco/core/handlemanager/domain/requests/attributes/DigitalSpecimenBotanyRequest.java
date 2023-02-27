@@ -10,6 +10,7 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public class DigitalSpecimenBotanyRequest extends DigitalSpecimenRequest {
+
   @JsonProperty(required = true)
   @JsonPropertyDescription("Type of object (e.g. herbarium sheet)")
   private final String objectType;

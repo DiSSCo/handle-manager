@@ -59,7 +59,8 @@ public class JsonSchemaConfig {
     // e.g. PATCH update attributes
 
     SchemaGeneratorConfigBuilder configBuilder = new SchemaGeneratorConfigBuilder(
-        SchemaVersion.DRAFT_2020_12, OptionPreset.PLAIN_JSON).with(Option.FORBIDDEN_ADDITIONAL_PROPERTIES_BY_DEFAULT);
+        SchemaVersion.DRAFT_2020_12, OptionPreset.PLAIN_JSON).with(
+        Option.FORBIDDEN_ADDITIONAL_PROPERTIES_BY_DEFAULT);
 
     configBuilder.forTypesInGeneral()
         .withEnumResolver(scope -> scope.getType().getErasedType().isEnum()
@@ -86,7 +87,8 @@ public class JsonSchemaConfig {
         SchemaVersion.DRAFT_2020_12, OptionPreset.PLAIN_JSON);
 
     configBuilder.forFields()
-        .withRequiredCheck(field -> field.getAnnotationConsideringFieldAndGetter(Nullable.class) == null);
+        .withRequiredCheck(
+            field -> field.getAnnotationConsideringFieldAndGetter(Nullable.class) == null);
 
     configBuilder.forFields()
         .withAdditionalPropertiesResolver(field -> field.getType().getErasedType() == JsonNode.class

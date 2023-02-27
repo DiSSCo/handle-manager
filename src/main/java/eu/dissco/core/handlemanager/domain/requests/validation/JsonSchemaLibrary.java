@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class JsonSchemaLibrary {
+
   // JsonNodes
   private static JsonNode postReqJsonNode;
   private static JsonNode patchReqJsonNode;
@@ -195,8 +196,9 @@ public class JsonSchemaLibrary {
 
   public static void validateSearchByPhysIdRequest(JsonNode requestRoot) throws InvalidRecordInput {
     var validationErrors = searchByPhysIdReqSchema.validate(requestRoot);
-    if (!validationErrors.isEmpty()){
-      throw new InvalidRecordInput(setErrorMessage(validationErrors, "Search by physical specimen id"));
+    if (!validationErrors.isEmpty()) {
+      throw new InvalidRecordInput(
+          setErrorMessage(validationErrors, "Search by physical specimen id"));
     }
   }
 

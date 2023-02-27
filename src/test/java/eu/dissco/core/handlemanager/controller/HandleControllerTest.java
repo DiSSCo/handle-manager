@@ -525,7 +525,7 @@ class HandleControllerTest {
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
 
-  private JsonNode givenArchiveRequest(){
+  private JsonNode givenArchiveRequest() {
     ObjectNode archiveRequest = MAPPER.createObjectNode();
     ObjectNode archiveRequestData = MAPPER.createObjectNode();
     archiveRequestData.put(NODE_ID, HANDLE);

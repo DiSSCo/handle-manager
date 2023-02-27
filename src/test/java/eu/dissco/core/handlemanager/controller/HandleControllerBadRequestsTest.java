@@ -64,7 +64,7 @@ class HandleControllerBadRequestsTest {
   }
 
   @Test
-  void testBadSearchByPhysIdRequestMissingAttribute(){
+  void testBadSearchByPhysIdRequestMissingAttribute() {
     // Given
     var request = givenSearchByPhysIdRequest();
     ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(PHYSICAL_IDENTIFIER);
@@ -77,7 +77,7 @@ class HandleControllerBadRequestsTest {
   }
 
   @Test
-  void testBadSearchByPhysIdRequestUnknownProperty(){
+  void testBadSearchByPhysIdRequestUnknownProperty() {
     // Given
     var request = givenSearchByPhysIdRequest();
     request.put(UNKNOWN_ATTRIBUTE, UNKNOWN_VAL);
@@ -299,7 +299,7 @@ class HandleControllerBadRequestsTest {
   }
 
   @Test
-  void testBadResolveRequestMissingProperty(){
+  void testBadResolveRequestMissingProperty() {
     // Given
     var request = MAPPER.createObjectNode();
     request.put(NODE_DATA, "");

@@ -219,7 +219,6 @@ public class HandleService {
   public JsonApiWrapperWrite searchByPhysicalSpecimenId(JsonNode request)
       throws JsonProcessingException, PidResolutionException {
     byte[] physicalIdentifier = getPhysicalIdFromRequest(request);
-
     var returnedRows = handleRep.searchByPhysicalIdentifier(List.of(physicalIdentifier));
     var handleNames = listHandleNamesReturnedFromQuery(returnedRows);
     if (handleNames.size() > 1) {
@@ -593,8 +592,9 @@ public class HandleService {
 
     // 15 Subject Specimen Host
     String specimenHost = pidTypeService.resolveTypePid(request.getSubjectSpecimenHostPid());
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(SUBJECT_SPECIMEN_HOST), handle, SUBJECT_SPECIMEN_HOST,
-        specimenHost.getBytes(StandardCharsets.UTF_8)));
+    handleRecord.add(
+        new HandleAttribute(FIELD_IDX.get(SUBJECT_SPECIMEN_HOST), handle, SUBJECT_SPECIMEN_HOST,
+            specimenHost.getBytes(StandardCharsets.UTF_8)));
 
     // 16 Media Url
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(MEDIA_URL), handle, PHYSICAL_IDENTIFIER,
@@ -603,7 +603,7 @@ public class HandleService {
     // 17 : Subject Physical Identifier
     // Encoding here is UTF-8
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(SUBJECT_PHYSICAL_IDENTIFIER), handle,
-        SUBJECT_PHYSICAL_IDENTIFIER,  setUniquePhysicalIdentifierId(request)));
+        SUBJECT_PHYSICAL_IDENTIFIER, setUniquePhysicalIdentifierId(request)));
     return handleRecord;
   }
 

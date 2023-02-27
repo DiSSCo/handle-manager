@@ -108,7 +108,8 @@ public class HandleController {
   }
 
   @PostMapping("/records/physicalId")
-  public ResponseEntity<JsonApiWrapperWrite> searchByPhysicalSpecimenId(@RequestBody JsonNode request)
+  public ResponseEntity<JsonApiWrapperWrite> searchByPhysicalSpecimenId(
+      @RequestBody JsonNode request)
       throws InvalidRecordInput, JsonProcessingException, PidResolutionException {
     validateSearchByPhysIdRequest(request);
     return ResponseEntity.status(HttpStatus.OK).body(service.searchByPhysicalSpecimenId(request));

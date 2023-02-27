@@ -8,12 +8,12 @@ import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import java.io.IOException;
-import org.springframework.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
 @SpringBootTest(properties = "spring.main.lazy-initialization=true")
@@ -23,14 +23,15 @@ class HandleControllerExceptionHandlerTest {
   private static final String errorMessage = "Error";
 
   @BeforeEach
-  void setup(){
+  void setup() {
     exceptionHandler = new RestResponseEntityExceptionHandler();
   }
 
   @Test
-  void testPidCreationException() throws Exception{
+  void testPidCreationException() throws Exception {
     // Given
-    var expectedBody = new ExceptionResponse(HttpStatus.CONFLICT.toString(), PidCreationException.class.getSimpleName(), errorMessage);
+    var expectedBody = new ExceptionResponse(HttpStatus.CONFLICT.toString(),
+        PidCreationException.class.getSimpleName(), errorMessage);
 
     // When
     var result = exceptionHandler.pidCreationException(new PidCreationException(errorMessage));
@@ -41,9 +42,10 @@ class HandleControllerExceptionHandlerTest {
   }
 
   @Test
-  void testInvalidRecordInput() throws Exception{
+  void testInvalidRecordInput() throws Exception {
     // Given
-    var expectedBody = new ExceptionResponse(HttpStatus.BAD_REQUEST.toString(), InvalidRecordInput.class.getSimpleName(), errorMessage);
+    var expectedBody = new ExceptionResponse(HttpStatus.BAD_REQUEST.toString(),
+        InvalidRecordInput.class.getSimpleName(), errorMessage);
 
     // When
     var result = exceptionHandler.invalidRecordInputException(new InvalidRecordInput(errorMessage));
@@ -54,9 +56,10 @@ class HandleControllerExceptionHandlerTest {
   }
 
   @Test
-  void testPidResolutionException() throws Exception{
+  void testPidResolutionException() throws Exception {
     // Given
-    var expectedBody = new ExceptionResponse(HttpStatus.NOT_FOUND.toString(), PidResolutionException.class.getSimpleName(), errorMessage);
+    var expectedBody = new ExceptionResponse(HttpStatus.NOT_FOUND.toString(),
+        PidResolutionException.class.getSimpleName(), errorMessage);
 
     // When
     var result = exceptionHandler.pidResolutionException(new PidResolutionException(errorMessage));
@@ -67,14 +70,16 @@ class HandleControllerExceptionHandlerTest {
   }
 
   @Test
-  void testPidServiceInternalErrorWithCause() throws Exception{
+  void testPidServiceInternalErrorWithCause() throws Exception {
     // Given
     var cause = new IOException(errorMessage);
     var expectedMessage = errorMessage + ". Cause: " + cause + "\n " + cause.getLocalizedMessage();
-    var expectedBody = new ExceptionResponse(HttpStatus.UNPROCESSABLE_ENTITY.toString(), PidServiceInternalError.class.getSimpleName(), expectedMessage);
+    var expectedBody = new ExceptionResponse(HttpStatus.UNPROCESSABLE_ENTITY.toString(),
+        PidServiceInternalError.class.getSimpleName(), expectedMessage);
 
     // When
-    var result = exceptionHandler.pidServiceInternalError(new PidServiceInternalError(errorMessage, cause));
+    var result = exceptionHandler.pidServiceInternalError(
+        new PidServiceInternalError(errorMessage, cause));
 
     // Then
     assertThat(result.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
@@ -82,12 +87,14 @@ class HandleControllerExceptionHandlerTest {
   }
 
   @Test
-  void testPidServiceInternalErrorNullCause() throws Exception{
+  void testPidServiceInternalErrorNullCause() throws Exception {
     // Given
-    var expectedBody = new ExceptionResponse(HttpStatus.UNPROCESSABLE_ENTITY.toString(), PidServiceInternalError.class.getSimpleName(), errorMessage);
+    var expectedBody = new ExceptionResponse(HttpStatus.UNPROCESSABLE_ENTITY.toString(),
+        PidServiceInternalError.class.getSimpleName(), errorMessage);
 
     // When
-    var result = exceptionHandler.pidServiceInternalError(new PidServiceInternalError(errorMessage, null));
+    var result = exceptionHandler.pidServiceInternalError(
+        new PidServiceInternalError(errorMessage, null));
 
     // Then
     assertThat(result.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);

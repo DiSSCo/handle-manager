@@ -13,6 +13,7 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode
 public class HandleRecordRequest {
+
   @JsonProperty(required = true)
   @JsonPropertyDescription("Identifier for the agency issuing the PID.")
   private final String pidIssuerPid;
