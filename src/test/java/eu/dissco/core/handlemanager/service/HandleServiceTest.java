@@ -1,18 +1,24 @@
 package eu.dissco.core.handlemanager.service;
 
+import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
+import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PHYSICAL_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_MEDIA;
+import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST_REQ;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_LIST_STR;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PHYSICAL_IDENTIFIER_CETAF;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PHYSICAL_IDENTIFIER_LOCAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_STATUS_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PTR_HANDLE_RECORD;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_PID;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenAttributes;
@@ -46,6 +52,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
+import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdentifier;
 import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -64,6 +72,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.AdditionalMatchers;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -156,6 +165,56 @@ class HandleServiceTest {
   }
 
   @Test
+  void testSearchByPhysicalSpecimenIdTwoResolution() throws Exception {
+    // Given
+    var request = givenSearchByPhysIdRequest();
+    List<HandleAttribute> attributeList = new ArrayList<>();
+    attributeList.addAll(genDigitalSpecimenAttributes(HANDLE.getBytes(StandardCharsets.UTF_8)));
+    attributeList.addAll(genDigitalSpecimenAttributes(HANDLE_ALT.getBytes(StandardCharsets.UTF_8)));
+
+    var responseExpected = givenRecordResponseWriteGeneric(
+        List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), RECORD_TYPE_DS);
+
+    given(handleRep.searchByPhysicalIdentifier(anyList()))
+        .willReturn(attributeList);
+
+    // When
+    Exception e = assertThrows(PidResolutionException.class, () -> {
+      service.searchByPhysicalSpecimenId(request);
+    });
+
+    // Then
+    assertThat(e).hasMessage(
+        "More than one handle record corresponds to the provided collection facility and physical identifier.");
+  }
+
+  @Test
+  void testSearchByPhysicalSpecimenIdCombined() throws Exception {
+    // Given
+    var request = MAPPER.createObjectNode();
+    var dataNode = MAPPER.createObjectNode();
+    var attributeNode = MAPPER.createObjectNode();
+    attributeNode.set(PHYSICAL_IDENTIFIER, MAPPER.valueToTree(
+        new PhysicalIdentifier(PHYSICAL_IDENTIFIER_LOCAL, PhysicalIdType.COMBINED)));
+    attributeNode.put(SPECIMEN_HOST_REQ, SPECIMEN_HOST_PID);
+    dataNode.set(NODE_ATTRIBUTES, attributeNode);
+    request.set(NODE_DATA, dataNode);
+
+    var expectedAttributes = genDigitalSpecimenAttributes(HANDLE.getBytes(StandardCharsets.UTF_8));
+    var responseExpected = givenRecordResponseWriteGeneric(
+        List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), RECORD_TYPE_DS);
+
+    given(handleRep.searchByPhysicalIdentifier(anyList()))
+        .willReturn(expectedAttributes);
+
+    // When
+    var responseReceived = service.searchByPhysicalSpecimenId(request);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
   void testCreateHandleRecord() throws Exception {
     // Given
     byte[] handle = handles.get(0);
@@ -230,8 +289,9 @@ class HandleServiceTest {
     });
 
     // Then
-    assertThat(e).hasMessage("Unable to create PID records. Some requested records are already registered. Verify the following digital specimens:"
-        + List.of(new String(handle, StandardCharsets.UTF_8)));
+    assertThat(e).hasMessage(
+        "Unable to create PID records. Some requested records are already registered. Verify the following digital specimens:"
+            + List.of(new String(handle, StandardCharsets.UTF_8)));
   }
 
   @Test
@@ -259,7 +319,8 @@ class HandleServiceTest {
   void testCreateDigitalSpecimenBotanySpecimenExists() throws Exception {
     // Given
     byte[] handle = handles.get(0);
-    var request = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(), RECORD_TYPE_DS_BOTANY);
+    var request = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(),
+        RECORD_TYPE_DS_BOTANY);
     List<HandleAttribute> digitalSpecimenBotany = genDigitalSpecimenBotanyAttributes(handle);
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
@@ -272,8 +333,9 @@ class HandleServiceTest {
     });
 
     // Then
-    assertThat(e).hasMessage("Unable to create PID records. Some requested records are already registered. Verify the following digital specimens:"
-        + List.of(new String(handle, StandardCharsets.UTF_8)));
+    assertThat(e).hasMessage(
+        "Unable to create PID records. Some requested records are already registered. Verify the following digital specimens:"
+            + List.of(new String(handle, StandardCharsets.UTF_8)));
   }
 
   @Test

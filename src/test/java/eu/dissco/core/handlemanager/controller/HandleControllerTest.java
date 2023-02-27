@@ -42,6 +42,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
+import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaStaticContextInitializer;
@@ -238,7 +239,7 @@ class HandleControllerTest {
   void testCreateDigitalSpecimenRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    HandleRecordRequest requestObject = genDigitalSpecimenRequestObject();
+    DigitalSpecimenRequest requestObject = genDigitalSpecimenRequestObject();
     ObjectNode requestNode = genCreateRecordRequest(requestObject, RECORD_TYPE_DS);
     JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(handle),
         RECORD_TYPE_DS);

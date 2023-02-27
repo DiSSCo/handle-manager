@@ -14,7 +14,6 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaLibrary;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaStaticContextInitializer;
-import eu.dissco.core.handlemanager.exceptions.ExceptionResponse;
 import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -32,7 +31,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -195,32 +193,4 @@ public class HandleController {
     return ResponseEntity.status(HttpStatus.OK).body(service.archiveRecordBatch(requests));
   }
 
-  //Exception Handling
-  @ExceptionHandler(PidServiceInternalError.class)
-  private ResponseEntity<ExceptionResponse> pidServiceInternalError(PidServiceInternalError e) {
-    String message;
-    if (e.getCause() != null) {
-      message = e.getMessage() + ". Cause: " + e.getCause().toString() + "\n " + e.getCause()
-          .getLocalizedMessage();
-    } else {
-      message = e.getMessage();
-    }
-    ExceptionResponse exceptionResponse = new ExceptionResponse(
-        String.valueOf(HttpStatus.UNPROCESSABLE_ENTITY), e.getClass().getSimpleName(), message);
-    return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(exceptionResponse);
-  }
-
-  @ExceptionHandler(InvalidRecordInput.class)
-  private ResponseEntity<ExceptionResponse> invalidRecordInputException(InvalidRecordInput e) {
-    ExceptionResponse exceptionResponse = new ExceptionResponse(
-        String.valueOf(HttpStatus.BAD_REQUEST), e.getClass().getSimpleName(), e.getMessage());
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exceptionResponse);
-  }
-
-  @ExceptionHandler(PidResolutionException.class)
-  private ResponseEntity<ExceptionResponse> pidResolutionException(PidResolutionException e) {
-    ExceptionResponse exceptionResponse = new ExceptionResponse(
-        String.valueOf(HttpStatus.NOT_FOUND), e.getClass().getSimpleName(), e.getMessage());
-    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exceptionResponse);
-  }
 }
