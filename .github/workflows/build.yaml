@@ -44,17 +44,17 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: 'docker.io/dissco/handle-manager:${{ github.sha }}'
-          format: 'github'
+          format: 'table'
           ignore-unfixed: true
           vuln-type: 'os,library'
       - name: Trivy - Stop on Severe Vulnerabilities
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: 'docker.io/dissco/handle-manager:${{ github.sha }}'
-          format: 'table'
+          format: 'github'
           ignore-unfixed: true
           trivyignores: .trivyignore
-          exit-code: '1''
+          exit-code: '1'
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
       - name: Login to Public ECR
