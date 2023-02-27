@@ -53,7 +53,7 @@ jobs:
           image-ref: 'docker.io/dissco/handle-manager:${{ github.sha }}'
           format: 'table'
           ignore-unfixed: true
-          trivyignores: .trivyignore
+          trivyignores: .github/workflows/.trivyignore
           exit-code: '1'
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
