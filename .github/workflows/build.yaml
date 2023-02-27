@@ -29,18 +29,6 @@ jobs:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
-      - name: Build an image from Dockerfile
-        run: |
-          docker build -t docker.io/dissco/handle-manager:${{ github.sha }} .
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: 'docker.io/dissco/handle-manager:${{ github.sha }}'
-          format: 'github'
-          ignore-unfixed: true
-          trivyignores: .trivyignore
-          vuln-type: 'os,library'
-          # severity: 'CRITICAL,HIGH' # Choose from: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
       - name: Build and analyze
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
@@ -56,6 +44,26 @@ jobs:
           registry: public.ecr.aws
           username: ${{ secrets.AWS_ACCESS_KEY_ID }}
           password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Build an image from Dockerfile
+        run: |
+          docker build -t docker.io/dissco/handle-manager:${{ github.sha }} .
+      - name: Trivy - List all vulnerabilities
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'docker.io/dissco/handle-manager:${{ github.sha }}'
+          format: 'github'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+      - name: Trivy - Stop on Severe Vulnerabilities
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'docker.io/dissco/handle-manager:${{ github.sha }}'
+          format: 'table'
+          ignore-unfixed: true
+          trivyignores: .trivyignore
+          exit-code: '1''
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v4
