@@ -19,7 +19,7 @@ jobs:
           java-version: 17
       - name: Build an image from Dockerfile
         run: |
-          docker build -t docker.io/DiSSCo/handle-manager:${{ github.sha }} .
+          docker build -t docker.io/dissco/handle-manager:${{ github.sha }} .
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
