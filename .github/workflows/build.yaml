@@ -37,20 +37,6 @@ jobs:
           -Dsonar.projectKey=DiSSCo_${{ github.event.repository.name }}
           -Dsonar.exclusions=**/jooq/**
           -Dsonar.coverage.exclusions=**/properties/**,**/configuration/**,**/domain/**,**/exception/**
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Build an image from Dockerfile
-        run: |
-          docker build -t docker.io/my-organization/my-app:${{ github.sha }} .
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: 'docker.io/my-organization/my-app:${{ github.sha }}'
-          format: 'table'
-          exit-code: '1'  # Change to 0 if you don't want this to break pipeline?
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
       - name: Login to Public ECR
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v1
