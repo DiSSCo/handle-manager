@@ -216,9 +216,10 @@ public class HandleService {
   }
 
   // Search by Physical Specimen Identifier
-  public JsonApiWrapperWrite searchByPhysicalSpecimenId(JsonNode request)
-      throws JsonProcessingException, PidResolutionException {
-    byte[] physicalIdentifier = getPhysicalIdFromRequest(request);
+  public JsonApiWrapperWrite searchByPhysicalSpecimenId(String physicalId, PhysicalIdType physicalIdType, String specimenHostPid)
+      throws PidResolutionException, InvalidRequestException {
+
+    var physicalIdentifier = setPhysicalId(physicalId, physicalIdType, specimenHostPid);
     var returnedRows = handleRep.searchByPhysicalIdentifier(List.of(physicalIdentifier));
     var handleNames = listHandleNamesReturnedFromQuery(returnedRows);
     if (handleNames.size() > 1) {
@@ -230,6 +231,18 @@ public class HandleService {
     var jsonFormattedRecord = jsonFormatSingleRecord(returnedRows);
     dataNode.add(wrapData(jsonFormattedRecord, "PID"));
     return new JsonApiWrapperWrite(dataNode);
+  }
+
+  private byte[] setPhysicalId(String physicalIdentifer, PhysicalIdType physicalIdType, String specimenHostPid)
+      throws InvalidRequestException {
+    if (physicalIdType.equals(PhysicalIdType.COMBINED)){
+      if (specimenHostPid==null){
+        throw new InvalidRequestException("Missing specimen host ID.");
+      }
+      var hostIdArr = specimenHostPid.split("/");
+      return (physicalIdentifer + ":" + hostIdArr[hostIdArr.length - 1]).getBytes(StandardCharsets.UTF_8);
+    }
+    return physicalIdentifer.getBytes(StandardCharsets.UTF_8);
   }
 
   private <T extends DigitalSpecimenRequest> void verifyNoRegisteredSpecimens(List<T> requests)
@@ -251,19 +264,6 @@ public class HandleService {
     Set<String> handles = new HashSet<>();
     rows.forEach(row -> handles.add((new String(row.handle(), StandardCharsets.UTF_8))));
     return handles;
-  }
-
-  private byte[] getPhysicalIdFromRequest(JsonNode request) throws JsonProcessingException {
-    var physicalIdentifier = mapper.treeToValue(
-        request.get(NODE_DATA).get(NODE_ATTRIBUTES).get(PHYSICAL_IDENTIFIER),
-        PhysicalIdentifier.class);
-    if (physicalIdentifier.physicalIdType().equals(PhysicalIdType.CETAF)) {
-      return physicalIdentifier.physicalId().getBytes(StandardCharsets.UTF_8);
-    } else {
-      String specimenHostPid = request.get(NODE_DATA).get(NODE_ATTRIBUTES).get(SPECIMEN_HOST_REQ)
-          .asText();
-      return concatIds(physicalIdentifier, specimenHostPid);
-    }
   }
 
   // Pid Record Creation

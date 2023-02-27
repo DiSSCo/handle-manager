@@ -63,31 +63,6 @@ class HandleControllerBadRequestsTest {
     controller = new HandleController(service, schemaInitializer);
   }
 
-  @Test
-  void testBadSearchByPhysIdRequestMissingAttribute() {
-    // Given
-    var request = givenSearchByPhysIdRequest();
-    ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(PHYSICAL_IDENTIFIER);
-
-    // Then
-    Exception e = assertThrows(InvalidRequestException.class, () -> {
-      controller.searchByPhysicalSpecimenId(request);
-    });
-    assertThat(e.getMessage()).contains(PHYSICAL_IDENTIFIER);
-  }
-
-  @Test
-  void testBadSearchByPhysIdRequestUnknownProperty() {
-    // Given
-    var request = givenSearchByPhysIdRequest();
-    request.put(UNKNOWN_ATTRIBUTE, UNKNOWN_VAL);
-
-    // Then
-    Exception e = assertThrows(InvalidRequestException.class, () -> {
-      controller.searchByPhysicalSpecimenId(request);
-    });
-    assertThat(e.getMessage()).contains(UNKNOWN_ATTRIBUTE);
-  }
 
   @Test
   void testBadPostRequest() {

@@ -145,8 +145,6 @@ class HandleServiceTest {
   @Test
   void testSearchByPhysicalSpecimenId() throws Exception {
     // Given
-    var request = givenSearchByPhysIdRequest();
-
     var expectedAttributes = genDigitalSpecimenAttributes(HANDLE.getBytes(StandardCharsets.UTF_8));
     var responseExpected = givenRecordResponseWriteGeneric(
         List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), RECORD_TYPE_DS);
@@ -155,7 +153,8 @@ class HandleServiceTest {
         .willReturn(expectedAttributes);
 
     // When
-    var responseReceived = service.searchByPhysicalSpecimenId(request);
+    var responseReceived = service.searchByPhysicalSpecimenId(PHYSICAL_IDENTIFIER_LOCAL, PhysicalIdType.CETAF,
+        SPECIMEN_HOST_PID);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -177,7 +176,8 @@ class HandleServiceTest {
 
     // When
     Exception e = assertThrows(PidResolutionException.class, () -> {
-      service.searchByPhysicalSpecimenId(request);
+      service.searchByPhysicalSpecimenId(PHYSICAL_IDENTIFIER_LOCAL, PhysicalIdType.CETAF,
+          SPECIMEN_HOST_PID);
     });
 
     // Then
@@ -188,15 +188,6 @@ class HandleServiceTest {
   @Test
   void testSearchByPhysicalSpecimenIdCombined() throws Exception {
     // Given
-    var request = MAPPER.createObjectNode();
-    var dataNode = MAPPER.createObjectNode();
-    var attributeNode = MAPPER.createObjectNode();
-    attributeNode.set(PHYSICAL_IDENTIFIER, MAPPER.valueToTree(
-        new PhysicalIdentifier(PHYSICAL_IDENTIFIER_LOCAL, PhysicalIdType.COMBINED)));
-    attributeNode.put(SPECIMEN_HOST_REQ, SPECIMEN_HOST_PID);
-    dataNode.set(NODE_ATTRIBUTES, attributeNode);
-    request.set(NODE_DATA, dataNode);
-
     var expectedAttributes = genDigitalSpecimenAttributes(HANDLE.getBytes(StandardCharsets.UTF_8));
     var responseExpected = givenRecordResponseWriteGeneric(
         List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), RECORD_TYPE_DS);
@@ -205,7 +196,8 @@ class HandleServiceTest {
         .willReturn(expectedAttributes);
 
     // When
-    var responseReceived = service.searchByPhysicalSpecimenId(request);
+    var responseReceived = service.searchByPhysicalSpecimenId(PHYSICAL_IDENTIFIER_LOCAL, PhysicalIdType.COMBINED,
+        SPECIMEN_HOST_PID);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);

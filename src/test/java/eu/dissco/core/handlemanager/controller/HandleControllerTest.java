@@ -13,7 +13,9 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_LIST_STR;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PHYSICAL_IDENTIFIER_LOCAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PREFIX;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_PID;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SUFFIX;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyRequestObject;
@@ -45,6 +47,8 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
+import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdentifier;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaStaticContextInitializer;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -138,15 +142,35 @@ class HandleControllerTest {
   }
 
   @Test
-  void testSearchByPhyId() throws Exception {
+  void testSearchByPhysicalId() throws Exception {
     // Given
-    var request = givenSearchByPhysIdRequest();
+
     var responseExpected = givenRecordResponseWriteGeneric(
         List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), RECORD_TYPE_DS);
-    given(service.searchByPhysicalSpecimenId(request)).willReturn(responseExpected);
+    given(service.searchByPhysicalSpecimenId(PHYSICAL_IDENTIFIER_LOCAL, PhysicalIdType.CETAF,
+        SPECIMEN_HOST_PID)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.searchByPhysicalSpecimenId(request);
+    var responseReceived = controller.searchByPhysicalSpecimenId(PHYSICAL_IDENTIFIER_LOCAL, PhysicalIdType.CETAF,
+        SPECIMEN_HOST_PID);
+
+    // Then
+    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testSearchByPhysicalIdCombined() throws Exception {
+    // Given
+    String physicalId = PHYSICAL_IDENTIFIER_LOCAL;
+    var physicalIdType = PhysicalIdType.COMBINED;
+    String specimenHostPid = SPECIMEN_HOST_PID;
+    var responseExpected = givenRecordResponseWriteGeneric(
+        List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), RECORD_TYPE_DS);
+    given(service.searchByPhysicalSpecimenId(physicalId, physicalIdType, specimenHostPid)).willReturn(responseExpected);
+
+    // When
+    var responseReceived = controller.searchByPhysicalSpecimenId(physicalId, physicalIdType, specimenHostPid);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
