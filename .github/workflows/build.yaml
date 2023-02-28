@@ -37,26 +37,6 @@ jobs:
           -Dsonar.projectKey=DiSSCo_${{ github.event.repository.name }}
           -Dsonar.exclusions=**/jooq/**
           -Dsonar.coverage.exclusions=**/properties/**,**/configuration/**,**/domain/**,**/exception/**
-      - name: Build Docker Image
-        run: |
-          docker build -t docker.io/dissco/handle-manager:${{ github.sha }} .
-      - name: Trivy - List all vulnerabilities
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: 'docker.io/dissco/handle-manager:${{ github.sha }}'
-          format: 'table'
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-      - name: Trivy - Stop on Severe Vulnerabilities
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: 'docker.io/dissco/handle-manager:${{ github.sha }}'
-          format: 'table'
-          ignore-unfixed: true
-          trivyignores: .github/workflows/.trivyignore
-          exit-code: '1'
-          vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
       - name: Login to Public ECR
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v1
@@ -72,6 +52,23 @@ jobs:
           tags: |
             type=sha
             type=raw,value=latest
+      - name: Trivy - List all vulnerabilities
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'public.ecr.aws/dissco/${{ github.event.repository.name }}'
+          format: 'table'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+      - name: Trivy - Stop on Severe Vulnerabilities
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'public.ecr.aws/dissco/${{ github.event.repository.name }}'
+          format: 'table'
+          ignore-unfixed: true
+          trivyignores: .github/workflows/.trivyignore
+          exit-code: '1'
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
@@ -88,3 +85,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CUSTOM_TAG: sha-${{ steps.vars.outputs.sha_short }}
+
+

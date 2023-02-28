@@ -1,5 +1,12 @@
-# Spring Web
+# Date: Feb-28-2022
+# Package: Spring Web
+# Notes: Upgrading this package will depreciate other security packages. We need to rethink our AAI
+# Status: User story in Jira
 CVE-2016-1000027
 
-# Snakeyaml (managed by Spring)
+# Date: Feb-28-2022
+# Package: Snakeyaml
+# Reason: This package is managed by Spring.
+# Solution: Upgrading major version of Spring may fix this issue, but will break other dependencies
+# Status: User story in Jira
 CVE-2022-25857
