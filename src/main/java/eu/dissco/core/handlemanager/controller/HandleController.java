@@ -18,6 +18,7 @@ import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import eu.dissco.core.handlemanager.service.HandleService;
+import io.swagger.v3.oas.annotations.Operation;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,6 +60,7 @@ public class HandleController {
   }
 
   // List all handle values
+  @Operation(summary = "List all PIDs by PID Status (ACTIVE, ARCHIVED, etc.)")
   @GetMapping(value = "/names")
   public ResponseEntity<List<String>> getAllHandlesByPidStatus(
       @RequestParam(value = "pageNum", defaultValue = "0") int pageNum,
@@ -82,6 +84,7 @@ public class HandleController {
     return ResponseEntity.ok(handleList);
   }
 
+  @Operation(summary = "Resolve single PID record")
   @GetMapping("/{prefix}/{suffix}")
   public ResponseEntity<JsonApiWrapperRead> resolvePid(@PathVariable("prefix") String prefix,
       @PathVariable("suffix") String suffix, HttpServletRequest r) throws PidResolutionException {
@@ -92,6 +95,7 @@ public class HandleController {
     return ResponseEntity.status(HttpStatus.OK).body(node);
   }
 
+  @Operation(summary ="Resolve multiple PID records")
   @PostMapping("/records")
   public ResponseEntity<JsonApiWrapperRead> resolvePids(@RequestBody List<JsonNode> requests,
       HttpServletRequest r) throws PidResolutionException, InvalidRequestException {
@@ -106,6 +110,7 @@ public class HandleController {
     return ResponseEntity.status(HttpStatus.OK).body(service.resolveBatchRecord(handles, path));
   }
 
+  @Operation(summary ="Given a physical identifier (i.e. local identifier), resolve PID record")
   @GetMapping("/records/physicalId")
   public ResponseEntity<JsonApiWrapperWrite> searchByPhysicalSpecimenId(
       @RequestParam String physicalIdentifier,
@@ -115,6 +120,7 @@ public class HandleController {
     return ResponseEntity.status(HttpStatus.OK).body(service.searchByPhysicalSpecimenId(physicalIdentifier, physicalIdentifierType, specimenHostPid));
   }
 
+  @Operation(summary ="Create single PID Record")
   @PreAuthorize("isAuthenticated()")
   @PostMapping(value = "")
   public ResponseEntity<JsonApiWrapperWrite> createRecord(@RequestBody JsonNode request)
@@ -123,6 +129,7 @@ public class HandleController {
     return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(List.of(request)));
   }
 
+  @Operation(summary ="Create multiple PID Records at a time.")
   @PreAuthorize("isAuthenticated()")
   @PostMapping(value = "/batch")
   public ResponseEntity<JsonApiWrapperWrite> createRecords(@RequestBody List<JsonNode> requests)
@@ -135,6 +142,7 @@ public class HandleController {
   }
 
   // Update
+  @Operation(summary ="Update existing PID Record")
   @PreAuthorize("isAuthenticated()")
   @PatchMapping(value = "/{prefix}/{suffix}")
   public ResponseEntity<JsonApiWrapperWrite> updateRecord(@PathVariable("prefix") String prefix,
@@ -154,6 +162,7 @@ public class HandleController {
     return ResponseEntity.status(HttpStatus.OK).body(service.updateRecords(List.of(request)));
   }
 
+  @Operation(summary ="Update multiple PID Records")
   @PreAuthorize("isAuthenticated()")
   @PatchMapping(value = "")
   public ResponseEntity<JsonApiWrapperWrite> updateRecords(@RequestBody List<JsonNode> requests)
@@ -165,7 +174,8 @@ public class HandleController {
     return ResponseEntity.status(HttpStatus.OK).body(service.updateRecords(requests));
   }
 
-  //@PreAuthorize("isAuthenticated()")
+  @Operation(summary ="Archive given record")
+  @PreAuthorize("isAuthenticated()")
   @PutMapping(value = "/{prefix}/{suffix}")
   public ResponseEntity<JsonApiWrapperWrite> archiveRecord(@PathVariable("prefix") String prefix,
       @PathVariable("suffix") String suffix, @RequestBody JsonNode request)
@@ -184,6 +194,7 @@ public class HandleController {
     return ResponseEntity.status(HttpStatus.OK).body(service.archiveRecordBatch(List.of(request)));
   }
 
+  @Operation(summary ="Archive multiple PID records")
   @PreAuthorize("isAuthenticated()")
   @PutMapping(value = "")
   public ResponseEntity<JsonApiWrapperWrite> archiveRecords(@RequestBody List<JsonNode> requests)

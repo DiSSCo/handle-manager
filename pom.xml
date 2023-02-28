@@ -247,6 +247,24 @@
         </configuration>
       </plugin>
       <plugin>
+        <groupId>org.springdoc</groupId>
+        <artifactId>springdoc-openapi-maven-plugin</artifactId>
+        <version>0.2</version>
+        <executions>
+          <execution>
+            <phase>integration-test</phase>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <apiDocsUrl>http://localhost:8080/v3/api-docs</apiDocsUrl>
+          <outputFileName>openapi.json</outputFileName>
+          <outputDir>${project.build.directory}</outputDir>
+        </configuration>
+      </plugin>
+      <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
         <executions>
@@ -260,6 +278,18 @@
                 eu.dissco.core.handlemanager.HandleManagerApplication
               </mainClass>
             </configuration>
+          </execution>
+          <execution>
+            <id>pre-integration-test</id>
+            <goals>
+              <goal>start</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>post-integration-test</id>
+            <goals>
+              <goal>stop</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>

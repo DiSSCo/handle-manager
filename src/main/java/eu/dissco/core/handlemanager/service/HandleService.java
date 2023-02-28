@@ -143,7 +143,7 @@ public class HandleService {
           resolvedHandles::remove); // Remove handles from resolved handle list, now it only contains unresolved handles
 
       Set<String> unresolvedHandles = new HashSet<>();
-      for (byte[] handle : resolvedHandles) {
+      for (byte[] handle : handles) {
         unresolvedHandles.add(new String(handle, StandardCharsets.UTF_8));
       }
       throw new PidResolutionException(
