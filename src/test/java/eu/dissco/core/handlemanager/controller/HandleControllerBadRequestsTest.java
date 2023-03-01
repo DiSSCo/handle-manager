@@ -285,23 +285,6 @@ class HandleControllerBadRequestsTest {
     assertThat(e.getMessage()).contains(TOMBSTONE_TEXT);
   }
 
-  @Test
-  void testBadResolveRequestMissingProperty() {
-    // Given
-    var request = MAPPER.createObjectNode();
-    request.put(NODE_DATA, "");
-    MockHttpServletRequest r = new MockHttpServletRequest();
-    r.setRequestURI("a");
-
-    // When
-    Exception e = assertThrows(InvalidRequestException.class, () -> {
-      controller.resolvePids(List.of(request), r);
-    });
-
-    // Then
-    assertThat(e.getMessage()).contains(NODE_ID);
-  }
-
   private ObjectNode givenPatchRequest(String type, String badKey) {
     ObjectNode attributeNode = MAPPER.createObjectNode();
     attributeNode.put(badKey, "val");

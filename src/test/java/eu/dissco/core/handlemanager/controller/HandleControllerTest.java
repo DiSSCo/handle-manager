@@ -180,27 +180,18 @@ class HandleControllerTest {
   @Test
   void testResolveBatchHandle() throws Exception {
     // Given
-    List<byte[]> handles = new ArrayList<>();
-    List<JsonNode> requestRoot = new ArrayList<>();
     String path = SANDBOX_URI + "view";
     MockHttpServletRequest r = new MockHttpServletRequest();
     r.setRequestURI("view");
 
-    for (String hdlStr : HANDLE_LIST_STR) {
-      handles.add(hdlStr.getBytes(StandardCharsets.UTF_8));
-      ObjectNode requestData = mapper.createObjectNode();
-      ObjectNode requestId = mapper.createObjectNode();
-
-      requestId.put(NODE_ID, hdlStr);
-      requestData.set(NODE_DATA, requestId);
-      requestRoot.add(requestData);
-    }
+    List<String> handleString = List.of(HANDLE, HANDLE_ALT);
+    List<byte[]> handles = List.of(HANDLE.getBytes(StandardCharsets.UTF_8), HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
     var responseExpected = givenRecordResponseRead(handles, path, RECORD_TYPE_HANDLE);
     given(service.resolveBatchRecord(anyList(), eq(path))).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.resolvePids(requestRoot, r);
+    var responseReceived = controller.resolvePids(handleString, r);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);

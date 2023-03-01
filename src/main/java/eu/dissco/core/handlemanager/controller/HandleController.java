@@ -5,7 +5,6 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.VALID_PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaLibrary.validatePutRequest;
-import static eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaLibrary.validateResolveRequest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
@@ -96,17 +95,20 @@ public class HandleController {
   }
 
   @Operation(summary ="Resolve multiple PID records")
-  @PostMapping("/records")
-  public ResponseEntity<JsonApiWrapperRead> resolvePids(@RequestBody List<JsonNode> requests,
+  @GetMapping("/records")
+  public ResponseEntity<JsonApiWrapperRead> resolvePids(
+      @RequestParam List<String> handleString,
       HttpServletRequest r) throws PidResolutionException, InvalidRequestException {
-
     String path = SANDBOX_URI + r.getRequestURI();
-    List<byte[]> handles = new ArrayList<>();
+    int maxHandles = 200;
 
-    for (JsonNode request : requests) {
-      validateResolveRequest(request);
-      handles.add(request.get(NODE_DATA).get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8));
+    if (handleString.size() > maxHandles){
+      throw new InvalidRequestException("Attempting to resolve more than maximum permitted PIDs in a single request. Maximum handles: " + maxHandles);
     }
+
+    List<byte[]> handles = new ArrayList<>();
+    handleString.forEach(h -> handles.add(h.getBytes(StandardCharsets.UTF_8)));
+
     return ResponseEntity.status(HttpStatus.OK).body(service.resolveBatchRecord(handles, path));
   }
 
