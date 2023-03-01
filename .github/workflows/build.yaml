@@ -32,6 +32,7 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
       - name: Build and analyze
+        if: github.event_name != 'pull_request' #**
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -63,14 +64,14 @@ jobs:
       - name: Trivy - List all vulnerabilities
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: '$IMAGE_NAME'
+          image-ref: 'public.ecr.aws/dissco/${{ github.event.repository.name }}:latest'
           format: 'table'
           ignore-unfixed: true
           vuln-type: 'os,library'
       - name: Trivy - Stop on Severe Vulnerabilities
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: '$IMAGE_NAME:latest'
+          image-ref: $IMAGE_NAME:latest
           format: 'table'
           ignore-unfixed: true
           trivyignores: .github/workflows/.trivyignore
@@ -78,9 +79,9 @@ jobs:
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
       - name: Push image to ECR
+        if: github.event_name != 'pull_request'
         env:
           SHA: sha-${{ steps.vars.outputs.sha_short }}
-        if: github.event_name != 'pull_request'
         run: |
           docker push public.ecr.aws/dissco/${{ github.event.repository.name }} --all-tags
       - name: Set outputs
