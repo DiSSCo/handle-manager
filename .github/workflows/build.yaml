@@ -23,8 +23,9 @@ jobs:
       - name: get tags
         run: |
           image_name=$IMAGE_NAME
-          echo $image_name
-          printf ${{ steps.meta.outputs.tags }}
+          echo "$image_name"
+          echo "$DOCKER_METADATA_OUTPUT_TAGS"
+          echo "${{ steps.meta.outputs.tags }}"
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
