@@ -59,8 +59,8 @@ jobs:
         env:
           SHA: sha-${{ steps.vars.outputs.sha_short }}
         run: |
+          echo "SHA tag: $SHA     Image Name: $IMAGE_NAME"
           docker build -t $IMAGE_NAME:latest -t $IMAGE_NAME:$SHA .
-          echo "SHA tag: $SHA"
       - name: Trivy - List all vulnerabilities
         uses: aquasecurity/trivy-action@master
         with:
