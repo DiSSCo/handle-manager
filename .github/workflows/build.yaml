@@ -58,6 +58,8 @@ jobs:
       - name: Build image
         env:
           SHA: sha-${{ steps.vars.outputs.sha_short }}
+        with:
+          context: .
         run: |
           echo "SHA tag: $SHA     Image Name: $IMAGE_NAME"
           docker build -t $IMAGE_NAME:latest -t $IMAGE_NAME:$SHA .
