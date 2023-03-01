@@ -22,8 +22,8 @@ jobs:
             type=raw,value=latest
       - name: get tags
         run: |
-          echo ${DOCKER_METADATA_OUTPUT_TAGS}
-          echo ${{ steps.meta.outputs.tags }}
+          echo $${DOCKER_METADATA_OUTPUT_TAGS}
+          echo $${{ steps.meta.outputs.tags }}
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
