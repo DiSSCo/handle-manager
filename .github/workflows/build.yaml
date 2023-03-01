@@ -75,7 +75,7 @@ jobs:
       - name: Push Image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: {{github.event.repository.name}}
+          ECR_REPOSITORY: public.ecr.aws/dissco/${{ github.event.repository.name }}
           IMAGE_TAG: latest
         run: |
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
