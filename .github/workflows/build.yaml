@@ -24,8 +24,6 @@ jobs:
         run: |
           image_name=$IMAGE_NAME
           echo $image_name
-          printf ${DOCKER_METADATA_OUTPUT_TAGS}
-          printf ${DOCKER_METADATA_OUTPUT_TAGS[0]}
           printf ${{ steps.meta.outputs.tags }}
       - uses: actions/checkout@v2
         with:
