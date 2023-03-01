@@ -56,9 +56,9 @@ jobs:
             type=raw,value=latest
       - name: Build image
         run: |         
-          for tag in ${{ steps.meta.outputs.tags }}
+          for TAG in {{ steps.meta.outputs.tags }}
           do
-            echo $IMAGE_NAME$tag
+            echo $IMAGE_NAME$TAG
           done
           docker build -t $IMAGE_NAME .
       - name: Trivy - List all vulnerabilities
@@ -81,9 +81,9 @@ jobs:
       - name: Push image to ECR
         if: github.event_name != 'pull_request'
         run: |
-          for tag in ${{ steps.meta.outputs.tags }}"
+          for TAG in ${{ steps.meta.outputs.tags }}"
           do
-            docker tag $IMAGE_NAME $IMAGE_NAME$tag
+            docker tag $IMAGE_NAME $IMAGE_NAME$TAG
           done
           docker push $IMAGE_NAME --all-tags
       - name: Set outputs
