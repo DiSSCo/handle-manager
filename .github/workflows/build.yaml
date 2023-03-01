@@ -41,10 +41,11 @@ jobs:
             type=raw,value=latest
       - name: get tags
         run: |
-          echo $DOCKER_METADATA_OUTPUT_TAGS    
+          echo 'Docker metadata output'$DOCKER_METADATA_OUTPUT_TAGS    
           image_name = $IMAGE_NAME
           for TAG in DOCKER_METADATA_OUTPUT_TAGS
           do
+            echo image_name
             echo $TAG
           done
       - name: Build and analyze
