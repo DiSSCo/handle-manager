@@ -58,7 +58,10 @@ jobs:
         run: |         
           echo "tags: $DOCKER_METADATA_OUTPUT_TAGS"
           echo "tags2: ${{ steps.meta.outputs.tags }}"
-          echo "labels: ${{ steps.meta.outputs.labels }}"
+          for tag in ${{ steps.meta.outputs.tags }}"
+          do
+            echo $IMAGE_NAME$tag
+          done
           docker build -t $IMAGE_NAME .
       - name: Trivy - List all vulnerabilities
         uses: aquasecurity/trivy-action@master
@@ -80,7 +83,10 @@ jobs:
       - name: Push image to ECR
         if: github.event_name != 'pull_request'
         run: |
-          docker tag $IMAGE_NAME $DOCKER_METADATA_OUTPUT_TAGS
+          for tag in ${{ steps.meta.outputs.tags }}"
+          do
+            docker tag $IMAGE_NAME $IMAGE_NAME$tag
+          done
           docker push $IMAGE_NAME --all-tags
       - name: Set outputs
         id: vars
