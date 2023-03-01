@@ -81,8 +81,7 @@ jobs:
         env:
           SHA: sha-${{ steps.vars.outputs.sha_short }}
         run: |
-          docker tag $IMAGE_NAME $IMAGE_NAME:latest
-          docker tag $IMAGE_NAME $IMAGE_NAME:$SHA
+          docker tag $IMAGE_NAME $DOCKER_METADATA_OUTPUT_TAGS
           docker push $IMAGE_NAME --all-tags
       - name: Set outputs
         id: vars
