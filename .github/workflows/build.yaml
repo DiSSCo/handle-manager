@@ -23,15 +23,7 @@ jobs:
       - name: get tags
         run: |
           image_name=$IMAGE_NAME
-          for TAG in "${{ steps.meta.outputs.tags }}"
-          do
-            echo "steps meta $TAG"
-          done
-          
-          for TAG in "${DOCKER_METADATA_OUTPUT_TAGS}"
-          do
-            echo "steps meta $TAG"
-          done
+          echo '${{ steps.meta.outputs.tags }}'
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
