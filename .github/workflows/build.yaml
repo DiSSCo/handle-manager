@@ -22,7 +22,7 @@ jobs:
             type=raw,value=latest
       - name: get tags
         run: |
-          echo $DOCKER_METADATA_OUTPUT_TAGS
+          echo ${DOCKER_METADATA_OUTPUT_TAGS}
           echo ${{ steps.meta.outputs.tags }}
       - uses: actions/checkout@v2
         with:
