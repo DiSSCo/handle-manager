@@ -22,6 +22,8 @@ jobs:
             type=raw,value=latest
       - name: get tags
         run: |
+          image_name=$IMAGE_NAME
+          echo $image_name
           printf ${DOCKER_METADATA_OUTPUT_TAGS}
           printf ${DOCKER_METADATA_OUTPUT_TAGS[0]}
           printf ${{ steps.meta.outputs.tags }}
