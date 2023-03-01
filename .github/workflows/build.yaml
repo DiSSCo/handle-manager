@@ -57,8 +57,8 @@ jobs:
       - name: Build image
         run: |         
           echo "tags: $DOCKER_METADATA_OUTPUT_TAGS"
-          set -- $DOCKER_METADATA_OUTPUT_TAGS
-          echo $2
+          echo "tags2: ${{ steps.meta.outputs.tags }}"
+          echo "labels: ${{ steps.meta.outputs.labels }}"
           docker build -t $IMAGE_NAME .
       - name: Trivy - List all vulnerabilities
         uses: aquasecurity/trivy-action@master
