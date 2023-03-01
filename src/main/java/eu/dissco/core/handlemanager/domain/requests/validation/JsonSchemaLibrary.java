@@ -20,7 +20,6 @@ import com.networknt.schema.ValidationMessage;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
 import eu.dissco.core.handlemanager.domain.requests.PutRequest;
-import eu.dissco.core.handlemanager.domain.requests.ResolveRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DoiRecordRequest;
@@ -40,7 +39,6 @@ public class JsonSchemaLibrary {
   private static JsonNode postReqJsonNode;
   private static JsonNode patchReqJsonNode;
   private static JsonNode putReqJsonNode;
-  private static JsonNode resolveReqJsonNode;
   private static JsonNode handlePostReqJsonNode;
   private static JsonNode handlePatchReqJsonNode;
   private static JsonNode doiPostReqJsonNode;
@@ -56,7 +54,6 @@ public class JsonSchemaLibrary {
   private static JsonSchema postReqSchema;
   private static JsonSchema patchReqSchema;
   private static JsonSchema putReqSchema;
-  private static JsonSchema resolveReqSchema;
   private static JsonSchema handlePostReqSchema;
   private static JsonSchema handlePatchReqSchema;
   private static JsonSchema doiPostReqSchema;
@@ -107,7 +104,6 @@ public class JsonSchemaLibrary {
     postReqJsonNode = schemaGenerator.generateSchema(PostRequest.class);
     patchReqJsonNode = schemaGenerator.generateSchema(PatchRequest.class);
     putReqJsonNode = schemaGenerator.generateSchema(PutRequest.class);
-    resolveReqJsonNode = schemaGenerator.generateSchema(ResolveRequest.class);
   }
 
   private static void setJsonSchemas() {
@@ -116,7 +112,6 @@ public class JsonSchemaLibrary {
     postReqSchema = factory.getSchema(postReqJsonNode);
     patchReqSchema = factory.getSchema(patchReqJsonNode);
     putReqSchema = factory.getSchema(putReqJsonNode);
-    resolveReqSchema = factory.getSchema(resolveReqJsonNode);
 
     handlePostReqSchema = factory.getSchema(handlePostReqJsonNode);
     doiPostReqSchema = factory.getSchema(doiPostReqJsonNode);
@@ -179,13 +174,6 @@ public class JsonSchemaLibrary {
       case RECORD_TYPE_MEDIA ->
           validateRequestAttributes(attributes, mediaObjectPatchReqSchema, type);
       default -> throw new InvalidRequestException("Invalid Request. Reason: Invalid type: " + type);
-    }
-  }
-
-  public static void validateResolveRequest(JsonNode requestRoot) throws InvalidRequestException {
-    var validationErrors = resolveReqSchema.validate(requestRoot);
-    if (!validationErrors.isEmpty()) {
-      throw new InvalidRequestException(setErrorMessage(validationErrors, "POST (Resolve)"));
     }
   }
 
