@@ -51,7 +51,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: public.ecr.aws/dissco/${{ github.event.repository.name }}
+          images: $IMAGE_NAME
           tags: |
             type=sha
             type=raw,value=latest
@@ -60,7 +60,7 @@ jobs:
           SHA: sha-${{ steps.vars.outputs.sha_short }}
         run: |
           echo "Tags: $DOCKER_METADATA_OUTPUT_TAGS"
-          echo "SHA tag: $SHA:     
+          echo "SHA tag: $SHA:"     
           echo "Image Name: $IMAGE_NAME"
           docker build -t $IMAGE_NAME:latest -t $IMAGE_NAME:$SHA .
       - name: Trivy - List all vulnerabilities
