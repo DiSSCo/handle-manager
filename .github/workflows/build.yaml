@@ -31,14 +31,6 @@ jobs:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
-      - name: Build and analyze
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
-          -Dsonar.projectKey=DiSSCo_${{ github.event.repository.name }}
-          -Dsonar.exclusions=**/jooq/**
-          -Dsonar.coverage.exclusions=**/properties/**,**/configuration/**,**/domain/**,**/exception/**
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v4
@@ -49,12 +41,19 @@ jobs:
             type=raw,value=latest
       - name: get tags
         run: |
-          echo $DOCKER_METADATA_OUTPUT_TAGS
-          echo ${{ steps.meta.outputs.tags }}          
+          echo $DOCKER_METADATA_OUTPUT_TAGS    
           for TAG in DOCKER_METADATA_OUTPUT_TAGS
           do
             echo $IMAGE_NAME$TAG
           done
+      - name: Build and analyze
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
+          -Dsonar.projectKey=DiSSCo_${{ github.event.repository.name }}
+          -Dsonar.exclusions=**/jooq/**
+          -Dsonar.coverage.exclusions=**/properties/**,**/configuration/**,**/domain/**,**/exception/**
       - name: Login to Public ECR
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v1
