@@ -52,6 +52,9 @@ jobs:
           tags: |
             type=sha
             type=raw,value=latest
+      - name: Build image
+        run: |
+          docker build -t public.ecr.aws/dissco/${{ github.event.repository.name }} .
       - name: Trivy - List all vulnerabilities
         uses: aquasecurity/trivy-action@master
         with:
@@ -69,8 +72,7 @@ jobs:
           exit-code: '1'
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
-      - name: Build and push
-        uses: docker/build-push-action@v3
+      - name: Push Image
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
