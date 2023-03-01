@@ -23,10 +23,9 @@ jobs:
       - name: get tags
         run: |
           image_name=$IMAGE_NAME
-          echo "${{ steps.meta.outputs.tags }}"
-          readarray -t y <<<"${{ steps.meta.outputs.tags }}"
-          echo ${y[0]}
-          echo ${y[1]}
+          readarray -t TAGS <<<"${{ steps.meta.outputs.tags }}"
+          echo ${TAGS[0]}
+          echo ${TAGS[1]}
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
@@ -67,10 +66,10 @@ jobs:
       - name: Push image to ECR
         if: github.event_name != 'pull_request'
         run: |
-          for TAG in ${{ steps.meta.outputs.tags }}
-          do
-            docker tag $IMAGE_NAME $IMAGE_NAME$TAG
-          done
+          image_name=$IMAGE_NAME
+          readarray -t TAGS <<<"${{ steps.meta.outputs.tags }}"
+          docker tag $IMAGE_NAME ${TAGS[0]}
+          docker tag $IMAGE_NAME ${TAGS[1]}
           docker push $IMAGE_NAME --all-tags
       - name: Set outputs
         id: vars
