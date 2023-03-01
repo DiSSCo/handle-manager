@@ -72,7 +72,8 @@ jobs:
           exit-code: '1'
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
-      - name: Push Image
+      - name: Push image to ECR
+        if: github.event_name != 'pull_request'
         env:
           ECR_REPOSITORY: public.ecr.aws/dissco/${{ github.event.repository.name }}
           IMAGE_TAG: latest
