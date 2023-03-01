@@ -74,11 +74,10 @@ jobs:
           severity: 'CRITICAL,HIGH'
       - name: Push Image
         env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: public.ecr.aws/dissco/${{ github.event.repository.name }}
           IMAGE_TAG: latest
         run: |
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REPOSITORY:$IMAGE_TAG
       - name: Set outputs
         id: vars
         run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
