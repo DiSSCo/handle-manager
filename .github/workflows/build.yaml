@@ -55,7 +55,8 @@ jobs:
             type=sha
             type=raw,value=latest
       - name: Build image
-        run: |         
+        run: |
+          echo ${{ steps.meta.outputs.tags }}
           for TAG in {{ steps.meta.outputs.tags }}
           do
             echo $IMAGE_NAME$TAG
