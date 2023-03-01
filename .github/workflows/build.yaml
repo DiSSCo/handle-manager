@@ -23,10 +23,14 @@ jobs:
       - name: get tags
         run: |
           image_name=$IMAGE_NAME
-          echo "$DOCKER_METADATA_OUTPUT_TAGS"
-          for TAG in "$DOCKER_METADATA_OUTPUT_TAGS"
+          for TAG in "${{ steps.meta.outputs.tags }}"
           do
-            echo "$TAG"
+            echo "steps meta $TAG"
+          done
+          
+          for TAG in "${DOCKER_METADATA_OUTPUT_TAGS}"
+          do
+            echo "steps meta $TAG"
           done
       - uses: actions/checkout@v2
         with:
