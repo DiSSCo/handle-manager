@@ -31,6 +31,22 @@ jobs:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: $IMAGE_NAME
+          tags: |
+            type=sha
+            type=raw,value=latest
+      - name: get tags
+        run: |
+          echo $DOCKER_METADATA_OUTPUT_TAGS
+          echo ${{ steps.meta.outputs.tags }}          
+          for TAG in DOCKER_METADATA_OUTPUT_TAGS
+          do
+            echo $TAG
+          done
       - name: Build and analyze
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
@@ -46,21 +62,8 @@ jobs:
           registry: public.ecr.aws
           username: ${{ secrets.AWS_ACCESS_KEY_ID }}
           password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v4
-        with:
-          images: $IMAGE_NAME
-          tags: |
-            type=sha
-            type=raw,value=latest
       - name: Build image
         run: |
-          echo ${{ steps.meta.outputs.tags }}
-          for TAG in {{ steps.meta.outputs.tags }}
-          do
-            echo $IMAGE_NAME$TAG
-          done
           docker build -t $IMAGE_NAME .
       - name: Trivy - List all vulnerabilities
         uses: aquasecurity/trivy-action@master
