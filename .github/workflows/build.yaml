@@ -23,9 +23,8 @@ jobs:
       - name: get tags
         run: |
           image_name=$IMAGE_NAME
-          echo "$image_name"
           echo "$DOCKER_METADATA_OUTPUT_TAGS"
-          for $TAG in "$DOCKER_METADATA_OUTPUT_TAGS"
+          for TAG in "$DOCKER_METADATA_OUTPUT_TAGS"
           do
             echo "$TAG"
           done
