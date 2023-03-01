@@ -78,8 +78,6 @@ jobs:
           severity: 'CRITICAL,HIGH'
       - name: Push image to ECR
         if: github.event_name != 'pull_request'
-        env:
-          SHA: sha-${{ steps.vars.outputs.sha_short }}
         run: |
           docker tag $IMAGE_NAME $DOCKER_METADATA_OUTPUT_TAGS
           docker push $IMAGE_NAME --all-tags
