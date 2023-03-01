@@ -42,7 +42,7 @@ jobs:
       - name: get tags
         run: |
           echo 'Docker metadata output'$DOCKER_METADATA_OUTPUT_TAGS    
-          image_name = $IMAGE_NAME
+          image_name=$IMAGE_NAME
           for TAG in DOCKER_METADATA_OUTPUT_TAGS
           do
             echo image_name
