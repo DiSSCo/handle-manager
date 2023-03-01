@@ -5,6 +5,8 @@ on:
       - main
   pull_request:
     types: [ opened, synchronize, reopened ]
+env:
+  IMAGE_NAME: public.ecr.aws/dissco/${{ github.event.repository.name }}
 jobs:
   build:
     name: Build
@@ -53,19 +55,22 @@ jobs:
             type=sha
             type=raw,value=latest
       - name: Build image
+        env:
+          SHA: sha-${{ steps.vars.outputs.sha_short }}
         run: |
-          docker build -t public.ecr.aws/dissco/${{ github.event.repository.name }} .
+          docker build -t $IMAGE_NAME:latest -t $IMAGE_NAME:$SHA .
+          echo "SHA tag: $SHA"
       - name: Trivy - List all vulnerabilities
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'public.ecr.aws/dissco/${{ github.event.repository.name }}'
+          image-ref: '$IMAGE_NAME'
           format: 'table'
           ignore-unfixed: true
           vuln-type: 'os,library'
       - name: Trivy - Stop on Severe Vulnerabilities
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'public.ecr.aws/dissco/${{ github.event.repository.name }}'
+          image-ref: '$IMAGE_NAME:latest'
           format: 'table'
           ignore-unfixed: true
           trivyignores: .github/workflows/.trivyignore
@@ -73,12 +78,11 @@ jobs:
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
       - name: Push image to ECR
-        if: github.event_name != 'pull_request'
         env:
-          ECR_REPOSITORY: public.ecr.aws/dissco/${{ github.event.repository.name }}
-          IMAGE_TAG: latest
+          SHA: sha-${{ steps.vars.outputs.sha_short }}
+        if: github.event_name != 'pull_request'
         run: |
-          docker push $ECR_REPOSITORY:$IMAGE_TAG
+          docker push public.ecr.aws/dissco/${{ github.event.repository.name }} --all-tags
       - name: Set outputs
         id: vars
         run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
