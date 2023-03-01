@@ -42,9 +42,10 @@ jobs:
       - name: get tags
         run: |
           echo $DOCKER_METADATA_OUTPUT_TAGS    
+          image_name = $IMAGE_NAME
           for TAG in DOCKER_METADATA_OUTPUT_TAGS
           do
-            echo $IMAGE_NAME$TAG
+            echo $TAG
           done
       - name: Build and analyze
         env:
