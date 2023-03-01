@@ -53,7 +53,7 @@ jobs:
           echo ${{ steps.meta.outputs.tags }}          
           for TAG in DOCKER_METADATA_OUTPUT_TAGS
           do
-            echo $TAG
+            echo $IMAGE_NAME$TAG
           done
       - name: Login to Public ECR
         if: github.event_name != 'pull_request'
