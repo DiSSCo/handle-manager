@@ -63,6 +63,18 @@ class HandleControllerBadRequestsTest {
     controller = new HandleController(service, schemaInitializer);
   }
 
+  @Test
+  void testBadTypeRequest(){
+    //When
+    var badType = "bad";
+    var request = genCreateRecordRequest(genHandleRecordRequestObject(), badType);
+
+    // Then
+    Exception e = assertThrows(InvalidRequestException.class, () -> {
+      controller.createRecord(request);
+    });
+    assertThat(e.getMessage()).contains(badType);
+  }
 
   @Test
   void testBadPostRequest() {

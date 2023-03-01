@@ -21,7 +21,6 @@ import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
 import eu.dissco.core.handlemanager.domain.requests.PutRequest;
 import eu.dissco.core.handlemanager.domain.requests.ResolveRequest;
-import eu.dissco.core.handlemanager.domain.requests.SearchByPhysIdRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DoiRecordRequest;
@@ -42,7 +41,6 @@ public class JsonSchemaLibrary {
   private static JsonNode patchReqJsonNode;
   private static JsonNode putReqJsonNode;
   private static JsonNode resolveReqJsonNode;
-  private static JsonNode searchByPhysIdReqJsonNode;
   private static JsonNode handlePostReqJsonNode;
   private static JsonNode handlePatchReqJsonNode;
   private static JsonNode doiPostReqJsonNode;
@@ -59,7 +57,6 @@ public class JsonSchemaLibrary {
   private static JsonSchema patchReqSchema;
   private static JsonSchema putReqSchema;
   private static JsonSchema resolveReqSchema;
-  private static JsonSchema searchByPhysIdReqSchema;
   private static JsonSchema handlePostReqSchema;
   private static JsonSchema handlePatchReqSchema;
   private static JsonSchema doiPostReqSchema;
@@ -93,7 +90,6 @@ public class JsonSchemaLibrary {
         DigitalSpecimenBotanyRequest.class);
     mediaObjectPostReqJsonNode = schemaGenerator.generateSchema(MediaObjectRequest.class);
     tombstoneReqJsonNode = schemaGenerator.generateSchema(TombstoneRecordRequest.class);
-    searchByPhysIdReqJsonNode = schemaGenerator.generateSchema(SearchByPhysIdRequest.class);
   }
 
   private static void setJsonNodesLenientRequirements(SchemaGeneratorConfig patchRequestConfig) {
@@ -121,7 +117,6 @@ public class JsonSchemaLibrary {
     patchReqSchema = factory.getSchema(patchReqJsonNode);
     putReqSchema = factory.getSchema(putReqJsonNode);
     resolveReqSchema = factory.getSchema(resolveReqJsonNode);
-    searchByPhysIdReqSchema = factory.getSchema(searchByPhysIdReqJsonNode);
 
     handlePostReqSchema = factory.getSchema(handlePostReqJsonNode);
     doiPostReqSchema = factory.getSchema(doiPostReqJsonNode);
@@ -191,14 +186,6 @@ public class JsonSchemaLibrary {
     var validationErrors = resolveReqSchema.validate(requestRoot);
     if (!validationErrors.isEmpty()) {
       throw new InvalidRequestException(setErrorMessage(validationErrors, "POST (Resolve)"));
-    }
-  }
-
-  public static void validateSearchByPhysIdRequest(JsonNode requestRoot) throws InvalidRequestException {
-    var validationErrors = searchByPhysIdReqSchema.validate(requestRoot);
-    if (!validationErrors.isEmpty()) {
-      throw new InvalidRequestException(
-          setErrorMessage(validationErrors, "Search by physical specimen id"));
     }
   }
 
