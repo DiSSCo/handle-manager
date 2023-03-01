@@ -24,8 +24,9 @@ jobs:
         run: |
           image_name=$IMAGE_NAME
           echo "${{ steps.meta.outputs.tags }}"
-          readarray -t y <<<"$${{ steps.meta.outputs.tags }}"
-          echo $y
+          readarray -t y <<<"${{ steps.meta.outputs.tags }}"
+          echo ${y[0]}
+          echo ${y[1]}
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
