@@ -106,7 +106,7 @@ class HandleServiceTest {
   }
 
   @Test
-  void resolveSingleRecord() throws Exception {
+  void testResolveSingleRecord() throws Exception {
 
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     String path = SANDBOX_URI + HANDLE;
@@ -121,6 +121,22 @@ class HandleServiceTest {
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testResolveSingleRecordNotFound() throws Exception {
+
+    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
+    String path = SANDBOX_URI + HANDLE;
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(new ArrayList<>());
+
+    // When
+    var exception = assertThrows(PidResolutionException.class, () -> {
+      service.resolveSingleRecord(handle, path);
+    });
+    // Then
+    assertThat(exception.getMessage()).contains(HANDLE);
+
   }
 
   @Test
