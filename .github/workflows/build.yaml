@@ -74,14 +74,6 @@ jobs:
           exit-code: '1'
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
-      - name: Push image to ECR
-        if: github.event_name != 'pull_request'
-        run: |
-          image_name=$IMAGE_NAME
-          readarray -t TAGS <<<"${{ steps.meta.outputs.tags }}"
-          docker tag $IMAGE_NAME ${TAGS[0]}
-          docker tag $IMAGE_NAME ${TAGS[1]}
-          docker push $IMAGE_NAME --all-tags
       - name: Build and Push to ECR
         uses: docker/build-push-action@v4
         with:
