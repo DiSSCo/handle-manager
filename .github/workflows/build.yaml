@@ -12,14 +12,6 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v4
-        with:
-          images: $IMAGE_NAME
-          tags: |
-            type=sha
-            type=raw,value=latest
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
@@ -74,6 +66,14 @@ jobs:
           exit-code: '1'
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: $IMAGE_NAME
+          tags: |
+            type=sha
+            type=raw,value=latest
       - name: Build and Push to ECR
         uses: docker/build-push-action@v3
         with:
