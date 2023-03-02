@@ -199,6 +199,26 @@ class HandleControllerTest {
   }
 
   @Test
+  void testResolveBatchHandleExceedsMax() throws Exception {
+    // Given
+    MockHttpServletRequest r = new MockHttpServletRequest();
+    r.setRequestURI("view");
+    int maxHandles = 200;
+    List<String> handleString = new ArrayList<>();
+    for (int i = 0; i<= maxHandles; i++){
+      handleString.add(String.valueOf(i));
+    }
+
+    // When
+    Exception e = assertThrows(InvalidRequestException.class, () -> {
+      controller.resolvePids(handleString, r);
+    });
+
+    // Then
+    assertThat(e.getMessage()).contains(String.valueOf(maxHandles));
+  }
+
+  @Test
   void testGetAllHandlesFailure() {
     // Given
     given(service.getHandlesPaged(1, 10)).willReturn(new ArrayList<>());

@@ -97,19 +97,19 @@ public class HandleController {
   @Operation(summary ="Resolve multiple PID records")
   @GetMapping("/records")
   public ResponseEntity<JsonApiWrapperRead> resolvePids(
-      @RequestParam List<String> handleString,
+      @RequestParam List<String> handles,
       HttpServletRequest r) throws PidResolutionException, InvalidRequestException {
     String path = SANDBOX_URI + r.getRequestURI();
     int maxHandles = 200;
 
-    if (handleString.size() > maxHandles){
+    if (handles.size() > maxHandles){
       throw new InvalidRequestException("Attempting to resolve more than maximum permitted PIDs in a single request. Maximum handles: " + maxHandles);
     }
 
-    List<byte[]> handles = new ArrayList<>();
-    handleString.forEach(h -> handles.add(h.getBytes(StandardCharsets.UTF_8)));
+    List<byte[]> handleBytes = new ArrayList<>();
+    handles.forEach(h -> handleBytes.add(h.getBytes(StandardCharsets.UTF_8)));
 
-    return ResponseEntity.status(HttpStatus.OK).body(service.resolveBatchRecord(handles, path));
+    return ResponseEntity.status(HttpStatus.OK).body(service.resolveBatchRecord(handleBytes, path));
   }
 
   @Operation(summary ="Given a physical identifier (i.e. local identifier), resolve PID record")

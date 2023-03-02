@@ -129,23 +129,21 @@ public class HandleService {
       throws PidResolutionException {
     var dbRecord = handleRep.resolveHandleAttributes(handles);
     var handleMap = mapRecords(dbRecord);
-    Set<byte[]> resolvedHandles = new HashSet<>();
+    Set<String> resolvedHandles = new HashSet<>();
 
     List<JsonNode> rootNodeList = new ArrayList<>();
 
     for (var handleRecord : handleMap.entrySet()) {
       rootNodeList.add(jsonFormatSingleRecord(handleRecord.getValue()));
-      resolvedHandles.add(handleRecord.getValue().get(0).handle());
+      resolvedHandles.add(new String(handleRecord.getValue().get(0).handle(), StandardCharsets.UTF_8));
     }
 
     if (handles.size() > resolvedHandles.size()) {
-      handles.forEach(
-          resolvedHandles::remove); // Remove handles from resolved handle list, now it only contains unresolved handles
-
       Set<String> unresolvedHandles = new HashSet<>();
-      for (byte[] handle : handles) {
-        unresolvedHandles.add(new String(handle, StandardCharsets.UTF_8));
-      }
+      handles.stream()
+          .filter(h -> !resolvedHandles.contains(new String(h, StandardCharsets.UTF_8))).toList()
+              .forEach(h -> unresolvedHandles.add(new String(h, StandardCharsets.UTF_8)));
+
       throw new PidResolutionException(
           "Unable to resolve the following handles: " + unresolvedHandles);
     }
