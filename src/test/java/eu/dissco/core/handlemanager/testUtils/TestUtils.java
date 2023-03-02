@@ -52,7 +52,6 @@ import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordReque
 import eu.dissco.core.handlemanager.domain.requests.attributes.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdentifier;
-import eu.dissco.core.handlemanager.domain.requests.attributes.PidTypeName;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PreservedOrLiving;
 import eu.dissco.core.handlemanager.domain.requests.attributes.TombstoneRecordRequest;
 import java.io.StringWriter;
@@ -98,11 +97,6 @@ public class TestUtils {
   //Digital Specimens
   public static final DigitalOrPhysical DIGITAL_OR_PHYSICAL_TESTVAL = DigitalOrPhysical.PHYSICAL;
   public static final String SPECIMEN_HOST_PID = "20.5000.1025/OTHER-TRIPLET";
-  public static final PidTypeName SPECIMEN_HOST_TESTVAL = new PidTypeName(
-      SPECIMEN_HOST_PID,
-      "ROR",
-      "Host institution"
-  );
   public static final String IN_COLLECTION_FACILITY_TESTVAL = "20.5000.1025/OTHER-TRIPLET";
   //Botany Specimens
   public static final String OBJECT_TYPE_TESTVAL = "Herbarium Sheet";

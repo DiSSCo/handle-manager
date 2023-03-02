@@ -11,7 +11,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_STATUS_TESTVAL;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributesAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordFullAttributes;
@@ -182,7 +181,9 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     // Given
     PhysicalIdentifier physId = new PhysicalIdentifier("abc", PhysicalIdType.CETAF);
     String physicalIdentifier = MAPPER.writeValueAsString(physId);
-    String targetHostFacility = MAPPER.writeValueAsString(SPECIMEN_HOST_TESTVAL);
+
+
+    String targetHostFacility = "DiSSCo";
     String nonTargetHostFacility = "NHM";
     List<HandleAttribute> expectedResponse = new ArrayList<>() {
       {
