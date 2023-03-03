@@ -6,19 +6,18 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.OBJECT_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PHYSICAL_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER_REQ;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_MEDIA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_TEXT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PREFIX;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DOI;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS_BOTANY;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_HANDLE;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MEDIA;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SUFFIX;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyRequestObject;
@@ -26,7 +25,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecime
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDoiRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequestBatch;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSearchByPhysIdRequest;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -44,7 +42,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.mock.web.MockHttpServletRequest;
 
 @ExtendWith(MockitoExtension.class)
 @SpringBootTest(properties = "spring.main.lazy-initialization=true")
@@ -73,7 +70,7 @@ class HandleControllerBadRequestsTest {
     Exception e = assertThrows(InvalidRequestException.class, () -> {
       controller.createRecord(request);
     });
-    assertThat(e.getMessage()).contains(badType);
+    assertThat(e.getMessage()).contains("data.type: does not have a value in the enumeration");
   }
 
   @Test

@@ -3,12 +3,6 @@ package eu.dissco.core.handlemanager.domain.requests.validation;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_MEDIA;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_TOMBSTONE;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.victools.jsonschema.generator.SchemaGenerator;
@@ -17,6 +11,7 @@ import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion.VersionFlag;
 import com.networknt.schema.ValidationMessage;
+import eu.dissco.core.handlemanager.domain.ObjectType;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
 import eu.dissco.core.handlemanager.domain.requests.PutRequest;
@@ -133,18 +128,39 @@ public class JsonSchemaLibrary {
     if (!validationErrors.isEmpty()) {
       throw new InvalidRequestException(setErrorMessage(validationErrors, "POST"));
     }
-    String type = requestRoot.get(NODE_DATA).get(NODE_TYPE).asText();
+
+    ObjectType type = ObjectType.fromString(requestRoot.get(NODE_DATA).get(NODE_TYPE).asText());
     var attributes = requestRoot.get(NODE_DATA).get(NODE_ATTRIBUTES);
     switch (type) {
-      case RECORD_TYPE_HANDLE -> validateRequestAttributes(attributes, handlePostReqSchema, type);
-      case RECORD_TYPE_DOI -> validateRequestAttributes(attributes, doiPostReqSchema, type);
-      case RECORD_TYPE_DS ->
+      case HANDLE -> validateRequestAttributes(attributes, handlePostReqSchema, type);
+      case DOI -> validateRequestAttributes(attributes, doiPostReqSchema, type);
+      case DIGITAL_SPECIMEN ->
           validateRequestAttributes(attributes, digitalSpecimenPostReqSchema, type);
-      case RECORD_TYPE_DS_BOTANY ->
+      case DIGITAL_SPECIMEN_BOTANY ->
           validateRequestAttributes(attributes, digitalSpecimenBotanyPostReqSchema, type);
-      case RECORD_TYPE_MEDIA ->
-          validateRequestAttributes(attributes, mediaObjectPostReqSchema, type);
-      default -> throw new InvalidRequestException("Invalid Request. Reason: Invalid type: " + type);
+      case MEDIA_OBJECT -> validateRequestAttributes(attributes, mediaObjectPostReqSchema, type);
+      default ->
+          throw new InvalidRequestException("Invalid Request. Reason: Invalid type: " + type);
+    }
+  }
+
+  public static void validatePatchRequest(JsonNode requestRoot) throws InvalidRequestException {
+    var validationErrors = patchReqSchema.validate(requestRoot);
+    if (!validationErrors.isEmpty()) {
+      throw new InvalidRequestException(setErrorMessage(validationErrors, "PATCH (update)"));
+    }
+    var type = ObjectType.fromString(requestRoot.get(NODE_DATA).get(NODE_TYPE).asText());
+    var attributes = requestRoot.get(NODE_DATA).get(NODE_ATTRIBUTES);
+    switch (type) {
+      case HANDLE -> validateRequestAttributes(attributes, handlePatchReqSchema, type);
+      case DOI -> validateRequestAttributes(attributes, doiPatchReqSchema, type);
+      case DIGITAL_SPECIMEN ->
+          validateRequestAttributes(attributes, digitalSpecimenPatchReqSchema, type);
+      case DIGITAL_SPECIMEN_BOTANY ->
+          validateRequestAttributes(attributes, digitalSpecimenBotanyPatchReqSchema, type);
+      case MEDIA_OBJECT -> validateRequestAttributes(attributes, mediaObjectPatchReqSchema, type);
+      default ->
+          throw new InvalidRequestException("Invalid Request. Reason: Invalid type: " + type);
     }
   }
 
@@ -154,34 +170,23 @@ public class JsonSchemaLibrary {
       throw new InvalidRequestException(setErrorMessage(validationErrors, "PUT (tombstone)"));
     }
     var attributes = requestRoot.get(NODE_DATA).get(NODE_ATTRIBUTES);
-    validateRequestAttributes(attributes, tombstoneReqSchema, RECORD_TYPE_TOMBSTONE);
+    validateTombstoneRequestAttributes(attributes, tombstoneReqSchema);
   }
 
-  public static void validatePatchRequest(JsonNode requestRoot) throws InvalidRequestException {
-    var validationErrors = patchReqSchema.validate(requestRoot);
+  private static void validateTombstoneRequestAttributes(JsonNode requestAttributes,
+      JsonSchema schema) throws InvalidRequestException {
+    var validationErrors = schema.validate(requestAttributes);
     if (!validationErrors.isEmpty()) {
-      throw new InvalidRequestException(setErrorMessage(validationErrors, "PATCH (update)"));
-    }
-    String type = requestRoot.get(NODE_DATA).get(NODE_TYPE).asText();
-    var attributes = requestRoot.get(NODE_DATA).get(NODE_ATTRIBUTES);
-    switch (type) {
-      case RECORD_TYPE_HANDLE -> validateRequestAttributes(attributes, handlePatchReqSchema, type);
-      case RECORD_TYPE_DOI -> validateRequestAttributes(attributes, doiPatchReqSchema, type);
-      case RECORD_TYPE_DS ->
-          validateRequestAttributes(attributes, digitalSpecimenPatchReqSchema, type);
-      case RECORD_TYPE_DS_BOTANY ->
-          validateRequestAttributes(attributes, digitalSpecimenBotanyPatchReqSchema, type);
-      case RECORD_TYPE_MEDIA ->
-          validateRequestAttributes(attributes, mediaObjectPatchReqSchema, type);
-      default -> throw new InvalidRequestException("Invalid Request. Reason: Invalid type: " + type);
+      throw new InvalidRequestException(
+          setErrorMessage(validationErrors, ObjectType.TOMBSTONE.getType()));
     }
   }
 
   private static void validateRequestAttributes(JsonNode requestAttributes, JsonSchema schema,
-      String type) throws InvalidRequestException {
+      ObjectType type) throws InvalidRequestException {
     var validationErrors = schema.validate(requestAttributes);
     if (!validationErrors.isEmpty()) {
-      throw new InvalidRequestException(setErrorMessage(validationErrors, type));
+      throw new InvalidRequestException(setErrorMessage(validationErrors, String.valueOf(type)));
     }
   }
 

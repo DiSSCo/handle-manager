@@ -38,15 +38,6 @@ public class PidRecords {
   // Tombstone
   public static final String TOMBSTONE_TEXT = "tombstoneText";
   public static final String TOMBSTONE_PIDS = "tombstonePids";
-  // Record types
-  public static final String RECORD_TYPE_HANDLE = "handle";
-  public static final String RECORD_TYPE_DOI = "doi";
-  public static final String RECORD_TYPE_DS = "digitalSpecimen";
-  public static final String RECORD_TYPE_DS_BOTANY = "digitalSpecimenBotany";
-  public static final String RECORD_TYPE_TOMBSTONE = "tombstone";
-  public static final String RECORD_TYPE_MEDIA = "mediaObject";
-  public static final Set<String> RECORD_TYPES = (Set.of(RECORD_TYPE_HANDLE, RECORD_TYPE_DOI,
-      RECORD_TYPE_DS, RECORD_TYPE_DS_BOTANY, RECORD_TYPE_TOMBSTONE, RECORD_TYPE_MEDIA));
   // Fields for requests
   public static final String PID_ISSUER_REQ = "pidIssuerPid";
   public static final String LOC_REQ = "locations";
@@ -86,12 +77,13 @@ public class PidRecords {
       Map.entry(DIGITAL_OBJECT_SUBTYPE, 4), Map.entry(LOC, 5), Map.entry(ISSUE_DATE, 6),
       Map.entry(ISSUE_NUMBER, 7), Map.entry(PID_STATUS, 8), Map.entry(TOMBSTONE_TEXT, 9),
       Map.entry(TOMBSTONE_PIDS, 10), Map.entry(PID_KERNEL_METADATA_LICENSE, 11),
-      Map.entry(REFERENT_DOI_NAME, 12), Map.entry(REFERENT, 13), Map.entry(DIGITAL_OR_PHYSICAL, 14),
+      Map.entry(REFERENT_DOI_NAME, 12), Map.entry(REFERENT, 13),
+      Map.entry(DIGITAL_OR_PHYSICAL, 14), Map.entry(MEDIA_HASH, 14),
       Map.entry(SPECIMEN_HOST, 15), Map.entry(SUBJECT_SPECIMEN_HOST, 15),
-      Map.entry(IN_COLLECTION_FACILITY, 16),
+      Map.entry(IN_COLLECTION_FACILITY, 16), Map.entry(MEDIA_URL, 16),
       Map.entry(SUBJECT_PHYSICAL_IDENTIFIER, 17), Map.entry(PHYSICAL_IDENTIFIER, 17),
-      Map.entry(OBJECT_TYPE, 18), Map.entry(PRESERVED_OR_LIVING, 19), Map.entry(MEDIA_HASH, 14),
-      Map.entry(MEDIA_URL, 15));
+      Map.entry(OBJECT_TYPE, 18), Map.entry(PRESERVED_OR_LIVING, 19));
+
 
   static { // Doi Record Fields
     Set<String> tmp = new HashSet<>(HANDLE_RECORD_FIELDS);

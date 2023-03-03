@@ -24,12 +24,6 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_KERNEL_METADATA_LICENSE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PRESERVED_OR_LIVING;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_MEDIA;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_TOMBSTONE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
@@ -44,6 +38,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import eu.dissco.core.handlemanager.domain.ObjectType;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiDataLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
@@ -279,36 +274,36 @@ public class HandleService {
 
     for (var request : requests) {
       ObjectNode dataNode = (ObjectNode) request.get(NODE_DATA);
-      String type = dataNode.get(NODE_TYPE).asText();
-      recordTypes.put(new String(handles.get(0), StandardCharsets.UTF_8), type);
+      ObjectType type = ObjectType.fromString(dataNode.get(NODE_TYPE).asText());
+      recordTypes.put(new String(handles.get(0), StandardCharsets.UTF_8), type.getType());
       try {
         switch (type) {
-          case RECORD_TYPE_HANDLE -> {
+          case HANDLE -> {
             HandleRecordRequest requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 HandleRecordRequest.class);
             handleAttributes.addAll(
                 prepareHandleRecordAttributes(requestObject, handles.remove(0)));
           }
-          case RECORD_TYPE_DOI -> {
+          case DOI -> {
             DoiRecordRequest requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 DoiRecordRequest.class);
             handleAttributes.addAll(prepareDoiRecordAttributes(requestObject, handles.remove(0)));
           }
-          case RECORD_TYPE_DS -> {
+          case DIGITAL_SPECIMEN -> {
             DigitalSpecimenRequest requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 DigitalSpecimenRequest.class);
             handleAttributes.addAll(
                 prepareDigitalSpecimenRecordAttributes(requestObject, handles.remove(0)));
             digitalSpecimenList.add((T) requestObject);
           }
-          case RECORD_TYPE_DS_BOTANY -> {
+          case DIGITAL_SPECIMEN_BOTANY -> {
             DigitalSpecimenBotanyRequest requestObject = mapper.treeToValue(
                 dataNode.get(NODE_ATTRIBUTES), DigitalSpecimenBotanyRequest.class);
             handleAttributes.addAll(
                 prepareDigitalSpecimenBotanyRecordAttributes(requestObject, handles.remove(0)));
             digitalSpecimenList.add((T) requestObject);
           }
-          case RECORD_TYPE_MEDIA -> {
+          case MEDIA_OBJECT -> {
             MediaObjectRequest requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 MediaObjectRequest.class);
             handleAttributes.addAll(prepareMediaObjectAttributes(requestObject, handles.remove(0)));
@@ -495,7 +490,7 @@ public class HandleService {
     for (JsonNode updatedRecord : archivedRecords) {
       String pidLink = updatedRecord.get(PID).asText();
       String pidName = getPidName(pidLink);
-      dataList.add(new JsonApiDataLinks(pidName, RECORD_TYPE_TOMBSTONE, updatedRecord,
+      dataList.add(new JsonApiDataLinks(pidName, ObjectType.TOMBSTONE.getType(), updatedRecord,
           new JsonApiLinks(pidLink)));
     }
     return new JsonApiWrapperWrite(dataList);
@@ -585,7 +580,7 @@ public class HandleService {
     var handleRecord = prepareDoiRecordAttributes(request, handle);
 
     // 14 Media Hash
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(MEDIA_HASH), handle, PHYSICAL_IDENTIFIER,
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(MEDIA_HASH), handle, MEDIA_HASH,
         request.getMediaHash().getBytes(StandardCharsets.UTF_8)));
 
     // 15 Subject Specimen Host
@@ -595,7 +590,7 @@ public class HandleService {
             specimenHost.getBytes(StandardCharsets.UTF_8)));
 
     // 16 Media Url
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(MEDIA_URL), handle, PHYSICAL_IDENTIFIER,
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(MEDIA_URL), handle, MEDIA_URL,
         request.getMediaUrl().getBytes(StandardCharsets.UTF_8)));
 
     // 17 : Subject Physical Identifier

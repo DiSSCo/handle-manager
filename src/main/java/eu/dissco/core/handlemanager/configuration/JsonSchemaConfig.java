@@ -1,11 +1,14 @@
 package eu.dissco.core.handlemanager.configuration;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.victools.jsonschema.generator.Option;
 import com.github.victools.jsonschema.generator.OptionPreset;
 import com.github.victools.jsonschema.generator.SchemaGeneratorConfig;
 import com.github.victools.jsonschema.generator.SchemaGeneratorConfigBuilder;
 import com.github.victools.jsonschema.generator.SchemaVersion;
+import com.github.victools.jsonschema.generator.impl.module.EnumModule;
 import com.github.victools.jsonschema.module.jackson.JacksonModule;
 import com.github.victools.jsonschema.module.jackson.JacksonOption;
 import java.util.stream.Stream;
@@ -59,8 +62,8 @@ public class JsonSchemaConfig {
     // e.g. PATCH update attributes
 
     SchemaGeneratorConfigBuilder configBuilder = new SchemaGeneratorConfigBuilder(
-        SchemaVersion.DRAFT_2020_12, OptionPreset.PLAIN_JSON).with(
-        Option.FORBIDDEN_ADDITIONAL_PROPERTIES_BY_DEFAULT);
+        SchemaVersion.DRAFT_2020_12, OptionPreset.PLAIN_JSON)
+        .with(Option.FORBIDDEN_ADDITIONAL_PROPERTIES_BY_DEFAULT);
 
     configBuilder.forTypesInGeneral()
         .withEnumResolver(scope -> scope.getType().getErasedType().isEnum()
@@ -83,6 +86,8 @@ public class JsonSchemaConfig {
     // These schemas allow unknown fields to accommodate the attributes field (which could be one of several schemas)
     // Attribute schemas are checked using one of the two other schema configs
 
+    ObjectMapper mapper = new ObjectMapper();
+
     SchemaGeneratorConfigBuilder configBuilder = new SchemaGeneratorConfigBuilder(
         SchemaVersion.DRAFT_2020_12, OptionPreset.PLAIN_JSON);
 
@@ -93,6 +98,15 @@ public class JsonSchemaConfig {
     configBuilder.forFields()
         .withAdditionalPropertiesResolver(field -> field.getType().getErasedType() == JsonNode.class
             ? null : Void.class);
+
+    configBuilder.with(new EnumModule(possibleEnumValue -> {
+      try {
+        String valueInQuotes = mapper.writeValueAsString(possibleEnumValue);
+        return valueInQuotes.substring(1, valueInQuotes.length() - 1);
+      } catch (JsonProcessingException ex) {
+        throw new IllegalStateException(ex);
+      }
+    }));
 
     return configBuilder.build();
   }
