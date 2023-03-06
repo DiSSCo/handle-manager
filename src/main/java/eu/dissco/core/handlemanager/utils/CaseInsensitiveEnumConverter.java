@@ -2,7 +2,8 @@ package eu.dissco.core.handlemanager.utils;
 
 import org.springframework.core.convert.converter.Converter;
 
-public class CaseInsensitiveEnumConverter <T extends Enum<T>> implements Converter<String, T> {
+public class CaseInsensitiveEnumConverter<T extends Enum<T>> implements Converter<String, T> {
+
   private final Class<T> enumClass;
 
   public CaseInsensitiveEnumConverter(Class<T> enumClass) {

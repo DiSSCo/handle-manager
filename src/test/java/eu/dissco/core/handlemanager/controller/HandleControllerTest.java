@@ -46,6 +46,7 @@ import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRe
 import eu.dissco.core.handlemanager.domain.requests.attributes.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
+import eu.dissco.core.handlemanager.domain.requests.attributes.PidStatus;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaStaticContextInitializer;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -90,10 +91,10 @@ class HandleControllerTest {
     // Given
     int pageSize = 10;
     int pageNum = 1;
-    String pidStatus = "TEST";
+    var pidStatus = PidStatus.TEST;
     List<String> expectedHandles = Collections.nCopies(pageSize, HANDLE);
 
-    given(service.getHandlesPaged(pageNum, pageSize, pidStatus)).willReturn(expectedHandles);
+    given(service.getHandlesPaged(pageNum, pageSize, pidStatus.getStatus())).willReturn(expectedHandles);
 
     // When
     ResponseEntity<List<String>> response = controller.getAllHandlesByPidStatus(pageNum, pageSize,
@@ -102,20 +103,6 @@ class HandleControllerTest {
     // Then
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(expectedHandles).isEqualTo(response.getBody());
-  }
-
-  @Test
-  void testGetAllHandlesByPidStatusInvalid() {
-    int pageSize = 10;
-    int pageNum = 1;
-    String pidStatus = "BAD";
-
-    var exception = assertThrowsExactly(InvalidRequestException.class,
-        () -> controller.getAllHandlesByPidStatus(pageNum, pageSize, pidStatus));
-
-    // Then
-    assertThat(exception).hasMessage(
-        "Invalid Input. Pid Status not recognized. Available Pid Statuses: " + VALID_PID_STATUS);
   }
 
   @Test
@@ -222,7 +209,7 @@ class HandleControllerTest {
 
     // When
     var exception = assertThrowsExactly(PidResolutionException.class,
-        () -> controller.getAllHandlesByPidStatus(1, 10, "ALL"));
+        () -> controller.getAllHandlesByPidStatus(1, 10, PidStatus.ALL));
 
     // Then
     assertThat(exception).hasMessage("Unable to resolve pids");
