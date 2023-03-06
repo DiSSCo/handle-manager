@@ -88,10 +88,7 @@ public class HandleRepository {
 
   // Get List of Pids
   public List<String> getAllHandles(byte[] pidStatus, int pageNum, int pageSize) {
-    int offset = 0;
-    if (pageNum > 1) {
-      offset = offset + (pageSize * (pageNum - 1));
-    }
+    int offset = getOffset(pageNum, pageSize);
 
     return context
         .selectDistinct(HANDLES.HANDLE)
@@ -105,11 +102,12 @@ public class HandleRepository {
   }
 
   public List<String> getAllHandles(int pageNum, int pageSize) {
+    int offset = getOffset(pageNum, pageSize);
     return context
         .selectDistinct(HANDLES.HANDLE)
         .from(HANDLES)
         .limit(pageSize)
-        .offset(pageNum)
+        .offset(offset)
         .fetch()
         .getValues(HANDLES.HANDLE, String.class);
   }
@@ -245,6 +243,14 @@ public class HandleRepository {
         .where(HANDLES.HANDLE.in(handles))
         .and(HANDLES.TYPE.notIn(TOMBSTONE_RECORD_FIELDS_BYTES))
         .execute();
+  }
+
+  int getOffset(int pageNum, int pageSize){
+    int offset = 0;
+    if (pageNum > 1) {
+      offset = offset + (pageSize * (pageNum - 1));
+    }
+    return offset;
   }
 
 }

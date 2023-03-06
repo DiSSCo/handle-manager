@@ -3,11 +3,15 @@ package eu.dissco.core.handlemanager.repository;
 import static eu.dissco.core.handlemanager.database.jooq.Tables.HANDLES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_NUMBER;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PHYSICAL_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
+import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PHYSICAL_IDENTIFIER_LOCAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_STATUS_TESTVAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_PID;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributesAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordFullAttributes;
@@ -29,6 +33,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import org.jooq.Query;
 import org.jooq.Record4;
+import org.junit.Assert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -216,6 +221,29 @@ class HandleRepositoryIT extends BaseRepositoryIT {
 
     // When
     List<String> responseReceived = handleRep.getAllHandles(pidStatusTarget, pageNum, pageSize);
+
+    // Then
+    assertThat(responseReceived).hasSameElementsAs(responseExpected);
+  }
+
+  @Test
+  void testSearchByPhysicalIdentifier(){
+    // Given
+    var targetPhysicalIdentifer = PHYSICAL_IDENTIFIER_LOCAL.getBytes(StandardCharsets.UTF_8);
+    List<HandleAttribute> responseExpected = new ArrayList<>();
+    responseExpected.add(new HandleAttribute(1, HANDLE.getBytes(StandardCharsets.UTF_8), PHYSICAL_IDENTIFIER, targetPhysicalIdentifer));
+    responseExpected.add(new HandleAttribute(2, HANDLE.getBytes(StandardCharsets.UTF_8), SPECIMEN_HOST, SPECIMEN_HOST_PID.getBytes(
+        StandardCharsets.UTF_8)));
+
+    List<HandleAttribute> nonTargetAttributes = new ArrayList<>();
+    nonTargetAttributes.add(new HandleAttribute(1, HANDLE_ALT.getBytes(StandardCharsets.UTF_8), PHYSICAL_IDENTIFIER, "A".getBytes(
+        StandardCharsets.UTF_8)));
+
+    postAttributes(responseExpected);
+    postAttributes(nonTargetAttributes);
+
+    // When
+    var responseReceived = handleRep.searchByPhysicalIdentifier(List.of(targetPhysicalIdentifer));
 
     // Then
     assertThat(responseReceived).hasSameElementsAs(responseExpected);
