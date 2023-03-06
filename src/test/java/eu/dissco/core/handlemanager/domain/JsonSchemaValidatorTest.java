@@ -1,6 +1,5 @@
 package eu.dissco.core.handlemanager.domain;
 
-import static eu.dissco.core.handlemanager.domain.PidRecords.LOC_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_URL;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
@@ -17,17 +16,12 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_MEDIA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_TEXT;
-import static eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaLibrary.validatePatchRequest;
-import static eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaLibrary.validatePostRequest;
-import static eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaLibrary.validatePutRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MEDIA_URL_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_ISSUER_PID;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.PREFIX;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.REFERENT_DOI_NAME_PID;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_PID;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.SUFFIX;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenRequestObject;
@@ -38,37 +32,40 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneReque
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequestBatch;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestAltLoc;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaLibrary;
-import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaStaticContextInitializer;
+import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaValidator;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mockito.InjectMocks;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @Slf4j
-@SpringBootTest(properties = "spring.main.lazy-initialization=true")
-class JsonSchemaLibraryTest {
+@ExtendWith(MockitoExtension.class)
+class JsonSchemaValidatorTest {
 
-  @Autowired
-  JsonSchemaStaticContextInitializer schemaInitializer;
+  @InjectMocks
+  JsonSchemaValidator schemaValidator;
 
   private static final String UNRECOGNIZED_MSG = "Unrecognized attributes: ";
   private static final String MISSING_MSG = "Missing attributes: ";
-  private static final String OTHER_MSG = "Other errors: ";
   private static final String INVALID_TYPE_MSG = "Invalid Request. Reason: Invalid type: ";
 
   private static final String UNKNOWN_ATTRIBUTE = "badKey";
   private static final String UNKNOWN_VAL = "badVal";
+
+  @BeforeEach
+  void setup(){
+    schemaValidator = new JsonSchemaValidator();
+  }
 
   @Test
   void testPostHandleRequest() {
@@ -77,7 +74,7 @@ class JsonSchemaLibraryTest {
 
     // Then
     assertDoesNotThrow(() -> {
-      validatePostRequest(request);
+      schemaValidator.validatePostRequest(request);
     });
   }
 
@@ -88,7 +85,7 @@ class JsonSchemaLibraryTest {
 
     // Then
     assertDoesNotThrow(() -> {
-      validatePostRequest(request);
+      schemaValidator.validatePostRequest(request);
     });
   }
 
@@ -99,7 +96,7 @@ class JsonSchemaLibraryTest {
 
     // Then
     assertDoesNotThrow(() -> {
-      validatePostRequest(request);
+      schemaValidator.validatePostRequest(request);
     });
   }
 
@@ -110,7 +107,7 @@ class JsonSchemaLibraryTest {
 
     // Then
     assertDoesNotThrow(() -> {
-      validatePostRequest(request);
+      schemaValidator.validatePostRequest(request);
     });
   }
 
@@ -121,7 +118,7 @@ class JsonSchemaLibraryTest {
 
     // Then
     assertDoesNotThrow(() -> {
-      validatePostRequest(request);
+      schemaValidator.validatePostRequest(request);
     });
   }
 
@@ -132,7 +129,7 @@ class JsonSchemaLibraryTest {
 
     // Then
     assertDoesNotThrow(() -> {
-      validatePatchRequest(request);
+      schemaValidator.validatePatchRequest(request);
     });
   }
 
@@ -143,7 +140,7 @@ class JsonSchemaLibraryTest {
 
     // Then
     assertDoesNotThrow(() -> {
-      validatePatchRequest(request);
+      schemaValidator.validatePatchRequest(request);
     });
   }
 
@@ -154,7 +151,7 @@ class JsonSchemaLibraryTest {
 
     // Then
     assertDoesNotThrow(() -> {
-      validatePatchRequest(request);
+      schemaValidator.validatePatchRequest(request);
     });
   }
 
@@ -165,7 +162,7 @@ class JsonSchemaLibraryTest {
 
     // Then
     assertDoesNotThrow(() -> {
-      validatePatchRequest(request);
+      schemaValidator.validatePatchRequest(request);
     });
   }
 
@@ -176,7 +173,7 @@ class JsonSchemaLibraryTest {
 
     // Then
     assertDoesNotThrow(() -> {
-      validatePatchRequest(request);
+      schemaValidator.validatePatchRequest(request);
     });
   }
 
@@ -203,7 +200,7 @@ class JsonSchemaLibraryTest {
     request.set(NODE_DATA, data);
 
     assertDoesNotThrow(() -> {
-      validatePutRequest(request);
+      schemaValidator.validatePutRequest(request);
     });
   }
 
@@ -215,7 +212,7 @@ class JsonSchemaLibraryTest {
 
     // Then
     Exception e = assertThrows(InvalidRequestException.class, () -> {
-      validatePostRequest(request);
+      schemaValidator.validatePostRequest(request);
     });
     assertThat(e.getMessage()).contains(INVALID_TYPE_MSG).contains(badType);
   }
@@ -228,7 +225,7 @@ class JsonSchemaLibraryTest {
 
     // Then
     Exception e = assertThrows(InvalidRequestException.class, () -> {
-      validatePostRequest(request);
+      schemaValidator.validatePostRequest(request);
     });
     assertThat(e.getMessage()).contains(MISSING_MSG).contains(NODE_TYPE);
   }
@@ -242,7 +239,7 @@ class JsonSchemaLibraryTest {
 
     // Then
     Exception e = assertThrows(InvalidRequestException.class, () -> {
-      validatePostRequest(request);
+      schemaValidator.validatePostRequest(request);
     });
     assertThat(e.getMessage()).contains(MISSING_MSG).contains(missingAttribute);
   }
@@ -255,7 +252,7 @@ class JsonSchemaLibraryTest {
 
     // Then
     Exception e = assertThrows(InvalidRequestException.class, () -> {
-      validatePostRequest(request);
+      schemaValidator.validatePostRequest(request);
     });
     assertThat(e.getMessage()).contains(UNRECOGNIZED_MSG).contains(UNKNOWN_ATTRIBUTE);
   }
@@ -269,7 +266,7 @@ class JsonSchemaLibraryTest {
 
     // Then
     Exception e = assertThrows(InvalidRequestException.class, () -> {
-      validatePostRequest(request);
+      schemaValidator.validatePostRequest(request);
     });
     assertThat(e.getMessage()).contains(MISSING_MSG).contains(missingAttribute);
   }
@@ -282,7 +279,7 @@ class JsonSchemaLibraryTest {
 
     // Then
     Exception e = assertThrows(InvalidRequestException.class, () -> {
-      validatePostRequest(request);
+      schemaValidator.validatePostRequest(request);
     });
     assertThat(e.getMessage()).contains(UNRECOGNIZED_MSG).contains(UNKNOWN_ATTRIBUTE);
   }
@@ -296,7 +293,7 @@ class JsonSchemaLibraryTest {
 
     // Then
     Exception e = assertThrows(InvalidRequestException.class, () -> {
-       validatePostRequest(request);
+       schemaValidator.validatePostRequest(request);
     });
     assertThat(e.getMessage()).contains(MISSING_MSG).contains(missingAttribute);
   }
@@ -309,7 +306,7 @@ class JsonSchemaLibraryTest {
 
     // Then
     Exception e = assertThrows(InvalidRequestException.class, () -> {
-       validatePostRequest(request);
+       schemaValidator.validatePostRequest(request);
     });
     assertThat(e.getMessage()).contains(UNRECOGNIZED_MSG).contains(UNKNOWN_ATTRIBUTE);
   }
@@ -324,7 +321,7 @@ class JsonSchemaLibraryTest {
 
     // Then
     Exception e = assertThrows(InvalidRequestException.class, () -> {
-       validatePostRequest(request);
+       schemaValidator.validatePostRequest(request);
     });
     assertThat(e.getMessage()).contains(MISSING_MSG).contains(missingAttribute);
   }
@@ -338,7 +335,7 @@ class JsonSchemaLibraryTest {
 
     // Then
     Exception e = assertThrows(InvalidRequestException.class, () -> {
-       validatePostRequest(request);
+       schemaValidator.validatePostRequest(request);
     });
     assertThat(e.getMessage()).contains(UNRECOGNIZED_MSG).contains(UNKNOWN_ATTRIBUTE);
   }
@@ -351,7 +348,7 @@ class JsonSchemaLibraryTest {
 
     // Then
     Exception e = assertThrows(InvalidRequestException.class, () -> {
-       validatePostRequest(request);
+       schemaValidator.validatePostRequest(request);
     });
     assertThat(e.getMessage()).contains(UNRECOGNIZED_MSG).contains(UNKNOWN_ATTRIBUTE);
   }
@@ -366,7 +363,7 @@ class JsonSchemaLibraryTest {
 
     // Then
     Exception e = assertThrows(InvalidRequestException.class, () -> {
-       validatePostRequest(request);
+       schemaValidator.validatePostRequest(request);
     });
     assertThat(e.getMessage()).contains(MISSING_MSG).contains(missingAttribute);
   }
@@ -379,7 +376,7 @@ class JsonSchemaLibraryTest {
 
     // Then
     Exception e = assertThrows(InvalidRequestException.class, () -> {
-      validatePatchRequest(request);
+      schemaValidator.validatePatchRequest(request);
     });
     assertThat(e.getMessage()).contains(INVALID_TYPE_MSG).contains(badType);
   }
@@ -393,7 +390,7 @@ class JsonSchemaLibraryTest {
 
     // Then
     Exception e = assertThrows(InvalidRequestException.class, () -> {
-      validatePatchRequest(request);
+      schemaValidator.validatePatchRequest(request);
     });
 
     assertThat(e.getMessage()).contains(UNRECOGNIZED_MSG).contains(UNKNOWN_ATTRIBUTE);
@@ -408,7 +405,7 @@ class JsonSchemaLibraryTest {
 
     // When
     Exception e = assertThrows(InvalidRequestException.class, () -> {
-      validatePutRequest(request);
+      schemaValidator.validatePutRequest(request);
     });
 
     // Then
@@ -424,7 +421,7 @@ class JsonSchemaLibraryTest {
 
     // When
     Exception e = assertThrows(InvalidRequestException.class, () -> {
-     validatePutRequest(request);
+     schemaValidator.validatePutRequest(request);
     });
 
     // Then

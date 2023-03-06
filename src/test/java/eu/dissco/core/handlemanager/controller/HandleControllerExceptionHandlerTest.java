@@ -2,17 +2,16 @@ package eu.dissco.core.handlemanager.controller;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-import eu.dissco.core.handlemanager.responses.ExceptionResponse;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
+import eu.dissco.core.handlemanager.responses.ExceptionResponse;
 import java.io.IOException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
