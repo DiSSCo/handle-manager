@@ -14,7 +14,8 @@ public enum PhysicalIdType {
     this.state = state;
   }
 
-  public String getType() {
+  @Override
+  public String toString() {
     return state;
   }
 

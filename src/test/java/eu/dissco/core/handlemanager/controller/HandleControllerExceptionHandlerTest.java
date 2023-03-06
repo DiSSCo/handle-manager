@@ -2,17 +2,16 @@ package eu.dissco.core.handlemanager.controller;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-import eu.dissco.core.handlemanager.exceptions.ExceptionResponse;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
+import eu.dissco.core.handlemanager.responses.ExceptionResponse;
 import java.io.IOException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DOI;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS;
@@ -21,7 +20,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_HANDL
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MEDIA;
 
 @ExtendWith(MockitoExtension.class)
-@SpringBootTest(properties = "spring.main.lazy-initialization=true")
 class HandleControllerExceptionHandlerTest {
 
   private RestResponseEntityExceptionHandler exceptionHandler;

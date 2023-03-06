@@ -8,7 +8,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS_BOTANY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MEDIA;
-import static eu.dissco.core.handlemanager.domain.PidRecords.VALID_PID_STATUS;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
@@ -47,7 +46,7 @@ import eu.dissco.core.handlemanager.domain.requests.attributes.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PidStatus;
-import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaStaticContextInitializer;
+import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaValidator;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.service.HandleService;
@@ -60,20 +59,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 @ExtendWith(MockitoExtension.class)
-@SpringBootTest(properties = "spring.main.lazy-initialization=true")
 class HandleControllerTest {
 
   @Mock
   private HandleService service;
-  @Autowired
-  JsonSchemaStaticContextInitializer schemaInitializer;
+
+  @Mock
+  JsonSchemaValidator schemaValidator;
 
   private HandleController controller;
 
@@ -83,7 +80,7 @@ class HandleControllerTest {
 
   @BeforeEach
   void setup() {
-    controller = new HandleController(service, schemaInitializer);
+    controller = new HandleController(service, schemaValidator);
   }
 
   @Test
@@ -94,7 +91,7 @@ class HandleControllerTest {
     var pidStatus = PidStatus.TEST;
     List<String> expectedHandles = Collections.nCopies(pageSize, HANDLE);
 
-    given(service.getHandlesPaged(pageNum, pageSize, pidStatus.getStatus())).willReturn(expectedHandles);
+    given(service.getHandlesPaged(pageNum, pageSize, pidStatus.toString())).willReturn(expectedHandles);
 
     // When
     ResponseEntity<List<String>> response = controller.getAllHandlesByPidStatus(pageNum, pageSize,
@@ -451,7 +448,7 @@ class HandleControllerTest {
     byte[] handle = HANDLE.getBytes();
     var updateAttributes = genUpdateRequestAltLoc();
     ObjectNode updateRequestNode = mapper.createObjectNode();
-    updateRequestNode.set("data", givenJsonNode(HANDLE, RECORD_TYPE_HANDLE, updateAttributes));
+    updateRequestNode.set(NODE_DATA, givenJsonNode(HANDLE, RECORD_TYPE_HANDLE, updateAttributes));
 
     var responseExpected = givenRecordResponseWriteAltLoc(List.of(handle));
     given(service.updateRecords(List.of(updateRequestNode))).willReturn(

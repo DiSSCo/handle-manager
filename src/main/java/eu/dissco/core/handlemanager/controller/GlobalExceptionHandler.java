@@ -1,6 +1,6 @@
 package eu.dissco.core.handlemanager.controller;
 
-import eu.dissco.core.handlemanager.exceptions.ExceptionResponse;
+import eu.dissco.core.handlemanager.responses.ExceptionResponse;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

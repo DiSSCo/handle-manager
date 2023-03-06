@@ -16,9 +16,11 @@ public enum ObjectType {
     this.state = state;
   }
 
-  public String getType() {
+  @Override
+  public String toString() {
     return state;
   }
+
 
   public static ObjectType fromString(String state){
     for (ObjectType type : ObjectType.values()){

@@ -15,7 +15,8 @@ public enum PidStatus {
     this.state = state;
   }
 
-  public String getStatus() {
+  @Override
+  public String toString() {
     return state;
   }
 

@@ -1,4 +1,4 @@
-package eu.dissco.core.handlemanager.exceptions;
+package eu.dissco.core.handlemanager.responses;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

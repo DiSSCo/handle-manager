@@ -5,7 +5,6 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_NUMBER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PHYSICAL_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
-import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_RECORD_FIELDS_BYTES;
 
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
@@ -69,31 +68,6 @@ public class HandleRepository {
         .fetch(this::mapToAttribute);
   }
 
-  public List<HandleAttribute> resolveHandleAttributesByPhysicalIdentifier(
-      byte[] physicalIdentifier, byte[] hostInstitution) {
-    var hostInstitutionTable = context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE,
-            HANDLES.DATA)
-        .from(HANDLES)
-        .where(HANDLES.TYPE.eq(SPECIMEN_HOST.getBytes(StandardCharsets.UTF_8)))
-        .and((HANDLES.DATA).eq(hostInstitution))
-        .asTable("hostInstitutionTable");
-
-    var physicalIdentifierTable = context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE,
-            HANDLES.DATA)
-        .from(HANDLES)
-        .where(HANDLES.TYPE.eq(PHYSICAL_IDENTIFIER.getBytes(StandardCharsets.UTF_8)))
-        .and((HANDLES.DATA).eq(physicalIdentifier))
-        .asTable("physicalIdentifierTable");
-
-    return context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
-        .from(HANDLES)
-        .join(hostInstitutionTable)
-        .on(HANDLES.HANDLE.eq(hostInstitutionTable.field(HANDLES.HANDLE)))
-        .join(physicalIdentifierTable)
-        .on(HANDLES.HANDLE.eq(physicalIdentifierTable.field(HANDLES.HANDLE)))
-        .where(HANDLES.TYPE.notEqual(HS_ADMIN.getBytes(StandardCharsets.UTF_8)))
-        .fetch(this::mapToAttribute);
-  }
 
   public List<HandleAttribute> searchByPhysicalIdentifier(List<byte[]> physicalIdentifiers) {
     var physicalIdentifierTable = context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE,
@@ -114,10 +88,7 @@ public class HandleRepository {
 
   // Get List of Pids
   public List<String> getAllHandles(byte[] pidStatus, int pageNum, int pageSize) {
-    int offset = 0;
-    if (pageNum > 1) {
-      offset = offset + (pageSize * (pageNum - 1));
-    }
+    int offset = getOffset(pageNum, pageSize);
 
     return context
         .selectDistinct(HANDLES.HANDLE)
@@ -131,11 +102,12 @@ public class HandleRepository {
   }
 
   public List<String> getAllHandles(int pageNum, int pageSize) {
+    int offset = getOffset(pageNum, pageSize);
     return context
         .selectDistinct(HANDLES.HANDLE)
         .from(HANDLES)
         .limit(pageSize)
-        .offset(pageNum)
+        .offset(offset)
         .fetch()
         .getValues(HANDLES.HANDLE, String.class);
   }
@@ -271,6 +243,14 @@ public class HandleRepository {
         .where(HANDLES.HANDLE.in(handles))
         .and(HANDLES.TYPE.notIn(TOMBSTONE_RECORD_FIELDS_BYTES))
         .execute();
+  }
+
+  int getOffset(int pageNum, int pageSize){
+    int offset = 0;
+    if (pageNum > 1) {
+      offset = offset + (pageSize * (pageNum - 1));
+    }
+    return offset;
   }
 
 }

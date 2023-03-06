@@ -27,7 +27,6 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.PRESERVED_OR_LIVING
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
-import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_PHYSICAL_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.utils.AdminHandleGenerator.genAdminHandle;
@@ -189,13 +188,12 @@ public class HandleService {
 
   private JsonNode jsonFormatSingleRecord(List<HandleAttribute> dbRecord) {
     ObjectNode rootNode = mapper.createObjectNode();
-    ObjectNode subNode;
     for (HandleAttribute row : dbRecord) {
       String type = row.type();
       String data = new String(row.data(), StandardCharsets.UTF_8);
       if (FIELD_IS_PID_RECORD.contains(type)) {
         try {
-          subNode = mapper.readValue(data, ObjectNode.class);
+          ObjectNode subNode = mapper.readValue(data, ObjectNode.class);
           rootNode.set(type, subNode);
         } catch (JsonProcessingException e) {
           log.warn("Type \"{}\" is noncompliant to the PID kernel model. Invalid data: {}", type,
@@ -275,7 +273,7 @@ public class HandleService {
     for (var request : requests) {
       ObjectNode dataNode = (ObjectNode) request.get(NODE_DATA);
       ObjectType type = ObjectType.fromString(dataNode.get(NODE_TYPE).asText());
-      recordTypes.put(new String(handles.get(0), StandardCharsets.UTF_8), type.getType());
+      recordTypes.put(new String(handles.get(0), StandardCharsets.UTF_8), type.toString());
       try {
         switch (type) {
           case HANDLE -> {
@@ -490,7 +488,7 @@ public class HandleService {
     for (JsonNode updatedRecord : archivedRecords) {
       String pidLink = updatedRecord.get(PID).asText();
       String pidName = getPidName(pidLink);
-      dataList.add(new JsonApiDataLinks(pidName, ObjectType.TOMBSTONE.getType(), updatedRecord,
+      dataList.add(new JsonApiDataLinks(pidName, ObjectType.TOMBSTONE.toString(), updatedRecord,
           new JsonApiLinks(pidLink)));
     }
     return new JsonApiWrapperWrite(dataList);
@@ -641,8 +639,7 @@ public class HandleService {
 
     // 18: preservedOrLiving
     handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(PRESERVED_OR_LIVING), handle, PRESERVED_OR_LIVING,
-            setUniquePhysicalIdentifierId(request)));
+        new HandleAttribute(FIELD_IDX.get(PRESERVED_OR_LIVING), handle, PRESERVED_OR_LIVING, request.getPreservedOrLiving().getBytes()));
 
     return handleRecord;
   }

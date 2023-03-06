@@ -9,8 +9,9 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PHYSICAL_IDENTIFIER_LOCAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_STATUS_TESTVAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_PID;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributesAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordFullAttributes;
@@ -19,11 +20,8 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRecordAt
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import eu.dissco.core.handlemanager.database.jooq.tables.Handles;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
-import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdentifier;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,6 +33,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import org.jooq.Query;
 import org.jooq.Record4;
+import org.junit.Assert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -177,43 +176,6 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
-  void resolveRecordByPhysicalId() throws JsonProcessingException {
-    // Given
-    PhysicalIdentifier physId = new PhysicalIdentifier("abc", PhysicalIdType.CETAF);
-    String physicalIdentifier = MAPPER.writeValueAsString(physId);
-
-
-    String targetHostFacility = "DiSSCo";
-    String nonTargetHostFacility = "NHM";
-    List<HandleAttribute> expectedResponse = new ArrayList<>() {
-      {
-        add(new HandleAttribute(1, HANDLE.getBytes(StandardCharsets.UTF_8), SPECIMEN_HOST,
-            targetHostFacility.getBytes(StandardCharsets.UTF_8)));
-        add(new HandleAttribute(2, HANDLE.getBytes(StandardCharsets.UTF_8), PHYSICAL_IDENTIFIER,
-            physicalIdentifier.getBytes(StandardCharsets.UTF_8)));
-      }
-    };
-
-    List<HandleAttribute> postAttributes = new ArrayList<>(expectedResponse);
-    postAttributes.add(
-        new HandleAttribute(1, HANDLE_ALT.getBytes(StandardCharsets.UTF_8), SPECIMEN_HOST,
-            nonTargetHostFacility.getBytes(StandardCharsets.UTF_8)));
-    postAttributes.add(
-        new HandleAttribute(2, HANDLE_ALT.getBytes(StandardCharsets.UTF_8), PHYSICAL_IDENTIFIER,
-            physicalIdentifier.getBytes(StandardCharsets.UTF_8)));
-
-    postAttributes(postAttributes);
-
-    // When
-    var receivedResponse = handleRep.resolveHandleAttributesByPhysicalIdentifier(
-        physicalIdentifier.getBytes(StandardCharsets.UTF_8),
-        targetHostFacility.getBytes(StandardCharsets.UTF_8));
-
-    // Then
-    assertThat(receivedResponse).isEqualTo(expectedResponse);
-  }
-
-  @Test
   void testGetAllHandlesPaging() {
     // Given
     int pageNum = 0;
@@ -259,6 +221,29 @@ class HandleRepositoryIT extends BaseRepositoryIT {
 
     // When
     List<String> responseReceived = handleRep.getAllHandles(pidStatusTarget, pageNum, pageSize);
+
+    // Then
+    assertThat(responseReceived).hasSameElementsAs(responseExpected);
+  }
+
+  @Test
+  void testSearchByPhysicalIdentifier(){
+    // Given
+    var targetPhysicalIdentifer = PHYSICAL_IDENTIFIER_LOCAL.getBytes(StandardCharsets.UTF_8);
+    List<HandleAttribute> responseExpected = new ArrayList<>();
+    responseExpected.add(new HandleAttribute(1, HANDLE.getBytes(StandardCharsets.UTF_8), PHYSICAL_IDENTIFIER, targetPhysicalIdentifer));
+    responseExpected.add(new HandleAttribute(2, HANDLE.getBytes(StandardCharsets.UTF_8), SPECIMEN_HOST, SPECIMEN_HOST_PID.getBytes(
+        StandardCharsets.UTF_8)));
+
+    List<HandleAttribute> nonTargetAttributes = new ArrayList<>();
+    nonTargetAttributes.add(new HandleAttribute(1, HANDLE_ALT.getBytes(StandardCharsets.UTF_8), PHYSICAL_IDENTIFIER, "A".getBytes(
+        StandardCharsets.UTF_8)));
+
+    postAttributes(responseExpected);
+    postAttributes(nonTargetAttributes);
+
+    // When
+    var responseReceived = handleRep.searchByPhysicalIdentifier(List.of(targetPhysicalIdentifer));
 
     // Then
     assertThat(responseReceived).hasSameElementsAs(responseExpected);

@@ -3,15 +3,13 @@ package eu.dissco.core.handlemanager.controller;
 
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
-import static eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaLibrary.validatePutRequest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PidStatus;
-import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaLibrary;
-import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaStaticContextInitializer;
+import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaValidator;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -50,7 +48,7 @@ public class HandleController {
   private static final String SANDBOX_URI = "https://sandbox.dissco.tech/";
   private final HandleService service;
   @Autowired
-  private final JsonSchemaStaticContextInitializer initializer;
+  private final JsonSchemaValidator schemaValidator;
 
   // Hellos and getters
   @GetMapping(value = "/health")
@@ -68,10 +66,10 @@ public class HandleController {
       throws PidResolutionException {
 
     List<String> handleList;
-    if (pidStatus.getStatus().equals("ALL")) {
+    if (pidStatus.toString().equals("ALL")) {
       handleList = service.getHandlesPaged(pageNum, pageSize);
     } else {
-      handleList = service.getHandlesPaged(pageNum, pageSize, pidStatus.getStatus());
+      handleList = service.getHandlesPaged(pageNum, pageSize, pidStatus.toString());
     }
     if (handleList.isEmpty()) {
       throw new PidResolutionException("Unable to resolve pids");
@@ -123,7 +121,7 @@ public class HandleController {
   @PostMapping(value = "")
   public ResponseEntity<JsonApiWrapperWrite> createRecord(@RequestBody JsonNode request)
       throws PidResolutionException, PidServiceInternalError, InvalidRequestException, PidCreationException {
-    JsonSchemaLibrary.validatePostRequest(request);
+    schemaValidator.validatePostRequest(request);
     return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(List.of(request)));
   }
 
@@ -134,7 +132,7 @@ public class HandleController {
       throws PidResolutionException, PidServiceInternalError, InvalidRequestException, PidCreationException {
 
     for (JsonNode request : requests) {
-      JsonSchemaLibrary.validatePostRequest(request);
+      schemaValidator.validatePostRequest(request);
     }
     return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(requests));
   }
@@ -147,7 +145,7 @@ public class HandleController {
       @PathVariable("suffix") String suffix, @RequestBody JsonNode request)
       throws InvalidRequestException, PidResolutionException, PidServiceInternalError {
 
-    JsonSchemaLibrary.validatePatchRequest(request);
+    schemaValidator.validatePatchRequest(request);
 
     JsonNode data = request.get(NODE_DATA);
     byte[] handle = (prefix + "/" + suffix).getBytes(StandardCharsets.UTF_8);
@@ -167,7 +165,7 @@ public class HandleController {
       throws InvalidRequestException, PidResolutionException, PidServiceInternalError {
 
     for (JsonNode request : requests) {
-      JsonSchemaLibrary.validatePatchRequest(request);
+      schemaValidator.validatePatchRequest(request);
     }
     return ResponseEntity.status(HttpStatus.OK).body(service.updateRecords(requests));
   }
@@ -179,7 +177,7 @@ public class HandleController {
       @PathVariable("suffix") String suffix, @RequestBody JsonNode request)
       throws InvalidRequestException, PidResolutionException {
 
-    validatePutRequest(request);
+    schemaValidator.validatePutRequest(request);
 
     JsonNode data = request.get(NODE_DATA);
     byte[] handle = (prefix + "/" + suffix).getBytes(StandardCharsets.UTF_8);
@@ -198,7 +196,7 @@ public class HandleController {
   public ResponseEntity<JsonApiWrapperWrite> archiveRecords(@RequestBody List<JsonNode> requests)
       throws InvalidRequestException, PidResolutionException {
     for (JsonNode request : requests) {
-      validatePutRequest(request);
+      schemaValidator.validatePutRequest(request);
     }
     return ResponseEntity.status(HttpStatus.OK).body(service.archiveRecordBatch(requests));
   }
