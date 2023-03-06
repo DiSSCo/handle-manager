@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 @Slf4j
 public class JsonSchemaLibrary {
@@ -72,13 +73,13 @@ public class JsonSchemaLibrary {
 
   public static void init(SchemaGeneratorConfig postRequestConfig,
       SchemaGeneratorConfig patchRequestConfig, SchemaGeneratorConfig requestConfig) {
-    setJsonNodesJacksonProperties(postRequestConfig);
-    setJsonNodesLenientRequirements(patchRequestConfig);
-    setJsonNodesRequests(requestConfig);
+    setPostRequestAttributesJsonNodes(postRequestConfig);
+    setPatchRequestAttributesJsonNodes(patchRequestConfig);
+    setRequestJsonNodes(requestConfig);
     setJsonSchemas();
   }
 
-  private static void setJsonNodesJacksonProperties(SchemaGeneratorConfig postRequestConfig) {
+  private static void setPostRequestAttributesJsonNodes(SchemaGeneratorConfig postRequestConfig) {
     var schemaGenerator = new SchemaGenerator(postRequestConfig);
     handlePostReqJsonNode = schemaGenerator.generateSchema(HandleRecordRequest.class);
     doiPostReqJsonNode = schemaGenerator.generateSchema(DoiRecordRequest.class);
@@ -89,7 +90,7 @@ public class JsonSchemaLibrary {
     tombstoneReqJsonNode = schemaGenerator.generateSchema(TombstoneRecordRequest.class);
   }
 
-  private static void setJsonNodesLenientRequirements(SchemaGeneratorConfig patchRequestConfig) {
+  private static void setPatchRequestAttributesJsonNodes(SchemaGeneratorConfig patchRequestConfig) {
     var schemaGenerator = new SchemaGenerator(patchRequestConfig);
     handlePatchReqJsonNode = schemaGenerator.generateSchema(HandleRecordRequest.class);
     doiPatchReqJsonNode = schemaGenerator.generateSchema(DoiRecordRequest.class);
@@ -99,7 +100,7 @@ public class JsonSchemaLibrary {
     mediaObjectPatchReqJsonNode = schemaGenerator.generateSchema(MediaObjectRequest.class);
   }
 
-  private static void setJsonNodesRequests(SchemaGeneratorConfig requestConfig) {
+  private static void setRequestJsonNodes(SchemaGeneratorConfig requestConfig) {
     var schemaGenerator = new SchemaGenerator(requestConfig);
     postReqJsonNode = schemaGenerator.generateSchema(PostRequest.class);
     patchReqJsonNode = schemaGenerator.generateSchema(PatchRequest.class);
@@ -188,6 +189,7 @@ public class JsonSchemaLibrary {
   private static String setErrorMessage(Set<ValidationMessage> validationErrors, String type) {
     Set<String> missingAttributes = new HashSet<>();
     Set<String> unrecognizedAttributes = new HashSet<>();
+    Set<String> enumErrors = new HashSet<>();
     Set<String> otherErrors = new HashSet<>();
 
     for (var validationError : validationErrors) {
@@ -195,7 +197,10 @@ public class JsonSchemaLibrary {
         missingAttributes.add(Arrays.toString(validationError.getArguments()));
       } else if (validationError.getType().equals("additionalProperties")) {
         unrecognizedAttributes.add(Arrays.toString(validationError.getArguments()));
-      } else {
+      } else if (validationError.getType().equals("enum")){
+        enumErrors.add(validationError.getMessage());
+      }
+      else {
         otherErrors.add(validationError.getMessage());
       }
     }
@@ -206,9 +211,13 @@ public class JsonSchemaLibrary {
     if (!unrecognizedAttributes.isEmpty()) {
       message = message + "\nUnrecognized attributes: " + unrecognizedAttributes;
     }
+    if (!enumErrors.isEmpty()) {
+      message = message + "\nEnum errors: " + enumErrors;
+    }
     if (!otherErrors.isEmpty()) {
       message = message + "\nOther errors: " + otherErrors;
     }
+    log.error("Json Schema Validation error." + message);
     return message;
   }
 

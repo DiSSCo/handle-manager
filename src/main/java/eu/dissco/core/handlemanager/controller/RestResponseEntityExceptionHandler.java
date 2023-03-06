@@ -1,6 +1,6 @@
 package eu.dissco.core.handlemanager.controller;
 
-import eu.dissco.core.handlemanager.exceptions.ExceptionResponse;
+import eu.dissco.core.handlemanager.responses.ExceptionResponse;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;

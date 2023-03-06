@@ -2,7 +2,7 @@ package eu.dissco.core.handlemanager.controller;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-import eu.dissco.core.handlemanager.exceptions.ExceptionResponse;
+import eu.dissco.core.handlemanager.responses.ExceptionResponse;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -16,7 +16,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
-@SpringBootTest(properties = "spring.main.lazy-initialization=true")
 class HandleControllerExceptionHandlerTest {
 
   private RestResponseEntityExceptionHandler exceptionHandler;

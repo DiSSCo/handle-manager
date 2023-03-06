@@ -467,7 +467,7 @@ class HandleControllerTest {
     byte[] handle = HANDLE.getBytes();
     var updateAttributes = genUpdateRequestAltLoc();
     ObjectNode updateRequestNode = mapper.createObjectNode();
-    updateRequestNode.set("data", givenJsonNode(HANDLE, RECORD_TYPE_HANDLE, updateAttributes));
+    updateRequestNode.set(NODE_DATA, givenJsonNode(HANDLE, RECORD_TYPE_HANDLE, updateAttributes));
 
     var responseExpected = givenRecordResponseWriteAltLoc(List.of(handle));
     given(service.updateRecords(List.of(updateRequestNode))).willReturn(

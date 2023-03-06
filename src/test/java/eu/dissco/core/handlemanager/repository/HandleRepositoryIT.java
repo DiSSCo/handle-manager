@@ -177,43 +177,6 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
-  void resolveRecordByPhysicalId() throws JsonProcessingException {
-    // Given
-    PhysicalIdentifier physId = new PhysicalIdentifier("abc", PhysicalIdType.CETAF);
-    String physicalIdentifier = MAPPER.writeValueAsString(physId);
-
-
-    String targetHostFacility = "DiSSCo";
-    String nonTargetHostFacility = "NHM";
-    List<HandleAttribute> expectedResponse = new ArrayList<>() {
-      {
-        add(new HandleAttribute(1, HANDLE.getBytes(StandardCharsets.UTF_8), SPECIMEN_HOST,
-            targetHostFacility.getBytes(StandardCharsets.UTF_8)));
-        add(new HandleAttribute(2, HANDLE.getBytes(StandardCharsets.UTF_8), PHYSICAL_IDENTIFIER,
-            physicalIdentifier.getBytes(StandardCharsets.UTF_8)));
-      }
-    };
-
-    List<HandleAttribute> postAttributes = new ArrayList<>(expectedResponse);
-    postAttributes.add(
-        new HandleAttribute(1, HANDLE_ALT.getBytes(StandardCharsets.UTF_8), SPECIMEN_HOST,
-            nonTargetHostFacility.getBytes(StandardCharsets.UTF_8)));
-    postAttributes.add(
-        new HandleAttribute(2, HANDLE_ALT.getBytes(StandardCharsets.UTF_8), PHYSICAL_IDENTIFIER,
-            physicalIdentifier.getBytes(StandardCharsets.UTF_8)));
-
-    postAttributes(postAttributes);
-
-    // When
-    var receivedResponse = handleRep.resolveHandleAttributesByPhysicalIdentifier(
-        physicalIdentifier.getBytes(StandardCharsets.UTF_8),
-        targetHostFacility.getBytes(StandardCharsets.UTF_8));
-
-    // Then
-    assertThat(receivedResponse).isEqualTo(expectedResponse);
-  }
-
-  @Test
   void testGetAllHandlesPaging() {
     // Given
     int pageNum = 0;

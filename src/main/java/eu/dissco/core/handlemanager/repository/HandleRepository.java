@@ -5,7 +5,6 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_NUMBER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PHYSICAL_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
-import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_RECORD_FIELDS_BYTES;
 
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
@@ -69,31 +68,6 @@ public class HandleRepository {
         .fetch(this::mapToAttribute);
   }
 
-  public List<HandleAttribute> resolveHandleAttributesByPhysicalIdentifier(
-      byte[] physicalIdentifier, byte[] hostInstitution) {
-    var hostInstitutionTable = context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE,
-            HANDLES.DATA)
-        .from(HANDLES)
-        .where(HANDLES.TYPE.eq(SPECIMEN_HOST.getBytes(StandardCharsets.UTF_8)))
-        .and((HANDLES.DATA).eq(hostInstitution))
-        .asTable("hostInstitutionTable");
-
-    var physicalIdentifierTable = context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE,
-            HANDLES.DATA)
-        .from(HANDLES)
-        .where(HANDLES.TYPE.eq(PHYSICAL_IDENTIFIER.getBytes(StandardCharsets.UTF_8)))
-        .and((HANDLES.DATA).eq(physicalIdentifier))
-        .asTable("physicalIdentifierTable");
-
-    return context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
-        .from(HANDLES)
-        .join(hostInstitutionTable)
-        .on(HANDLES.HANDLE.eq(hostInstitutionTable.field(HANDLES.HANDLE)))
-        .join(physicalIdentifierTable)
-        .on(HANDLES.HANDLE.eq(physicalIdentifierTable.field(HANDLES.HANDLE)))
-        .where(HANDLES.TYPE.notEqual(HS_ADMIN.getBytes(StandardCharsets.UTF_8)))
-        .fetch(this::mapToAttribute);
-  }
 
   public List<HandleAttribute> searchByPhysicalIdentifier(List<byte[]> physicalIdentifiers) {
     var physicalIdentifierTable = context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE,

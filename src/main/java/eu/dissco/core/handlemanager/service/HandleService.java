@@ -194,13 +194,12 @@ public class HandleService {
 
   private JsonNode jsonFormatSingleRecord(List<HandleAttribute> dbRecord) {
     ObjectNode rootNode = mapper.createObjectNode();
-    ObjectNode subNode;
     for (HandleAttribute row : dbRecord) {
       String type = row.type();
       String data = new String(row.data(), StandardCharsets.UTF_8);
       if (FIELD_IS_PID_RECORD.contains(type)) {
         try {
-          subNode = mapper.readValue(data, ObjectNode.class);
+          ObjectNode subNode = mapper.readValue(data, ObjectNode.class);
           rootNode.set(type, subNode);
         } catch (JsonProcessingException e) {
           log.warn("Type \"{}\" is noncompliant to the PID kernel model. Invalid data: {}", type,
@@ -646,8 +645,7 @@ public class HandleService {
 
     // 18: preservedOrLiving
     handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(PRESERVED_OR_LIVING), handle, PRESERVED_OR_LIVING,
-            setUniquePhysicalIdentifierId(request)));
+        new HandleAttribute(FIELD_IDX.get(PRESERVED_OR_LIVING), handle, PRESERVED_OR_LIVING, request.getPreservedOrLiving().getBytes()));
 
     return handleRecord;
   }
