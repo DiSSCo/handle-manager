@@ -34,7 +34,7 @@ class HandleControllerExceptionHandlerTest {
   void testPidCreationException() throws Exception {
     // Given
     var expectedBody = new ExceptionResponse(HttpStatus.CONFLICT.toString(),
-        PidCreationException.class.getSimpleName(), errorMessage);
+        "Unable to Create PID Record", errorMessage);
 
     // When
     var result = exceptionHandler.pidCreationException(new PidCreationException(errorMessage));
@@ -48,7 +48,7 @@ class HandleControllerExceptionHandlerTest {
   void testInvalidRecordInput() throws Exception {
     // Given
     var expectedBody = new ExceptionResponse(HttpStatus.BAD_REQUEST.toString(),
-        InvalidRequestException.class.getSimpleName(), errorMessage);
+        "Invalid Request", errorMessage);
 
     // When
     var result = exceptionHandler.invalidRecordInputException(new InvalidRequestException(errorMessage));
@@ -62,7 +62,7 @@ class HandleControllerExceptionHandlerTest {
   void testPidResolutionException() throws Exception {
     // Given
     var expectedBody = new ExceptionResponse(HttpStatus.NOT_FOUND.toString(),
-        PidResolutionException.class.getSimpleName(), errorMessage);
+        "Unable to Resolve Persistent Identifier", errorMessage);
 
     // When
     var result = exceptionHandler.pidResolutionException(new PidResolutionException(errorMessage));
@@ -78,7 +78,7 @@ class HandleControllerExceptionHandlerTest {
     var cause = new IOException(errorMessage);
     var expectedMessage = errorMessage + ". Cause: " + cause + "\n " + cause.getLocalizedMessage();
     var expectedBody = new ExceptionResponse(HttpStatus.UNPROCESSABLE_ENTITY.toString(),
-        PidServiceInternalError.class.getSimpleName(), expectedMessage);
+        "Unprocessable Entity", expectedMessage);
 
     // When
     var result = exceptionHandler.pidServiceInternalError(
@@ -93,7 +93,7 @@ class HandleControllerExceptionHandlerTest {
   void testPidServiceInternalErrorNullCause() throws Exception {
     // Given
     var expectedBody = new ExceptionResponse(HttpStatus.UNPROCESSABLE_ENTITY.toString(),
-        PidServiceInternalError.class.getSimpleName(), errorMessage);
+        "Unprocessable Entity", errorMessage);
 
     // When
     var result = exceptionHandler.pidServiceInternalError(

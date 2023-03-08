@@ -245,7 +245,7 @@ public class HandleRepository {
         .execute();
   }
 
-  int getOffset(int pageNum, int pageSize){
+  private int getOffset(int pageNum, int pageSize){
     int offset = 0;
     if (pageNum > 1) {
       offset = offset + (pageSize * (pageNum - 1));

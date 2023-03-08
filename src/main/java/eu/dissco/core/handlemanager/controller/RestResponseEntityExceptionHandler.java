@@ -19,7 +19,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
   @ExceptionHandler(PidCreationException.class)
   public ResponseEntity<ExceptionResponse> pidCreationException(PidCreationException e) {
     ExceptionResponse exceptionResponse = new ExceptionResponse(
-        String.valueOf(HttpStatus.CONFLICT), e.getClass().getSimpleName(), e.getMessage());
+        String.valueOf(HttpStatus.CONFLICT), "Unable to Create PID Record", e.getMessage());
     return ResponseEntity.status(HttpStatus.CONFLICT).body(exceptionResponse);
   }
 
@@ -27,7 +27,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
   @ExceptionHandler(InvalidRequestException.class)
   public ResponseEntity<ExceptionResponse> invalidRecordInputException(InvalidRequestException e) {
     ExceptionResponse exceptionResponse = new ExceptionResponse(
-        String.valueOf(HttpStatus.BAD_REQUEST), e.getClass().getSimpleName(), e.getMessage());
+        String.valueOf(HttpStatus.BAD_REQUEST), "Invalid Request", e.getMessage());
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exceptionResponse);
   }
 
@@ -35,7 +35,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
   @ExceptionHandler(PidResolutionException.class)
   public ResponseEntity<ExceptionResponse> pidResolutionException(PidResolutionException e) {
     ExceptionResponse exceptionResponse = new ExceptionResponse(
-        String.valueOf(HttpStatus.NOT_FOUND), e.getClass().getSimpleName(), e.getMessage());
+        String.valueOf(HttpStatus.NOT_FOUND), "Unable to Resolve Persistent Identifier", e.getMessage());
     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exceptionResponse);
   }
 
@@ -50,7 +50,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
       message = e.getMessage();
     }
     ExceptionResponse exceptionResponse = new ExceptionResponse(
-        String.valueOf(HttpStatus.UNPROCESSABLE_ENTITY), e.getClass().getSimpleName(), message);
+        String.valueOf(HttpStatus.UNPROCESSABLE_ENTITY), "Unprocessable Entity", message);
     return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(exceptionResponse);
   }
 
