@@ -1,23 +1,19 @@
 package eu.dissco.core.handlemanager.service;
 
-import static eu.dissco.core.handlemanager.domain.PidRecords.IN_COLLECTION_FACILITY_REQ;
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER_REQ;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PRESERVED_OR_LIVING;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME_REQ;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_MEDIA;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_LIST_STR;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PHYSICAL_IDENTIFIER_LOCAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_STATUS_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PTR_HANDLE_RECORD;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_PID;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyAttributes;
@@ -28,6 +24,8 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDoiRecordReque
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributesAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaObjectAttributes;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordFullAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequestBatch;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestBatch;
@@ -35,6 +33,8 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordRespon
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWrite;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteArchive;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteGeneric;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSearchByPhysIdRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -42,13 +42,13 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mockStatic;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.domain.requests.HandleRecordRequest;
-import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
+import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
+import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
+import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
 import java.nio.charset.StandardCharsets;
@@ -73,34 +73,24 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class HandleServiceTest {
 
+  private final String SANDBOX_URI = "https://sandbox.dissco.tech/";
   @Mock
   private HandleRepository handleRep;
-
   @Mock
   private PidTypeService pidTypeService;
-
   @Mock
   private HandleGeneratorService hgService;
-
-  private ObjectMapper mapper;
-
   private HandleService service;
-
   private List<byte[]> handles;
-
   private MockedStatic<Instant> mockedStatic;
-  private final String SANDBOX_URI = "https://sandbox.dissco.tech/";
-
 
   @BeforeEach
-  void setup() throws Exception {
-    mapper = new ObjectMapper().findAndRegisterModules()
-        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+  void setup() {
     DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
     TransformerFactory transformerFactory = TransformerFactory.newInstance();
 
     service = new HandleService(handleRep, pidTypeService, hgService,
-        documentBuilderFactory, mapper, transformerFactory);
+        documentBuilderFactory, MAPPER, transformerFactory);
     initTime();
     initHandleList();
   }
@@ -112,20 +102,36 @@ class HandleServiceTest {
 
   @Test
   void testResolveSingleRecord() throws Exception {
-    // Given
+
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     String path = SANDBOX_URI + HANDLE;
     List<HandleAttribute> recordAttributeList = genHandleRecordAttributes(handle);
 
     var responseExpected = givenRecordResponseRead(List.of(handle), path, "PID");
 
-    given(handleRep.resolveHandleAttributes(handle)).willReturn(recordAttributeList);
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(recordAttributeList);
 
     // When
     var responseReceived = service.resolveSingleRecord(handle, path);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testResolveSingleRecordNotFound() throws Exception {
+
+    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
+    String path = SANDBOX_URI + HANDLE;
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(new ArrayList<>());
+
+    // When
+    var exception = assertThrows(PidResolutionException.class, () -> {
+      service.resolveSingleRecord(handle, path);
+    });
+    // Then
+    assertThat(exception.getMessage()).contains(HANDLE);
+
   }
 
   @Test
@@ -142,6 +148,67 @@ class HandleServiceTest {
     var responseExpected = givenRecordResponseRead(handles, path, "PID");
     // When
     var responseReceived = service.resolveBatchRecord(handles, path);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testSearchByPhysicalSpecimenId() throws Exception {
+    // Given
+    var expectedAttributes = genDigitalSpecimenAttributes(HANDLE.getBytes(StandardCharsets.UTF_8));
+    var responseExpected = givenRecordResponseWriteGeneric(
+        List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), RECORD_TYPE_DS);
+
+    given(handleRep.searchByPhysicalIdentifier(anyList()))
+        .willReturn(expectedAttributes);
+
+    // When
+    var responseReceived = service.searchByPhysicalSpecimenId(PHYSICAL_IDENTIFIER_LOCAL, PhysicalIdType.CETAF,
+        SPECIMEN_HOST_PID);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testSearchByPhysicalSpecimenIdTwoResolution() throws Exception {
+    // Given
+    var request = givenSearchByPhysIdRequest();
+    List<HandleAttribute> attributeList = new ArrayList<>();
+    attributeList.addAll(genDigitalSpecimenAttributes(HANDLE.getBytes(StandardCharsets.UTF_8)));
+    attributeList.addAll(genDigitalSpecimenAttributes(HANDLE_ALT.getBytes(StandardCharsets.UTF_8)));
+
+    var responseExpected = givenRecordResponseWriteGeneric(
+        List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), RECORD_TYPE_DS);
+
+    given(handleRep.searchByPhysicalIdentifier(anyList()))
+        .willReturn(attributeList);
+
+    // When
+    Exception e = assertThrows(PidResolutionException.class, () -> {
+      service.searchByPhysicalSpecimenId(PHYSICAL_IDENTIFIER_LOCAL, PhysicalIdType.CETAF,
+          SPECIMEN_HOST_PID);
+    });
+
+    // Then
+    assertThat(e).hasMessage(
+        "More than one handle record corresponds to the provided collection facility and physical identifier.");
+  }
+
+  @Test
+  void testSearchByPhysicalSpecimenIdCombined() throws Exception {
+    // Given
+    var expectedAttributes = genDigitalSpecimenAttributes(HANDLE.getBytes(StandardCharsets.UTF_8));
+    var responseExpected = givenRecordResponseWriteGeneric(
+        List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), RECORD_TYPE_DS);
+
+    given(handleRep.searchByPhysicalIdentifier(anyList()))
+        .willReturn(expectedAttributes);
+
+    // When
+    var responseReceived = service.searchByPhysicalSpecimenId(PHYSICAL_IDENTIFIER_LOCAL, PhysicalIdType.COMBINED,
+        SPECIMEN_HOST_PID);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -195,6 +262,7 @@ class HandleServiceTest {
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(DigitalSpecimen);
+    given(handleRep.searchByPhysicalIdentifier(anyList())).willReturn(new ArrayList<>());
     given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
 
     // When
@@ -205,7 +273,29 @@ class HandleServiceTest {
   }
 
   @Test
-  void testCreateDigitalSpecimenRecord() throws Exception {
+  void testCreateDigitalSpecimenSpecimenExists() throws Exception {
+    // Given
+    byte[] handle = handles.get(0);
+    var request = genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_DS);
+    List<HandleAttribute> digitalSpecimen = genDigitalSpecimenAttributes(handle);
+
+    given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
+    given(handleRep.searchByPhysicalIdentifier(anyList())).willReturn(digitalSpecimen);
+    given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
+
+    // When
+    Exception e = assertThrows(PidCreationException.class, () -> {
+      service.createRecords(List.of(request));
+    });
+
+    // Then
+    assertThat(e).hasMessage(
+        "Unable to create PID records. Some requested records are already registered. Verify the following digital specimens:"
+            + List.of(new String(handle, StandardCharsets.UTF_8)));
+  }
+
+  @Test
+  void testCreateDigitalSpecimenBotany() throws Exception {
     // Given
     byte[] handle = handles.get(0);
     var request = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(),
@@ -215,6 +305,50 @@ class HandleServiceTest {
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(DigitalSpecimenBotany);
+    given(handleRep.searchByPhysicalIdentifier(anyList())).willReturn(new ArrayList<>());
+    given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
+
+    // When
+    var responseReceived = service.createRecords(List.of(request));
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testCreateDigitalSpecimenBotanySpecimenExists() throws Exception {
+    // Given
+    byte[] handle = handles.get(0);
+    var request = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(),
+        RECORD_TYPE_DS_BOTANY);
+    List<HandleAttribute> digitalSpecimenBotany = genDigitalSpecimenBotanyAttributes(handle);
+
+    given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
+    given(handleRep.searchByPhysicalIdentifier(anyList())).willReturn(digitalSpecimenBotany);
+    given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
+
+    // When
+    Exception e = assertThrows(PidCreationException.class, () -> {
+      service.createRecords(List.of(request));
+    });
+
+    // Then
+    assertThat(e).hasMessage(
+        "Unable to create PID records. Some requested records are already registered. Verify the following digital specimens:"
+            + List.of(new String(handle, StandardCharsets.UTF_8)));
+  }
+
+  @Test
+  void testCreateMediaObjectRecord() throws Exception {
+    // Given
+    byte[] handle = handles.get(0);
+    var request = genCreateRecordRequest(genMediaRequestObject(),
+        RECORD_TYPE_MEDIA);
+    var responseExpected = givenRecordResponseWrite(List.of(handle), RECORD_TYPE_MEDIA);
+    List<HandleAttribute> mediaObject = genMediaObjectAttributes(handle);
+
+    given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(mediaObject);
     given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
 
     // When
@@ -322,6 +456,30 @@ class HandleServiceTest {
   }
 
   @Test
+  void testCreateMediaObjectBatch() throws Exception {
+    // Given
+    List<HandleAttribute> flatList = new ArrayList<>();
+
+    List<JsonNode> requests = new ArrayList<>();
+    for (byte[] handle : handles) {
+      requests.add(genCreateRecordRequest(genMediaRequestObject(), RECORD_TYPE_MEDIA));
+      flatList.addAll(genMediaObjectAttributes(handle));
+    }
+
+    var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_MEDIA);
+
+    given(hgService.genHandleList(handles.size())).willReturn(handles);
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
+    given(pidTypeService.resolveTypePid(any(String.class))).willReturn(PTR_HANDLE_RECORD);
+
+    // When
+    var responseReceived = service.createRecords(requests);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
   void testUpdateRecordLocation() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
@@ -373,29 +531,11 @@ class HandleServiceTest {
     List<JsonNode> updateRequest = genUpdateRequestBatch(handles);
 
     // Then
-    assertThrows(InvalidRecordInput.class, () -> {
+    assertThrows(InvalidRequestException.class, () -> {
       service.updateRecords(updateRequest);
     });
   }
 
-  @Test
-  void testUpdateRecordInvalidField() throws Exception {
-    // Given
-    ObjectNode requestRoot = mapper.createObjectNode();
-    ObjectNode requestData = mapper.createObjectNode();
-    ObjectNode requestAttributes = mapper.createObjectNode();
-
-    requestAttributes.put("invalidField", "invalidValue");
-    requestData.put(NODE_TYPE, RECORD_TYPE_HANDLE);
-    requestData.put(NODE_ID, HANDLE);
-    requestData.set(NODE_ATTRIBUTES, requestAttributes);
-    requestRoot.set(NODE_DATA, requestData);
-
-    // Then
-    assertThrows(InvalidRecordInput.class, () -> {
-      service.updateRecords(List.of(requestRoot));
-    });
-  }
 
   @Test
   void testUpdateRecordNonWritable() {
@@ -421,7 +561,6 @@ class HandleServiceTest {
 
     given(handleRep.checkHandlesWritable(anyList())).willReturn(handles);
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(tombstoneAttributesFull);
-    log.info(archiveRequest.toString());
 
     // When
     var responseReceived = service.archiveRecordBatch(archiveRequest);
@@ -488,7 +627,7 @@ class HandleServiceTest {
     given(hgService.genHandleList(1)).willReturn(List.of(HANDLE.getBytes(StandardCharsets.UTF_8)));
 
     // When
-    Exception exception = assertThrows(InvalidRecordInput.class, () -> {
+    Exception exception = assertThrows(InvalidRequestException.class, () -> {
       service.createRecords(List.of(requestNode));
     });
 
@@ -510,181 +649,12 @@ class HandleServiceTest {
     given(hgService.genHandleList(2)).willReturn(handles);
 
     // When
-    Exception exception = assertThrows(InvalidRecordInput.class, () -> {
+    Exception exception = assertThrows(InvalidRequestException.class, () -> {
       service.createRecords(requests);
     });
 
     // Then
     assertThat(exception.getMessage()).isEqualTo(invalidMessage);
-  }
-
-  @Test
-  void testMissingFieldCreateHandleRecord() {
-
-    HandleRecordRequest request = genHandleRecordRequestObject();
-    ObjectNode requestObjectNode = genCreateRecordRequest(request, RECORD_TYPE_HANDLE);
-
-    ((ObjectNode) requestObjectNode.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(PID_ISSUER_REQ);
-
-    given(hgService.genHandleList(1)).willReturn(List.of(HANDLE.getBytes(StandardCharsets.UTF_8)));
-
-    // When
-    Exception exception = assertThrows(InvalidRecordInput.class, () -> {
-      service.createRecords(List.of(requestObjectNode));
-    });
-
-    // Then
-    assertThat(exception.getMessage()).contains(PID_ISSUER_REQ);
-  }
-
-  @Test
-  void testMissingFieldCreateDoiRecord() {
-
-    HandleRecordRequest request = genDoiRecordRequestObject();
-    ObjectNode requestObjectNode = genCreateRecordRequest(request, RECORD_TYPE_DOI);
-
-    ((ObjectNode) requestObjectNode.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(
-        REFERENT_DOI_NAME_REQ);
-
-    given(hgService.genHandleList(1)).willReturn(List.of(HANDLE.getBytes(StandardCharsets.UTF_8)));
-
-    // When
-    Exception exception = assertThrows(InvalidRecordInput.class, () -> {
-      service.createRecords(List.of(requestObjectNode));
-    });
-
-    // Then
-    assertThat(exception.getMessage()).contains(REFERENT_DOI_NAME_REQ);
-  }
-
-  @Test
-  void testMissingFieldCreateDigitalSpecimen() {
-
-    HandleRecordRequest request = genDigitalSpecimenBotanyRequestObject();
-    ObjectNode requestObjectNode = genCreateRecordRequest(request, RECORD_TYPE_DS);
-
-    ((ObjectNode) requestObjectNode.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(
-        IN_COLLECTION_FACILITY_REQ);
-
-    given(hgService.genHandleList(1)).willReturn(List.of(HANDLE.getBytes(StandardCharsets.UTF_8)));
-
-    // When
-    Exception exception = assertThrows(InvalidRecordInput.class, () -> {
-      service.createRecords(List.of(requestObjectNode));
-    });
-
-    // Then
-    assertThat(exception.getMessage()).contains(IN_COLLECTION_FACILITY_REQ);
-  }
-
-  @Test
-  void testMissingFieldCreateDigitalSpecimenBotany() {
-
-    HandleRecordRequest request = genDigitalSpecimenBotanyRequestObject();
-    ObjectNode requestObjectNode = genCreateRecordRequest(request, RECORD_TYPE_DS_BOTANY);
-
-    ((ObjectNode) requestObjectNode.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(
-        PRESERVED_OR_LIVING);
-
-    given(hgService.genHandleList(1)).willReturn(List.of(HANDLE.getBytes(StandardCharsets.UTF_8)));
-
-    // When
-    Exception exception = assertThrows(InvalidRecordInput.class, () -> {
-      service.createRecords(List.of(requestObjectNode));
-    });
-
-    // Then
-    assertThat(exception.getMessage()).contains(PRESERVED_OR_LIVING);
-  }
-
-  @Test
-  void testMissingFieldCreateHandleRecordBatch() {
-
-    List<JsonNode> requests = new ArrayList<>();
-    for (byte[] handle : handles) {
-      ObjectNode request = genCreateRecordRequest(genHandleRecordRequestObject(),
-          RECORD_TYPE_HANDLE);
-      ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(PID_ISSUER_REQ);
-
-      requests.add(request);
-    }
-
-    given(hgService.genHandleList(2)).willReturn(handles);
-
-    // When
-    Exception exception = assertThrows(InvalidRecordInput.class, () -> {
-      service.createRecords(requests);
-    });
-
-    // Then
-    assertThat(exception.getMessage()).contains(PID_ISSUER_REQ);
-  }
-
-  @Test
-  void testMissingFieldDoiRecordBatch() {
-
-    List<JsonNode> requests = new ArrayList<>();
-    for (byte[] handle : handles) {
-      ObjectNode request = genCreateRecordRequest(genDoiRecordRequestObject(), RECORD_TYPE_DOI);
-      ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(REFERENT_DOI_NAME_REQ);
-      requests.add(request);
-    }
-
-    given(hgService.genHandleList(2)).willReturn(handles);
-
-    // When
-    Exception exception = assertThrows(InvalidRecordInput.class, () -> {
-      service.createRecords(requests);
-    });
-
-    // Then
-    assertThat(exception.getMessage()).contains(REFERENT_DOI_NAME_REQ);
-  }
-
-  @Test
-  void testMissingFieldDigitalSpecimenRecordBatch() {
-
-    List<JsonNode> requests = new ArrayList<>();
-    for (byte[] handle : handles) {
-      ObjectNode request = genCreateRecordRequest(genDigitalSpecimenRequestObject(),
-          RECORD_TYPE_DS);
-      ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(IN_COLLECTION_FACILITY_REQ);
-
-      requests.add(request);
-    }
-
-    given(hgService.genHandleList(2)).willReturn(handles);
-
-    // When
-    Exception exception = assertThrows(InvalidRecordInput.class, () -> {
-      service.createRecords(requests);
-    });
-
-    // Then
-    assertThat(exception.getMessage()).contains(IN_COLLECTION_FACILITY_REQ);
-  }
-
-  @Test
-  void testMissingFieldDigitalSpecimenBotanyRecordBatch() {
-
-    List<JsonNode> requests = new ArrayList<>();
-    for (byte[] handle : handles) {
-      ObjectNode request = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(),
-          RECORD_TYPE_DS_BOTANY);
-      ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(PRESERVED_OR_LIVING);
-
-      requests.add(request);
-    }
-
-    given(hgService.genHandleList(2)).willReturn(handles);
-
-    // When
-    Exception exception = assertThrows(InvalidRecordInput.class, () -> {
-      service.createRecords(requests);
-    });
-
-    // Then
-    assertThat(exception.getMessage()).contains(PRESERVED_OR_LIVING);
   }
 
   private void initTime() {

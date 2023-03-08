@@ -11,7 +11,12 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_DATE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_NUMBER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LOC;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LOC_REQ;
+import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_HASH;
+import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_URL;
+import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
+import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.OBJECT_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PHYSICAL_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_KERNEL_METADATA_LICENSE;
@@ -21,10 +26,13 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_MEDIA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_TOMBSTONE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
+import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST_REQ;
+import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_PHYSICAL_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_TEXT;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -36,11 +44,16 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenBotanyRequest;
-import eu.dissco.core.handlemanager.domain.requests.DigitalSpecimenRequest;
-import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.TombstoneRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalOrPhysical;
+import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenBotanyRequest;
+import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
+import eu.dissco.core.handlemanager.domain.requests.attributes.DoiRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.attributes.MediaObjectRequest;
+import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
+import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdentifier;
+import eu.dissco.core.handlemanager.domain.requests.attributes.PreservedOrLiving;
+import eu.dissco.core.handlemanager.domain.requests.attributes.TombstoneRecordRequest;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -64,18 +77,15 @@ public class TestUtils {
   public static final Instant CREATED = Instant.parse("2022-11-01T09:59:24.00Z");
   public static final String ISSUE_DATE_TESTVAL = "2022-11-01";
   public static final String HANDLE = "20.5000.1025/QRS-321-ABC";
+  public static final String PREFIX = "20.5000.1025";
+  public static final String SUFFIX = "QRS-321-ABC";
   public static final String HANDLE_ALT = "20.5000.1025/ABC-123-QRS";
   public static final List<String> HANDLE_LIST_STR;
-
-  static {
-    HANDLE_LIST_STR = List.of(HANDLE, HANDLE_ALT);
-  }
+  public static final String PID_ISSUER_PID = "20.5000.1025/PID-ISSUER";
+  public static final String DIGITAL_OBJECT_TYPE_PID = "20.5000.1025/DIGITAL-SPECIMEN";
 
   // Request Vars
   // Handles
-
-  public static final String PID_ISSUER_PID = "20.5000.1025/PID-ISSUER";
-  public static final String DIGITAL_OBJECT_TYPE_PID = "20.5000.1025/DIGITAL-SPECIMEN";
   public static final String DIGITAL_OBJECT_SUBTYPE_PID = "20.5000.1025/BOTANY-SPECIMEN";
   public static final String[] LOC_TESTVAL = {"https://sandbox.dissco.tech/", "https://dissco.eu"};
   public static final String[] LOC_ALT_TESTVAL = {"naturalis.nl"};
@@ -85,27 +95,38 @@ public class TestUtils {
   public static final String REFERENT_DOI_NAME_PID = "20.5000.1025/OTHER-TRIPLET";
   public static final String REFERENT_TESTVAL = "";
   //Digital Specimens
-  public static final String DIGITAL_OR_PHYSICAL_TESTVAL = "physical";
+  public static final DigitalOrPhysical DIGITAL_OR_PHYSICAL_TESTVAL = DigitalOrPhysical.PHYSICAL;
   public static final String SPECIMEN_HOST_PID = "20.5000.1025/OTHER-TRIPLET";
   public static final String IN_COLLECTION_FACILITY_TESTVAL = "20.5000.1025/OTHER-TRIPLET";
-
   //Botany Specimens
   public static final String OBJECT_TYPE_TESTVAL = "Herbarium Sheet";
-  public static final String PRESERVED_OR_LIVING_TESTVAL = "preserved";
-
-  // Pid Type Record vals
-  private final static String HANDLE_URI = "https://hdl.handle.net/";
-  public static final String PTR_PID = HANDLE_URI + PID_ISSUER_PID;
+  public static final PreservedOrLiving PRESERVED_OR_LIVING_TESTVAL = PreservedOrLiving.PRESERVED;
+  // Media Objects
+  public static final String MEDIA_URL_TESTVAL = "https://naturalis.nl/media/123";
+  public static final String MEDIA_HASH_TESTVAL = "47bce5c74f589f48";
   public static final String PTR_TYPE = "handle";
   public static final String PTR_PRIMARY_NAME = "DiSSCo";
   public static final String PTR_PID_DOI = "http://doi.org/" + PID_ISSUER_PID;
   public static final String PTR_TYPE_DOI = "doi";
   public static final String PTR_REGISTRATION_DOI_NAME = "Registration Agency";
-  public final static String PTR_HANDLE_RECORD = genPtrHandleRecord(false);
-  public final static String PTR_DOI_RECORD = genPtrHandleRecord(true);
+  public final static String PHYSICAL_IDENTIFIER_LOCAL = "BOTANICAL.QRS.123";
+  public final static PhysicalIdentifier PHYSICAL_IDENTIFIER_CETAF = new PhysicalIdentifier(
+      PHYSICAL_IDENTIFIER_LOCAL,
+      PhysicalIdType.CETAF
+  );
 
   // Tombstone Record vals
   public final static String TOMBSTONE_TEXT_TESTVAL = "pid was deleted";
+  // Pid Type Record vals
+  private final static String HANDLE_URI = "https://hdl.handle.net/";
+  public static final String PTR_PID = HANDLE_URI + PID_ISSUER_PID;
+  public final static String PTR_HANDLE_RECORD = genPtrHandleRecord(false);
+  public final static String PTR_DOI_RECORD = genPtrHandleRecord(true);
+  public static ObjectMapper MAPPER = new ObjectMapper().findAndRegisterModules();
+
+  static {
+    HANDLE_LIST_STR = List.of(HANDLE, HANDLE_ALT);
+  }
 
   private TestUtils() {
     throw new IllegalStateException("Utility class");
@@ -118,12 +139,12 @@ public class TestUtils {
     if (isDoi) {
       objectNode.put("pid", PTR_PID_DOI);
       objectNode.put("pidType", PTR_TYPE_DOI);
-      objectNode.put("primaryNamefromPid", PTR_PRIMARY_NAME);
+      objectNode.put("primaryNameFromPid", PTR_PRIMARY_NAME);
       objectNode.put("registrationAgencyDoiName", PTR_REGISTRATION_DOI_NAME);
     } else {
       objectNode.put("pid", PTR_PID);
       objectNode.put("pidType", PTR_TYPE);
-      objectNode.put("primaryNamefromPid", PTR_PRIMARY_NAME);
+      objectNode.put("primaryNameFromPid", PTR_PRIMARY_NAME);
     }
     try {
       return mapper.writeValueAsString(objectNode);
@@ -243,14 +264,15 @@ public class TestUtils {
     return handleRecord;
   }
 
-  public static List<HandleAttribute> genDigitalSpecimenAttributes(byte[] handle) {
+  public static List<HandleAttribute> genDigitalSpecimenAttributes(byte[] handle)
+      throws JsonProcessingException {
     List<HandleAttribute> handleRecord = genDoiRecordAttributes(handle);
     byte[] ptr_record = PTR_HANDLE_RECORD.getBytes(StandardCharsets.UTF_8);
 
     // 14: digitalOrPhysical
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(DIGITAL_OR_PHYSICAL), handle, DIGITAL_OR_PHYSICAL,
-            DIGITAL_OR_PHYSICAL_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+            DIGITAL_OR_PHYSICAL_TESTVAL.getBytes()));
 
     // 15: specimenHost
     handleRecord.add(
@@ -260,10 +282,16 @@ public class TestUtils {
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(IN_COLLECTION_FACILITY), handle, IN_COLLECTION_FACILITY,
             ptr_record));
+
+    // 17 Physical Specimen Identifier
+    handleRecord.add(
+        new HandleAttribute(FIELD_IDX.get(PHYSICAL_IDENTIFIER), handle, PHYSICAL_IDENTIFIER,
+            PHYSICAL_IDENTIFIER_LOCAL.getBytes(StandardCharsets.UTF_8)));
     return handleRecord;
   }
 
-  public static List<HandleAttribute> genDigitalSpecimenBotanyAttributes(byte[] handle) {
+  public static List<HandleAttribute> genDigitalSpecimenBotanyAttributes(byte[] handle)
+      throws JsonProcessingException {
     List<HandleAttribute> handleRecord = genDigitalSpecimenAttributes(handle);
 
     // 17: ObjectType
@@ -273,13 +301,36 @@ public class TestUtils {
     // 18: preservedOrLiving
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(PRESERVED_OR_LIVING), handle, PRESERVED_OR_LIVING,
-            PRESERVED_OR_LIVING_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+            PRESERVED_OR_LIVING_TESTVAL.getBytes()));
+    return handleRecord;
+  }
+
+  public static List<HandleAttribute> genMediaObjectAttributes(byte[] handle)
+      throws JsonProcessingException {
+    List<HandleAttribute> handleRecord = genDoiRecordAttributes(handle);
+    byte[] ptr_record = PTR_HANDLE_RECORD.getBytes(StandardCharsets.UTF_8);
+
+    // 14 Media Hash
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(MEDIA_HASH), handle,
+        MEDIA_HASH, MEDIA_HASH_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+
+    // 15 Subject Specimen Host
+    handleRecord.add(
+        new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST), handle, SPECIMEN_HOST, ptr_record));
+
+    // 16 media hash
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(MEDIA_URL), handle,
+        MEDIA_URL, MEDIA_URL_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+
+    // 17 : Subject Physical Identifier
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(SUBJECT_PHYSICAL_IDENTIFIER), handle,
+        SUBJECT_PHYSICAL_IDENTIFIER, PHYSICAL_IDENTIFIER_LOCAL.getBytes(StandardCharsets.UTF_8)));
     return handleRecord;
   }
 
   public static <T extends HandleRecordRequest> ObjectNode genCreateRecordRequest(T request,
       String recordType) {
-    ObjectMapper mapper = new ObjectMapper();
+    ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
 
     ObjectNode rootNode = mapper.createObjectNode();
     ObjectNode dataNode = mapper.createObjectNode();
@@ -323,11 +374,13 @@ public class TestUtils {
         REFERENT_DOI_NAME_PID,
         DIGITAL_OR_PHYSICAL_TESTVAL,
         SPECIMEN_HOST_PID,
-        IN_COLLECTION_FACILITY_TESTVAL);
+        IN_COLLECTION_FACILITY_TESTVAL,
+        PHYSICAL_IDENTIFIER_CETAF);
   }
 
   public static DigitalSpecimenBotanyRequest genDigitalSpecimenBotanyRequestObject() {
-    return new DigitalSpecimenBotanyRequest(PID_ISSUER_PID,
+    return new DigitalSpecimenBotanyRequest(
+        PID_ISSUER_PID,
         DIGITAL_OBJECT_TYPE_PID,
         DIGITAL_OBJECT_SUBTYPE_PID,
         LOC_TESTVAL,
@@ -335,15 +388,40 @@ public class TestUtils {
         DIGITAL_OR_PHYSICAL_TESTVAL,
         SPECIMEN_HOST_PID,
         IN_COLLECTION_FACILITY_TESTVAL,
+        PHYSICAL_IDENTIFIER_CETAF,
         OBJECT_TYPE_TESTVAL,
         PRESERVED_OR_LIVING_TESTVAL);
   }
 
+  public static MediaObjectRequest genMediaRequestObject() {
+    return new MediaObjectRequest(
+        PID_ISSUER_PID,
+        DIGITAL_OBJECT_TYPE_PID,
+        DIGITAL_OBJECT_SUBTYPE_PID,
+        LOC_TESTVAL,
+        REFERENT_DOI_NAME_PID,
+        MEDIA_HASH_TESTVAL,
+        MEDIA_URL_TESTVAL,
+        SPECIMEN_HOST_PID,
+        PHYSICAL_IDENTIFIER_CETAF
+    );
+  }
+
   public static TombstoneRecordRequest genTombstoneRecordRequestObject() {
     return new TombstoneRecordRequest(
-        HANDLE,
         TOMBSTONE_TEXT
     );
+  }
+
+  public static ObjectNode givenSearchByPhysIdRequest() {
+    var request = MAPPER.createObjectNode();
+    var dataNode = MAPPER.createObjectNode();
+    var attributeNode = MAPPER.createObjectNode();
+    attributeNode.set(PHYSICAL_IDENTIFIER, MAPPER.valueToTree(PHYSICAL_IDENTIFIER_CETAF));
+    attributeNode.put(SPECIMEN_HOST_REQ, SPECIMEN_HOST_PID);
+    dataNode.set(NODE_ATTRIBUTES, attributeNode);
+    request.set(NODE_DATA, dataNode);
+    return request;
   }
 
   public static JsonApiWrapperRead givenRecordResponseRead(List<byte[]> handles, String path,
@@ -375,6 +453,22 @@ public class TestUtils {
 
       var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
       dataNodes.add(new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), recordType,
+          recordAttributes, pidLink));
+    }
+    return new JsonApiWrapperWrite(dataNodes);
+  }
+
+  public static JsonApiWrapperWrite givenRecordResponseWriteGeneric(List<byte[]> handles,
+      String recordType)
+      throws JsonProcessingException {
+    List<JsonApiDataLinks> dataNodes = new ArrayList<>();
+
+    for (byte[] handle : handles) {
+      var testDbRecord = genAttributes(recordType, handle);
+      JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
+
+      var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
+      dataNodes.add(new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), "PID",
           recordAttributes, pidLink));
     }
     return new JsonApiWrapperWrite(dataNodes);
@@ -435,7 +529,8 @@ public class TestUtils {
     return new JsonApiWrapperWrite(dataNodes);
   }
 
-  private static List<HandleAttribute> genAttributes(String recordType, byte[] handle) {
+  private static List<HandleAttribute> genAttributes(String recordType, byte[] handle)
+      throws JsonProcessingException {
     switch (recordType) {
       case RECORD_TYPE_HANDLE, "PID" -> {
         return genHandleRecordAttributes(handle);
@@ -448,6 +543,9 @@ public class TestUtils {
       }
       case RECORD_TYPE_DS_BOTANY -> {
         return genDigitalSpecimenBotanyAttributes(handle);
+      }
+      case RECORD_TYPE_MEDIA -> {
+        return genMediaObjectAttributes(handle);
       }
       default -> {
         return null;
@@ -482,7 +580,7 @@ public class TestUtils {
     List<JsonNode> requestNodeList = new ArrayList<>();
 
     for (String handle : handles) {
-      requestNodeData.put("type", RECORD_TYPE_TOMBSTONE);
+      requestNodeData.put("type", RECORD_TYPE_HANDLE);
       requestNodeData.put("id", handle);
       requestNodeData.set("attributes", genTombstoneRequest());
       requestNodeRoot.set("data", requestNodeData);
@@ -515,7 +613,6 @@ public class TestUtils {
       throws JsonProcessingException {
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode rootNode = mapper.createObjectNode();
-    ObjectNode subNode;
 
     for (HandleAttribute row : dbRecord) {
       String type = row.type();
@@ -524,7 +621,7 @@ public class TestUtils {
         continue; // We never want HS_ADMIN in our json
       }
       if (FIELD_IS_PID_RECORD.contains(type)) {
-        subNode = mapper.readValue(data, ObjectNode.class);
+        ObjectNode subNode = mapper.readValue(data, ObjectNode.class);
         rootNode.set(type, subNode);
       } else {
         rootNode.put(type, data);

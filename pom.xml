@@ -19,12 +19,14 @@
     <java.version>17</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <testcontainers.version>1.17.5</testcontainers.version>
+    <victools.version>4.28.0</victools.version>
     <keycloak-adapter-bom.version>16.1.1</keycloak-adapter-bom.version>
     <sonar.coverage.jacoco.xmlReportPaths>
       ../app-it/target/site/jacoco-aggregate/jacoco.xml
     </sonar.coverage.jacoco.xmlReportPaths>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     <sonar.organization>dissco</sonar.organization>
+    <version.victools>4.28.0</version.victools>
   </properties>
 
   <dependencyManagement>
@@ -69,7 +71,6 @@
       <artifactId>spring-context</artifactId>
     </dependency>
 
-
     <!--Database Dependencies -->
     <dependency>
       <artifactId>postgresql</artifactId>
@@ -83,6 +84,27 @@
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-jdbc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+    </dependency>
+
+    <!--JsonSchema  -->
+    <dependency>
+      <groupId>com.github.victools</groupId>
+      <artifactId>jsonschema-module-jackson</artifactId>
+      <version>${version.victools}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.github.victools</groupId>
+      <artifactId>jsonschema-generator</artifactId>
+      <version>${version.victools}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.networknt</groupId>
+      <artifactId>json-schema-validator</artifactId>
+      <version>1.0.77</version>
     </dependency>
 
     <!--Other Library Dependencies -->

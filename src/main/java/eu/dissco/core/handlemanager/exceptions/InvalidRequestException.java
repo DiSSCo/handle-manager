@@ -1,10 +1,10 @@
 package eu.dissco.core.handlemanager.exceptions;
 
-public class InvalidRecordInput extends Exception {
+public class InvalidRequestException extends Exception {
 
   // Response code = 400 BAD REQUEST
 
-  public InvalidRecordInput(String s) {
+  public InvalidRequestException(String s) {
     super(s);
   }
 

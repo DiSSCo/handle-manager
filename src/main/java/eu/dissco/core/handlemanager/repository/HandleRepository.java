@@ -3,13 +3,12 @@ package eu.dissco.core.handlemanager.repository;
 import static eu.dissco.core.handlemanager.database.jooq.tables.Handles.HANDLES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_NUMBER;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PHYSICAL_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_RECORD_FIELDS_BYTES;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -29,7 +28,6 @@ public class HandleRepository {
 
   private static final int TTL = 86400;
   private final DSLContext context;
-  private final ObjectMapper mapper;
 
   // For Handle Name Generation
   public List<byte[]> getHandlesExist(List<byte[]> handles) {
@@ -52,7 +50,6 @@ public class HandleRepository {
         .getValues(HANDLES.HANDLE, byte[].class);
   }
 
-
   public List<HandleAttribute> resolveHandleAttributes(byte[] handle) {
     return context
         .select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
@@ -71,12 +68,27 @@ public class HandleRepository {
         .fetch(this::mapToAttribute);
   }
 
+
+  public List<HandleAttribute> searchByPhysicalIdentifier(List<byte[]> physicalIdentifiers) {
+    var physicalIdentifierTable = context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE,
+            HANDLES.DATA)
+        .from(HANDLES)
+        .where(HANDLES.TYPE.eq(PHYSICAL_IDENTIFIER.getBytes(StandardCharsets.UTF_8)))
+        .and((HANDLES.DATA).in(physicalIdentifiers))
+        .asTable("physicalIdentifierTable");
+
+    return context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
+        .from(HANDLES)
+        .join(physicalIdentifierTable)
+        .on(HANDLES.HANDLE.eq(physicalIdentifierTable.field(HANDLES.HANDLE)))
+        .where(HANDLES.TYPE.notEqual(HS_ADMIN.getBytes(StandardCharsets.UTF_8)))
+        .fetch(this::mapToAttribute);
+  }
+
+
   // Get List of Pids
   public List<String> getAllHandles(byte[] pidStatus, int pageNum, int pageSize) {
-    int offset = 0;
-    if (pageNum > 1) {
-      offset = offset + (pageSize * (pageNum - 1));
-    }
+    int offset = getOffset(pageNum, pageSize);
 
     return context
         .selectDistinct(HANDLES.HANDLE)
@@ -90,11 +102,12 @@ public class HandleRepository {
   }
 
   public List<String> getAllHandles(int pageNum, int pageSize) {
+    int offset = getOffset(pageNum, pageSize);
     return context
         .selectDistinct(HANDLES.HANDLE)
         .from(HANDLES)
         .limit(pageSize)
-        .offset(pageNum)
+        .offset(offset)
         .fetch()
         .getValues(HANDLES.HANDLE, String.class);
   }
@@ -109,7 +122,7 @@ public class HandleRepository {
 
   // Post
 
-  public void postAttributesToDb(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
+  public void postAttributesToDb(long recordTimestamp, List<HandleAttribute> handleAttributes) {
     var queryList = new ArrayList<Query>();
 
     for (var handleAttribute : handleAttributes) {
@@ -119,7 +132,7 @@ public class HandleRepository {
           .set(HANDLES.TYPE, handleAttribute.type().getBytes(StandardCharsets.UTF_8))
           .set(HANDLES.DATA, handleAttribute.data())
           .set(HANDLES.TTL, TTL)
-          .set(HANDLES.TIMESTAMP, recordTimestamp.getEpochSecond())
+          .set(HANDLES.TIMESTAMP, recordTimestamp)
           .set(HANDLES.ADMIN_READ, true)
           .set(HANDLES.ADMIN_WRITE, true)
           .set(HANDLES.PUB_READ, true)
@@ -129,7 +142,7 @@ public class HandleRepository {
     context.batch(queryList).execute();
   }
 
-  private void mergeAttributesToDb(Instant recordTimestamp,
+  private void mergeAttributesToDb(long recordTimestamp,
       List<HandleAttribute> handleAttributes) {
     var queryList = new ArrayList<Query>();
     Set<byte[]> updatedHandles = new HashSet<>();
@@ -140,7 +153,7 @@ public class HandleRepository {
           .set(HANDLES.TYPE, handleAttribute.type().getBytes(StandardCharsets.UTF_8))
           .set(HANDLES.DATA, handleAttribute.data())
           .set(HANDLES.TTL, TTL)
-          .set(HANDLES.TIMESTAMP, recordTimestamp.getEpochSecond())
+          .set(HANDLES.TIMESTAMP, recordTimestamp)
           .set(HANDLES.ADMIN_READ, true)
           .set(HANDLES.ADMIN_WRITE, true)
           .set(HANDLES.PUB_READ, true)
@@ -151,7 +164,7 @@ public class HandleRepository {
           .set(HANDLES.TYPE, handleAttribute.type().getBytes(StandardCharsets.UTF_8))
           .set(HANDLES.DATA, handleAttribute.data())
           .set(HANDLES.TTL, TTL)
-          .set(HANDLES.TIMESTAMP, recordTimestamp.getEpochSecond())
+          .set(HANDLES.TIMESTAMP, recordTimestamp)
           .set(HANDLES.ADMIN_READ, true)
           .set(HANDLES.ADMIN_WRITE, true)
           .set(HANDLES.PUB_READ, true)
@@ -165,25 +178,25 @@ public class HandleRepository {
   }
 
   // Archive
-  public void archiveRecord(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
+  public void archiveRecord(long recordTimestamp, List<HandleAttribute> handleAttributes) {
     mergeAttributesToDb(recordTimestamp, handleAttributes);
     removeNonTombstoneFields(List.of(handleAttributes.get(0).handle()));
   }
 
-  public void archiveRecords(Instant recordTimestamp, List<HandleAttribute> handleAttributes,
+  public void archiveRecords(long recordTimestamp, List<HandleAttribute> handleAttributes,
       List<byte[]> handles) {
     mergeAttributesToDb(recordTimestamp, handleAttributes);
     removeNonTombstoneFields(handles);
   }
 
   // Update
-  public void updateRecord(Instant recordTimestamp, List<HandleAttribute> handleAttributes) {
+  public void updateRecord(long recordTimestamp, List<HandleAttribute> handleAttributes) {
     byte[] handle = handleAttributes.get(0).handle();
     var query = prepareUpdateQuery(handle, recordTimestamp, handleAttributes);
     context.batch(query).execute();
   }
 
-  public void updateRecordBatch(Instant recordTimestamp,
+  public void updateRecordBatch(long recordTimestamp,
       List<List<HandleAttribute>> handleRecords) {
 
     List<Query> queryList = new ArrayList<>();
@@ -194,13 +207,13 @@ public class HandleRepository {
     context.batch(queryList).execute();
   }
 
-  private ArrayList<Query> prepareUpdateQuery(byte[] handle, Instant recordTimestamp,
+  private ArrayList<Query> prepareUpdateQuery(byte[] handle, long recordTimestamp,
       List<HandleAttribute> handleAttributes) {
     var queryList = new ArrayList<Query>();
     for (var handleAttribute : handleAttributes) {
       var query = context.update(HANDLES)
           .set(HANDLES.DATA, handleAttribute.data())
-          .set(HANDLES.TIMESTAMP, recordTimestamp.getEpochSecond())
+          .set(HANDLES.TIMESTAMP, recordTimestamp)
           .where(HANDLES.HANDLE.eq(handle))
           .and(HANDLES.IDX.eq(handleAttribute.index()));
       queryList.add(query);
@@ -209,7 +222,7 @@ public class HandleRepository {
     return queryList;
   }
 
-  private Query versionIncrement(byte[] handle, Instant recordTimestamp) {
+  private Query versionIncrement(byte[] handle, long recordTimestamp) {
     var currentVersion =
         Integer.parseInt(Objects.requireNonNull(context.select(HANDLES.DATA)
             .from(HANDLES)
@@ -220,7 +233,7 @@ public class HandleRepository {
 
     return context.update(HANDLES)
         .set(HANDLES.DATA, String.valueOf(version).getBytes(StandardCharsets.UTF_8))
-        .set(HANDLES.TIMESTAMP, recordTimestamp.getEpochSecond())
+        .set(HANDLES.TIMESTAMP, recordTimestamp)
         .where(HANDLES.HANDLE.eq(handle))
         .and(HANDLES.TYPE.eq(ISSUE_NUMBER.getBytes(StandardCharsets.UTF_8)));
   }
@@ -230,6 +243,14 @@ public class HandleRepository {
         .where(HANDLES.HANDLE.in(handles))
         .and(HANDLES.TYPE.notIn(TOMBSTONE_RECORD_FIELDS_BYTES))
         .execute();
+  }
+
+  private int getOffset(int pageNum, int pageSize){
+    int offset = 0;
+    if (pageNum > 1) {
+      offset = offset + (pageSize * (pageNum - 1));
+    }
+    return offset;
   }
 
 }

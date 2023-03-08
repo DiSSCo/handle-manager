@@ -7,15 +7,21 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
 import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_MEDIA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.VALID_PID_STATUS;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_LIST_STR;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PHYSICAL_IDENTIFIER_LOCAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PREFIX;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_PID;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.SUFFIX;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDoiRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestAltLoc;
@@ -23,6 +29,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordRespon
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWrite;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteArchive;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteGeneric;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
@@ -35,9 +42,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
-import eu.dissco.core.handlemanager.domain.requests.DoiRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.HandleRecordRequest;
-import eu.dissco.core.handlemanager.exceptions.InvalidRecordInput;
+import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
+import eu.dissco.core.handlemanager.domain.requests.attributes.DoiRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
+import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaValidator;
+import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.service.HandleService;
 import java.nio.charset.StandardCharsets;
@@ -58,15 +68,19 @@ class HandleControllerTest {
 
   @Mock
   private HandleService service;
+
+  @Mock
+  JsonSchemaValidator schemaValidator;
+
   private HandleController controller;
 
   private final String SANDBOX_URI = "https://sandbox.dissco.tech/";
 
-  ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
+  public ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
 
   @BeforeEach
   void setup() {
-    controller = new HandleController(service);
+    controller = new HandleController(service, schemaValidator);
   }
 
   @Test
@@ -94,7 +108,7 @@ class HandleControllerTest {
     int pageNum = 1;
     String pidStatus = "BAD";
 
-    var exception = assertThrowsExactly(InvalidRecordInput.class,
+    var exception = assertThrowsExactly(InvalidRequestException.class,
         () -> controller.getAllHandlesByPidStatus(pageNum, pageSize, pidStatus));
 
     // Then
@@ -105,19 +119,53 @@ class HandleControllerTest {
   @Test
   void testResolveSingleHandle() throws Exception {
     // Given
-    String prefix = "20.5000.1025";
-    String suffix = "QRS-321-ABC";
-    String path = SANDBOX_URI + prefix + "/" + suffix;
+    String path = SANDBOX_URI + PREFIX + "/" + SUFFIX;
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     MockHttpServletRequest r = new MockHttpServletRequest();
-    r.setRequestURI(prefix + "/" + suffix);
+    r.setRequestURI(PREFIX + "/" + SUFFIX);
 
     JsonApiWrapperRead responseExpected = givenRecordResponseRead(List.of(handle), path,
         RECORD_TYPE_HANDLE);
     given(service.resolveSingleRecord(handle, path)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.resolvePid(prefix, suffix, r);
+    var responseReceived = controller.resolvePid(PREFIX, SUFFIX, r);
+
+    // Then
+    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testSearchByPhysicalId() throws Exception {
+    // Given
+
+    var responseExpected = givenRecordResponseWriteGeneric(
+        List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), RECORD_TYPE_DS);
+    given(service.searchByPhysicalSpecimenId(PHYSICAL_IDENTIFIER_LOCAL, PhysicalIdType.CETAF,
+        SPECIMEN_HOST_PID)).willReturn(responseExpected);
+
+    // When
+    var responseReceived = controller.searchByPhysicalSpecimenId(PHYSICAL_IDENTIFIER_LOCAL, PhysicalIdType.CETAF,
+        SPECIMEN_HOST_PID);
+
+    // Then
+    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testSearchByPhysicalIdCombined() throws Exception {
+    // Given
+    String physicalId = PHYSICAL_IDENTIFIER_LOCAL;
+    var physicalIdType = PhysicalIdType.COMBINED;
+    String specimenHostPid = SPECIMEN_HOST_PID;
+    var responseExpected = givenRecordResponseWriteGeneric(
+        List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), RECORD_TYPE_DS);
+    given(service.searchByPhysicalSpecimenId(physicalId, physicalIdType, specimenHostPid)).willReturn(responseExpected);
+
+    // When
+    var responseReceived = controller.searchByPhysicalSpecimenId(physicalId, physicalIdType, specimenHostPid);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -127,31 +175,42 @@ class HandleControllerTest {
   @Test
   void testResolveBatchHandle() throws Exception {
     // Given
-    List<byte[]> handles = new ArrayList<>();
-    List<JsonNode> requestRoot = new ArrayList<>();
     String path = SANDBOX_URI + "view";
     MockHttpServletRequest r = new MockHttpServletRequest();
     r.setRequestURI("view");
 
-    for (String hdlStr : HANDLE_LIST_STR) {
-      handles.add(hdlStr.getBytes(StandardCharsets.UTF_8));
-      ObjectNode requestData = mapper.createObjectNode();
-      ObjectNode requestId = mapper.createObjectNode();
-
-      requestId.put(NODE_ID, hdlStr);
-      requestData.set(NODE_DATA, requestId);
-      requestRoot.add(requestData);
-    }
+    List<String> handleString = List.of(HANDLE, HANDLE_ALT);
+    List<byte[]> handles = List.of(HANDLE.getBytes(StandardCharsets.UTF_8), HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
     var responseExpected = givenRecordResponseRead(handles, path, RECORD_TYPE_HANDLE);
     given(service.resolveBatchRecord(anyList(), eq(path))).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.resolvePids(requestRoot, r);
+    var responseReceived = controller.resolvePids(handleString, r);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testResolveBatchHandleExceedsMax() throws Exception {
+    // Given
+    MockHttpServletRequest r = new MockHttpServletRequest();
+    r.setRequestURI("view");
+    int maxHandles = 200;
+    List<String> handleString = new ArrayList<>();
+    for (int i = 0; i<= maxHandles; i++){
+      handleString.add(String.valueOf(i));
+    }
+
+    // When
+    Exception e = assertThrows(InvalidRequestException.class, () -> {
+      controller.resolvePids(handleString, r);
+    });
+
+    // Then
+    assertThat(e.getMessage()).contains(String.valueOf(maxHandles));
   }
 
   @Test
@@ -210,7 +269,7 @@ class HandleControllerTest {
   void testCreateDigitalSpecimenRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    HandleRecordRequest requestObject = genDigitalSpecimenRequestObject();
+    DigitalSpecimenRequest requestObject = genDigitalSpecimenRequestObject();
     ObjectNode requestNode = genCreateRecordRequest(requestObject, RECORD_TYPE_DS);
     JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(handle),
         RECORD_TYPE_DS);
@@ -233,6 +292,25 @@ class HandleControllerTest {
     ObjectNode requestNode = genCreateRecordRequest(requestObject, RECORD_TYPE_DS_BOTANY);
     JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(handle),
         RECORD_TYPE_DS_BOTANY);
+
+    given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
+
+    // When
+    var responseReceived = controller.createRecord(requestNode);
+
+    // Then
+    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testCreateMediaObjectRecord() throws Exception {
+    // Given
+    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
+    HandleRecordRequest requestObject = genMediaRequestObject();
+    ObjectNode requestNode = genCreateRecordRequest(requestObject, RECORD_TYPE_MEDIA);
+    JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(handle),
+        RECORD_TYPE_MEDIA);
 
     given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
 
@@ -325,10 +403,33 @@ class HandleControllerTest {
 
     handles.forEach(handle -> {
       requests.add(
-          genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_DS_BOTANY));
+          genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(), RECORD_TYPE_DS_BOTANY));
     });
 
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_DS_BOTANY);
+    given(service.createRecords(requests)).willReturn(responseExpected);
+
+    // When
+    var responseReceived = controller.createRecords(requests);
+
+    // Then
+    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testCreateMediaRecordBatch() throws Exception {
+    // Given
+    List<byte[]> handles = List.of(
+        HANDLE.getBytes(StandardCharsets.UTF_8),
+        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
+
+    List<JsonNode> requests = new ArrayList<>();
+    handles.forEach(handle -> {
+      requests.add(genCreateRecordRequest(genMediaRequestObject(), RECORD_TYPE_MEDIA));
+    });
+
+    var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_DOI);
     given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When
@@ -359,18 +460,16 @@ class HandleControllerTest {
   void testUpdateRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes();
-    String prefix = HANDLE.split("/")[0];
-    String suffix = HANDLE.split("/")[1];
     var updateAttributes = genUpdateRequestAltLoc();
     ObjectNode updateRequestNode = mapper.createObjectNode();
-    updateRequestNode.set("data", givenJsonNode(HANDLE, RECORD_TYPE_HANDLE, updateAttributes));
+    updateRequestNode.set(NODE_DATA, givenJsonNode(HANDLE, RECORD_TYPE_HANDLE, updateAttributes));
 
     var responseExpected = givenRecordResponseWriteAltLoc(List.of(handle));
     given(service.updateRecords(List.of(updateRequestNode))).willReturn(
         responseExpected);
 
     // When
-    var responseReceived = controller.updateRecord(prefix, suffix, updateRequestNode);
+    var responseReceived = controller.updateRecord(PREFIX, SUFFIX, updateRequestNode);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -381,15 +480,13 @@ class HandleControllerTest {
   void testUpdateRecordBadRequest() {
 
     // Given
-    String prefix = HANDLE.split("/")[0];
-    String suffix = HANDLE.split("/")[1];
     var updateAttributes = genUpdateRequestAltLoc();
     ObjectNode updateRequestNode = mapper.createObjectNode();
     updateRequestNode.set("data", givenJsonNode(HANDLE_ALT, RECORD_TYPE_HANDLE, updateAttributes));
 
     // Then
-    assertThrows(InvalidRecordInput.class, () -> {
-      controller.updateRecord(prefix, suffix, updateRequestNode);
+    assertThrows(InvalidRequestException.class, () -> {
+      controller.updateRecord(PREFIX, SUFFIX, updateRequestNode);
     });
   }
 
@@ -425,21 +522,14 @@ class HandleControllerTest {
     // Given
 
     byte[] handle = HANDLE.getBytes();
-    String prefix = HANDLE.split("/")[0];
-    String suffix = HANDLE.split("/")[1];
-
-    ObjectNode archiveRootNode = mapper.createObjectNode();
-    archiveRootNode.set("data", givenJsonNode(HANDLE, RECORD_TYPE_HANDLE,
-        mapper.valueToTree(genTombstoneRecordRequestObject())));
-    ObjectNode archiveRequestNode = (ObjectNode) archiveRootNode.get(NODE_DATA)
-        .get(NODE_ATTRIBUTES);
 
     var responseExpected = givenRecordResponseWriteArchive(List.of(handle));
-    given(service.archiveRecordBatch(List.of(archiveRootNode))).willReturn(
+    var archiveRequest = givenArchiveRequest();
+    given(service.archiveRecordBatch(List.of(archiveRequest))).willReturn(
         responseExpected);
 
     // When
-    var responseReceived = controller.archiveRecord(prefix, suffix, archiveRootNode);
+    var responseReceived = controller.archiveRecord(PREFIX, SUFFIX, archiveRequest);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -452,17 +542,9 @@ class HandleControllerTest {
     List<byte[]> handles = List.of(
         HANDLE.getBytes(StandardCharsets.UTF_8),
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-
     List<JsonNode> archiveRequestList = new ArrayList<>();
-
-    for (byte[] handle : handles) {
-      ObjectNode archiveRootNode = mapper.createObjectNode();
-      archiveRootNode.set("data", givenJsonNode(HANDLE, RECORD_TYPE_HANDLE,
-          mapper.valueToTree(genTombstoneRecordRequestObject())));
-      archiveRequestList.add(archiveRootNode.deepCopy());
-    }
+    handles.forEach(h -> archiveRequestList.add(givenArchiveRequest()));
     var responseExpected = givenRecordResponseWriteArchive(handles);
-
     given(service.archiveRecordBatch(archiveRequestList)).willReturn(responseExpected);
 
     // When
@@ -473,53 +555,28 @@ class HandleControllerTest {
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
 
+  private JsonNode givenArchiveRequest() {
+    ObjectNode archiveRequest = MAPPER.createObjectNode();
+    ObjectNode archiveRequestData = MAPPER.createObjectNode();
+    archiveRequestData.put(NODE_ID, HANDLE);
+    archiveRequestData.set(NODE_ATTRIBUTES, MAPPER.valueToTree(genTombstoneRecordRequestObject()));
+    archiveRequest.set(NODE_DATA, archiveRequestData);
+    return archiveRequest;
+  }
+
+
   @Test
   void testArchiveRecordBadRequest() {
     // Given
-    String prefix = HANDLE.split("/")[0];
-    String suffix = HANDLE.split("/")[1];
     var archiveAttributes = genTombstoneRequest();
     ObjectNode archiveRequestNode = mapper.createObjectNode();
     archiveRequestNode.set("data",
         givenJsonNode(HANDLE_ALT, RECORD_TYPE_HANDLE, archiveAttributes));
 
     // Then
-    assertThrows(InvalidRecordInput.class, () -> {
-      controller.updateRecord(prefix, suffix, archiveRequestNode);
+    assertThrows(InvalidRequestException.class, () -> {
+      controller.updateRecord(PREFIX, SUFFIX, archiveRequestNode);
     });
-  }
-
-  @Test
-  void testCheckRequestNodesPresent() {
-    String message = "INVALID INPUT. Missing node \" %s \"";
-    String prefix = HANDLE.split("/")[0];
-    String suffix = HANDLE.split("/")[1];
-
-    var noData = excludeValue("data");
-    var noType = excludeValue("type");
-    var noId = excludeValue("id");
-    var noAttributes = excludeValue("attributes");
-
-    // Then
-    Exception exData = assertThrows(InvalidRecordInput.class, () -> {
-      controller.updateRecord(prefix, suffix, noData);
-    });
-    assertThat(exData).hasMessage(String.format(message, "data"));
-
-    Exception exType = assertThrows(InvalidRecordInput.class, () -> {
-      controller.updateRecord(prefix, suffix, noType);
-    });
-    assertThat(exType).hasMessage(String.format(message, "type"));
-
-    Exception exId = assertThrows(InvalidRecordInput.class, () -> {
-      controller.updateRecords(List.of(noId));
-    });
-    assertThat(exId).hasMessage(String.format(message, "id"));
-
-    Exception exAttribute = assertThrows(InvalidRecordInput.class, () -> {
-      controller.updateRecord(prefix, suffix, noAttributes);
-    });
-    assertThat(exAttribute).hasMessage(String.format(message, "attributes"));
   }
 
   private JsonNode excludeValue(String val) {

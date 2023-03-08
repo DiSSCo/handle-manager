@@ -30,7 +30,7 @@ public record HandleAttribute(int index, byte[] handle, String type, byte[] data
   public String toString() {
     return "HandleAttribute{" +
         "handle=" + new String(handle, StandardCharsets.UTF_8) +
-        "index=" + index +
+        ", index=" + index +
         ", type='" + type + '\'' +
         ", data=" + new String(data, StandardCharsets.UTF_8) +
         '}';

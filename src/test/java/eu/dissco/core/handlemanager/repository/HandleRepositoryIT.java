@@ -1,14 +1,17 @@
 package eu.dissco.core.handlemanager.repository;
 
-
 import static eu.dissco.core.handlemanager.database.jooq.Tables.HANDLES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_NUMBER;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PHYSICAL_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
+import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PHYSICAL_IDENTIFIER_LOCAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_STATUS_TESTVAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_PID;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributesAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordFullAttributes;
@@ -17,8 +20,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRecordAt
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.database.jooq.tables.Handles;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import java.nio.charset.StandardCharsets;
@@ -32,6 +33,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import org.jooq.Query;
 import org.jooq.Record4;
+import org.junit.Assert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,9 +44,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
 
   @BeforeEach
   void setup() {
-    var mapper = new ObjectMapper().findAndRegisterModules()
-        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    handleRep = new HandleRepository(context, mapper);
+    handleRep = new HandleRepository(context);
   }
 
   @AfterEach
@@ -59,7 +59,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     List<HandleAttribute> attributesToPost = genHandleRecordAttributes(handle);
 
     // When
-    handleRep.postAttributesToDb(CREATED, attributesToPost);
+    handleRep.postAttributesToDb(CREATED.getEpochSecond(), attributesToPost);
     var postedRecordContext = context.selectFrom(HANDLES).fetch();
     var postedRecordAttributes = handleRep.resolveHandleAttributes(handle);
 
@@ -74,8 +74,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     // Given
     List<byte[]> handles = List.of(HANDLE.getBytes(StandardCharsets.UTF_8),
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-    List<HandleAttribute> rows = List.of(
-        new HandleAttribute(1, handles.get(0), PID_STATUS,
+    List<HandleAttribute> rows = List.of(new HandleAttribute(1, handles.get(0), PID_STATUS,
             PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8)),
         new HandleAttribute(1, handles.get(1), PID_STATUS,
             PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8)));
@@ -106,11 +105,9 @@ class HandleRepositoryIT extends BaseRepositoryIT {
 
   @Test
   void testHandlesWritableTrue() {
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
+    List<byte[]> handles = List.of(HANDLE.getBytes(StandardCharsets.UTF_8),
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-    List<HandleAttribute> rows = List.of(
-        new HandleAttribute(1, handles.get(0), PID_STATUS,
+    List<HandleAttribute> rows = List.of(new HandleAttribute(1, handles.get(0), PID_STATUS,
             PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8)),
         new HandleAttribute(1, handles.get(1), PID_STATUS,
             PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8)));
@@ -129,8 +126,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   void testHandlesWritableFalse() {
     List<byte[]> handles = List.of(HANDLE.getBytes(StandardCharsets.UTF_8),
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-    List<HandleAttribute> rows = List.of(
-        new HandleAttribute(1, handles.get(0), PID_STATUS,
+    List<HandleAttribute> rows = List.of(new HandleAttribute(1, handles.get(0), PID_STATUS,
             "ARCHIVED".getBytes(StandardCharsets.UTF_8)),
         new HandleAttribute(1, handles.get(1), PID_STATUS,
             "ARCHIVED".getBytes(StandardCharsets.UTF_8)));
@@ -162,8 +158,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   @Test
   void testResolveBatchRecord() {
     // Given
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
+    List<byte[]> handles = List.of(HANDLE.getBytes(StandardCharsets.UTF_8),
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
     List<HandleAttribute> responseExpected = new ArrayList<>();
@@ -232,6 +227,29 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
+  void testSearchByPhysicalIdentifier(){
+    // Given
+    var targetPhysicalIdentifer = PHYSICAL_IDENTIFIER_LOCAL.getBytes(StandardCharsets.UTF_8);
+    List<HandleAttribute> responseExpected = new ArrayList<>();
+    responseExpected.add(new HandleAttribute(1, HANDLE.getBytes(StandardCharsets.UTF_8), PHYSICAL_IDENTIFIER, targetPhysicalIdentifer));
+    responseExpected.add(new HandleAttribute(2, HANDLE.getBytes(StandardCharsets.UTF_8), SPECIMEN_HOST, SPECIMEN_HOST_PID.getBytes(
+        StandardCharsets.UTF_8)));
+
+    List<HandleAttribute> nonTargetAttributes = new ArrayList<>();
+    nonTargetAttributes.add(new HandleAttribute(1, HANDLE_ALT.getBytes(StandardCharsets.UTF_8), PHYSICAL_IDENTIFIER, "A".getBytes(
+        StandardCharsets.UTF_8)));
+
+    postAttributes(responseExpected);
+    postAttributes(nonTargetAttributes);
+
+    // When
+    var responseReceived = handleRep.searchByPhysicalIdentifier(List.of(targetPhysicalIdentifer));
+
+    // Then
+    assertThat(responseReceived).hasSameElementsAs(responseExpected);
+  }
+
+  @Test
   void testUpdateRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
@@ -241,13 +259,10 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     postAttributes(originalRecord);
 
     // When
-    handleRep.updateRecord(CREATED, recordUpdate);
-    var responseReceived = context
-        .select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE, Handles.HANDLES.TYPE,
-            Handles.HANDLES.DATA)
-        .from(Handles.HANDLES)
-        .where(Handles.HANDLES.HANDLE.eq(handle))
-        .and(Handles.HANDLES.TYPE.notEqual(
+    handleRep.updateRecord(CREATED.getEpochSecond(), recordUpdate);
+    var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
+            Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
+        .where(Handles.HANDLES.HANDLE.eq(handle)).and(Handles.HANDLES.TYPE.notEqual(
             HS_ADMIN.getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
         .fetch(this::mapToAttribute);
 
@@ -259,8 +274,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   void testUpdateRecordBatch() throws ParserConfigurationException, TransformerException {
 
     // Given
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
+    List<byte[]> handles = List.of(HANDLE.getBytes(StandardCharsets.UTF_8),
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
     List<List<HandleAttribute>> updateAttributes = new ArrayList<>();
@@ -272,13 +286,10 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     }
 
     // When
-    handleRep.updateRecordBatch(CREATED, updateAttributes);
-    var responseReceived = context
-        .select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE, Handles.HANDLES.TYPE,
-            Handles.HANDLES.DATA)
-        .from(Handles.HANDLES)
-        .where(Handles.HANDLES.HANDLE.in(handles))
-        .and(Handles.HANDLES.TYPE.notEqual(
+    handleRep.updateRecordBatch(CREATED.getEpochSecond(), updateAttributes);
+    var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
+            Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
+        .where(Handles.HANDLES.HANDLE.in(handles)).and(Handles.HANDLES.TYPE.notEqual(
             HS_ADMIN.getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
         .fetch(this::mapToAttribute);
 
@@ -290,8 +301,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   void testArchiveRecordBatch() throws ParserConfigurationException, TransformerException {
 
     // Given
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
+    List<byte[]> handles = List.of(HANDLE.getBytes(StandardCharsets.UTF_8),
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
     List<HandleAttribute> archiveAttributes = new ArrayList<>();
@@ -303,13 +313,10 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     }
 
     // When
-    handleRep.archiveRecords(CREATED, archiveAttributes, handles);
-    var responseReceived = context
-        .select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE, Handles.HANDLES.TYPE,
-            Handles.HANDLES.DATA)
-        .from(Handles.HANDLES)
-        .where(Handles.HANDLES.HANDLE.in(handles))
-        .and(Handles.HANDLES.TYPE.notEqual(
+    handleRep.archiveRecords(CREATED.getEpochSecond(), archiveAttributes, handles);
+    var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
+            Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
+        .where(Handles.HANDLES.HANDLE.in(handles)).and(Handles.HANDLES.TYPE.notEqual(
             HS_ADMIN.getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
         .fetch(this::mapToAttribute);
 
@@ -327,13 +334,10 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     postAttributes(originalRecord);
 
     // When
-    handleRep.archiveRecord(CREATED, recordArchive);
-    var responseReceived = context
-        .select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE, Handles.HANDLES.TYPE,
-            Handles.HANDLES.DATA)
-        .from(Handles.HANDLES)
-        .where(Handles.HANDLES.HANDLE.eq(handle))
-        .and(Handles.HANDLES.TYPE.notEqual(
+    handleRep.archiveRecord(CREATED.getEpochSecond(), recordArchive);
+    var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
+            Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
+        .where(Handles.HANDLES.HANDLE.eq(handle)).and(Handles.HANDLES.TYPE.notEqual(
             HS_ADMIN.getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
         .fetch(this::mapToAttribute);
 
@@ -348,13 +352,10 @@ class HandleRepositoryIT extends BaseRepositoryIT {
           .set(Handles.HANDLES.HANDLE, handleAttribute.handle())
           .set(Handles.HANDLES.IDX, handleAttribute.index())
           .set(Handles.HANDLES.TYPE, handleAttribute.type().getBytes(StandardCharsets.UTF_8))
-          .set(Handles.HANDLES.DATA, handleAttribute.data())
-          .set(Handles.HANDLES.TTL, 86400)
+          .set(Handles.HANDLES.DATA, handleAttribute.data()).set(Handles.HANDLES.TTL, 86400)
           .set(Handles.HANDLES.TIMESTAMP, CREATED.getEpochSecond())
-          .set(Handles.HANDLES.ADMIN_READ, true)
-          .set(Handles.HANDLES.ADMIN_WRITE, true)
-          .set(Handles.HANDLES.PUB_READ, true)
-          .set(Handles.HANDLES.PUB_WRITE, false);
+          .set(Handles.HANDLES.ADMIN_READ, true).set(Handles.HANDLES.ADMIN_WRITE, true)
+          .set(Handles.HANDLES.PUB_READ, true).set(Handles.HANDLES.PUB_WRITE, false);
       queryList.add(query);
     }
     context.batch(queryList).execute();
@@ -410,11 +411,8 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   private HandleAttribute mapToAttribute(Record4<Integer, byte[], byte[], byte[]> row) {
-    return new HandleAttribute(
-        row.get(Handles.HANDLES.IDX),
-        row.get(Handles.HANDLES.HANDLE),
-        new String(row.get(Handles.HANDLES.TYPE)),
-        row.get(Handles.HANDLES.DATA));
+    return new HandleAttribute(row.get(Handles.HANDLES.IDX), row.get(Handles.HANDLES.HANDLE),
+        new String(row.get(Handles.HANDLES.TYPE)), row.get(Handles.HANDLES.DATA));
   }
 
 }

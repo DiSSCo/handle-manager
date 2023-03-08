@@ -1,8 +1,9 @@
-package eu.dissco.core.handlemanager.domain.requests;
+package eu.dissco.core.handlemanager.domain.requests.attributes;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.ToString;
 
 @Getter
@@ -10,10 +11,12 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 public class DigitalSpecimenBotanyRequest extends DigitalSpecimenRequest {
 
-  @NonNull
+  @JsonProperty(required = true)
+  @JsonPropertyDescription("Type of object (e.g. herbarium sheet)")
   private final String objectType;
-  @NonNull
-  private final String preservedOrLiving;
+  @JsonProperty(required = true)
+  @JsonPropertyDescription("Indicates specimen is preserved or living")
+  private final PreservedOrLiving preservedOrLiving;
 
   public DigitalSpecimenBotanyRequest(
       // Handle
@@ -24,17 +27,18 @@ public class DigitalSpecimenBotanyRequest extends DigitalSpecimenRequest {
       // Referent
       String referentDoiNamePid,
       // Digital Specimen
-      String digitalOrPhysical,
+      DigitalOrPhysical digitalOrPhysical,
       String specimenHostPid,
       String inCollectionFacilityPid,
+      PhysicalIdentifier physicalIdentifier,
       // Botany Specimen
-      @NonNull String objectType,
-      @NonNull String preservedOrLiving
+      String objectType,
+      PreservedOrLiving preservedOrLiving
   ) {
     super(pidIssuerPid, digitalObjectTypePid, digitalObjectSubtypePid, locations,
         referentDoiNamePid,
         digitalOrPhysical,
-        specimenHostPid, inCollectionFacilityPid);
+        specimenHostPid, inCollectionFacilityPid, physicalIdentifier);
     this.objectType = objectType;
     this.preservedOrLiving = preservedOrLiving;
   }
