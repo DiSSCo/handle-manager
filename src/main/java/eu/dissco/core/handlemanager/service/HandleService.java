@@ -74,6 +74,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import javax.annotation.PostConstruct;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -99,6 +101,7 @@ public class HandleService {
   private final DocumentBuilderFactory dbf;
   private final ObjectMapper mapper;
   private final TransformerFactory tf;
+
 
   private final DateTimeFormatter dt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS",
       Locale.ENGLISH).withZone(ZoneId.of("UTC"));
@@ -138,10 +141,9 @@ public class HandleService {
     }
 
     if (handles.size() > resolvedHandles.size()) {
-      Set<String> unresolvedHandles = new HashSet<>();
-      handles.stream()
-          .filter(h -> !resolvedHandles.contains(new String(h, StandardCharsets.UTF_8))).toList()
-              .forEach(h -> unresolvedHandles.add(new String(h, StandardCharsets.UTF_8)));
+      Set<String> unresolvedHandles = handles.stream()
+          .filter(h -> !resolvedHandles.contains(new String(h, StandardCharsets.UTF_8)))
+          .map(h-> new String(h, StandardCharsets.UTF_8)).collect(Collectors.toSet());
 
       throw new PidResolutionException(
           "Unable to resolve the following handles: " + unresolvedHandles);
@@ -376,14 +378,12 @@ public class HandleService {
     if (!keys.contains(LOC_REQ)) {
       return request;
     }
-    ObjectReader reader = mapper.readerFor(new TypeReference<List<String>>() {
-    });
+
     JsonNode locNode = request.get(LOC_REQ);
     ObjectNode requestObjectNode = request.deepCopy();
     if (locNode.isArray()) {
       try {
-        List<String> locList = reader.readValue(locNode);
-        String[] locArr = locList.toArray(new String[0]);
+        String[] locArr = mapper.treeToValue(locNode, String[].class);
         requestObjectNode.put(LOC, new String(setLocations(locArr), StandardCharsets.UTF_8));
         requestObjectNode.remove(LOC_REQ);
       } catch (IOException e) {
