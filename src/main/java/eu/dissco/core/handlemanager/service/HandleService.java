@@ -95,7 +95,6 @@ public class HandleService {
   private final ObjectMapper mapper;
   private final TransformerFactory tf;
 
-
   private final DateTimeFormatter dt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS",
       Locale.ENGLISH).withZone(ZoneId.of("UTC"));
 
@@ -130,13 +129,14 @@ public class HandleService {
 
     for (var handleRecord : handleMap.entrySet()) {
       rootNodeList.add(jsonFormatSingleRecord(handleRecord.getValue()));
-      resolvedHandles.add(new String(handleRecord.getValue().get(0).handle(), StandardCharsets.UTF_8));
+      resolvedHandles.add(
+          new String(handleRecord.getValue().get(0).handle(), StandardCharsets.UTF_8));
     }
 
     if (handles.size() > resolvedHandles.size()) {
       Set<String> unresolvedHandles = handles.stream()
           .filter(h -> !resolvedHandles.contains(new String(h, StandardCharsets.UTF_8)))
-          .map(h-> new String(h, StandardCharsets.UTF_8)).collect(Collectors.toSet());
+          .map(h -> new String(h, StandardCharsets.UTF_8)).collect(Collectors.toSet());
 
       throw new PidResolutionException(
           "Unable to resolve the following handles: " + unresolvedHandles);
@@ -207,7 +207,8 @@ public class HandleService {
   }
 
   // Search by Physical Specimen Identifier
-  public JsonApiWrapperWrite searchByPhysicalSpecimenId(String physicalId, PhysicalIdType physicalIdType, String specimenHostPid)
+  public JsonApiWrapperWrite searchByPhysicalSpecimenId(String physicalId,
+      PhysicalIdType physicalIdType, String specimenHostPid)
       throws PidResolutionException, InvalidRequestException {
 
     var physicalIdentifier = setPhysicalId(physicalId, physicalIdType, specimenHostPid);
@@ -224,14 +225,16 @@ public class HandleService {
     return new JsonApiWrapperWrite(dataNode);
   }
 
-  private byte[] setPhysicalId(String physicalIdentifer, PhysicalIdType physicalIdType, String specimenHostPid)
+  private byte[] setPhysicalId(String physicalIdentifer, PhysicalIdType physicalIdType,
+      String specimenHostPid)
       throws InvalidRequestException {
-    if (physicalIdType.equals(PhysicalIdType.COMBINED)){
-      if (specimenHostPid==null){
+    if (physicalIdType.equals(PhysicalIdType.COMBINED)) {
+      if (specimenHostPid == null) {
         throw new InvalidRequestException("Missing specimen host ID.");
       }
       var hostIdArr = specimenHostPid.split("/");
-      return (physicalIdentifer + ":" + hostIdArr[hostIdArr.length - 1]).getBytes(StandardCharsets.UTF_8);
+      return (physicalIdentifer + ":" + hostIdArr[hostIdArr.length - 1]).getBytes(
+          StandardCharsets.UTF_8);
     }
     return physicalIdentifer.getBytes(StandardCharsets.UTF_8);
   }
@@ -637,7 +640,8 @@ public class HandleService {
 
     // 18: preservedOrLiving
     handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(PRESERVED_OR_LIVING), handle, PRESERVED_OR_LIVING, request.getPreservedOrLiving().getBytes()));
+        new HandleAttribute(FIELD_IDX.get(PRESERVED_OR_LIVING), handle, PRESERVED_OR_LIVING,
+            request.getPreservedOrLiving().getBytes()));
 
     return handleRecord;
   }
