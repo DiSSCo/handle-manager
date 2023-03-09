@@ -648,7 +648,7 @@ public class HandleService {
 
   private <T extends DigitalSpecimenRequest> byte[] setUniquePhysicalIdentifierId(T request) {
     var physicalIdentifier = request.getPhysicalIdentifier();
-    if (physicalIdentifier.physicalIdType() == PhysicalIdType.CETAF) {
+    if (physicalIdentifier.physicalIdType() == PhysicalIdType.GLOBAL) {
       return physicalIdentifier.physicalId().getBytes(StandardCharsets.UTF_8);
     }
     return concatIds(physicalIdentifier, request.getSpecimenHostPid());
@@ -656,7 +656,7 @@ public class HandleService {
 
   private byte[] setUniquePhysicalIdentifierId(MediaObjectRequest request) {
     var physicalIdentifier = request.getSubjectPhysicalIdentifier();
-    if (physicalIdentifier.physicalIdType() == PhysicalIdType.CETAF) {
+    if (physicalIdentifier.physicalIdType() == PhysicalIdType.GLOBAL) {
       return physicalIdentifier.physicalId().getBytes(StandardCharsets.UTF_8);
     }
     return concatIds(physicalIdentifier, request.getSubjectSpecimenHostPid());

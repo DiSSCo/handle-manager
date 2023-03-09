@@ -164,7 +164,7 @@ class HandleServiceTest {
         .willReturn(expectedAttributes);
 
     // When
-    var responseReceived = service.searchByPhysicalSpecimenId(PHYSICAL_IDENTIFIER_LOCAL, PhysicalIdType.CETAF,
+    var responseReceived = service.searchByPhysicalSpecimenId(PHYSICAL_IDENTIFIER_LOCAL, PhysicalIdType.GLOBAL,
         SPECIMEN_HOST_PID);
 
     // Then
@@ -187,7 +187,7 @@ class HandleServiceTest {
 
     // When
     Exception e = assertThrows(PidResolutionException.class, () -> {
-      service.searchByPhysicalSpecimenId(PHYSICAL_IDENTIFIER_LOCAL, PhysicalIdType.CETAF,
+      service.searchByPhysicalSpecimenId(PHYSICAL_IDENTIFIER_LOCAL, PhysicalIdType.GLOBAL,
           SPECIMEN_HOST_PID);
     });
 
