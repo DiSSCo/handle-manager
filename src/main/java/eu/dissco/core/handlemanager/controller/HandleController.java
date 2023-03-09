@@ -62,14 +62,14 @@ public class HandleController {
   public ResponseEntity<List<String>> getAllHandlesByPidStatus(
       @RequestParam(value = "pageNum", defaultValue = "0") int pageNum,
       @RequestParam(value = "pageSize", defaultValue = "100") int pageSize,
-      @RequestParam(name = "pidStatus", defaultValue = "ALL") PidStatus pidStatus)
+      @RequestParam(name = "pidStatus", defaultValue ="ALL") PidStatus pidStatus)
       throws PidResolutionException {
 
     List<String> handleList;
-    if (pidStatus.toString().equals("ALL")) {
+    if (pidStatus.equals(PidStatus.ALL)) {
       handleList = service.getHandlesPaged(pageNum, pageSize);
     } else {
-      handleList = service.getHandlesPaged(pageNum, pageSize, pidStatus.toString());
+      handleList = service.getHandlesPaged(pageNum, pageSize, pidStatus.getBytes());
     }
     if (handleList.isEmpty()) {
       throw new PidResolutionException("Unable to resolve pids");

@@ -91,7 +91,7 @@ class HandleControllerTest {
     var pidStatus = PidStatus.TEST;
     List<String> expectedHandles = Collections.nCopies(pageSize, HANDLE);
 
-    given(service.getHandlesPaged(pageNum, pageSize, pidStatus.toString())).willReturn(expectedHandles);
+    given(service.getHandlesPaged(pageNum, pageSize, pidStatus.getBytes())).willReturn(expectedHandles);
 
     // When
     ResponseEntity<List<String>> response = controller.getAllHandlesByPidStatus(pageNum, pageSize,

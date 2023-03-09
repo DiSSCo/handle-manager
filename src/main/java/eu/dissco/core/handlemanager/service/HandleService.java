@@ -118,7 +118,6 @@ public class HandleService {
     return new JsonApiWrapperRead(new JsonApiLinks(path), dataList);
   }
 
-
   private List<JsonNode> resolveAndFormatRecords(List<byte[]> handles)
       throws PidResolutionException {
     var dbRecord = handleRep.resolveHandleAttributes(handles);
@@ -148,8 +147,8 @@ public class HandleService {
 
   // Getters
 
-  public List<String> getHandlesPaged(int pageNum, int pageSize, String pidStatus) {
-    return handleRep.getAllHandles(pidStatus.getBytes(StandardCharsets.UTF_8), pageNum, pageSize);
+  public List<String> getHandlesPaged(int pageNum, int pageSize, byte[] pidStatus) {
+    return handleRep.getAllHandles(pidStatus, pageNum, pageSize);
   }
 
   public List<String> getHandlesPaged(int pageNum, int pageSize) {

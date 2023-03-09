@@ -1,5 +1,7 @@
 package eu.dissco.core.handlemanager.domain.requests.attributes;
 
+import java.nio.charset.StandardCharsets;
+
 public enum PidStatus {
   ACTIVE("ACTIVE"),
   ARCHIVED("ARCHIVED"),
@@ -20,6 +22,9 @@ public enum PidStatus {
     return state;
   }
 
+  public byte[] getBytes(){
+    return state.getBytes(StandardCharsets.UTF_8);
+  }
 
 
 }

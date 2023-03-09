@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.IntStream;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import org.jooq.Query;
@@ -178,7 +179,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   @Test
   void testGetAllHandlesPaging() {
     // Given
-    int pageNum = 0;
+    int pageNum = 1;
     int pageSize = 5;
 
     List<String> handles = genListofHandlesString(pageSize);
@@ -198,9 +199,31 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
+  void testGetAllHandlesLastPage() {
+    // Given
+    int pageNum = 2;
+    int pageSize = 5;
+
+    List<String> handles = genListofHandlesString(pageSize+1);
+    List<HandleAttribute> rows = new ArrayList<>();
+
+    for (String handle : handles) {
+      rows.add(new HandleAttribute(1, handle.getBytes(StandardCharsets.UTF_8), PID_STATUS,
+          PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+    }
+    postAttributes(rows);
+
+    // When
+    List<String> responseReceived = handleRep.getAllHandles(pageNum, pageSize);
+
+    // Then
+    assertThat(responseReceived).hasSize(1);
+  }
+
+  @Test
   void testGetAllHandlesPagingByPidStatus() {
     // Given
-    int pageNum = 0;
+    int pageNum = 1;
     int pageSize = 5;
     byte[] pidStatusTarget = "ARCHIVED".getBytes(StandardCharsets.UTF_8);
 

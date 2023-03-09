@@ -606,55 +606,11 @@ class HandleServiceTest {
 
     // When
     var responseExpectedFirst = service.getHandlesPaged(pageNum, pageSize);
-    var responseExpectedSecond = service.getHandlesPaged(pageNum, pageSize, new String(pidStatus));
+    var responseExpectedSecond = service.getHandlesPaged(pageNum, pageSize, pidStatus);
 
     // Then
     assertThat(responseExpectedFirst).isEqualTo(handles);
     assertThat(responseExpectedSecond).isEqualTo(handles);
-  }
-
-  // Exceptions
-
-
-  void testInvalidInputExceptionCreateHandleRecord() {
-    // Given
-    String invalidType = "INVALID TYPE";
-    String invalidMessage = "Invalid request. Reason: unrecognized type. Check: " + invalidType;
-
-    HandleRecordRequest request = genHandleRecordRequestObject();
-    ObjectNode requestNode = genCreateRecordRequest(request, invalidType);
-
-    given(hgService.genHandleList(1)).willReturn(List.of(HANDLE.getBytes(StandardCharsets.UTF_8)));
-
-    // When
-    Exception exception = assertThrows(InvalidRequestException.class, () -> {
-      service.createRecords(List.of(requestNode));
-    });
-
-    // Then
-    assertThat(exception.getMessage()).isEqualTo(invalidMessage);
-  }
-
-
-  void testInvalidInputExceptionCreateHandleRecordBatch() {
-    // Given
-    String invalidType = "INVALID TYPE";
-    String invalidMessage = "Invalid request. Reason: unrecognized type. Check: " + invalidType;
-
-    List<JsonNode> requests = new ArrayList<>();
-    for (byte[] handle : handles) {
-      requests.add(genCreateRecordRequest(genHandleRecordRequestObject(), invalidType));
-    }
-
-    given(hgService.genHandleList(2)).willReturn(handles);
-
-    // When
-    Exception exception = assertThrows(InvalidRequestException.class, () -> {
-      service.createRecords(requests);
-    });
-
-    // Then
-    assertThat(exception.getMessage()).isEqualTo(invalidMessage);
   }
 
   private void initTime() {
