@@ -114,7 +114,7 @@ public class TestUtils {
   public final static String PHYSICAL_IDENTIFIER_LOCAL = "BOTANICAL.QRS.123";
   public final static PhysicalIdentifier PHYSICAL_IDENTIFIER_CETAF = new PhysicalIdentifier(
       PHYSICAL_IDENTIFIER_LOCAL,
-      PhysicalIdType.GLOBAL
+      PhysicalIdType.CETAF
   );
 
   // Tombstone Record vals

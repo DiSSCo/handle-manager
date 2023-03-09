@@ -5,7 +5,7 @@ import java.nio.charset.StandardCharsets;
 
 public enum PhysicalIdType {
 
-  @JsonProperty("global") GLOBAL("global"),
+  @JsonProperty("cetaf") CETAF("cetaf"),
   @JsonProperty("combined") COMBINED("combined");
 
   private final String state;

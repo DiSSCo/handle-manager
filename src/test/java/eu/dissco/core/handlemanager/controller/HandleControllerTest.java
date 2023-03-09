@@ -128,11 +128,11 @@ class HandleControllerTest {
 
     var responseExpected = givenRecordResponseWriteGeneric(
         List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), RECORD_TYPE_DS);
-    given(service.searchByPhysicalSpecimenId(PHYSICAL_IDENTIFIER_LOCAL, PhysicalIdType.GLOBAL,
+    given(service.searchByPhysicalSpecimenId(PHYSICAL_IDENTIFIER_LOCAL, PhysicalIdType.CETAF,
         SPECIMEN_HOST_PID)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.searchByPhysicalSpecimenId(PHYSICAL_IDENTIFIER_LOCAL, PhysicalIdType.GLOBAL,
+    var responseReceived = controller.searchByPhysicalSpecimenId(PHYSICAL_IDENTIFIER_LOCAL, PhysicalIdType.CETAF,
         SPECIMEN_HOST_PID);
 
     // Then

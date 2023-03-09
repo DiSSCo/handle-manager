@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public record PhysicalIdentifier(
     @JsonProperty(required = true)
     String physicalId,
-
+    @JsonProperty(required = true)
     PhysicalIdType physicalIdType
 ) {
 
