@@ -3,12 +3,6 @@ package eu.dissco.core.handlemanager.domain.requests.validation;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_MEDIA;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_TOMBSTONE;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.victools.jsonschema.generator.Option;
@@ -23,6 +17,7 @@ import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion.VersionFlag;
 import com.networknt.schema.ValidationMessage;
+import eu.dissco.core.handlemanager.domain.requests.attributes.ObjectType;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
 import eu.dissco.core.handlemanager.domain.requests.PutRequest;
@@ -142,8 +137,9 @@ public class JsonSchemaValidator {
     // e.g. PATCH update attributes
 
     SchemaGeneratorConfigBuilder configBuilder = new SchemaGeneratorConfigBuilder(
-        SchemaVersion.DRAFT_2020_12, OptionPreset.PLAIN_JSON).with(
-        Option.FORBIDDEN_ADDITIONAL_PROPERTIES_BY_DEFAULT);
+        SchemaVersion.DRAFT_2020_12, OptionPreset.PLAIN_JSON)
+        .with(Option.FORBIDDEN_ADDITIONAL_PROPERTIES_BY_DEFAULT)
+        .with(Option.FLATTENED_ENUMS_FROM_TOSTRING);
 
     configBuilder.forTypesInGeneral()
         .withEnumResolver(scope -> scope.getType().getErasedType().isEnum()
@@ -172,7 +168,8 @@ public class JsonSchemaValidator {
     // Attribute schemas are checked using one of the two other schema configs
 
     SchemaGeneratorConfigBuilder configBuilder = new SchemaGeneratorConfigBuilder(
-        SchemaVersion.DRAFT_2020_12, OptionPreset.PLAIN_JSON);
+        SchemaVersion.DRAFT_2020_12, OptionPreset.PLAIN_JSON)
+        .with(Option.FLATTENED_ENUMS_FROM_TOSTRING);
 
     configBuilder.forFields()
         .withRequiredCheck(
@@ -181,6 +178,14 @@ public class JsonSchemaValidator {
     configBuilder.forFields()
         .withAdditionalPropertiesResolver(field -> field.getType().getErasedType() == JsonNode.class
             ? null : Void.class);
+
+
+    configBuilder.forTypesInGeneral()
+        .withEnumResolver(scope -> scope.getType().getErasedType().isEnum()
+            ? Stream.of(scope.getType().getErasedType().getEnumConstants())
+            .map(v -> ((Enum) v).name()).toList()
+            : null);
+
 
     return configBuilder.build();
   }
@@ -212,18 +217,39 @@ public class JsonSchemaValidator {
     if (!validationErrors.isEmpty()) {
       throw new InvalidRequestException(setErrorMessage(validationErrors, "POST"));
     }
-    String type = requestRoot.get(NODE_DATA).get(NODE_TYPE).asText();
+
+    ObjectType type = ObjectType.fromString(requestRoot.get(NODE_DATA).get(NODE_TYPE).asText());
     var attributes = requestRoot.get(NODE_DATA).get(NODE_ATTRIBUTES);
     switch (type) {
-      case RECORD_TYPE_HANDLE -> validateRequestAttributes(attributes, handlePostReqSchema, type);
-      case RECORD_TYPE_DOI -> validateRequestAttributes(attributes, doiPostReqSchema, type);
-      case RECORD_TYPE_DS ->
+      case HANDLE -> validateRequestAttributes(attributes, handlePostReqSchema, type);
+      case DOI -> validateRequestAttributes(attributes, doiPostReqSchema, type);
+      case DIGITAL_SPECIMEN ->
           validateRequestAttributes(attributes, digitalSpecimenPostReqSchema, type);
-      case RECORD_TYPE_DS_BOTANY ->
+      case DIGITAL_SPECIMEN_BOTANY ->
           validateRequestAttributes(attributes, digitalSpecimenBotanyPostReqSchema, type);
-      case RECORD_TYPE_MEDIA ->
-          validateRequestAttributes(attributes, mediaObjectPostReqSchema, type);
-      default -> throw new InvalidRequestException("Invalid Request. Reason: Invalid type: " + type);
+      case MEDIA_OBJECT -> validateRequestAttributes(attributes, mediaObjectPostReqSchema, type);
+      default ->
+          throw new InvalidRequestException("Invalid Request. Reason: Invalid type: " + type);
+    }
+  }
+
+  public void validatePatchRequest(JsonNode requestRoot) throws InvalidRequestException {
+    var validationErrors = patchReqSchema.validate(requestRoot);
+    if (!validationErrors.isEmpty()) {
+      throw new InvalidRequestException(setErrorMessage(validationErrors, "PATCH (update)"));
+    }
+    ObjectType type = ObjectType.fromString(requestRoot.get(NODE_DATA).get(NODE_TYPE).asText());
+    var attributes = requestRoot.get(NODE_DATA).get(NODE_ATTRIBUTES);
+    switch (type) {
+      case HANDLE -> validateRequestAttributes(attributes, handlePatchReqSchema, type);
+      case DOI -> validateRequestAttributes(attributes, doiPatchReqSchema, type);
+      case DIGITAL_SPECIMEN ->
+          validateRequestAttributes(attributes, digitalSpecimenPatchReqSchema, type);
+      case DIGITAL_SPECIMEN_BOTANY ->
+          validateRequestAttributes(attributes, digitalSpecimenBotanyPatchReqSchema, type);
+      case MEDIA_OBJECT -> validateRequestAttributes(attributes, mediaObjectPatchReqSchema, type);
+      default ->
+          throw new InvalidRequestException("Invalid Request. Reason: Invalid type: " + type);
     }
   }
 
@@ -233,34 +259,23 @@ public class JsonSchemaValidator {
       throw new InvalidRequestException(setErrorMessage(validationErrors, "PUT (tombstone)"));
     }
     var attributes = requestRoot.get(NODE_DATA).get(NODE_ATTRIBUTES);
-    validateRequestAttributes(attributes, tombstoneReqSchema, RECORD_TYPE_TOMBSTONE);
+    validateTombstoneRequestAttributes(attributes);
   }
 
-  public void validatePatchRequest(JsonNode requestRoot) throws InvalidRequestException {
-    var validationErrors = patchReqSchema.validate(requestRoot);
+
+  private void validateTombstoneRequestAttributes(JsonNode requestAttributes) throws InvalidRequestException {
+    var validationErrors = tombstoneReqSchema.validate(requestAttributes);
     if (!validationErrors.isEmpty()) {
-      throw new InvalidRequestException(setErrorMessage(validationErrors, "PATCH (update)"));
-    }
-    String type = requestRoot.get(NODE_DATA).get(NODE_TYPE).asText();
-    var attributes = requestRoot.get(NODE_DATA).get(NODE_ATTRIBUTES);
-    switch (type) {
-      case RECORD_TYPE_HANDLE -> validateRequestAttributes(attributes, handlePatchReqSchema, type);
-      case RECORD_TYPE_DOI -> validateRequestAttributes(attributes, doiPatchReqSchema, type);
-      case RECORD_TYPE_DS ->
-          validateRequestAttributes(attributes, digitalSpecimenPatchReqSchema, type);
-      case RECORD_TYPE_DS_BOTANY ->
-          validateRequestAttributes(attributes, digitalSpecimenBotanyPatchReqSchema, type);
-      case RECORD_TYPE_MEDIA ->
-          validateRequestAttributes(attributes, mediaObjectPatchReqSchema, type);
-      default -> throw new InvalidRequestException("Invalid Request. Reason: Invalid type: " + type);
+      throw new InvalidRequestException(
+          setErrorMessage(validationErrors, ObjectType.TOMBSTONE.toString()));
     }
   }
 
   private void validateRequestAttributes(JsonNode requestAttributes, JsonSchema schema,
-      String type) throws InvalidRequestException {
+      ObjectType type) throws InvalidRequestException {
     var validationErrors = schema.validate(requestAttributes);
     if (!validationErrors.isEmpty()) {
-      throw new InvalidRequestException(setErrorMessage(validationErrors, type));
+      throw new InvalidRequestException(setErrorMessage(validationErrors, String.valueOf(type)));
     }
   }
 

@@ -54,5 +54,4 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
     return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(exceptionResponse);
   }
 
-
 }

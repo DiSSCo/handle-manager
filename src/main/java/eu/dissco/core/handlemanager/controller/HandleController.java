@@ -3,12 +3,12 @@ package eu.dissco.core.handlemanager.controller;
 
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
-import static eu.dissco.core.handlemanager.domain.PidRecords.VALID_PID_STATUS;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
+import eu.dissco.core.handlemanager.domain.requests.attributes.PidStatus;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaValidator;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
@@ -62,18 +62,14 @@ public class HandleController {
   public ResponseEntity<List<String>> getAllHandlesByPidStatus(
       @RequestParam(value = "pageNum", defaultValue = "0") int pageNum,
       @RequestParam(value = "pageSize", defaultValue = "100") int pageSize,
-      @RequestParam(name = "pidStatus", defaultValue = "ALL") String pidStatus)
-      throws PidResolutionException, InvalidRequestException {
+      @RequestParam(name = "pidStatus", defaultValue ="ALL") PidStatus pidStatus)
+      throws PidResolutionException {
 
-    if (!VALID_PID_STATUS.contains(pidStatus)) {
-      throw new InvalidRequestException(
-          "Invalid Input. Pid Status not recognized. Available Pid Statuses: " + VALID_PID_STATUS);
-    }
     List<String> handleList;
-    if (pidStatus.equals("ALL")) {
+    if (pidStatus.equals(PidStatus.ALL)) {
       handleList = service.getHandlesPaged(pageNum, pageSize);
     } else {
-      handleList = service.getHandlesPaged(pageNum, pageSize, pidStatus);
+      handleList = service.getHandlesPaged(pageNum, pageSize, pidStatus.getBytes());
     }
     if (handleList.isEmpty()) {
       throw new PidResolutionException("Unable to resolve pids");

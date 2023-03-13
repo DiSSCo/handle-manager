@@ -13,6 +13,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DOI;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS_BOTANY;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_HANDLE;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MEDIA;
 
 @ExtendWith(MockitoExtension.class)
 class HandleControllerExceptionHandlerTest {

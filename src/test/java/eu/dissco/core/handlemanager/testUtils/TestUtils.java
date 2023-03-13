@@ -22,12 +22,6 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_KERNEL_METADATA_LICENSE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PRESERVED_OR_LIVING;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_MEDIA;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_TOMBSTONE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
@@ -83,6 +77,14 @@ public class TestUtils {
   public static final List<String> HANDLE_LIST_STR;
   public static final String PID_ISSUER_PID = "20.5000.1025/PID-ISSUER";
   public static final String DIGITAL_OBJECT_TYPE_PID = "20.5000.1025/DIGITAL-SPECIMEN";
+
+  // Record types
+  public static final String RECORD_TYPE_HANDLE = "handle";
+  public static final String RECORD_TYPE_DOI = "doi";
+  public static final String RECORD_TYPE_DS = "digitalSpecimen";
+  public static final String RECORD_TYPE_DS_BOTANY = "digitalSpecimenBotany";
+  public static final String RECORD_TYPE_TOMBSTONE = "tombstone";
+  public static final String RECORD_TYPE_MEDIA = "mediaObject";
 
   // Request Vars
   // Handles

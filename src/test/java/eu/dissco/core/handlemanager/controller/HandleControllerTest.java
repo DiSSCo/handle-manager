@@ -3,12 +3,11 @@ package eu.dissco.core.handlemanager.controller;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_MEDIA;
-import static eu.dissco.core.handlemanager.domain.PidRecords.VALID_PID_STATUS;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DOI;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS_BOTANY;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_HANDLE;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MEDIA;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
@@ -46,6 +45,7 @@ import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRe
 import eu.dissco.core.handlemanager.domain.requests.attributes.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
+import eu.dissco.core.handlemanager.domain.requests.attributes.PidStatus;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaValidator;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -88,10 +88,10 @@ class HandleControllerTest {
     // Given
     int pageSize = 10;
     int pageNum = 1;
-    String pidStatus = "TEST";
+    var pidStatus = PidStatus.TEST;
     List<String> expectedHandles = Collections.nCopies(pageSize, HANDLE);
 
-    given(service.getHandlesPaged(pageNum, pageSize, pidStatus)).willReturn(expectedHandles);
+    given(service.getHandlesPaged(pageNum, pageSize, pidStatus.getBytes())).willReturn(expectedHandles);
 
     // When
     ResponseEntity<List<String>> response = controller.getAllHandlesByPidStatus(pageNum, pageSize,
@@ -100,20 +100,6 @@ class HandleControllerTest {
     // Then
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(expectedHandles).isEqualTo(response.getBody());
-  }
-
-  @Test
-  void testGetAllHandlesByPidStatusInvalid() {
-    int pageSize = 10;
-    int pageNum = 1;
-    String pidStatus = "BAD";
-
-    var exception = assertThrowsExactly(InvalidRequestException.class,
-        () -> controller.getAllHandlesByPidStatus(pageNum, pageSize, pidStatus));
-
-    // Then
-    assertThat(exception).hasMessage(
-        "Invalid Input. Pid Status not recognized. Available Pid Statuses: " + VALID_PID_STATUS);
   }
 
   @Test
@@ -220,7 +206,7 @@ class HandleControllerTest {
 
     // When
     var exception = assertThrowsExactly(PidResolutionException.class,
-        () -> controller.getAllHandlesByPidStatus(1, 10, "ALL"));
+        () -> controller.getAllHandlesByPidStatus(1, 10, PidStatus.ALL));
 
     // Then
     assertThat(exception).hasMessage("Unable to resolve pids");

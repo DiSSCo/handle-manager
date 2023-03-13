@@ -13,7 +13,8 @@ public enum PreservedOrLiving {
     this.state = state;
   }
 
-  public String getType() {
+  @Override
+  public String toString() {
     return state;
   }
 

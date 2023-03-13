@@ -1,18 +1,15 @@
 package eu.dissco.core.handlemanager.domain;
 
+import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OR_PHYSICAL;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_URL;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.OBJECT_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PHYSICAL_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PRESERVED_OR_LIVING;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DOI;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_DS_BOTANY;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_HANDLE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RECORD_TYPE_MEDIA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_TEXT;
@@ -20,6 +17,11 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MEDIA_URL_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_ISSUER_PID;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DOI;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS_BOTANY;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_HANDLE;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MEDIA;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.REFERENT_DOI_NAME_PID;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_PID;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
@@ -49,14 +51,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class JsonSchemaValidatorTest {
-
-  @InjectMocks
   JsonSchemaValidator schemaValidator;
-
   private static final String UNRECOGNIZED_MSG = "Unrecognized attributes: ";
   private static final String MISSING_MSG = "Missing attributes: ";
-  private static final String INVALID_TYPE_MSG = "Invalid Request. Reason: Invalid type: ";
-
+  private static final String ENUM_MSG = "Enum errors: ";
   private static final String UNKNOWN_ATTRIBUTE = "badKey";
   private static final String UNKNOWN_VAL = "badVal";
 
@@ -156,7 +154,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testDigitalSpecimenBotanyPatchRequest() {
     // Given
-    var request = givenUpdateRequest(RECORD_TYPE_DS_BOTANY, PRESERVED_OR_LIVING, "LIVING");
+    var request = givenUpdateRequest(RECORD_TYPE_DS_BOTANY, PRESERVED_OR_LIVING, "living");
 
     // Then
     assertDoesNotThrow(() -> {
@@ -205,14 +203,45 @@ class JsonSchemaValidatorTest {
   @Test
   void testBadTypeRequest() {
     // Given
-    var badType = "bad";
-    var request = genCreateRecordRequest(genHandleRecordRequestObject(), badType);
+    var request = genCreateRecordRequest(genHandleRecordRequestObject(), UNKNOWN_ATTRIBUTE);
 
     // Then
     Exception e = assertThrows(InvalidRequestException.class, () -> {
       schemaValidator.validatePostRequest(request);
     });
-    assertThat(e.getMessage()).contains(INVALID_TYPE_MSG).contains(badType);
+    assertThat(e.getMessage()).contains(ENUM_MSG).contains(NODE_TYPE);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {PRESERVED_OR_LIVING, DIGITAL_OR_PHYSICAL})
+  void testBadEnumValueRequest(String targetEnum){
+    // Given
+    ObjectNode request = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(), RECORD_TYPE_DS_BOTANY);
+    ((ObjectNode) request.get("data").get("attributes")).remove(targetEnum);
+    ((ObjectNode) request.get("data").get("attributes")).put(targetEnum, UNKNOWN_VAL);
+
+    // Then
+    Exception e = assertThrows(InvalidRequestException.class, () -> {
+      schemaValidator.validatePostRequest(request);
+    });
+
+    assertThat(e.getMessage()).contains(ENUM_MSG).contains(targetEnum);
+  }
+
+  @Test
+  void testBadEnumPhysicalIdType(){
+    // Given
+    String targetEnum = "physicalIdType";
+    ObjectNode request = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(), RECORD_TYPE_DS_BOTANY);
+    ((ObjectNode) request.get("data").get("attributes").get(PHYSICAL_IDENTIFIER)).remove(targetEnum);
+    ((ObjectNode) request.get("data").get("attributes").get(PHYSICAL_IDENTIFIER)).put(targetEnum, UNKNOWN_VAL);
+
+    // Then
+    Exception e = assertThrows(InvalidRequestException.class, () -> {
+      schemaValidator.validatePostRequest(request);
+    });
+
+    assertThat(e.getMessage()).contains(ENUM_MSG).contains(targetEnum);
   }
 
   @Test
@@ -376,7 +405,7 @@ class JsonSchemaValidatorTest {
     Exception e = assertThrows(InvalidRequestException.class, () -> {
       schemaValidator.validatePatchRequest(request);
     });
-    assertThat(e.getMessage()).contains(INVALID_TYPE_MSG).contains(badType);
+    assertThat(e.getMessage()).contains(ENUM_MSG).contains(NODE_TYPE);
   }
 
   @ParameterizedTest

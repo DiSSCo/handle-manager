@@ -1,16 +1,19 @@
 package eu.dissco.core.handlemanager.domain.requests.attributes;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.nio.charset.StandardCharsets;
 
-public enum PhysicalIdType {
-
-  @JsonProperty("cetaf") CETAF("cetaf"),
-  @JsonProperty("combined") COMBINED("combined");
+public enum PidStatus {
+  ACTIVE("ACTIVE"),
+  ARCHIVED("ARCHIVED"),
+  DRAFT("DRAFT"),
+  RESERVED("RESERVED"),
+  TEST("TEST"),
+  TEST2("TEST2"),
+  ALL("ALL");
 
   private final String state;
 
-  private PhysicalIdType(@JsonProperty("physicalIdType") String state) {
+  private PidStatus(String state) {
     this.state = state;
   }
 
@@ -19,7 +22,9 @@ public enum PhysicalIdType {
     return state;
   }
 
-  public byte[] getBytes() {
+  public byte[] getBytes(){
     return state.getBytes(StandardCharsets.UTF_8);
   }
+
+
 }
