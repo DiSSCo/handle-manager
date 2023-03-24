@@ -224,7 +224,7 @@ public class HandleService {
     return new JsonApiWrapperWrite(dataNode);
   }
 
-  private byte[] setPhysicalId(String physicalIdentifer, PhysicalIdType physicalIdType,
+  private byte[] setPhysicalId(String physicalIdentifier, PhysicalIdType physicalIdType,
       String specimenHostPid)
       throws InvalidRequestException {
     if (physicalIdType.equals(PhysicalIdType.COMBINED)) {
@@ -232,10 +232,10 @@ public class HandleService {
         throw new InvalidRequestException("Missing specimen host ID.");
       }
       var hostIdArr = specimenHostPid.split("/");
-      return (physicalIdentifer + ":" + hostIdArr[hostIdArr.length - 1]).getBytes(
+      return (physicalIdentifier + ":" + hostIdArr[hostIdArr.length - 1]).getBytes(
           StandardCharsets.UTF_8);
     }
-    return physicalIdentifer.getBytes(StandardCharsets.UTF_8);
+    return physicalIdentifier.getBytes(StandardCharsets.UTF_8);
   }
 
   private <T extends DigitalSpecimenRequest> void verifyNoRegisteredSpecimens(List<T> requests)
@@ -344,7 +344,7 @@ public class HandleService {
       String recordType = data.get(NODE_TYPE).asText();
       recordTypes.put(new String(handle, StandardCharsets.UTF_8), recordType);
 
-      JsonNode validatedAttributes = setLocationFromJson(requestAttributes);
+      JsonNode validatedAttributes = setLocationFromJson(requestAttributes, new String(handle, StandardCharsets.UTF_8));
       var attributes = prepareUpdateAttributes(handle, validatedAttributes);
       attributesToUpdate.add(attributes);
     }
@@ -367,7 +367,7 @@ public class HandleService {
     return recordTypes.get(pid);
   }
 
-  private JsonNode setLocationFromJson(JsonNode request)
+  private JsonNode setLocationFromJson(JsonNode request, String handle)
       throws InvalidRequestException, PidServiceInternalError {
     var keys = getKeys(request);
     if (!keys.contains(LOC_REQ)) {
@@ -379,7 +379,7 @@ public class HandleService {
     if (locNode.isArray()) {
       try {
         String[] locArr = mapper.treeToValue(locNode, String[].class);
-        requestObjectNode.put(LOC, new String(setLocations(locArr), StandardCharsets.UTF_8));
+        requestObjectNode.put(LOC, new String(setLocations(locArr, handle), StandardCharsets.UTF_8));
         requestObjectNode.remove(LOC_REQ);
       } catch (IOException e) {
         throw new InvalidRequestException(
@@ -517,7 +517,7 @@ public class HandleService {
             request.getDigitalObjectSubtypePid().getBytes(StandardCharsets.UTF_8)));
 
     // 5: 10320/loc
-    byte[] loc = setLocations(request.getLocations());
+    byte[] loc = setLocations(request.getLocations(), new String(handle, StandardCharsets.UTF_8));
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, loc));
 
     // 6: Issue Date
@@ -653,7 +653,7 @@ public class HandleService {
     return dt.format(Instant.now());
   }
 
-  public byte[] setLocations(String[] objectLocations) throws PidServiceInternalError {
+  public byte[] setLocations(String[] userLocations, String handle) throws PidServiceInternalError {
 
     DocumentBuilder documentBuilder = null;
     try {
@@ -665,12 +665,14 @@ public class HandleService {
     var doc = documentBuilder.newDocument();
     var locations = doc.createElement(LOC_REQ);
     doc.appendChild(locations);
-    for (int i = 0; i < objectLocations.length; i++) {
+    String[] objectLocations = concatLocations(userLocations, handle);
 
+    for (int i = 0; i < objectLocations.length; i++) {
       var locs = doc.createElement("location");
       locs.setAttribute(NODE_ID, String.valueOf(i));
       locs.setAttribute("href", objectLocations[i]);
-      locs.setAttribute("weight", "0");
+      String weight = i < 1 ? "1" : "0";
+      locs.setAttribute("weight", weight);
       locations.appendChild(locs);
     }
     try {
@@ -679,6 +681,23 @@ public class HandleService {
       throw new PidServiceInternalError("An internal error has occurred parsing location data", e);
     }
   }
+
+  private String[] concatLocations(String[] userLocations, String handle){
+    ArrayList<String> objectLocations = new ArrayList<>();
+    objectLocations.addAll(List.of(defaultLocations(handle)));
+    if (userLocations != null){
+      objectLocations.addAll(List.of(userLocations));
+    }
+    return objectLocations.toArray(new String[0]);
+  }
+
+  private String[] defaultLocations(String handle){
+    String api = "https://sandbox.dissco.tech/api/v1/specimens/" + handle;
+    String ui = "https://sandbox.dissco.tech/ds/" + handle;
+    return new String[]{api, ui};
+  }
+
+
 
   private String documentToString(Document document) throws TransformerException {
     var transformer = tf.newTransformer();
