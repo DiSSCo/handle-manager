@@ -448,14 +448,6 @@ public class HandleService {
     for (var requestField : updateRecord.entrySet()) {
       String type = requestField.getKey().replace("Pid", "");
       byte[] data = requestField.getValue().getBytes(StandardCharsets.UTF_8);
-      byte[] pidData;
-
-      // Resolve data if it's a pid
-      if (FIELD_IS_PID_RECORD.contains(type)) {
-        pidData = (pidTypeService.resolveTypePid(
-            new String(data, StandardCharsets.UTF_8))).getBytes(StandardCharsets.UTF_8);
-        data = pidData;
-      }
       attributesToUpdate.add(new HandleAttribute(FIELD_IDX.get(type), handle, type, data));
     }
     return attributesToUpdate;
@@ -511,22 +503,18 @@ public class HandleService {
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(PID), handle, PID, pid));
 
     // 2: PidIssuer
-    String pidIssuer = pidTypeService.resolveTypePid(request.getPidIssuerPid());
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(PID_ISSUER), handle, PID_ISSUER,
-        pidIssuer.getBytes(StandardCharsets.UTF_8)));
+        request.getPidIssuerPid().getBytes(StandardCharsets.UTF_8)));
 
     // 3: Digital Object Type
-    String digitalObjectType = pidTypeService.resolveTypePid(request.getDigitalObjectTypePid());
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(DIGITAL_OBJECT_TYPE), handle, DIGITAL_OBJECT_TYPE,
-            digitalObjectType.getBytes(StandardCharsets.UTF_8)));
+            request.getDigitalObjectTypePid().getBytes(StandardCharsets.UTF_8)));
 
     // 4: Digital Object Subtype
-    String digitalObjectSubtype = pidTypeService.resolveTypePid(
-        request.getDigitalObjectSubtypePid());
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(DIGITAL_OBJECT_SUBTYPE), handle, DIGITAL_OBJECT_SUBTYPE,
-            digitalObjectSubtype.getBytes(StandardCharsets.UTF_8)));
+            request.getDigitalObjectSubtypePid().getBytes(StandardCharsets.UTF_8)));
 
     // 5: 10320/loc
     byte[] loc = setLocations(request.getLocations());
@@ -560,11 +548,9 @@ public class HandleService {
     var handleRecord = prepareHandleRecordAttributes(request, handle);
 
     // 12: Referent DOI Name
-    String referentDoiName = pidTypeService.resolveTypePid(request.getReferentDoiNamePid());
-
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(REFERENT_DOI_NAME), handle, REFERENT_DOI_NAME,
-            referentDoiName.getBytes(StandardCharsets.UTF_8)));
+            request.getReferentDoiNamePid().getBytes(StandardCharsets.UTF_8)));
 
     // 13: Referent -> NOTE: Referent is blank currently until we have a model
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(REFERENT), handle, REFERENT,
@@ -582,10 +568,9 @@ public class HandleService {
         request.getMediaHash().getBytes(StandardCharsets.UTF_8)));
 
     // 15 Subject Specimen Host
-    String specimenHost = pidTypeService.resolveTypePid(request.getSubjectSpecimenHostPid());
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(SUBJECT_SPECIMEN_HOST), handle, SUBJECT_SPECIMEN_HOST,
-            specimenHost.getBytes(StandardCharsets.UTF_8)));
+            request.getSubjectSpecimenHostPid().getBytes(StandardCharsets.UTF_8)));
 
     // 16 Media Url
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(MEDIA_URL), handle, MEDIA_URL,
@@ -608,16 +593,13 @@ public class HandleService {
             request.getDigitalOrPhysical().getBytes()));
 
     // 15: specimenHost
-    String specimenHost = pidTypeService.resolveTypePid(request.getSpecimenHostPid());
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST), handle, SPECIMEN_HOST,
-        specimenHost.getBytes(StandardCharsets.UTF_8)));
+        request.getSpecimenHostPid().getBytes(StandardCharsets.UTF_8)));
 
     // 16: In collectionFacility
-    String inCollectionFacility = pidTypeService.resolveTypePid(
-        request.getInCollectionFacilityPid());
     handleRecord.add(
         new HandleAttribute(FIELD_IDX.get(IN_COLLECTION_FACILITY), handle, IN_COLLECTION_FACILITY,
-            inCollectionFacility.getBytes(StandardCharsets.UTF_8)));
+            request.getInCollectionFacilityPid().getBytes(StandardCharsets.UTF_8)));
 
     // 17 : Institutional Identifier
     // Encoding here is UTF-8
