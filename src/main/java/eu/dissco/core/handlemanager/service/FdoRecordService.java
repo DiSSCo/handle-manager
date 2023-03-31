@@ -207,7 +207,7 @@ public class FdoRecordService {
     return dt.format(Instant.now());
   }
 
-  public byte[] setLocations(String[] userLocations, String handle) throws PidServiceInternalError {
+  protected byte[] setLocations(String[] userLocations, String handle) throws PidServiceInternalError {
 
     DocumentBuilder documentBuilder;
     try {

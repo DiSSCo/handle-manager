@@ -16,10 +16,15 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class PidTypeService {
+public class PidResolutionService {
 
   private final HandleRepository handleRep;
   private final ObjectMapper mapper;
+
+  @Cacheable(value="fdoRecordResolution")
+  public String resolveFdoProfile(String identifier){
+    return null;
+  }
 
   @Cacheable(value = "cache")
   public String resolveTypePid(String typePid)

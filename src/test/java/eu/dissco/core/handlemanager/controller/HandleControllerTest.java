@@ -39,7 +39,11 @@ import static org.mockito.BDDMockito.given;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import eu.dissco.core.handlemanager.component.PidResolverComponent;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiDataLinks;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperReadSingle;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DoiRecordRequest;
@@ -68,9 +72,8 @@ class HandleControllerTest {
 
   @Mock
   private HandleService service;
-
-  @Mock
   JsonSchemaValidator schemaValidator;
+
 
   private HandleController controller;
 
@@ -110,12 +113,38 @@ class HandleControllerTest {
     MockHttpServletRequest r = new MockHttpServletRequest();
     r.setRequestURI(PREFIX + "/" + SUFFIX);
 
-    JsonApiWrapperRead responseExpected = givenRecordResponseRead(List.of(handle), path,
-        RECORD_TYPE_HANDLE);
+    var responseExpected = new JsonApiWrapperReadSingle(new JsonApiLinks(path),
+        new JsonApiDataLinks(HANDLE, RECORD_TYPE_HANDLE, null,
+            new JsonApiLinks("https://hdl.handle.net/"+HANDLE)));
+
     given(service.resolveSingleRecord(handle, path)).willReturn(responseExpected);
 
     // When
     var responseReceived = controller.resolvePid(PREFIX, SUFFIX, r);
+
+    // Then
+    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testResolveSingleHandleExternal() throws Exception {
+    // Given
+    var prefix = "10.20";
+    String handleString = prefix + "/" + SUFFIX;
+    String path = SANDBOX_URI + handleString;
+    byte[] handle = handleString.getBytes(StandardCharsets.UTF_8);
+    MockHttpServletRequest r = new MockHttpServletRequest();
+    r.setRequestURI(prefix + "/" + SUFFIX);
+
+    var responseExpected = new JsonApiWrapperReadSingle(new JsonApiLinks(path),
+        new JsonApiDataLinks(handleString, RECORD_TYPE_HANDLE, null,
+            new JsonApiLinks("https://hdl.handle.net/"+handleString)));
+
+    given(service.resolveSingleRecordExternal(handleString, path)).willReturn(responseExpected);
+
+    // When
+    var responseReceived = controller.resolvePid(prefix, SUFFIX, r);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);

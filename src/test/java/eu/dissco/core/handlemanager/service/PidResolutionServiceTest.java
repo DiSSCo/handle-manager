@@ -28,7 +28,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class PidTypeServiceTest {
+class PidResolutionServiceTest {
   // NOTE: Pid Type Record => PTR in naming convention because these
   // PTR refers to the handle record that stores information about a type
 
@@ -37,7 +37,7 @@ class PidTypeServiceTest {
   private HandleRepository handleRep;
   @Mock
   private Clock clock;
-  private PidTypeService pidTypeService;
+  private PidResolutionService pidResolutionService;
   private String pid;
   private String pidType;
   private String primaryNameFromPid;
@@ -49,7 +49,7 @@ class PidTypeServiceTest {
   @BeforeEach
   void init() {
     mapper = new ObjectMapper();
-    pidTypeService = new PidTypeService(handleRep, mapper);
+    pidResolutionService = new PidResolutionService(handleRep, mapper);
   }
 
   @Test
@@ -60,7 +60,7 @@ class PidTypeServiceTest {
     given(handleRep.resolveHandleAttributes(recordPid)).willReturn(typeRecord);
 
     // When
-    String returned = pidTypeService.resolveTypePid(PID_ISSUER_PID);
+    String returned = pidResolutionService.resolveTypePid(PID_ISSUER_PID);
 
     // Then
     assertThat(returned).isEqualTo(PTR_HANDLE_RECORD);
@@ -74,7 +74,7 @@ class PidTypeServiceTest {
     given(handleRep.resolveHandleAttributes(recordPid)).willReturn(typeRecord);
 
     // When
-    String returned = pidTypeService.resolveTypePid(PID_ISSUER_PID);
+    String returned = pidResolutionService.resolveTypePid(PID_ISSUER_PID);
 
     // Then
     assertThat(expected).isEqualTo(returned);
@@ -88,7 +88,7 @@ class PidTypeServiceTest {
 
     // Then
     assertThrows(PidResolutionException.class, () -> {
-      pidTypeService.resolveTypePid(typePid);
+      pidResolutionService.resolveTypePid(typePid);
     });
   }
 

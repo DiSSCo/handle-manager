@@ -17,9 +17,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import eu.dissco.core.handlemanager.component.PidResolverComponent;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiDataLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperReadSingle;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenBotanyRequest;
@@ -33,6 +35,7 @@ import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
+import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -63,20 +66,28 @@ public class HandleService {
   private final HandleRepository handleRep;
   private final FdoRecordService fdoRecordService;
   private final HandleGeneratorService hf;
-  private final DocumentBuilderFactory dbf;
   private final ObjectMapper mapper;
-  private final TransformerFactory tf;
+  private final PidResolverComponent pidResolver;
 
   private final DateTimeFormatter dt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS",
       Locale.ENGLISH).withZone(ZoneId.of("UTC"));
 
   // Resolve Record
-  public JsonApiWrapperRead resolveSingleRecord(byte[] handle, String path)
+  public JsonApiWrapperReadSingle resolveSingleRecord(byte[] handle, String path)
       throws PidResolutionException {
     var recordAttributeList = resolveAndFormatRecords(List.of(handle)).get(0);
     var dataNode = wrapData(recordAttributeList, "PID");
-    JsonApiLinks links = new JsonApiLinks(path);
-    return new JsonApiWrapperRead(links, List.of(dataNode));
+    var linksNode = new JsonApiLinks(path);
+    return new JsonApiWrapperReadSingle(linksNode, dataNode);
+  }
+
+  public JsonApiWrapperReadSingle resolveSingleRecordExternal(String pid, String path)
+      throws UnprocessableEntityException, PidResolutionException {
+    var pidRecord = pidResolver.resolveExternalPid(pid);
+    var dataNode = new JsonApiDataLinks(pid, "PID Record", pidRecord, new JsonApiLinks("https://hdl.handle.net/" + pid));
+    var linksNode = new JsonApiLinks(path);
+
+    return new JsonApiWrapperReadSingle(linksNode, dataNode);
   }
 
   public JsonApiWrapperRead resolveBatchRecord(List<byte[]> handles, String path)

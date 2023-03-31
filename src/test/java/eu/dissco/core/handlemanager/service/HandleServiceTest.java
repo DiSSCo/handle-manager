@@ -42,6 +42,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mockStatic;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import eu.dissco.core.handlemanager.component.PidResolverComponent;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
@@ -77,6 +78,8 @@ class HandleServiceTest {
   private FdoRecordService fdoRecordService;
   @Mock
   private HandleGeneratorService hgService;
+  @Mock
+  PidResolverComponent pidResolver;
   private HandleService service;
   private List<byte[]> handles;
   private MockedStatic<Instant> mockedStatic;
@@ -86,8 +89,7 @@ class HandleServiceTest {
     DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
     TransformerFactory transformerFactory = TransformerFactory.newInstance();
 
-    service = new HandleService(handleRep, fdoRecordService, hgService,
-        documentBuilderFactory, MAPPER, transformerFactory);
+    service = new HandleService(handleRep, fdoRecordService, hgService, MAPPER, pidResolver);
     initTime();
     initHandleList();
   }
