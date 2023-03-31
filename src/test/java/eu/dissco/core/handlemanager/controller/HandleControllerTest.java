@@ -25,6 +25,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecor
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseRead;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseReadSingle;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWrite;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteArchive;
@@ -39,10 +40,8 @@ import static org.mockito.BDDMockito.given;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import eu.dissco.core.handlemanager.component.PidResolverComponent;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiDataLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
-import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperReadSingle;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
@@ -72,12 +71,13 @@ class HandleControllerTest {
 
   @Mock
   private HandleService service;
+  @Mock
   JsonSchemaValidator schemaValidator;
 
 
   private HandleController controller;
 
-  private final String SANDBOX_URI = "https://sandbox.dissco.tech/";
+  private final String SANDBOX_URI = "https://sandbox.dissco.tech";
 
   public ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
 
@@ -113,9 +113,7 @@ class HandleControllerTest {
     MockHttpServletRequest r = new MockHttpServletRequest();
     r.setRequestURI(PREFIX + "/" + SUFFIX);
 
-    var responseExpected = new JsonApiWrapperReadSingle(new JsonApiLinks(path),
-        new JsonApiDataLinks(HANDLE, RECORD_TYPE_HANDLE, null,
-            new JsonApiLinks("https://hdl.handle.net/"+HANDLE)));
+    var responseExpected = givenRecordResponseReadSingle(HANDLE, path, RECORD_TYPE_HANDLE, null);
 
     given(service.resolveSingleRecord(handle, path)).willReturn(responseExpected);
 

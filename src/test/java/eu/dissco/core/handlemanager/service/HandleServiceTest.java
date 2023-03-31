@@ -1,9 +1,11 @@
 package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.EXTERNAL_PID;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_LIST_STR;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.LOC_ALT_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PHYSICAL_IDENTIFIER_LOCAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_STATUS_TESTVAL;
@@ -25,23 +27,29 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAt
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaObjectAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genObjectNodeAttributeRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordFullAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequestBatch;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestBatch;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseRead;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseReadSingle;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWrite;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteArchive;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteGeneric;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSearchByPhysIdRequest;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.setLocations;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mockStatic;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import eu.dissco.core.handlemanager.component.FdoRecordBuilder;
 import eu.dissco.core.handlemanager.component.PidResolverComponent;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
@@ -58,7 +66,6 @@ import java.util.Arrays;
 import java.util.List;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.TransformerFactory;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -67,7 +74,6 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-@Slf4j
 @ExtendWith(MockitoExtension.class)
 class HandleServiceTest {
 
@@ -75,7 +81,7 @@ class HandleServiceTest {
   @Mock
   private HandleRepository handleRep;
   @Mock
-  private FdoRecordService fdoRecordService;
+  private FdoRecordBuilder fdoRecordBuilder;
   @Mock
   private HandleGeneratorService hgService;
   @Mock
@@ -89,7 +95,7 @@ class HandleServiceTest {
     DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
     TransformerFactory transformerFactory = TransformerFactory.newInstance();
 
-    service = new HandleService(handleRep, fdoRecordService, hgService, MAPPER, pidResolver);
+    service = new HandleService(handleRep, fdoRecordBuilder, hgService, MAPPER, pidResolver);
     initTime();
     initHandleList();
   }
@@ -106,7 +112,8 @@ class HandleServiceTest {
     String path = SANDBOX_URI + HANDLE;
     List<HandleAttribute> recordAttributeList = genHandleRecordAttributes(handle);
 
-    var responseExpected = givenRecordResponseRead(List.of(handle), path, "PID");
+    var responseExpected = givenRecordResponseReadSingle(HANDLE, path, "PID",
+        genObjectNodeAttributeRecord(recordAttributeList));
 
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(recordAttributeList);
 
@@ -118,7 +125,7 @@ class HandleServiceTest {
   }
 
   @Test
-  void testResolveSingleRecordNotFound() throws Exception {
+  void testResolveSingleRecordNotFound() {
 
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     String path = SANDBOX_URI + HANDLE;
@@ -130,7 +137,26 @@ class HandleServiceTest {
     });
     // Then
     assertThat(exception.getMessage()).contains(HANDLE);
+  }
 
+  @Test
+  void testResolveSingleRecordExternal() throws Exception {
+    String pid = EXTERNAL_PID;
+    String path = SANDBOX_URI + pid;
+    List<HandleAttribute> recordAttributeList = genHandleRecordAttributes(pid.getBytes(StandardCharsets.UTF_8));
+    var jsonNode = genObjectNodeAttributeRecord(recordAttributeList);
+
+    var responseExpected = givenRecordResponseReadSingle(pid, path, "PID Record",
+        genObjectNodeAttributeRecord(recordAttributeList));
+
+
+    given(pidResolver.resolveExternalPid(pid)).willReturn(jsonNode);
+
+    // When
+    var responseReceived = service.resolveSingleRecordExternal(pid, path);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
   @Test
@@ -476,6 +502,7 @@ class HandleServiceTest {
 
     given(handleRep.checkHandlesWritable(anyList())).willReturn(List.of(handle));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(updatedAttributeRecord);
+    given(fdoRecordBuilder.setLocations(LOC_ALT_TESTVAL, HANDLE)).willReturn(setLocations(LOC_ALT_TESTVAL, HANDLE));
 
     // When
     var responseReceived = service.updateRecords(updateRequest);
@@ -499,6 +526,7 @@ class HandleServiceTest {
 
     given(handleRep.checkHandlesWritable(anyList())).willReturn(handles);
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(updatedAttributeRecord);
+    given(fdoRecordBuilder.setLocations(eq(LOC_ALT_TESTVAL), anyString())).willReturn(setLocations(LOC_ALT_TESTVAL, HANDLE));
 
     // When
     var responseReceived = service.updateRecords(updateRequest);
@@ -516,6 +544,7 @@ class HandleServiceTest {
     handles.add(HANDLE.getBytes());
 
     List<JsonNode> updateRequest = genUpdateRequestBatch(handles);
+    given(fdoRecordBuilder.setLocations(eq(LOC_ALT_TESTVAL), anyString())).willReturn(setLocations(LOC_ALT_TESTVAL, HANDLE));
 
     // Then
     assertThrows(InvalidRequestException.class, () -> {
@@ -523,14 +552,14 @@ class HandleServiceTest {
     });
   }
 
-
   @Test
-  void testUpdateRecordNonWritable() {
+  void testUpdateRecordNonWritable() throws Exception {
     // Given
 
     List<JsonNode> updateRequest = genUpdateRequestBatch(handles);
     given(handleRep.checkHandlesWritable(anyList())).willReturn(new ArrayList<>());
-
+    given(fdoRecordBuilder.setLocations(LOC_ALT_TESTVAL, HANDLE)).willReturn(setLocations(LOC_ALT_TESTVAL, HANDLE));
+    given(fdoRecordBuilder.setLocations(LOC_ALT_TESTVAL, HANDLE_ALT)).willReturn(setLocations(LOC_ALT_TESTVAL, HANDLE_ALT));
     // Then
     assertThrows(PidResolutionException.class, () -> {
       service.updateRecords(updateRequest);

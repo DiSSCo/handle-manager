@@ -1,4 +1,4 @@
-package eu.dissco.core.handlemanager.service;
+package eu.dissco.core.handlemanager.component;
 
 import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_SUBTYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_TYPE;
@@ -52,12 +52,12 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 
-@Service
 @RequiredArgsConstructor
-public class FdoRecordService {
+@Component
+public class FdoRecordBuilder {
 
   private final TransformerFactory tf;
   private final DocumentBuilderFactory dbf;
@@ -65,7 +65,7 @@ public class FdoRecordService {
   private final DateTimeFormatter dt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS",
       Locale.ENGLISH).withZone(ZoneId.of("UTC"));
 
-  protected List<HandleAttribute> prepareHandleRecordAttributes(HandleRecordRequest request,
+  public List<HandleAttribute> prepareHandleRecordAttributes(HandleRecordRequest request,
       byte[] handle) throws PidServiceInternalError {
     List<HandleAttribute> fdoRecord = new ArrayList<>();
 
@@ -119,7 +119,7 @@ public class FdoRecordService {
     return fdoRecord;
   }
 
-  protected List<HandleAttribute> prepareDoiRecordAttributes(DoiRecordRequest request, byte[] handle)
+  public List<HandleAttribute> prepareDoiRecordAttributes(DoiRecordRequest request, byte[] handle)
       throws PidServiceInternalError {
     var fdoRecord = prepareHandleRecordAttributes(request, handle);
 
@@ -134,7 +134,7 @@ public class FdoRecordService {
     return fdoRecord;
   }
 
-  protected List<HandleAttribute> prepareMediaObjectAttributes(MediaObjectRequest request,
+  public List<HandleAttribute> prepareMediaObjectAttributes(MediaObjectRequest request,
       byte[] handle)
       throws PidServiceInternalError {
     var fdoRecord = prepareDoiRecordAttributes(request, handle);
@@ -159,7 +159,7 @@ public class FdoRecordService {
     return fdoRecord;
   }
 
-  protected List<HandleAttribute> prepareDigitalSpecimenRecordAttributes(
+  public List<HandleAttribute> prepareDigitalSpecimenRecordAttributes(
       DigitalSpecimenRequest request, byte[] handle)
       throws PidServiceInternalError {
     var fdoRecord = prepareDoiRecordAttributes(request, handle);
@@ -186,7 +186,7 @@ public class FdoRecordService {
     return fdoRecord;
   }
 
-  protected List<HandleAttribute> prepareDigitalSpecimenBotanyRecordAttributes(
+  public List<HandleAttribute> prepareDigitalSpecimenBotanyRecordAttributes(
       DigitalSpecimenBotanyRequest request, byte[] handle)
       throws PidServiceInternalError {
     List<HandleAttribute> fdoRecord = prepareDigitalSpecimenRecordAttributes(request, handle);
@@ -207,7 +207,7 @@ public class FdoRecordService {
     return dt.format(Instant.now());
   }
 
-  protected byte[] setLocations(String[] userLocations, String handle) throws PidServiceInternalError {
+  public byte[] setLocations(String[] userLocations, String handle) throws PidServiceInternalError {
 
     DocumentBuilder documentBuilder;
     try {

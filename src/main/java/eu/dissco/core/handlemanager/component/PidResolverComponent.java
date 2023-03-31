@@ -1,17 +1,11 @@
 package eu.dissco.core.handlemanager.component;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.annotation.JsonNaming;
-import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperReadSingle;
-import eu.dissco.core.handlemanager.domain.requests.PutRequest;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
-import java.net.URI;
-import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.HttpHeaders;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -29,10 +23,10 @@ public class PidResolverComponent {
       throws UnprocessableEntityException, PidResolutionException {
     String url = "https://hdl.handle.net/" + pid;
     log.info("querying the following: {}", url);
-    var uriSpec = webClient.get().uri(url).retrieve()
+    var responseSpec = webClient.get().uri(url).retrieve()
         .onStatus(HttpStatus.NOT_FOUND::equals,
             r -> r.bodyToMono(String.class).map(PidResolutionException::new));
-    var response = uriSpec.bodyToMono(JsonNode.class);
+    var response = responseSpec.bodyToMono(JsonNode.class);
     JsonNode responseVal;
 
     try {
@@ -41,9 +35,9 @@ public class PidResolverComponent {
       log.warn("Interrupted connection. Unable to resolve the following: {}", pid);
       Thread.currentThread().interrupt();
       return null;
-    } catch (ExecutionException e){
-      if (e.getCause().getClass().equals(PidResolutionException.class)){
-        throw new PidResolutionException("Given PID not found: "+ pid);
+    } catch (ExecutionException e) {
+      if (e.getCause().getClass().equals(PidResolutionException.class)) {
+        throw new PidResolutionException("Given PID not found: " + pid);
       }
       throw new UnprocessableEntityException("Unable to parse identifier " + pid + " to JSON.");
     }

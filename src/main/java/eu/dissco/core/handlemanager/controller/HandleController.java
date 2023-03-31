@@ -46,7 +46,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class HandleController {
 
-  private static final String SANDBOX_URI = "https://sandbox.dissco.tech/";
+  private static final String SANDBOX_URI = "https://sandbox.dissco.tech";
   private final HandleService service;
   private final JsonSchemaValidator schemaValidator;
 

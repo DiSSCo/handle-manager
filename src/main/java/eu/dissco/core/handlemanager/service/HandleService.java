@@ -17,6 +17,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import eu.dissco.core.handlemanager.component.FdoRecordBuilder;
 import eu.dissco.core.handlemanager.component.PidResolverComponent;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiDataLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
@@ -51,10 +52,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.TransformerFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -64,7 +64,8 @@ public class HandleService {
 
   private static final String INVALID_TYPE_ERROR = "Invalid request. Reason: unrecognized type. Check: ";
   private final HandleRepository handleRep;
-  private final FdoRecordService fdoRecordService;
+  @Autowired
+  private final FdoRecordBuilder fdoRecordBuilder;
   private final HandleGeneratorService hf;
   private final ObjectMapper mapper;
   private final PidResolverComponent pidResolver;
@@ -265,19 +266,19 @@ public class HandleService {
             HandleRecordRequest requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 HandleRecordRequest.class);
             handleAttributes.addAll(
-                fdoRecordService.prepareHandleRecordAttributes(requestObject, handles.remove(0)));
+                fdoRecordBuilder.prepareHandleRecordAttributes(requestObject, handles.remove(0)));
           }
           case DOI -> {
             DoiRecordRequest requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 DoiRecordRequest.class);
             handleAttributes.addAll(
-                fdoRecordService.prepareDoiRecordAttributes(requestObject, handles.remove(0)));
+                fdoRecordBuilder.prepareDoiRecordAttributes(requestObject, handles.remove(0)));
           }
           case DIGITAL_SPECIMEN -> {
             DigitalSpecimenRequest requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 DigitalSpecimenRequest.class);
             handleAttributes.addAll(
-                fdoRecordService.prepareDigitalSpecimenRecordAttributes(requestObject,
+                fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(requestObject,
                     handles.remove(0)));
             digitalSpecimenList.add((T) requestObject);
           }
@@ -285,7 +286,7 @@ public class HandleService {
             DigitalSpecimenBotanyRequest requestObject = mapper.treeToValue(
                 dataNode.get(NODE_ATTRIBUTES), DigitalSpecimenBotanyRequest.class);
             handleAttributes.addAll(
-                fdoRecordService.prepareDigitalSpecimenBotanyRecordAttributes(requestObject,
+                fdoRecordBuilder.prepareDigitalSpecimenBotanyRecordAttributes(requestObject,
                     handles.remove(0)));
             digitalSpecimenList.add((T) requestObject);
           }
@@ -293,7 +294,7 @@ public class HandleService {
             MediaObjectRequest requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 MediaObjectRequest.class);
             handleAttributes.addAll(
-                fdoRecordService.prepareMediaObjectAttributes(requestObject, handles.remove(0)));
+                fdoRecordBuilder.prepareMediaObjectAttributes(requestObject, handles.remove(0)));
           }
           default -> throw new InvalidRequestException(INVALID_TYPE_ERROR + type);
         }
@@ -368,8 +369,8 @@ public class HandleService {
     if (locNode.isArray()) {
       try {
         String[] locArr = mapper.treeToValue(locNode, String[].class);
-        requestObjectNode.put(LOC,
-            new String(fdoRecordService.setLocations(locArr, handle), StandardCharsets.UTF_8));
+        var setLocs = fdoRecordBuilder.setLocations(locArr, handle);
+        requestObjectNode.put(LOC, new String(setLocs, StandardCharsets.UTF_8));
         requestObjectNode.remove(LOC_REQ);
       } catch (IOException e) {
         throw new InvalidRequestException(
