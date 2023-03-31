@@ -58,6 +58,21 @@ class PidResolverComponentTest {
     assertThat(response).isEqualTo(expected);
   }
 
+  @Test
+  void testResolveExternalPidNotFound() throws Exception {
+    // Given
+    givenWebclient();
+    var expected = MAPPER.readTree(loadResourceFile("pidrecord/pidRecord.json"));
+    given(responseSpec.onStatus(any(), any())).willReturn(responseSpec);
+    given(jsonFuture.get()).willReturn(expected);
+
+    // When
+    var response = pidResolver.resolveExternalPid(EXTERNAL_PID);
+
+    // Then
+    assertThat(response).isEqualTo(expected);
+  }
+
   private void givenWebclient() {
     given(client.get()).willReturn(uriSpec);
     given(uriSpec.uri(anyString())).willReturn(headerSpec);
