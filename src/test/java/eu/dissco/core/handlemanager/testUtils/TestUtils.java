@@ -183,7 +183,7 @@ public class TestUtils {
     // 5: 10320/loc
     byte[] loc = "".getBytes(StandardCharsets.UTF_8);
     try {
-      loc = setLocations(LOC_TESTVAL);
+      loc = setLocations(LOC_TESTVAL, new String(handle, StandardCharsets.UTF_8));
     } catch (TransformerException | ParserConfigurationException e) {
       e.printStackTrace();
     }
@@ -215,10 +215,10 @@ public class TestUtils {
       throws ParserConfigurationException, TransformerException {
     List<HandleAttribute> attributes = genHandleRecordAttributes(handle);
 
-    byte[] locOriginal = setLocations(LOC_TESTVAL);
+    byte[] locOriginal = setLocations(LOC_TESTVAL, new String(handle, StandardCharsets.UTF_8));
     var locOriginalAttr = new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, locOriginal);
 
-    byte[] locAlt = setLocations(LOC_ALT_TESTVAL);
+    byte[] locAlt = setLocations(LOC_ALT_TESTVAL, new String(handle, StandardCharsets.UTF_8));
     var locAltAttr = new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, locAlt);
 
     attributes.set(attributes.indexOf(locOriginalAttr), locAltAttr);
@@ -238,7 +238,7 @@ public class TestUtils {
 
   public static List<HandleAttribute> genUpdateRecordAttributesAltLoc(byte[] handle)
       throws ParserConfigurationException, TransformerException {
-    byte[] locAlt = setLocations(LOC_ALT_TESTVAL);
+    byte[] locAlt = setLocations(LOC_ALT_TESTVAL, new String(handle, StandardCharsets.UTF_8));
     return List.of(new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, locAlt));
   }
 
@@ -634,7 +634,7 @@ public class TestUtils {
 
   // Other Functions
 
-  public static byte[] setLocations(String[] objectLocations)
+  public static byte[] setLocations(String[] userLocations, String handle)
       throws TransformerException, ParserConfigurationException {
     DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
     dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
@@ -644,16 +644,32 @@ public class TestUtils {
     var doc = documentBuilder.newDocument();
     var locations = doc.createElement("locations");
     doc.appendChild(locations);
-    for (int i = 0; i < objectLocations.length; i++) {
+    String[] objectLocations = concatLocations(userLocations, handle);
 
+    for (int i = 0; i < objectLocations.length; i++) {
       var locs = doc.createElement("location");
       locs.setAttribute("id", String.valueOf(i));
       locs.setAttribute("href", objectLocations[i]);
-      locs.setAttribute("weight", "0");
+      String weight = i < 1 ? "1" : "0";
+      locs.setAttribute("weight", weight);
       locations.appendChild(locs);
     }
     return documentToString(doc).getBytes(StandardCharsets.UTF_8);
   }
+
+  private static String[] concatLocations(String[] userLocations, String handle){
+    ArrayList<String> objectLocations = new ArrayList<>();
+    objectLocations.addAll(List.of(defaultLocations(handle)));
+    objectLocations.addAll(List.of(userLocations));
+    return objectLocations.toArray(new String[0]);
+  }
+
+  private static String[] defaultLocations(String handle){
+    String api = "https://sandbox.dissco.tech/api/v1/specimens/" + handle;
+    String ui = "https://sandbox.dissco.tech/ds/" + handle;
+    return new String[]{api, ui};
+  }
+
 
   private static String documentToString(Document document) throws TransformerException {
     TransformerFactory tf = TransformerFactory.newInstance();
