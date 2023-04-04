@@ -223,20 +223,6 @@ public class FdoRecordBuilder {
       throws PidServiceInternalError, UnprocessableEntityException, PidResolutionException {
     var fdoRecord = prepareDoiRecordAttributes(request, handle);
 
-    fdoRecord.add(
-        new HandleAttribute(FIELD_IDX.get(MATERIAL_OR_DIGITAL_ENTITY), handle,
-            MATERIAL_OR_DIGITAL_ENTITY,
-            request.getDigitalOrPhysical().getBytes()));
-
-    // 15: specimenHost
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST), handle, SPECIMEN_HOST,
-        request.getSpecimenHostPid().getBytes(StandardCharsets.UTF_8)));
-
-    // 16: In collectionFacility
-    fdoRecord.add(
-        new HandleAttribute(FIELD_IDX.get(IN_COLLECTION_FACILITY), handle, IN_COLLECTION_FACILITY,
-            request.getInCollectionFacilityPid().getBytes(StandardCharsets.UTF_8)));
-
     // 17 : Institutional Identifier
     // Encoding here is UTF-8
     fdoRecord.add(

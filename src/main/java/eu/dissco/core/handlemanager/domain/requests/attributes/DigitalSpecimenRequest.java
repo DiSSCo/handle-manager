@@ -14,6 +14,8 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
   private final String specimenHost;
 
   private final String specimenHostName;
+
+  @JsonProperty(required = true)
   private final String primarySpecimenObjectId;
   private final String primarySpecimenObjectIdType;
   private final String primarySpecimenObjectIdName;
