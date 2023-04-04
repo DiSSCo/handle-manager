@@ -6,6 +6,7 @@ import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
+import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.responses.ExceptionResponse;
 import java.io.IOException;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,11 +14,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DOI;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS_BOTANY;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_HANDLE;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MEDIA;
 
 @ExtendWith(MockitoExtension.class)
 class HandleControllerExceptionHandlerTest {
@@ -103,4 +99,19 @@ class HandleControllerExceptionHandlerTest {
     assertThat(result.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
     assertThat(result.getBody()).isEqualTo(expectedBody);
   }
+
+  @Test
+  void testUnprocessableEntityException() {
+    // Given
+    var expectedBody = new ExceptionResponse(HttpStatus.UNPROCESSABLE_ENTITY.toString(),
+        "Unprocessable Entity Exception", errorMessage);
+
+    // When
+    var result = exceptionHandler.unprocessableEntityException(new UnprocessableEntityException(errorMessage));
+
+    // Then
+    assertThat(result.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+    assertThat(result.getBody()).isEqualTo(expectedBody);
+  }
+
 }

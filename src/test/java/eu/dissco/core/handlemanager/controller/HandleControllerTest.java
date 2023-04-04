@@ -3,16 +3,16 @@ package eu.dissco.core.handlemanager.controller;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DOI;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS_BOTANY;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_HANDLE;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MEDIA;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PHYSICAL_IDENTIFIER_LOCAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PREFIX;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DOI;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS_BOTANY;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_HANDLE;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MEDIA;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_PID;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SUFFIX;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
@@ -25,6 +25,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecor
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseRead;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseReadSingle;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWrite;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteArchive;
@@ -39,7 +40,9 @@ import static org.mockito.BDDMockito.given;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiDataLinks;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperReadSingle;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DoiRecordRequest;
@@ -68,13 +71,13 @@ class HandleControllerTest {
 
   @Mock
   private HandleService service;
-
   @Mock
   JsonSchemaValidator schemaValidator;
 
+
   private HandleController controller;
 
-  private final String SANDBOX_URI = "https://sandbox.dissco.tech/";
+  private final String SANDBOX_URI = "https://sandbox.dissco.tech";
 
   public ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
 
@@ -110,12 +113,36 @@ class HandleControllerTest {
     MockHttpServletRequest r = new MockHttpServletRequest();
     r.setRequestURI(PREFIX + "/" + SUFFIX);
 
-    JsonApiWrapperRead responseExpected = givenRecordResponseRead(List.of(handle), path,
-        RECORD_TYPE_HANDLE);
+    var responseExpected = givenRecordResponseReadSingle(HANDLE, path, RECORD_TYPE_HANDLE, null);
+
     given(service.resolveSingleRecord(handle, path)).willReturn(responseExpected);
 
     // When
     var responseReceived = controller.resolvePid(PREFIX, SUFFIX, r);
+
+    // Then
+    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testResolveSingleHandleExternal() throws Exception {
+    // Given
+    var prefix = "10.20";
+    String handleString = prefix + "/" + SUFFIX;
+    String path = SANDBOX_URI + handleString;
+    byte[] handle = handleString.getBytes(StandardCharsets.UTF_8);
+    MockHttpServletRequest r = new MockHttpServletRequest();
+    r.setRequestURI(prefix + "/" + SUFFIX);
+
+    var responseExpected = new JsonApiWrapperReadSingle(new JsonApiLinks(path),
+        new JsonApiDataLinks(handleString, RECORD_TYPE_HANDLE, null,
+            new JsonApiLinks("https://hdl.handle.net/"+handleString)));
+
+    given(service.resolveSingleRecordExternal(handleString, path)).willReturn(responseExpected);
+
+    // When
+    var responseReceived = controller.resolvePid(prefix, SUFFIX, r);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);

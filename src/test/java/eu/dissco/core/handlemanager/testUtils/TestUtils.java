@@ -36,6 +36,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiDataLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperReadSingle;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalOrPhysical;
@@ -48,6 +49,7 @@ import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdentifier;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PreservedOrLiving;
 import eu.dissco.core.handlemanager.domain.requests.attributes.TombstoneRecordRequest;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -63,6 +65,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ClassPathResource;
 import org.w3c.dom.Document;
 
 @Slf4j
@@ -116,6 +119,7 @@ public class TestUtils {
       PHYSICAL_IDENTIFIER_LOCAL,
       PhysicalIdType.CETAF
   );
+  public final static String EXTERNAL_PID = "21.T11148/d8de0819e144e4096645";
 
   // Tombstone Record vals
   public final static String TOMBSTONE_TEXT_TESTVAL = "pid was deleted";
@@ -129,6 +133,9 @@ public class TestUtils {
   static {
     HANDLE_LIST_STR = List.of(HANDLE, HANDLE_ALT);
   }
+
+  public static TransformerFactory TRANSFORMER_FACTORY = TransformerFactory.newInstance();
+  public static DocumentBuilderFactory DOC_BUILDER_FACTORY = DocumentBuilderFactory.newInstance();
 
   private TestUtils() {
     throw new IllegalStateException("Utility class");
@@ -444,6 +451,12 @@ public class TestUtils {
     return new JsonApiWrapperRead(responseLink, dataNodes);
   }
 
+  public static JsonApiWrapperReadSingle givenRecordResponseReadSingle(String handle, String path, String type, JsonNode attributes){
+    return new JsonApiWrapperReadSingle(
+        new JsonApiLinks(path),
+        new JsonApiDataLinks(handle, type, attributes, new JsonApiLinks("https://hdl.handle.net/"+handle)));
+  }
+
   public static JsonApiWrapperWrite givenRecordResponseWrite(List<byte[]> handles,
       String recordType)
       throws JsonProcessingException {
@@ -531,7 +544,7 @@ public class TestUtils {
     return new JsonApiWrapperWrite(dataNodes);
   }
 
-  private static List<HandleAttribute> genAttributes(String recordType, byte[] handle)
+  public static List<HandleAttribute> genAttributes(String recordType, byte[] handle)
       throws JsonProcessingException {
     switch (recordType) {
       case RECORD_TYPE_HANDLE, "PID" -> {
@@ -636,10 +649,9 @@ public class TestUtils {
 
   public static byte[] setLocations(String[] userLocations, String handle)
       throws TransformerException, ParserConfigurationException {
-    DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-    dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+    DOC_BUILDER_FACTORY.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
 
-    DocumentBuilder documentBuilder = dbf.newDocumentBuilder();
+    DocumentBuilder documentBuilder = DOC_BUILDER_FACTORY.newDocumentBuilder();
 
     var doc = documentBuilder.newDocument();
     var locations = doc.createElement("locations");
@@ -670,18 +682,21 @@ public class TestUtils {
     return new String[]{api, ui};
   }
 
-
   private static String documentToString(Document document) throws TransformerException {
-    TransformerFactory tf = TransformerFactory.newInstance();
-    tf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-    tf.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-    tf.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
+    TRANSFORMER_FACTORY.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+    TRANSFORMER_FACTORY.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+    TRANSFORMER_FACTORY.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
 
-    var transformer = tf.newTransformer();
+    var transformer = TRANSFORMER_FACTORY.newTransformer();
     transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
     StringWriter writer = new StringWriter();
     transformer.transform(new DOMSource(document), new StreamResult(writer));
     return writer.getBuffer().toString();
+  }
+
+  public static String loadResourceFile(String fileName) throws IOException {
+    return new String(new ClassPathResource(fileName).getInputStream()
+        .readAllBytes(), StandardCharsets.UTF_8);
   }
 
 }

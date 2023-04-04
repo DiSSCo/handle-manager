@@ -6,6 +6,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperReadSingle;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PidStatus;
@@ -14,6 +15,7 @@ import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
+import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.service.HandleService;
 import io.swagger.v3.oas.annotations.Operation;
 import java.nio.charset.StandardCharsets;
@@ -23,7 +25,6 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -45,9 +46,8 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class HandleController {
 
-  private static final String SANDBOX_URI = "https://sandbox.dissco.tech/";
+  private static final String SANDBOX_URI = "https://sandbox.dissco.tech";
   private final HandleService service;
-  @Autowired
   private final JsonSchemaValidator schemaValidator;
 
   // Hellos and getters
@@ -79,12 +79,28 @@ public class HandleController {
 
   @Operation(summary = "Resolve single PID record")
   @GetMapping("/{prefix}/{suffix}")
-  public ResponseEntity<JsonApiWrapperRead> resolvePid(@PathVariable("prefix") String prefix,
-      @PathVariable("suffix") String suffix, HttpServletRequest r) throws PidResolutionException {
-    String path = SANDBOX_URI + r.getRequestURI();
-    byte[] handle = (prefix + "/" + suffix).getBytes(StandardCharsets.UTF_8);
+  public ResponseEntity<JsonApiWrapperReadSingle> resolvePid(@PathVariable("prefix") String prefix,
+      @PathVariable("suffix") String suffix, HttpServletRequest r)
+      throws PidResolutionException, UnprocessableEntityException {
 
-    var node = service.resolveSingleRecord(handle, path);
+    String path = SANDBOX_URI + r.getRequestURI();
+    String handle = prefix + "/" + suffix;
+
+    if (prefix.equals("20.5000.1025")){
+      return resolveInternalPid(handle, path);
+    }
+    return resolveExternalPid(handle, path);
+  }
+
+  private ResponseEntity<JsonApiWrapperReadSingle> resolveInternalPid(String handle, String path)
+      throws PidResolutionException {
+    var node = service.resolveSingleRecord(handle.getBytes(StandardCharsets.UTF_8), path);
+    return ResponseEntity.status(HttpStatus.OK).body(node);
+  }
+
+  private ResponseEntity<JsonApiWrapperReadSingle> resolveExternalPid(String handle, String path)
+      throws UnprocessableEntityException, PidResolutionException {
+    var node = service.resolveSingleRecordExternal(handle, path);
     return ResponseEntity.status(HttpStatus.OK).body(node);
   }
 
@@ -99,7 +115,6 @@ public class HandleController {
     if (handles.size() > maxHandles){
       throw new InvalidRequestException("Attempting to resolve more than maximum permitted PIDs in a single request. Maximum handles: " + maxHandles);
     }
-
     List<byte[]> handleBytes = new ArrayList<>();
     handles.forEach(h -> handleBytes.add(h.getBytes(StandardCharsets.UTF_8)));
 
