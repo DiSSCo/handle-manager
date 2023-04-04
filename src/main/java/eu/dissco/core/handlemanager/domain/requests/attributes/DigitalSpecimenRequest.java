@@ -12,12 +12,10 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
 
   @JsonProperty(required = true)
   private final String specimenHost;
-
-  private final String specimenHostName;
-
   @JsonProperty(required = true)
   private final String primarySpecimenObjectId;
-  private final String primarySpecimenObjectIdType;
+
+  private final PhysicalIdType primarySpecimenObjectIdType;
   private final String primarySpecimenObjectIdName;
   private final String primarySpecimenObjectIdAbsenceReason;
   private final String[] otherSpecimenIds;
@@ -30,6 +28,7 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
   private final String informationArtefactType;
   private final String materialSampleType;
   private final String materialOrDigitalEntity;
+  private final String markedAsType;
   private final String wasDerivedFrom;
 
 
@@ -46,9 +45,8 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
       String primaryReferentType,
       // DigitalSpecimen
       String specimenHost,
-      String specimenHostName,
       String primarySpecimenObjectId,
-      String primarySpecimenObjectIdType,
+      PhysicalIdType primarySpecimenObjectIdType,
       String primarySpecimenObjectIdName,
       String primarySpecimenObjectIdAbsenceReason,
       String[] otherSpecimenIds,
@@ -61,13 +59,13 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
       String informationArtefactType,
       String materialSampleType,
       String materialOrDigitalEntity,
+      String markedAsType,
       String wasDerivedFrom
   ) {
     super(fdoProfile, issuedForAgent, digitalObjectTypePid, pidIssuer, structuralType, locations, referentName, primaryReferentType);
     this.specimenHost = specimenHost;
-    this.specimenHostName=specimenHostName;
     this.primarySpecimenObjectId = primarySpecimenObjectId;
-    this.primarySpecimenObjectIdType = primarySpecimenObjectIdType;
+    this.primarySpecimenObjectIdType = primarySpecimenObjectIdType == null ? PhysicalIdType.COMBINED : primarySpecimenObjectIdType;
     this.primarySpecimenObjectIdName = primarySpecimenObjectIdName;
     this.primarySpecimenObjectIdAbsenceReason = primarySpecimenObjectIdAbsenceReason;
     this.otherSpecimenIds = otherSpecimenIds;
@@ -80,6 +78,7 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
     this.informationArtefactType = informationArtefactType;
     this.materialSampleType = materialSampleType;
     this.materialOrDigitalEntity = setDefault(materialOrDigitalEntity, "digital");
+    this.markedAsType = markedAsType;
     this.wasDerivedFrom = wasDerivedFrom;
   }
 

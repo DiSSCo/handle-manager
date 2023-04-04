@@ -1,16 +1,21 @@
 package eu.dissco.core.handlemanager.component;
 
+import static eu.dissco.core.handlemanager.domain.PidRecords.BASE_TYPE_OF_SPECIMEN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_SUBTYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.FDO_PROFILE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.FDO_RECORD_LICENSE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.INFORMATION_ARTEFACT_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUED_FOR_AGENT;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUED_FOR_AGENT_NAME;
+import static eu.dissco.core.handlemanager.domain.PidRecords.MARKED_AS_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MATERIAL_OR_DIGITAL_ENTITY;
 import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
 import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.IN_COLLECTION_FACILITY;
+import static eu.dissco.core.handlemanager.domain.PidRecords.MATERIAL_SAMPLE_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.OTHER_SPECIMEN_IDS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_RECORD_ISSUE_DATE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_RECORD_ISSUE_NUMBER;
@@ -26,13 +31,21 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.PID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LIVING_OR_PRESERVED;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID_ABSENCE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID_NAME;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
+import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_PHYSICAL_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_SPECIMEN_HOST;
+import static eu.dissco.core.handlemanager.domain.PidRecords.TOPIC_DISCIPLINE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.TOPIC_DOMAIN;
+import static eu.dissco.core.handlemanager.domain.PidRecords.TOPIC_ORIGIN;
+import static eu.dissco.core.handlemanager.domain.PidRecords.WAS_DERIVED_FROM;
 import static eu.dissco.core.handlemanager.service.ServiceUtils.setUniquePhysicalIdentifierId;
 import static eu.dissco.core.handlemanager.utils.AdminHandleGenerator.genAdminHandle;
 
@@ -51,6 +64,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import javax.xml.parsers.DocumentBuilder;
@@ -223,12 +237,144 @@ public class FdoRecordBuilder {
       throws PidServiceInternalError, UnprocessableEntityException, PidResolutionException {
     var fdoRecord = prepareDoiRecordAttributes(request, handle);
 
-    // 17 : Institutional Identifier
-    // Encoding here is UTF-8
+    // 200: Specimen Host
+    fdoRecord.add(
+        new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST), handle,
+            SPECIMEN_HOST,
+            request.getSpecimenHost().getBytes(StandardCharsets.UTF_8)));
+
+    // 201: Specimen Host name
+    var specimenHostName = pidResolver.getObjectName(request.getSpecimenHost()).getBytes(StandardCharsets.UTF_8);
+    fdoRecord.add(
+        new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST_NAME), handle,
+            SPECIMEN_HOST_NAME,
+            specimenHostName));
+
+    // 202: primarySpecimenObjectId
+    var primarySpecimenObjectId = setUniquePhysicalIdentifierId(request);
     fdoRecord.add(
         new HandleAttribute(FIELD_IDX.get(PRIMARY_SPECIMEN_OBJECT_ID), handle,
             PRIMARY_SPECIMEN_OBJECT_ID,
-            setUniquePhysicalIdentifierId(request)));
+            primarySpecimenObjectId));
+
+    // 203: primarySpecimenObjectIdType
+    fdoRecord.add(
+        new HandleAttribute(FIELD_IDX.get(PRIMARY_SPECIMEN_OBJECT_ID_TYPE), handle,
+            PRIMARY_SPECIMEN_OBJECT_ID_TYPE,
+            request.getPrimarySpecimenObjectIdType().getBytes()));
+
+    // 204-217 are optional
+
+    // 204: primarySpecimenObjectIdName
+    if (request.getPrimarySpecimenObjectIdName() != null ){
+      fdoRecord.add(
+          new HandleAttribute(FIELD_IDX.get(PRIMARY_SPECIMEN_OBJECT_ID_NAME), handle,
+              PRIMARY_SPECIMEN_OBJECT_ID_NAME,
+              request.getPrimarySpecimenObjectIdName().getBytes(StandardCharsets.UTF_8)));
+    }
+
+    // 205: specimenObjectIdAbsenceReason
+    if (request.getPrimarySpecimenObjectIdAbsenceReason() != null ){
+      fdoRecord.add(
+          new HandleAttribute(FIELD_IDX.get(PRIMARY_SPECIMEN_OBJECT_ID_ABSENCE), handle,
+              PRIMARY_SPECIMEN_OBJECT_ID_ABSENCE,
+              request.getPrimarySpecimenObjectIdAbsenceReason().getBytes(StandardCharsets.UTF_8)));
+    }
+
+    // 206: otherSpecimenIds
+    if (request.getOtherSpecimenIds() != null ){
+      var otherSpecimenIds = Arrays.toString(request.getOtherSpecimenIds()).getBytes(StandardCharsets.UTF_8);
+      fdoRecord.add(
+          new HandleAttribute(FIELD_IDX.get(OTHER_SPECIMEN_IDS), handle,
+              OTHER_SPECIMEN_IDS,
+              otherSpecimenIds));
+    }
+
+    // 207: topicOrigin
+    if (request.getTopicOrigin() != null ){
+      fdoRecord.add(
+          new HandleAttribute(FIELD_IDX.get(TOPIC_ORIGIN), handle,
+              TOPIC_ORIGIN,
+              request.getTopicOrigin().getBytes(StandardCharsets.UTF_8)));
+    }
+
+    // 208: topicDomain
+    if (request.getTopicDomain() != null ){
+      fdoRecord.add(
+          new HandleAttribute(FIELD_IDX.get(TOPIC_DOMAIN), handle,
+              TOPIC_DOMAIN,
+              request.getTopicDomain().getBytes(StandardCharsets.UTF_8)));
+    }
+
+    // 209: topicDiscipline
+    if (request.getTopicDiscipline() != null ){
+      fdoRecord.add(
+          new HandleAttribute(FIELD_IDX.get(TOPIC_DISCIPLINE), handle,
+              TOPIC_DISCIPLINE,
+              request.getTopicDiscipline().getBytes(StandardCharsets.UTF_8)));
+    }
+
+    // 210: objectType
+    if (request.getObjectType() != null ){
+      fdoRecord.add(
+          new HandleAttribute(FIELD_IDX.get(OBJECT_TYPE), handle,
+              OBJECT_TYPE,
+              request.getObjectType().getBytes(StandardCharsets.UTF_8)));
+    }
+
+    // 211: livingOrPreserved
+    if (request.getLivingOrPreserved() != null ){
+      fdoRecord.add(
+          new HandleAttribute(FIELD_IDX.get(LIVING_OR_PRESERVED), handle,
+              LIVING_OR_PRESERVED,
+              request.getLivingOrPreserved().getBytes(StandardCharsets.UTF_8)));
+    }
+
+    // 212: baseTypeOfSpecimen
+    if (request.getBaseTypeOfSpecimen() != null ){
+      fdoRecord.add(
+          new HandleAttribute(FIELD_IDX.get(BASE_TYPE_OF_SPECIMEN), handle,
+              BASE_TYPE_OF_SPECIMEN,
+              request.getBaseTypeOfSpecimen().getBytes(StandardCharsets.UTF_8)));
+    }
+
+    // 213: informationArtefactType
+    if (request.getInformationArtefactType() != null ){
+      fdoRecord.add(
+          new HandleAttribute(FIELD_IDX.get(INFORMATION_ARTEFACT_TYPE), handle,
+              INFORMATION_ARTEFACT_TYPE,
+              request.getInformationArtefactType().getBytes(StandardCharsets.UTF_8)));
+    }
+
+    // 214: materialSampleType
+    if (request.getMaterialSampleType() != null ){
+      fdoRecord.add(
+          new HandleAttribute(FIELD_IDX.get(MATERIAL_SAMPLE_TYPE), handle,
+              MATERIAL_SAMPLE_TYPE,
+              request.getMaterialSampleType().getBytes(StandardCharsets.UTF_8)));
+    }
+
+    // 215: materialOrDigitalEntity
+    fdoRecord.add(
+        new HandleAttribute(FIELD_IDX.get(MATERIAL_OR_DIGITAL_ENTITY), handle,
+            MATERIAL_OR_DIGITAL_ENTITY,
+            request.getMaterialSampleType().getBytes()));
+
+    // 216: markedAsType
+    if (request.getMarkedAsType() != null ){
+      fdoRecord.add(
+          new HandleAttribute(FIELD_IDX.get(MARKED_AS_TYPE), handle,
+              MARKED_AS_TYPE,
+              request.getMarkedAsType().getBytes(StandardCharsets.UTF_8)));
+    }
+
+    // 217: wasDerivedFrom
+    if (request.getWasDerivedFrom() != null ){
+      fdoRecord.add(
+          new HandleAttribute(FIELD_IDX.get(WAS_DERIVED_FROM), handle,
+              WAS_DERIVED_FROM,
+              request.getWasDerivedFrom().getBytes(StandardCharsets.UTF_8)));
+    }
 
     return fdoRecord;
   }
