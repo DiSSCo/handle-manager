@@ -12,28 +12,34 @@ import lombok.ToString;
 public class DoiRecordRequest extends HandleRecordRequest {
 
 
-  private static final String REFERENT_PLACEHOLDER = "";
-  @JsonProperty(required = true)
-  @JsonPropertyDescription("DOI Name of the referent")
-  private final String referentDoiNamePid;
+  private static final String PLACEHOLDER = "";
+
+  private final String referentType;
+
+  @JsonPropertyDescription("Local name of the object (human-readable)")
+  private final String referentName;
+
+  @JsonPropertyDescription("Primary referent Type. Defaults to \"creation\"")
+  private final String primaryReferentType;
 
   @JsonPropertyDescription("Currently populated with placeholder string")
   private final String referent;
 
-
-
-
-
   public DoiRecordRequest(
       // Handle
-      String pidIssuerPid,
+      String fdoProfile,
+      String issuedForAgent,
       String digitalObjectTypePid,
-      String digitalObjectSubtypePid,
+      String pidIssuer,
+      String structuralType,
       String[] locations,
       // Doi
-      String referentDoiNamePid) {
-    super(pidIssuerPid, digitalObjectTypePid, digitalObjectSubtypePid, locations);
-    this.referentDoiNamePid = referentDoiNamePid;
-    this.referent = REFERENT_PLACEHOLDER;
+      String referentName,
+      String primaryReferentType) {
+    super(fdoProfile, issuedForAgent, digitalObjectTypePid, pidIssuer, structuralType, locations);
+    this.referentType = PLACEHOLDER;
+    this.referent = PLACEHOLDER;
+    this.referentName = referentName == null ? PLACEHOLDER : referentName;
+    this.primaryReferentType = primaryReferentType == null ? "creation" : primaryReferentType;
   }
 }

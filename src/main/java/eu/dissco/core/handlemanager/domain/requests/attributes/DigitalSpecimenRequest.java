@@ -1,7 +1,6 @@
 package eu.dissco.core.handlemanager.domain.requests.attributes;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -12,38 +11,78 @@ import lombok.ToString;
 public class DigitalSpecimenRequest extends DoiRecordRequest {
 
   @JsonProperty(required = true)
-  @JsonPropertyDescription("Identifies specimen as digital or physical")
-  private final DigitalOrPhysical digitalOrPhysical;
-  @JsonProperty(required = true)
-  @JsonPropertyDescription("PID of the host institution.")
-  private final String specimenHostPid;
-  @JsonProperty(required = true)
-  @JsonPropertyDescription("PID of the collection the specimen is hosted in")
-  private final String inCollectionFacilityPid;
-  @JsonProperty(required = true)
-  @JsonPropertyDescription("Primary identifier used by host institution")
-  private final PhysicalIdentifier physicalIdentifier;
+  private final String specimenHost;
+
+  private final String specimenHostName;
+  private final String primarySpecimenObjectId;
+  private final String primarySpecimenObjectIdType;
+  private final String primarySpecimenObjectIdName;
+  private final String primarySpecimenObjectIdAbsenceReason;
+  private final String[] otherSpecimenIds;
+  private final String topicOrigin;
+  private final String topicDomain;
+  private final String topicDiscipline;
+  private final String objectType;
+  private final String livingOrPreserved;
+  private final String baseTypeOfSpecimen;
+  private final String informationArtefactType;
+  private final String materialSampleType;
+  private final String materialOrDigitalEntity;
+  private final String wasDerivedFrom;
+
 
   public DigitalSpecimenRequest(
       // Handle
-      String pidIssuerPid,
+      String fdoProfile,
+      String issuedForAgent,
       String digitalObjectTypePid,
-      String digitalObjectSubtypePid,
+      String pidIssuer,
+      String structuralType,
       String[] locations,
       // Doi
-      String referentDoiNamePid,
-      // Digital Specimen
-      DigitalOrPhysical digitalOrPhysical,
-      String specimenHostPid,
-      String inCollectionFacilityPid,
-      PhysicalIdentifier physicalIdentifier
+      String referentName,
+      String primaryReferentType,
+      // DigitalSpecimen
+      String specimenHost,
+      String specimenHostName,
+      String primarySpecimenObjectId,
+      String primarySpecimenObjectIdType,
+      String primarySpecimenObjectIdName,
+      String primarySpecimenObjectIdAbsenceReason,
+      String[] otherSpecimenIds,
+      String topicOrigin,
+      String topicDomain,
+      String topicDiscipline,
+      String objectType,
+      String livingOrPreserved,
+      String baseTypeOfSpecimen,
+      String informationArtefactType,
+      String materialSampleType,
+      String materialOrDigitalEntity,
+      String wasDerivedFrom
   ) {
-    super(pidIssuerPid, digitalObjectTypePid, digitalObjectSubtypePid, locations,
-        referentDoiNamePid);
-    this.digitalOrPhysical = digitalOrPhysical;
-    this.specimenHostPid = specimenHostPid;
-    this.inCollectionFacilityPid = inCollectionFacilityPid;
-    this.physicalIdentifier = physicalIdentifier;
+    super(fdoProfile, issuedForAgent, digitalObjectTypePid, pidIssuer, structuralType, locations, referentName, primaryReferentType);
+    this.specimenHost = specimenHost;
+    this.specimenHostName=specimenHostName;
+    this.primarySpecimenObjectId = primarySpecimenObjectId;
+    this.primarySpecimenObjectIdType = primarySpecimenObjectIdType;
+    this.primarySpecimenObjectIdName = primarySpecimenObjectIdName;
+    this.primarySpecimenObjectIdAbsenceReason = primarySpecimenObjectIdAbsenceReason;
+    this.otherSpecimenIds = otherSpecimenIds;
+    this.topicOrigin = topicOrigin;
+    this.topicDomain = topicDomain;
+    this.topicDiscipline = topicDiscipline;
+    this.objectType = objectType;
+    this.livingOrPreserved = livingOrPreserved;
+    this.baseTypeOfSpecimen = baseTypeOfSpecimen;
+    this.informationArtefactType = informationArtefactType;
+    this.materialSampleType = materialSampleType;
+    this.materialOrDigitalEntity = setDefault(materialOrDigitalEntity, "digital");
+    this.wasDerivedFrom = wasDerivedFrom;
+  }
+
+  private String setDefault(String attribute, String defaultVal){
+    return attribute == null ? defaultVal : attribute;
   }
 
 }

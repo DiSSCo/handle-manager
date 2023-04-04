@@ -20,6 +20,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_HASH;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_URL;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.OBJECT_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_REFERENT_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER;
@@ -27,6 +28,8 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LIVING_OR_PRESERVED;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
+import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_NAME;
+import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_PHYSICAL_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_SPECIMEN_HOST;
@@ -66,12 +69,10 @@ import org.w3c.dom.Document;
 @Component
 public class FdoRecordBuilder {
 
+  private static final String DATACITE_ROR = "https://ror.org/04wxnsj81";
   private final TransformerFactory tf;
   private final DocumentBuilderFactory dbf;
   private final PidResolverComponent pidResolver;
-
-  private static final String DATACITE_ROR = "https://ror.org/04wxnsj81";
-
   private final DateTimeFormatter dt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS",
       Locale.ENGLISH).withZone(ZoneId.of("UTC"));
 
@@ -88,7 +89,8 @@ public class FdoRecordBuilder {
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, loc));
 
     // 1: FDO Profile
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(FDO_PROFILE), handle, FDO_PROFILE, request.getFdoProfile().getBytes(StandardCharsets.UTF_8)));
+    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(FDO_PROFILE), handle, FDO_PROFILE,
+        request.getFdoProfile().getBytes(StandardCharsets.UTF_8)));
 
     // 2: FDO Record License
     byte[] pidKernelMetadataLicense = "https://creativecommons.org/publicdomain/zero/1.0/".getBytes(
@@ -97,11 +99,16 @@ public class FdoRecordBuilder {
         FDO_RECORD_LICENSE, pidKernelMetadataLicense));
 
     // 3: DigitalObjectType
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(DIGITAL_OBJECT_TYPE), handle, DIGITAL_OBJECT_TYPE, request.getDigitalObjectTypePid().getBytes(StandardCharsets.UTF_8)));
+    fdoRecord.add(
+        new HandleAttribute(FIELD_IDX.get(DIGITAL_OBJECT_TYPE), handle, DIGITAL_OBJECT_TYPE,
+            request.getDigitalObjectTypePid().getBytes(StandardCharsets.UTF_8)));
 
     // 4: DigitalObjectName
-    var digitalObjectName = pidResolver.getObjectName(request.getDigitalObjectTypePid()).getBytes(StandardCharsets.UTF_8);
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(DIGITAL_OBJECT_NAME), handle, DIGITAL_OBJECT_NAME, digitalObjectName));
+    var digitalObjectName = pidResolver.getObjectName(request.getDigitalObjectTypePid())
+        .getBytes(StandardCharsets.UTF_8);
+    fdoRecord.add(
+        new HandleAttribute(FIELD_IDX.get(DIGITAL_OBJECT_NAME), handle, DIGITAL_OBJECT_NAME,
+            digitalObjectName));
 
     // 5: Pid
     byte[] pid = ("https://hdl.handle.net/" + new String(handle, StandardCharsets.UTF_8)).getBytes(
@@ -123,9 +130,11 @@ public class FdoRecordBuilder {
         request.getIssuedForAgent().getBytes(StandardCharsets.UTF_8)));
 
     // 9: issuedForAgentName
-    var issuedForAgentName = pidResolver.getObjectName(request.getIssuedForAgent()).getBytes(StandardCharsets.UTF_8);
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(ISSUED_FOR_AGENT_NAME), handle, ISSUED_FOR_AGENT_NAME,
-        issuedForAgentName));
+    var issuedForAgentName = pidResolver.getObjectName(request.getIssuedForAgent())
+        .getBytes(StandardCharsets.UTF_8);
+    fdoRecord.add(
+        new HandleAttribute(FIELD_IDX.get(ISSUED_FOR_AGENT_NAME), handle, ISSUED_FOR_AGENT_NAME,
+            issuedForAgentName));
 
     // 10: pidRecordIssueDate
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(PID_RECORD_ISSUE_DATE), handle,
@@ -146,9 +155,10 @@ public class FdoRecordBuilder {
     return fdoRecord;
   }
 
-  private String setPidIssuer(HandleRecordRequest request){
+  private String setPidIssuer(HandleRecordRequest request) {
     return request.getPidIssuer() == null ? DATACITE_ROR : request.getPidIssuer();
   }
+
   private String setPidIssuerName(HandleRecordRequest request)
       throws UnprocessableEntityException, PidResolutionException {
     return request.getPidIssuer() == null ? DATACITE_ROR : pidResolver.getObjectName(
@@ -161,15 +171,20 @@ public class FdoRecordBuilder {
     var fdoRecord = prepareHandleRecordAttributes(request, handle);
 
     // 40: referentType
+    fdoRecord.add(
+        new HandleAttribute(FIELD_IDX.get(REFERENT_TYPE), handle, REFERENT_TYPE, request.getReferentType().getBytes(StandardCharsets.UTF_8)));
 
     // 41: referentDoiName
     fdoRecord.add(
-        new HandleAttribute(FIELD_IDX.get(REFERENT_DOI_NAME), handle, REFERENT_DOI_NAME,
-            request.getReferentDoiNamePid().getBytes(StandardCharsets.UTF_8)));
+        new HandleAttribute(FIELD_IDX.get(REFERENT_DOI_NAME), handle, REFERENT_DOI_NAME, handle));
 
     // 42: referentName
+    fdoRecord.add(
+        new HandleAttribute(FIELD_IDX.get(REFERENT_NAME), handle, REFERENT_NAME, request.getReferentName().getBytes(StandardCharsets.UTF_8)));
 
     // 43: primaryReferentType
+    fdoRecord.add(
+        new HandleAttribute(FIELD_IDX.get(PRIMARY_REFERENT_TYPE), handle, PRIMARY_REFERENT_TYPE, request.getPrimaryReferentType().getBytes(StandardCharsets.UTF_8)));
 
     // 44: referent
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(REFERENT), handle, REFERENT,
@@ -282,15 +297,15 @@ public class FdoRecordBuilder {
     }
   }
 
-  private String[] concatLocations(String[] userLocations, String handle){
+  private String[] concatLocations(String[] userLocations, String handle) {
     ArrayList<String> objectLocations = new ArrayList<>(List.of(defaultLocations(handle)));
-    if (userLocations != null){
+    if (userLocations != null) {
       objectLocations.addAll(List.of(userLocations));
     }
     return objectLocations.toArray(new String[0]);
   }
 
-  private String[] defaultLocations(String handle){
+  private String[] defaultLocations(String handle) {
     String api = "https://sandbox.dissco.tech/api/v1/specimens/" + handle;
     String ui = "https://sandbox.dissco.tech/ds/" + handle;
     return new String[]{api, ui};

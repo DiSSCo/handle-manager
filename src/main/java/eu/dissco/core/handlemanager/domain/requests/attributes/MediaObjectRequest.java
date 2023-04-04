@@ -20,17 +20,21 @@ public class MediaObjectRequest extends DoiRecordRequest {
   private final PhysicalIdentifier subjectPhysicalIdentifier;
 
   public MediaObjectRequest(
-      String pidIssuerPid,
+      String fdoProfile,
+      String issuedForAgent,
       String digitalObjectTypePid,
-      String digitalObjectSubtypePid,
+      String pidIssuer,
+      String structuralType,
       String[] locations,
-      String referentDoiNamePid,
+      // Doi
+      String referentName,
+      String primaryReferentType,
+      // Media
       String mediaHash,
       String mediaUrl,
       String subjectSpecimenHostPid,
       PhysicalIdentifier physicalIdentifier) {
-    super(pidIssuerPid, digitalObjectTypePid, digitalObjectSubtypePid, locations,
-        referentDoiNamePid);
+    super(fdoProfile, issuedForAgent, digitalObjectTypePid, pidIssuer, structuralType, locations, referentName, primaryReferentType);
     this.mediaHash = mediaHash;
     this.mediaUrl = mediaUrl;
     this.subjectPhysicalIdentifier = physicalIdentifier;
