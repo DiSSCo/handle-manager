@@ -27,10 +27,9 @@ public class PidResolverComponent {
         .onStatus(HttpStatus.NOT_FOUND::equals,
             r -> r.bodyToMono(String.class).map(PidResolutionException::new));
     var response = responseSpec.bodyToMono(JsonNode.class);
-    JsonNode responseVal;
 
     try {
-      responseVal = response.toFuture().get();
+      return response.toFuture().get();
     } catch (InterruptedException e) {
       log.warn("Interrupted connection. Unable to resolve the following: {}", pid);
       Thread.currentThread().interrupt();
@@ -41,7 +40,6 @@ public class PidResolverComponent {
       }
       throw new UnprocessableEntityException("Unable to parse identifier " + pid + " to JSON.");
     }
-    return responseVal;
   }
 
   public String getObjectName(String pid)
