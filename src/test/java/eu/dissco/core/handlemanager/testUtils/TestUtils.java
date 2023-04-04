@@ -2,13 +2,13 @@ package eu.dissco.core.handlemanager.testUtils;
 
 import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_SUBTYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OR_PHYSICAL;
+import static eu.dissco.core.handlemanager.domain.PidRecords.MATERIAL_OR_DIGITAL_ENTITY;
 import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
 import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IS_PID_RECORD;
 import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.IN_COLLECTION_FACILITY;
-import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_DATE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_NUMBER;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID_RECORD_ISSUE_DATE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID_RECORD_ISSUE_NUMBER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LOC;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LOC_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_HASH;
@@ -16,12 +16,12 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_URL;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.OBJECT_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PHYSICAL_IDENTIFIER;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_KERNEL_METADATA_LICENSE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PRESERVED_OR_LIVING;
+import static eu.dissco.core.handlemanager.domain.PidRecords.LIVING_OR_PRESERVED;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
@@ -197,12 +197,13 @@ public class TestUtils {
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, loc));
 
     // 6: Issue Date
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(ISSUE_DATE), handle, ISSUE_DATE,
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(PID_RECORD_ISSUE_DATE), handle,
+        PID_RECORD_ISSUE_DATE,
         ISSUE_DATE_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     // 7: Issue number
     handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(ISSUE_NUMBER), handle, ISSUE_NUMBER,
+        new HandleAttribute(FIELD_IDX.get(PID_RECORD_ISSUE_NUMBER), handle, PID_RECORD_ISSUE_NUMBER,
             "1".getBytes(StandardCharsets.UTF_8)));
 
     // 8: PidStatus
@@ -210,10 +211,7 @@ public class TestUtils {
         PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     // 11: PidKernelMetadataLicense:
-    handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(PID_KERNEL_METADATA_LICENSE), handle,
-            PID_KERNEL_METADATA_LICENSE,
-            PID_KERNEL_METADATA_LICENSE_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+
 
     return handleRecord;
   }
@@ -280,7 +278,8 @@ public class TestUtils {
 
     // 14: digitalOrPhysical
     handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(DIGITAL_OR_PHYSICAL), handle, DIGITAL_OR_PHYSICAL,
+        new HandleAttribute(FIELD_IDX.get(MATERIAL_OR_DIGITAL_ENTITY), handle,
+            MATERIAL_OR_DIGITAL_ENTITY,
             DIGITAL_OR_PHYSICAL_TESTVAL.getBytes()));
 
     // 15: specimenHost
@@ -294,7 +293,8 @@ public class TestUtils {
 
     // 17 Physical Specimen Identifier
     handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(PHYSICAL_IDENTIFIER), handle, PHYSICAL_IDENTIFIER,
+        new HandleAttribute(FIELD_IDX.get(PRIMARY_SPECIMEN_OBJECT_ID), handle,
+            PRIMARY_SPECIMEN_OBJECT_ID,
             PHYSICAL_IDENTIFIER_LOCAL.getBytes(StandardCharsets.UTF_8)));
     return handleRecord;
   }
@@ -309,7 +309,7 @@ public class TestUtils {
 
     // 18: preservedOrLiving
     handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(PRESERVED_OR_LIVING), handle, PRESERVED_OR_LIVING,
+        new HandleAttribute(FIELD_IDX.get(LIVING_OR_PRESERVED), handle, LIVING_OR_PRESERVED,
             PRESERVED_OR_LIVING_TESTVAL.getBytes()));
     return handleRecord;
   }
@@ -426,7 +426,7 @@ public class TestUtils {
     var request = MAPPER.createObjectNode();
     var dataNode = MAPPER.createObjectNode();
     var attributeNode = MAPPER.createObjectNode();
-    attributeNode.set(PHYSICAL_IDENTIFIER, MAPPER.valueToTree(PHYSICAL_IDENTIFIER_CETAF));
+    attributeNode.set(PRIMARY_SPECIMEN_OBJECT_ID, MAPPER.valueToTree(PHYSICAL_IDENTIFIER_CETAF));
     attributeNode.put(SPECIMEN_HOST_REQ, SPECIMEN_HOST_PID);
     dataNode.set(NODE_ATTRIBUTES, attributeNode);
     request.set(NODE_DATA, dataNode);

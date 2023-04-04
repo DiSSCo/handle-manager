@@ -2,8 +2,8 @@ package eu.dissco.core.handlemanager.repository;
 
 import static eu.dissco.core.handlemanager.database.jooq.tables.Handles.HANDLES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
-import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_NUMBER;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PHYSICAL_IDENTIFIER;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID_RECORD_ISSUE_NUMBER;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_RECORD_FIELDS_BYTES;
 
@@ -73,7 +73,7 @@ public class HandleRepository {
     var physicalIdentifierTable = context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE,
             HANDLES.DATA)
         .from(HANDLES)
-        .where(HANDLES.TYPE.eq(PHYSICAL_IDENTIFIER.getBytes(StandardCharsets.UTF_8)))
+        .where(HANDLES.TYPE.eq(PRIMARY_SPECIMEN_OBJECT_ID.getBytes(StandardCharsets.UTF_8)))
         .and((HANDLES.DATA).in(physicalIdentifiers))
         .asTable("physicalIdentifierTable");
 
@@ -227,7 +227,7 @@ public class HandleRepository {
         Integer.parseInt(Objects.requireNonNull(context.select(HANDLES.DATA)
             .from(HANDLES)
             .where(HANDLES.HANDLE.eq(handle))
-            .and(HANDLES.TYPE.eq(ISSUE_NUMBER.getBytes(StandardCharsets.UTF_8)))
+            .and(HANDLES.TYPE.eq(PID_RECORD_ISSUE_NUMBER.getBytes(StandardCharsets.UTF_8)))
             .fetchOne(dbRecord -> new String(dbRecord.value1(), StandardCharsets.UTF_8))));
     int version = currentVersion + 1;
 
@@ -235,7 +235,7 @@ public class HandleRepository {
         .set(HANDLES.DATA, String.valueOf(version).getBytes(StandardCharsets.UTF_8))
         .set(HANDLES.TIMESTAMP, recordTimestamp)
         .where(HANDLES.HANDLE.eq(handle))
-        .and(HANDLES.TYPE.eq(ISSUE_NUMBER.getBytes(StandardCharsets.UTF_8)));
+        .and(HANDLES.TYPE.eq(PID_RECORD_ISSUE_NUMBER.getBytes(StandardCharsets.UTF_8)));
   }
 
   private void removeNonTombstoneFields(List<byte[]> handles) {

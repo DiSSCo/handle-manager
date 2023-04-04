@@ -14,17 +14,20 @@ import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class FdoRecordBuilderTest {
   private FdoRecordBuilder fdoRecordBuilder;
+  @Mock
+  private final PidResolverComponent pidResolver,
 
   private final byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
 
   @BeforeEach
   void init(){
-    fdoRecordBuilder = new FdoRecordBuilder(TRANSFORMER_FACTORY, DOC_BUILDER_FACTORY);
+    fdoRecordBuilder = new FdoRecordBuilder(TRANSFORMER_FACTORY, DOC_BUILDER_FACTORY, pidResolver);
   }
 
   @Test

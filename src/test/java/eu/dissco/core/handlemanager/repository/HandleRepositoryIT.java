@@ -2,8 +2,8 @@ package eu.dissco.core.handlemanager.repository;
 
 import static eu.dissco.core.handlemanager.database.jooq.Tables.HANDLES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
-import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_NUMBER;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PHYSICAL_IDENTIFIER;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID_RECORD_ISSUE_NUMBER;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
@@ -252,12 +252,14 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     // Given
     var targetPhysicalIdentifer = PHYSICAL_IDENTIFIER_LOCAL.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> responseExpected = new ArrayList<>();
-    responseExpected.add(new HandleAttribute(1, HANDLE.getBytes(StandardCharsets.UTF_8), PHYSICAL_IDENTIFIER, targetPhysicalIdentifer));
+    responseExpected.add(new HandleAttribute(1, HANDLE.getBytes(StandardCharsets.UTF_8),
+        PRIMARY_SPECIMEN_OBJECT_ID, targetPhysicalIdentifer));
     responseExpected.add(new HandleAttribute(2, HANDLE.getBytes(StandardCharsets.UTF_8), SPECIMEN_HOST, SPECIMEN_HOST_PID.getBytes(
         StandardCharsets.UTF_8)));
 
     List<HandleAttribute> nonTargetAttributes = new ArrayList<>();
-    nonTargetAttributes.add(new HandleAttribute(1, HANDLE_ALT.getBytes(StandardCharsets.UTF_8), PHYSICAL_IDENTIFIER, "A".getBytes(
+    nonTargetAttributes.add(new HandleAttribute(1, HANDLE_ALT.getBytes(StandardCharsets.UTF_8),
+        PRIMARY_SPECIMEN_OBJECT_ID, "A".getBytes(
         StandardCharsets.UTF_8)));
 
     postAttributes(responseExpected);
@@ -419,7 +421,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
 
   private List<HandleAttribute> incrementVersion(List<HandleAttribute> handleAttributes) {
     for (int i = 0; i < handleAttributes.size(); i++) {
-      if (handleAttributes.get(i).type().equals(ISSUE_NUMBER)) {
+      if (handleAttributes.get(i).type().equals(PID_RECORD_ISSUE_NUMBER)) {
         var removedRecord = handleAttributes.remove(i);
         byte[] issueNum = String.valueOf(Integer.parseInt(new String(removedRecord.data())) + 1)
             .getBytes(StandardCharsets.UTF_8);

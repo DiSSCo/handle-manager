@@ -20,6 +20,10 @@ public class DoiRecordRequest extends HandleRecordRequest {
   @JsonPropertyDescription("Currently populated with placeholder string")
   private final String referent;
 
+
+
+
+
   public DoiRecordRequest(
       // Handle
       String pidIssuerPid,

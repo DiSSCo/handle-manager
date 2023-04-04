@@ -298,7 +298,7 @@ public class HandleService {
           }
           default -> throw new InvalidRequestException(INVALID_TYPE_ERROR + type);
         }
-      } catch (JsonProcessingException e) {
+      } catch (JsonProcessingException | UnprocessableEntityException e) {
         throw new InvalidRequestException(
             "An error has occurred parsing a record in request. More information: "
                 + e.getMessage());

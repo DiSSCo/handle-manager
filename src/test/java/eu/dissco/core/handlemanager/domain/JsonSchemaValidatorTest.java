@@ -1,15 +1,15 @@
 package eu.dissco.core.handlemanager.domain;
 
-import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OR_PHYSICAL;
+import static eu.dissco.core.handlemanager.domain.PidRecords.MATERIAL_OR_DIGITAL_ENTITY;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_URL;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.OBJECT_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PHYSICAL_IDENTIFIER;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER_REQ;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PRESERVED_OR_LIVING;
+import static eu.dissco.core.handlemanager.domain.PidRecords.LIVING_OR_PRESERVED;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_TEXT;
@@ -153,7 +153,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testDigitalSpecimenBotanyPatchRequest() {
     // Given
-    var request = givenUpdateRequest(RECORD_TYPE_DS_BOTANY, PRESERVED_OR_LIVING, "living");
+    var request = givenUpdateRequest(RECORD_TYPE_DS_BOTANY, LIVING_OR_PRESERVED, "living");
 
     // Then
     assertDoesNotThrow(() -> {
@@ -212,7 +212,7 @@ class JsonSchemaValidatorTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {PRESERVED_OR_LIVING, DIGITAL_OR_PHYSICAL})
+  @ValueSource(strings = {LIVING_OR_PRESERVED, MATERIAL_OR_DIGITAL_ENTITY})
   void testBadEnumValueRequest(String targetEnum){
     // Given
     ObjectNode request = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(), RECORD_TYPE_DS_BOTANY);
@@ -232,8 +232,8 @@ class JsonSchemaValidatorTest {
     // Given
     String targetEnum = "physicalIdType";
     ObjectNode request = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(), RECORD_TYPE_DS_BOTANY);
-    ((ObjectNode) request.get("data").get("attributes").get(PHYSICAL_IDENTIFIER)).remove(targetEnum);
-    ((ObjectNode) request.get("data").get("attributes").get(PHYSICAL_IDENTIFIER)).put(targetEnum, UNKNOWN_VAL);
+    ((ObjectNode) request.get("data").get("attributes").get(PRIMARY_SPECIMEN_OBJECT_ID)).remove(targetEnum);
+    ((ObjectNode) request.get("data").get("attributes").get(PRIMARY_SPECIMEN_OBJECT_ID)).put(targetEnum, UNKNOWN_VAL);
 
     // Then
     Exception e = assertThrows(InvalidRequestException.class, () -> {

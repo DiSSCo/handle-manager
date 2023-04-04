@@ -44,4 +44,14 @@ public class PidResolverComponent {
     return responseVal;
   }
 
+  public String getObjectName(String pid)
+      throws UnprocessableEntityException, PidResolutionException {
+    var pidRecord = resolveExternalPid(pid);
+    if (pidRecord.get("name")!= null){
+      return pidRecord.get("name").asText();
+    }
+    log.warn("Given pid {} resolves, but does not include a name attribute", pid);
+    return "";
+  }
+
 }
