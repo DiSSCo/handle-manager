@@ -11,7 +11,7 @@ public class PidRecords {
   // Handle
 
   public static final String FDO_PROFILE = "fdoProfile"; // 1
-  public static final String FDO_RECORD_LICENSE = "FdoRecordLicense"; //2
+  public static final String FDO_RECORD_LICENSE = "fdoRecordLicense"; //2
   public static final String DIGITAL_OBJECT_TYPE = "digitalObjectType"; //3
   public static final String DIGITAL_OBJECT_NAME = "digitalObjectName"; //4
   public static final String PID = "pid"; //5
@@ -125,6 +125,8 @@ public class PidRecords {
       Map.entry(BASE_TYPE_OF_SPECIMEN, 212), Map.entry(INFORMATION_ARTEFACT_TYPE, 213),
       Map.entry(MATERIAL_SAMPLE_TYPE, 214), Map.entry(MATERIAL_OR_DIGITAL_ENTITY, 215),
       Map.entry(MARKED_AS_TYPE, 216), Map.entry(WAS_DERIVED_FROM, 217),
+
+      Map.entry(MEDIA_HASH, 300), Map.entry(MEDIA_URL, 301), Map.entry(SUBJECT_PHYSICAL_IDENTIFIER, 302),
 
       Map.entry(HS_ADMIN, 100), Map.entry(LOC, 101));
 

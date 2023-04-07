@@ -1,7 +1,5 @@
 package eu.dissco.core.handlemanager.domain.requests.attributes;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -11,36 +9,42 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 public class DigitalSpecimenBotanyRequest extends DigitalSpecimenRequest {
 
-  @JsonProperty(required = true)
-  @JsonPropertyDescription("Type of object (e.g. herbarium sheet)")
-  private final String objectType;
-  @JsonProperty(required = true)
-  @JsonPropertyDescription("Indicates specimen is preserved or living")
-  private final PreservedOrLiving preservedOrLiving;
-
   public DigitalSpecimenBotanyRequest(
-      // Handle
-      String pidIssuerPid,
+      String fdoProfile,
+      String issuedForAgent,
       String digitalObjectTypePid,
-      String digitalObjectSubtypePid,
+      String pidIssuer,
+      String structuralType,
       String[] locations,
-      // Referent
-      String referentDoiNamePid,
-      // Digital Specimen
-      DigitalOrPhysical digitalOrPhysical,
-      String specimenHostPid,
-      String inCollectionFacilityPid,
-      PhysicalIdentifier physicalIdentifier,
-      // Botany Specimen
+      // Doi
+      String referentName,
+      String primaryReferentType,
+      // DigitalSpecimen
+      String specimenHost,
+      String primarySpecimenObjectId,
+      PhysicalIdType primarySpecimenObjectIdType,
+      String primarySpecimenObjectIdName,
+      String primarySpecimenObjectIdAbsenceReason,
+      String[] otherSpecimenIds,
+      String topicOrigin,
+      String topicDomain,
+      String topicDiscipline,
       String objectType,
-      PreservedOrLiving preservedOrLiving
+      String livingOrPreserved,
+      String baseTypeOfSpecimen,
+      String informationArtefactType,
+      String materialSampleType,
+      String materialOrDigitalEntity,
+      String markedAsType,
+      String wasDerivedFrom
   ) {
-    super(pidIssuerPid, digitalObjectTypePid, digitalObjectSubtypePid, locations,
-        referentDoiNamePid,
-        digitalOrPhysical,
-        specimenHostPid, inCollectionFacilityPid, physicalIdentifier);
-    this.objectType = objectType;
-    this.preservedOrLiving = preservedOrLiving;
+    super(fdoProfile, issuedForAgent, digitalObjectTypePid, pidIssuer, structuralType, locations,
+        referentName, primaryReferentType,
+        specimenHost, primarySpecimenObjectId, primarySpecimenObjectIdType,
+        primarySpecimenObjectIdName, primarySpecimenObjectIdAbsenceReason, otherSpecimenIds,
+        topicOrigin, topicDomain, topicDiscipline, objectType, livingOrPreserved,
+        baseTypeOfSpecimen, informationArtefactType, materialSampleType,
+        materialOrDigitalEntity, markedAsType, wasDerivedFrom);
   }
 
 }

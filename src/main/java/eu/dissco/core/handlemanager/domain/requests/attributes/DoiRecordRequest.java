@@ -1,6 +1,5 @@
 package eu.dissco.core.handlemanager.domain.requests.attributes;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -29,14 +28,14 @@ public class DoiRecordRequest extends HandleRecordRequest {
       // Handle
       String fdoProfile,
       String issuedForAgent,
-      String digitalObjectTypePid,
+      String digitalObjectType,
       String pidIssuer,
       String structuralType,
       String[] locations,
       // Doi
       String referentName,
       String primaryReferentType) {
-    super(fdoProfile, issuedForAgent, digitalObjectTypePid, pidIssuer, structuralType, locations);
+    super(fdoProfile, issuedForAgent, digitalObjectType, pidIssuer, structuralType, locations);
     this.referentType = PLACEHOLDER;
     this.referent = PLACEHOLDER;
     this.referentName = referentName == null ? PLACEHOLDER : referentName;

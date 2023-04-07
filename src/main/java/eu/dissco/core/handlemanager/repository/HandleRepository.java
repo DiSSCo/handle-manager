@@ -3,8 +3,8 @@ package eu.dissco.core.handlemanager.repository;
 import static eu.dissco.core.handlemanager.database.jooq.tables.Handles.HANDLES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_RECORD_ISSUE_NUMBER;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_RECORD_FIELDS_BYTES;
 
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
@@ -180,13 +180,13 @@ public class HandleRepository {
   // Archive
   public void archiveRecord(long recordTimestamp, List<HandleAttribute> handleAttributes) {
     mergeAttributesToDb(recordTimestamp, handleAttributes);
-    removeNonTombstoneFields(List.of(handleAttributes.get(0).handle()));
+    //removeNonTombstoneFields(List.of(handleAttributes.get(0).handle()));
   }
 
   public void archiveRecords(long recordTimestamp, List<HandleAttribute> handleAttributes,
       List<byte[]> handles) {
     mergeAttributesToDb(recordTimestamp, handleAttributes);
-    removeNonTombstoneFields(handles);
+    //removeNonTombstoneFields(handles);
   }
 
   // Update

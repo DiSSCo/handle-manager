@@ -2,35 +2,33 @@ package eu.dissco.core.handlemanager.component;
 
 import static eu.dissco.core.handlemanager.domain.PidRecords.BASE_TYPE_OF_SPECIMEN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_NAME;
-import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_SUBTYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.FDO_PROFILE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.FDO_RECORD_LICENSE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
+import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.INFORMATION_ARTEFACT_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUED_FOR_AGENT;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUED_FOR_AGENT_NAME;
-import static eu.dissco.core.handlemanager.domain.PidRecords.MARKED_AS_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.MATERIAL_OR_DIGITAL_ENTITY;
-import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
-import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
-import static eu.dissco.core.handlemanager.domain.PidRecords.IN_COLLECTION_FACILITY;
-import static eu.dissco.core.handlemanager.domain.PidRecords.MATERIAL_SAMPLE_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.OTHER_SPECIMEN_IDS;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER_NAME;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_RECORD_ISSUE_DATE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_RECORD_ISSUE_NUMBER;
+import static eu.dissco.core.handlemanager.domain.PidRecords.LIVING_OR_PRESERVED;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LOC;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LOC_REQ;
+import static eu.dissco.core.handlemanager.domain.PidRecords.MARKED_AS_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.MATERIAL_OR_DIGITAL_ENTITY;
+import static eu.dissco.core.handlemanager.domain.PidRecords.MATERIAL_SAMPLE_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_HASH;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_URL;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.OBJECT_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_REFERENT_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID;
+import static eu.dissco.core.handlemanager.domain.PidRecords.OTHER_SPECIMEN_IDS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER_NAME;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID_RECORD_ISSUE_DATE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID_RECORD_ISSUE_NUMBER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
-import static eu.dissco.core.handlemanager.domain.PidRecords.LIVING_OR_PRESERVED;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_REFERENT_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID_ABSENCE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID_TYPE;
@@ -83,7 +81,6 @@ import org.w3c.dom.Document;
 @Component
 public class FdoRecordBuilder {
 
-  private static final String DATACITE_ROR = "https://ror.org/04wxnsj81";
   private final TransformerFactory tf;
   private final DocumentBuilderFactory dbf;
   private final PidResolverComponent pidResolver;
@@ -98,6 +95,8 @@ public class FdoRecordBuilder {
     // 100: Admin Handle
     fdoRecord.add(
         new HandleAttribute(FIELD_IDX.get(HS_ADMIN), handle, HS_ADMIN, genAdminHandle()));
+
+    // 101: 10320/loc
 
     byte[] loc = setLocations(request.getLocations(), new String(handle, StandardCharsets.UTF_8));
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, loc));
@@ -115,10 +114,10 @@ public class FdoRecordBuilder {
     // 3: DigitalObjectType
     fdoRecord.add(
         new HandleAttribute(FIELD_IDX.get(DIGITAL_OBJECT_TYPE), handle, DIGITAL_OBJECT_TYPE,
-            request.getDigitalObjectTypePid().getBytes(StandardCharsets.UTF_8)));
+            request.getDigitalObjectType().getBytes(StandardCharsets.UTF_8)));
 
     // 4: DigitalObjectName
-    var digitalObjectName = pidResolver.getObjectName(request.getDigitalObjectTypePid())
+    var digitalObjectName = pidResolver.getObjectName(request.getDigitalObjectType())
         .getBytes(StandardCharsets.UTF_8);
     fdoRecord.add(
         new HandleAttribute(FIELD_IDX.get(DIGITAL_OBJECT_NAME), handle, DIGITAL_OBJECT_NAME,
@@ -130,12 +129,11 @@ public class FdoRecordBuilder {
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(PID), handle, PID, pid));
 
     // 6: PidIssuer
-    var pidIssuer = setPidIssuer(request).getBytes(StandardCharsets.UTF_8);
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(PID_ISSUER), handle, PID_ISSUER,
-        pidIssuer));
+        request.getPidIssuer().getBytes(StandardCharsets.UTF_8)));
 
     // 7: pidIssuerName
-    var pidIssuerName = setPidIssuerName(request).getBytes(StandardCharsets.UTF_8);
+    var pidIssuerName = pidResolver.getObjectName(request.getPidIssuer()).getBytes(StandardCharsets.UTF_8);
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(PID_ISSUER_NAME), handle, PID_ISSUER_NAME,
         pidIssuerName));
 
@@ -168,17 +166,6 @@ public class FdoRecordBuilder {
 
     return fdoRecord;
   }
-
-  private String setPidIssuer(HandleRecordRequest request) {
-    return request.getPidIssuer() == null ? DATACITE_ROR : request.getPidIssuer();
-  }
-
-  private String setPidIssuerName(HandleRecordRequest request)
-      throws UnprocessableEntityException, PidResolutionException {
-    return request.getPidIssuer() == null ? DATACITE_ROR : pidResolver.getObjectName(
-        request.getPidIssuer());
-  }
-
 
   public List<HandleAttribute> prepareDoiRecordAttributes(DoiRecordRequest request, byte[] handle)
       throws PidServiceInternalError, UnprocessableEntityException, PidResolutionException {
@@ -382,18 +369,7 @@ public class FdoRecordBuilder {
   public List<HandleAttribute> prepareDigitalSpecimenBotanyRecordAttributes(
       DigitalSpecimenBotanyRequest request, byte[] handle)
       throws PidServiceInternalError, UnprocessableEntityException, PidResolutionException {
-    List<HandleAttribute> fdoRecord = prepareDigitalSpecimenRecordAttributes(request, handle);
-
-    // 17: ObjectType
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(OBJECT_TYPE), handle, OBJECT_TYPE,
-        request.getObjectType().getBytes(StandardCharsets.UTF_8)));
-
-    // 18: preservedOrLiving
-    fdoRecord.add(
-        new HandleAttribute(FIELD_IDX.get(LIVING_OR_PRESERVED), handle, LIVING_OR_PRESERVED,
-            request.getPreservedOrLiving().getBytes()));
-
-    return fdoRecord;
+    return prepareDigitalSpecimenRecordAttributes(request, handle);
   }
 
   private String getDate() {

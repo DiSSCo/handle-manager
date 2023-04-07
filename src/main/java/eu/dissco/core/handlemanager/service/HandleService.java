@@ -1,7 +1,6 @@
 package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
-import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IS_PID_RECORD;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LOC;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LOC_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
@@ -171,21 +170,7 @@ public class HandleService {
 
   private JsonNode jsonFormatSingleRecord(List<HandleAttribute> dbRecord) {
     ObjectNode rootNode = mapper.createObjectNode();
-    for (HandleAttribute row : dbRecord) {
-      String type = row.type();
-      String data = new String(row.data(), StandardCharsets.UTF_8);
-      if (FIELD_IS_PID_RECORD.contains(type)) {
-        try {
-          ObjectNode subNode = mapper.readValue(data, ObjectNode.class);
-          rootNode.set(type, subNode);
-        } catch (JsonProcessingException e) {
-          log.warn("Type \"{}\" is noncompliant to the PID kernel model. Invalid data: {}", type,
-              data);
-        }
-      } else {
-        rootNode.put(type, data);
-      }
-    }
+    dbRecord.forEach(row -> rootNode.put(row.type(), new String(row.data(), StandardCharsets.UTF_8)));
     return rootNode;
   }
 

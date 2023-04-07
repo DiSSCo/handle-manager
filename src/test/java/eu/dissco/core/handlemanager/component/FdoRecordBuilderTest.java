@@ -4,10 +4,10 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.DOC_BUILDER_FACTO
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.TRANSFORMER_FACTORY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDoiRecordRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecordRequestObject;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
@@ -21,7 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class FdoRecordBuilderTest {
   private FdoRecordBuilder fdoRecordBuilder;
   @Mock
-  private final PidResolverComponent pidResolver,
+  private PidResolverComponent pidResolver;
 
   private final byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
 
@@ -33,7 +33,7 @@ class FdoRecordBuilderTest {
   @Test
   void testPrepareHandleRecordAttributes() throws Exception {
     // Given
-    var request = genHandleRecordRequestObject();
+    var request = givenHandleRecordRequestObject();
 
     // When
     var result = fdoRecordBuilder.prepareHandleRecordAttributes(request, handle);
@@ -45,7 +45,7 @@ class FdoRecordBuilderTest {
   @Test
   void testPrepareDoiRecordAttributes() throws Exception {
     // Given
-    var request = genDoiRecordRequestObject();
+    var request = givenDoiRecordRequestObject();
 
     // When
     var result = fdoRecordBuilder.prepareDoiRecordAttributes(request, handle);
@@ -69,7 +69,7 @@ class FdoRecordBuilderTest {
   @Test
   void testPrepareDigitalSpecimenRecordAttributes() throws Exception {
     // Given
-    var request = genDigitalSpecimenRequestObject();
+    var request = givenDigitalSpecimenRequestObjectNullOptionals();
 
     // When
     var result = fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(request, handle);

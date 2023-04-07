@@ -82,8 +82,4 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
     this.wasDerivedFrom = wasDerivedFrom;
   }
 
-  private String setDefault(String attribute, String defaultVal){
-    return attribute == null ? defaultVal : attribute;
-  }
-
 }

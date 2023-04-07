@@ -1,5 +1,6 @@
 package eu.dissco.core.handlemanager.domain;
 
+import static eu.dissco.core.handlemanager.domain.PidRecords.LIVING_OR_PRESERVED;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MATERIAL_OR_DIGITAL_ENTITY;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_URL;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
@@ -7,32 +8,31 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.OBJECT_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER_REQ;
-import static eu.dissco.core.handlemanager.domain.PidRecords.LIVING_OR_PRESERVED;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_TEXT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MEDIA_URL_TESTVAL;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_ISSUER_PID;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_ISSUER_TESTVAL_OTHER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DOI;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS_BOTANY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MEDIA;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.REFERENT_DOI_NAME_PID;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_PID;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.REFERENT_DOI_NAME_TESTVAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDoiRecordRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequestBatch;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestAltLoc;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecordRequestObject;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -65,7 +65,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testPostHandleRequest() {
     // Given
-    var request = genCreateRecordRequest(genHandleRecordRequestObject(), RECORD_TYPE_HANDLE);
+    var request = genCreateRecordRequest(givenHandleRecordRequestObject(), RECORD_TYPE_HANDLE);
 
     // Then
     assertDoesNotThrow(() -> {
@@ -76,7 +76,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testPostDoiRequest() {
     // Given
-    var request = genCreateRecordRequest(genDoiRecordRequestObject(), RECORD_TYPE_DOI);
+    var request = genCreateRecordRequest(givenDoiRecordRequestObject(), RECORD_TYPE_DOI);
 
     // Then
     assertDoesNotThrow(() -> {
@@ -87,7 +87,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testPostDigitalSpecimenRequest() {
     // Given
-    var request = genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_DS);
+    var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS);
 
     // Then
     assertDoesNotThrow(() -> {
@@ -120,7 +120,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testPatchHandleRequest() {
     // Given
-    var request = givenUpdateRequest(RECORD_TYPE_HANDLE, PID_ISSUER_REQ, PID_ISSUER_PID);
+    var request = givenUpdateRequest(RECORD_TYPE_HANDLE, PID_ISSUER_REQ, PID_ISSUER_TESTVAL_OTHER);
 
     // Then
     assertDoesNotThrow(() -> {
@@ -131,7 +131,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testDoiPatchRequest() {
     // Given
-    var request = givenUpdateRequest(RECORD_TYPE_DOI, REFERENT_DOI_NAME_REQ, REFERENT_DOI_NAME_PID);
+    var request = givenUpdateRequest(RECORD_TYPE_DOI, REFERENT_DOI_NAME_REQ, REFERENT_DOI_NAME_TESTVAL);
 
     // Then
     assertDoesNotThrow(() -> {
@@ -142,7 +142,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testDigitalSpecimenPatchRequest() {
     // Given
-    var request = givenUpdateRequest(RECORD_TYPE_DS, SPECIMEN_HOST_REQ, SPECIMEN_HOST_PID);
+    var request = givenUpdateRequest(RECORD_TYPE_DS, SPECIMEN_HOST_REQ, SPECIMEN_HOST_TESTVAL);
 
     // Then
     assertDoesNotThrow(() -> {
@@ -202,7 +202,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testBadTypeRequest() {
     // Given
-    var request = genCreateRecordRequest(genHandleRecordRequestObject(), UNKNOWN_ATTRIBUTE);
+    var request = genCreateRecordRequest(givenHandleRecordRequestObject(), UNKNOWN_ATTRIBUTE);
 
     // Then
     Exception e = assertThrows(InvalidRequestException.class, () -> {
@@ -246,7 +246,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testBadPostRequest() {
     // Given
-    var request = genCreateRecordRequest(genHandleRecordRequestObject(), RECORD_TYPE_HANDLE);
+    var request = genCreateRecordRequest(givenHandleRecordRequestObject(), RECORD_TYPE_HANDLE);
     ((ObjectNode) request.get(NODE_DATA)).remove(NODE_TYPE);
 
     // Then
@@ -260,7 +260,7 @@ class JsonSchemaValidatorTest {
   void testBadPostHandleRequestMissingProperty() {
     // Given
     String missingAttribute = PID_ISSUER_REQ;
-    var request = genCreateRecordRequest(genHandleRecordRequestObject(), RECORD_TYPE_HANDLE);
+    var request = genCreateRecordRequest(givenHandleRecordRequestObject(), RECORD_TYPE_HANDLE);
     ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(missingAttribute);
 
     // Then
@@ -273,7 +273,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testBadPostHandleRequestUnknownProperty() {
     // Given
-    var request = genCreateRecordRequest(genHandleRecordRequestObject(), RECORD_TYPE_HANDLE);
+    var request = genCreateRecordRequest(givenHandleRecordRequestObject(), RECORD_TYPE_HANDLE);
     ((ObjectNode) request.get(NODE_DATA)).put(UNKNOWN_ATTRIBUTE, UNKNOWN_VAL);
 
     // Then
@@ -287,7 +287,7 @@ class JsonSchemaValidatorTest {
   void testBadPostDoiRequestMissingProperty() {
     // Given
     String missingAttribute = REFERENT_DOI_NAME_REQ;
-    var request = genCreateRecordRequest(genDoiRecordRequestObject(), RECORD_TYPE_DOI);
+    var request = genCreateRecordRequest(givenDoiRecordRequestObject(), RECORD_TYPE_DOI);
     ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(missingAttribute);
 
     // Then
@@ -300,7 +300,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testBadPostDoiRequestUnknownProperty() {
     // Given
-    var request = genCreateRecordRequest(genDoiRecordRequestObject(), RECORD_TYPE_DOI);
+    var request = genCreateRecordRequest(givenDoiRecordRequestObject(), RECORD_TYPE_DOI);
     ((ObjectNode) request.get(NODE_DATA)).put(UNKNOWN_ATTRIBUTE, UNKNOWN_VAL);
 
     // Then
@@ -314,7 +314,7 @@ class JsonSchemaValidatorTest {
   void testBadPostDigitalSpecimenRequestMissingProperty() {
     // Given
     String missingAttribute = SPECIMEN_HOST_REQ;
-    var request = genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_DS);
+    var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS);
     ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(missingAttribute);
 
     // Then
@@ -327,7 +327,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testBadPostDigitalSpecimenRequestUnknownProperty() {
     // Given
-    var request = genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_DS);
+    var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS);
     ((ObjectNode) request.get(NODE_DATA)).put(UNKNOWN_ATTRIBUTE, UNKNOWN_VAL);
 
     // Then
@@ -369,7 +369,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testBadPostMediaObjectRequestUnknownProperty() {
     // Given
-    var request = genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_MEDIA);
+    var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_MEDIA);
     ((ObjectNode) request.get(NODE_DATA)).put(UNKNOWN_ATTRIBUTE, UNKNOWN_VAL);
 
     // Then

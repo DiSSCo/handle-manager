@@ -1,15 +1,14 @@
 package eu.dissco.core.handlemanager.domain.requests.attributes;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-import java.util.Optional;
+import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 
 @Getter
-@RequiredArgsConstructor
 @ToString
 @EqualsAndHashCode
 public class HandleRecordRequest {
@@ -24,27 +23,38 @@ public class HandleRecordRequest {
 
   @JsonProperty(required = true)
   @JsonPropertyDescription("PID for the Type of Digital Object")
-  private final String digitalObjectTypePid;
+  private final String digitalObjectType;
   @JsonProperty(required = true)
   @JsonPropertyDescription("ROR of the Registration Agency. Defaults to DataCite's ROR")
   private final String pidIssuer;
-
   @JsonPropertyDescription("Structural Type of the Object. Defaults to digital")
   private final String structuralType;
   @JsonPropertyDescription("Array containing the locations of the object.")
   private final String[] locations;
 
+  @JsonIgnore
+  @Getter(AccessLevel.NONE)
+  private static final String DATACITE_ROR = "https://ror.org/04wxnsj81";
 
+  public HandleRecordRequest(
+      String fdoProfile,
+      String issuedForAgent,
+      String digitalObjectType,
+      String pidIssuer,
+      String structuralType,
+      String[] locations
+  ){
+    this.fdoProfile = fdoProfile;
+    this.issuedForAgent = issuedForAgent;
+    this.digitalObjectType = digitalObjectType;
+    this.pidIssuer = setDefault(pidIssuer, DATACITE_ROR);
+    this.structuralType = setDefault(structuralType, "digital");
+    this.locations = locations;
+  }
 
-  /*
-  ** Handles **
-  * fdoProfile -> Required
-  * digitalObjectType -> Required
-  * issuedForAgent
-  *
+  protected String setDefault(String attribute, String defaultVal){
+    return attribute == null ? defaultVal : attribute;
+  }
 
-
-
-   */
 
 }
