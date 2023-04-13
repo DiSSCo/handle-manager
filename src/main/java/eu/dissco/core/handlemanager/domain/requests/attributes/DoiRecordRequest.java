@@ -11,7 +11,7 @@ import lombok.ToString;
 public class DoiRecordRequest extends HandleRecordRequest {
 
 
-  private static final String PLACEHOLDER = "";
+  private static final String PLACEHOLDER = "{This value is a placeholder}";
 
   private final String referentType;
 
@@ -38,7 +38,7 @@ public class DoiRecordRequest extends HandleRecordRequest {
     super(fdoProfile, issuedForAgent, digitalObjectType, pidIssuer, structuralType, locations);
     this.referentType = PLACEHOLDER;
     this.referent = PLACEHOLDER;
-    this.referentName = referentName == null ? PLACEHOLDER : referentName;
+    this.referentName = referentName;
     this.primaryReferentType = primaryReferentType == null ? "creation" : primaryReferentType;
   }
 }

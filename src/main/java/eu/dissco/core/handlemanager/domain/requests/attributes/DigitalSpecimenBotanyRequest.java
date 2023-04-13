@@ -1,5 +1,6 @@
 package eu.dissco.core.handlemanager.domain.requests.attributes;
 
+import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -30,14 +31,14 @@ public class DigitalSpecimenBotanyRequest extends DigitalSpecimenRequest {
       String topicDomain,
       String topicDiscipline,
       String objectType,
-      String livingOrPreserved,
+      LivingOrPreserved livingOrPreserved,
       String baseTypeOfSpecimen,
       String informationArtefactType,
       String materialSampleType,
       String materialOrDigitalEntity,
       String markedAsType,
       String wasDerivedFrom
-  ) {
+  ) throws InvalidRequestException {
     super(fdoProfile, issuedForAgent, digitalObjectTypePid, pidIssuer, structuralType, locations,
         referentName, primaryReferentType,
         specimenHost, primarySpecimenObjectId, primarySpecimenObjectIdType,

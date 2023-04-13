@@ -15,7 +15,6 @@ import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
-import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.service.HandleService;
 import io.swagger.v3.oas.annotations.Operation;
 import java.nio.charset.StandardCharsets;
@@ -81,7 +80,7 @@ public class HandleController {
   @GetMapping("/{prefix}/{suffix}")
   public ResponseEntity<JsonApiWrapperReadSingle> resolvePid(@PathVariable("prefix") String prefix,
       @PathVariable("suffix") String suffix, HttpServletRequest r)
-      throws PidResolutionException, UnprocessableEntityException {
+      throws PidResolutionException {
 
     String path = SANDBOX_URI + r.getRequestURI();
     String handle = prefix + "/" + suffix;
@@ -89,18 +88,12 @@ public class HandleController {
     if (prefix.equals("20.5000.1025")){
       return resolveInternalPid(handle, path);
     }
-    return resolveExternalPid(handle, path);
+    throw new PidResolutionException("Unable to resolve PIDs outside DiSSCo namespace. PID must start with prefix 20.5000.1025");
   }
 
   private ResponseEntity<JsonApiWrapperReadSingle> resolveInternalPid(String handle, String path)
       throws PidResolutionException {
     var node = service.resolveSingleRecord(handle.getBytes(StandardCharsets.UTF_8), path);
-    return ResponseEntity.status(HttpStatus.OK).body(node);
-  }
-
-  private ResponseEntity<JsonApiWrapperReadSingle> resolveExternalPid(String handle, String path)
-      throws UnprocessableEntityException, PidResolutionException {
-    var node = service.resolveSingleRecordExternal(handle, path);
     return ResponseEntity.status(HttpStatus.OK).body(node);
   }
 

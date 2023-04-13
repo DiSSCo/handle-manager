@@ -56,7 +56,7 @@ class PidResolverComponentTest {
     given(jsonFuture.get()).willReturn(expected);
 
     // When
-    var response = pidResolver.resolveExternalPid(EXTERNAL_PID);
+    var response = pidResolver.resolveExternalPid(EXTERNAL_PID, null);
 
     // Then
     assertThat(response).isEqualTo(expected);
@@ -71,7 +71,8 @@ class PidResolverComponentTest {
     given(jsonFuture.get()).willThrow(exception);
 
     // Then
-    assertThrows(PidResolutionException.class, () -> pidResolver.resolveExternalPid(EXTERNAL_PID));
+    assertThrows(PidResolutionException.class, () -> pidResolver.resolveExternalPid(EXTERNAL_PID,
+        null));
   }
 
   @Test
@@ -84,7 +85,8 @@ class PidResolverComponentTest {
     given(jsonFuture.get()).willThrow(exception);
 
     // Then
-    assertThrows(UnprocessableEntityException.class, () -> pidResolver.resolveExternalPid(EXTERNAL_PID));
+    assertThrows(UnprocessableEntityException.class, () -> pidResolver.resolveExternalPid(EXTERNAL_PID,
+        null));
   }
 
   private void givenWebclient() {

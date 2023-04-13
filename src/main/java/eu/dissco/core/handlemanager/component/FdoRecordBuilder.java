@@ -38,6 +38,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST_NAME;
+import static eu.dissco.core.handlemanager.domain.PidRecords.STRUCTURAL_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_PHYSICAL_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOPIC_DISCIPLINE;
@@ -46,6 +47,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.TOPIC_ORIGIN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.WAS_DERIVED_FROM;
 import static eu.dissco.core.handlemanager.service.ServiceUtils.setUniquePhysicalIdentifierId;
 import static eu.dissco.core.handlemanager.utils.AdminHandleGenerator.genAdminHandle;
+import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
 
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenBotanyRequest;
@@ -53,6 +55,7 @@ import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRe
 import eu.dissco.core.handlemanager.domain.requests.attributes.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.MediaObjectRequest;
+import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
@@ -84,12 +87,15 @@ public class FdoRecordBuilder {
   private final TransformerFactory tf;
   private final DocumentBuilderFactory dbf;
   private final PidResolverComponent pidResolver;
+
+  private static final String HANDLE_DOMAIN = "https://hdl.handle.net/";
+  private static final String ROR_DOMAIN = "https://api.ror.org/organizations/";
   private final DateTimeFormatter dt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS",
       Locale.ENGLISH).withZone(ZoneId.of("UTC"));
 
   public List<HandleAttribute> prepareHandleRecordAttributes(HandleRecordRequest request,
       byte[] handle)
-      throws PidServiceInternalError, UnprocessableEntityException, PidResolutionException {
+      throws PidServiceInternalError, UnprocessableEntityException, PidResolutionException, InvalidRequestException {
     List<HandleAttribute> fdoRecord = new ArrayList<>();
 
     // 100: Admin Handle
@@ -117,14 +123,14 @@ public class FdoRecordBuilder {
             request.getDigitalObjectType().getBytes(StandardCharsets.UTF_8)));
 
     // 4: DigitalObjectName
-    var digitalObjectName = pidResolver.getObjectName(request.getDigitalObjectType())
+    var digitalObjectName = pidResolver.getObjectName(request.getDigitalObjectType(), HANDLE_DOMAIN)
         .getBytes(StandardCharsets.UTF_8);
     fdoRecord.add(
         new HandleAttribute(FIELD_IDX.get(DIGITAL_OBJECT_NAME), handle, DIGITAL_OBJECT_NAME,
             digitalObjectName));
 
     // 5: Pid
-    byte[] pid = ("https://hdl.handle.net/" + new String(handle, StandardCharsets.UTF_8)).getBytes(
+    byte[] pid = (HANDLE_DOMAIN + new String(handle, StandardCharsets.UTF_8)).getBytes(
         StandardCharsets.UTF_8);
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(PID), handle, PID, pid));
 
@@ -133,7 +139,8 @@ public class FdoRecordBuilder {
         request.getPidIssuer().getBytes(StandardCharsets.UTF_8)));
 
     // 7: pidIssuerName
-    var pidIssuerName = pidResolver.getObjectName(request.getPidIssuer()).getBytes(StandardCharsets.UTF_8);
+    var pidIssuerRor = getRor(request.getPidIssuer());
+    var pidIssuerName = pidResolver.getObjectName(pidIssuerRor, ROR_DOMAIN).getBytes(StandardCharsets.UTF_8);
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(PID_ISSUER_NAME), handle, PID_ISSUER_NAME,
         pidIssuerName));
 
@@ -142,7 +149,8 @@ public class FdoRecordBuilder {
         request.getIssuedForAgent().getBytes(StandardCharsets.UTF_8)));
 
     // 9: issuedForAgentName
-    var issuedForAgentName = pidResolver.getObjectName(request.getIssuedForAgent())
+    var agentNameRor = getRor(request.getIssuedForAgent());
+    var issuedForAgentName = pidResolver.getObjectName(agentNameRor, ROR_DOMAIN)
         .getBytes(StandardCharsets.UTF_8);
     fdoRecord.add(
         new HandleAttribute(FIELD_IDX.get(ISSUED_FOR_AGENT_NAME), handle, ISSUED_FOR_AGENT_NAME,
@@ -157,8 +165,8 @@ public class FdoRecordBuilder {
         PID_RECORD_ISSUE_NUMBER, "1".getBytes(StandardCharsets.UTF_8)));
 
     // 12: structuralType
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(PID_RECORD_ISSUE_NUMBER), handle,
-        PID_RECORD_ISSUE_NUMBER, "1".getBytes(StandardCharsets.UTF_8)));
+    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(STRUCTURAL_TYPE), handle,
+        STRUCTURAL_TYPE, request.getStructuralType().getBytes(StandardCharsets.UTF_8)));
 
     // 13: PidStatus
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS,
@@ -167,8 +175,16 @@ public class FdoRecordBuilder {
     return fdoRecord;
   }
 
+  private static String getRor(String url) throws InvalidRequestException {
+    if(!containsIgnoreCase(url, "https://ror.org/")){
+      throw new InvalidRequestException("Invalid ROR \""+url+"\". Valid data must contain domain \"https://ror.org/");
+    }
+    var splitVal = url.split("/");
+    return splitVal[splitVal.length-1];
+  }
+
   public List<HandleAttribute> prepareDoiRecordAttributes(DoiRecordRequest request, byte[] handle)
-      throws PidServiceInternalError, UnprocessableEntityException, PidResolutionException {
+      throws PidServiceInternalError, UnprocessableEntityException, PidResolutionException, InvalidRequestException {
     var fdoRecord = prepareHandleRecordAttributes(request, handle);
 
     // 40: referentType
@@ -180,9 +196,10 @@ public class FdoRecordBuilder {
         new HandleAttribute(FIELD_IDX.get(REFERENT_DOI_NAME), handle, REFERENT_DOI_NAME, handle));
 
     // 42: referentName
-    fdoRecord.add(
-        new HandleAttribute(FIELD_IDX.get(REFERENT_NAME), handle, REFERENT_NAME, request.getReferentName().getBytes(StandardCharsets.UTF_8)));
-
+    if (request.getReferentName() != null){
+      fdoRecord.add(
+          new HandleAttribute(FIELD_IDX.get(REFERENT_NAME), handle, REFERENT_NAME, request.getReferentName().getBytes(StandardCharsets.UTF_8)));
+    }
     // 43: primaryReferentType
     fdoRecord.add(
         new HandleAttribute(FIELD_IDX.get(PRIMARY_REFERENT_TYPE), handle, PRIMARY_REFERENT_TYPE, request.getPrimaryReferentType().getBytes(StandardCharsets.UTF_8)));
@@ -196,7 +213,7 @@ public class FdoRecordBuilder {
 
   public List<HandleAttribute> prepareMediaObjectAttributes(MediaObjectRequest request,
       byte[] handle)
-      throws PidServiceInternalError, UnprocessableEntityException, PidResolutionException {
+      throws PidServiceInternalError, UnprocessableEntityException, PidResolutionException, InvalidRequestException {
     var fdoRecord = prepareDoiRecordAttributes(request, handle);
 
     // 14 Media Hash
@@ -221,7 +238,7 @@ public class FdoRecordBuilder {
 
   public List<HandleAttribute> prepareDigitalSpecimenRecordAttributes(
       DigitalSpecimenRequest request, byte[] handle)
-      throws PidServiceInternalError, UnprocessableEntityException, PidResolutionException {
+      throws PidServiceInternalError, UnprocessableEntityException, PidResolutionException, InvalidRequestException {
     var fdoRecord = prepareDoiRecordAttributes(request, handle);
 
     // 200: Specimen Host
@@ -231,7 +248,8 @@ public class FdoRecordBuilder {
             request.getSpecimenHost().getBytes(StandardCharsets.UTF_8)));
 
     // 201: Specimen Host name
-    var specimenHostName = pidResolver.getObjectName(request.getSpecimenHost()).getBytes(StandardCharsets.UTF_8);
+    var specimenHostRor = getRor(request.getSpecimenHost());
+    var specimenHostName = pidResolver.getObjectName(specimenHostRor, ROR_DOMAIN).getBytes(StandardCharsets.UTF_8);
     fdoRecord.add(
         new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST_NAME), handle,
             SPECIMEN_HOST_NAME,
@@ -314,7 +332,7 @@ public class FdoRecordBuilder {
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(LIVING_OR_PRESERVED), handle,
               LIVING_OR_PRESERVED,
-              request.getLivingOrPreserved().getBytes(StandardCharsets.UTF_8)));
+              request.getLivingOrPreserved().getBytes()));
     }
 
     // 212: baseTypeOfSpecimen
@@ -345,7 +363,7 @@ public class FdoRecordBuilder {
     fdoRecord.add(
         new HandleAttribute(FIELD_IDX.get(MATERIAL_OR_DIGITAL_ENTITY), handle,
             MATERIAL_OR_DIGITAL_ENTITY,
-            request.getMaterialSampleType().getBytes()));
+            request.getMaterialOrDigitalEntity().getBytes()));
 
     // 216: markedAsType
     if (request.getMarkedAsType() != null ){
@@ -368,7 +386,7 @@ public class FdoRecordBuilder {
 
   public List<HandleAttribute> prepareDigitalSpecimenBotanyRecordAttributes(
       DigitalSpecimenBotanyRequest request, byte[] handle)
-      throws PidServiceInternalError, UnprocessableEntityException, PidResolutionException {
+      throws PidServiceInternalError, UnprocessableEntityException, PidResolutionException, InvalidRequestException {
     return prepareDigitalSpecimenRecordAttributes(request, handle);
   }
 

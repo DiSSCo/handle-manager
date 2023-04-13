@@ -22,6 +22,7 @@ import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRe
 import eu.dissco.core.handlemanager.domain.requests.attributes.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdentifier;
+import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
 
@@ -81,20 +82,24 @@ import org.junit.jupiter.api.Test;
   }
 
   private DigitalSpecimenRequest givenCombinedTypeDSRecord(){
-   return new DigitalSpecimenRequest(
-       FDO_PROFILE_TESTVAL,
-       ISSUED_FOR_AGENT_TESTVAL,
-       DIGITAL_OBJECT_TYPE_TESTVAL,
-       PID_ISSUER_TESTVAL_OTHER,
-       STRUCTURAL_TYPE_TESTVAL,
-       LOC_TESTVAL,
-       REFERENT_NAME_TESTVAL,
-       PRIMARY_REFERENT_TYPE_TESTVAL,
-       SPECIMEN_HOST_TESTVAL,
-       PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-       PhysicalIdType.COMBINED,null, null, null, null, null, null, null, null, null, null,null, null, null, null
+   try {
+    return new DigitalSpecimenRequest(
+        FDO_PROFILE_TESTVAL,
+        ISSUED_FOR_AGENT_TESTVAL,
+        DIGITAL_OBJECT_TYPE_TESTVAL,
+        PID_ISSUER_TESTVAL_OTHER,
+        STRUCTURAL_TYPE_TESTVAL,
+        LOC_TESTVAL,
+        REFERENT_NAME_TESTVAL,
+        PRIMARY_REFERENT_TYPE_TESTVAL,
+        SPECIMEN_HOST_TESTVAL,
+        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
+        PhysicalIdType.COMBINED,null, null, null, null, null, null, null, null, null, null,null, null, null, null
 
-   );
+    );
+   } catch (InvalidRequestException e) {
+    return null;
+   }
   }
 
   private MediaObjectRequest givenCombinedMediaRequest(){

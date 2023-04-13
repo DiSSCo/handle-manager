@@ -150,7 +150,7 @@ class HandleServiceTest {
         genObjectNodeAttributeRecord(recordAttributeList));
 
 
-    given(pidResolver.resolveExternalPid(pid)).willReturn(jsonNode);
+    given(pidResolver.resolveExternalPid(pid, null)).willReturn(jsonNode);
 
     // When
     var responseReceived = service.resolveSingleRecordExternal(pid, path);

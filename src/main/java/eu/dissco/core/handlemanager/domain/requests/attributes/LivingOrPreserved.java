@@ -3,13 +3,13 @@ package eu.dissco.core.handlemanager.domain.requests.attributes;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.nio.charset.StandardCharsets;
 
-public enum PreservedOrLiving {
+public enum LivingOrPreserved {
   @JsonProperty("preserved") PRESERVED("preserved"),
   @JsonProperty("living") LIVING("living");
 
   private final String state;
 
-  private PreservedOrLiving(@JsonProperty("preservedOrLiving") String state) {
+  private LivingOrPreserved(@JsonProperty("preservedOrLiving") String state) {
     this.state = state;
   }
 

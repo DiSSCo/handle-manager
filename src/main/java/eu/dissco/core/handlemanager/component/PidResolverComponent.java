@@ -19,10 +19,10 @@ public class PidResolverComponent {
   private final WebClient webClient;
 
   @Cacheable("pid")
-  public JsonNode resolveExternalPid(String pid)
+  public JsonNode resolveExternalPid(String pid, String domain)
       throws UnprocessableEntityException, PidResolutionException {
-    String url = "https://hdl.handle.net/" + pid;
-    log.info("querying the following: {}", url);
+    String url = domain + pid;
+    log.info("Querying the following: {}", url);
     var responseSpec = webClient.get().uri(url).retrieve()
         .onStatus(HttpStatus.NOT_FOUND::equals,
             r -> r.bodyToMono(String.class).map(PidResolutionException::new));
@@ -42,9 +42,10 @@ public class PidResolverComponent {
     }
   }
 
-  public String getObjectName(String pid)
+
+  public String getObjectName(String pid, String domain)
       throws UnprocessableEntityException, PidResolutionException {
-    var pidRecord = resolveExternalPid(pid);
+    var pidRecord = resolveExternalPid(pid, domain);
     if (pidRecord.get("name")!= null){
       return pidRecord.get("name").asText();
     }

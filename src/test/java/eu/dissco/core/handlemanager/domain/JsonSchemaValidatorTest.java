@@ -10,7 +10,9 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.OBJECT_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID;
+import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME_REQ;
+import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_TEXT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
@@ -38,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaValidator;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import java.util.List;
@@ -66,6 +69,25 @@ class JsonSchemaValidatorTest {
   void testPostHandleRequest() {
     // Given
     var request = genCreateRecordRequest(givenHandleRecordRequestObject(), RECORD_TYPE_HANDLE);
+
+    // Then
+    assertDoesNotThrow(() -> {
+      schemaValidator.validatePostRequest(request);
+    });
+  }
+
+  @Test
+  void testPostHandleRequestNoLoc() {
+    // Given
+    var requestAttributes = new HandleRecordRequest(
+        "",
+        "",
+        "",
+        "",
+        "",
+        null
+    );
+    var request = genCreateRecordRequest(requestAttributes, RECORD_TYPE_HANDLE);
 
     // Then
     assertDoesNotThrow(() -> {
@@ -131,7 +153,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testDoiPatchRequest() {
     // Given
-    var request = givenUpdateRequest(RECORD_TYPE_DOI, REFERENT_DOI_NAME_REQ, REFERENT_DOI_NAME_TESTVAL);
+    var request = givenUpdateRequest(RECORD_TYPE_DOI, REFERENT_NAME, REFERENT_DOI_NAME_TESTVAL);
 
     // Then
     assertDoesNotThrow(() -> {

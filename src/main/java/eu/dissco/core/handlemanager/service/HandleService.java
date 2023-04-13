@@ -81,15 +81,6 @@ public class HandleService {
     return new JsonApiWrapperReadSingle(linksNode, dataNode);
   }
 
-  public JsonApiWrapperReadSingle resolveSingleRecordExternal(String pid, String path)
-      throws UnprocessableEntityException, PidResolutionException {
-    var pidRecord = pidResolver.resolveExternalPid(pid);
-    var dataNode = new JsonApiDataLinks(pid, "PID Record", pidRecord, new JsonApiLinks("https://hdl.handle.net/" + pid));
-    var linksNode = new JsonApiLinks(path);
-
-    return new JsonApiWrapperReadSingle(linksNode, dataNode);
-  }
-
   public JsonApiWrapperRead resolveBatchRecord(List<byte[]> handles, String path)
       throws PidResolutionException {
     List<JsonApiDataLinks> dataList = new ArrayList<>();

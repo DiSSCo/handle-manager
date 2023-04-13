@@ -67,8 +67,9 @@ import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordReque
 import eu.dissco.core.handlemanager.domain.requests.attributes.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdentifier;
-import eu.dissco.core.handlemanager.domain.requests.attributes.PreservedOrLiving;
+import eu.dissco.core.handlemanager.domain.requests.attributes.LivingOrPreserved;
 import eu.dissco.core.handlemanager.domain.requests.attributes.TombstoneRecordRequest;
+import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
@@ -139,7 +140,7 @@ public class TestUtils {
   public static final String IN_COLLECTION_FACILITY_TESTVAL = "20.5000.1025/OTHER-TRIPLET";
   //Botany Specimens
   public static final String OBJECT_TYPE_TESTVAL = "Herbarium Sheet";
-  public static final PreservedOrLiving PRESERVED_OR_LIVING_TESTVAL = PreservedOrLiving.PRESERVED;
+  public static final LivingOrPreserved PRESERVED_OR_LIVING_TESTVAL = LivingOrPreserved.PRESERVED;
   // Media Objects
   public static final String MEDIA_URL_TESTVAL = "https://naturalis.nl/media/123";
   public static final String MEDIA_HASH_TESTVAL = "47bce5c74f589f48";
@@ -557,35 +558,43 @@ public class TestUtils {
   }
 
   public static DigitalSpecimenRequest givenDigitalSpecimenRequestObjectNullOptionals() {
-    return new DigitalSpecimenRequest(
-        FDO_PROFILE_TESTVAL,
-        ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL,
-        PID_ISSUER_TESTVAL_OTHER,
-        STRUCTURAL_TYPE_TESTVAL,
-        LOC_TESTVAL,
-        REFERENT_NAME_TESTVAL,
-        PRIMARY_REFERENT_TYPE_TESTVAL,
-        SPECIMEN_HOST_TESTVAL,
-        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        null,null, null, null, null, null, null, null, null, null, null,null, null, null, null
-        );
+    try {
+      return new DigitalSpecimenRequest(
+          FDO_PROFILE_TESTVAL,
+          ISSUED_FOR_AGENT_TESTVAL,
+          DIGITAL_OBJECT_TYPE_TESTVAL,
+          PID_ISSUER_TESTVAL_OTHER,
+          STRUCTURAL_TYPE_TESTVAL,
+          LOC_TESTVAL,
+          REFERENT_NAME_TESTVAL,
+          PRIMARY_REFERENT_TYPE_TESTVAL,
+          SPECIMEN_HOST_TESTVAL,
+          PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
+          null,null, null, null, null, null, null, null, null, null, null,null, null, null, null
+          );
+    } catch (InvalidRequestException e) {
+      return null;
+    }
   }
 
   public static DigitalSpecimenBotanyRequest genDigitalSpecimenBotanyRequestObject() {
-    return new DigitalSpecimenBotanyRequest(
-        FDO_PROFILE_TESTVAL,
-        ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL,
-        PID_ISSUER_TESTVAL_OTHER,
-        STRUCTURAL_TYPE_TESTVAL,
-        LOC_TESTVAL,
-        REFERENT_NAME_TESTVAL,
-        PRIMARY_REFERENT_TYPE_TESTVAL,
-        SPECIMEN_HOST_TESTVAL,
-        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        null,null, null, null, null, null, null, null, null, null, null,null, null, null, null
-    );
+    try {
+      return new DigitalSpecimenBotanyRequest(
+          FDO_PROFILE_TESTVAL,
+          ISSUED_FOR_AGENT_TESTVAL,
+          DIGITAL_OBJECT_TYPE_TESTVAL,
+          PID_ISSUER_TESTVAL_OTHER,
+          STRUCTURAL_TYPE_TESTVAL,
+          LOC_TESTVAL,
+          REFERENT_NAME_TESTVAL,
+          PRIMARY_REFERENT_TYPE_TESTVAL,
+          SPECIMEN_HOST_TESTVAL,
+          PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
+          null,null, null, null, null, null, null, null, null, null, null,null, null, null, null
+      );
+    } catch (InvalidRequestException e) {
+     return null;
+    }
   }
 
   public static MediaObjectRequest genMediaRequestObject() {

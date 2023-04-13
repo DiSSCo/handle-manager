@@ -10,6 +10,7 @@ import com.github.victools.jsonschema.generator.OptionPreset;
 import com.github.victools.jsonschema.generator.SchemaGenerator;
 import com.github.victools.jsonschema.generator.SchemaGeneratorConfig;
 import com.github.victools.jsonschema.generator.SchemaGeneratorConfigBuilder;
+import com.github.victools.jsonschema.generator.SchemaGeneratorConfigPart;
 import com.github.victools.jsonschema.generator.SchemaVersion;
 import com.github.victools.jsonschema.module.jackson.JacksonModule;
 import com.github.victools.jsonschema.module.jackson.JacksonOption;
@@ -96,6 +97,7 @@ public class JsonSchemaValidator {
 
     JacksonModule module = new JacksonModule(JacksonOption.RESPECT_JSONPROPERTY_REQUIRED,
         JacksonOption.FLATTENED_ENUMS_FROM_JSONPROPERTY);
+
     SchemaGeneratorConfigBuilder configBuilder = new SchemaGeneratorConfigBuilder(
         SchemaVersion.DRAFT_2020_12, OptionPreset.PLAIN_JSON).with(
             Option.FORBIDDEN_ADDITIONAL_PROPERTIES_BY_DEFAULT)
@@ -117,6 +119,10 @@ public class JsonSchemaValidator {
     configBuilder.forTypesInGeneral()
         .withArrayUniqueItemsResolver(
             scope -> scope.getType().isInstanceOf(String[].class) ? true : null);
+
+    // Allow null if specified
+    configBuilder.forFields()
+        .withNullableCheck(field ->  field.getAnnotationConsideringFieldAndGetter(Nullable.class) != null);
 
     return configBuilder.build();
   }
@@ -274,6 +280,7 @@ public class JsonSchemaValidator {
   private void validateRequestAttributes(JsonNode requestAttributes, JsonSchema schema,
       ObjectType type) throws InvalidRequestException {
     var validationErrors = schema.validate(requestAttributes);
+    log.info(schema.getSchemaNode().toPrettyString());
     if (!validationErrors.isEmpty()) {
       throw new InvalidRequestException(setErrorMessage(validationErrors, String.valueOf(type)));
     }
