@@ -41,6 +41,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.DIGITAL_OBJECT_TY
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.DOC_BUILDER_FACTORY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.FDO_PROFILE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_DOMAIN;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.ISSUED_FOR_AGENT_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.LOC_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
@@ -48,20 +49,26 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_ISSUER_TESTVA
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_REFERENT_TYPE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.REFERENT_NAME_TESTVAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.ROR_DOMAIN;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.STRUCTURAL_TYPE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.TRANSFORMER_FACTORY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestAltLoc;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestBatch;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecordRequestObject;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.lenient;
 
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
+import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.LivingOrPreserved;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
@@ -74,6 +81,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.quality.Strictness;
 
 @ExtendWith(MockitoExtension.class)
 class FdoRecordBuilderTest {
@@ -101,13 +109,13 @@ class FdoRecordBuilderTest {
 
   @BeforeEach
   void init() throws Exception {
-    given(pidResolver.getObjectName(any())).willReturn("placeholder");
     fdoRecordBuilder = new FdoRecordBuilder(TRANSFORMER_FACTORY, DOC_BUILDER_FACTORY, pidResolver, MAPPER);
   }
 
   @Test
   void testPrepareHandleRecordAttributes() throws Exception {
     // Given
+    given(pidResolver.getObjectName(any())).willReturn("placeholder");
     var request = givenHandleRecordRequestObject();
 
     // When
@@ -121,6 +129,7 @@ class FdoRecordBuilderTest {
   @Test
   void testPrepareDoiRecordAttributes() throws Exception {
     // Given
+    given(pidResolver.getObjectName(any())).willReturn("placeholder");
     var request = givenDoiRecordRequestObject();
 
     // When
@@ -135,6 +144,7 @@ class FdoRecordBuilderTest {
   @Test
   void testPrepareMediaObjectAttributes() throws Exception {
     // Given
+    given(pidResolver.getObjectName(any())).willReturn("placeholder");
     var request = genMediaRequestObject();
 
     // When
@@ -147,6 +157,7 @@ class FdoRecordBuilderTest {
   @Test
   void testPrepareDigitalSpecimenRecordMandatoryAttributes() throws Exception {
     // Given
+    given(pidResolver.getObjectName(any())).willReturn("placeholder");
     var request = givenDigitalSpecimenRequestObjectNullOptionals();
 
     // When
@@ -162,7 +173,9 @@ class FdoRecordBuilderTest {
   @Test
   void testPrepareDigitalSpecimenRecordOptionalAttributes() throws Exception {
     // Given
+    given(pidResolver.getObjectName(any())).willReturn("placeholder");
     var request = givenDigitalSpecimenRequestObjectOptionalsInit();
+
     // When
     var result = fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(request, handle);
 
@@ -177,6 +190,7 @@ class FdoRecordBuilderTest {
   @Test
   void testPrepareDigitalSpecimenBotanyAttributes() throws Exception {
     // Given
+    given(pidResolver.getObjectName(any())).willReturn("placeholder");
     var request = genDigitalSpecimenBotanyRequestObject();
 
     // When
@@ -184,6 +198,78 @@ class FdoRecordBuilderTest {
 
     // Then
     assertThat(result).hasSize(25);
+  }
+
+  @Test
+  void testPidIssuerIsRor() throws Exception {
+    // Given
+    given(pidResolver.getObjectName(any())).willReturn("placeholder");
+    var request = new HandleRecordRequest(
+      FDO_PROFILE_TESTVAL,
+      ISSUED_FOR_AGENT_TESTVAL,
+      DIGITAL_OBJECT_TYPE_TESTVAL,
+      ISSUED_FOR_AGENT_TESTVAL,
+      STRUCTURAL_TYPE_TESTVAL,
+      null
+    );
+
+    // When
+    var result = fdoRecordBuilder.prepareHandleRecordAttributes(request, handle);
+
+    // Then
+    assertThat(result).hasSize(15);
+    assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
+  }
+
+  @Test
+  void testPidIssuerBad() throws Exception {
+    // Given
+    given(pidResolver.getObjectName(any())).willReturn("placeholder");
+    var request = new HandleRecordRequest(
+        FDO_PROFILE_TESTVAL,
+        ISSUED_FOR_AGENT_TESTVAL,
+        DIGITAL_OBJECT_TYPE_TESTVAL,
+        "abc",
+        STRUCTURAL_TYPE_TESTVAL,
+        null
+    );
+
+    // Then
+    var e = assertThrows(InvalidRequestException.class, () -> fdoRecordBuilder.prepareHandleRecordAttributes(request, handle));
+    assertThat(e.getMessage()).contains(ROR_DOMAIN).contains(HANDLE_DOMAIN);
+  }
+
+  @Test
+  void testBadRor() throws Exception {
+    // Given
+    given(pidResolver.getObjectName(any())).willReturn("placeholder");
+    var request = new HandleRecordRequest(
+        FDO_PROFILE_TESTVAL,
+        "abc",
+        DIGITAL_OBJECT_TYPE_TESTVAL,
+        ISSUED_FOR_AGENT_TESTVAL,
+        STRUCTURAL_TYPE_TESTVAL,
+        null
+    );
+
+    var e = assertThrows(InvalidRequestException.class, () -> fdoRecordBuilder.prepareHandleRecordAttributes(request, handle));
+    assertThat(e.getMessage()).contains(ROR_DOMAIN);
+  }
+
+  @Test
+  void testBadHandle(){
+    // Given
+    var request = new HandleRecordRequest(
+        FDO_PROFILE_TESTVAL,
+        ISSUED_FOR_AGENT_TESTVAL,
+        "abc",
+        ISSUED_FOR_AGENT_TESTVAL,
+        STRUCTURAL_TYPE_TESTVAL,
+        null
+    );
+
+    var e = assertThrows(InvalidRequestException.class, () -> fdoRecordBuilder.prepareHandleRecordAttributes(request, handle));
+    assertThat(e.getMessage()).contains(HANDLE_DOMAIN);
   }
 
   private DigitalSpecimenRequest givenDigitalSpecimenRequestObjectOptionalsInit()

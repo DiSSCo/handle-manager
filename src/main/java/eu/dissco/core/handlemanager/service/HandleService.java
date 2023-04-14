@@ -12,6 +12,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
 import static eu.dissco.core.handlemanager.service.ServiceUtils.setUniquePhysicalIdentifierId;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -292,6 +293,21 @@ public class HandleService {
     return new JsonApiWrapperWrite(dataList);
   }
 
+  public List<HandleAttribute> prepareUpdateAttributes(byte[] handle, JsonNode request) {
+
+    Map<String, String> updateRecord = mapper.convertValue(request,
+        new TypeReference<Map<String, String>>() {
+        });
+    List<HandleAttribute> attributesToUpdate = new ArrayList<>();
+
+    for (var requestField : updateRecord.entrySet()) {
+      String type = requestField.getKey().replace("Pid", "");
+      byte[] data = requestField.getValue().getBytes(StandardCharsets.UTF_8);
+      attributesToUpdate.add(new HandleAttribute(FIELD_IDX.get(type), handle, type, data));
+    }
+    return attributesToUpdate;
+  }
+
   // Update Records
   public JsonApiWrapperWrite updateRecords(List<JsonNode> requests)
       throws InvalidRequestException, PidResolutionException, PidServiceInternalError {
@@ -310,7 +326,7 @@ public class HandleService {
 
       JsonNode validatedAttributes = setLocationFromJson(requestAttributes,
           new String(handle, StandardCharsets.UTF_8));
-      var attributes = fdoRecordBuilder.prepareUpdateAttributes(handle, validatedAttributes);
+      var attributes = prepareUpdateAttributes(handle, validatedAttributes);
       attributesToUpdate.add(attributes);
     }
     checkInternalDuplicates(handles);
@@ -416,7 +432,7 @@ public class HandleService {
       JsonNode requestAttributes = data.get(NODE_ATTRIBUTES);
       byte[] handle = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
       handles.add(handle);
-      archiveAttributes.addAll(fdoRecordBuilder.prepareUpdateAttributes(handle, requestAttributes));
+      archiveAttributes.addAll(prepareUpdateAttributes(handle, requestAttributes));
       archiveAttributes.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS,
           "ARCHIVED".getBytes(StandardCharsets.UTF_8)));
     }

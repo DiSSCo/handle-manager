@@ -1,0 +1,53 @@
+{
+  "identifier": "21.T11148/d8de0819e144e4096645",
+  "description": "DiSSCo Digital Specimen FDO Record",
+  "provenance": {
+    "contributors": [
+      {
+        "identifiedUsing": "ORCID",
+        "name": "0000-0001-8050-0299",
+        "details": "Sharif Islam (Naturalis)"
+      }
+    ],
+    "creationDate": "2023-03-03T15:59:38.376Z",
+    "lastModificationDate": "2023-03-16T14:12:18.707Z"
+  },
+  "properties": [
+    {
+      "name": "digitalObjectType",
+      "identifier": "21.T11148/1c699a5d1b4ad3ba4956"
+    },
+    {
+      "name": "pid",
+      "identifier": "21.T11148/bde57ab8b0be12d839b4"
+    },
+    {
+      "name": "pidIssuer",
+      "identifier": "21.T11148/d30addfc314144b00c03"
+    },
+    {
+      "name": "issueDate",
+      "identifier": "21.T11148/e927d0677c77241b7074"
+    },
+    {
+      "name": "issueNumber",
+      "identifier": "21.T11148/ec9ca42beddc2988dd8f"
+    },
+    {
+      "name": "pidStatus",
+      "identifier": "21.T11148/d1ec8ccbfa6de41da894"
+    },
+    {
+      "name": "FDORecordLicense",
+      "identifier": "21.T11148/dc54ae4b6807f5887fda"
+    },
+    {
+      "name": "digitalOrPhysical",
+      "identifier": "21.T11148/b0f9268ca7cdad6a4e8f"
+    },
+    {
+      "name": "specimenHost",
+      "identifier": "21.T11148/89b340c66ce4dae7a55b"
+    }
+  ]
+}

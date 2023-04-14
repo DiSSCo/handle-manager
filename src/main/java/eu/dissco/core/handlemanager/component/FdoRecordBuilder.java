@@ -48,8 +48,6 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.WAS_DERIVED_FROM;
 import static eu.dissco.core.handlemanager.service.ServiceUtils.setUniquePhysicalIdentifierId;
 import static eu.dissco.core.handlemanager.utils.AdminHandleGenerator.genAdminHandle;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenBotanyRequest;
@@ -70,7 +68,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -181,7 +178,7 @@ public class FdoRecordBuilder {
   }
   private String prepareRorOrHandle(String url)
       throws InvalidRequestException, UnprocessableEntityException, PidResolutionException {
-    if (url.contains(ROR_API_DOMAIN)){
+    if (url.contains(ROR_DOMAIN)){
       return pidResolver.getObjectName(getRor(url));
     }
     else if (url.contains(HANDLE_DOMAIN)){
@@ -411,20 +408,6 @@ public class FdoRecordBuilder {
     }
 
     return fdoRecord;
-  }
-
-  public List<HandleAttribute> prepareUpdateAttributes(byte[] handle, JsonNode request) {
-    Map<String, String> updateRecord = mapper.convertValue(request,
-        new TypeReference<Map<String, String>>() {
-        });
-    List<HandleAttribute> attributesToUpdate = new ArrayList<>();
-
-    for (var requestField : updateRecord.entrySet()) {
-      String type = requestField.getKey().replace("Pid", "");
-      byte[] data = requestField.getValue().getBytes(StandardCharsets.UTF_8);
-      attributesToUpdate.add(new HandleAttribute(FIELD_IDX.get(type), handle, type, data));
-    }
-    return attributesToUpdate;
   }
 
   public List<HandleAttribute> prepareDigitalSpecimenBotanyRecordAttributes(

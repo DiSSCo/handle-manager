@@ -10,7 +10,6 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 public class DoiRecordRequest extends HandleRecordRequest {
 
-
   private static final String PLACEHOLDER = "{This value is a placeholder}";
 
   private final String referentType;

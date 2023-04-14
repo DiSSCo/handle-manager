@@ -13,6 +13,7 @@ import static org.mockito.Mockito.mock;
 import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
+import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import org.junit.jupiter.api.BeforeEach;
@@ -87,6 +88,36 @@ class PidResolverComponentTest {
     // Then
     assertThrows(UnprocessableEntityException.class, () -> pidResolver.resolveExternalPid(EXTERNAL_PID
     ));
+  }
+
+  @Test
+  void testGetObjectName() throws Exception {
+    // Given
+    givenWebclient();
+    var response = MAPPER.readTree(loadResourceFile("pidrecord/pidRecord.json"));
+    given(jsonFuture.get()).willReturn(response);
+    var expected = "digitalSpecimen";
+
+    // When
+    var result = pidResolver.getObjectName(EXTERNAL_PID);
+
+    // Then
+    assertThat(result).isEqualTo(expected);
+  }
+
+  @Test
+  void testGetObjectNameNotPresent() throws Exception {
+    // Given
+    givenWebclient();
+    var response = MAPPER.readTree(loadResourceFile("pidrecord/pidRecordNoName.json"));
+    given(jsonFuture.get()).willReturn(response);
+    var expected = "";
+
+    // When
+    var result = pidResolver.getObjectName(EXTERNAL_PID);
+
+    // Then
+    assertThat(result).isEqualTo(expected);
   }
 
   private void givenWebclient() {
