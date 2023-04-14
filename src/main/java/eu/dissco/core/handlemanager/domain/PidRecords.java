@@ -39,7 +39,7 @@ public class PidRecords {
   public static final String SPECIMEN_HOST = "specimenHost"; // 200
   public static final String SPECIMEN_HOST_NAME = "specimenHostName"; // 201
   public static final String PRIMARY_SPECIMEN_OBJECT_ID = "primarySpecimenObjectId"; // 202
-  public static final String PRIMARY_SPECIMEN_OBJECT_ID_TYPE = "primarySpecimenObjectidType"; // 203
+  public static final String PRIMARY_SPECIMEN_OBJECT_ID_TYPE = "primarySpecimenObjectIdType"; // 203
   public static final String PRIMARY_SPECIMEN_OBJECT_ID_NAME = "primarySpecimenObjectIdName"; // 204
   public static final String PRIMARY_SPECIMEN_OBJECT_ID_ABSENCE = "primarySpecimenObjectIdAbsenceReason"; // 205
   public static final String OTHER_SPECIMEN_IDS = "otherSpecimenIds"; // 206
@@ -83,10 +83,6 @@ public class PidRecords {
   public static final String NODE_ID = "id";
   public static final String NODE_TYPE = "type";
 
-  // Pid Status
-  public static final Set<String> VALID_PID_STATUS = (Set.of("ACTIVE", "ARCHIVED", "DRAFT",
-      "RESERVED", "TEST", "TEST2", "ALL"));
-
   // Permitted fields for each record type
   public static final Set<String> HANDLE_RECORD_FIELDS = Set.of(PID, PID_ISSUER,
       DIGITAL_OBJECT_TYPE, DIGITAL_OBJECT_SUBTYPE, LOC, PID_RECORD_ISSUE_DATE,
@@ -98,10 +94,6 @@ public class PidRecords {
   public static final Set<String> DOI_RECORD_REQ;
   public static final Set<String> DIGITAL_SPECIMEN_REQ;
   public static final Set<String> DIGITAL_SPECIMEN_BOTANY_REQ;
-
-  public static final Set<String> FIELD_IS_PID_RECORD = Set.of(PID_ISSUER, DIGITAL_OBJECT_TYPE,
-      DIGITAL_OBJECT_SUBTYPE, TOMBSTONE_PIDS, SPECIMEN_HOST, IN_COLLECTION_FACILITY,
-      REFERENT_DOI_NAME);
 
   public static final Map<String, Integer> FIELD_IDX = Map.ofEntries(Map.entry(FDO_PROFILE, 1),
       Map.entry(FDO_RECORD_LICENSE, 2), Map.entry(DIGITAL_OBJECT_TYPE, 3),
@@ -126,7 +118,7 @@ public class PidRecords {
       Map.entry(MATERIAL_SAMPLE_TYPE, 214), Map.entry(MATERIAL_OR_DIGITAL_ENTITY, 215),
       Map.entry(MARKED_AS_TYPE, 216), Map.entry(WAS_DERIVED_FROM, 217),
 
-      Map.entry(MEDIA_HASH, 300), Map.entry(MEDIA_URL, 301), Map.entry(SUBJECT_PHYSICAL_IDENTIFIER, 302),
+      Map.entry(MEDIA_HASH, 300), Map.entry(MEDIA_URL, 301), Map.entry(SUBJECT_PHYSICAL_IDENTIFIER, 302), Map.entry(SUBJECT_SPECIMEN_HOST, 303),
 
       Map.entry(HS_ADMIN, 100), Map.entry(LOC, 101));
 

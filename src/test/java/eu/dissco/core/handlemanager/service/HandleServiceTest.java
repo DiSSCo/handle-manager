@@ -140,26 +140,6 @@ class HandleServiceTest {
   }
 
   @Test
-  void testResolveSingleRecordExternal() throws Exception {
-    String pid = EXTERNAL_PID;
-    String path = SANDBOX_URI + pid;
-    List<HandleAttribute> recordAttributeList = genHandleRecordAttributes(pid.getBytes(StandardCharsets.UTF_8));
-    var jsonNode = genObjectNodeAttributeRecord(recordAttributeList);
-
-    var responseExpected = givenRecordResponseReadSingle(pid, path, "PID Record",
-        genObjectNodeAttributeRecord(recordAttributeList));
-
-
-    given(pidResolver.resolveExternalPid(pid, null)).willReturn(jsonNode);
-
-    // When
-    var responseReceived = service.resolveSingleRecordExternal(pid, path);
-
-    // Then
-    assertThat(responseReceived).isEqualTo(responseExpected);
-  }
-
-  @Test
   void testResolveBatchRecord() throws Exception {
     // Given
     String path = SANDBOX_URI;

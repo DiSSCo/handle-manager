@@ -12,6 +12,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.PREFIX;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_REFERENT_TYPE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.REFERENT_NAME_TESTVAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.ROR_DOMAIN;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.STRUCTURAL_TYPE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaRequestObject;
@@ -32,7 +33,8 @@ import org.junit.jupiter.api.Test;
   void testSetUniquePhysicalIdentifier(){
     // Given
    var request = givenDigitalSpecimenRequestObjectNullOptionals();
-   var expected = request.getPrimarySpecimenObjectIdType().toString().getBytes(StandardCharsets.UTF_8);
+   var suffix = request.getSpecimenHost().replace(ROR_DOMAIN,"");
+   var expected = (request.getPrimarySpecimenObjectId() + ":" + suffix).getBytes(StandardCharsets.UTF_8);
 
    // When
    var result = setUniquePhysicalIdentifierId(request);
@@ -44,12 +46,12 @@ import org.junit.jupiter.api.Test;
   @Test
   void testSetUniquePhysicalIdentifierCombined(){
    // Given
-   var request = givenCombinedTypeDSRecord();
-   var suffix = request.getPrimarySpecimenObjectId().replace(PREFIX + "/","");
-   var expected = (request.getPrimarySpecimenObjectIdType().toString() + ":" + suffix).getBytes(StandardCharsets.UTF_8);
+   var request = givenCetafTypeDSRecord();
+   var expected = request.getPrimarySpecimenObjectId().getBytes(StandardCharsets.UTF_8);
 
    // When
    var result = setUniquePhysicalIdentifierId(request);
+
    // Then
    assertThat(result).isEqualTo(expected);
   }
@@ -71,7 +73,7 @@ import org.junit.jupiter.api.Test;
   void testSetUniquePhysicalIdentifierMediaCombined(){
    // Given
    var request = givenCombinedMediaRequest();
-   var suffix = request.getSubjectSpecimenHostPid().replace(PREFIX + "/","");
+   var suffix = request.getSubjectSpecimenHostPid().replace(ROR_DOMAIN,"");
    var expected = request.getSubjectPhysicalIdentifier().physicalId() + ":" + suffix;
 
    // When
@@ -81,7 +83,7 @@ import org.junit.jupiter.api.Test;
    assertThat(result).isEqualTo(expected);
   }
 
-  private DigitalSpecimenRequest givenCombinedTypeDSRecord(){
+  private DigitalSpecimenRequest givenCetafTypeDSRecord(){
    try {
     return new DigitalSpecimenRequest(
         FDO_PROFILE_TESTVAL,
@@ -94,7 +96,7 @@ import org.junit.jupiter.api.Test;
         PRIMARY_REFERENT_TYPE_TESTVAL,
         SPECIMEN_HOST_TESTVAL,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        PhysicalIdType.COMBINED,null, null, null, null, null, null, null, null, null, null,null, null, null, null
+        PhysicalIdType.CETAF,null, null, null, null, null, null, null, null, null, null,null, null, null, null
 
     );
    } catch (InvalidRequestException e) {

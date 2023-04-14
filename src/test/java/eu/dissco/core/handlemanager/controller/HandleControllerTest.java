@@ -126,30 +126,6 @@ class HandleControllerTest {
   }
 
   @Test
-  void testResolveSingleHandleExternal() throws Exception {
-    // Given
-    var prefix = "10.20";
-    String handleString = prefix + "/" + SUFFIX;
-    String path = SANDBOX_URI + handleString;
-    byte[] handle = handleString.getBytes(StandardCharsets.UTF_8);
-    MockHttpServletRequest r = new MockHttpServletRequest();
-    r.setRequestURI(prefix + "/" + SUFFIX);
-
-    var responseExpected = new JsonApiWrapperReadSingle(new JsonApiLinks(path),
-        new JsonApiDataLinks(handleString, RECORD_TYPE_HANDLE, null,
-            new JsonApiLinks("https://hdl.handle.net/"+handleString)));
-
-    given(service.resolveSingleRecordExternal(handleString, path)).willReturn(responseExpected);
-
-    // When
-    var responseReceived = controller.resolvePid(prefix, SUFFIX, r);
-
-    // Then
-    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
-  }
-
-  @Test
   void testSearchByPhysicalId() throws Exception {
     // Given
 

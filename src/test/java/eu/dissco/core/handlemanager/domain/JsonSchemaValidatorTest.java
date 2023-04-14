@@ -1,19 +1,16 @@
 package eu.dissco.core.handlemanager.domain;
 
+import static eu.dissco.core.handlemanager.domain.PidRecords.FDO_PROFILE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LIVING_OR_PRESERVED;
-import static eu.dissco.core.handlemanager.domain.PidRecords.MATERIAL_OR_DIGITAL_ENTITY;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_URL;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.OBJECT_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER_REQ;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID;
-import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
-import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME_REQ;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_NAME;
-import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST_REQ;
+import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_TEXT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
@@ -140,9 +137,9 @@ class JsonSchemaValidatorTest {
   }
 
   @Test
-  void testPatchHandleRequest() {
+  void testHandlePatchRequest() {
     // Given
-    var request = givenUpdateRequest(RECORD_TYPE_HANDLE, PID_ISSUER_REQ, PID_ISSUER_TESTVAL_OTHER);
+    var request = givenUpdateRequest(RECORD_TYPE_HANDLE, PID_ISSUER, PID_ISSUER_TESTVAL_OTHER);
 
     // Then
     assertDoesNotThrow(() -> {
@@ -164,7 +161,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testDigitalSpecimenPatchRequest() {
     // Given
-    var request = givenUpdateRequest(RECORD_TYPE_DS, SPECIMEN_HOST_REQ, SPECIMEN_HOST_TESTVAL);
+    var request = givenUpdateRequest(RECORD_TYPE_DS, SPECIMEN_HOST, SPECIMEN_HOST_TESTVAL);
 
     // Then
     assertDoesNotThrow(() -> {
@@ -234,28 +231,12 @@ class JsonSchemaValidatorTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {LIVING_OR_PRESERVED, MATERIAL_OR_DIGITAL_ENTITY})
+  @ValueSource(strings = {LIVING_OR_PRESERVED, PRIMARY_SPECIMEN_OBJECT_ID_TYPE})
   void testBadEnumValueRequest(String targetEnum){
     // Given
     ObjectNode request = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(), RECORD_TYPE_DS_BOTANY);
     ((ObjectNode) request.get("data").get("attributes")).remove(targetEnum);
     ((ObjectNode) request.get("data").get("attributes")).put(targetEnum, UNKNOWN_VAL);
-
-    // Then
-    Exception e = assertThrows(InvalidRequestException.class, () -> {
-      schemaValidator.validatePostRequest(request);
-    });
-
-    assertThat(e.getMessage()).contains(ENUM_MSG).contains(targetEnum);
-  }
-
-  @Test
-  void testBadEnumPhysicalIdType(){
-    // Given
-    String targetEnum = "physicalIdType";
-    ObjectNode request = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(), RECORD_TYPE_DS_BOTANY);
-    ((ObjectNode) request.get("data").get("attributes").get(PRIMARY_SPECIMEN_OBJECT_ID)).remove(targetEnum);
-    ((ObjectNode) request.get("data").get("attributes").get(PRIMARY_SPECIMEN_OBJECT_ID)).put(targetEnum, UNKNOWN_VAL);
 
     // Then
     Exception e = assertThrows(InvalidRequestException.class, () -> {
@@ -279,9 +260,9 @@ class JsonSchemaValidatorTest {
   }
 
   @Test
-  void testBadPostHandleRequestMissingProperty() {
+  void testBadPostHandleRequestMissingRequiredProperty() {
     // Given
-    String missingAttribute = PID_ISSUER_REQ;
+    String missingAttribute = FDO_PROFILE;
     var request = genCreateRecordRequest(givenHandleRecordRequestObject(), RECORD_TYPE_HANDLE);
     ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(missingAttribute);
 
@@ -306,20 +287,6 @@ class JsonSchemaValidatorTest {
   }
 
   @Test
-  void testBadPostDoiRequestMissingProperty() {
-    // Given
-    String missingAttribute = REFERENT_DOI_NAME_REQ;
-    var request = genCreateRecordRequest(givenDoiRecordRequestObject(), RECORD_TYPE_DOI);
-    ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(missingAttribute);
-
-    // Then
-    Exception e = assertThrows(InvalidRequestException.class, () -> {
-      schemaValidator.validatePostRequest(request);
-    });
-    assertThat(e.getMessage()).contains(MISSING_MSG).contains(missingAttribute);
-  }
-
-  @Test
   void testBadPostDoiRequestUnknownProperty() {
     // Given
     var request = genCreateRecordRequest(givenDoiRecordRequestObject(), RECORD_TYPE_DOI);
@@ -335,7 +302,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testBadPostDigitalSpecimenRequestMissingProperty() {
     // Given
-    String missingAttribute = SPECIMEN_HOST_REQ;
+    String missingAttribute = SPECIMEN_HOST;
     var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS);
     ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(missingAttribute);
 
@@ -357,21 +324,6 @@ class JsonSchemaValidatorTest {
        schemaValidator.validatePostRequest(request);
     });
     assertThat(e.getMessage()).contains(UNRECOGNIZED_MSG).contains(UNKNOWN_ATTRIBUTE);
-  }
-
-  @Test
-  void testBadPostDigitalSpecimenBotanyRequestMissingProperty() {
-    // Given
-    String missingAttribute = OBJECT_TYPE;
-    var request = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(),
-        RECORD_TYPE_DS_BOTANY);
-    ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(missingAttribute);
-
-    // Then
-    Exception e = assertThrows(InvalidRequestException.class, () -> {
-       schemaValidator.validatePostRequest(request);
-    });
-    assertThat(e.getMessage()).contains(MISSING_MSG).contains(missingAttribute);
   }
 
   @Test

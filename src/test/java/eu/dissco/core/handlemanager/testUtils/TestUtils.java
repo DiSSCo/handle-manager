@@ -100,7 +100,6 @@ public class TestUtils {
   public static final String SUFFIX = "QRS-321-ABC";
   public static final String HANDLE_ALT = "20.5000.1025/ABC-123-QRS";
   public static final List<String> HANDLE_LIST_STR;
-  public static final String DIGITAL_OBJECT_TYPE_PID = "20.5000.1025/DIGITAL-SPECIMEN";
 
   // Record types
   public static final String RECORD_TYPE_HANDLE = "handle";
@@ -112,16 +111,17 @@ public class TestUtils {
 
   // Request Test Vals
   // Handles
-  public static final String FDO_PROFILE_TESTVAL = "21.T11148/d8de0819e144e4096645";
-  public static final String ISSUED_FOR_AGENT_TESTVAL = "https://ror.org/0566bfb96";
-  public static final String DIGITAL_OBJECT_TYPE_TESTVAL = "21.T11148/1c699a5d1b4ad3ba4956";
-  public static final String PID_ISSUER_TESTVAL_OTHER = "20.5000.1025/PID-ISSUER";
+  public static final String HANDLE_DOMAIN = "https://hdl.handle.net/";
+  public static final String ROR_DOMAIN = "https://ror.org/";
+  public static final String FDO_PROFILE_TESTVAL = HANDLE_DOMAIN + "21.T11148/d8de0819e144e4096645";
+  public static final String ISSUED_FOR_AGENT_TESTVAL = ROR_DOMAIN + "0566bfb96";
+  public static final String DIGITAL_OBJECT_TYPE_TESTVAL = HANDLE_DOMAIN + "21.T11148/1c699a5d1b4ad3ba4956";
+  public static final String PID_ISSUER_TESTVAL_OTHER = HANDLE_DOMAIN + "20.5000.1025/PID-ISSUER";
   public static final String STRUCTURAL_TYPE_TESTVAL = "digital";
   public static final String[] LOC_TESTVAL = {"https://sandbox.dissco.tech/", "https://dissco.eu"};
   public static final String[] LOC_ALT_TESTVAL = {"naturalis.nl"};
 
   // DOI Request Attributes
-  public static final String REFERENT_TESTVAL = "";
   public static final String REFERENT_NAME_TESTVAL = "Bird nest";
   public static final String PRIMARY_REFERENT_TYPE_TESTVAL = "materialSample";
 
@@ -129,13 +129,10 @@ public class TestUtils {
   // Generated Attributes
   public static final String PID_STATUS_TESTVAL = "TEST";
   public static final String REFERENT_DOI_NAME_TESTVAL = "10.20500/" + SUFFIX;
-
-  public static final String PID_KERNEL_METADATA_LICENSE_TESTVAL = "https://creativecommons.org/publicdomain/zero/1.0/";
   //DOIs
 
   //Digital Specimens
-  public static final DigitalOrPhysical DIGITAL_OR_PHYSICAL_TESTVAL = DigitalOrPhysical.PHYSICAL;
-  public static final String SPECIMEN_HOST_TESTVAL = "ror.org/0x123";
+  public static final String SPECIMEN_HOST_TESTVAL = ROR_DOMAIN + "0x123";
   public static final String SPECIMEN_HOST_NAME_TESTVAL = "Naturalis";
   public static final String IN_COLLECTION_FACILITY_TESTVAL = "20.5000.1025/OTHER-TRIPLET";
   //Botany Specimens
@@ -431,7 +428,7 @@ public class TestUtils {
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(LIVING_OR_PRESERVED), handle,
               LIVING_OR_PRESERVED,
-              request.getLivingOrPreserved().getBytes(StandardCharsets.UTF_8)));
+              request.getLivingOrPreserved().getBytes()));
     }
 
     // 212: baseTypeOfSpecimen

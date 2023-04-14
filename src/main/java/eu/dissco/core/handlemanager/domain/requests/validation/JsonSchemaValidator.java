@@ -280,7 +280,6 @@ public class JsonSchemaValidator {
   private void validateRequestAttributes(JsonNode requestAttributes, JsonSchema schema,
       ObjectType type) throws InvalidRequestException {
     var validationErrors = schema.validate(requestAttributes);
-    log.info(schema.getSchemaNode().toPrettyString());
     if (!validationErrors.isEmpty()) {
       throw new InvalidRequestException(setErrorMessage(validationErrors, String.valueOf(type)));
     }

@@ -7,6 +7,7 @@ import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import org.springframework.lang.Nullable;
 
 @Getter
 @ToString
@@ -32,6 +33,7 @@ public class HandleRecordRequest {
   private final String structuralType;
 
   @JsonPropertyDescription("Array containing the locations of the object.")
+  @Nullable
   private final String[] locations;
 
   @JsonIgnore

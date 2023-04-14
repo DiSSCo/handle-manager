@@ -6,6 +6,7 @@ import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import org.springframework.lang.Nullable;
 
 @Getter
 @ToString
@@ -21,21 +22,34 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
 
   @JsonPropertyDescription("ID Type. Either combined or cetaf. Defaults to combined.")
   private final PhysicalIdType primarySpecimenObjectIdType;
+  @Nullable
   private final String primarySpecimenObjectIdName;
+  @Nullable
   private final String primarySpecimenObjectIdAbsenceReason;
+  @Nullable
   private final String[] otherSpecimenIds;
+  @Nullable
   private final String topicOrigin;
+  @Nullable
   private final String topicDomain;
+  @Nullable
   private final String topicDiscipline;
+  @Nullable
   private final String objectType;
+  @Nullable
   private final LivingOrPreserved livingOrPreserved;
+  @Nullable
   private final String baseTypeOfSpecimen;
+  @Nullable
   private final String informationArtefactType;
+  @Nullable
   private final String materialSampleType;
+  @Nullable
   private final String materialOrDigitalEntity;
+  @Nullable
   private final String markedAsType;
+  @Nullable
   private final String wasDerivedFrom;
-
 
   public DigitalSpecimenRequest(
       // Handle

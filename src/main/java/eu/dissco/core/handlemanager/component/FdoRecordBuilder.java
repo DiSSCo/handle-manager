@@ -47,8 +47,10 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.TOPIC_ORIGIN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.WAS_DERIVED_FROM;
 import static eu.dissco.core.handlemanager.service.ServiceUtils.setUniquePhysicalIdentifierId;
 import static eu.dissco.core.handlemanager.utils.AdminHandleGenerator.genAdminHandle;
-import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
@@ -68,6 +70,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -87,9 +90,11 @@ public class FdoRecordBuilder {
   private final TransformerFactory tf;
   private final DocumentBuilderFactory dbf;
   private final PidResolverComponent pidResolver;
-
+  private final ObjectMapper mapper;
   private static final String HANDLE_DOMAIN = "https://hdl.handle.net/";
-  private static final String ROR_DOMAIN = "https://api.ror.org/organizations/";
+  private static final String ROR_API_DOMAIN = "https://api.ror.org/organizations/";
+  private static final String ROR_DOMAIN = "https://ror.org/";
+  private static final String PROXY_ERROR = "Invalid attribute: %s must contain proxy: %s";
   private final DateTimeFormatter dt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS",
       Locale.ENGLISH).withZone(ZoneId.of("UTC"));
 
@@ -122,8 +127,9 @@ public class FdoRecordBuilder {
         new HandleAttribute(FIELD_IDX.get(DIGITAL_OBJECT_TYPE), handle, DIGITAL_OBJECT_TYPE,
             request.getDigitalObjectType().getBytes(StandardCharsets.UTF_8)));
 
-    // 4: DigitalObjectName
-    var digitalObjectName = pidResolver.getObjectName(request.getDigitalObjectType(), HANDLE_DOMAIN)
+    // 4: DigitalObjectName - Handle
+    checkHandle(request.getDigitalObjectType());
+    var digitalObjectName = pidResolver.getObjectName(request.getDigitalObjectType())
         .getBytes(StandardCharsets.UTF_8);
     fdoRecord.add(
         new HandleAttribute(FIELD_IDX.get(DIGITAL_OBJECT_NAME), handle, DIGITAL_OBJECT_NAME,
@@ -138,19 +144,18 @@ public class FdoRecordBuilder {
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(PID_ISSUER), handle, PID_ISSUER,
         request.getPidIssuer().getBytes(StandardCharsets.UTF_8)));
 
-    // 7: pidIssuerName
-    var pidIssuerRor = getRor(request.getPidIssuer());
-    var pidIssuerName = pidResolver.getObjectName(pidIssuerRor, ROR_DOMAIN).getBytes(StandardCharsets.UTF_8);
+    // 7: pidIssuerName (ROR or Handle)
+    String pidIssuerName = prepareRorOrHandle(request.getPidIssuer());
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(PID_ISSUER_NAME), handle, PID_ISSUER_NAME,
-        pidIssuerName));
+        pidIssuerName.getBytes(StandardCharsets.UTF_8)));
 
     // 8: issuedForAgent
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(ISSUED_FOR_AGENT), handle, ISSUED_FOR_AGENT,
         request.getIssuedForAgent().getBytes(StandardCharsets.UTF_8)));
 
-    // 9: issuedForAgentName
+    // 9: issuedForAgentName - ROR
     var agentNameRor = getRor(request.getIssuedForAgent());
-    var issuedForAgentName = pidResolver.getObjectName(agentNameRor, ROR_DOMAIN)
+    var issuedForAgentName = pidResolver.getObjectName(agentNameRor)
         .getBytes(StandardCharsets.UTF_8);
     fdoRecord.add(
         new HandleAttribute(FIELD_IDX.get(ISSUED_FOR_AGENT_NAME), handle, ISSUED_FOR_AGENT_NAME,
@@ -174,13 +179,28 @@ public class FdoRecordBuilder {
 
     return fdoRecord;
   }
+  private String prepareRorOrHandle(String url)
+      throws InvalidRequestException, UnprocessableEntityException, PidResolutionException {
+    if (url.contains(ROR_API_DOMAIN)){
+      return pidResolver.getObjectName(getRor(url));
+    }
+    else if (url.contains(HANDLE_DOMAIN)){
+      return pidResolver.getObjectName(url);
+    }
+    throw new InvalidRequestException(String.format(PROXY_ERROR, url, (ROR_DOMAIN + " or " + HANDLE_DOMAIN)));
+  }
 
   private static String getRor(String url) throws InvalidRequestException {
-    if(!containsIgnoreCase(url, "https://ror.org/")){
-      throw new InvalidRequestException("Invalid ROR \""+url+"\". Valid data must contain domain \"https://ror.org/");
+    if (!url.contains(ROR_DOMAIN)){
+      throw new InvalidRequestException(String.format(PROXY_ERROR, url, ROR_DOMAIN));
     }
-    var splitVal = url.split("/");
-    return splitVal[splitVal.length-1];
+    return url.replace(ROR_DOMAIN, ROR_API_DOMAIN);
+  }
+
+  private static void checkHandle(String url) throws InvalidRequestException {
+    if (!url.contains(HANDLE_DOMAIN)){
+      throw new InvalidRequestException(String.format(PROXY_ERROR, url, HANDLE_DOMAIN));
+    }
   }
 
   public List<HandleAttribute> prepareDoiRecordAttributes(DoiRecordRequest request, byte[] handle)
@@ -249,7 +269,7 @@ public class FdoRecordBuilder {
 
     // 201: Specimen Host name
     var specimenHostRor = getRor(request.getSpecimenHost());
-    var specimenHostName = pidResolver.getObjectName(specimenHostRor, ROR_DOMAIN).getBytes(StandardCharsets.UTF_8);
+    var specimenHostName = pidResolver.getObjectName(specimenHostRor).getBytes(StandardCharsets.UTF_8);
     fdoRecord.add(
         new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST_NAME), handle,
             SPECIMEN_HOST_NAME,
@@ -382,6 +402,20 @@ public class FdoRecordBuilder {
     }
 
     return fdoRecord;
+  }
+
+  public List<HandleAttribute> prepareUpdateAttributes(byte[] handle, JsonNode request) {
+    Map<String, String> updateRecord = mapper.convertValue(request,
+        new TypeReference<Map<String, String>>() {
+        });
+    List<HandleAttribute> attributesToUpdate = new ArrayList<>();
+
+    for (var requestField : updateRecord.entrySet()) {
+      String type = requestField.getKey().replace("Pid", "");
+      byte[] data = requestField.getValue().getBytes(StandardCharsets.UTF_8);
+      attributesToUpdate.add(new HandleAttribute(FIELD_IDX.get(type), handle, type, data));
+    }
+    return attributesToUpdate;
   }
 
   public List<HandleAttribute> prepareDigitalSpecimenBotanyRecordAttributes(
