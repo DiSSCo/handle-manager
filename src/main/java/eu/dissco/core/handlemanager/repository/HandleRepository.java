@@ -5,7 +5,6 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_RECORD_ISSUE_NUMBER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID;
-import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_RECORD_FIELDS_BYTES;
 
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import java.nio.charset.StandardCharsets;
@@ -180,13 +179,10 @@ public class HandleRepository {
   // Archive
   public void archiveRecord(long recordTimestamp, List<HandleAttribute> handleAttributes) {
     mergeAttributesToDb(recordTimestamp, handleAttributes);
-    //removeNonTombstoneFields(List.of(handleAttributes.get(0).handle()));
   }
 
-  public void archiveRecords(long recordTimestamp, List<HandleAttribute> handleAttributes,
-      List<byte[]> handles) {
+  public void archiveRecords(long recordTimestamp, List<HandleAttribute> handleAttributes) {
     mergeAttributesToDb(recordTimestamp, handleAttributes);
-    //removeNonTombstoneFields(handles);
   }
 
   // Update
@@ -236,13 +232,6 @@ public class HandleRepository {
         .set(HANDLES.TIMESTAMP, recordTimestamp)
         .where(HANDLES.HANDLE.eq(handle))
         .and(HANDLES.TYPE.eq(PID_RECORD_ISSUE_NUMBER.getBytes(StandardCharsets.UTF_8)));
-  }
-
-  private void removeNonTombstoneFields(List<byte[]> handles) {
-    context.delete(HANDLES)
-        .where(HANDLES.HANDLE.in(handles))
-        .and(HANDLES.TYPE.notIn(TOMBSTONE_RECORD_FIELDS_BYTES))
-        .execute();
   }
 
   private int getOffset(int pageNum, int pageSize){

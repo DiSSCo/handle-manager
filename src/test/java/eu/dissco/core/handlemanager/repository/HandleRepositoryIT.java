@@ -334,7 +334,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     }
 
     // When
-    handleRep.archiveRecords(CREATED.getEpochSecond(), archiveAttributes, handles);
+    handleRep.archiveRecords(CREATED.getEpochSecond(), archiveAttributes);
     var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
             Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
         .where(Handles.HANDLES.HANDLE.in(handles)).and(Handles.HANDLES.TYPE.notEqual(

@@ -324,59 +324,66 @@ public class FdoRecordBuilder {
     }
 
     // 208: topicDomain
-    if (request.getTopicDomain() != null ){
+    var topicDomain = request.getTopicDomain();
+    if (topicDomain != null ){
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(TOPIC_DOMAIN), handle,
               TOPIC_DOMAIN,
-              request.getTopicDomain().getBytes(StandardCharsets.UTF_8)));
+              topicDomain.getBytes(StandardCharsets.UTF_8)));
     }
 
     // 209: topicDiscipline
-    if (request.getTopicDiscipline() != null ){
+    var topicDisc = request.getTopicDiscipline();
+    if (topicDisc != null ){
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(TOPIC_DISCIPLINE), handle,
               TOPIC_DISCIPLINE,
-              request.getTopicDiscipline().getBytes(StandardCharsets.UTF_8)));
+              topicDisc.getBytes(StandardCharsets.UTF_8)));
     }
 
     // 210: objectType
-    if (request.getObjectType() != null ){
+    var objType = request.getObjectType();
+    if (objType != null ){
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(OBJECT_TYPE), handle,
               OBJECT_TYPE,
-              request.getObjectType().getBytes(StandardCharsets.UTF_8)));
+              objType.getBytes(StandardCharsets.UTF_8)));
     }
 
     // 211: livingOrPreserved
-    if (request.getLivingOrPreserved() != null ){
+    var livingOrPres = request.getLivingOrPreserved();
+    if (livingOrPres != null ){
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(LIVING_OR_PRESERVED), handle,
               LIVING_OR_PRESERVED,
-              request.getLivingOrPreserved().getBytes()));
+              livingOrPres.getBytes()));
     }
 
     // 212: baseTypeOfSpecimen
-    if (request.getBaseTypeOfSpecimen() != null ){
+    var baseType = request.getBaseTypeOfSpecimen();
+    if (baseType != null ){
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(BASE_TYPE_OF_SPECIMEN), handle,
               BASE_TYPE_OF_SPECIMEN,
-              request.getBaseTypeOfSpecimen().getBytes(StandardCharsets.UTF_8)));
+              baseType.getBytes(StandardCharsets.UTF_8)));
     }
 
     // 213: informationArtefactType
-    if (request.getInformationArtefactType() != null ){
+    var artefactType = request.getInformationArtefactType();
+    if (artefactType != null ){
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(INFORMATION_ARTEFACT_TYPE), handle,
               INFORMATION_ARTEFACT_TYPE,
-              request.getInformationArtefactType().getBytes(StandardCharsets.UTF_8)));
+              artefactType.getBytes(StandardCharsets.UTF_8)));
     }
 
     // 214: materialSampleType
-    if (request.getMaterialSampleType() != null ){
+    var matSamp = request.getMaterialSampleType();
+    if (matSamp != null ){
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(MATERIAL_SAMPLE_TYPE), handle,
               MATERIAL_SAMPLE_TYPE,
-              request.getMaterialSampleType().getBytes(StandardCharsets.UTF_8)));
+              matSamp.getBytes(StandardCharsets.UTF_8)));
     }
 
     // 215: materialOrDigitalEntity
@@ -386,19 +393,21 @@ public class FdoRecordBuilder {
             request.getMaterialOrDigitalEntity().getBytes()));
 
     // 216: markedAsType
-    if (request.getMarkedAsType() != null ){
+    var markedAsType = request.getMarkedAsType();
+    if (markedAsType != null ){
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(MARKED_AS_TYPE), handle,
               MARKED_AS_TYPE,
-              request.getMarkedAsType().getBytes(StandardCharsets.UTF_8)));
+              markedAsType.getBytes(StandardCharsets.UTF_8)));
     }
 
     // 217: wasDerivedFrom
-    if (request.getWasDerivedFrom() != null ){
+    var wasDerivedFrom = request.getWasDerivedFrom();
+    if (wasDerivedFrom != null ){
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(WAS_DERIVED_FROM), handle,
               WAS_DERIVED_FROM,
-              request.getWasDerivedFrom().getBytes(StandardCharsets.UTF_8)));
+              wasDerivedFrom.getBytes(StandardCharsets.UTF_8)));
     }
 
     return fdoRecord;

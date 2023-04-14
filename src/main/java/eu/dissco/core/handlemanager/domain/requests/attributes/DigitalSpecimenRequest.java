@@ -44,7 +44,6 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
   private final String informationArtefactType;
   @Nullable
   private final String materialSampleType;
-  @Nullable
   private final String materialOrDigitalEntity;
   @Nullable
   private final String markedAsType;

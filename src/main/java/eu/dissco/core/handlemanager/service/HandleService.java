@@ -423,7 +423,7 @@ public class HandleService {
     checkInternalDuplicates(handles);
     checkHandlesWritable(handles);
 
-    handleRep.archiveRecords(recordTimestamp, archiveAttributes, handles);
+    handleRep.archiveRecords(recordTimestamp, archiveAttributes);
     var archivedRecords = resolveAndFormatRecords(handles);
 
     List<JsonApiDataLinks> dataList = new ArrayList<>();
