@@ -103,7 +103,7 @@ class FdoRecordBuilderTest {
 
   @BeforeEach
   void init() throws Exception {
-    fdoRecordBuilder = new FdoRecordBuilder(TRANSFORMER_FACTORY, DOC_BUILDER_FACTORY, pidResolver, MAPPER);
+    fdoRecordBuilder = new FdoRecordBuilder(TRANSFORMER_FACTORY, DOC_BUILDER_FACTORY, pidResolver);
   }
 
   @Test

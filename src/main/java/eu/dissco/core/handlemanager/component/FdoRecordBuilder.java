@@ -48,7 +48,6 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.WAS_DERIVED_FROM;
 import static eu.dissco.core.handlemanager.service.ServiceUtils.setUniquePhysicalIdentifierId;
 import static eu.dissco.core.handlemanager.utils.AdminHandleGenerator.genAdminHandle;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
@@ -87,11 +86,12 @@ public class FdoRecordBuilder {
   private final TransformerFactory tf;
   private final DocumentBuilderFactory dbf;
   private final PidResolverComponent pidResolver;
-  private final ObjectMapper mapper;
   private static final String HANDLE_DOMAIN = "https://hdl.handle.net/";
   private static final String ROR_API_DOMAIN = "https://api.ror.org/organizations/";
   private static final String ROR_DOMAIN = "https://ror.org/";
   private static final String PROXY_ERROR = "Invalid attribute: %s must contain proxy: %s";
+  private static final byte[] pidKernelMetadataLicense = "https://creativecommons.org/publicdomain/zero/1.0/".getBytes(
+      StandardCharsets.UTF_8);
   private final DateTimeFormatter dt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS",
       Locale.ENGLISH).withZone(ZoneId.of("UTC"));
 
@@ -105,7 +105,6 @@ public class FdoRecordBuilder {
         new HandleAttribute(FIELD_IDX.get(HS_ADMIN), handle, HS_ADMIN, genAdminHandle()));
 
     // 101: 10320/loc
-
     byte[] loc = setLocations(request.getLocations(), new String(handle, StandardCharsets.UTF_8));
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, loc));
 
@@ -114,8 +113,6 @@ public class FdoRecordBuilder {
         request.getFdoProfile().getBytes(StandardCharsets.UTF_8)));
 
     // 2: FDO Record License
-    byte[] pidKernelMetadataLicense = "https://creativecommons.org/publicdomain/zero/1.0/".getBytes(
-        StandardCharsets.UTF_8);
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(FDO_RECORD_LICENSE), handle,
         FDO_RECORD_LICENSE, pidKernelMetadataLicense));
 

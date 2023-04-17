@@ -60,11 +60,6 @@ public class PidRecords {
   public static final String HS_ADMIN = "HS_ADMIN"; // 100
   public static final String LOC = "10320/loc"; //101
 
-  // To Remove
-  public static final String DIGITAL_OBJECT_SUBTYPE = "digitalObjectSubtype";
-
-  public static final String IN_COLLECTION_FACILITY = "inCollectionFacility";
-
 
   // Media Object
   public static final String MEDIA_HASH = "mediaHash";
@@ -85,7 +80,7 @@ public class PidRecords {
 
   // Permitted fields for each record type
   public static final Set<String> HANDLE_RECORD_FIELDS = Set.of(PID, PID_ISSUER,
-      DIGITAL_OBJECT_TYPE, DIGITAL_OBJECT_SUBTYPE, LOC, PID_RECORD_ISSUE_DATE,
+      DIGITAL_OBJECT_TYPE, LOC, PID_RECORD_ISSUE_DATE,
       PID_RECORD_ISSUE_NUMBER, PID_STATUS, FDO_RECORD_LICENSE);
   public static final Set<byte[]> TOMBSTONE_RECORD_FIELDS_BYTES;
   public static final Set<String> TOMBSTONE_RECORD_FIELDS;
