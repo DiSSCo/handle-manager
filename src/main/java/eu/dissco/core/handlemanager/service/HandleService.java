@@ -17,7 +17,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.component.FdoRecordBuilder;
-import eu.dissco.core.handlemanager.component.PidResolverComponent;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiDataLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
@@ -64,7 +63,6 @@ public class HandleService {
   private final FdoRecordBuilder fdoRecordBuilder;
   private final HandleGeneratorService hf;
   private final ObjectMapper mapper;
-  private final PidResolverComponent pidResolver;
 
   // Resolve Record
   public JsonApiWrapperReadSingle resolveSingleRecord(byte[] handle, String path)
