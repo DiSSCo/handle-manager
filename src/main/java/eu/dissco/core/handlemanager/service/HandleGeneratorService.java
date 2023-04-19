@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service;
 public class HandleGeneratorService {
 
   private static final int LENGTH = 11;
-  private static final String ALPHA_NUM = "ABCDEFGHJKLMNPQRSTUVWXYZ1234567890";
+  private static final String ALPHA_NUM = "ABCDEFGHJKLMNPQRSTVWXYZ1234567890";
   private static final String PREFIX = "20.5000.1025/";
   private static final int MAX_HANDLES = 1000;
 

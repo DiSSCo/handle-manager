@@ -40,14 +40,11 @@ import eu.dissco.core.handlemanager.repository.HandleRepository;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -68,9 +65,6 @@ public class HandleService {
   private final HandleGeneratorService hf;
   private final ObjectMapper mapper;
   private final PidResolverComponent pidResolver;
-
-  private final DateTimeFormatter dt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS",
-      Locale.ENGLISH).withZone(ZoneId.of("UTC"));
 
   // Resolve Record
   public JsonApiWrapperReadSingle resolveSingleRecord(byte[] handle, String path)
