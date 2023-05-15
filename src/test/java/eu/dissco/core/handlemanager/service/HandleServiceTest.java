@@ -94,7 +94,7 @@ class HandleServiceTest {
     DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
     TransformerFactory transformerFactory = TransformerFactory.newInstance();
 
-    service = new HandleService(handleRep, fdoRecordBuilder, hgService, MAPPER, pidResolver);
+    service = new HandleService(handleRep, fdoRecordBuilder, hgService, MAPPER);
     initTime();
     initHandleList();
   }
