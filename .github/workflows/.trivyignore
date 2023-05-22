@@ -4,9 +4,9 @@
 # Severity: High
 # Note May 15: Spring upgrade didnt fix
 # Status: User story in Jira (DD-272)
-CVE-2022-25857
+#CVE-2022-25857
 
 # Date: May-19-2023
 # Package: Snakeyaml
 # Notes: Another Snakeyaml package not fixed by the Spring upgrade...
-CVE-2022-1471
+#CVE-2022-1471
