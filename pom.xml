@@ -6,7 +6,7 @@
     <artifactId>spring-boot-starter-parent</artifactId>
     <groupId>org.springframework.boot</groupId>
     <relativePath/>
-    <version>3.0.6</version> <!-- lookup parent from repository -->
+    <version>3.1.0</version> <!-- lookup parent from repository -->
   </parent>
   <artifactId>handle-manager</artifactId>
   <version>0.0.1-SNAPSHOT</version>
@@ -20,6 +20,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <testcontainers.version>1.17.6</testcontainers.version>
     <victools.version>4.28.0</victools.version>
+    <mockito-inline.version>5.2.0</mockito-inline.version>
     <okhttp3.version>4.10.0</okhttp3.version>
     <sonar.coverage.jacoco.xmlReportPaths>
       ../app-it/target/site/jacoco-aggregate/jacoco.xml
@@ -77,6 +78,10 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
 
     <!--Database Dependencies -->
@@ -161,8 +166,9 @@
       <groupId>org.mockito</groupId>
     </dependency>
     <dependency>
-      <artifactId>mockito-inline</artifactId>
       <groupId>org.mockito</groupId>
+      <artifactId>mockito-inline</artifactId>
+      <version>${mockito-inline.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
