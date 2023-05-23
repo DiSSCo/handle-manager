@@ -16,6 +16,8 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
   @JsonProperty(required = true)
   @JsonPropertyDescription("ROR of the host institution")
   private final String specimenHost;
+  @Nullable
+  private final String specimenHostName;
   @JsonPropertyDescription("Local identifier for the given specimen")
   @JsonProperty(required = true)
   private final String primarySpecimenObjectId;
@@ -63,6 +65,7 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
       String primaryReferentType,
       // DigitalSpecimen
       String specimenHost,
+      String specimenHostName,
       String primarySpecimenObjectId,
       PhysicalIdType primarySpecimenObjectIdType,
       String primarySpecimenObjectIdName,
@@ -83,6 +86,7 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
     super(fdoProfile, issuedForAgent, digitalObjectTypePid, pidIssuer, structuralType, locations,
         referentName, primaryReferentType);
     this.specimenHost = specimenHost;
+    this.specimenHostName = specimenHostName;
     this.primarySpecimenObjectId = primarySpecimenObjectId;
     this.primarySpecimenObjectIdType =
         primarySpecimenObjectIdType == null ? PhysicalIdType.COMBINED : primarySpecimenObjectIdType;

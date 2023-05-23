@@ -565,6 +565,7 @@ public class TestUtils {
           REFERENT_NAME_TESTVAL,
           PRIMARY_REFERENT_TYPE_TESTVAL,
           SPECIMEN_HOST_TESTVAL,
+          SPECIMEN_HOST_NAME_TESTVAL,
           PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
           null,null, null, null, null, null, null, null, null, null, null,null, null, null, null
           );
@@ -585,6 +586,7 @@ public class TestUtils {
           REFERENT_NAME_TESTVAL,
           PRIMARY_REFERENT_TYPE_TESTVAL,
           SPECIMEN_HOST_TESTVAL,
+          SPECIMEN_HOST_NAME_TESTVAL,
           PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
           null,null, null, null, null, null, null, null, null, null, null,null, null, null, null
       );

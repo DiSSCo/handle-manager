@@ -75,11 +75,13 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 
 @RequiredArgsConstructor
 @Component
+@Slf4j
 public class FdoRecordBuilder {
 
   private final TransformerFactory tf;
@@ -91,7 +93,8 @@ public class FdoRecordBuilder {
   private static final String PROXY_ERROR = "Invalid attribute: %s must contain proxy: %s";
   private static final byte[] pidKernelMetadataLicense = "https://creativecommons.org/publicdomain/zero/1.0/".getBytes(
       StandardCharsets.UTF_8);
-  private final DateTimeFormatter dt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").withZone(ZoneId.of("UTC"));
+  private final DateTimeFormatter dt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+      .withZone(ZoneId.of("UTC"));
 
   public List<HandleAttribute> prepareHandleRecordAttributes(HandleRecordRequest request,
       byte[] handle)
@@ -171,26 +174,27 @@ public class FdoRecordBuilder {
 
     return fdoRecord;
   }
+
   private String prepareRorOrHandle(String url)
       throws InvalidRequestException, UnprocessableEntityException, PidResolutionException {
-    if (url.contains(ROR_DOMAIN)){
+    if (url.contains(ROR_DOMAIN)) {
       return pidResolver.getObjectName(getRor(url));
-    }
-    else if (url.contains(HANDLE_DOMAIN)){
+    } else if (url.contains(HANDLE_DOMAIN)) {
       return pidResolver.getObjectName(url);
     }
-    throw new InvalidRequestException(String.format(PROXY_ERROR, url, (ROR_DOMAIN + " or " + HANDLE_DOMAIN)));
+    throw new InvalidRequestException(
+        String.format(PROXY_ERROR, url, (ROR_DOMAIN + " or " + HANDLE_DOMAIN)));
   }
 
   private static String getRor(String url) throws InvalidRequestException {
-    if (!url.contains(ROR_DOMAIN)){
+    if (!url.contains(ROR_DOMAIN)) {
       throw new InvalidRequestException(String.format(PROXY_ERROR, url, ROR_DOMAIN));
     }
     return url.replace(ROR_DOMAIN, ROR_API_DOMAIN);
   }
 
   private static void checkHandle(String url) throws InvalidRequestException {
-    if (!url.contains(HANDLE_DOMAIN)){
+    if (!url.contains(HANDLE_DOMAIN)) {
       throw new InvalidRequestException(String.format(PROXY_ERROR, url, HANDLE_DOMAIN));
     }
   }
@@ -201,20 +205,23 @@ public class FdoRecordBuilder {
 
     // 40: referentType
     fdoRecord.add(
-        new HandleAttribute(FIELD_IDX.get(REFERENT_TYPE), handle, REFERENT_TYPE, request.getReferentType().getBytes(StandardCharsets.UTF_8)));
+        new HandleAttribute(FIELD_IDX.get(REFERENT_TYPE), handle, REFERENT_TYPE,
+            request.getReferentType().getBytes(StandardCharsets.UTF_8)));
 
     // 41: referentDoiName
     fdoRecord.add(
         new HandleAttribute(FIELD_IDX.get(REFERENT_DOI_NAME), handle, REFERENT_DOI_NAME, handle));
 
     // 42: referentName
-    if (request.getReferentName() != null){
+    if (request.getReferentName() != null) {
       fdoRecord.add(
-          new HandleAttribute(FIELD_IDX.get(REFERENT_NAME), handle, REFERENT_NAME, request.getReferentName().getBytes(StandardCharsets.UTF_8)));
+          new HandleAttribute(FIELD_IDX.get(REFERENT_NAME), handle, REFERENT_NAME,
+              request.getReferentName().getBytes(StandardCharsets.UTF_8)));
     }
     // 43: primaryReferentType
     fdoRecord.add(
-        new HandleAttribute(FIELD_IDX.get(PRIMARY_REFERENT_TYPE), handle, PRIMARY_REFERENT_TYPE, request.getPrimaryReferentType().getBytes(StandardCharsets.UTF_8)));
+        new HandleAttribute(FIELD_IDX.get(PRIMARY_REFERENT_TYPE), handle, PRIMARY_REFERENT_TYPE,
+            request.getPrimaryReferentType().getBytes(StandardCharsets.UTF_8)));
 
     // 44: referent
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(REFERENT), handle, REFERENT,
@@ -260,12 +267,24 @@ public class FdoRecordBuilder {
             request.getSpecimenHost().getBytes(StandardCharsets.UTF_8)));
 
     // 201: Specimen Host name
-    var specimenHostRor = getRor(request.getSpecimenHost());
-    var specimenHostName = pidResolver.getObjectName(specimenHostRor).getBytes(StandardCharsets.UTF_8);
-    fdoRecord.add(
-        new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST_NAME), handle,
-            SPECIMEN_HOST_NAME,
-            specimenHostName));
+    if (request.getSpecimenHostName() != null) {
+      var specimenHostNameRequest = request.getSpecimenHostName();
+      fdoRecord.add(
+          new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST_NAME), handle,
+              SPECIMEN_HOST_NAME,
+              specimenHostNameRequest.getBytes(StandardCharsets.UTF_8)));
+    } else {
+      try {
+        var specimenHostNameResolved = pidResolver.getObjectName(getRor(request.getSpecimenHost()));
+        fdoRecord.add(
+            new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST_NAME), handle,
+                SPECIMEN_HOST_NAME,
+                specimenHostNameResolved.getBytes(StandardCharsets.UTF_8)));
+
+      } catch (InvalidRequestException e) {
+        log.info("SpecimenHostId is not a resolvable ROR and no SpecimenHostName is provided in the request. SpecimenHostName field left blank.");
+      }
+    }
 
     // 202: primarySpecimenObjectId
     var primarySpecimenObjectId = setUniquePhysicalIdentifierId(request);
@@ -283,7 +302,7 @@ public class FdoRecordBuilder {
     // 204-217 are optional
 
     // 204: primarySpecimenObjectIdName
-    if (request.getPrimarySpecimenObjectIdName() != null ){
+    if (request.getPrimarySpecimenObjectIdName() != null) {
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(PRIMARY_SPECIMEN_OBJECT_ID_NAME), handle,
               PRIMARY_SPECIMEN_OBJECT_ID_NAME,
@@ -291,7 +310,7 @@ public class FdoRecordBuilder {
     }
 
     // 205: specimenObjectIdAbsenceReason
-    if (request.getPrimarySpecimenObjectIdAbsenceReason() != null ){
+    if (request.getPrimarySpecimenObjectIdAbsenceReason() != null) {
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(PRIMARY_SPECIMEN_OBJECT_ID_ABSENCE), handle,
               PRIMARY_SPECIMEN_OBJECT_ID_ABSENCE,
@@ -299,8 +318,9 @@ public class FdoRecordBuilder {
     }
 
     // 206: otherSpecimenIds
-    if (request.getOtherSpecimenIds() != null ){
-      var otherSpecimenIds = Arrays.toString(request.getOtherSpecimenIds()).getBytes(StandardCharsets.UTF_8);
+    if (request.getOtherSpecimenIds() != null) {
+      var otherSpecimenIds = Arrays.toString(request.getOtherSpecimenIds())
+          .getBytes(StandardCharsets.UTF_8);
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(OTHER_SPECIMEN_IDS), handle,
               OTHER_SPECIMEN_IDS,
@@ -308,7 +328,7 @@ public class FdoRecordBuilder {
     }
 
     // 207: topicOrigin
-    if (request.getTopicOrigin() != null ){
+    if (request.getTopicOrigin() != null) {
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(TOPIC_ORIGIN), handle,
               TOPIC_ORIGIN,
@@ -317,7 +337,7 @@ public class FdoRecordBuilder {
 
     // 208: topicDomain
     var topicDomain = request.getTopicDomain();
-    if (topicDomain != null ){
+    if (topicDomain != null) {
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(TOPIC_DOMAIN), handle,
               TOPIC_DOMAIN,
@@ -326,7 +346,7 @@ public class FdoRecordBuilder {
 
     // 209: topicDiscipline
     var topicDisc = request.getTopicDiscipline();
-    if (topicDisc != null ){
+    if (topicDisc != null) {
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(TOPIC_DISCIPLINE), handle,
               TOPIC_DISCIPLINE,
@@ -335,7 +355,7 @@ public class FdoRecordBuilder {
 
     // 210: objectType
     var objType = request.getObjectType();
-    if (objType != null ){
+    if (objType != null) {
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(OBJECT_TYPE), handle,
               OBJECT_TYPE,
@@ -344,7 +364,7 @@ public class FdoRecordBuilder {
 
     // 211: livingOrPreserved
     var livingOrPres = request.getLivingOrPreserved();
-    if (livingOrPres != null ){
+    if (livingOrPres != null) {
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(LIVING_OR_PRESERVED), handle,
               LIVING_OR_PRESERVED,
@@ -353,7 +373,7 @@ public class FdoRecordBuilder {
 
     // 212: baseTypeOfSpecimen
     var baseType = request.getBaseTypeOfSpecimen();
-    if (baseType != null ){
+    if (baseType != null) {
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(BASE_TYPE_OF_SPECIMEN), handle,
               BASE_TYPE_OF_SPECIMEN,
@@ -362,7 +382,7 @@ public class FdoRecordBuilder {
 
     // 213: informationArtefactType
     var artefactType = request.getInformationArtefactType();
-    if (artefactType != null ){
+    if (artefactType != null) {
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(INFORMATION_ARTEFACT_TYPE), handle,
               INFORMATION_ARTEFACT_TYPE,
@@ -371,7 +391,7 @@ public class FdoRecordBuilder {
 
     // 214: materialSampleType
     var matSamp = request.getMaterialSampleType();
-    if (matSamp != null ){
+    if (matSamp != null) {
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(MATERIAL_SAMPLE_TYPE), handle,
               MATERIAL_SAMPLE_TYPE,
@@ -386,7 +406,7 @@ public class FdoRecordBuilder {
 
     // 216: markedAsType
     var markedAsType = request.getMarkedAsType();
-    if (markedAsType != null ){
+    if (markedAsType != null) {
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(MARKED_AS_TYPE), handle,
               MARKED_AS_TYPE,
@@ -395,7 +415,7 @@ public class FdoRecordBuilder {
 
     // 217: wasDerivedFrom
     var wasDerivedFrom = request.getWasDerivedFrom();
-    if (wasDerivedFrom != null ){
+    if (wasDerivedFrom != null) {
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(WAS_DERIVED_FROM), handle,
               WAS_DERIVED_FROM,

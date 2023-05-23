@@ -22,6 +22,7 @@ public class DigitalSpecimenBotanyRequest extends DigitalSpecimenRequest {
       String primaryReferentType,
       // DigitalSpecimen
       String specimenHost,
+      String specimenHostName,
       String primarySpecimenObjectId,
       PhysicalIdType primarySpecimenObjectIdType,
       String primarySpecimenObjectIdName,
@@ -41,7 +42,7 @@ public class DigitalSpecimenBotanyRequest extends DigitalSpecimenRequest {
   ) throws InvalidRequestException {
     super(fdoProfile, issuedForAgent, digitalObjectTypePid, pidIssuer, structuralType, locations,
         referentName, primaryReferentType,
-        specimenHost, primarySpecimenObjectId, primarySpecimenObjectIdType,
+        specimenHost, specimenHostName, primarySpecimenObjectId, primarySpecimenObjectIdType,
         primarySpecimenObjectIdName, primarySpecimenObjectIdAbsenceReason, otherSpecimenIds,
         topicOrigin, topicDomain, topicDiscipline, objectType, livingOrPreserved,
         baseTypeOfSpecimen, informationArtefactType, materialSampleType,
