@@ -48,7 +48,7 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
   private final String materialSampleType;
   private final String materialOrDigitalEntity;
   @Nullable
-  private final String markedAsType;
+  private final Boolean markedAsType;
   @Nullable
   private final String wasDerivedFrom;
 
@@ -80,7 +80,7 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
       String informationArtefactType,
       String materialSampleType,
       String materialOrDigitalEntity,
-      String markedAsType,
+      Boolean markedAsType,
       String wasDerivedFrom
   ) throws InvalidRequestException {
     super(fdoProfile, issuedForAgent, digitalObjectTypePid, pidIssuer, structuralType, locations,

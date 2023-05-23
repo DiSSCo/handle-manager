@@ -22,4 +22,5 @@ public enum LivingOrPreserved {
     return state.getBytes(StandardCharsets.UTF_8);
   }
 
+
 }

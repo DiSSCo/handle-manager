@@ -12,6 +12,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_REFERENT_
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.REFERENT_NAME_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.ROR_DOMAIN;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_NAME_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.STRUCTURAL_TYPE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaRequestObject;
@@ -94,6 +95,7 @@ import org.junit.jupiter.api.Test;
         REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL,
         SPECIMEN_HOST_TESTVAL,
+        SPECIMEN_HOST_NAME_TESTVAL,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
         PhysicalIdType.CETAF,null, null, null, null, null, null, null, null, null, null,null, null, null, null
 

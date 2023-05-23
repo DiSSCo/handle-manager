@@ -410,7 +410,7 @@ public class FdoRecordBuilder {
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(MARKED_AS_TYPE), handle,
               MARKED_AS_TYPE,
-              markedAsType.getBytes(StandardCharsets.UTF_8)));
+              markedAsType.toString().getBytes(StandardCharsets.UTF_8)));
     }
 
     // 217: wasDerivedFrom

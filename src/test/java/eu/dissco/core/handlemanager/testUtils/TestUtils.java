@@ -467,7 +467,7 @@ public class TestUtils {
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(MARKED_AS_TYPE), handle,
               MARKED_AS_TYPE,
-              request.getMarkedAsType().getBytes(StandardCharsets.UTF_8)));
+              request.getMarkedAsType().toString().getBytes(StandardCharsets.UTF_8)));
     }
 
     // 217: wasDerivedFrom

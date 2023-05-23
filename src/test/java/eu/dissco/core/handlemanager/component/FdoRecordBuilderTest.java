@@ -49,6 +49,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_REFERENT_
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.REFERENT_NAME_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.ROR_DOMAIN;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_NAME_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.STRUCTURAL_TYPE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.TRANSFORMER_FACTORY;
@@ -278,9 +279,10 @@ class FdoRecordBuilderTest {
         REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL,
         SPECIMEN_HOST_TESTVAL,
+        SPECIMEN_HOST_NAME_TESTVAL,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
         PhysicalIdType.CETAF, "b", null, new String[]{"d"}, "e", "f", "g", "h",
-        LivingOrPreserved.PRESERVED, "j", "k", "l", "m", "n", "o");
+        LivingOrPreserved.PRESERVED, "j", "k", "l", "m", false, "o");
   }
 
   private boolean hasCorrectElements(List<HandleAttribute> fdoRecord,

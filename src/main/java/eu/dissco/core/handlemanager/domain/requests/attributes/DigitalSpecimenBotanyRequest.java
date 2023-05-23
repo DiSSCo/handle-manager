@@ -37,7 +37,7 @@ public class DigitalSpecimenBotanyRequest extends DigitalSpecimenRequest {
       String informationArtefactType,
       String materialSampleType,
       String materialOrDigitalEntity,
-      String markedAsType,
+      Boolean markedAsType,
       String wasDerivedFrom
   ) throws InvalidRequestException {
     super(fdoProfile, issuedForAgent, digitalObjectTypePid, pidIssuer, structuralType, locations,
