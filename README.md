@@ -34,22 +34,7 @@ The API is documented with a Swagger endpoint.
 
 `spring.datasource.password` - Password for the User
 
-## Keycloak Properties
+## JWT Properties
+`spring.security.oauth2.authorizationserver.endpoint.jwk-set-uri`
 
-`keycloak.auth-server-url`
-
-`keycloak.realm`
-
-`keycloak.resource`
-
-`keycloak.ssl-required`
-
-`keycloak.use-resource-role-mappings`
-
-`keycloak.principal-attribute`
-
-`keycloak.confidential-port`
-
-`keycloak.always-refresh-token`
-
-`keycloak.bearer-only`
+`jwt.auth.converter.resource-id`

@@ -21,12 +21,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import javax.servlet.http.HttpServletRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -125,7 +125,6 @@ public class HandleController {
   }
 
   @Operation(summary ="Create single PID Record")
-  @PreAuthorize("isAuthenticated()")
   @PostMapping(value = "")
   public ResponseEntity<JsonApiWrapperWrite> createRecord(@RequestBody JsonNode request)
       throws PidResolutionException, PidServiceInternalError, InvalidRequestException, PidCreationException {
@@ -134,7 +133,6 @@ public class HandleController {
   }
 
   @Operation(summary ="Create multiple PID Records at a time.")
-  @PreAuthorize("isAuthenticated()")
   @PostMapping(value = "/batch")
   public ResponseEntity<JsonApiWrapperWrite> createRecords(@RequestBody List<JsonNode> requests)
       throws PidResolutionException, PidServiceInternalError, InvalidRequestException, PidCreationException {
@@ -147,7 +145,6 @@ public class HandleController {
 
   // Update
   @Operation(summary ="Update existing PID Record")
-  @PreAuthorize("isAuthenticated()")
   @PatchMapping(value = "/{prefix}/{suffix}")
   public ResponseEntity<JsonApiWrapperWrite> updateRecord(@PathVariable("prefix") String prefix,
       @PathVariable("suffix") String suffix, @RequestBody JsonNode request)
@@ -167,7 +164,6 @@ public class HandleController {
   }
 
   @Operation(summary ="Update multiple PID Records")
-  @PreAuthorize("isAuthenticated()")
   @PatchMapping(value = "")
   public ResponseEntity<JsonApiWrapperWrite> updateRecords(@RequestBody List<JsonNode> requests)
       throws InvalidRequestException, PidResolutionException, PidServiceInternalError {
@@ -179,7 +175,6 @@ public class HandleController {
   }
 
   @Operation(summary ="Archive given record")
-  @PreAuthorize("isAuthenticated()")
   @PutMapping(value = "/{prefix}/{suffix}")
   public ResponseEntity<JsonApiWrapperWrite> archiveRecord(@PathVariable("prefix") String prefix,
       @PathVariable("suffix") String suffix, @RequestBody JsonNode request)
@@ -199,7 +194,6 @@ public class HandleController {
   }
 
   @Operation(summary ="Archive multiple PID records")
-  @PreAuthorize("isAuthenticated()")
   @PutMapping(value = "")
   public ResponseEntity<JsonApiWrapperWrite> archiveRecords(@RequestBody List<JsonNode> requests)
       throws InvalidRequestException, PidResolutionException {
@@ -208,5 +202,4 @@ public class HandleController {
     }
     return ResponseEntity.status(HttpStatus.OK).body(service.archiveRecordBatch(requests));
   }
-
 }

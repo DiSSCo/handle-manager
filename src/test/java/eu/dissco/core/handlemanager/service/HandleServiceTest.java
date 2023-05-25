@@ -83,8 +83,6 @@ class HandleServiceTest {
   private FdoRecordBuilder fdoRecordBuilder;
   @Mock
   private HandleGeneratorService hgService;
-  @Mock
-  PidResolverComponent pidResolver;
   private HandleService service;
   private List<byte[]> handles;
   private MockedStatic<Instant> mockedStatic;

@@ -49,7 +49,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -59,7 +58,6 @@ public class HandleService {
 
   private static final String INVALID_TYPE_ERROR = "Invalid request. Reason: unrecognized type. Check: ";
   private final HandleRepository handleRep;
-  @Autowired
   private final FdoRecordBuilder fdoRecordBuilder;
   private final HandleGeneratorService hf;
   private final ObjectMapper mapper;
