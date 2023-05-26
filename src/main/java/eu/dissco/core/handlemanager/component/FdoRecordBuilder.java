@@ -267,24 +267,8 @@ public class FdoRecordBuilder {
             request.getSpecimenHost().getBytes(StandardCharsets.UTF_8)));
 
     // 201: Specimen Host name
-    if (request.getSpecimenHostName() != null) {
-      var specimenHostNameRequest = request.getSpecimenHostName();
-      fdoRecord.add(
-          new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST_NAME), handle,
-              SPECIMEN_HOST_NAME,
-              specimenHostNameRequest.getBytes(StandardCharsets.UTF_8)));
-    } else {
-      try {
-        var specimenHostNameResolved = pidResolver.getObjectName(getRor(request.getSpecimenHost()));
-        fdoRecord.add(
-            new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST_NAME), handle,
-                SPECIMEN_HOST_NAME,
-                specimenHostNameResolved.getBytes(StandardCharsets.UTF_8)));
+    fdoRecord = setSpecimenHostName(request, fdoRecord, handle);
 
-      } catch (InvalidRequestException e) {
-        log.info("SpecimenHostId is not a resolvable ROR and no SpecimenHostName is provided in the request. SpecimenHostName field left blank.");
-      }
-    }
 
     // 202: primarySpecimenObjectId
     var primarySpecimenObjectId = setUniquePhysicalIdentifierId(request);
@@ -422,6 +406,28 @@ public class FdoRecordBuilder {
               wasDerivedFrom.getBytes(StandardCharsets.UTF_8)));
     }
 
+    return fdoRecord;
+  }
+
+  private List<HandleAttribute> setSpecimenHostName(DigitalSpecimenRequest request, List<HandleAttribute> fdoRecord, byte[] handle){
+    if (request.getSpecimenHostName() != null) {
+      var specimenHostNameRequest = request.getSpecimenHostName();
+      fdoRecord.add(
+              new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST_NAME), handle,
+                      SPECIMEN_HOST_NAME,
+                      specimenHostNameRequest.getBytes(StandardCharsets.UTF_8)));
+    } else {
+      try {
+        var specimenHostNameResolved = pidResolver.getObjectName(getRor(request.getSpecimenHost()));
+        fdoRecord.add(
+                new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST_NAME), handle,
+                        SPECIMEN_HOST_NAME,
+                        specimenHostNameResolved.getBytes(StandardCharsets.UTF_8)));
+
+      } catch (Exception e) {
+        log.info("SpecimenHostId is not a resolvable ROR and no SpecimenHostName is provided in the request. SpecimenHostName field left blank. More information: " + e.getMessage());
+      }
+    }
     return fdoRecord;
   }
 
