@@ -107,8 +107,8 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
   }
 
   private void idXorAbsence() throws InvalidRequestException {
-    if ((this.primarySpecimenObjectId == null) ^ (this.primarySpecimenObjectIdAbsenceReason
-        == null)) {
+
+    if ((this.primarySpecimenObjectId == null) == (this.primarySpecimenObjectIdAbsenceReason == null)) {
       throw new InvalidRequestException(
           "Request must contain exactly one of: [primarySpecimenObjectId, primarySpecimenObjectIdAbsenceReason]");
     }
