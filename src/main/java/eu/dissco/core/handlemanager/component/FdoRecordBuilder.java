@@ -93,7 +93,7 @@ public class FdoRecordBuilder {
   private static final String PROXY_ERROR = "Invalid attribute: %s must contain proxy: %s";
   private static final byte[] pidKernelMetadataLicense = "https://creativecommons.org/publicdomain/zero/1.0/".getBytes(
       StandardCharsets.UTF_8);
-  private final DateTimeFormatter dt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+  private final DateTimeFormatter dt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
       .withZone(ZoneId.of("UTC"));
 
   public List<HandleAttribute> prepareHandleRecordAttributes(HandleRecordRequest request,
@@ -139,7 +139,7 @@ public class FdoRecordBuilder {
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(PID_ISSUER), handle, PID_ISSUER,
         request.getPidIssuer().getBytes(StandardCharsets.UTF_8)));
 
-    // 7: pidIssuerName (ROR or Handle)
+    // 7: pidIssuerName
     String pidIssuerName = prepareRorOrHandle(request.getPidIssuer());
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(PID_ISSUER_NAME), handle, PID_ISSUER_NAME,
         pidIssuerName.getBytes(StandardCharsets.UTF_8)));
@@ -148,7 +148,7 @@ public class FdoRecordBuilder {
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(ISSUED_FOR_AGENT), handle, ISSUED_FOR_AGENT,
         request.getIssuedForAgent().getBytes(StandardCharsets.UTF_8)));
 
-    // 9: issuedForAgentName - ROR
+    // 9: issuedForAgentName
     var agentNameRor = getRor(request.getIssuedForAgent());
     var issuedForAgentName = pidResolver.getObjectName(agentNameRor)
         .getBytes(StandardCharsets.UTF_8);

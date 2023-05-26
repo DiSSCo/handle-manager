@@ -21,7 +21,6 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
   @JsonPropertyDescription("Local identifier for the given specimen")
   @JsonProperty(required = true)
   private final String primarySpecimenObjectId;
-
   @JsonPropertyDescription("ID Type. Either combined or cetaf. Defaults to combined.")
   private final PhysicalIdType primarySpecimenObjectIdType;
   @Nullable
@@ -108,7 +107,7 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
   }
 
   private void idXorAbsence() throws InvalidRequestException {
-    if ((this.primarySpecimenObjectId == null) == (this.primarySpecimenObjectIdAbsenceReason
+    if ((this.primarySpecimenObjectId == null) ^ (this.primarySpecimenObjectIdAbsenceReason
         == null)) {
       throw new InvalidRequestException(
           "Request must contain exactly one of: [primarySpecimenObjectId, primarySpecimenObjectIdAbsenceReason]");
