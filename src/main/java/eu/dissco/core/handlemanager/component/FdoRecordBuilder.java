@@ -410,12 +410,12 @@ public class FdoRecordBuilder {
   }
 
   private List<HandleAttribute> setSpecimenHostName(DigitalSpecimenRequest request, List<HandleAttribute> fdoRecord, byte[] handle){
-    if (request.getSpecimenHostName() != null) {
-      var specimenHostNameRequest = request.getSpecimenHostName();
+    var specimenHostName = request.getSpecimenHostName();
+    if (specimenHostName != null) {
       fdoRecord.add(
               new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST_NAME), handle,
                       SPECIMEN_HOST_NAME,
-                      specimenHostNameRequest.getBytes(StandardCharsets.UTF_8)));
+                      specimenHostName.getBytes(StandardCharsets.UTF_8)));
     } else {
       try {
         var specimenHostNameResolved = pidResolver.getObjectName(getRor(request.getSpecimenHost()));
