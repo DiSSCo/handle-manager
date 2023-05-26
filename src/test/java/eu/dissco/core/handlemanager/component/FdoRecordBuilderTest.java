@@ -60,7 +60,9 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordReq
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecordRequestObject;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.AdditionalMatchers.not;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
@@ -72,13 +74,18 @@ import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Set;
+
+import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class FdoRecordBuilderTest {
 
   private static final Set<String> HANDLE_FIELDS = Set.of(FDO_PROFILE, FDO_RECORD_LICENSE,
@@ -95,12 +102,17 @@ class FdoRecordBuilderTest {
       OTHER_SPECIMEN_IDS, TOPIC_ORIGIN, TOPIC_DISCIPLINE, OBJECT_TYPE, LIVING_OR_PRESERVED,
       BASE_TYPE_OF_SPECIMEN, INFORMATION_ARTEFACT_TYPE,
       MATERIAL_SAMPLE_TYPE, MARKED_AS_TYPE, WAS_DERIVED_FROM);
-  private static final Set<String> TOMBSTONE_FIELDS = Set.of();
 
   private final byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
   private FdoRecordBuilder fdoRecordBuilder;
   @Mock
   private PidResolverComponent pidResolver;
+  private static final int HANDLE_QTY = 15;
+  private static final int DOI_QTY = 20;
+  private static final int MEDIA_QTY = 24;
+  private static final int DS_MANDATORY_QTY = 25;
+  private static final int DS_OPTIONAL_QTY = 37;
+  private static final int BOTANY_QTY = 25;
 
   @BeforeEach
   void init() throws Exception {
@@ -117,7 +129,7 @@ class FdoRecordBuilderTest {
     var result = fdoRecordBuilder.prepareHandleRecordAttributes(request, handle);
 
     // Then
-    assertThat(result).hasSize(15);
+    assertThat(result).hasSize(HANDLE_QTY);
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
   }
 
@@ -131,7 +143,7 @@ class FdoRecordBuilderTest {
     var result = fdoRecordBuilder.prepareDoiRecordAttributes(request, handle);
 
     // Then
-    assertThat(result).hasSize(20);
+    assertThat(result).hasSize(DOI_QTY);
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, DOI_FIELDS)).isTrue();
   }
@@ -146,7 +158,7 @@ class FdoRecordBuilderTest {
     var result = fdoRecordBuilder.prepareMediaObjectAttributes(request, handle);
 
     // Then
-    assertThat(result).hasSize(24);
+    assertThat(result).hasSize(MEDIA_QTY);
   }
 
   @Test
@@ -159,7 +171,7 @@ class FdoRecordBuilderTest {
     var result = fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(request, handle);
 
     // Then
-    assertThat(result).hasSize(25);
+    assertThat(result).hasSize(DS_MANDATORY_QTY);
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, DOI_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, DS_FIELDS_MANDATORY)).isTrue();
@@ -175,7 +187,7 @@ class FdoRecordBuilderTest {
     var result = fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(request, handle);
 
     // Then
-    assertThat(result).hasSize(37);
+    assertThat(result).hasSize(DS_OPTIONAL_QTY);
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, DOI_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, DS_FIELDS_MANDATORY)).isTrue();
@@ -192,7 +204,7 @@ class FdoRecordBuilderTest {
     var result = fdoRecordBuilder.prepareDigitalSpecimenBotanyRecordAttributes(request, handle);
 
     // Then
-    assertThat(result).hasSize(25);
+    assertThat(result).hasSize(BOTANY_QTY);
   }
 
   @Test
@@ -212,7 +224,7 @@ class FdoRecordBuilderTest {
     var result = fdoRecordBuilder.prepareHandleRecordAttributes(request, handle);
 
     // Then
-    assertThat(result).hasSize(15);
+    assertThat(result).hasSize(HANDLE_QTY);
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
   }
 
@@ -249,6 +261,56 @@ class FdoRecordBuilderTest {
 
     var e = assertThrows(InvalidRequestException.class, () -> fdoRecordBuilder.prepareHandleRecordAttributes(request, handle));
     assertThat(e.getMessage()).contains(ROR_DOMAIN);
+  }
+
+  @Test
+  void testSpecimenHostResolvable() throws Exception {
+    given(pidResolver.getObjectName(any())).willReturn("placeholder");
+    var request = new DigitalSpecimenRequest(
+            FDO_PROFILE_TESTVAL,
+            ISSUED_FOR_AGENT_TESTVAL,
+            DIGITAL_OBJECT_TYPE_TESTVAL,
+            PID_ISSUER_TESTVAL_OTHER,
+            STRUCTURAL_TYPE_TESTVAL,
+            LOC_TESTVAL,
+            REFERENT_NAME_TESTVAL,
+            PRIMARY_REFERENT_TYPE_TESTVAL,
+            SPECIMEN_HOST_TESTVAL,
+            null,
+            PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
+            null,null, null, null, null, null, null, null, null, null, null,null, null, null, null);
+
+    // When
+    var result = fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(request, handle);
+
+    // Then
+    assertThat(result).hasSize(DS_MANDATORY_QTY);
+  }
+
+  @Test
+  void testSpecimenHostNotResolvable() throws Exception {
+    var rorApi = "https://api.ror.org/organizations/0x123";
+    given(pidResolver.getObjectName(rorApi)).willThrow(new PidResolutionException(""));
+    given(pidResolver.getObjectName(not(eq(rorApi)))).willReturn("placeholder");
+    var request = new DigitalSpecimenRequest(
+            FDO_PROFILE_TESTVAL,
+            ISSUED_FOR_AGENT_TESTVAL,
+            DIGITAL_OBJECT_TYPE_TESTVAL,
+            PID_ISSUER_TESTVAL_OTHER,
+            STRUCTURAL_TYPE_TESTVAL,
+            LOC_TESTVAL,
+            REFERENT_NAME_TESTVAL,
+            PRIMARY_REFERENT_TYPE_TESTVAL,
+            SPECIMEN_HOST_TESTVAL,
+            null,
+            PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
+            null,null, null, null, null, null, null, null, null, null, null,null, null, null, null);
+
+    // When
+    var result = fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(request, handle);
+
+    // Then
+    assertThat(result).hasSize(DS_MANDATORY_QTY-1);
   }
 
   @Test
