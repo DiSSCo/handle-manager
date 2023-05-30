@@ -2,16 +2,16 @@ package eu.dissco.core.handlemanager.repository;
 
 import static eu.dissco.core.handlemanager.database.jooq.Tables.HANDLES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
-import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUE_NUMBER;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PHYSICAL_IDENTIFIER;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID_RECORD_ISSUE_NUMBER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.PHYSICAL_IDENTIFIER_LOCAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_STATUS_TESTVAL;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_PID;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributesAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordFullAttributes;
@@ -29,8 +29,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 import org.jooq.Query;
 import org.jooq.Record4;
 import org.junit.jupiter.api.AfterEach;
@@ -52,7 +50,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
-  void testCreateRecord() {
+  void testCreateRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> attributesToPost = genHandleRecordAttributes(handle);
@@ -141,7 +139,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
-  void testResolveSingleRecord() {
+  void testResolveSingleRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> responseExpected = genHandleRecordAttributes(handle);
@@ -155,7 +153,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
-  void testResolveBatchRecord() {
+  void testResolveBatchRecord() throws Exception {
     // Given
     List<byte[]> handles = List.of(HANDLE.getBytes(StandardCharsets.UTF_8),
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
@@ -250,14 +248,16 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   @Test
   void testSearchByPhysicalIdentifier(){
     // Given
-    var targetPhysicalIdentifer = PHYSICAL_IDENTIFIER_LOCAL.getBytes(StandardCharsets.UTF_8);
+    var targetPhysicalIdentifer = PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> responseExpected = new ArrayList<>();
-    responseExpected.add(new HandleAttribute(1, HANDLE.getBytes(StandardCharsets.UTF_8), PHYSICAL_IDENTIFIER, targetPhysicalIdentifer));
-    responseExpected.add(new HandleAttribute(2, HANDLE.getBytes(StandardCharsets.UTF_8), SPECIMEN_HOST, SPECIMEN_HOST_PID.getBytes(
+    responseExpected.add(new HandleAttribute(1, HANDLE.getBytes(StandardCharsets.UTF_8),
+        PRIMARY_SPECIMEN_OBJECT_ID, targetPhysicalIdentifer));
+    responseExpected.add(new HandleAttribute(2, HANDLE.getBytes(StandardCharsets.UTF_8), SPECIMEN_HOST, SPECIMEN_HOST_TESTVAL.getBytes(
         StandardCharsets.UTF_8)));
 
     List<HandleAttribute> nonTargetAttributes = new ArrayList<>();
-    nonTargetAttributes.add(new HandleAttribute(1, HANDLE_ALT.getBytes(StandardCharsets.UTF_8), PHYSICAL_IDENTIFIER, "A".getBytes(
+    nonTargetAttributes.add(new HandleAttribute(1, HANDLE_ALT.getBytes(StandardCharsets.UTF_8),
+        PRIMARY_SPECIMEN_OBJECT_ID, "A".getBytes(
         StandardCharsets.UTF_8)));
 
     postAttributes(responseExpected);
@@ -292,7 +292,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
-  void testUpdateRecordBatch() throws ParserConfigurationException, TransformerException {
+  void testUpdateRecordBatch() throws Exception {
 
     // Given
     List<byte[]> handles = List.of(HANDLE.getBytes(StandardCharsets.UTF_8),
@@ -319,7 +319,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
-  void testArchiveRecordBatch() throws ParserConfigurationException, TransformerException {
+  void testArchiveRecordBatch() throws Exception {
 
     // Given
     List<byte[]> handles = List.of(HANDLE.getBytes(StandardCharsets.UTF_8),
@@ -334,7 +334,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     }
 
     // When
-    handleRep.archiveRecords(CREATED.getEpochSecond(), archiveAttributes, handles);
+    handleRep.archiveRecords(CREATED.getEpochSecond(), archiveAttributes);
     var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
             Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
         .where(Handles.HANDLES.HANDLE.in(handles)).and(Handles.HANDLES.TYPE.notEqual(
@@ -346,7 +346,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
-  void testArchiveRecord() {
+  void testArchiveRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> originalRecord = genHandleRecordAttributes(handle);
@@ -419,7 +419,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
 
   private List<HandleAttribute> incrementVersion(List<HandleAttribute> handleAttributes) {
     for (int i = 0; i < handleAttributes.size(); i++) {
-      if (handleAttributes.get(i).type().equals(ISSUE_NUMBER)) {
+      if (handleAttributes.get(i).type().equals(PID_RECORD_ISSUE_NUMBER)) {
         var removedRecord = handleAttributes.remove(i);
         byte[] issueNum = String.valueOf(Integer.parseInt(new String(removedRecord.data())) + 1)
             .getBytes(StandardCharsets.UTF_8);

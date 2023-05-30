@@ -19,10 +19,9 @@ public class PidResolverComponent {
   private final WebClient webClient;
 
   @Cacheable("pid")
-  public JsonNode resolveExternalPid(String pid)
+  public JsonNode resolveExternalPid(String url)
       throws UnprocessableEntityException, PidResolutionException {
-    String url = "https://hdl.handle.net/" + pid;
-    log.info("querying the following: {}", url);
+    log.info("Querying the following: {}", url);
     var responseSpec = webClient.get().uri(url).retrieve()
         .onStatus(HttpStatus.NOT_FOUND::equals,
             r -> r.bodyToMono(String.class).map(PidResolutionException::new));
@@ -31,15 +30,26 @@ public class PidResolverComponent {
     try {
       return response.toFuture().get();
     } catch (InterruptedException e) {
-      log.warn("Interrupted connection. Unable to resolve the following: {}", pid);
+      log.warn("Interrupted connection. Unable to resolve the following: {}", url);
       Thread.currentThread().interrupt();
       return null;
     } catch (ExecutionException e) {
       if (e.getCause().getClass().equals(PidResolutionException.class)) {
-        throw new PidResolutionException("Given PID not found: " + pid);
+        throw new PidResolutionException("Given PID not found: " + url);
       }
-      throw new UnprocessableEntityException("Unable to parse identifier " + pid + " to JSON.");
+      throw new UnprocessableEntityException("Unable to parse identifier " + url + " to JSON.");
     }
+  }
+
+
+  public String getObjectName(String pid)
+      throws UnprocessableEntityException, PidResolutionException {
+    var pidRecord = resolveExternalPid(pid);
+    if (pidRecord.get("name")!= null){
+      return pidRecord.get("name").asText();
+    }
+    log.warn("Given pid {} resolves, but does not include a name attribute", pid);
+    return "";
   }
 
 }

@@ -1,7 +1,6 @@
 package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
-import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IS_PID_RECORD;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LOC;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LOC_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
@@ -18,7 +17,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.component.FdoRecordBuilder;
-import eu.dissco.core.handlemanager.component.PidResolverComponent;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiDataLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
@@ -41,20 +39,16 @@ import eu.dissco.core.handlemanager.repository.HandleRepository;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -64,14 +58,9 @@ public class HandleService {
 
   private static final String INVALID_TYPE_ERROR = "Invalid request. Reason: unrecognized type. Check: ";
   private final HandleRepository handleRep;
-  @Autowired
   private final FdoRecordBuilder fdoRecordBuilder;
   private final HandleGeneratorService hf;
   private final ObjectMapper mapper;
-  private final PidResolverComponent pidResolver;
-
-  private final DateTimeFormatter dt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS",
-      Locale.ENGLISH).withZone(ZoneId.of("UTC"));
 
   // Resolve Record
   public JsonApiWrapperReadSingle resolveSingleRecord(byte[] handle, String path)
@@ -79,15 +68,6 @@ public class HandleService {
     var recordAttributeList = resolveAndFormatRecords(List.of(handle)).get(0);
     var dataNode = wrapData(recordAttributeList, "PID");
     var linksNode = new JsonApiLinks(path);
-    return new JsonApiWrapperReadSingle(linksNode, dataNode);
-  }
-
-  public JsonApiWrapperReadSingle resolveSingleRecordExternal(String pid, String path)
-      throws UnprocessableEntityException, PidResolutionException {
-    var pidRecord = pidResolver.resolveExternalPid(pid);
-    var dataNode = new JsonApiDataLinks(pid, "PID Record", pidRecord, new JsonApiLinks("https://hdl.handle.net/" + pid));
-    var linksNode = new JsonApiLinks(path);
-
     return new JsonApiWrapperReadSingle(linksNode, dataNode);
   }
 
@@ -171,21 +151,7 @@ public class HandleService {
 
   private JsonNode jsonFormatSingleRecord(List<HandleAttribute> dbRecord) {
     ObjectNode rootNode = mapper.createObjectNode();
-    for (HandleAttribute row : dbRecord) {
-      String type = row.type();
-      String data = new String(row.data(), StandardCharsets.UTF_8);
-      if (FIELD_IS_PID_RECORD.contains(type)) {
-        try {
-          ObjectNode subNode = mapper.readValue(data, ObjectNode.class);
-          rootNode.set(type, subNode);
-        } catch (JsonProcessingException e) {
-          log.warn("Type \"{}\" is noncompliant to the PID kernel model. Invalid data: {}", type,
-              data);
-        }
-      } else {
-        rootNode.put(type, data);
-      }
-    }
+    dbRecord.forEach(row -> rootNode.put(row.type(), new String(row.data(), StandardCharsets.UTF_8)));
     return rootNode;
   }
 
@@ -298,7 +264,7 @@ public class HandleService {
           }
           default -> throw new InvalidRequestException(INVALID_TYPE_ERROR + type);
         }
-      } catch (JsonProcessingException e) {
+      } catch (JsonProcessingException | UnprocessableEntityException e) {
         throw new InvalidRequestException(
             "An error has occurred parsing a record in request. More information: "
                 + e.getMessage());
@@ -315,6 +281,21 @@ public class HandleService {
           wrapData(recordAttributes, getRecordTypeFromTypeList(recordAttributes, recordTypes)));
     }
     return new JsonApiWrapperWrite(dataList);
+  }
+
+  public List<HandleAttribute> prepareUpdateAttributes(byte[] handle, JsonNode request) {
+
+    Map<String, String> updateRecord = mapper.convertValue(request,
+        new TypeReference<Map<String, String>>() {
+        });
+    List<HandleAttribute> attributesToUpdate = new ArrayList<>();
+
+    for (var requestField : updateRecord.entrySet()) {
+      String type = requestField.getKey().replace("Pid", "");
+      byte[] data = requestField.getValue().getBytes(StandardCharsets.UTF_8);
+      attributesToUpdate.add(new HandleAttribute(FIELD_IDX.get(type), handle, type, data));
+    }
+    return attributesToUpdate;
   }
 
   // Update Records
@@ -429,20 +410,6 @@ public class HandleService {
     return duplicateHandles;
   }
 
-  private List<HandleAttribute> prepareUpdateAttributes(byte[] handle, JsonNode request) {
-    Map<String, String> updateRecord = mapper.convertValue(request,
-        new TypeReference<Map<String, String>>() {
-        });
-    List<HandleAttribute> attributesToUpdate = new ArrayList<>();
-
-    for (var requestField : updateRecord.entrySet()) {
-      String type = requestField.getKey().replace("Pid", "");
-      byte[] data = requestField.getValue().getBytes(StandardCharsets.UTF_8);
-      attributesToUpdate.add(new HandleAttribute(FIELD_IDX.get(type), handle, type, data));
-    }
-    return attributesToUpdate;
-  }
-
   // Archive
   public JsonApiWrapperWrite archiveRecordBatch(List<JsonNode> requests)
       throws InvalidRequestException, PidResolutionException {
@@ -462,7 +429,7 @@ public class HandleService {
     checkInternalDuplicates(handles);
     checkHandlesWritable(handles);
 
-    handleRep.archiveRecords(recordTimestamp, archiveAttributes, handles);
+    handleRep.archiveRecords(recordTimestamp, archiveAttributes);
     var archivedRecords = resolveAndFormatRecords(handles);
 
     List<JsonApiDataLinks> dataList = new ArrayList<>();
@@ -474,7 +441,6 @@ public class HandleService {
           new JsonApiLinks(pidLink)));
     }
     return new JsonApiWrapperWrite(dataList);
-
   }
 }
 

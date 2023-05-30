@@ -1,36 +1,35 @@
 package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.EXTERNAL_PID;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_LIST_STR;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.LOC_ALT_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.PHYSICAL_IDENTIFIER_LOCAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_STATUS_TESTVAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DOI;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS_BOTANY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MEDIA;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_PID;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDoiRecordAttributes;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDoiRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributesAltLoc;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaObjectAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genObjectNodeAttributeRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordFullAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequestBatch;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestBatch;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseRead;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseReadSingle;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWrite;
@@ -84,18 +83,13 @@ class HandleServiceTest {
   private FdoRecordBuilder fdoRecordBuilder;
   @Mock
   private HandleGeneratorService hgService;
-  @Mock
-  PidResolverComponent pidResolver;
   private HandleService service;
   private List<byte[]> handles;
   private MockedStatic<Instant> mockedStatic;
 
   @BeforeEach
   void setup() {
-    DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-    TransformerFactory transformerFactory = TransformerFactory.newInstance();
-
-    service = new HandleService(handleRep, fdoRecordBuilder, hgService, MAPPER, pidResolver);
+    service = new HandleService(handleRep, fdoRecordBuilder, hgService, MAPPER);
     initTime();
     initHandleList();
   }
@@ -140,26 +134,6 @@ class HandleServiceTest {
   }
 
   @Test
-  void testResolveSingleRecordExternal() throws Exception {
-    String pid = EXTERNAL_PID;
-    String path = SANDBOX_URI + pid;
-    List<HandleAttribute> recordAttributeList = genHandleRecordAttributes(pid.getBytes(StandardCharsets.UTF_8));
-    var jsonNode = genObjectNodeAttributeRecord(recordAttributeList);
-
-    var responseExpected = givenRecordResponseReadSingle(pid, path, "PID Record",
-        genObjectNodeAttributeRecord(recordAttributeList));
-
-
-    given(pidResolver.resolveExternalPid(pid)).willReturn(jsonNode);
-
-    // When
-    var responseReceived = service.resolveSingleRecordExternal(pid, path);
-
-    // Then
-    assertThat(responseReceived).isEqualTo(responseExpected);
-  }
-
-  @Test
   void testResolveBatchRecord() throws Exception {
     // Given
     String path = SANDBOX_URI;
@@ -189,8 +163,8 @@ class HandleServiceTest {
         .willReturn(expectedAttributes);
 
     // When
-    var responseReceived = service.searchByPhysicalSpecimenId(PHYSICAL_IDENTIFIER_LOCAL, PhysicalIdType.CETAF,
-        SPECIMEN_HOST_PID);
+    var responseReceived = service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, PhysicalIdType.CETAF,
+        SPECIMEN_HOST_TESTVAL);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -212,8 +186,8 @@ class HandleServiceTest {
 
     // When
     Exception e = assertThrows(PidResolutionException.class, () -> {
-      service.searchByPhysicalSpecimenId(PHYSICAL_IDENTIFIER_LOCAL, PhysicalIdType.CETAF,
-          SPECIMEN_HOST_PID);
+      service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, PhysicalIdType.CETAF,
+          SPECIMEN_HOST_TESTVAL);
     });
 
     // Then
@@ -232,8 +206,8 @@ class HandleServiceTest {
         .willReturn(expectedAttributes);
 
     // When
-    var responseReceived = service.searchByPhysicalSpecimenId(PHYSICAL_IDENTIFIER_LOCAL, PhysicalIdType.COMBINED,
-        SPECIMEN_HOST_PID);
+    var responseReceived = service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, PhysicalIdType.COMBINED,
+        SPECIMEN_HOST_TESTVAL);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -243,12 +217,13 @@ class HandleServiceTest {
   void testCreateHandleRecord() throws Exception {
     // Given
     byte[] handle = handles.get(0);
-    var request = genCreateRecordRequest(genHandleRecordRequestObject(), RECORD_TYPE_HANDLE);
+    var request = genCreateRecordRequest(givenHandleRecordRequestObject(), RECORD_TYPE_HANDLE);
     var responseExpected = givenRecordResponseWrite(List.of(handle), RECORD_TYPE_HANDLE);
     List<HandleAttribute> handleRecord = genHandleRecordAttributes(handle);
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(handleRecord);
+    given(fdoRecordBuilder.prepareHandleRecordAttributes(any(), any())).willReturn(handleRecord);
 
     // When
     var responseReceived = service.createRecords(Arrays.asList(request));
@@ -261,12 +236,13 @@ class HandleServiceTest {
   void testCreateDoiRecord() throws Exception {
     // Given
     byte[] handle = handles.get(0);
-    var request = genCreateRecordRequest(genDoiRecordRequestObject(), RECORD_TYPE_DOI);
+    var request = genCreateRecordRequest(givenDoiRecordRequestObject(), RECORD_TYPE_DOI);
     var responseExpected = givenRecordResponseWrite(List.of(handle), RECORD_TYPE_DOI);
-    List<HandleAttribute> DoiRecord = genDoiRecordAttributes(handle);
+    List<HandleAttribute> doiRecord = genDoiRecordAttributes(handle);
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(handleRep.resolveHandleAttributes(anyList())).willReturn(DoiRecord);
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(doiRecord);
+    given(fdoRecordBuilder.prepareDoiRecordAttributes(any(), any())).willReturn(doiRecord);
 
     // When
     var responseReceived = service.createRecords(List.of(request));
@@ -279,13 +255,14 @@ class HandleServiceTest {
   void testCreateDigitalSpecimen() throws Exception {
     // Given
     byte[] handle = handles.get(0);
-    var request = genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_DS);
+    var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS);
     var responseExpected = givenRecordResponseWrite(List.of(handle), RECORD_TYPE_DS);
-    List<HandleAttribute> DigitalSpecimen = genDigitalSpecimenAttributes(handle);
+    List<HandleAttribute> digitalSpecimen = genDigitalSpecimenAttributes(handle);
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(handleRep.resolveHandleAttributes(anyList())).willReturn(DigitalSpecimen);
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(digitalSpecimen);
     given(handleRep.searchByPhysicalIdentifier(anyList())).willReturn(new ArrayList<>());
+    given(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(any(), any())).willReturn(digitalSpecimen);
 
     // When
     var responseReceived = service.createRecords(List.of(request));
@@ -298,7 +275,7 @@ class HandleServiceTest {
   void testCreateDigitalSpecimenSpecimenExists() throws Exception {
     // Given
     byte[] handle = handles.get(0);
-    var request = genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_DS);
+    var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS);
     List<HandleAttribute> digitalSpecimen = genDigitalSpecimenAttributes(handle);
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
@@ -383,7 +360,7 @@ class HandleServiceTest {
 
     List<JsonNode> requests = new ArrayList<>();
     for (byte[] handle : handles) {
-      requests.add(genCreateRecordRequest(genHandleRecordRequestObject(), RECORD_TYPE_HANDLE));
+      requests.add(genCreateRecordRequest(givenHandleRecordRequestObject(), RECORD_TYPE_HANDLE));
       flatList.addAll(genHandleRecordAttributes(handle));
     }
 
@@ -406,7 +383,7 @@ class HandleServiceTest {
 
     List<JsonNode> requests = new ArrayList<>();
     for (byte[] handle : handles) {
-      requests.add(genCreateRecordRequest(genDoiRecordRequestObject(), RECORD_TYPE_DOI));
+      requests.add(genCreateRecordRequest(givenDoiRecordRequestObject(), RECORD_TYPE_DOI));
       flatList.addAll(genDoiRecordAttributes(handle));
     }
 
@@ -429,7 +406,7 @@ class HandleServiceTest {
 
     List<JsonNode> requests = new ArrayList<>();
     for (byte[] handle : handles) {
-      requests.add(genCreateRecordRequest(genDigitalSpecimenRequestObject(), RECORD_TYPE_DS));
+      requests.add(genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS));
       flatList.addAll(genDigitalSpecimenAttributes(handle));
     }
 

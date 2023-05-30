@@ -32,7 +32,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Stream;
-import javax.validation.constraints.NotEmpty;
+
+import jakarta.validation.constraints.NotEmpty;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
@@ -96,6 +97,7 @@ public class JsonSchemaValidator {
 
     JacksonModule module = new JacksonModule(JacksonOption.RESPECT_JSONPROPERTY_REQUIRED,
         JacksonOption.FLATTENED_ENUMS_FROM_JSONPROPERTY);
+
     SchemaGeneratorConfigBuilder configBuilder = new SchemaGeneratorConfigBuilder(
         SchemaVersion.DRAFT_2020_12, OptionPreset.PLAIN_JSON).with(
             Option.FORBIDDEN_ADDITIONAL_PROPERTIES_BY_DEFAULT)
@@ -117,6 +119,10 @@ public class JsonSchemaValidator {
     configBuilder.forTypesInGeneral()
         .withArrayUniqueItemsResolver(
             scope -> scope.getType().isInstanceOf(String[].class) ? true : null);
+
+    // Allow null if specified
+    configBuilder.forFields()
+        .withNullableCheck(field ->  field.getAnnotationConsideringFieldAndGetter(Nullable.class) != null);
 
     return configBuilder.build();
   }

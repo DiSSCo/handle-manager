@@ -20,8 +20,6 @@ public enum ObjectType {
   public String toString() {
     return state;
   }
-
-
   public static ObjectType fromString(String state){
     for (ObjectType type : ObjectType.values()){
       if(type.state.equalsIgnoreCase(state)){

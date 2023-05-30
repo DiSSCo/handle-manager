@@ -9,35 +9,64 @@ import java.util.Set;
 public class PidRecords {
 
   // Handle
-  public static final String HS_ADMIN = "HS_ADMIN";
-  public static final String PID = "pid";
-  public static final String PID_ISSUER = "pidIssuer";
-  public static final String DIGITAL_OBJECT_TYPE = "digitalObjectType";
-  public static final String DIGITAL_OBJECT_SUBTYPE = "digitalObjectSubtype";
-  public static final String LOC = "10320/loc";
-  public static final String ISSUE_DATE = "issueDate";
-  public static final String ISSUE_NUMBER = "issueNumber";
-  public static final String PID_STATUS = "pidStatus";
-  public static final String PID_KERNEL_METADATA_LICENSE = "pidKernelMetadataLicense";
+
+  public static final String FDO_PROFILE = "fdoProfile"; // 1
+  public static final String FDO_RECORD_LICENSE = "fdoRecordLicense"; //2
+  public static final String DIGITAL_OBJECT_TYPE = "digitalObjectType"; //3
+  public static final String DIGITAL_OBJECT_NAME = "digitalObjectName"; //4
+  public static final String PID = "pid"; //5
+  public static final String PID_ISSUER = "pidIssuer"; // 6
+  public static final String PID_ISSUER_NAME = "pidIssuerName"; // 7
+  public static final String ISSUED_FOR_AGENT = "issuedForAgent"; // 8
+  public static final String ISSUED_FOR_AGENT_NAME = "issuedForAgentName"; // 9
+  public static final String PID_RECORD_ISSUE_DATE = "pidRecordIssueDate"; // 10
+  public static final String PID_RECORD_ISSUE_NUMBER = "pidRecordIssueNumber"; //11
+  public static final String STRUCTURAL_TYPE = "structuralType"; // 12
+  public static final String PID_STATUS = "pidStatus"; // 13
+
+  // Tombstone
+  public static final String TOMBSTONE_TEXT = "tombstoneText"; // 30
+  public static final String TOMBSTONE_PIDS = "tombstonePids"; // 31
+
   // Doi
-  public static final String REFERENT_DOI_NAME = "referentDoiName";
-  public static final String REFERENT = "referent";
+  public static final String REFERENT_TYPE = "referentType"; // 40
+  public static final String REFERENT_DOI_NAME = "referentDoiName"; // 41
+  public static final String REFERENT_NAME = "referentName"; // 42
+  public static final String PRIMARY_REFERENT_TYPE = "primaryReferentType"; // 43
+  public static final String REFERENT = "referent"; // 44
+
+  // Digital Specimen
+  public static final String SPECIMEN_HOST = "specimenHost"; // 200
+  public static final String SPECIMEN_HOST_NAME = "specimenHostName"; // 201
+  public static final String PRIMARY_SPECIMEN_OBJECT_ID = "primarySpecimenObjectId"; // 202
+  public static final String PRIMARY_SPECIMEN_OBJECT_ID_TYPE = "primarySpecimenObjectIdType"; // 203
+  public static final String PRIMARY_SPECIMEN_OBJECT_ID_NAME = "primarySpecimenObjectIdName"; // 204
+  public static final String PRIMARY_SPECIMEN_OBJECT_ID_ABSENCE = "primarySpecimenObjectIdAbsenceReason"; // 205
+  public static final String OTHER_SPECIMEN_IDS = "otherSpecimenIds"; // 206
+  public static final String TOPIC_ORIGIN = "topicOrigin"; // 207
+  public static final String TOPIC_DOMAIN = "topicDomain"; // 208
+  public static final String TOPIC_DISCIPLINE = "topicDiscipline"; // 209
+  public static final String OBJECT_TYPE = "objectType"; // 210
+  public static final String LIVING_OR_PRESERVED = "livingOrPreserved"; // 211
+  public static final String BASE_TYPE_OF_SPECIMEN = "baseTypeOfSpecimen"; // 212
+  public static final String INFORMATION_ARTEFACT_TYPE = "informationArtefactType"; // 213
+  public static final String MATERIAL_SAMPLE_TYPE = "materialSampleType"; // 214
+  public static final String MATERIAL_OR_DIGITAL_ENTITY = "materialOrDigitalEntity"; // 215
+  public static final String MARKED_AS_TYPE = "markedAsType"; // 216
+  public static final String WAS_DERIVED_FROM = "wasDerivedFrom"; // 217
+
+
+  // Handle Admin
+  public static final String HS_ADMIN = "HS_ADMIN"; // 100
+  public static final String LOC = "10320/loc"; //101
+
+
   // Media Object
   public static final String MEDIA_HASH = "mediaHash";
   public static final String SUBJECT_SPECIMEN_HOST = "subjectSpecimenHost";
   public static final String MEDIA_URL = "mediaUrl";
   public static final String SUBJECT_PHYSICAL_IDENTIFIER = "subjectPhysicalIdentifier";
-  // Digital Specimen
-  public static final String DIGITAL_OR_PHYSICAL = "digitalOrPhysical";
-  public static final String SPECIMEN_HOST = "specimenHost";
-  public static final String IN_COLLECTION_FACILITY = "inCollectionFacility";
-  // Digital Specimen Botany
-  public static final String OBJECT_TYPE = "objectType";
-  public static final String PRESERVED_OR_LIVING = "preservedOrLiving";
-  public static final String PHYSICAL_IDENTIFIER = "physicalIdentifier";
-  // Tombstone
-  public static final String TOMBSTONE_TEXT = "tombstoneText";
-  public static final String TOMBSTONE_PIDS = "tombstonePids";
+
   // Fields for requests
   public static final String PID_ISSUER_REQ = "pidIssuerPid";
   public static final String LOC_REQ = "locations";
@@ -49,63 +78,45 @@ public class PidRecords {
   public static final String NODE_ID = "id";
   public static final String NODE_TYPE = "type";
 
-  // Pid Status
-  public static final Set<String> VALID_PID_STATUS = (Set.of("ACTIVE", "ARCHIVED", "DRAFT",
-      "RESERVED", "TEST", "TEST2", "ALL"));
-
   // Permitted fields for each record type
   public static final Set<String> HANDLE_RECORD_FIELDS = Set.of(PID, PID_ISSUER,
-      DIGITAL_OBJECT_TYPE, DIGITAL_OBJECT_SUBTYPE, LOC, ISSUE_DATE, ISSUE_NUMBER, PID_STATUS,
-      PID_KERNEL_METADATA_LICENSE);
-  public static final Set<String> DOI_RECORD_FIELDS;
-  public static final Set<String> DIGITAL_SPECIMEN_FIELDS;
-  public static final Set<String> DIGITAL_SPECIMEN_BOTANY_FIELDS;
-  public static final Set<String> TOMBSTONE_RECORD_FIELDS;
+      DIGITAL_OBJECT_TYPE, LOC, PID_RECORD_ISSUE_DATE,
+      PID_RECORD_ISSUE_NUMBER, PID_STATUS, FDO_RECORD_LICENSE);
   public static final Set<byte[]> TOMBSTONE_RECORD_FIELDS_BYTES;
+  public static final Set<String> TOMBSTONE_RECORD_FIELDS;
   // Fields for request type (For checking update requests)
   public static final Set<String> HANDLE_RECORD_REQ = Set.of(PID_ISSUER_REQ, LOC_REQ);
   public static final Set<String> DOI_RECORD_REQ;
   public static final Set<String> DIGITAL_SPECIMEN_REQ;
   public static final Set<String> DIGITAL_SPECIMEN_BOTANY_REQ;
 
-  public static final Set<String> FIELD_IS_PID_RECORD = Set.of(PID_ISSUER, DIGITAL_OBJECT_TYPE,
-      DIGITAL_OBJECT_SUBTYPE, TOMBSTONE_PIDS, SPECIMEN_HOST, IN_COLLECTION_FACILITY,
-      REFERENT_DOI_NAME);
+  public static final Map<String, Integer> FIELD_IDX = Map.ofEntries(Map.entry(FDO_PROFILE, 1),
+      Map.entry(FDO_RECORD_LICENSE, 2), Map.entry(DIGITAL_OBJECT_TYPE, 3),
+      Map.entry(DIGITAL_OBJECT_NAME, 4), Map.entry(PID, 5), Map.entry(PID_ISSUER, 6),
+      Map.entry(PID_ISSUER_NAME, 7), Map.entry(ISSUED_FOR_AGENT, 8),
+      Map.entry(ISSUED_FOR_AGENT_NAME, 9), Map.entry(PID_RECORD_ISSUE_DATE, 10),
+      Map.entry(PID_RECORD_ISSUE_NUMBER, 11), Map.entry(STRUCTURAL_TYPE, 12),
+      Map.entry(PID_STATUS, 13),
 
-  public static final Map<String, Integer> FIELD_IDX = Map.ofEntries(Map.entry(HS_ADMIN, 100),
-      Map.entry(PID, 1), Map.entry(PID_ISSUER, 2), Map.entry(DIGITAL_OBJECT_TYPE, 3),
-      Map.entry(DIGITAL_OBJECT_SUBTYPE, 4), Map.entry(LOC, 5), Map.entry(ISSUE_DATE, 6),
-      Map.entry(ISSUE_NUMBER, 7), Map.entry(PID_STATUS, 8), Map.entry(TOMBSTONE_TEXT, 9),
-      Map.entry(TOMBSTONE_PIDS, 10), Map.entry(PID_KERNEL_METADATA_LICENSE, 11),
-      Map.entry(REFERENT_DOI_NAME, 12), Map.entry(REFERENT, 13),
-      Map.entry(DIGITAL_OR_PHYSICAL, 14), Map.entry(MEDIA_HASH, 14),
-      Map.entry(SPECIMEN_HOST, 15), Map.entry(SUBJECT_SPECIMEN_HOST, 15),
-      Map.entry(IN_COLLECTION_FACILITY, 16), Map.entry(MEDIA_URL, 16),
-      Map.entry(SUBJECT_PHYSICAL_IDENTIFIER, 17), Map.entry(PHYSICAL_IDENTIFIER, 17),
-      Map.entry(OBJECT_TYPE, 18), Map.entry(PRESERVED_OR_LIVING, 19));
+      Map.entry(TOMBSTONE_TEXT, 31), Map.entry(TOMBSTONE_PIDS, 32),
 
+      Map.entry(REFERENT_TYPE, 40), Map.entry(REFERENT_DOI_NAME, 41), Map.entry(REFERENT_NAME, 42),
+      Map.entry(PRIMARY_REFERENT_TYPE, 43), Map.entry(REFERENT, 44),
 
-  static { // Doi Record Fields
-    Set<String> tmp = new HashSet<>(HANDLE_RECORD_FIELDS);
-    tmp.add(REFERENT_DOI_NAME);
-    tmp.add(REFERENT);
-    DOI_RECORD_FIELDS = Collections.unmodifiableSet(tmp);
-  }
+      Map.entry(SPECIMEN_HOST, 200), Map.entry(SPECIMEN_HOST_NAME, 201),
+      Map.entry(PRIMARY_SPECIMEN_OBJECT_ID, 202), Map.entry(PRIMARY_SPECIMEN_OBJECT_ID_TYPE, 203),
+      Map.entry(PRIMARY_SPECIMEN_OBJECT_ID_NAME, 204),
+      Map.entry(PRIMARY_SPECIMEN_OBJECT_ID_ABSENCE, 205), Map.entry(OTHER_SPECIMEN_IDS, 206),
+      Map.entry(TOPIC_ORIGIN, 207), Map.entry(TOPIC_DOMAIN, 208), Map.entry(TOPIC_DISCIPLINE, 209),
+      Map.entry(OBJECT_TYPE, 210), Map.entry(LIVING_OR_PRESERVED, 211),
+      Map.entry(BASE_TYPE_OF_SPECIMEN, 212), Map.entry(INFORMATION_ARTEFACT_TYPE, 213),
+      Map.entry(MATERIAL_SAMPLE_TYPE, 214), Map.entry(MATERIAL_OR_DIGITAL_ENTITY, 215),
+      Map.entry(MARKED_AS_TYPE, 216), Map.entry(WAS_DERIVED_FROM, 217),
 
-  static { // Digital Specimen Fields
-    Set<String> tmp = new HashSet<>(DOI_RECORD_FIELDS);
-    tmp.add(DIGITAL_OR_PHYSICAL);
-    tmp.add(SPECIMEN_HOST);
-    tmp.add(IN_COLLECTION_FACILITY);
-    DIGITAL_SPECIMEN_FIELDS = Collections.unmodifiableSet(tmp);
-  }
+      Map.entry(MEDIA_HASH, 300), Map.entry(MEDIA_URL, 301), Map.entry(SUBJECT_PHYSICAL_IDENTIFIER, 302), Map.entry(SUBJECT_SPECIMEN_HOST, 303),
 
-  static { // Digital Specimen Botany Fields
-    Set<String> tmp = new HashSet<>(DIGITAL_SPECIMEN_FIELDS);
-    tmp.add(OBJECT_TYPE);
-    tmp.add(PRESERVED_OR_LIVING);
-    DIGITAL_SPECIMEN_BOTANY_FIELDS = Collections.unmodifiableSet(tmp);
-  }
+      Map.entry(HS_ADMIN, 100), Map.entry(LOC, 101));
+
 
   static {
     Set<String> tmp = new HashSet<>(HANDLE_RECORD_FIELDS);
@@ -133,7 +144,7 @@ public class PidRecords {
 
   static {
     Set<String> tmp = new HashSet<>(DOI_RECORD_REQ);
-    tmp.add(DIGITAL_OR_PHYSICAL);
+    tmp.add(MATERIAL_OR_DIGITAL_ENTITY);
     tmp.add(SPECIMEN_HOST_REQ);
     tmp.add(IN_COLLECTION_FACILITY_REQ);
     DIGITAL_SPECIMEN_REQ = Collections.unmodifiableSet(tmp);
@@ -142,11 +153,10 @@ public class PidRecords {
   static {
     Set<String> tmp = new HashSet<>(DIGITAL_SPECIMEN_REQ);
     tmp.add(OBJECT_TYPE);
-    tmp.add(PRESERVED_OR_LIVING);
+    tmp.add(LIVING_OR_PRESERVED);
     DIGITAL_SPECIMEN_BOTANY_REQ = Collections.unmodifiableSet(tmp);
   }
 
-  // Indexes of modifiable fields
   private PidRecords() {
     throw new IllegalStateException("Utility class");
   }

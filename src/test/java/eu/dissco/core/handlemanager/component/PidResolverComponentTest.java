@@ -8,7 +8,6 @@ import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -72,7 +71,8 @@ class PidResolverComponentTest {
     given(jsonFuture.get()).willThrow(exception);
 
     // Then
-    assertThrows(PidResolutionException.class, () -> pidResolver.resolveExternalPid(EXTERNAL_PID));
+    assertThrows(PidResolutionException.class, () -> pidResolver.resolveExternalPid(EXTERNAL_PID
+    ));
   }
 
   @Test
@@ -85,7 +85,38 @@ class PidResolverComponentTest {
     given(jsonFuture.get()).willThrow(exception);
 
     // Then
-    assertThrows(UnprocessableEntityException.class, () -> pidResolver.resolveExternalPid(EXTERNAL_PID));
+    assertThrows(UnprocessableEntityException.class, () -> pidResolver.resolveExternalPid(EXTERNAL_PID
+    ));
+  }
+
+  @Test
+  void testGetObjectName() throws Exception {
+    // Given
+    givenWebclient();
+    var response = MAPPER.readTree(loadResourceFile("pidrecord/pidRecord.json"));
+    given(jsonFuture.get()).willReturn(response);
+    var expected = "digitalSpecimen";
+
+    // When
+    var result = pidResolver.getObjectName(EXTERNAL_PID);
+
+    // Then
+    assertThat(result).isEqualTo(expected);
+  }
+
+  @Test
+  void testGetObjectNameNotPresent() throws Exception {
+    // Given
+    givenWebclient();
+    var response = MAPPER.readTree(loadResourceFile("pidrecord/pidRecordNoName.json"));
+    given(jsonFuture.get()).willReturn(response);
+    var expected = "";
+
+    // When
+    var result = pidResolver.getObjectName(EXTERNAL_PID);
+
+    // Then
+    assertThat(result).isEqualTo(expected);
   }
 
   private void givenWebclient() {
