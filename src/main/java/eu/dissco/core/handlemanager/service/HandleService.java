@@ -1,8 +1,6 @@
 package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
-import static eu.dissco.core.handlemanager.domain.PidRecords.LOC;
-import static eu.dissco.core.handlemanager.domain.PidRecords.LOC_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
@@ -36,13 +34,11 @@ import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -314,9 +310,7 @@ public class HandleService {
       String recordType = data.get(NODE_TYPE).asText();
       recordTypes.put(new String(handle, StandardCharsets.UTF_8), recordType);
 
-      JsonNode validatedAttributes = setLocationFromJson(requestAttributes,
-          new String(handle, StandardCharsets.UTF_8));
-      var attributes = prepareUpdateAttributes(handle, validatedAttributes);
+      var attributes = fdoRecordBuilder.prepareUpdateAttributes(handle, requestAttributes);
       attributesToUpdate.add(attributes);
     }
     checkInternalDuplicates(handles);
@@ -338,37 +332,6 @@ public class HandleService {
     return recordTypes.get(pid);
   }
 
-  private JsonNode setLocationFromJson(JsonNode request, String handle)
-      throws InvalidRequestException, PidServiceInternalError {
-    var keys = getKeys(request);
-    if (!keys.contains(LOC_REQ)) {
-      return request;
-    }
-
-    JsonNode locNode = request.get(LOC_REQ);
-    ObjectNode requestObjectNode = request.deepCopy();
-    if (locNode.isArray()) {
-      try {
-        String[] locArr = mapper.treeToValue(locNode, String[].class);
-        var setLocs = fdoRecordBuilder.setLocations(locArr, handle);
-        requestObjectNode.put(LOC, new String(setLocs, StandardCharsets.UTF_8));
-        requestObjectNode.remove(LOC_REQ);
-      } catch (IOException e) {
-        throw new InvalidRequestException(
-            "An error has occurred parsing \"locations\" array. " + e.getMessage());
-      } catch (PidServiceInternalError e) {
-        throw e;
-      }
-    }
-    return requestObjectNode;
-  }
-
-  private List<String> getKeys(JsonNode request) {
-    List<String> keys = new ArrayList<>();
-    Iterator<String> fieldItr = request.fieldNames();
-    fieldItr.forEachRemaining(keys::add);
-    return keys;
-  }
 
   private void checkHandlesWritable(List<byte[]> handles) throws PidResolutionException {
     Set<byte[]> handlesToUpdate = new HashSet<>(handles);

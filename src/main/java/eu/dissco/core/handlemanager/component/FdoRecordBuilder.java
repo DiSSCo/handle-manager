@@ -48,6 +48,10 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.WAS_DERIVED_FROM;
 import static eu.dissco.core.handlemanager.service.ServiceUtils.setUniquePhysicalIdentifierId;
 import static eu.dissco.core.handlemanager.utils.AdminHandleGenerator.genAdminHandle;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
@@ -58,6 +62,7 @@ import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -65,7 +70,9 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -87,6 +94,7 @@ public class FdoRecordBuilder {
   private final TransformerFactory tf;
   private final DocumentBuilderFactory dbf;
   private final PidResolverComponent pidResolver;
+  private final ObjectMapper mapper;
   private static final String HANDLE_DOMAIN = "https://hdl.handle.net/";
   private static final String ROR_API_DOMAIN = "https://api.ror.org/organizations/";
   private static final String ROR_DOMAIN = "https://ror.org/";
@@ -269,7 +277,6 @@ public class FdoRecordBuilder {
     // 201: Specimen Host name
     fdoRecord = setSpecimenHostName(request, fdoRecord, handle);
 
-
     // 202: primarySpecimenObjectId
     var primarySpecimenObjectId = setUniquePhysicalIdentifierId(request);
     fdoRecord.add(
@@ -409,23 +416,26 @@ public class FdoRecordBuilder {
     return fdoRecord;
   }
 
-  private List<HandleAttribute> setSpecimenHostName(DigitalSpecimenRequest request, List<HandleAttribute> fdoRecord, byte[] handle){
+  private List<HandleAttribute> setSpecimenHostName(DigitalSpecimenRequest request,
+      List<HandleAttribute> fdoRecord, byte[] handle) {
     var specimenHostName = request.getSpecimenHostName();
     if (specimenHostName != null) {
       fdoRecord.add(
-              new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST_NAME), handle,
-                      SPECIMEN_HOST_NAME,
-                      specimenHostName.getBytes(StandardCharsets.UTF_8)));
+          new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST_NAME), handle,
+              SPECIMEN_HOST_NAME,
+              specimenHostName.getBytes(StandardCharsets.UTF_8)));
     } else {
       try {
         var specimenHostNameResolved = pidResolver.getObjectName(getRor(request.getSpecimenHost()));
         fdoRecord.add(
-                new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST_NAME), handle,
-                        SPECIMEN_HOST_NAME,
-                        specimenHostNameResolved.getBytes(StandardCharsets.UTF_8)));
+            new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST_NAME), handle,
+                SPECIMEN_HOST_NAME,
+                specimenHostNameResolved.getBytes(StandardCharsets.UTF_8)));
 
       } catch (Exception e) {
-        log.info("SpecimenHostId is not a resolvable ROR and no SpecimenHostName is provided in the request. SpecimenHostName field left blank. More information: " + e.getMessage());
+        log.info(
+            "SpecimenHostId is not a resolvable ROR and no SpecimenHostName is provided in the request. SpecimenHostName field left blank. More information: "
+                + e.getMessage());
       }
     }
     return fdoRecord;
@@ -437,11 +447,47 @@ public class FdoRecordBuilder {
     return prepareDigitalSpecimenRecordAttributes(request, handle);
   }
 
+  public List<HandleAttribute> prepareUpdateAttributes(byte[] handle, JsonNode requestAttributes)
+      throws InvalidRequestException, PidServiceInternalError {
+    requestAttributes = setLocationXmlFromJson(requestAttributes,
+        new String(handle, StandardCharsets.UTF_8));
+    Map<String, String> updateRequestMap = mapper.convertValue(requestAttributes,
+        new TypeReference<Map<String, String>>() {
+        });
+    List<HandleAttribute> attributesToUpdate = new ArrayList<>();
+    updateRequestMap.forEach((key, value) ->
+        attributesToUpdate.add(new HandleAttribute(FIELD_IDX.get(key), handle, key, value.getBytes(
+            StandardCharsets.UTF_8))));
+
+    return attributesToUpdate;
+  }
+
+  private JsonNode setLocationXmlFromJson(JsonNode request, String handle)
+      throws InvalidRequestException, PidServiceInternalError {
+    // Format request so that the given locations array is formatted according to 10320/loc specifications
+
+    if (request.findValue(LOC_REQ) == null) {
+      return request;
+    }
+
+    JsonNode locNode = request.get(LOC_REQ);
+    ObjectNode requestObjectNode = request.deepCopy();
+    try {
+      String[] locArr = mapper.treeToValue(locNode, String[].class);
+      requestObjectNode.put(LOC, new String(setLocations(locArr, handle), StandardCharsets.UTF_8));
+      requestObjectNode.remove(LOC_REQ);
+    } catch (IOException e) {
+      throw new InvalidRequestException(
+          "An error has occurred parsing \"locations\" array. " + e.getMessage());
+    }
+    return requestObjectNode;
+  }
+
   private String getDate() {
     return dt.format(Instant.now());
   }
 
-  public byte[] setLocations(String[] userLocations, String handle) throws PidServiceInternalError {
+  private byte[] setLocations(String[] userLocations, String handle) throws PidServiceInternalError {
 
     DocumentBuilder documentBuilder;
     try {
