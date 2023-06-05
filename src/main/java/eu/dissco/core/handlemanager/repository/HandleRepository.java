@@ -122,6 +122,11 @@ public class HandleRepository {
   // Post
 
   public void postAttributesToDb(long recordTimestamp, List<HandleAttribute> handleAttributes) {
+    var queryList = prepareBatchPostQuery(recordTimestamp, handleAttributes);
+    context.batch(queryList).execute();
+  }
+
+  private List<Query> prepareBatchPostQuery(long recordTimestamp, List<HandleAttribute> handleAttributes){
     var queryList = new ArrayList<Query>();
 
     for (var handleAttribute : handleAttributes) {
@@ -138,7 +143,7 @@ public class HandleRepository {
           .set(HANDLES.PUB_WRITE, false);
       queryList.add(query);
     }
-    context.batch(queryList).execute();
+    return queryList;
   }
 
   private void mergeAttributesToDb(long recordTimestamp,
@@ -185,6 +190,14 @@ public class HandleRepository {
     mergeAttributesToDb(recordTimestamp, handleAttributes);
   }
 
+  public void postAndUpdateHandles(long recordTimestamp, List<HandleAttribute> createAttributes, List<List<HandleAttribute>> updateAttributes){
+    var queryList = prepareBatchUpdateQuery(recordTimestamp, updateAttributes);
+    queryList.addAll(prepareBatchPostQuery(recordTimestamp, createAttributes));
+    context.batch(queryList).execute();
+
+  }
+
+
   // Update
   public void updateRecord(long recordTimestamp, List<HandleAttribute> handleAttributes) {
     byte[] handle = handleAttributes.get(0).handle();
@@ -194,13 +207,17 @@ public class HandleRepository {
 
   public void updateRecordBatch(long recordTimestamp,
       List<List<HandleAttribute>> handleRecords) {
+    var queryList = prepareBatchUpdateQuery(recordTimestamp, handleRecords);
+    context.batch(queryList).execute();
+  }
 
+  private List<Query> prepareBatchUpdateQuery(long recordTimestamp, List<List<HandleAttribute>> handleRecords){
     List<Query> queryList = new ArrayList<>();
     for (List<HandleAttribute> handleRecord : handleRecords) {
       queryList.addAll(
           prepareUpdateQuery(handleRecord.get(0).handle(), recordTimestamp, handleRecord));
     }
-    context.batch(queryList).execute();
+    return queryList;
   }
 
   private ArrayList<Query> prepareUpdateQuery(byte[] handle, long recordTimestamp,
@@ -217,6 +234,7 @@ public class HandleRepository {
     queryList.add(versionIncrement(handle, recordTimestamp));
     return queryList;
   }
+
 
   private Query versionIncrement(byte[] handle, long recordTimestamp) {
     var currentVersion =

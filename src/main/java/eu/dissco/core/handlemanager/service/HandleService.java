@@ -10,6 +10,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
 import static eu.dissco.core.handlemanager.service.ServiceUtils.setUniquePhysicalIdentifierId;
+import static eu.dissco.core.handlemanager.service.ServiceUtils.toSingleton;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -23,6 +24,7 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperReadSingle;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
+import eu.dissco.core.handlemanager.domain.requests.UpsertDigitalSpecimen;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DoiRecordRequest;
@@ -47,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -82,6 +85,8 @@ public class HandleService {
     return new JsonApiWrapperRead(new JsonApiLinks(path), dataList);
   }
 
+
+  // Response Formatting
   private List<JsonNode> resolveAndFormatRecords(List<byte[]> handles)
       throws PidResolutionException {
     var dbRecord = handleRep.resolveHandleAttributes(handles);
@@ -106,20 +111,6 @@ public class HandleService {
     }
     return rootNodeList;
   }
-
-  // Other Getters
-
-  // Getters
-
-  public List<String> getHandlesPaged(int pageNum, int pageSize, byte[] pidStatus) {
-    return handleRep.getAllHandles(pidStatus, pageNum, pageSize);
-  }
-
-  public List<String> getHandlesPaged(int pageNum, int pageSize) {
-    return handleRep.getAllHandles(pageNum, pageSize);
-  }
-
-  // Response Formatting
 
   private String getPidName(String pidLink) {
     return pidLink.substring(pidLink.length() - 24);
@@ -151,7 +142,8 @@ public class HandleService {
 
   private JsonNode jsonFormatSingleRecord(List<HandleAttribute> dbRecord) {
     ObjectNode rootNode = mapper.createObjectNode();
-    dbRecord.forEach(row -> rootNode.put(row.type(), new String(row.data(), StandardCharsets.UTF_8)));
+    dbRecord.forEach(
+        row -> rootNode.put(row.type(), new String(row.data(), StandardCharsets.UTF_8)));
     return rootNode;
   }
 
@@ -188,20 +180,6 @@ public class HandleService {
     return physicalIdentifier.getBytes(StandardCharsets.UTF_8);
   }
 
-  private <T extends DigitalSpecimenRequest> void verifyNoRegisteredSpecimens(List<T> requests)
-      throws PidCreationException {
-    List<byte[]> physicalIds = new ArrayList<>();
-    for (var request : requests) {
-      physicalIds.add(setUniquePhysicalIdentifierId(request));
-    }
-    var registeredSpecimens = handleRep.searchByPhysicalIdentifier(physicalIds);
-    if (!registeredSpecimens.isEmpty()) {
-      var registeredHandles = listHandleNamesReturnedFromQuery(registeredSpecimens);
-      throw new PidCreationException(
-          "Unable to create PID records. Some requested records are already registered. Verify the following digital specimens:"
-              + registeredHandles);
-    }
-  }
 
   private Set<String> listHandleNamesReturnedFromQuery(List<HandleAttribute> rows) {
     Set<String> handles = new HashSet<>();
@@ -271,33 +249,129 @@ public class HandleService {
       }
     }
 
-    verifyNoRegisteredSpecimens(digitalSpecimenList);
+    if (!digitalSpecimenList.isEmpty()){
+      var requestPhysicalIds = getPhysicalIdsFromRequests(digitalSpecimenList);
+      verifyNoInternalDuplicatePhysicalSpecimenObjectId(digitalSpecimenList, requestPhysicalIds);
+      verifyNoRegisteredSpecimens(requestPhysicalIds);
+    }
+
     handleRep.postAttributesToDb(recordTimestamp, handleAttributes);
 
     var postedRecordAttributes = resolveAndFormatRecords(handlesPost);
-    List<JsonApiDataLinks> dataList = new ArrayList<>();
-    for (JsonNode recordAttributes : postedRecordAttributes) {
-      dataList.add(
-          wrapData(recordAttributes, getRecordTypeFromTypeList(recordAttributes, recordTypes)));
-    }
+    var dataList = postedRecordAttributes.stream().map(recordAttributes -> wrapData(recordAttributes, getRecordTypeFromTypeList(recordAttributes, recordTypes))).toList();
     return new JsonApiWrapperWrite(dataList);
   }
 
-  public List<HandleAttribute> prepareUpdateAttributes(byte[] handle, JsonNode request) {
-
-    Map<String, String> updateRecord = mapper.convertValue(request,
-        new TypeReference<Map<String, String>>() {
-        });
-    List<HandleAttribute> attributesToUpdate = new ArrayList<>();
-
-    for (var requestField : updateRecord.entrySet()) {
-      String type = requestField.getKey().replace("Pid", "");
-      byte[] data = requestField.getValue().getBytes(StandardCharsets.UTF_8);
-      attributesToUpdate.add(new HandleAttribute(FIELD_IDX.get(type), handle, type, data));
+  private <T extends DigitalSpecimenRequest> void verifyNoInternalDuplicatePhysicalSpecimenObjectId(
+      List<T> requests, List<byte[]> physicalIds)
+      throws InvalidRequestException {
+    if (physicalIds.size() < requests.size()) {
+      throw new InvalidRequestException(
+          "Bad Request. Some PhysicalSpecimenObjectIds are duplicated in request body");
     }
-    return attributesToUpdate;
   }
 
+  private void verifyNoRegisteredSpecimens(List<byte[]> physicalIds)
+      throws PidCreationException {
+    var registeredSpecimens = handleRep.searchByPhysicalIdentifier(physicalIds);
+    if (!registeredSpecimens.isEmpty()) {
+      var registeredHandles = listHandleNamesReturnedFromQuery(registeredSpecimens);
+      throw new PidCreationException(
+          "Unable to create PID records. Some requested records are already registered. Verify the following digital specimens:"
+              + registeredHandles);
+    }
+  }
+
+  //
+
+  public JsonApiWrapperWrite upsertDigitalSpecimens(List<JsonNode> requests)
+      throws JsonProcessingException, UnprocessableEntityException, PidResolutionException, InvalidRequestException, PidServiceInternalError {
+    ArrayList<DigitalSpecimenRequest> digitalSpecimenRequests = new ArrayList<>();
+    for (var request : requests) {
+      digitalSpecimenRequests.add(mapper.treeToValue(request.get(NODE_DATA).get(NODE_ATTRIBUTES),
+          DigitalSpecimenRequest.class));
+    }
+
+    var physicalIds = getPhysicalIdsFromRequests(digitalSpecimenRequests);
+    var upsertRequests = getRegisteredSpecimensUpsert(digitalSpecimenRequests, physicalIds);
+    var upsertAttributes = prepareUpsertAttributes(upsertRequests);
+
+    var createRequests = getCreateRequests(upsertRequests, digitalSpecimenRequests);
+    var newHandles = hf.newHandle(createRequests.size());
+    var createAttributes = getCreateAttributes(createRequests, newHandles);
+
+    var allRequests = Stream.concat(
+        createRequests.stream(),
+        upsertRequests.stream().map(UpsertDigitalSpecimen::request)).toList();
+    verifyNoInternalDuplicatePhysicalSpecimenObjectId(allRequests, physicalIds);
+
+    var recordTimestamp = Instant.now().getEpochSecond();
+
+    handleRep.postAndUpdateHandles(recordTimestamp, createAttributes, upsertAttributes);
+
+    return null;
+  }
+
+
+  private <T extends DigitalSpecimenRequest> List<byte[]> getPhysicalIdsFromRequests(
+      List<T> digitalSpecimenRequests) {
+    return digitalSpecimenRequests.stream()
+        .map(ServiceUtils::setUniquePhysicalIdentifierId)
+        .map(physId -> physId.getBytes(StandardCharsets.UTF_8))
+        .toList();
+  }
+
+  private List<UpsertDigitalSpecimen> getRegisteredSpecimensUpsert(
+      List<DigitalSpecimenRequest> requests, List<byte[]> physicalIds) {
+    var registeredSpecimensHandleAttributes = new HashSet<>(
+        handleRep.searchByPhysicalIdentifier(physicalIds));
+
+    return registeredSpecimensHandleAttributes
+        .stream()
+        .map(row -> new UpsertDigitalSpecimen(new String(row.handle(), StandardCharsets.UTF_8),
+            new String(row.data(), StandardCharsets.UTF_8),
+            getRequestFromPhysicalId(requests, new String(row.data(), StandardCharsets.UTF_8))))
+        .toList();
+  }
+  private DigitalSpecimenRequest getRequestFromPhysicalId(List<DigitalSpecimenRequest> requests,
+      String physicalId) {
+    return requests.stream()
+        .filter(request -> request.getPrimarySpecimenObjectId().equals(physicalId))
+        .collect(toSingleton());
+  }
+
+  private List<DigitalSpecimenRequest> getCreateRequests(List<UpsertDigitalSpecimen> upsertRequests, List<DigitalSpecimenRequest> digitalSpecimenRequests){
+    var upsertRequestsSet = upsertRequests
+        .stream()
+        .map(UpsertDigitalSpecimen::request).collect(Collectors.toSet());
+
+    return digitalSpecimenRequests
+        .stream()
+        .filter(r -> (!upsertRequestsSet.contains(r)))
+        .toList();
+  }
+
+  private List<HandleAttribute> getCreateAttributes(List<DigitalSpecimenRequest> digitalSpecimenRequests, List<byte[]> newHandles)
+      throws UnprocessableEntityException, PidResolutionException, InvalidRequestException, PidServiceInternalError {
+    List<HandleAttribute> handleAttributes = new ArrayList<>();
+    for (var digitalSpecimenRequest : digitalSpecimenRequests){
+      handleAttributes.addAll(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(digitalSpecimenRequest, newHandles.remove(0)));
+    }
+    return handleAttributes;
+  }
+
+  private List<List<HandleAttribute>> prepareUpsertAttributes(List<UpsertDigitalSpecimen> upsertDigitalSpecimens)
+      throws UnprocessableEntityException, PidResolutionException, InvalidRequestException, PidServiceInternalError {
+    List<List<HandleAttribute>> upsertAttributes = new ArrayList<>();
+
+    for (var upsertRequest: upsertDigitalSpecimens) {
+      upsertAttributes.add(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(upsertRequest.request(),
+          upsertRequest.handle().getBytes(StandardCharsets.UTF_8)));
+    }
+    return upsertAttributes;
+  }
+
+  // Update
   // Update Records
   public JsonApiWrapperWrite updateRecords(List<JsonNode> requests)
       throws InvalidRequestException, PidResolutionException, PidServiceInternalError {
@@ -330,6 +404,21 @@ public class HandleService {
       dataList.add(wrapData(updatedRecord, getRecordTypeFromTypeList(updatedRecord, recordTypes)));
     }
     return new JsonApiWrapperWrite(dataList);
+  }
+
+  private List<HandleAttribute> prepareUpdateAttributes(byte[] handle, JsonNode request) {
+
+    Map<String, String> updateRecord = mapper.convertValue(request,
+        new TypeReference<Map<String, String>>() {
+        });
+    List<HandleAttribute> attributesToUpdate = new ArrayList<>();
+
+    for (var requestField : updateRecord.entrySet()) {
+      String type = requestField.getKey().replace("Pid", "");
+      byte[] data = requestField.getValue().getBytes(StandardCharsets.UTF_8);
+      attributesToUpdate.add(new HandleAttribute(FIELD_IDX.get(type), handle, type, data));
+    }
+    return attributesToUpdate;
   }
 
   private String getRecordTypeFromTypeList(JsonNode recordAttributes,
@@ -376,15 +465,15 @@ public class HandleService {
     Set<byte[]> handlesExist = new HashSet<>(handleRep.checkHandlesWritable(handles));
     if (handlesExist.size() < handles.size()) {
       handlesToUpdate.removeAll(handlesExist);
-      Set<String> handlesDontExist = new HashSet<>();
-      for (byte[] handle : handlesToUpdate) {
-        handlesDontExist.add(new String(handle, StandardCharsets.UTF_8));
-      }
+      Set<String> handlesDontExist = handlesToUpdate.stream()
+          .map(h -> new String(h, StandardCharsets.UTF_8)).collect(
+              Collectors.toSet());
       throw new PidResolutionException(
           "INVALID INPUT. One or more handles in request do not exist or are archived. Verify the following handle(s): "
               + handlesDontExist);
     }
   }
+
 
   private void checkInternalDuplicates(List<byte[]> handles) throws InvalidRequestException {
     Set<String> handlesToUpdateStr = new HashSet<>();

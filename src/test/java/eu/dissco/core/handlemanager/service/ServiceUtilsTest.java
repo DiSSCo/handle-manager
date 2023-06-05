@@ -60,10 +60,10 @@ import org.junit.jupiter.api.Test;
   void testSetUniquePhysicalIdentifierMedia(){
    // Given
    var request = genMediaRequestObject();
-   var expected = request.getSubjectPhysicalIdentifier().physicalId();
+   String expected = request.getSubjectPhysicalIdentifier().physicalId();
 
    // When
-   var result =new String(setUniquePhysicalIdentifierId(request), StandardCharsets.UTF_8);
+   String result = setUniquePhysicalIdentifierId(request);
 
    // Then
    assertThat(result).isEqualTo(expected);
@@ -74,10 +74,10 @@ import org.junit.jupiter.api.Test;
    // Given
    var request = givenCombinedMediaRequest();
    var suffix = request.getSubjectSpecimenHostPid().replace(ROR_DOMAIN,"");
-   var expected = request.getSubjectPhysicalIdentifier().physicalId() + ":" + suffix;
+   String expected = request.getSubjectPhysicalIdentifier().physicalId() + ":" + suffix;
 
    // When
-   var result = new String(setUniquePhysicalIdentifierId(request), StandardCharsets.UTF_8);
+   String result = setUniquePhysicalIdentifierId(request);
 
    // Then
    assertThat(result).isEqualTo(expected);

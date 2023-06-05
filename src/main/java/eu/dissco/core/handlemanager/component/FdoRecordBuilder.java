@@ -48,6 +48,9 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.WAS_DERIVED_FROM;
 import static eu.dissco.core.handlemanager.service.ServiceUtils.setUniquePhysicalIdentifierId;
 import static eu.dissco.core.handlemanager.utils.AdminHandleGenerator.genAdminHandle;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
@@ -66,6 +69,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -87,6 +91,7 @@ public class FdoRecordBuilder {
   private final TransformerFactory tf;
   private final DocumentBuilderFactory dbf;
   private final PidResolverComponent pidResolver;
+  private final ObjectMapper mapper;
   private static final String HANDLE_DOMAIN = "https://hdl.handle.net/";
   private static final String ROR_API_DOMAIN = "https://api.ror.org/organizations/";
   private static final String ROR_DOMAIN = "https://ror.org/";
@@ -251,7 +256,8 @@ public class FdoRecordBuilder {
     // 17 : Subject Physical Identifier
     // Encoding here is UTF-8
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(SUBJECT_PHYSICAL_IDENTIFIER), handle,
-        SUBJECT_PHYSICAL_IDENTIFIER, setUniquePhysicalIdentifierId(request)));
+        SUBJECT_PHYSICAL_IDENTIFIER, setUniquePhysicalIdentifierId(request).getBytes(
+        StandardCharsets.UTF_8)));
     return fdoRecord;
   }
 
@@ -271,7 +277,7 @@ public class FdoRecordBuilder {
 
 
     // 202: primarySpecimenObjectId
-    var primarySpecimenObjectId = setUniquePhysicalIdentifierId(request);
+    var primarySpecimenObjectId = setUniquePhysicalIdentifierId(request).getBytes(StandardCharsets.UTF_8);
     fdoRecord.add(
         new HandleAttribute(FIELD_IDX.get(PRIMARY_SPECIMEN_OBJECT_ID), handle,
             PRIMARY_SPECIMEN_OBJECT_ID,

@@ -9,7 +9,6 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperReadSingle;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
-import eu.dissco.core.handlemanager.domain.requests.attributes.PidStatus;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaValidator;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
@@ -49,33 +48,7 @@ public class HandleController {
   private final HandleService service;
   private final JsonSchemaValidator schemaValidator;
 
-  // Hellos and getters
-  @GetMapping(value = "/health")
-  public ResponseEntity<String> hello() {
-    return new ResponseEntity<>("API is running", HttpStatus.OK);
-  }
-
-  // List all handle values
-  @Operation(summary = "List all PIDs by PID Status (ACTIVE, ARCHIVED, etc.)")
-  @GetMapping(value = "/names")
-  public ResponseEntity<List<String>> getAllHandlesByPidStatus(
-      @RequestParam(value = "pageNum", defaultValue = "0") int pageNum,
-      @RequestParam(value = "pageSize", defaultValue = "100") int pageSize,
-      @RequestParam(name = "pidStatus", defaultValue ="ALL") PidStatus pidStatus)
-      throws PidResolutionException {
-
-    List<String> handleList;
-    if (pidStatus.equals(PidStatus.ALL)) {
-      handleList = service.getHandlesPaged(pageNum, pageSize);
-    } else {
-      handleList = service.getHandlesPaged(pageNum, pageSize, pidStatus.getBytes());
-    }
-    if (handleList.isEmpty()) {
-      throw new PidResolutionException("Unable to resolve pids");
-    }
-    return ResponseEntity.ok(handleList);
-  }
-
+  // Getters
   @Operation(summary = "Resolve single PID record")
   @GetMapping("/{prefix}/{suffix}")
   public ResponseEntity<JsonApiWrapperReadSingle> resolvePid(@PathVariable("prefix") String prefix,
@@ -115,7 +88,7 @@ public class HandleController {
   }
 
   @Operation(summary ="Given a physical identifier (i.e. local identifier), resolve PID record")
-  @GetMapping("/records/physicalId")
+  @GetMapping("/records/primarySpecimenObjectId")
   public ResponseEntity<JsonApiWrapperWrite> searchByPhysicalSpecimenId(
       @RequestParam String physicalIdentifier,
       @RequestParam PhysicalIdType physicalIdentifierType,
