@@ -1,8 +1,6 @@
 package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
-import static eu.dissco.core.handlemanager.domain.PidRecords.LOC;
-import static eu.dissco.core.handlemanager.domain.PidRecords.LOC_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
@@ -13,7 +11,6 @@ import static eu.dissco.core.handlemanager.service.ServiceUtils.setUniquePhysica
 import static eu.dissco.core.handlemanager.service.ServiceUtils.toSingleton;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -38,13 +35,11 @@ import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -111,6 +106,18 @@ public class HandleService {
     }
     return rootNodeList;
   }
+
+  // Getters
+
+  public List<String> getHandlesPaged(int pageNum, int pageSize, byte[] pidStatus) {
+    return handleRep.getAllHandles(pidStatus, pageNum, pageSize);
+  }
+
+  public List<String> getHandlesPaged(int pageNum, int pageSize) {
+    return handleRep.getAllHandles(pageNum, pageSize);
+  }
+
+  // Response Formatting
 
   private String getPidName(String pidLink) {
     return pidLink.substring(pidLink.length() - 24);
@@ -388,9 +395,7 @@ public class HandleService {
       String recordType = data.get(NODE_TYPE).asText();
       recordTypes.put(new String(handle, StandardCharsets.UTF_8), recordType);
 
-      JsonNode validatedAttributes = setLocationFromJson(requestAttributes,
-          new String(handle, StandardCharsets.UTF_8));
-      var attributes = prepareUpdateAttributes(handle, validatedAttributes);
+      var attributes = fdoRecordBuilder.prepareUpdateAttributes(handle, requestAttributes);
       attributesToUpdate.add(attributes);
     }
     checkInternalDuplicates(handles);
@@ -406,58 +411,12 @@ public class HandleService {
     return new JsonApiWrapperWrite(dataList);
   }
 
-  private List<HandleAttribute> prepareUpdateAttributes(byte[] handle, JsonNode request) {
-
-    Map<String, String> updateRecord = mapper.convertValue(request,
-        new TypeReference<Map<String, String>>() {
-        });
-    List<HandleAttribute> attributesToUpdate = new ArrayList<>();
-
-    for (var requestField : updateRecord.entrySet()) {
-      String type = requestField.getKey().replace("Pid", "");
-      byte[] data = requestField.getValue().getBytes(StandardCharsets.UTF_8);
-      attributesToUpdate.add(new HandleAttribute(FIELD_IDX.get(type), handle, type, data));
-    }
-    return attributesToUpdate;
-  }
-
   private String getRecordTypeFromTypeList(JsonNode recordAttributes,
       Map<String, String> recordTypes) {
     String pid = getPidName(recordAttributes.get(PID).asText());
     return recordTypes.get(pid);
   }
 
-  private JsonNode setLocationFromJson(JsonNode request, String handle)
-      throws InvalidRequestException, PidServiceInternalError {
-    var keys = getKeys(request);
-    if (!keys.contains(LOC_REQ)) {
-      return request;
-    }
-
-    JsonNode locNode = request.get(LOC_REQ);
-    ObjectNode requestObjectNode = request.deepCopy();
-    if (locNode.isArray()) {
-      try {
-        String[] locArr = mapper.treeToValue(locNode, String[].class);
-        var setLocs = fdoRecordBuilder.setLocations(locArr, handle);
-        requestObjectNode.put(LOC, new String(setLocs, StandardCharsets.UTF_8));
-        requestObjectNode.remove(LOC_REQ);
-      } catch (IOException e) {
-        throw new InvalidRequestException(
-            "An error has occurred parsing \"locations\" array. " + e.getMessage());
-      } catch (PidServiceInternalError e) {
-        throw e;
-      }
-    }
-    return requestObjectNode;
-  }
-
-  private List<String> getKeys(JsonNode request) {
-    List<String> keys = new ArrayList<>();
-    Iterator<String> fieldItr = request.fieldNames();
-    fieldItr.forEachRemaining(keys::add);
-    return keys;
-  }
 
   private void checkHandlesWritable(List<byte[]> handles) throws PidResolutionException {
     Set<byte[]> handlesToUpdate = new HashSet<>(handles);
@@ -501,7 +460,7 @@ public class HandleService {
 
   // Archive
   public JsonApiWrapperWrite archiveRecordBatch(List<JsonNode> requests)
-      throws InvalidRequestException, PidResolutionException {
+      throws InvalidRequestException, PidResolutionException, PidServiceInternalError {
     var recordTimestamp = Instant.now().getEpochSecond();
     List<byte[]> handles = new ArrayList<>();
     List<HandleAttribute> archiveAttributes = new ArrayList<>();
@@ -511,7 +470,7 @@ public class HandleService {
       JsonNode requestAttributes = data.get(NODE_ATTRIBUTES);
       byte[] handle = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
       handles.add(handle);
-      archiveAttributes.addAll(prepareUpdateAttributes(handle, requestAttributes));
+      archiveAttributes.addAll(fdoRecordBuilder.prepareUpdateAttributes(handle, requestAttributes));
       archiveAttributes.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS,
           "ARCHIVED".getBytes(StandardCharsets.UTF_8)));
     }

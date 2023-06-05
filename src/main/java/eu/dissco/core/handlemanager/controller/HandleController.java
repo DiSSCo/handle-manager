@@ -151,7 +151,7 @@ public class HandleController {
   @PutMapping(value = "/{prefix}/{suffix}")
   public ResponseEntity<JsonApiWrapperWrite> archiveRecord(@PathVariable("prefix") String prefix,
       @PathVariable("suffix") String suffix, @RequestBody JsonNode request)
-      throws InvalidRequestException, PidResolutionException {
+      throws InvalidRequestException, PidResolutionException, PidServiceInternalError {
 
     schemaValidator.validatePutRequest(request);
 
@@ -169,7 +169,7 @@ public class HandleController {
   @Operation(summary ="Archive multiple PID records")
   @PutMapping(value = "")
   public ResponseEntity<JsonApiWrapperWrite> archiveRecords(@RequestBody List<JsonNode> requests)
-      throws InvalidRequestException, PidResolutionException {
+      throws InvalidRequestException, PidResolutionException, PidServiceInternalError {
     for (JsonNode request : requests) {
       schemaValidator.validatePutRequest(request);
     }
