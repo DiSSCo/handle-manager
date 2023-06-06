@@ -69,7 +69,7 @@ class HandleControllerExceptionHandlerTest {
   }
 
   @Test
-  void testPidServiceInternalErrorWithCause() throws Exception {
+  void testPidServiceInternalErrorWithCause() {
     // Given
     var cause = new IOException(errorMessage);
     var expectedMessage = errorMessage + ". Cause: " + cause + "\n " + cause.getLocalizedMessage();

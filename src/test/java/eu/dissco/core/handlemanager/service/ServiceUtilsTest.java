@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
     // Given
    var request = givenDigitalSpecimenRequestObjectNullOptionals();
    var suffix = request.getSpecimenHost().replace(ROR_DOMAIN,"");
-   var expected = (request.getPrimarySpecimenObjectId() + ":" + suffix).getBytes(StandardCharsets.UTF_8);
+   var expected = request.getPrimarySpecimenObjectId() + ":" + suffix;
 
    // When
    var result = setUniquePhysicalIdentifierId(request);
@@ -47,7 +47,7 @@ import org.junit.jupiter.api.Test;
   void testSetUniquePhysicalIdentifierCombined(){
    // Given
    var request = givenCetafTypeDSRecord();
-   var expected = request.getPrimarySpecimenObjectId().getBytes(StandardCharsets.UTF_8);
+   var expected = request.getPrimarySpecimenObjectId();
 
    // When
    var result = setUniquePhysicalIdentifierId(request);

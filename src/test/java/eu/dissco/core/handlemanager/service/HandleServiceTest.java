@@ -1,10 +1,11 @@
 package eu.dissco.core.handlemanager.service;
 
+import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
+import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_TEXT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_LIST_STR;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.LOC_ALT_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_STATUS_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
@@ -14,6 +15,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS_BO
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MEDIA;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.TOMBSTONE_TEXT_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyAttributes;
@@ -25,11 +27,13 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaObjectAtt
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genObjectNodeAttributeRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordFullAttributes;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordRequestAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequestBatch;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestBatch;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecordRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenLandingPage;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseRead;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseReadSingle;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWrite;
@@ -42,14 +46,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mockStatic;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.component.FdoRecordBuilder;
-import eu.dissco.core.handlemanager.component.PidResolverComponent;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
@@ -62,9 +65,9 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.TransformerFactory;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -163,7 +166,8 @@ class HandleServiceTest {
         .willReturn(expectedAttributes);
 
     // When
-    var responseReceived = service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, PhysicalIdType.CETAF,
+    var responseReceived = service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
+        PhysicalIdType.CETAF,
         SPECIMEN_HOST_TESTVAL);
 
     // Then
@@ -206,7 +210,8 @@ class HandleServiceTest {
         .willReturn(expectedAttributes);
 
     // When
-    var responseReceived = service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, PhysicalIdType.COMBINED,
+    var responseReceived = service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
+        PhysicalIdType.COMBINED,
         SPECIMEN_HOST_TESTVAL);
 
     // Then
@@ -255,14 +260,16 @@ class HandleServiceTest {
   void testCreateDigitalSpecimen() throws Exception {
     // Given
     byte[] handle = handles.get(0);
-    var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS);
+    var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(),
+        RECORD_TYPE_DS);
     var responseExpected = givenRecordResponseWrite(List.of(handle), RECORD_TYPE_DS);
     List<HandleAttribute> digitalSpecimen = genDigitalSpecimenAttributes(handle);
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(digitalSpecimen);
     given(handleRep.searchByPhysicalIdentifier(anyList())).willReturn(new ArrayList<>());
-    given(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(any(), any())).willReturn(digitalSpecimen);
+    given(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(any(), any())).willReturn(
+        digitalSpecimen);
 
     // When
     var responseReceived = service.createRecords(List.of(request));
@@ -275,7 +282,8 @@ class HandleServiceTest {
   void testCreateDigitalSpecimenSpecimenExists() throws Exception {
     // Given
     byte[] handle = handles.get(0);
-    var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS);
+    var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(),
+        RECORD_TYPE_DS);
     List<HandleAttribute> digitalSpecimen = genDigitalSpecimenAttributes(handle);
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
@@ -406,7 +414,8 @@ class HandleServiceTest {
 
     List<JsonNode> requests = new ArrayList<>();
     for (byte[] handle : handles) {
-      requests.add(genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS));
+      requests.add(
+          genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS));
       flatList.addAll(genDigitalSpecimenAttributes(handle));
     }
 
@@ -544,42 +553,59 @@ class HandleServiceTest {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     var archiveRequest = genTombstoneRequestBatch(List.of(HANDLE));
+    var originalRecord = genDigitalSpecimenAttributes(HANDLE.getBytes(StandardCharsets.UTF_8));
     var tombstoneAttributesFull = genTombstoneRecordFullAttributes(handle);
 
     var responseExpected = givenRecordResponseWriteArchive(List.of(handle));
+    var tombstoneAttributes = genTombstoneRecordRequestAttributes(handle);
 
     given(handleRep.checkHandlesWritable(anyList())).willReturn(handles);
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(tombstoneAttributesFull);
+    given(fdoRecordBuilder.prepareTombstoneAttributes(any(), any())).willReturn(
+        tombstoneAttributes);
 
     // When
     var responseReceived = service.archiveRecordBatch(archiveRequest);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
+    then(handleRep).should()
+        .archiveRecords(CREATED.getEpochSecond(), tombstoneAttributes, List.of(HANDLE));
   }
 
   @Test
   void testArchiveRecordBatch() throws Exception {
     // Given
-    List<String> handlesString = handles.stream().map(e -> new String(e, StandardCharsets.UTF_8))
-        .toList();
-    var archiveRequest = genTombstoneRequestBatch(handlesString);
+    var handle = HANDLE.getBytes(StandardCharsets.UTF_8);
+    var handleAlt = HANDLE_ALT.getBytes(StandardCharsets.UTF_8);
+    var archiveRequest = genTombstoneRequestBatch(List.of(HANDLE, HANDLE_ALT));
 
-    List<HandleAttribute> flatList = new ArrayList<>();
-    for (byte[] handle : handles) {
-      flatList.addAll(genTombstoneRecordFullAttributes(handle));
-    }
+    var responseExpected = givenRecordResponseWriteArchive(List.of(handle, handleAlt));
+    var tombstoneAttributesResolved = new ArrayList<>(
+        Stream.concat(genTombstoneRecordFullAttributes(HANDLE.getBytes(
+                    StandardCharsets.UTF_8)).stream(),
+                genTombstoneRecordFullAttributes(HANDLE_ALT.getBytes(StandardCharsets.UTF_8)).stream())
+            .toList());
 
-    var responseExpected = givenRecordResponseWriteArchive(handles);
+    var tombstoneAttributes = List.of(
+        genTombstoneRecordRequestAttributes(handle),
+        genTombstoneRecordRequestAttributes(handleAlt)
+    );
+    var tombstoneFlatlist = Stream.concat(tombstoneAttributes.get(0).stream(),
+        tombstoneAttributes.get(1).stream()).toList();
 
     given(handleRep.checkHandlesWritable(anyList())).willReturn(handles);
-    given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(tombstoneAttributesResolved);
+    given(fdoRecordBuilder.prepareTombstoneAttributes(any(), any())).willReturn(
+        tombstoneAttributes.get(0), tombstoneAttributes.get(1));
 
     // When
     var responseReceived = service.archiveRecordBatch(archiveRequest);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
+    then(handleRep).should()
+        .archiveRecords(CREATED.getEpochSecond(), tombstoneFlatlist, List.of(HANDLE, HANDLE_ALT));
   }
 
   @Test

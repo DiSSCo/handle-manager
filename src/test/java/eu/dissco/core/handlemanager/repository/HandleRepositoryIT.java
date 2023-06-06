@@ -1,7 +1,10 @@
 package eu.dissco.core.handlemanager.repository;
 
 import static eu.dissco.core.handlemanager.database.jooq.Tables.HANDLES;
+import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
 import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
+import static eu.dissco.core.handlemanager.domain.PidRecords.LOC;
+import static eu.dissco.core.handlemanager.domain.PidRecords.MATERIAL_SAMPLE_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_RECORD_ISSUE_NUMBER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID;
@@ -12,16 +15,19 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_STATUS_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributesAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordFullAttributes;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordRequestAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRecordAttributesAltLoc;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.setLocations;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.jooq.impl.DSL.exp;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import eu.dissco.core.handlemanager.database.jooq.tables.Handles;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
+import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,6 +35,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.jooq.Query;
 import org.jooq.Record4;
 import org.junit.jupiter.api.AfterEach;
@@ -64,7 +71,6 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     assertThat(attributesToPost).isEqualTo(postedRecordAttributes);
     assertThat(postedRecordContext).hasSize(attributesToPost.size());
   }
-
 
   @Test
   void testHandlesExistTrue() {
@@ -324,17 +330,16 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     // Given
     List<byte[]> handles = List.of(HANDLE.getBytes(StandardCharsets.UTF_8),
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
+    List<String> handlesStr = List.of(HANDLE, HANDLE_ALT);
 
-    List<HandleAttribute> archiveAttributes = new ArrayList<>();
-    List<HandleAttribute> responseExpected = new ArrayList<>();
-    for (byte[] handle : handles) {
-      postAttributes(genHandleRecordAttributes(handle));
-      archiveAttributes.addAll(genTombstoneRecordRequestAttributes(handle));
-      responseExpected.addAll(incrementVersion(genTombstoneRecordFullAttributes(handle)));
+    List<HandleAttribute> tombstoneAttributes = new ArrayList<>();
+    for (var handle : handles) {
+      postAttributes(genDigitalSpecimenAttributes(handle));
+      tombstoneAttributes.addAll(incrementVersion(genTombstoneRecordFullAttributes(handle)));
     }
 
     // When
-    handleRep.archiveRecords(CREATED.getEpochSecond(), archiveAttributes);
+    handleRep.archiveRecords(CREATED.getEpochSecond(), tombstoneAttributes, handlesStr);
     var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
             Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
         .where(Handles.HANDLES.HANDLE.in(handles)).and(Handles.HANDLES.TYPE.notEqual(
@@ -342,20 +347,20 @@ class HandleRepositoryIT extends BaseRepositoryIT {
         .fetch(this::mapToAttribute);
 
     // Then
-    assertThat(responseReceived).hasSameElementsAs(responseExpected);
+    assertThat(responseReceived).hasSameElementsAs(tombstoneAttributes);
   }
 
   @Test
   void testArchiveRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    List<HandleAttribute> originalRecord = genHandleRecordAttributes(handle);
-    List<HandleAttribute> recordArchive = genTombstoneRecordRequestAttributes(handle);
-    var responseExpected = incrementVersion(genTombstoneRecordFullAttributes(handle));
+    List<HandleAttribute> originalRecord = genDigitalSpecimenAttributes(handle);
+    var tombstoneAttributes = incrementVersion(genTombstoneRecordFullAttributes(handle));
+
     postAttributes(originalRecord);
 
     // When
-    handleRep.archiveRecord(CREATED.getEpochSecond(), recordArchive);
+    handleRep.archiveRecords(CREATED.getEpochSecond(), tombstoneAttributes, List.of(HANDLE));
     var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
             Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
         .where(Handles.HANDLES.HANDLE.eq(handle)).and(Handles.HANDLES.TYPE.notEqual(
@@ -363,7 +368,33 @@ class HandleRepositoryIT extends BaseRepositoryIT {
         .fetch(this::mapToAttribute);
 
     // Then
-    assertThat(responseReceived).hasSameElementsAs(responseExpected);
+    assertThat(responseReceived).hasSameElementsAs(tombstoneAttributes);
+  }
+
+  @Test
+  void testPostAndUpdateHandles() throws Exception {
+    // Given
+    var handle = HANDLE.getBytes(StandardCharsets.UTF_8);
+    var handleAlt = HANDLE_ALT.getBytes(StandardCharsets.UTF_8);
+    var existingRecord = genHandleRecordAttributes(handle);
+    postAttributes(existingRecord);
+    var updatedRecord = new ArrayList<>(existingRecord);
+    updatedRecord.add(new HandleAttribute(FIELD_IDX.get(MATERIAL_SAMPLE_TYPE), handle, MATERIAL_SAMPLE_TYPE, "digital".getBytes(StandardCharsets.UTF_8)));
+    updatedRecord.add(new HandleAttribute(FIELD_IDX.get(PID_RECORD_ISSUE_NUMBER), handle, PID_RECORD_ISSUE_NUMBER, String.valueOf(2).getBytes(
+        StandardCharsets.UTF_8)));
+    updatedRecord.remove(new HandleAttribute(FIELD_IDX.get(PID_RECORD_ISSUE_NUMBER), handle, PID_RECORD_ISSUE_NUMBER, String.valueOf(1).getBytes(
+        StandardCharsets.UTF_8)));
+
+    var newRecord = genHandleRecordAttributes(handleAlt);
+    var expected = Stream.concat(updatedRecord.stream(), newRecord.stream()).toList();
+
+    // When
+    handleRep.postAndUpdateHandles(CREATED.getEpochSecond(), newRecord, List.of(updatedRecord));
+    var response = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
+        Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(HANDLES).fetch(this::mapToAttribute);
+
+    // Then
+    assertThat(response).hasSameElementsAs(expected);
   }
 
   private void postAttributes(List<HandleAttribute> rows) {
