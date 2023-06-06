@@ -520,7 +520,7 @@ class HandleServiceTest {
   }
 
   @Test
-  void testUpdateRecordInternalDuplicates() throws Exception {
+  void testUpdateRecordInternalDuplicates()  {
 
     // Given
     List<byte[]> handles = new ArrayList<>();
@@ -536,7 +536,7 @@ class HandleServiceTest {
   }
 
   @Test
-  void testUpdateRecordNonWritable() throws Exception {
+  void testUpdateRecordNonWritable() {
     // Given
 
     List<JsonNode> updateRequest = genUpdateRequestBatch(handles);
