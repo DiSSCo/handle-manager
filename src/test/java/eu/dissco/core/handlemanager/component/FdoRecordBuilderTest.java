@@ -56,6 +56,8 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.STRUCTURAL_TYPE_T
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.TRANSFORMER_FACTORY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordRequestAttributes;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRecordAttributesAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
@@ -358,6 +360,19 @@ class FdoRecordBuilderTest {
 
     // Then
     assertThat(response).isEqualTo(expected);
+  }
+
+  @Test
+  void testTombstoneAttributes() throws Exception{
+    // Given
+    var expected = genTombstoneRecordRequestAttributes(HANDLE.getBytes(StandardCharsets.UTF_8));
+
+    // When
+    var response = fdoRecordBuilder.prepareTombstoneAttributes(HANDLE.getBytes(), genTombstoneRequest());
+
+    // Then
+    assertThat(response).isEqualTo(expected);
+
   }
 
 
