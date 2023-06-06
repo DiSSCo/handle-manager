@@ -4,6 +4,7 @@ package eu.dissco.core.handlemanager.controller;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
+import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -159,7 +160,7 @@ public class HandleController {
       throws InvalidRequestException, UnprocessableEntityException, PidResolutionException, PidServiceInternalError, JsonProcessingException {
     for (var request: requests){
       schemaValidator.validatePostRequest(request);
-      if (!request.get(NODE_DATA).get(NODE_ATTRIBUTES).asText().equals(ObjectType.DIGITAL_SPECIMEN.toString())){
+      if (!request.get(NODE_DATA).get(NODE_TYPE).asText().equals(ObjectType.DIGITAL_SPECIMEN.toString())){
         throw new InvalidRequestException("Invalid type. Upsert endpoint only available for type DigitalSpecimen");
       }
     }

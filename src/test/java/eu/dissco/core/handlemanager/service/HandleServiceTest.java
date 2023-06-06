@@ -1,11 +1,13 @@
 package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
-import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_TEXT;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID_TYPE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_LIST_STR;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_URI;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_STATUS_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
@@ -15,7 +17,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS_BO
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MEDIA;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.TOMBSTONE_TEXT_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyAttributes;
@@ -33,7 +34,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestB
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecordRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenLandingPage;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseRead;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseReadSingle;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWrite;
@@ -41,10 +41,10 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordRespon
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteArchive;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteGeneric;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSearchByPhysIdRequest;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.setLocations;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -53,7 +53,11 @@ import static org.mockito.Mockito.mockStatic;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.component.FdoRecordBuilder;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiDataLinks;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
+import eu.dissco.core.handlemanager.domain.requests.attributes.ObjectType;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
@@ -65,7 +69,6 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
@@ -520,7 +523,7 @@ class HandleServiceTest {
   }
 
   @Test
-  void testUpdateRecordInternalDuplicates()  {
+  void testUpdateRecordInternalDuplicates() {
 
     // Given
     List<byte[]> handles = new ArrayList<>();
@@ -626,6 +629,100 @@ class HandleServiceTest {
     // Then
     assertThat(responseExpectedFirst).isEqualTo(handles);
     assertThat(responseExpectedSecond).isEqualTo(handles);
+  }
+
+  @Test
+  void testUpsertDigitalSpecimens() throws Exception {
+    // Given
+    List<byte[]> physicalIds = List.of(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, "alt").stream()
+        .map(id -> id.getBytes(
+            StandardCharsets.UTF_8)).toList();
+    List<JsonNode> requests = List.of(
+        genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS),
+        genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(
+            new String(physicalIds.get(1), StandardCharsets.UTF_8)), RECORD_TYPE_DS));
+    var existingRecord = genDigitalSpecimenAttributes(handles.get(0));
+    var newRecord = genDigitalSpecimenAttributes(handles.get(1));
+    var expected = new JsonApiWrapperWrite(
+        List.of(upsertedResponse(existingRecord, HANDLE), upsertedResponse(newRecord, HANDLE_ALT))
+    );
+
+    given(handleRep.searchByPhysicalIdentifier(anyList())).willReturn(
+        List.of(new HandleAttribute(FIELD_IDX.get(PRIMARY_SPECIMEN_OBJECT_ID), handles.get(0),
+            PRIMARY_SPECIMEN_OBJECT_ID_TYPE, physicalIds.get(0))));
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(
+        Stream.concat(existingRecord.stream(), newRecord.stream()).toList());
+    given(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(any(), any())).willReturn(
+        existingRecord, newRecord);
+    given(hgService.genHandleList(anyInt())).willReturn(new ArrayList<>(List.of(handles.get(1))));
+
+    // When
+    var response = service.upsertDigitalSpecimens(requests);
+
+    // Then
+    then(handleRep).should()
+        .postAndUpdateHandles(CREATED.getEpochSecond(), newRecord, List.of(existingRecord));
+    assertThat(response).isEqualTo(expected);
+  }
+
+  @Test
+  void testUpsertDigitalSpecimensOnlyUpdate() throws Exception {
+    // Given
+    List<JsonNode> requests = List.of(
+        genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS));
+    var existingRecord = genDigitalSpecimenAttributes(handles.get(0));
+    var expected = new JsonApiWrapperWrite(
+        List.of(upsertedResponse(existingRecord, HANDLE))
+    );
+
+    given(handleRep.searchByPhysicalIdentifier(anyList())).willReturn(
+        List.of(new HandleAttribute(FIELD_IDX.get(PRIMARY_SPECIMEN_OBJECT_ID), handles.get(0),
+            PRIMARY_SPECIMEN_OBJECT_ID_TYPE, PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(
+            StandardCharsets.UTF_8))));
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(existingRecord);
+    given(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(any(), any())).willReturn(
+        existingRecord);
+    given(hgService.genHandleList(0)).willReturn(new ArrayList<>());
+
+    // When
+    var response = service.upsertDigitalSpecimens(requests);
+
+    // Then
+    then(handleRep).should()
+        .postAndUpdateHandles(CREATED.getEpochSecond(), new ArrayList<>(), List.of(existingRecord));
+    assertThat(response).isEqualTo(expected);
+  }
+
+  @Test
+  void testUpsertDigitalSpecimensOnlyCreate() throws Exception {
+    // Given
+    List<JsonNode> requests = List.of(
+        genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS));
+    var newRecord = genDigitalSpecimenAttributes(handles.get(1));
+    var expected = new JsonApiWrapperWrite(
+        List.of(upsertedResponse(newRecord, HANDLE_ALT))
+    );
+
+    given(handleRep.searchByPhysicalIdentifier(anyList())).willReturn(new ArrayList<>());
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(newRecord);
+    given(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(any(), any())).willReturn(newRecord);
+    given(hgService.genHandleList(anyInt())).willReturn(List.of(handles.get(0)));
+
+    // When
+    var response = service.upsertDigitalSpecimens(requests);
+
+    // Then
+    assertThat(response).isEqualTo(expected);
+    then(handleRep).should()
+        .postAndUpdateHandles(CREATED.getEpochSecond(), newRecord, new ArrayList<>());
+  }
+
+  JsonApiDataLinks upsertedResponse(List<HandleAttribute> handleRecord, String handle)
+      throws Exception {
+    JsonNode recordAttributes = genObjectNodeAttributeRecord(handleRecord);
+    var pidLink = new JsonApiLinks(HANDLE_URI + handle);
+    return new JsonApiDataLinks(handle, ObjectType.DIGITAL_SPECIMEN.toString(),
+        recordAttributes, pidLink);
   }
 
   private void initTime() {

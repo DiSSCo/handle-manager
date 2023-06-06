@@ -286,7 +286,6 @@ public class HandleService {
     }
   }
 
-
   public JsonApiWrapperWrite upsertDigitalSpecimens(List<JsonNode> requests)
       throws JsonProcessingException, UnprocessableEntityException, PidResolutionException, InvalidRequestException, PidServiceInternalError {
     ArrayList<DigitalSpecimenRequest> digitalSpecimenRequests = new ArrayList<>();
@@ -300,7 +299,7 @@ public class HandleService {
     var upsertAttributes = prepareUpsertAttributes(upsertRequests);
 
     var createRequests = getCreateRequests(upsertRequests, digitalSpecimenRequests);
-    var newHandles = hf.newHandle(createRequests.size());
+    var newHandles = hf.genHandleList(createRequests.size());
     var createAttributes = getCreateAttributes(createRequests, newHandles);
 
     var allRequests = Stream.concat(
@@ -333,6 +332,9 @@ public class HandleService {
       List<DigitalSpecimenRequest> requests, List<byte[]> physicalIds) {
     var registeredSpecimensHandleAttributes = new HashSet<>(
         handleRep.searchByPhysicalIdentifier(physicalIds));
+    if (registeredSpecimensHandleAttributes.isEmpty()){
+      return new ArrayList<>();
+    }
 
     return registeredSpecimensHandleAttributes
         .stream()
@@ -361,9 +363,10 @@ public class HandleService {
 
   private List<HandleAttribute> getCreateAttributes(List<DigitalSpecimenRequest> digitalSpecimenRequests, List<byte[]> newHandles)
       throws UnprocessableEntityException, PidResolutionException, InvalidRequestException, PidServiceInternalError {
+    var handles = new ArrayList<>(newHandles);
     List<HandleAttribute> handleAttributes = new ArrayList<>();
     for (var digitalSpecimenRequest : digitalSpecimenRequests){
-      handleAttributes.addAll(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(digitalSpecimenRequest, newHandles.remove(0)));
+      handleAttributes.addAll(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(digitalSpecimenRequest, handles.remove(0)));
     }
     return handleAttributes;
   }

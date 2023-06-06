@@ -156,7 +156,7 @@ public class TestUtils {
   // Tombstone Record vals
   public final static String TOMBSTONE_TEXT_TESTVAL = "pid was deleted";
   // Pid Type Record vals
-  private final static String HANDLE_URI = "https://hdl.handle.net/";
+  public final static String HANDLE_URI = "https://hdl.handle.net/";
   public static final String PTR_PID = HANDLE_URI + PID_ISSUER_TESTVAL_OTHER;
   public final static String PTR_HANDLE_RECORD = genPtrHandleRecord(false);
   public final static String PTR_DOI_RECORD = genPtrHandleRecord(true);
@@ -556,7 +556,11 @@ public class TestUtils {
     );
   }
 
-  public static DigitalSpecimenRequest givenDigitalSpecimenRequestObjectNullOptionals() {
+  public static DigitalSpecimenRequest givenDigitalSpecimenRequestObjectNullOptionals(){
+    return givenDigitalSpecimenRequestObjectNullOptionals(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL);
+  }
+
+  public static DigitalSpecimenRequest givenDigitalSpecimenRequestObjectNullOptionals(String physicalId) {
     try {
       return new DigitalSpecimenRequest(
           FDO_PROFILE_TESTVAL,
@@ -569,7 +573,7 @@ public class TestUtils {
           PRIMARY_REFERENT_TYPE_TESTVAL,
           SPECIMEN_HOST_TESTVAL,
           SPECIMEN_HOST_NAME_TESTVAL,
-          PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
+          physicalId,
           null,null, null, null, null, null, null, null, null, null, null,null, null, null, null
           );
     } catch (InvalidRequestException e) {

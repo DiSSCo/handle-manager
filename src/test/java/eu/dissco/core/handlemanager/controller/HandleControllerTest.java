@@ -104,6 +104,12 @@ class HandleControllerTest {
   }
 
   @Test
+  void testResolvePidBadPrefix(){
+    assertThrows(PidResolutionException.class, () ->
+        controller.resolvePid(SUFFIX, SUFFIX, new MockHttpServletRequest()));
+  }
+
+  @Test
   void testSearchByPhysicalId() throws Exception {
     // Given
 
@@ -464,6 +470,27 @@ class HandleControllerTest {
   }
 
   @Test
+  void testUpsert() throws Exception{
+    // Given
+    var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS);
+
+    // When
+    var response = controller.upsertRecord(List.of(request));
+
+    // Then
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+  }
+
+  @Test
+  void testUpsertBadType() {
+    // Given
+    var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS_BOTANY);
+
+    // Then
+    assertThrows(InvalidRequestException.class, () -> controller.upsertRecord(List.of(request)));
+  }
+
+  @Test
   void testArchiveRecord() throws Exception {
     // Given
 
@@ -480,6 +507,15 @@ class HandleControllerTest {
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testArchiveRecordBadHandle() {
+    // Given
+    var archiveRequest = givenArchiveRequest();
+
+    // When
+    assertThrows(InvalidRequestException.class, () -> controller.archiveRecord(PREFIX, "123", archiveRequest));
   }
 
   @Test
