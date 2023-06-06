@@ -109,6 +109,7 @@ public class HandleController {
   @PostMapping(value = "/batch")
   public ResponseEntity<JsonApiWrapperWrite> createRecords(@RequestBody List<JsonNode> requests)
       throws PidResolutionException, PidServiceInternalError, InvalidRequestException, PidCreationException {
+    log.info("received batch request");
 
     for (JsonNode request : requests) {
       schemaValidator.validatePostRequest(request);
