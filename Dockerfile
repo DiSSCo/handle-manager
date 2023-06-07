@@ -1,9 +1,9 @@
 FROM eclipse-temurin:17-alpine AS builder
+RUN apk update && apk upgrade --no-cache
 WORKDIR application
 ARG JAR_FILE=target/*spring-boot.jar
 COPY ${JAR_FILE} application.jar
 RUN java -Djarmode=layertools -jar application.jar extract
-RUN apk upgrade libssl3 libcrypto3
 FROM eclipse-temurin:17-alpine
 RUN adduser -D -u 1000 java
 WORKDIR application
