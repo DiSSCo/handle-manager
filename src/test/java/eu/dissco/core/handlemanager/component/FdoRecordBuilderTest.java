@@ -372,10 +372,7 @@ class FdoRecordBuilderTest {
 
     // Then
     assertThat(response).isEqualTo(expected);
-
   }
-
-
 
   private DigitalSpecimenRequest givenDigitalSpecimenRequestObjectOptionalsInit()
       throws InvalidRequestException {
