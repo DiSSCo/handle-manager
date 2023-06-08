@@ -44,6 +44,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_DOMAIN;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.ISSUED_FOR_AGENT_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.LOC_TESTVAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_ISSUER_TESTVAL_OTHER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_REFERENT_TYPE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
@@ -117,7 +118,8 @@ class FdoRecordBuilderTest {
 
   @BeforeEach
   void init() {
-    fdoRecordBuilder = new FdoRecordBuilder(TRANSFORMER_FACTORY, DOC_BUILDER_FACTORY, pidResolver, MAPPER);
+    fdoRecordBuilder = new FdoRecordBuilder(TRANSFORMER_FACTORY, DOC_BUILDER_FACTORY, pidResolver,
+        MAPPER);
   }
 
   @Test
@@ -213,12 +215,12 @@ class FdoRecordBuilderTest {
     // Given
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
     var request = new HandleRecordRequest(
-      FDO_PROFILE_TESTVAL,
-      ISSUED_FOR_AGENT_TESTVAL,
-      DIGITAL_OBJECT_TYPE_TESTVAL,
-      ISSUED_FOR_AGENT_TESTVAL,
-      STRUCTURAL_TYPE_TESTVAL,
-      null
+        FDO_PROFILE_TESTVAL,
+        ISSUED_FOR_AGENT_TESTVAL,
+        DIGITAL_OBJECT_TYPE_TESTVAL,
+        ISSUED_FOR_AGENT_TESTVAL,
+        STRUCTURAL_TYPE_TESTVAL,
+        null
     );
 
     // When
@@ -243,7 +245,8 @@ class FdoRecordBuilderTest {
     );
 
     // Then
-    var e = assertThrows(InvalidRequestException.class, () -> fdoRecordBuilder.prepareHandleRecordAttributes(request, handle));
+    var e = assertThrows(InvalidRequestException.class,
+        () -> fdoRecordBuilder.prepareHandleRecordAttributes(request, handle));
     assertThat(e.getMessage()).contains(ROR_DOMAIN).contains(HANDLE_DOMAIN);
   }
 
@@ -260,7 +263,8 @@ class FdoRecordBuilderTest {
         null
     );
 
-    var e = assertThrows(InvalidRequestException.class, () -> fdoRecordBuilder.prepareHandleRecordAttributes(request, handle));
+    var e = assertThrows(InvalidRequestException.class,
+        () -> fdoRecordBuilder.prepareHandleRecordAttributes(request, handle));
     assertThat(e.getMessage()).contains(ROR_DOMAIN);
   }
 
@@ -268,18 +272,18 @@ class FdoRecordBuilderTest {
   void testSpecimenHostResolvable() throws Exception {
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
     var request = new DigitalSpecimenRequest(
-            FDO_PROFILE_TESTVAL,
-            ISSUED_FOR_AGENT_TESTVAL,
-            DIGITAL_OBJECT_TYPE_TESTVAL,
-            PID_ISSUER_TESTVAL_OTHER,
-            STRUCTURAL_TYPE_TESTVAL,
-            LOC_TESTVAL,
-            REFERENT_NAME_TESTVAL,
-            PRIMARY_REFERENT_TYPE_TESTVAL,
-            SPECIMEN_HOST_TESTVAL,
-            null,
-            PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-            null,null, null, null, null, null, null, null, null, null, null,null, null, null, null);
+        FDO_PROFILE_TESTVAL,
+        ISSUED_FOR_AGENT_TESTVAL,
+        DIGITAL_OBJECT_TYPE_TESTVAL,
+        PID_ISSUER_TESTVAL_OTHER,
+        STRUCTURAL_TYPE_TESTVAL,
+        LOC_TESTVAL,
+        REFERENT_NAME_TESTVAL,
+        PRIMARY_REFERENT_TYPE_TESTVAL,
+        SPECIMEN_HOST_TESTVAL,
+        null,
+        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 
     // When
     var result = fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(request, handle);
@@ -294,28 +298,28 @@ class FdoRecordBuilderTest {
     given(pidResolver.getObjectName(rorApi)).willThrow(new PidResolutionException(""));
     given(pidResolver.getObjectName(not(eq(rorApi)))).willReturn("placeholder");
     var request = new DigitalSpecimenRequest(
-            FDO_PROFILE_TESTVAL,
-            ISSUED_FOR_AGENT_TESTVAL,
-            DIGITAL_OBJECT_TYPE_TESTVAL,
-            PID_ISSUER_TESTVAL_OTHER,
-            STRUCTURAL_TYPE_TESTVAL,
-            LOC_TESTVAL,
-            REFERENT_NAME_TESTVAL,
-            PRIMARY_REFERENT_TYPE_TESTVAL,
-            SPECIMEN_HOST_TESTVAL,
-            null,
-            PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-            null,null, null, null, null, null, null, null, null, null, null,null, null, null, null);
+        FDO_PROFILE_TESTVAL,
+        ISSUED_FOR_AGENT_TESTVAL,
+        DIGITAL_OBJECT_TYPE_TESTVAL,
+        PID_ISSUER_TESTVAL_OTHER,
+        STRUCTURAL_TYPE_TESTVAL,
+        LOC_TESTVAL,
+        REFERENT_NAME_TESTVAL,
+        PRIMARY_REFERENT_TYPE_TESTVAL,
+        SPECIMEN_HOST_TESTVAL,
+        null,
+        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 
     // When
     var result = fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(request, handle);
 
     // Then
-    assertThat(result).hasSize(DS_MANDATORY_QTY-1);
+    assertThat(result).hasSize(DS_MANDATORY_QTY - 1);
   }
 
   @Test
-  void testBadHandle(){
+  void testBadHandle() {
     // Given
     var request = new HandleRecordRequest(
         FDO_PROFILE_TESTVAL,
@@ -326,18 +330,20 @@ class FdoRecordBuilderTest {
         null
     );
 
-    var e = assertThrows(InvalidRequestException.class, () -> fdoRecordBuilder.prepareHandleRecordAttributes(request, handle));
+    var e = assertThrows(InvalidRequestException.class,
+        () -> fdoRecordBuilder.prepareHandleRecordAttributes(request, handle));
     assertThat(e.getMessage()).contains(HANDLE_DOMAIN);
   }
 
   @Test
-  void testUpdateAttributesAltLoc() throws Exception{
+  void testUpdateAttributesAltLoc() throws Exception {
     // Given
     var updateRequest = genUpdateRequestAltLoc();
     var expected = genUpdateRecordAttributesAltLoc(HANDLE.getBytes(StandardCharsets.UTF_8));
 
     // When
-    var response = fdoRecordBuilder.prepareUpdateAttributes(HANDLE.getBytes(StandardCharsets.UTF_8), updateRequest);
+    var response = fdoRecordBuilder.prepareUpdateAttributes(HANDLE.getBytes(StandardCharsets.UTF_8),
+        updateRequest);
 
     // Then
     assertThat(response).isEqualTo(expected);
@@ -348,16 +354,18 @@ class FdoRecordBuilderTest {
     // Given
     var updateRequest = MAPPER.createObjectNode();
     updateRequest.put(STRUCTURAL_TYPE, STRUCTURAL_TYPE_TESTVAL);
-    var expected = List.of(new HandleAttribute(FIELD_IDX.get(STRUCTURAL_TYPE), HANDLE.getBytes(StandardCharsets.UTF_8), STRUCTURAL_TYPE, STRUCTURAL_TYPE_TESTVAL.getBytes(
-        StandardCharsets.UTF_8)));
+    var expected = List.of(
+        new HandleAttribute(FIELD_IDX.get(STRUCTURAL_TYPE), HANDLE.getBytes(StandardCharsets.UTF_8),
+            STRUCTURAL_TYPE, STRUCTURAL_TYPE_TESTVAL.getBytes(
+            StandardCharsets.UTF_8)));
 
     // When
-    var response = fdoRecordBuilder.prepareUpdateAttributes(HANDLE.getBytes(StandardCharsets.UTF_8), updateRequest);
+    var response = fdoRecordBuilder.prepareUpdateAttributes(HANDLE.getBytes(StandardCharsets.UTF_8),
+        updateRequest);
 
     // Then
     assertThat(response).isEqualTo(expected);
   }
-
 
 
   private DigitalSpecimenRequest givenDigitalSpecimenRequestObjectOptionalsInit()
@@ -396,6 +404,4 @@ class FdoRecordBuilderTest {
     }
     return false;
   }
-
-
 }
