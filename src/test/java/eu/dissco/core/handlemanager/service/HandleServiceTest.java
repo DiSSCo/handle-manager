@@ -479,7 +479,6 @@ class HandleServiceTest {
 
     given(handleRep.checkHandlesWritable(anyList())).willReturn(List.of(handle));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(updatedAttributeRecord);
-    given(fdoRecordBuilder.setLocations(LOC_ALT_TESTVAL, HANDLE)).willReturn(setLocations(LOC_ALT_TESTVAL, HANDLE));
 
     // When
     var responseReceived = service.updateRecords(updateRequest);
@@ -503,7 +502,6 @@ class HandleServiceTest {
 
     given(handleRep.checkHandlesWritable(anyList())).willReturn(handles);
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(updatedAttributeRecord);
-    given(fdoRecordBuilder.setLocations(eq(LOC_ALT_TESTVAL), anyString())).willReturn(setLocations(LOC_ALT_TESTVAL, HANDLE));
 
     // When
     var responseReceived = service.updateRecords(updateRequest);
@@ -521,7 +519,6 @@ class HandleServiceTest {
     handles.add(HANDLE.getBytes());
 
     List<JsonNode> updateRequest = genUpdateRequestBatch(handles);
-    given(fdoRecordBuilder.setLocations(eq(LOC_ALT_TESTVAL), anyString())).willReturn(setLocations(LOC_ALT_TESTVAL, HANDLE));
 
     // Then
     assertThrows(InvalidRequestException.class, () -> {
@@ -535,8 +532,7 @@ class HandleServiceTest {
 
     List<JsonNode> updateRequest = genUpdateRequestBatch(handles);
     given(handleRep.checkHandlesWritable(anyList())).willReturn(new ArrayList<>());
-    given(fdoRecordBuilder.setLocations(LOC_ALT_TESTVAL, HANDLE)).willReturn(setLocations(LOC_ALT_TESTVAL, HANDLE));
-    given(fdoRecordBuilder.setLocations(LOC_ALT_TESTVAL, HANDLE_ALT)).willReturn(setLocations(LOC_ALT_TESTVAL, HANDLE_ALT));
+
     // Then
     assertThrows(PidResolutionException.class, () -> {
       service.updateRecords(updateRequest);

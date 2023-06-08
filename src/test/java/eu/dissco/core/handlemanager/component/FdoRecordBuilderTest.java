@@ -5,6 +5,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_NAME
 import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.FDO_PROFILE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.FDO_RECORD_LICENSE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
 import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.INFORMATION_ARTEFACT_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUED_FOR_AGENT;
@@ -55,6 +56,8 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.STRUCTURAL_TYPE_T
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.TRANSFORMER_FACTORY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRecordAttributesAltLoc;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecordRequestObject;
@@ -115,8 +118,8 @@ class FdoRecordBuilderTest {
   private static final int BOTANY_QTY = 25;
 
   @BeforeEach
-  void init() throws Exception {
-    fdoRecordBuilder = new FdoRecordBuilder(TRANSFORMER_FACTORY, DOC_BUILDER_FACTORY, pidResolver);
+  void init() {
+    fdoRecordBuilder = new FdoRecordBuilder(TRANSFORMER_FACTORY, DOC_BUILDER_FACTORY, pidResolver, MAPPER);
   }
 
   @Test
@@ -328,6 +331,36 @@ class FdoRecordBuilderTest {
     var e = assertThrows(InvalidRequestException.class, () -> fdoRecordBuilder.prepareHandleRecordAttributes(request, handle));
     assertThat(e.getMessage()).contains(HANDLE_DOMAIN);
   }
+
+  @Test
+  void testUpdateAttributesAltLoc() throws Exception{
+    // Given
+    var updateRequest = genUpdateRequestAltLoc();
+    var expected = genUpdateRecordAttributesAltLoc(HANDLE.getBytes(StandardCharsets.UTF_8));
+
+    // When
+    var response = fdoRecordBuilder.prepareUpdateAttributes(HANDLE.getBytes(StandardCharsets.UTF_8), updateRequest);
+
+    // Then
+    assertThat(response).isEqualTo(expected);
+  }
+
+  @Test
+  void testUpdateAttributesStructuralType() throws Exception {
+    // Given
+    var updateRequest = MAPPER.createObjectNode();
+    updateRequest.put(STRUCTURAL_TYPE, STRUCTURAL_TYPE_TESTVAL);
+    var expected = List.of(new HandleAttribute(FIELD_IDX.get(STRUCTURAL_TYPE), HANDLE.getBytes(StandardCharsets.UTF_8), STRUCTURAL_TYPE, STRUCTURAL_TYPE_TESTVAL.getBytes(
+        StandardCharsets.UTF_8)));
+
+    // When
+    var response = fdoRecordBuilder.prepareUpdateAttributes(HANDLE.getBytes(StandardCharsets.UTF_8), updateRequest);
+
+    // Then
+    assertThat(response).isEqualTo(expected);
+  }
+
+
 
   private DigitalSpecimenRequest givenDigitalSpecimenRequestObjectOptionalsInit()
       throws InvalidRequestException {
