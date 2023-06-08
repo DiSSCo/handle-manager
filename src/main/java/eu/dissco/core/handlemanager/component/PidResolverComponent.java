@@ -31,7 +31,8 @@ public class PidResolverComponent {
         .onStatus(HttpStatus.NOT_FOUND::equals,
             r -> Mono.error(new PidResolutionException("Given PID not found: " + url)))
         .onStatus(HttpStatusCode::is4xxClientError,
-            r -> Mono.error(new UnprocessableEntityException("a fatal client-side error has occured")))
+            r -> Mono.error(
+                new UnprocessableEntityException("a fatal client-side error has occurred")))
         .bodyToMono(JsonNode.class)
         .retryWhen(Retry.fixedDelay(3, Duration.ofSeconds(2))
             .filter(this::is5xxServerError)
@@ -50,10 +51,7 @@ public class PidResolverComponent {
       if (e.getCause().getClass().equals(PidResolutionException.class)) {
         throw new PidResolutionException(e.getMessage());
       }
-      if (e.getCause().getClass().equals(UnprocessableEntityException.class)) {
-        throw new UnprocessableEntityException(e.getMessage());
-      }
-      throw new UnprocessableEntityException("Unable to parse identifier " + url + " to JSON.");
+      throw new UnprocessableEntityException(e.getMessage());
     }
   }
 
@@ -66,7 +64,7 @@ public class PidResolverComponent {
   public String getObjectName(String pid)
       throws UnprocessableEntityException, PidResolutionException {
     var pidRecord = resolveExternalPid(pid);
-    if (pidRecord.get("name")!= null){
+    if (pidRecord.get("name") != null) {
       return pidRecord.get("name").asText();
     }
     log.warn("Given pid {} resolves, but does not include a name attribute", pid);
