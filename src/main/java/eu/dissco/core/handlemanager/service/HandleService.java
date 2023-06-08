@@ -492,8 +492,5 @@ public class HandleService {
     }
     return new JsonApiWrapperWrite(dataList);
   }
-
-
-
 }
 
