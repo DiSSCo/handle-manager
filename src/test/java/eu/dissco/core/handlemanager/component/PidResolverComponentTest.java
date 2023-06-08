@@ -19,7 +19,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.netty.http.client.HttpClient;
 
 @ExtendWith(MockitoExtension.class)
 class PidResolverComponentTest {
@@ -35,8 +37,10 @@ class PidResolverComponentTest {
 
   @BeforeEach
   void setup() {
-    WebClient webClient = WebClient.create(
-        String.format("http://%s:%s", mockServer.getHostName(), mockServer.getPort()));
+    WebClient webClient = WebClient.builder()
+        .clientConnector(new ReactorClientHttpConnector(HttpClient.create().followRedirect(true)))
+        .baseUrl(String.format("http://%s:%s", mockServer.getHostName(), mockServer.getPort()))
+        .build();
     pidResolver = new PidResolverComponent(webClient);
   }
 
@@ -116,6 +120,28 @@ class PidResolverComponentTest {
     // Then
     assertThrows(UnprocessableEntityException.class, () -> pidResolver.resolveExternalPid(EXTERNAL_PID));
     assertThat(mockServer.getRequestCount()-requestCount).isEqualTo(4);
+  }
+
+
+  @Test
+  void testRedirect() throws Exception {
+    // Given
+    var expected = MAPPER.readTree(loadResourceFile("pidrecord/pidRecord.json"));
+    mockServer.enqueue(new MockResponse()
+        .setResponseCode(HttpStatus.FOUND.value())
+        .addHeader("Content-Type", "text/html;charset=utf-8")
+        .addHeader("Location", EXTERNAL_PID));
+
+    mockServer.enqueue(new MockResponse()
+        .setBody(MAPPER.writeValueAsString(expected))
+        .setResponseCode(HttpStatus.OK.value())
+        .addHeader("Content-Type", "application/json"));
+
+    // When
+    var response = pidResolver.resolveExternalPid(EXTERNAL_PID);
+
+    // Then
+    assertThat(response).isEqualTo(expected);
   }
 
 }
