@@ -36,33 +36,32 @@ import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
+import eu.dissco.core.handlemanager.domain.requests.RollbackRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
-import eu.dissco.core.handlemanager.domain.requests.attributes.PidStatus;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaValidator;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.service.HandleService;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
-
 @ExtendWith(MockitoExtension.class)
 class HandleControllerTest {
 
@@ -417,7 +416,7 @@ class HandleControllerTest {
     updateRequestNode.set(NODE_DATA, givenJsonNode(HANDLE, RECORD_TYPE_HANDLE, updateAttributes));
 
     var responseExpected = givenRecordResponseWriteAltLoc(List.of(handle));
-    given(service.updateRecords(List.of(updateRequestNode))).willReturn(
+    given(service.updateRecords(List.of(updateRequestNode), true)).willReturn(
         responseExpected);
 
     // When
@@ -459,7 +458,7 @@ class HandleControllerTest {
       updateRequestList.add(updateRequestNode.deepCopy());
     }
 
-    given(service.updateRecords(updateRequestList)).willReturn(responseExpected);
+    given(service.updateRecords(updateRequestList, true)).willReturn(responseExpected);
 
     // When
     var responseReceived = controller.updateRecords(updateRequestList);
@@ -468,6 +467,61 @@ class HandleControllerTest {
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
+
+  @Test
+  void testRollbackUpdate() throws Exception {
+    // Given
+    List<byte[]> handles = List.of(
+        HANDLE.getBytes(StandardCharsets.UTF_8),
+        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
+
+    List<JsonNode> updateRequestList = new ArrayList<>();
+    var responseExpected = givenRecordResponseWriteAltLoc(handles);
+
+    for (byte[] handle : handles) {
+      var updateAttributes = genUpdateRequestAltLoc();
+      ObjectNode updateRequestNode = mapper.createObjectNode();
+      updateRequestNode.set("data", givenJsonNode(HANDLE, RECORD_TYPE_HANDLE, updateAttributes));
+      updateRequestList.add(updateRequestNode.deepCopy());
+    }
+
+    given(service.updateRecords(updateRequestList, false)).willReturn(responseExpected);
+
+    // When
+    var responseReceived = controller.rollbackHandleUpdate(updateRequestList);
+
+    // Then
+    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testRollbackHandles() throws Exception{
+    // Given
+    var dataNode1 = MAPPER.createObjectNode();
+    dataNode1.put("id", HANDLE);
+    var dataNode2 = MAPPER.createObjectNode();
+    dataNode2.put("id", HANDLE_ALT);
+    List<JsonNode> dataNode = List.of(dataNode1, dataNode2);
+    var request = new RollbackRequest(dataNode);
+
+    // when
+    var response = controller.rollbackHandleCreation(request);
+
+    // Then
+    then(service).should().rollbackHandles(List.of(HANDLE, HANDLE_ALT));
+  }
+
+  @Test
+  void testRollbackHandlesBadRequest() {
+    // Given
+    List<JsonNode> dataNode = List.of(MAPPER.createObjectNode());
+    var request = new RollbackRequest(dataNode);
+
+    // Then
+    assertThrows(InvalidRequestException.class, () -> controller.rollbackHandleCreation(request));
+  }
+
 
   @Test
   void testUpsert() throws Exception{

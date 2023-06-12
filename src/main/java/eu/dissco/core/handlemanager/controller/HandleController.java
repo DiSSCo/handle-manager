@@ -1,7 +1,6 @@
 package eu.dissco.core.handlemanager.controller;
 
 
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
@@ -11,6 +10,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperReadSingle;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
+import eu.dissco.core.handlemanager.domain.requests.RollbackRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.ObjectType;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaValidator;
@@ -32,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -139,7 +140,7 @@ public class HandleController {
       throw new InvalidRequestException("Handle in request URL does not match id in request body.");
     }
 
-    return ResponseEntity.status(HttpStatus.OK).body(service.updateRecords(List.of(request)));
+    return ResponseEntity.status(HttpStatus.OK).body(service.updateRecords(List.of(request), true));
   }
 
   @Operation(summary ="Update multiple PID Records")
@@ -150,7 +151,7 @@ public class HandleController {
     for (JsonNode request : requests) {
       schemaValidator.validatePatchRequest(request);
     }
-    return ResponseEntity.status(HttpStatus.OK).body(service.updateRecords(requests));
+    return ResponseEntity.status(HttpStatus.OK).body(service.updateRecords(requests, true));
   }
 
   // Upsert
@@ -186,6 +187,31 @@ public class HandleController {
     }
     return ResponseEntity.status(HttpStatus.OK).body(service.archiveRecordBatch(List.of(request)));
   }
+
+  @Operation(summary = "rollback handle creation")
+  @DeleteMapping(value="/rollback")
+  public ResponseEntity<Void> rollbackHandleCreation(@RequestBody RollbackRequest request)
+      throws InvalidRequestException {
+
+    var ids = request.data().stream().map(d -> d.get(NODE_ID)).toList();
+    if (ids.contains(null)){
+      throw new InvalidRequestException("Missing Handles (\"id\") in request");
+    }
+    var handles = ids.stream().map(JsonNode::asText).toList();
+    service.rollbackHandles(handles);
+    return ResponseEntity.ok().build();
+  }
+
+  @Operation(summary = "rollback handle creation")
+  @DeleteMapping(value="/rollback/update")
+  public ResponseEntity<JsonApiWrapperWrite> rollbackHandleUpdate(@RequestBody List<JsonNode> requests)
+      throws InvalidRequestException, PidResolutionException, PidServiceInternalError {
+    for (JsonNode request : requests) {
+      schemaValidator.validatePatchRequest(request);
+    }
+    return ResponseEntity.status(HttpStatus.OK).body(service.updateRecords(requests, false));
+  }
+
 
   @Operation(summary ="Archive multiple PID records")
   @PutMapping(value = "")

@@ -493,7 +493,7 @@ class HandleServiceTest {
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(updatedAttributeRecord);
 
     // When
-    var responseReceived = service.updateRecords(updateRequest);
+    var responseReceived = service.updateRecords(updateRequest, true);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -516,7 +516,7 @@ class HandleServiceTest {
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(updatedAttributeRecord);
 
     // When
-    var responseReceived = service.updateRecords(updateRequest);
+    var responseReceived = service.updateRecords(updateRequest, true);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -534,7 +534,7 @@ class HandleServiceTest {
 
     // Then
     assertThrows(InvalidRequestException.class, () -> {
-      service.updateRecords(updateRequest);
+      service.updateRecords(updateRequest, true);
     });
   }
 
@@ -547,7 +547,7 @@ class HandleServiceTest {
 
     // Then
     assertThrows(PidResolutionException.class, () -> {
-      service.updateRecords(updateRequest);
+      service.updateRecords(updateRequest, true);
     });
   }
 
@@ -715,6 +715,18 @@ class HandleServiceTest {
     assertThat(response).isEqualTo(expected);
     then(handleRep).should()
         .postAndUpdateHandles(CREATED.getEpochSecond(), newRecord, new ArrayList<>());
+  }
+
+  @Test
+  void testRollbackHandleCreation(){
+    // Given
+    var handleList = List.of(HANDLE, HANDLE_ALT);
+
+    // When
+    service.rollbackHandles(handleList);
+
+    // Then
+    then(handleRep).should().rollbackHandles(handleList);
   }
 
   JsonApiDataLinks upsertedResponse(List<HandleAttribute> handleRecord, String handle)

@@ -147,7 +147,7 @@ public class HandleRepository {
 
   // Archive
   public void archiveRecords(long recordTimestamp, List<HandleAttribute> handleAttributes, List<String> handles) {
-    updateRecord(recordTimestamp, handleAttributes);
+    updateRecord(recordTimestamp, handleAttributes, true);
     deleteNonTombstoneAttributes(handles);
   }
 
@@ -160,34 +160,36 @@ public class HandleRepository {
   }
 
   public void postAndUpdateHandles(long recordTimestamp, List<HandleAttribute> createAttributes, List<List<HandleAttribute>> updateAttributes){
-    var queryList = prepareBatchUpdateQuery(recordTimestamp, updateAttributes);
+    var queryList = prepareBatchUpdateQuery(recordTimestamp, updateAttributes, true);
     queryList.addAll(prepareBatchPostQuery(recordTimestamp, createAttributes));
     context.batch(queryList).execute();
   }
 
   // Update
-  public void updateRecord(long recordTimestamp, List<HandleAttribute> handleAttributes) {
-    var query = prepareUpdateQuery(recordTimestamp, handleAttributes);
+  public void updateRecord(long recordTimestamp, List<HandleAttribute> handleAttributes,
+      boolean incrementVersion) {
+    var query = prepareUpdateQuery(recordTimestamp, handleAttributes, incrementVersion);
     context.batch(query).execute();
   }
 
   public void updateRecordBatch(long recordTimestamp,
-      List<List<HandleAttribute>> handleRecords) {
-    var queryList = prepareBatchUpdateQuery(recordTimestamp, handleRecords);
+      List<List<HandleAttribute>> handleRecords, boolean incrementVersion) {
+    var queryList = prepareBatchUpdateQuery(recordTimestamp, handleRecords, incrementVersion);
     context.batch(queryList).execute();
   }
 
-  private List<Query> prepareBatchUpdateQuery(long recordTimestamp, List<List<HandleAttribute>> handleRecords){
+  private List<Query> prepareBatchUpdateQuery(long recordTimestamp, List<List<HandleAttribute>> handleRecords,
+      boolean incrementVersion){
     List<Query> queryList = new ArrayList<>();
     for (List<HandleAttribute> handleRecord : handleRecords) {
       queryList.addAll(
-          prepareUpdateQuery(recordTimestamp, handleRecord));
+          prepareUpdateQuery(recordTimestamp, handleRecord, incrementVersion));
     }
     return queryList;
   }
 
   private ArrayList<Query> prepareUpdateQuery(long recordTimestamp,
-      List<HandleAttribute> handleAttributes) {
+      List<HandleAttribute> handleAttributes, boolean incrementVersion) {
     var queryList = new ArrayList<Query>();
     Set<byte[]> updatedHandles = new HashSet<>();
     for (var handleAttribute : handleAttributes) {
@@ -215,27 +217,32 @@ public class HandleRepository {
           .set(HANDLES.PUB_WRITE, false);
       queryList.add(query);
       if (updatedHandles.add(handleAttribute.handle())) {
-        queryList.add(versionIncrement(handleAttribute.handle(), recordTimestamp));
+        queryList.add(versionIncrement(handleAttribute.handle(), recordTimestamp, incrementVersion));
       }
     }
     return queryList;
   }
 
-
-  private Query versionIncrement(byte[] handle, long recordTimestamp) {
+  private Query versionIncrement(byte[] handle, long recordTimestamp, boolean incrementVersion) {
     var currentVersion =
         Integer.parseInt(Objects.requireNonNull(context.select(HANDLES.DATA)
             .from(HANDLES)
             .where(HANDLES.HANDLE.eq(handle))
             .and(HANDLES.TYPE.eq(PID_RECORD_ISSUE_NUMBER.getBytes(StandardCharsets.UTF_8)))
             .fetchOne(dbRecord -> new String(dbRecord.value1(), StandardCharsets.UTF_8))));
-    int version = currentVersion + 1;
+    int version = incrementVersion ? currentVersion + 1 : currentVersion - 1;
 
     return context.update(HANDLES)
         .set(HANDLES.DATA, String.valueOf(version).getBytes(StandardCharsets.UTF_8))
         .set(HANDLES.TIMESTAMP, recordTimestamp)
         .where(HANDLES.HANDLE.eq(handle))
         .and(HANDLES.TYPE.eq(PID_RECORD_ISSUE_NUMBER.getBytes(StandardCharsets.UTF_8)));
+  }
+
+  public void rollbackHandles(List<String> handles){
+    context.delete(HANDLES)
+        .where(HANDLES.HANDLE.in(handles))
+        .execute();
   }
 
   private int getOffset(int pageNum, int pageSize){
