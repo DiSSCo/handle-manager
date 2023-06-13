@@ -8,16 +8,21 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PREFIX;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_ANNOTATION;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DOI;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS_BOTANY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_HANDLE;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MAPPING;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MEDIA;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_SOURCE_SYSTEM;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SUFFIX;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMappingRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestAltLoc;
@@ -30,6 +35,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordRespon
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteArchive;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteGeneric;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemRequestObject;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
@@ -293,7 +299,7 @@ class HandleControllerTest {
   void testCreateMediaObjectRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    HandleRecordRequest requestObject = genMediaRequestObject();
+    HandleRecordRequest requestObject = givenMediaRequestObject();
     ObjectNode requestNode = genCreateRecordRequest(requestObject, RECORD_TYPE_MEDIA);
     JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(handle),
         RECORD_TYPE_MEDIA);
@@ -412,7 +418,7 @@ class HandleControllerTest {
 
     List<JsonNode> requests = new ArrayList<>();
     handles.forEach(handle -> {
-      requests.add(genCreateRecordRequest(genMediaRequestObject(), RECORD_TYPE_MEDIA));
+      requests.add(genCreateRecordRequest(givenMediaRequestObject(), RECORD_TYPE_MEDIA));
     });
 
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_DOI);
@@ -427,11 +433,72 @@ class HandleControllerTest {
   }
 
   @Test
-  void testHello() {
-    //When
-    ResponseEntity<String> response = controller.hello();
+  void testCreateSourceSystemsBatch() throws Exception {
+    // Given
+    List<byte[]> handles = List.of(
+        HANDLE.getBytes(StandardCharsets.UTF_8),
+        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
+
+    List<JsonNode> requests = new ArrayList<>();
+    handles.forEach(handle -> {
+      requests.add(genCreateRecordRequest(givenSourceSystemRequestObject(), RECORD_TYPE_SOURCE_SYSTEM));
+    });
+
+    var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_SOURCE_SYSTEM);
+    given(service.createRecords(requests)).willReturn(responseExpected);
+
+    // When
+    var responseReceived = controller.createRecords(requests);
+
     // Then
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testCreateAnnotationsBatch() throws Exception {
+    // Given
+    List<byte[]> handles = List.of(
+        HANDLE.getBytes(StandardCharsets.UTF_8),
+        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
+
+    List<JsonNode> requests = new ArrayList<>();
+    handles.forEach(handle -> {
+      requests.add(genCreateRecordRequest(givenAnnotationRequestObject(), RECORD_TYPE_ANNOTATION));
+    });
+
+    var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_ANNOTATION);
+    given(service.createRecords(requests)).willReturn(responseExpected);
+
+    // When
+    var responseReceived = controller.createRecords(requests);
+
+    // Then
+    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testCreateMappingBatch() throws Exception {
+    // Given
+    List<byte[]> handles = List.of(
+        HANDLE.getBytes(StandardCharsets.UTF_8),
+        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
+
+    List<JsonNode> requests = new ArrayList<>();
+    handles.forEach(handle -> {
+      requests.add(genCreateRecordRequest(givenMappingRequestObject(), RECORD_TYPE_MAPPING));
+    });
+
+    var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_MAPPING);
+    given(service.createRecords(requests)).willReturn(responseExpected);
+
+    // When
+    var responseReceived = controller.createRecords(requests);
+
+    // Then
+    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
 
   private JsonNode givenJsonNode(String id, String type, JsonNode attributes) {

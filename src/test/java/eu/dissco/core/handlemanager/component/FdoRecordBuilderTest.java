@@ -55,7 +55,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TES
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.STRUCTURAL_TYPE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.TRANSFORMER_FACTORY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRecordAttributesAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
@@ -155,7 +155,7 @@ class FdoRecordBuilderTest {
   void testPrepareMediaObjectAttributes() throws Exception {
     // Given
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
-    var request = genMediaRequestObject();
+    var request = givenMediaRequestObject();
 
     // When
     var result = fdoRecordBuilder.prepareMediaObjectAttributes(request, handle);

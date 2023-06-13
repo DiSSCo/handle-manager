@@ -25,7 +25,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.REFERENT_DOI_NAME
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequestBatch;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestAltLoc;
@@ -128,7 +128,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testPostMediaObjectRequest() {
     // Given
-    var request = genCreateRecordRequest(genMediaRequestObject(), RECORD_TYPE_MEDIA);
+    var request = genCreateRecordRequest(givenMediaRequestObject(), RECORD_TYPE_MEDIA);
 
     // Then
     assertDoesNotThrow(() -> {

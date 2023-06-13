@@ -293,7 +293,7 @@ public class FdoRecordBuilder {
       throws UnprocessableEntityException, PidResolutionException, InvalidRequestException, PidServiceInternalError {
     var fdoRecord = prepareHandleRecordAttributes(request, handle);
 
-    // 700 subjectDigitalObjectId
+    // 600 hostInstitution
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(HOST_INSTITUTION), handle,
         HOST_INSTITUTION, request.getHostInstitution().getBytes(StandardCharsets.UTF_8)));
 
@@ -308,7 +308,7 @@ public class FdoRecordBuilder {
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(ORGANISATION_ID), handle,
         ORGANISATION_ID, request.getOrganisationIdentifier().getBytes(StandardCharsets.UTF_8)));
 
-    // 801 OrganisationIdentifier
+    // 801 OrganisationIdentifierType
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(ORGANISATION_ID_TYPE), handle,
         ORGANISATION_ID_TYPE, request.getOrganisationIdentifierType().getBytes(StandardCharsets.UTF_8)));
 

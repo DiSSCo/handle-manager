@@ -16,7 +16,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.ROR_DOMAIN;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_NAME_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.STRUCTURAL_TYPE_TESTVAL;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -60,7 +60,7 @@ import org.junit.jupiter.api.Test;
   @Test
   void testSetUniquePhysicalIdentifierMedia(){
    // Given
-   var request = genMediaRequestObject();
+   var request = givenMediaRequestObject();
    var expected = request.getSubjectIdentifier().physicalId();
 
    // When
