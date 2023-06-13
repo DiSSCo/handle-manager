@@ -15,6 +15,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_HANDL
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MAPPING;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MEDIA;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_ORGANISATION;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_SOURCE_SYSTEM;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genAnnotationAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
@@ -27,6 +28,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAt
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMappingAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaObjectAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genOrganisationAttributes;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genSourceSystemAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMappingRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
@@ -45,6 +47,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordRespon
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteArchive;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteGeneric;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSearchByPhysIdRequest;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemRequestObject;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -458,6 +461,28 @@ class HandleServiceTest {
     }
 
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_MAPPING);
+    given(hgService.genHandleList(handles.size())).willReturn(handles);
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
+
+    // When
+    var responseReceived = service.createRecords(requests);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testCreateSourceSystemBatch() throws Exception {
+    // Given
+    List<HandleAttribute> flatList = new ArrayList<>();
+
+    List<JsonNode> requests = new ArrayList<>();
+    for (byte[] handle : handles) {
+      requests.add(genCreateRecordRequest(givenSourceSystemRequestObject(), RECORD_TYPE_SOURCE_SYSTEM));
+      flatList.addAll(genSourceSystemAttributes(handle));
+    }
+
+    var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_SOURCE_SYSTEM);
     given(hgService.genHandleList(handles.size())).willReturn(handles);
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
 
