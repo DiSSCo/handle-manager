@@ -55,12 +55,16 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TES
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.STRUCTURAL_TYPE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.TRANSFORMER_FACTORY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMappingRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRecordAttributesAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecordRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenOrganisationRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemRequestObject;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.AdditionalMatchers.not;
@@ -195,6 +199,59 @@ class FdoRecordBuilderTest {
     assertThat(hasCorrectElements(result, DOI_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, DS_FIELDS_MANDATORY)).isTrue();
     assertThat(hasCorrectElements(result, DS_FIELDS_OPTIONAL)).isTrue();
+  }
+
+  @Test
+  void testPrepareAnnotationAttributes() throws Exception {
+    // Given
+    given(pidResolver.getObjectName(any())).willReturn("placeholder");
+    var request = givenAnnotationRequestObject();
+
+    // When
+    var result = fdoRecordBuilder.prepareAnnotationAttributes(request, handle);
+
+    // Then
+    assertThat(result).hasSize(HANDLE_QTY+1);
+  }
+
+  @Test
+  void testPrepareMappingAttributes() throws Exception {
+    // Given
+    given(pidResolver.getObjectName(any())).willReturn("placeholder");
+    var request = givenMappingRequestObject();
+
+    // When
+    var result = fdoRecordBuilder.prepareMappingAttributes(request, handle);
+
+    // Then
+    assertThat(result).hasSize(HANDLE_QTY+1);
+  }
+
+
+  @Test
+  void testPrepareSourceSystemAttributes() throws Exception {
+    // Given
+    given(pidResolver.getObjectName(any())).willReturn("placeholder");
+    var request = givenSourceSystemRequestObject();
+
+    // When
+    var result = fdoRecordBuilder.prepareSourceSystemAttributes(request, handle);
+
+    // Then
+    assertThat(result).hasSize(HANDLE_QTY+1);
+  }
+
+  @Test
+  void testPrepareOrganisationAttributes() throws Exception {
+    // Given
+    given(pidResolver.getObjectName(any())).willReturn("placeholder");
+    var request = givenOrganisationRequestObject();
+
+    // When
+    var result = fdoRecordBuilder.prepareOrganisationAttributes(request, handle);
+
+    // Then
+    assertThat(result).hasSize(DOI_QTY+3);
   }
 
   @Test
