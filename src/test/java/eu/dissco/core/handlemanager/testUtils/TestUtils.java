@@ -59,12 +59,12 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperReadSingle;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenBotanyRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.DoiRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenBotanyRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.DoiRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.LivingOrPreserved;
-import eu.dissco.core.handlemanager.domain.requests.attributes.MediaObjectRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdentifier;
 import eu.dissco.core.handlemanager.domain.requests.attributes.TombstoneRecordRequest;
@@ -140,6 +140,7 @@ public class TestUtils {
   // Media Objects
   public static final String MEDIA_URL_TESTVAL = "https://naturalis.nl/media/123";
   public static final String MEDIA_HASH_TESTVAL = "47bce5c74f589f48";
+  public static final String MEDIA_HASH_ALG_TESTVAL = "sha-256";
   public static final String PTR_TYPE = "handle";
   public static final String PTR_PRIMARY_NAME = "DiSSCo";
   public static final String PTR_PID_DOI = "http://doi.org/" + PID_ISSUER_TESTVAL_OTHER;
@@ -606,6 +607,7 @@ public class TestUtils {
         REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL,
         MEDIA_HASH_TESTVAL,
+        MEDIA_HASH_ALG_TESTVAL,
         MEDIA_URL_TESTVAL,
         SPECIMEN_HOST_TESTVAL,
         PHYSICAL_IDENTIFIER_TESTVAL_CETAF

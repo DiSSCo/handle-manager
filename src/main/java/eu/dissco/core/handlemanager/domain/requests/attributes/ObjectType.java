@@ -8,6 +8,11 @@ public enum ObjectType {
   @JsonProperty("digitalSpecimen") DIGITAL_SPECIMEN("digitalSpecimen"),
   @JsonProperty("digitalSpecimenBotany") DIGITAL_SPECIMEN_BOTANY("digitalSpecimenBotany"),
   @JsonProperty("mediaObject") MEDIA_OBJECT("mediaObject"),
+  @JsonProperty("annotation") ANNOTATION("annotation"),
+  @JsonProperty("sourceSystem") SOURCE_SYSTEM("sourceSystem"),
+  @JsonProperty("mapping") MAPPING("mapping"),
+  @JsonProperty("translator") TRANSLATOR("translator"),
+  @JsonProperty("organisation") ORGANISATION("organisation"),
   @JsonProperty("tombstone") TOMBSTONE("tombstone");
 
   private final String state;
