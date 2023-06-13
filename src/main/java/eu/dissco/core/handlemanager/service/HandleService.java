@@ -20,13 +20,17 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperReadSingle;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
+import eu.dissco.core.handlemanager.domain.requests.objects.AnnotationRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.MappingRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.ObjectType;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
+import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.SourceSystemRequest;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -222,19 +226,19 @@ public class HandleService {
       try {
         switch (type) {
           case HANDLE -> {
-            HandleRecordRequest requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
+            var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 HandleRecordRequest.class);
             handleAttributes.addAll(
                 fdoRecordBuilder.prepareHandleRecordAttributes(requestObject, handles.remove(0)));
           }
           case DOI -> {
-            DoiRecordRequest requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
+            var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 DoiRecordRequest.class);
             handleAttributes.addAll(
                 fdoRecordBuilder.prepareDoiRecordAttributes(requestObject, handles.remove(0)));
           }
           case DIGITAL_SPECIMEN -> {
-            DigitalSpecimenRequest requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
+            var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 DigitalSpecimenRequest.class);
             handleAttributes.addAll(
                 fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(requestObject,
@@ -242,7 +246,7 @@ public class HandleService {
             digitalSpecimenList.add((T) requestObject);
           }
           case DIGITAL_SPECIMEN_BOTANY -> {
-            DigitalSpecimenBotanyRequest requestObject = mapper.treeToValue(
+            var requestObject = mapper.treeToValue(
                 dataNode.get(NODE_ATTRIBUTES), DigitalSpecimenBotanyRequest.class);
             handleAttributes.addAll(
                 fdoRecordBuilder.prepareDigitalSpecimenBotanyRecordAttributes(requestObject,
@@ -250,10 +254,34 @@ public class HandleService {
             digitalSpecimenList.add((T) requestObject);
           }
           case MEDIA_OBJECT -> {
-            MediaObjectRequest requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
+            var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 MediaObjectRequest.class);
             handleAttributes.addAll(
                 fdoRecordBuilder.prepareMediaObjectAttributes(requestObject, handles.remove(0)));
+          }
+          case ANNOTATION -> {
+            var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
+                AnnotationRequest.class);
+            handleAttributes.addAll(
+                fdoRecordBuilder.prepareAnnotationAttributes(requestObject, handles.remove(0)));
+          }
+          case MAPPING -> {
+            var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
+                MappingRequest.class);
+            handleAttributes.addAll(
+                fdoRecordBuilder.prepareMappingAttributes(requestObject, handles.remove(0)));
+          }
+          case SOURCE_SYSTEM -> {
+            var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
+                SourceSystemRequest.class);
+            handleAttributes.addAll(
+                fdoRecordBuilder.prepareSourceSystemAttributes(requestObject, handles.remove(0)));
+          }
+          case ORGANISATION -> {
+            var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
+                OrganisationRequest.class);
+            handleAttributes.addAll(
+                fdoRecordBuilder.prepareOrganisationAttributes(requestObject, handles.remove(0)));
           }
           default -> throw new InvalidRequestException(INVALID_TYPE_ERROR + type);
         }

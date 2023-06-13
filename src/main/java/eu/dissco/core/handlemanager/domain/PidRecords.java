@@ -69,7 +69,7 @@ public class PidRecords {
   public static final String SUBJECT_PHYSICAL_IDENTIFIER = "subjectPrimarySpecimenObjectId";
 
   // Annotations
-  public static final String SUBJECT_PID = "subjectDigitalObjectId";
+  public static final String SUBJECT_DIGITAL_OBJECT_ID = "subjectDigitalObjectId";
 
   // Source Systems
   public static final String HOST_INSTITUTION = "hostInstitution";
@@ -80,6 +80,7 @@ public class PidRecords {
   // Organisations
   public static final String ORGANISATION_ID = "organisationIdentifier";
   public static final String ORGANISATION_ID_TYPE = "organisationIdentifierType";
+  public static final String ORGANISATION_NAME = "organisationName";
 
   // Fields for requests
   public static final String PID_ISSUER_REQ = "pidIssuerPid";
@@ -133,7 +134,7 @@ public class PidRecords {
       Map.entry(MEDIA_URL, 403),
       Map.entry(SUBJECT_PHYSICAL_IDENTIFIER, 404),
 
-      Map.entry(SUBJECT_PID,500),
+      Map.entry(SUBJECT_DIGITAL_OBJECT_ID,500),
 
       Map.entry(HOST_INSTITUTION,600),
 
@@ -141,6 +142,7 @@ public class PidRecords {
 
       Map.entry(ORGANISATION_ID, 800),
       Map.entry(ORGANISATION_ID_TYPE, 801),
+      Map.entry(ORGANISATION_NAME, 802),
 
       Map.entry(HS_ADMIN, 100), Map.entry(LOC, 101));
 
