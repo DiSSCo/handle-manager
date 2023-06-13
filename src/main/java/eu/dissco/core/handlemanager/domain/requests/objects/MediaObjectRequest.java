@@ -1,7 +1,7 @@
 package eu.dissco.core.handlemanager.domain.requests.objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdentifier;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdentifier;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -44,6 +44,5 @@ public class MediaObjectRequest extends DoiRecordRequest {
     this.subjectSpecimenHost = subjectSpecimenHost;
     this.mediaUrl = mediaUrl;
     this.subjectIdentifier = subjectIdentifier;
-
   }
 }

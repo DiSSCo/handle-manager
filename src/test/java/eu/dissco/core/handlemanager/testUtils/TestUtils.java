@@ -72,12 +72,12 @@ import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenBotan
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.LivingOrPreserved;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.LivingOrPreserved;
 import eu.dissco.core.handlemanager.domain.requests.objects.MappingRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
-import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdentifier;
-import eu.dissco.core.handlemanager.domain.requests.attributes.TombstoneRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdentifier;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.TombstoneRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.SourceSystemRequest;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;

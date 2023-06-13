@@ -1,4 +1,4 @@
-package eu.dissco.core.handlemanager.domain.requests.attributes;
+package eu.dissco.core.handlemanager.domain.requests.vocabulary;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.nio.charset.StandardCharsets;

@@ -22,8 +22,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
-import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdentifier;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdentifier;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;

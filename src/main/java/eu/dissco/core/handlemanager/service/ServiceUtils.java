@@ -2,7 +2,7 @@ package eu.dissco.core.handlemanager.service;
 
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
 import java.nio.charset.StandardCharsets;
 
 public class ServiceUtils {

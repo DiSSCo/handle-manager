@@ -1,5 +1,6 @@
 package eu.dissco.core.handlemanager.domain.requests.objects;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -7,8 +8,9 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public class OrganisationRequest extends DoiRecordRequest{
+public class OrganisationRequest extends DoiRecordRequest {
 
+  @JsonProperty(required = true)
   private final String organisationIdentifier;
   private final String organisationIdentifierType;
 
@@ -18,6 +20,6 @@ public class OrganisationRequest extends DoiRecordRequest{
     super(fdoProfile, issuedForAgent, digitalObjectType, pidIssuer, structuralType, locations,
         referentName, primaryReferentType);
     this.organisationIdentifier = organisationIdentifier;
-    this.organisationIdentifierType = organisationIdentifierType;
+    this.organisationIdentifierType = organisationIdentifierType==null ? "ROR" : organisationIdentifierType;
   }
 }
