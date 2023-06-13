@@ -5,55 +5,58 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.loadResourceFile;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClient.RequestHeadersSpec;
-import org.springframework.web.reactive.function.client.WebClient.RequestHeadersUriSpec;
-import org.springframework.web.reactive.function.client.WebClient.ResponseSpec;
-import reactor.core.publisher.Mono;
+import reactor.netty.http.client.HttpClient;
 
 @ExtendWith(MockitoExtension.class)
 class PidResolverComponentTest {
 
-  @Mock
-  private WebClient client;
-  @Mock
-  private RequestHeadersUriSpec uriSpec;
-  @Mock
-  private RequestHeadersSpec headerSpec;
-  @Mock
-  private ResponseSpec responseSpec;
-  @Mock
-  private Mono<JsonNode> jsonNodeMono;
-  @Mock
-  private CompletableFuture<JsonNode> jsonFuture;
+  private static MockWebServer mockServer;
   private PidResolverComponent pidResolver;
+
+  @BeforeAll
+  static void init() throws IOException {
+    mockServer = new MockWebServer();
+    mockServer.start();
+  }
 
   @BeforeEach
   void setup() {
-    pidResolver = new PidResolverComponent(client);
+    WebClient webClient = WebClient.builder()
+        .clientConnector(new ReactorClientHttpConnector(HttpClient.create().followRedirect(true)))
+        .baseUrl(String.format("http://%s:%s", mockServer.getHostName(), mockServer.getPort()))
+        .build();
+    pidResolver = new PidResolverComponent(webClient);
+  }
+
+  @AfterAll
+  static void destroy() throws IOException {
+    mockServer.shutdown();
   }
 
   @Test
   void testResolveExternalPid() throws Exception {
     // Given
-    givenWebclient();
     var expected = MAPPER.readTree(loadResourceFile("pidrecord/pidRecord.json"));
-    given(jsonFuture.get()).willReturn(expected);
+    mockServer.enqueue(new MockResponse()
+        .setBody(MAPPER.writeValueAsString(expected))
+        .setResponseCode(HttpStatus.OK.value())
+        .addHeader("Content-Type", "application/json"));
 
     // When
     var response = pidResolver.resolveExternalPid(EXTERNAL_PID);
@@ -63,12 +66,11 @@ class PidResolverComponentTest {
   }
 
   @Test
-  void testResolveExternalPidNotFound() throws Exception {
+  void testResolveExternalPidNotFound() {
     // Given
-    givenWebclient();
-    var exception = mock(ExecutionException.class);
-    given(exception.getCause()).willReturn(new PidResolutionException("pid not found"));
-    given(jsonFuture.get()).willThrow(exception);
+    mockServer.enqueue(new MockResponse()
+        .setResponseCode(HttpStatus.NOT_FOUND.value())
+        .addHeader("Content-Type", "application/json"));
 
     // Then
     assertThrows(PidResolutionException.class, () -> pidResolver.resolveExternalPid(EXTERNAL_PID
@@ -76,13 +78,11 @@ class PidResolverComponentTest {
   }
 
   @Test
-  void testResolveExternalPidNotProcessable() throws Exception {
+  void testOther4xxError() {
     // Given
-    givenWebclient();
-    var exception = mock(ExecutionException.class);
-    // Can be any exception except PidResolutionException
-    given(exception.getCause()).willReturn(new Exception());
-    given(jsonFuture.get()).willThrow(exception);
+    mockServer.enqueue(new MockResponse()
+        .setResponseCode(HttpStatus.BAD_REQUEST.value())
+        .addHeader("Content-Type", "application/json"));
 
     // Then
     assertThrows(UnprocessableEntityException.class, () -> pidResolver.resolveExternalPid(EXTERNAL_PID
@@ -90,41 +90,58 @@ class PidResolverComponentTest {
   }
 
   @Test
-  void testGetObjectName() throws Exception {
+  void testRetriesSuccess() throws Exception {
     // Given
-    givenWebclient();
-    var response = MAPPER.readTree(loadResourceFile("pidrecord/pidRecord.json"));
-    given(jsonFuture.get()).willReturn(response);
-    var expected = "digitalSpecimen";
+    int requestCount = mockServer.getRequestCount();
+    var expected = MAPPER.readTree(loadResourceFile("pidrecord/pidRecord.json"));
+    mockServer.enqueue(new MockResponse().setResponseCode(HttpStatus.GATEWAY_TIMEOUT.value()));
+    mockServer.enqueue(new MockResponse()
+        .setBody(MAPPER.writeValueAsString(expected))
+        .setResponseCode(HttpStatus.OK.value())
+        .addHeader("Content-Type", "application/json"));
 
     // When
-    var result = pidResolver.getObjectName(EXTERNAL_PID);
+    var response = pidResolver.resolveExternalPid(EXTERNAL_PID);
 
     // Then
-    assertThat(result).isEqualTo(expected);
+    assertThat(response).isEqualTo(expected);
+    assertThat(mockServer.getRequestCount()-requestCount).isEqualTo(2);
   }
 
   @Test
-  void testGetObjectNameNotPresent() throws Exception {
+  void testRetriesFailures() {
     // Given
-    givenWebclient();
-    var response = MAPPER.readTree(loadResourceFile("pidrecord/pidRecordNoName.json"));
-    given(jsonFuture.get()).willReturn(response);
-    var expected = "";
-
-    // When
-    var result = pidResolver.getObjectName(EXTERNAL_PID);
+    int requestCount = mockServer.getRequestCount();
+    mockServer.enqueue(new MockResponse().setResponseCode(HttpStatus.GATEWAY_TIMEOUT.value()));
+    mockServer.enqueue(new MockResponse().setResponseCode(HttpStatus.GATEWAY_TIMEOUT.value()));
+    mockServer.enqueue(new MockResponse().setResponseCode(HttpStatus.GATEWAY_TIMEOUT.value()));
+    mockServer.enqueue(new MockResponse().setResponseCode(HttpStatus.GATEWAY_TIMEOUT.value()));
 
     // Then
-    assertThat(result).isEqualTo(expected);
+    assertThrows(UnprocessableEntityException.class, () -> pidResolver.resolveExternalPid(EXTERNAL_PID));
+    assertThat(mockServer.getRequestCount()-requestCount).isEqualTo(4);
   }
 
-  private void givenWebclient() {
-    given(client.get()).willReturn(uriSpec);
-    given(uriSpec.uri(anyString())).willReturn(headerSpec);
-    given(headerSpec.retrieve()).willReturn(responseSpec);
-    given(responseSpec.bodyToMono(any(Class.class))).willReturn(jsonNodeMono);
-    given(responseSpec.onStatus(any(), any())).willReturn(responseSpec);
-    given(jsonNodeMono.toFuture()).willReturn(jsonFuture);
+
+  @Test
+  void testRedirect() throws Exception {
+    // Given
+    var expected = MAPPER.readTree(loadResourceFile("pidrecord/pidRecord.json"));
+    mockServer.enqueue(new MockResponse()
+        .setResponseCode(HttpStatus.FOUND.value())
+        .addHeader("Content-Type", "text/html;charset=utf-8")
+        .addHeader("Location", EXTERNAL_PID));
+
+    mockServer.enqueue(new MockResponse()
+        .setBody(MAPPER.writeValueAsString(expected))
+        .setResponseCode(HttpStatus.OK.value())
+        .addHeader("Content-Type", "application/json"));
+
+    // When
+    var response = pidResolver.resolveExternalPid(EXTERNAL_PID);
+
+    // Then
+    assertThat(response).isEqualTo(expected);
   }
+
 }
