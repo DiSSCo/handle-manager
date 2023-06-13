@@ -18,11 +18,11 @@ public class ServiceUtils {
   }
 
   public static byte[] setUniquePhysicalIdentifierId(MediaObjectRequest request) {
-    var physicalIdentifier = request.getSubjectPhysicalIdentifier();
+    var physicalIdentifier = request.getSubjectIdentifier();
     if (physicalIdentifier.physicalIdType().equals(PhysicalIdType.CETAF)) {
       return physicalIdentifier.physicalId().getBytes(StandardCharsets.UTF_8);
     }
-    return concatIds(physicalIdentifier.physicalId(), request.getSubjectSpecimenHostPid());
+    return concatIds(physicalIdentifier.physicalId(), request.getSubjectSpecimenHost());
   }
 
   private static byte[] concatIds(String physicalIdentifier, String specimenHostPid) {

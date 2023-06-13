@@ -249,7 +249,7 @@ public class FdoRecordBuilder {
     // 15 Subject Specimen Host
     fdoRecord.add(
         new HandleAttribute(FIELD_IDX.get(SUBJECT_SPECIMEN_HOST), handle, SUBJECT_SPECIMEN_HOST,
-            request.getSubjectSpecimenHostPid().getBytes(StandardCharsets.UTF_8)));
+            request.getSubjectSpecimenHost().getBytes(StandardCharsets.UTF_8)));
 
     // 16 Media Url
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(MEDIA_URL), handle, MEDIA_URL,
