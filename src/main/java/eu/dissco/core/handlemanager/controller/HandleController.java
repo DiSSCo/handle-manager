@@ -198,6 +198,8 @@ public class HandleController {
       throw new InvalidRequestException("Missing Handles (\"id\") in request");
     }
     var handles = ids.stream().map(JsonNode::asText).toList();
+
+    log.info("Rollback request received for handles : " + handles);
     service.rollbackHandles(handles);
     return ResponseEntity.ok().build();
   }
