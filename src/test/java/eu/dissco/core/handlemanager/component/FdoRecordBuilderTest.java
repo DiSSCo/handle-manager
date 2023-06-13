@@ -111,7 +111,7 @@ class FdoRecordBuilderTest {
   private PidResolverComponent pidResolver;
   private static final int HANDLE_QTY = 15;
   private static final int DOI_QTY = 20;
-  private static final int MEDIA_QTY = 24;
+  private static final int MEDIA_QTY = 25;
   private static final int DS_MANDATORY_QTY = 25;
   private static final int DS_OPTIONAL_QTY = 37;
   private static final int BOTANY_QTY = 25;

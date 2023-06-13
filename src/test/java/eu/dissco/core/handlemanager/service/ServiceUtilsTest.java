@@ -118,8 +118,8 @@ import org.junit.jupiter.api.Test;
        PRIMARY_REFERENT_TYPE_TESTVAL,
        MEDIA_HASH_TESTVAL,
        MEDIA_HASH_ALG_TESTVAL,
-       MEDIA_URL_TESTVAL,
        SPECIMEN_HOST_TESTVAL,
+       MEDIA_URL_TESTVAL,
        new PhysicalIdentifier("id", PhysicalIdType.COMBINED)
    );
   }
