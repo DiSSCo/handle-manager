@@ -1,5 +1,7 @@
 package eu.dissco.core.handlemanager.testUtils;
 
+import static eu.dissco.core.handlemanager.domain.PidRecords.ACCESS_RESTRICTED;
+import static eu.dissco.core.handlemanager.domain.PidRecords.ANNOTATION_TOPIC;
 import static eu.dissco.core.handlemanager.domain.PidRecords.BASE_TYPE_OF_SPECIMEN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_TYPE;
@@ -11,6 +13,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.INFORMATION_ARTEFACT_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUED_FOR_AGENT;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUED_FOR_AGENT_NAME;
+import static eu.dissco.core.handlemanager.domain.PidRecords.LINKED_URL;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LIVING_OR_PRESERVED;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LOC;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LOC_REQ;
@@ -42,6 +45,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.REPLACE_OR_APPEND;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SOURCE_DATA_STANDARD;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST_NAME;
@@ -77,6 +81,7 @@ import eu.dissco.core.handlemanager.domain.requests.objects.MappingRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdentifier;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.ReplaceOrAppend;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.TombstoneRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.SourceSystemRequest;
@@ -106,6 +111,7 @@ public class TestUtils {
 
   public static final Instant CREATED = Instant.parse("2022-11-01T09:59:24.00Z");
   public static final String ISSUE_DATE_TESTVAL = "2022-11-01";
+  private final static String HANDLE_URI = "https://hdl.handle.net/";
   public static final String HANDLE = "20.5000.1025/QRS-321-ABC";
   public static final String PREFIX = "20.5000.1025";
   public static final String SUFFIX = "QRS-321-ABC";
@@ -151,9 +157,12 @@ public class TestUtils {
   public static final String SPECIMEN_HOST_TESTVAL = ROR_DOMAIN + "0x123";
   public static final String SPECIMEN_HOST_NAME_TESTVAL = "Naturalis";
   public static final String IN_COLLECTION_FACILITY_TESTVAL = "20.5000.1025/OTHER-TRIPLET";
-  //Botany Specimens
-  public static final String OBJECT_TYPE_TESTVAL = "Herbarium Sheet";
-  public static final LivingOrPreserved PRESERVED_OR_LIVING_TESTVAL = LivingOrPreserved.PRESERVED;
+  // Annotations
+  public static final String SUBJECT_DOI_TESTVAL = HANDLE_URI + "20.5000.1025/111";
+  public static final String ANNOTATION_TOPIC_TESTVAL = "note";
+  public static final String LINKED_URL_TESTVAL = "https://";
+
+
   // Media Objects
   public static final String MEDIA_URL_TESTVAL = "https://naturalis.nl/media/123";
   public static final String MEDIA_HASH_TESTVAL = "47bce5c74f589f48";
@@ -177,7 +186,7 @@ public class TestUtils {
   // Tombstone Record vals
   public final static String TOMBSTONE_TEXT_TESTVAL = "pid was deleted";
   // Pid Type Record vals
-  private final static String HANDLE_URI = "https://hdl.handle.net/";
+
   public static final String PTR_PID = HANDLE_URI + PID_ISSUER_TESTVAL_OTHER;
   public static ObjectMapper MAPPER = new ObjectMapper().findAndRegisterModules();
 
@@ -526,6 +535,22 @@ public class TestUtils {
         SUBJECT_DIGITAL_OBJECT_ID,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
+    // 501 AnnotationTopic
+    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(ANNOTATION_TOPIC), handle,
+        ANNOTATION_TOPIC, ANNOTATION_TOPIC_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+
+    // 502 replaceOrAppend
+    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(REPLACE_OR_APPEND), handle, REPLACE_OR_APPEND,
+        ReplaceOrAppend.REPLACE.getState().getBytes(StandardCharsets.UTF_8)));
+
+    // 503 AccessRestricted
+    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(ACCESS_RESTRICTED), handle, ACCESS_RESTRICTED,
+        String.valueOf(false).getBytes(StandardCharsets.UTF_8)));
+
+    // 504 LinkedObjectUrl
+      fdoRecord.add(new HandleAttribute(FIELD_IDX.get(LINKED_URL), handle, LINKED_URL,
+          LINKED_URL_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+
     return fdoRecord;
   }
 
@@ -683,7 +708,11 @@ public class TestUtils {
         PID_ISSUER_TESTVAL_OTHER,
         STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
-        SPECIMEN_HOST_TESTVAL
+        SUBJECT_DOI_TESTVAL,
+        ANNOTATION_TOPIC_TESTVAL,
+        ReplaceOrAppend.REPLACE,
+        false,
+        LINKED_URL_TESTVAL
     );
   }
 

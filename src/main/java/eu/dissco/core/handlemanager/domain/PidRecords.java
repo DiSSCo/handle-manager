@@ -70,6 +70,10 @@ public class PidRecords {
 
   // Annotations
   public static final String SUBJECT_DIGITAL_OBJECT_ID = "subjectDigitalObjectId";
+  public static final String ANNOTATION_TOPIC = "annotationTopic";
+  public static final String REPLACE_OR_APPEND = "replaceOrAppend";
+  public static final String ACCESS_RESTRICTED = "accessRestricted";
+  public static final String LINKED_URL = "linkedObjectUrl";
 
   // Source Systems
   public static final String HOST_INSTITUTION = "hostInstitution";
@@ -134,7 +138,9 @@ public class PidRecords {
       Map.entry(MEDIA_URL, 403),
       Map.entry(SUBJECT_PHYSICAL_IDENTIFIER, 404),
 
-      Map.entry(SUBJECT_DIGITAL_OBJECT_ID,500),
+      Map.entry(SUBJECT_DIGITAL_OBJECT_ID,500), Map.entry(ANNOTATION_TOPIC,501),
+      Map.entry(REPLACE_OR_APPEND,502), Map.entry(ACCESS_RESTRICTED,503),
+      Map.entry(LINKED_URL,504),
 
       Map.entry(HOST_INSTITUTION,600),
 

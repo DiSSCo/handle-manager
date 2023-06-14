@@ -1,5 +1,7 @@
 package eu.dissco.core.handlemanager.component;
 
+import static eu.dissco.core.handlemanager.domain.PidRecords.ACCESS_RESTRICTED;
+import static eu.dissco.core.handlemanager.domain.PidRecords.ANNOTATION_TOPIC;
 import static eu.dissco.core.handlemanager.domain.PidRecords.BASE_TYPE_OF_SPECIMEN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_TYPE;
@@ -10,6 +12,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.INFORMATION_ARTEFACT_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUED_FOR_AGENT;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUED_FOR_AGENT_NAME;
+import static eu.dissco.core.handlemanager.domain.PidRecords.LINKED_URL;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LIVING_OR_PRESERVED;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LOC;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MARKED_AS_TYPE;
@@ -31,9 +34,11 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.REPLACE_OR_APPEND;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.STRUCTURAL_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_DIGITAL_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOPIC_DISCIPLINE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOPIC_ORIGIN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.WAS_DERIVED_FROM;
@@ -55,6 +60,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TES
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.STRUCTURAL_TYPE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.TRANSFORMER_FACTORY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMappingRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
@@ -79,7 +85,9 @@ import eu.dissco.core.handlemanager.domain.requests.vocabulary.LivingOrPreserved
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
+import eu.dissco.core.handlemanager.repository.HandleRepository;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
@@ -109,21 +117,27 @@ class FdoRecordBuilderTest {
       BASE_TYPE_OF_SPECIMEN, INFORMATION_ARTEFACT_TYPE,
       MATERIAL_SAMPLE_TYPE, MARKED_AS_TYPE, WAS_DERIVED_FROM);
 
+  private static final Set<String> ANNOTATION_FIELDS = Set.of(SUBJECT_DIGITAL_OBJECT_ID,
+      ANNOTATION_TOPIC, REPLACE_OR_APPEND, ACCESS_RESTRICTED, LINKED_URL);
+
   private final byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
   private FdoRecordBuilder fdoRecordBuilder;
   @Mock
   private PidResolverComponent pidResolver;
+  @Mock
+  private HandleRepository handleRepository;
   private static final int HANDLE_QTY = 15;
   private static final int DOI_QTY = 20;
   private static final int MEDIA_QTY = 25;
   private static final int DS_MANDATORY_QTY = 25;
   private static final int DS_OPTIONAL_QTY = 37;
   private static final int BOTANY_QTY = 25;
+  private static final int ANNOTATION_QTY = 20;
 
   @BeforeEach
   void init() {
     fdoRecordBuilder = new FdoRecordBuilder(TRANSFORMER_FACTORY, DOC_BUILDER_FACTORY, pidResolver,
-        MAPPER);
+        MAPPER, handleRepository);
   }
 
   @Test
@@ -205,13 +219,27 @@ class FdoRecordBuilderTest {
   void testPrepareAnnotationAttributes() throws Exception {
     // Given
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
+    given(handleRepository.resolveHandleAttributes(any(byte[].class))).willReturn(genHandleRecordAttributes(handle));
     var request = givenAnnotationRequestObject();
 
     // When
     var result = fdoRecordBuilder.prepareAnnotationAttributes(request, handle);
 
     // Then
-    assertThat(result).hasSize(HANDLE_QTY+1);
+    assertThat(result).hasSize(ANNOTATION_QTY);
+    assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
+    assertThat(hasCorrectElements(result, ANNOTATION_FIELDS)).isTrue();
+  }
+
+  @Test
+  void testPrepareAnnotationAttributesPidResolution() throws Exception {
+    // Given
+    given(pidResolver.getObjectName(any())).willReturn("placeholder");
+    given(handleRepository.resolveHandleAttributes(any(byte[].class))).willReturn(new ArrayList<>());
+    var request = givenAnnotationRequestObject();
+
+    // Then
+    assertThrows(PidResolutionException.class, () -> fdoRecordBuilder.prepareAnnotationAttributes(request, handle));
   }
 
   @Test
@@ -224,6 +252,7 @@ class FdoRecordBuilderTest {
     var result = fdoRecordBuilder.prepareMappingAttributes(request, handle);
 
     // Then
+    assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
     assertThat(result).hasSize(HANDLE_QTY+1);
   }
 
@@ -238,6 +267,7 @@ class FdoRecordBuilderTest {
     var result = fdoRecordBuilder.prepareSourceSystemAttributes(request, handle);
 
     // Then
+    assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
     assertThat(result).hasSize(HANDLE_QTY+1);
   }
 
@@ -251,6 +281,8 @@ class FdoRecordBuilderTest {
     var result = fdoRecordBuilder.prepareOrganisationAttributes(request, handle);
 
     // Then
+    assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
+    assertThat(hasCorrectElements(result, DOI_FIELDS)).isTrue();
     assertThat(result).hasSize(DOI_QTY+3);
   }
 

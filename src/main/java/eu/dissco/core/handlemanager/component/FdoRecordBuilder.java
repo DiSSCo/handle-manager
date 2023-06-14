@@ -1,5 +1,7 @@
 package eu.dissco.core.handlemanager.component;
 
+import static eu.dissco.core.handlemanager.domain.PidRecords.ACCESS_RESTRICTED;
+import static eu.dissco.core.handlemanager.domain.PidRecords.ANNOTATION_TOPIC;
 import static eu.dissco.core.handlemanager.domain.PidRecords.BASE_TYPE_OF_SPECIMEN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_TYPE;
@@ -11,6 +13,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.INFORMATION_ARTEFACT_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUED_FOR_AGENT;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUED_FOR_AGENT_NAME;
+import static eu.dissco.core.handlemanager.domain.PidRecords.LINKED_URL;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LIVING_OR_PRESERVED;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LOC;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LOC_REQ;
@@ -41,6 +44,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.REPLACE_OR_APPEND;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SOURCE_DATA_STANDARD;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST_NAME;
@@ -73,6 +77,7 @@ import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
+import eu.dissco.core.handlemanager.repository.HandleRepository;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
@@ -105,6 +110,7 @@ public class FdoRecordBuilder {
   private final DocumentBuilderFactory dbf;
   private final PidResolverComponent pidResolver;
   private final ObjectMapper mapper;
+  private final HandleRepository handleRep;
   private static final String HANDLE_DOMAIN = "https://hdl.handle.net/";
   private static final String ROR_API_DOMAIN = "https://api.ror.org/organizations/";
   private static final String ROR_DOMAIN = "https://ror.org/";
@@ -283,10 +289,40 @@ public class FdoRecordBuilder {
     var fdoRecord = prepareHandleRecordAttributes(request, handle);
 
     // 500 subjectDigitalObjectId
+    resolveInternalPid(request);
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(SUBJECT_DIGITAL_OBJECT_ID), handle,
         SUBJECT_DIGITAL_OBJECT_ID, request.getSubjectDigitalObjectId().getBytes(StandardCharsets.UTF_8)));
 
+    // 501 AnnotationTopic
+    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(ANNOTATION_TOPIC), handle,
+        ANNOTATION_TOPIC, request.getAnnotationTopic().getBytes(StandardCharsets.UTF_8)));
+
+    // 502 replaceOrAppend
+    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(REPLACE_OR_APPEND), handle, REPLACE_OR_APPEND, request.getReplaceOrAppend().getState().getBytes(
+        StandardCharsets.UTF_8)));
+
+    // 503 AccessRestricted
+    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(ACCESS_RESTRICTED), handle, ACCESS_RESTRICTED, String.valueOf(request.getAccessRestricted()).getBytes(
+        StandardCharsets.UTF_8)));
+
+    // 504 LinkedObjectUrl
+    var linkedObjectUrl = request.getLinkedObjectUrl();
+    if (linkedObjectUrl !=null){
+      fdoRecord.add(new HandleAttribute(FIELD_IDX.get(LINKED_URL), handle, LINKED_URL, linkedObjectUrl.getBytes(
+          StandardCharsets.UTF_8)));
+    }
+
     return fdoRecord;
+  }
+
+  private void resolveInternalPid(AnnotationRequest request) throws PidResolutionException {
+    var resolvedSubject = handleRep.resolveHandleAttributes(
+        request.getSubjectDigitalObjectId()
+            .replace(HANDLE_DOMAIN,"")
+            .getBytes(StandardCharsets.UTF_8));
+    if (resolvedSubject.isEmpty()){
+      throw new PidResolutionException("Invalid Subject Object ID. Unable to resolve " + request.getSubjectDigitalObjectId());
+    }
   }
 
   public List<HandleAttribute> prepareSourceSystemAttributes(SourceSystemRequest request, byte[] handle)
