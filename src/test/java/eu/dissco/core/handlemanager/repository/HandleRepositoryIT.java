@@ -19,12 +19,14 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAt
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributesAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordFullAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRecordAttributesAltLoc;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.setLocations;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.jooq.impl.DSL.exp;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import eu.dissco.core.handlemanager.database.jooq.tables.Handles;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
+import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -369,6 +371,42 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
+  void testRollbackHandleCreation() throws Exception {
+    // Given
+    var expected = genHandleRecordAttributes(HANDLE.getBytes(StandardCharsets.UTF_8));
+    postAttributes(expected);
+    postAttributes(genHandleRecordAttributes(HANDLE_ALT.getBytes(StandardCharsets.UTF_8)));
+
+    // When
+    handleRep.rollbackHandles(List.of(HANDLE_ALT));
+    var response = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
+        Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(HANDLES).fetch(this::mapToAttribute);
+
+    // Then
+    assertThat(response).hasSameElementsAs(expected);
+  }
+
+  void testRollbackHandleUpdate() throws Exception {
+    // Given
+    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
+    List<HandleAttribute> originalRecord = genHandleRecordAttributes(handle);
+    List<HandleAttribute> recordUpdate = genUpdateRecordAttributesAltLoc(handle);
+    var responseExpected = incrementVersion(genHandleRecordAttributesAltLoc(handle), false);
+    postAttributes(originalRecord);
+
+    // When
+    handleRep.updateRecord(CREATED.getEpochSecond(), recordUpdate, false);
+    var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
+            Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
+        .where(Handles.HANDLES.HANDLE.eq(handle)).and(Handles.HANDLES.TYPE.notEqual(
+            HS_ADMIN.getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
+        .fetch(this::mapToAttribute);
+
+    // Then
+    assertThat(responseReceived).hasSameElementsAs(responseExpected);
+  }
+
+  @Test
   void testPostAndUpdateHandles() throws Exception {
     // Given
     var handle = HANDLE.getBytes(StandardCharsets.UTF_8);
@@ -392,43 +430,6 @@ class HandleRepositoryIT extends BaseRepositoryIT {
 
     // Then
     assertThat(response).hasSameElementsAs(expected);
-  }
-
-  @Test
-  void testRollbackHandleCreation() throws Exception {
-    // Given
-    var expected = genHandleRecordAttributes(HANDLE.getBytes(StandardCharsets.UTF_8));
-    postAttributes(expected);
-    postAttributes(genHandleRecordAttributes(HANDLE_ALT.getBytes(StandardCharsets.UTF_8)));
-
-    // When
-    handleRep.rollbackHandles(List.of(HANDLE_ALT));
-    var response = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
-        Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(HANDLES).fetch(this::mapToAttribute);
-
-    // Then
-    assertThat(response).hasSameElementsAs(expected);
-  }
-
-  @Test
-  void testRollbackHandleUpdate() throws Exception {
-    // Given
-    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    List<HandleAttribute> originalRecord = genHandleRecordAttributes(handle);
-    List<HandleAttribute> recordUpdate = genUpdateRecordAttributesAltLoc(handle);
-    var responseExpected = incrementVersion(genHandleRecordAttributesAltLoc(handle), false);
-    postAttributes(originalRecord);
-
-    // When
-    handleRep.updateRecord(CREATED.getEpochSecond(), recordUpdate, false);
-    var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
-            Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
-        .where(Handles.HANDLES.HANDLE.eq(handle)).and(Handles.HANDLES.TYPE.notEqual(
-            HS_ADMIN.getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
-        .fetch(this::mapToAttribute);
-
-    // Then
-    assertThat(responseReceived).hasSameElementsAs(responseExpected);
   }
 
   private void postAttributes(List<HandleAttribute> rows) {

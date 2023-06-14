@@ -1,6 +1,7 @@
 package eu.dissco.core.handlemanager.controller;
 
 
+import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
