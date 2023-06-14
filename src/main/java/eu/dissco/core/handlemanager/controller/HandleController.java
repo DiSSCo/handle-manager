@@ -32,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -169,7 +170,6 @@ public class HandleController {
     return ResponseEntity.ok(service.upsertDigitalSpecimens(requests));
   }
 
-
   @Operation(summary ="Archive given record")
   @PutMapping(value = "/{prefix}/{suffix}")
   public ResponseEntity<JsonApiWrapperWrite> archiveRecord(@PathVariable("prefix") String prefix,
@@ -191,16 +191,15 @@ public class HandleController {
 
   @Operation(summary = "rollback handle creation")
   @DeleteMapping(value="/rollback")
-  public ResponseEntity<Void> rollbackHandleCreation(@RequestBody RollbackRequest request)
+  public ResponseEntity<Void> rollbackHandleCreation(@RequestBody RollbackRequest request, Authentication authentication)
       throws InvalidRequestException {
-
     var ids = request.data().stream().map(d -> d.get(NODE_ID)).toList();
     if (ids.contains(null)){
       throw new InvalidRequestException("Missing Handles (\"id\") in request");
     }
     var handles = ids.stream().map(JsonNode::asText).toList();
 
-    log.info("Rollback request received for handles : " + handles);
+    log.info("Rollback request received from user "+ authentication.getName() + " for handles : " + handles);
     service.rollbackHandles(handles);
     return ResponseEntity.ok().build();
   }

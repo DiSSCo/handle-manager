@@ -61,13 +61,20 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+
 @ExtendWith(MockitoExtension.class)
 class HandleControllerTest {
 
   @Mock
   private HandleService service;
+
   @Mock
-  JsonSchemaValidator schemaValidator;
+  private Authentication authentication;
+
+  @Mock
+  private JsonSchemaValidator schemaValidator;
 
 
   private HandleController controller;
@@ -503,9 +510,10 @@ class HandleControllerTest {
     dataNode2.put("id", HANDLE_ALT);
     List<JsonNode> dataNode = List.of(dataNode1, dataNode2);
     var request = new RollbackRequest(dataNode);
+    given(authentication.getName()).willReturn("name");
 
     // when
-    var response = controller.rollbackHandleCreation(request);
+    var response = controller.rollbackHandleCreation(request, authentication);
 
     // Then
     then(service).should().rollbackHandles(List.of(HANDLE, HANDLE_ALT));
@@ -518,7 +526,7 @@ class HandleControllerTest {
     var request = new RollbackRequest(dataNode);
 
     // Then
-    assertThrows(InvalidRequestException.class, () -> controller.rollbackHandleCreation(request));
+    assertThrows(InvalidRequestException.class, () -> controller.rollbackHandleCreation(request, authentication));
   }
 
 
