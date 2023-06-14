@@ -33,19 +33,6 @@ class HandleGeneratorServiceTest {
   }
 
   @Test
-  void testNewHandle() {
-    // Given
-    String expectedHandle = "20.5000.1025/AAA-AAA-AAA";
-    given(random.nextInt(anyInt())).willReturn(0);
-
-    // When
-    String newHandle = hgService.newHandle();
-
-    // Then
-    assertThat(newHandle).isEqualTo(expectedHandle);
-  }
-
-  @Test
   void testSingleBatchGen() {
     String expectedHandle = "20.5000.1025/AAA-AAA-AAA";
     given(random.nextInt(anyInt())).willReturn(0);
@@ -125,7 +112,7 @@ class HandleGeneratorServiceTest {
     Random randomGen = new Random();
 
     // When
-    var tooFew = hgService.newHandle(-1);
+    var tooFew = hgService.genHandleList(-1);
 
     // Then
     assertThat(tooFew).isEmpty();

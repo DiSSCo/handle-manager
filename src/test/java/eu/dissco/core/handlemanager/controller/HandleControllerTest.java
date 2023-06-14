@@ -84,25 +84,6 @@ class HandleControllerTest {
   }
 
   @Test
-  void testGetAllHandlesByPidStatus() throws Exception {
-    // Given
-    int pageSize = 10;
-    int pageNum = 1;
-    var pidStatus = PidStatus.TEST;
-    List<String> expectedHandles = Collections.nCopies(pageSize, HANDLE);
-
-    given(service.getHandlesPaged(pageNum, pageSize, pidStatus.getBytes())).willReturn(expectedHandles);
-
-    // When
-    ResponseEntity<List<String>> response = controller.getAllHandlesByPidStatus(pageNum, pageSize,
-        pidStatus);
-
-    // Then
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(expectedHandles).isEqualTo(response.getBody());
-  }
-
-  @Test
   void testResolveSingleHandle() throws Exception {
     // Given
     String path = SANDBOX_URI + PREFIX + "/" + SUFFIX;
@@ -120,6 +101,12 @@ class HandleControllerTest {
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testResolvePidBadPrefix(){
+    assertThrows(PidResolutionException.class, () ->
+        controller.resolvePid(SUFFIX, SUFFIX, new MockHttpServletRequest()));
   }
 
   @Test
@@ -197,19 +184,6 @@ class HandleControllerTest {
 
     // Then
     assertThat(e.getMessage()).contains(String.valueOf(maxHandles));
-  }
-
-  @Test
-  void testGetAllHandlesFailure() {
-    // Given
-    given(service.getHandlesPaged(1, 10)).willReturn(new ArrayList<>());
-
-    // When
-    var exception = assertThrowsExactly(PidResolutionException.class,
-        () -> controller.getAllHandlesByPidStatus(1, 10, PidStatus.ALL));
-
-    // Then
-    assertThat(exception).hasMessage("Unable to resolve pids");
   }
 
   // Single Handle Record Creation
@@ -426,14 +400,6 @@ class HandleControllerTest {
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
 
-  @Test
-  void testHello() {
-    //When
-    ResponseEntity<String> response = controller.hello();
-    // Then
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-  }
-
   private JsonNode givenJsonNode(String id, String type, JsonNode attributes) {
     ObjectNode node = mapper.createObjectNode();
     node.put("id", id);
@@ -504,6 +470,27 @@ class HandleControllerTest {
   }
 
   @Test
+  void testUpsert() throws Exception{
+    // Given
+    var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS);
+
+    // When
+    var response = controller.upsertRecord(List.of(request));
+
+    // Then
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+  }
+
+  @Test
+  void testUpsertBadType() {
+    // Given
+    var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS_BOTANY);
+
+    // Then
+    assertThrows(InvalidRequestException.class, () -> controller.upsertRecord(List.of(request)));
+  }
+
+  @Test
   void testArchiveRecord() throws Exception {
     // Given
 
@@ -520,6 +507,15 @@ class HandleControllerTest {
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testArchiveRecordBadHandle() {
+    // Given
+    var archiveRequest = givenArchiveRequest();
+
+    // When
+    assertThrows(InvalidRequestException.class, () -> controller.archiveRecord(PREFIX, "123", archiveRequest));
   }
 
   @Test

@@ -156,7 +156,7 @@ public class TestUtils {
   // Tombstone Record vals
   public final static String TOMBSTONE_TEXT_TESTVAL = "pid was deleted";
   // Pid Type Record vals
-  private final static String HANDLE_URI = "https://hdl.handle.net/";
+  public final static String HANDLE_URI = "https://hdl.handle.net/";
   public static final String PTR_PID = HANDLE_URI + PID_ISSUER_TESTVAL_OTHER;
   public final static String PTR_HANDLE_RECORD = genPtrHandleRecord(false);
   public final static String PTR_DOI_RECORD = genPtrHandleRecord(true);
@@ -200,7 +200,8 @@ public class TestUtils {
 
     List<HandleAttribute> fdoRecord = new ArrayList<>();
     var request = givenHandleRecordRequestObject();
-    byte[] loc = setLocations(request.getLocations(), new String(handle, StandardCharsets.UTF_8));
+    byte[] loc = setLocations(request.getLocations(), new String(handle, StandardCharsets.UTF_8),
+        true);
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, loc));
 
     // 1: FDO Profile
@@ -269,10 +270,10 @@ public class TestUtils {
       throws Exception {
     List<HandleAttribute> attributes = genHandleRecordAttributes(handle);
 
-    byte[] locOriginal = setLocations(LOC_TESTVAL, new String(handle, StandardCharsets.UTF_8));
+    byte[] locOriginal = setLocations(LOC_TESTVAL, new String(handle, StandardCharsets.UTF_8), true);
     var locOriginalAttr = new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, locOriginal);
 
-    byte[] locAlt = setLocations(LOC_ALT_TESTVAL, new String(handle, StandardCharsets.UTF_8));
+    byte[] locAlt = setLocations(LOC_ALT_TESTVAL, new String(handle, StandardCharsets.UTF_8), true);
     var locAltAttr = new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, locAlt);
 
     attributes.set(attributes.indexOf(locOriginalAttr), locAltAttr);
@@ -281,28 +282,30 @@ public class TestUtils {
   }
 
   public static List<HandleAttribute> genTombstoneRecordFullAttributes(byte[] handle) throws Exception {
-    List<HandleAttribute> attributes = genHandleRecordAttributes(handle);
+    List<HandleAttribute> attributes = genTombstoneRecordRequestAttributes(handle);
     HandleAttribute oldPidStatus = new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle,
         PID_STATUS, PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8));
+    attributes.addAll(genHandleRecordAttributes(handle));
     attributes.remove(oldPidStatus);
-    attributes.addAll(genTombstoneRecordRequestAttributes(handle));
-
+    attributes = new ArrayList<>(attributes.stream().filter(row -> row.index()!=FIELD_IDX.get(LOC)).toList());
+    attributes.add(givenLandingPageAttribute(handle));
     return attributes;
   }
 
   public static List<HandleAttribute> genUpdateRecordAttributesAltLoc(byte[] handle)
       throws ParserConfigurationException, TransformerException {
-    byte[] locAlt = setLocations(LOC_ALT_TESTVAL, new String(handle, StandardCharsets.UTF_8));
+    byte[] locAlt = setLocations(LOC_ALT_TESTVAL, new String(handle, StandardCharsets.UTF_8), true);
     return List.of(new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, locAlt));
   }
 
-  public static List<HandleAttribute> genTombstoneRecordRequestAttributes(byte[] handle) {
+  public static List<HandleAttribute> genTombstoneRecordRequestAttributes(byte[] handle) throws Exception{
     List<HandleAttribute> tombstoneAttributes = new ArrayList<>();
     tombstoneAttributes.add(
         new HandleAttribute(FIELD_IDX.get(TOMBSTONE_TEXT), handle, TOMBSTONE_TEXT,
             TOMBSTONE_TEXT_TESTVAL.getBytes(StandardCharsets.UTF_8)));
     tombstoneAttributes.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS,
         "ARCHIVED".getBytes(StandardCharsets.UTF_8)));
+    tombstoneAttributes.add(givenLandingPageAttribute(handle));
     return tombstoneAttributes;
   }
 
@@ -355,7 +358,7 @@ public class TestUtils {
     fdoRecord.add(
         new HandleAttribute(FIELD_IDX.get(PRIMARY_SPECIMEN_OBJECT_ID), handle,
             PRIMARY_SPECIMEN_OBJECT_ID,
-            primarySpecimenObjectId));
+            primarySpecimenObjectId.getBytes(StandardCharsets.UTF_8)));
 
     // 203: primarySpecimenObjectIdType
     fdoRecord.add(
@@ -553,7 +556,11 @@ public class TestUtils {
     );
   }
 
-  public static DigitalSpecimenRequest givenDigitalSpecimenRequestObjectNullOptionals() {
+  public static DigitalSpecimenRequest givenDigitalSpecimenRequestObjectNullOptionals(){
+    return givenDigitalSpecimenRequestObjectNullOptionals(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL);
+  }
+
+  public static DigitalSpecimenRequest givenDigitalSpecimenRequestObjectNullOptionals(String physicalId) {
     try {
       return new DigitalSpecimenRequest(
           FDO_PROFILE_TESTVAL,
@@ -566,7 +573,7 @@ public class TestUtils {
           PRIMARY_REFERENT_TYPE_TESTVAL,
           SPECIMEN_HOST_TESTVAL,
           SPECIMEN_HOST_NAME_TESTVAL,
-          PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
+          physicalId,
           null,null, null, null, null, null, null, null, null, null, null,null, null, null, null
           );
     } catch (InvalidRequestException e) {
@@ -837,7 +844,18 @@ public class TestUtils {
 
   // Other Functions
 
-  public static byte[] setLocations(String[] userLocations, String handle)
+  public static byte[] givenLandingPage(String handle) throws Exception{
+    var landingPage = new String[]{"Placeholder landing page"};
+    return setLocations(landingPage, handle, false);
+  }
+
+  public static HandleAttribute givenLandingPageAttribute(byte[] handle) throws Exception{
+    var data = givenLandingPage(new String(handle, StandardCharsets.UTF_8));
+    return new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, data);
+  }
+
+  public static byte[] setLocations(String[] userLocations, String handle,
+      boolean includeDefaultLocs)
       throws TransformerException, ParserConfigurationException {
     DOC_BUILDER_FACTORY.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
 
@@ -846,7 +864,7 @@ public class TestUtils {
     var doc = documentBuilder.newDocument();
     var locations = doc.createElement("locations");
     doc.appendChild(locations);
-    String[] objectLocations = concatLocations(userLocations, handle);
+    String[] objectLocations = includeDefaultLocs ?  concatLocations(userLocations, handle) : userLocations;
 
     for (int i = 0; i < objectLocations.length; i++) {
       var locs = doc.createElement("location");

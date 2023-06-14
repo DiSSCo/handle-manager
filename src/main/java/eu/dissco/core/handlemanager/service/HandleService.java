@@ -1,13 +1,10 @@
 package eu.dissco.core.handlemanager.service;
 
-import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
-import static eu.dissco.core.handlemanager.service.ServiceUtils.setUniquePhysicalIdentifierId;
 import static eu.dissco.core.handlemanager.service.ServiceUtils.toSingleton;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -289,8 +286,6 @@ public class HandleService {
     }
   }
 
-  //
-
   public JsonApiWrapperWrite upsertDigitalSpecimens(List<JsonNode> requests)
       throws JsonProcessingException, UnprocessableEntityException, PidResolutionException, InvalidRequestException, PidServiceInternalError {
     ArrayList<DigitalSpecimenRequest> digitalSpecimenRequests = new ArrayList<>();
@@ -304,7 +299,7 @@ public class HandleService {
     var upsertAttributes = prepareUpsertAttributes(upsertRequests);
 
     var createRequests = getCreateRequests(upsertRequests, digitalSpecimenRequests);
-    var newHandles = hf.newHandle(createRequests.size());
+    var newHandles = hf.genHandleList(createRequests.size());
     var createAttributes = getCreateAttributes(createRequests, newHandles);
 
     var allRequests = Stream.concat(
@@ -316,9 +311,14 @@ public class HandleService {
 
     handleRep.postAndUpdateHandles(recordTimestamp, createAttributes, upsertAttributes);
 
-    return null;
-  }
+    var allHandles = Stream.concat(
+        newHandles.stream(), upsertRequests.stream().map(UpsertDigitalSpecimen::handle).map(s -> s.getBytes(StandardCharsets.UTF_8)))
+        .toList();
 
+    var upsertedRecords = resolveAndFormatRecords(allHandles);
+    var dataList = upsertedRecords.stream().map(upsertedRecord -> wrapData(upsertedRecord, ObjectType.DIGITAL_SPECIMEN.toString())).toList();
+    return new JsonApiWrapperWrite(dataList);
+  }
 
   private <T extends DigitalSpecimenRequest> List<byte[]> getPhysicalIdsFromRequests(
       List<T> digitalSpecimenRequests) {
@@ -332,6 +332,9 @@ public class HandleService {
       List<DigitalSpecimenRequest> requests, List<byte[]> physicalIds) {
     var registeredSpecimensHandleAttributes = new HashSet<>(
         handleRep.searchByPhysicalIdentifier(physicalIds));
+    if (registeredSpecimensHandleAttributes.isEmpty()){
+      return new ArrayList<>();
+    }
 
     return registeredSpecimensHandleAttributes
         .stream()
@@ -360,9 +363,10 @@ public class HandleService {
 
   private List<HandleAttribute> getCreateAttributes(List<DigitalSpecimenRequest> digitalSpecimenRequests, List<byte[]> newHandles)
       throws UnprocessableEntityException, PidResolutionException, InvalidRequestException, PidServiceInternalError {
+    var handles = new ArrayList<>(newHandles);
     List<HandleAttribute> handleAttributes = new ArrayList<>();
     for (var digitalSpecimenRequest : digitalSpecimenRequests){
-      handleAttributes.addAll(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(digitalSpecimenRequest, newHandles.remove(0)));
+      handleAttributes.addAll(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(digitalSpecimenRequest, handles.remove(0)));
     }
     return handleAttributes;
   }
@@ -379,7 +383,6 @@ public class HandleService {
   }
 
   // Update
-  // Update Records
   public JsonApiWrapperWrite updateRecords(List<JsonNode> requests)
       throws InvalidRequestException, PidResolutionException, PidServiceInternalError {
     var recordTimestamp = Instant.now().getEpochSecond();
@@ -468,16 +471,15 @@ public class HandleService {
     for (JsonNode root : requests) {
       JsonNode data = root.get(NODE_DATA);
       JsonNode requestAttributes = data.get(NODE_ATTRIBUTES);
-      byte[] handle = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
+      var handle = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
       handles.add(handle);
-      archiveAttributes.addAll(fdoRecordBuilder.prepareUpdateAttributes(handle, requestAttributes));
-      archiveAttributes.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS,
-          "ARCHIVED".getBytes(StandardCharsets.UTF_8)));
+      archiveAttributes.addAll(fdoRecordBuilder.prepareTombstoneAttributes(handle, requestAttributes));
     }
+
     checkInternalDuplicates(handles);
     checkHandlesWritable(handles);
 
-    handleRep.archiveRecords(recordTimestamp, archiveAttributes);
+    handleRep.archiveRecords(recordTimestamp, archiveAttributes, handles.stream().map(h -> new String(h, StandardCharsets.UTF_8)).toList());
     var archivedRecords = resolveAndFormatRecords(handles);
 
     List<JsonApiDataLinks> dataList = new ArrayList<>();

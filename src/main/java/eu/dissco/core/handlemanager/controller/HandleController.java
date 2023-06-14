@@ -1,19 +1,24 @@
 package eu.dissco.core.handlemanager.controller;
 
 
+import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
+import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperReadSingle;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
+import eu.dissco.core.handlemanager.domain.requests.attributes.ObjectType;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaValidator;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
+import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.service.HandleService;
 import io.swagger.v3.oas.annotations.Operation;
 import java.nio.charset.StandardCharsets;
@@ -147,6 +152,21 @@ public class HandleController {
     }
     return ResponseEntity.status(HttpStatus.OK).body(service.updateRecords(requests));
   }
+
+  // Upsert
+  @Operation(summary="Create a PID Record; if it already exists, update contents. DigitalSpecimens only.")
+  @PatchMapping(value="/upsert")
+  public ResponseEntity<JsonApiWrapperWrite> upsertRecord(List<JsonNode> requests)
+      throws InvalidRequestException, UnprocessableEntityException, PidResolutionException, PidServiceInternalError, JsonProcessingException {
+    for (var request: requests){
+      schemaValidator.validatePostRequest(request);
+      if (!request.get(NODE_DATA).get(NODE_TYPE).asText().equals(ObjectType.DIGITAL_SPECIMEN.toString())){
+        throw new InvalidRequestException("Invalid type. Upsert endpoint only available for type DigitalSpecimen");
+      }
+    }
+    return ResponseEntity.ok(service.upsertDigitalSpecimens(requests));
+  }
+
 
   @Operation(summary ="Archive given record")
   @PutMapping(value = "/{prefix}/{suffix}")

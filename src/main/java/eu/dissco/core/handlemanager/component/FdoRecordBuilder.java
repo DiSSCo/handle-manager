@@ -114,7 +114,8 @@ public class FdoRecordBuilder {
         new HandleAttribute(FIELD_IDX.get(HS_ADMIN), handle, HS_ADMIN, genAdminHandle()));
 
     // 101: 10320/loc
-    byte[] loc = setLocations(request.getLocations(), new String(handle, StandardCharsets.UTF_8));
+    byte[] loc = setLocations(request.getLocations(), new String(handle, StandardCharsets.UTF_8),
+        true);
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, loc));
 
     // 1: FDO Profile
@@ -259,8 +260,8 @@ public class FdoRecordBuilder {
     // 17 : Subject Physical Identifier
     // Encoding here is UTF-8
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(SUBJECT_PHYSICAL_IDENTIFIER), handle,
-        SUBJECT_PHYSICAL_IDENTIFIER, setUniquePhysicalIdentifierId(request).getBytes(
-        StandardCharsets.UTF_8)));
+        SUBJECT_PHYSICAL_IDENTIFIER,
+        setUniquePhysicalIdentifierId(request).getBytes(StandardCharsets.UTF_8)));
     return fdoRecord;
   }
 
@@ -279,11 +280,11 @@ public class FdoRecordBuilder {
     fdoRecord = setSpecimenHostName(request, fdoRecord, handle);
 
     // 202: primarySpecimenObjectId
-    var primarySpecimenObjectId = setUniquePhysicalIdentifierId(request).getBytes(StandardCharsets.UTF_8);
+    var primarySpecimenObjectId = setUniquePhysicalIdentifierId(request);
     fdoRecord.add(
         new HandleAttribute(FIELD_IDX.get(PRIMARY_SPECIMEN_OBJECT_ID), handle,
             PRIMARY_SPECIMEN_OBJECT_ID,
-            primarySpecimenObjectId));
+            primarySpecimenObjectId.getBytes(StandardCharsets.UTF_8)));
 
     // 203: primarySpecimenObjectIdType
     fdoRecord.add(
@@ -455,12 +456,25 @@ public class FdoRecordBuilder {
     Map<String, String> updateRequestMap = mapper.convertValue(requestAttributes,
         new TypeReference<Map<String, String>>() {
         });
-    List<HandleAttribute> attributesToUpdate = new ArrayList<>();
-    updateRequestMap.forEach((key, value) ->
-        attributesToUpdate.add(new HandleAttribute(FIELD_IDX.get(key), handle, key, value.getBytes(
-            StandardCharsets.UTF_8))));
+    return updateRequestMap.entrySet().stream()
+        .map(entry -> new HandleAttribute(FIELD_IDX.get(entry.getKey()), handle, entry.getKey(),
+            entry.getValue().getBytes(StandardCharsets.UTF_8)))
+        .toList();
+  }
 
-    return attributesToUpdate;
+  public List<HandleAttribute> prepareTombstoneAttributes(byte[] handle, JsonNode requestAttributes)
+      throws InvalidRequestException, PidServiceInternalError {
+    var tombstoneAttributes = new ArrayList<>(prepareUpdateAttributes(handle, requestAttributes));
+    tombstoneAttributes.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS,
+        "ARCHIVED".getBytes(StandardCharsets.UTF_8)));
+    tombstoneAttributes.add(genLandingPage(handle));
+    return tombstoneAttributes;
+  }
+
+  private HandleAttribute genLandingPage(byte[] handle) throws PidServiceInternalError {
+    var landingPage = new String[]{"Placeholder landing page"};
+    var data = setLocations(landingPage, new String(handle, StandardCharsets.UTF_8), false);
+    return new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, data);
   }
 
   private JsonNode setLocationXmlFromJson(JsonNode request, String handle)
@@ -475,7 +489,8 @@ public class FdoRecordBuilder {
     ObjectNode requestObjectNode = request.deepCopy();
     try {
       String[] locArr = mapper.treeToValue(locNode, String[].class);
-      requestObjectNode.put(LOC, new String(setLocations(locArr, handle), StandardCharsets.UTF_8));
+      requestObjectNode.put(LOC,
+          new String(setLocations(locArr, handle, true), StandardCharsets.UTF_8));
       requestObjectNode.remove(LOC_REQ);
     } catch (IOException e) {
       throw new InvalidRequestException(
@@ -488,7 +503,8 @@ public class FdoRecordBuilder {
     return dt.format(Instant.now());
   }
 
-  private byte[] setLocations(String[] userLocations, String handle) throws PidServiceInternalError {
+  public byte[] setLocations(String[] userLocations, String handle, boolean includeDefaultLocs)
+      throws PidServiceInternalError {
 
     DocumentBuilder documentBuilder;
     try {
@@ -500,7 +516,8 @@ public class FdoRecordBuilder {
     var doc = documentBuilder.newDocument();
     var locations = doc.createElement(LOC_REQ);
     doc.appendChild(locations);
-    String[] objectLocations = concatLocations(userLocations, handle);
+    String[] objectLocations =
+        includeDefaultLocs ? concatLocations(userLocations, handle) : userLocations;
 
     for (int i = 0; i < objectLocations.length; i++) {
       var locs = doc.createElement("location");

@@ -41,7 +41,7 @@ public class HandleGeneratorService {
     return handleList;
   }
 
-  public Set<ByteBuffer> genHandleHash(int h) {
+  private Set<ByteBuffer> genHandleHash(int h) {
 
     /*
      * Generates a HashSet of minted handles of size h Calls the handlefactory
@@ -104,15 +104,15 @@ public class HandleGeneratorService {
     return new String(buf);
   }
 
-  public String newHandle() {
+  private String newHandle() {
     return PREFIX + newSuffix();
   }
 
-  public byte[] newHandleBytes() {
+  private byte[] newHandleBytes() {
     return newHandle().getBytes(StandardCharsets.UTF_8);
   }
 
-  public List<byte[]> newHandle(int numberOfHandles) { // Generates h number of handles
+  private List<byte[]> newHandle(int numberOfHandles) { // Generates h number of handles
     if (numberOfHandles < 1) {
       log.warn("Invalid number of handles to be generated");
       return new ArrayList<>();

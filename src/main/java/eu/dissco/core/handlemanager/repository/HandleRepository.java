@@ -120,7 +120,6 @@ public class HandleRepository {
   }
 
   // Post
-
   public void postAttributesToDb(long recordTimestamp, List<HandleAttribute> handleAttributes) {
     var queryList = prepareBatchPostQuery(recordTimestamp, handleAttributes);
     context.batch(queryList).execute();
@@ -146,7 +145,48 @@ public class HandleRepository {
     return queryList;
   }
 
-  private void mergeAttributesToDb(long recordTimestamp,
+  // Archive
+  public void archiveRecords(long recordTimestamp, List<HandleAttribute> handleAttributes, List<String> handles) {
+    updateRecord(recordTimestamp, handleAttributes);
+    deleteNonTombstoneAttributes(handles);
+  }
+
+  private void deleteNonTombstoneAttributes(List<String> handles){
+    context.delete(HANDLES)
+        .where(HANDLES.HANDLE.in(handles))
+        .and(HANDLES.IDX.notBetween(1).and(39))
+        .and(HANDLES.IDX.notBetween(100).and(101))
+        .execute();
+  }
+
+  public void postAndUpdateHandles(long recordTimestamp, List<HandleAttribute> createAttributes, List<List<HandleAttribute>> updateAttributes){
+    var queryList = prepareBatchUpdateQuery(recordTimestamp, updateAttributes);
+    queryList.addAll(prepareBatchPostQuery(recordTimestamp, createAttributes));
+    context.batch(queryList).execute();
+  }
+
+  // Update
+  public void updateRecord(long recordTimestamp, List<HandleAttribute> handleAttributes) {
+    var query = prepareUpdateQuery(recordTimestamp, handleAttributes);
+    context.batch(query).execute();
+  }
+
+  public void updateRecordBatch(long recordTimestamp,
+      List<List<HandleAttribute>> handleRecords) {
+    var queryList = prepareBatchUpdateQuery(recordTimestamp, handleRecords);
+    context.batch(queryList).execute();
+  }
+
+  private List<Query> prepareBatchUpdateQuery(long recordTimestamp, List<List<HandleAttribute>> handleRecords){
+    List<Query> queryList = new ArrayList<>();
+    for (List<HandleAttribute> handleRecord : handleRecords) {
+      queryList.addAll(
+          prepareUpdateQuery(recordTimestamp, handleRecord));
+    }
+    return queryList;
+  }
+
+  private ArrayList<Query> prepareUpdateQuery(long recordTimestamp,
       List<HandleAttribute> handleAttributes) {
     var queryList = new ArrayList<Query>();
     Set<byte[]> updatedHandles = new HashSet<>();
@@ -178,60 +218,6 @@ public class HandleRepository {
         queryList.add(versionIncrement(handleAttribute.handle(), recordTimestamp));
       }
     }
-    context.batch(queryList).execute();
-  }
-
-  // Archive
-  public void archiveRecord(long recordTimestamp, List<HandleAttribute> handleAttributes) {
-    mergeAttributesToDb(recordTimestamp, handleAttributes);
-  }
-
-  public void archiveRecords(long recordTimestamp, List<HandleAttribute> handleAttributes) {
-    mergeAttributesToDb(recordTimestamp, handleAttributes);
-  }
-
-  public void postAndUpdateHandles(long recordTimestamp, List<HandleAttribute> createAttributes, List<List<HandleAttribute>> updateAttributes){
-    var queryList = prepareBatchUpdateQuery(recordTimestamp, updateAttributes);
-    queryList.addAll(prepareBatchPostQuery(recordTimestamp, createAttributes));
-    context.batch(queryList).execute();
-
-  }
-
-
-  // Update
-  public void updateRecord(long recordTimestamp, List<HandleAttribute> handleAttributes) {
-    byte[] handle = handleAttributes.get(0).handle();
-    var query = prepareUpdateQuery(handle, recordTimestamp, handleAttributes);
-    context.batch(query).execute();
-  }
-
-  public void updateRecordBatch(long recordTimestamp,
-      List<List<HandleAttribute>> handleRecords) {
-    var queryList = prepareBatchUpdateQuery(recordTimestamp, handleRecords);
-    context.batch(queryList).execute();
-  }
-
-  private List<Query> prepareBatchUpdateQuery(long recordTimestamp, List<List<HandleAttribute>> handleRecords){
-    List<Query> queryList = new ArrayList<>();
-    for (List<HandleAttribute> handleRecord : handleRecords) {
-      queryList.addAll(
-          prepareUpdateQuery(handleRecord.get(0).handle(), recordTimestamp, handleRecord));
-    }
-    return queryList;
-  }
-
-  private ArrayList<Query> prepareUpdateQuery(byte[] handle, long recordTimestamp,
-      List<HandleAttribute> handleAttributes) {
-    var queryList = new ArrayList<Query>();
-    for (var handleAttribute : handleAttributes) {
-      var query = context.update(HANDLES)
-          .set(HANDLES.DATA, handleAttribute.data())
-          .set(HANDLES.TIMESTAMP, recordTimestamp)
-          .where(HANDLES.HANDLE.eq(handle))
-          .and(HANDLES.IDX.eq(handleAttribute.index()));
-      queryList.add(query);
-    }
-    queryList.add(versionIncrement(handle, recordTimestamp));
     return queryList;
   }
 
