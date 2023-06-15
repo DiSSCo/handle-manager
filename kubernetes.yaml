@@ -27,6 +27,10 @@ spec:
               value: ${spring.security.oauth2.resourceserver.jwt.issuer-uri}/protocol/openid-connect/certs
             - name: spring.datasource.url
               value: jdbc:postgresql://database-1.cbppwfnjypll.eu-west-2.rds.amazonaws.com/dissco
+            - name: application.ui-url
+              value: https://sandbox.dissco.tech
+            - name: application.api-url
+              value: ${application.api-url}/api/v1
             - name: spring.datasource.username
               valueFrom:
                 secretKeyRef:

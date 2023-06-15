@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import eu.dissco.core.handlemanager.database.jooq.tables.Handles;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,7 +54,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   void testCreateRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    List<HandleAttribute> attributesToPost = genHandleRecordAttributes(handle);
+    List<HandleAttribute> attributesToPost = genHandleRecordAttributes(handle, ObjectType.HANDLE);
 
     // When
     handleRep.postAttributesToDb(CREATED.getEpochSecond(), attributesToPost);
@@ -142,7 +143,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   void testResolveSingleRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    List<HandleAttribute> responseExpected = genHandleRecordAttributes(handle);
+    List<HandleAttribute> responseExpected = genHandleRecordAttributes(handle, ObjectType.HANDLE);
     postAttributes(responseExpected);
 
     // When
@@ -160,7 +161,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
 
     List<HandleAttribute> responseExpected = new ArrayList<>();
     for (byte[] handle : handles) {
-      responseExpected.addAll(genHandleRecordAttributes(handle));
+      responseExpected.addAll(genHandleRecordAttributes(handle, ObjectType.HANDLE));
     }
 
     postAttributes(responseExpected);
@@ -274,9 +275,10 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   void testUpdateRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    List<HandleAttribute> originalRecord = genHandleRecordAttributes(handle);
-    List<HandleAttribute> recordUpdate = genUpdateRecordAttributesAltLoc(handle);
-    var responseExpected = incrementVersion(genHandleRecordAttributesAltLoc(handle));
+    List<HandleAttribute> originalRecord = genHandleRecordAttributes(handle, ObjectType.HANDLE);
+    List<HandleAttribute> recordUpdate = genUpdateRecordAttributesAltLoc(handle, ObjectType.HANDLE);
+    var responseExpected = incrementVersion(genHandleRecordAttributesAltLoc(handle,
+        ObjectType.HANDLE));
     postAttributes(originalRecord);
 
     // When
@@ -301,9 +303,10 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     List<List<HandleAttribute>> updateAttributes = new ArrayList<>();
     List<HandleAttribute> responseExpected = new ArrayList<>();
     for (byte[] handle : handles) {
-      postAttributes(genHandleRecordAttributes(handle));
-      updateAttributes.add(genUpdateRecordAttributesAltLoc(handle));
-      responseExpected.addAll(incrementVersion(genHandleRecordAttributesAltLoc(handle)));
+      postAttributes(genHandleRecordAttributes(handle, ObjectType.HANDLE));
+      updateAttributes.add(genUpdateRecordAttributesAltLoc(handle, ObjectType.HANDLE));
+      responseExpected.addAll(incrementVersion(genHandleRecordAttributesAltLoc(handle,
+          ObjectType.HANDLE)));
     }
 
     // When
@@ -328,7 +331,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     List<HandleAttribute> archiveAttributes = new ArrayList<>();
     List<HandleAttribute> responseExpected = new ArrayList<>();
     for (byte[] handle : handles) {
-      postAttributes(genHandleRecordAttributes(handle));
+      postAttributes(genHandleRecordAttributes(handle, ObjectType.HANDLE));
       archiveAttributes.addAll(genTombstoneRecordRequestAttributes(handle));
       responseExpected.addAll(incrementVersion(genTombstoneRecordFullAttributes(handle)));
     }
@@ -349,7 +352,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   void testArchiveRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    List<HandleAttribute> originalRecord = genHandleRecordAttributes(handle);
+    List<HandleAttribute> originalRecord = genHandleRecordAttributes(handle, ObjectType.HANDLE);
     List<HandleAttribute> recordArchive = genTombstoneRecordRequestAttributes(handle);
     var responseExpected = incrementVersion(genTombstoneRecordFullAttributes(handle));
     postAttributes(originalRecord);

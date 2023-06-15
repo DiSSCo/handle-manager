@@ -76,9 +76,9 @@ import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenBotan
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.LivingOrPreserved;
 import eu.dissco.core.handlemanager.domain.requests.objects.MappingRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdentifier;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ReplaceOrAppend;
@@ -170,11 +170,9 @@ public class TestUtils {
   // Mappings
   public static final String SOURCE_DATA_STANDARD_TESTVAL = "dwc";
 
-  public static final String PTR_TYPE = "handle";
-  public static final String PTR_PRIMARY_NAME = "DiSSCo";
-  public static final String PTR_PID_DOI = "http://doi.org/" + PID_ISSUER_TESTVAL_OTHER;
+  public static final String API_URL = "https://sandbox.dissco.tech/api/v1";
+  public static final String UI_URL = "https://sandbox.dissco.tech/";
   public static final String PTR_TYPE_DOI = "doi";
-  public static final String PTR_REGISTRATION_DOI_NAME = "Registration Agency";
   public final static String PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL = "BOTANICAL.QRS.123";
   public final static PhysicalIdentifier PHYSICAL_IDENTIFIER_TESTVAL_CETAF = new PhysicalIdentifier(
       PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
@@ -202,11 +200,11 @@ public class TestUtils {
   }
 
   // Single Handle Attribute Lists
-  public static List<HandleAttribute> genHandleRecordAttributes(byte[] handle) throws Exception {
+  public static List<HandleAttribute> genHandleRecordAttributes(byte[] handle, ObjectType type) throws Exception {
 
     List<HandleAttribute> fdoRecord = new ArrayList<>();
     var request = givenHandleRecordRequestObject();
-    byte[] loc = setLocations(request.getLocations(), new String(handle, StandardCharsets.UTF_8));
+    byte[] loc = setLocations(request.getLocations(), new String(handle, StandardCharsets.UTF_8), type);
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, loc));
 
     // 1: FDO Profile
@@ -270,14 +268,15 @@ public class TestUtils {
     return fdoRecord;
   }
 
-  public static List<HandleAttribute> genHandleRecordAttributesAltLoc(byte[] handle)
+  public static List<HandleAttribute> genHandleRecordAttributesAltLoc(byte[] handle,
+      ObjectType type)
       throws Exception {
-    List<HandleAttribute> attributes = genHandleRecordAttributes(handle);
+    List<HandleAttribute> attributes = genHandleRecordAttributes(handle, type);
 
-    byte[] locOriginal = setLocations(LOC_TESTVAL, new String(handle, StandardCharsets.UTF_8));
+    byte[] locOriginal = setLocations(LOC_TESTVAL, new String(handle, StandardCharsets.UTF_8), type);
     var locOriginalAttr = new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, locOriginal);
 
-    byte[] locAlt = setLocations(LOC_ALT_TESTVAL, new String(handle, StandardCharsets.UTF_8));
+    byte[] locAlt = setLocations(LOC_ALT_TESTVAL, new String(handle, StandardCharsets.UTF_8), type);
     var locAltAttr = new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, locAlt);
 
     attributes.set(attributes.indexOf(locOriginalAttr), locAltAttr);
@@ -287,7 +286,7 @@ public class TestUtils {
 
   public static List<HandleAttribute> genTombstoneRecordFullAttributes(byte[] handle)
       throws Exception {
-    List<HandleAttribute> attributes = genHandleRecordAttributes(handle);
+    List<HandleAttribute> attributes = genHandleRecordAttributes(handle, ObjectType.HANDLE);
     HandleAttribute oldPidStatus = new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle,
         PID_STATUS, PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8));
     attributes.remove(oldPidStatus);
@@ -296,9 +295,9 @@ public class TestUtils {
     return attributes;
   }
 
-  public static List<HandleAttribute> genUpdateRecordAttributesAltLoc(byte[] handle)
+  public static List<HandleAttribute> genUpdateRecordAttributesAltLoc(byte[] handle, ObjectType type)
       throws ParserConfigurationException, TransformerException {
-    byte[] locAlt = setLocations(LOC_ALT_TESTVAL, new String(handle, StandardCharsets.UTF_8));
+    byte[] locAlt = setLocations(LOC_ALT_TESTVAL, new String(handle, StandardCharsets.UTF_8), type);
     return List.of(new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, locAlt));
   }
 
@@ -312,8 +311,8 @@ public class TestUtils {
     return tombstoneAttributes;
   }
 
-  public static List<HandleAttribute> genDoiRecordAttributes(byte[] handle) throws Exception {
-    List<HandleAttribute> fdoRecord = genHandleRecordAttributes(handle);
+  public static List<HandleAttribute> genDoiRecordAttributes(byte[] handle, ObjectType type) throws Exception {
+    List<HandleAttribute> fdoRecord = genHandleRecordAttributes(handle, type);
     var request = givenDoiRecordRequestObject();
 
     // 40: referentType
@@ -345,7 +344,7 @@ public class TestUtils {
 
   public static List<HandleAttribute> genDigitalSpecimenAttributes(byte[] handle)
       throws Exception {
-    List<HandleAttribute> fdoRecord = genDoiRecordAttributes(handle);
+    List<HandleAttribute> fdoRecord = genDoiRecordAttributes(handle, ObjectType.DIGITAL_SPECIMEN);
     var request = givenDigitalSpecimenRequestObjectNullOptionals();
 
     // 200: Specimen Host
@@ -499,7 +498,7 @@ public class TestUtils {
 
   public static List<HandleAttribute> genMediaObjectAttributes(byte[] handle)
       throws Exception {
-    List<HandleAttribute> handleRecord = genDoiRecordAttributes(handle);
+    List<HandleAttribute> handleRecord = genDoiRecordAttributes(handle, ObjectType.MEDIA_OBJECT);
 
     // Media Hash
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(MEDIA_HASH), handle,
@@ -528,7 +527,7 @@ public class TestUtils {
 
   public static List<HandleAttribute> genAnnotationAttributes(byte[] handle)
       throws Exception {
-    var fdoRecord = genHandleRecordAttributes(handle);
+    var fdoRecord = genHandleRecordAttributes(handle, ObjectType.ANNOTATION);
 
     // 500 subjectDigitalObjectId
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(SUBJECT_DIGITAL_OBJECT_ID), handle,
@@ -556,7 +555,7 @@ public class TestUtils {
 
   public static List<HandleAttribute> genMappingAttributes(byte[] handle)
       throws Exception {
-    var fdoRecord = genHandleRecordAttributes(handle);
+    var fdoRecord = genHandleRecordAttributes(handle, ObjectType.MAPPING);
 
     // 500 subjectDigitalObjectId
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(SOURCE_DATA_STANDARD), handle,
@@ -567,7 +566,7 @@ public class TestUtils {
 
   public static List<HandleAttribute> genSourceSystemAttributes(byte[] handle)
       throws Exception {
-    var fdoRecord = genHandleRecordAttributes(handle);
+    var fdoRecord = genHandleRecordAttributes(handle, ObjectType.SOURCE_SYSTEM);
 
     // 600 hostInstitution
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(HOST_INSTITUTION), handle,
@@ -578,7 +577,7 @@ public class TestUtils {
 
   public static List<HandleAttribute> genOrganisationAttributes(byte[] handle)
       throws Exception {
-    var fdoRecord = genDoiRecordAttributes(handle);
+    var fdoRecord = genDoiRecordAttributes(handle, ObjectType.ORGANISATION);
 
     // 800 OrganisationIdentifier
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(ORGANISATION_ID), handle,
@@ -858,7 +857,7 @@ public class TestUtils {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
 
     for (byte[] handle : handles) {
-      var testDbRecord = genHandleRecordAttributesAltLoc(handle);
+      var testDbRecord = genHandleRecordAttributesAltLoc(handle, ObjectType.HANDLE);
       JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
 
       var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
@@ -889,11 +888,8 @@ public class TestUtils {
   public static List<HandleAttribute> genAttributes(String recordType, byte[] handle)
       throws Exception {
     switch (recordType) {
-      case RECORD_TYPE_HANDLE, "PID" -> {
-        return genHandleRecordAttributes(handle);
-      }
       case RECORD_TYPE_DOI -> {
-        return genDoiRecordAttributes(handle);
+        return genDoiRecordAttributes(handle, ObjectType.fromString(recordType));
       }
       case RECORD_TYPE_DS -> {
         return genDigitalSpecimenAttributes(handle);
@@ -917,8 +913,8 @@ public class TestUtils {
         return genOrganisationAttributes(handle);
       }
       default -> {
-        log.warn("Invalid type");
-        return null;
+        log.warn("Default type");
+        return genHandleRecordAttributes(handle, ObjectType.HANDLE);
       }
     }
   }
@@ -996,7 +992,7 @@ public class TestUtils {
 
   // Other Functions
 
-  public static byte[] setLocations(String[] userLocations, String handle)
+  public static byte[] setLocations(String[] userLocations, String handle, ObjectType type)
       throws TransformerException, ParserConfigurationException {
     DOC_BUILDER_FACTORY.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
 
@@ -1005,7 +1001,7 @@ public class TestUtils {
     var doc = documentBuilder.newDocument();
     var locations = doc.createElement("locations");
     doc.appendChild(locations);
-    String[] objectLocations = concatLocations(userLocations, handle);
+    String[] objectLocations = concatLocations(userLocations, handle, type);
 
     for (int i = 0; i < objectLocations.length; i++) {
       var locs = doc.createElement("location");
@@ -1018,17 +1014,42 @@ public class TestUtils {
     return documentToString(doc).getBytes(StandardCharsets.UTF_8);
   }
 
-  private static String[] concatLocations(String[] userLocations, String handle) {
+  private static String[] concatLocations(String[] userLocations, String handle, ObjectType type) {
     ArrayList<String> objectLocations = new ArrayList<>();
-    objectLocations.addAll(List.of(defaultLocations(handle)));
+    objectLocations.addAll(List.of(defaultLocations(handle, type)));
     objectLocations.addAll(List.of(userLocations));
     return objectLocations.toArray(new String[0]);
   }
 
-  private static String[] defaultLocations(String handle) {
-    String api = "https://sandbox.dissco.tech/api/v1/specimens/" + handle;
-    String ui = "https://sandbox.dissco.tech/ds/" + handle;
-    return new String[]{api, ui};
+  private static String[] defaultLocations(String handle, ObjectType type) {
+    switch (type) {
+      case DIGITAL_SPECIMEN -> {
+        String api = API_URL + "/specimens/" + handle;
+        String ui = UI_URL + "/ds/" + handle;
+        return new String[]{api, ui};
+      }
+      case MAPPING -> {
+        return new String[]{API_URL + "/mapping/" + handle};
+      }
+      case SOURCE_SYSTEM -> {
+        return new String[]{API_URL + "/source-system/" + handle};
+      }
+      case MEDIA_OBJECT -> {
+        String api = API_URL + "/digitalMedia/" + handle;
+        String ui = UI_URL + "/dm/" + handle;
+        return new String[]{api, ui};
+      }
+      case ANNOTATION -> {
+        return new String[]{API_URL + "/annotations/" + handle};
+      }
+      case ORGANISATION -> {
+        return new String[]{SPECIMEN_HOST_TESTVAL};
+      }
+      default -> {
+        // Handle, DOI, Organisation (organisation handled separately)
+        return new String[]{};
+      }
+    }
   }
 
   private static String documentToString(Document document) throws TransformerException {
