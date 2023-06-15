@@ -1,4 +1,8 @@
-FROM eclipse-temurin:17-alpine as builder
+FROM eclipse-temurin:17-alpine AS builder
+RUN apk update
+# Remove this line when alpine addresses CVE-2023-2650
+RUN apk add "openssl=3.1.1-r1"
+RUN apk upgrade openssl
 WORKDIR application
 ARG JAR_FILE=target/*spring-boot.jar
 COPY ${JAR_FILE} application.jar

@@ -9,7 +9,6 @@ import static org.junit.Assert.assertThrows;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterAll;
@@ -52,14 +51,32 @@ class PidResolverComponentTest {
   @Test
   void testResolveExternalPid() throws Exception {
     // Given
-    var expected = MAPPER.readTree(loadResourceFile("pidrecord/pidRecord.json"));
+    var expectedResponse = MAPPER.readTree(loadResourceFile("pidrecord/pidRecord.json"));
+    var expected = expectedResponse.get("name").asText();
     mockServer.enqueue(new MockResponse()
-        .setBody(MAPPER.writeValueAsString(expected))
+        .setBody(MAPPER.writeValueAsString(expectedResponse))
         .setResponseCode(HttpStatus.OK.value())
         .addHeader("Content-Type", "application/json"));
 
     // When
-    var response = pidResolver.resolveExternalPid(EXTERNAL_PID);
+    var response = pidResolver.getObjectName(EXTERNAL_PID);
+
+    // Then
+    assertThat(response).isEqualTo(expected);
+  }
+
+  @Test
+  void testResolveExternalPidNoName() throws Exception {
+    // Given
+    var expectedResponse = MAPPER.readTree(loadResourceFile("pidrecord/pidRecordNoName.json"));
+    var expected = "";
+    mockServer.enqueue(new MockResponse()
+        .setBody(MAPPER.writeValueAsString(expectedResponse))
+        .setResponseCode(HttpStatus.OK.value())
+        .addHeader("Content-Type", "application/json"));
+
+    // When
+    var response = pidResolver.getObjectName(EXTERNAL_PID);
 
     // Then
     assertThat(response).isEqualTo(expected);
@@ -73,7 +90,7 @@ class PidResolverComponentTest {
         .addHeader("Content-Type", "application/json"));
 
     // Then
-    assertThrows(PidResolutionException.class, () -> pidResolver.resolveExternalPid(EXTERNAL_PID
+    assertThrows(PidResolutionException.class, () -> pidResolver.getObjectName(EXTERNAL_PID
     ));
   }
 
@@ -85,7 +102,7 @@ class PidResolverComponentTest {
         .addHeader("Content-Type", "application/json"));
 
     // Then
-    assertThrows(UnprocessableEntityException.class, () -> pidResolver.resolveExternalPid(EXTERNAL_PID
+    assertThrows(UnprocessableEntityException.class, () -> pidResolver.getObjectName(EXTERNAL_PID
     ));
   }
 
@@ -93,15 +110,16 @@ class PidResolverComponentTest {
   void testRetriesSuccess() throws Exception {
     // Given
     int requestCount = mockServer.getRequestCount();
-    var expected = MAPPER.readTree(loadResourceFile("pidrecord/pidRecord.json"));
+    var expectedResponse = MAPPER.readTree(loadResourceFile("pidrecord/pidRecord.json"));
+    var expected = expectedResponse.get("name").asText();
     mockServer.enqueue(new MockResponse().setResponseCode(HttpStatus.GATEWAY_TIMEOUT.value()));
     mockServer.enqueue(new MockResponse()
-        .setBody(MAPPER.writeValueAsString(expected))
+        .setBody(MAPPER.writeValueAsString(expectedResponse))
         .setResponseCode(HttpStatus.OK.value())
         .addHeader("Content-Type", "application/json"));
 
     // When
-    var response = pidResolver.resolveExternalPid(EXTERNAL_PID);
+    var response = pidResolver.getObjectName(EXTERNAL_PID);
 
     // Then
     assertThat(response).isEqualTo(expected);
@@ -118,7 +136,7 @@ class PidResolverComponentTest {
     mockServer.enqueue(new MockResponse().setResponseCode(HttpStatus.GATEWAY_TIMEOUT.value()));
 
     // Then
-    assertThrows(UnprocessableEntityException.class, () -> pidResolver.resolveExternalPid(EXTERNAL_PID));
+    assertThrows(UnprocessableEntityException.class, () -> pidResolver.getObjectName(EXTERNAL_PID));
     assertThat(mockServer.getRequestCount()-requestCount).isEqualTo(4);
   }
 
@@ -126,19 +144,20 @@ class PidResolverComponentTest {
   @Test
   void testRedirect() throws Exception {
     // Given
-    var expected = MAPPER.readTree(loadResourceFile("pidrecord/pidRecord.json"));
+    var expectedResponse = MAPPER.readTree(loadResourceFile("pidrecord/pidRecord.json"));
+    var expected = expectedResponse.get("name").asText();
     mockServer.enqueue(new MockResponse()
         .setResponseCode(HttpStatus.FOUND.value())
         .addHeader("Content-Type", "text/html;charset=utf-8")
         .addHeader("Location", EXTERNAL_PID));
 
     mockServer.enqueue(new MockResponse()
-        .setBody(MAPPER.writeValueAsString(expected))
+        .setBody(MAPPER.writeValueAsString(expectedResponse))
         .setResponseCode(HttpStatus.OK.value())
         .addHeader("Content-Type", "application/json"));
 
     // When
-    var response = pidResolver.resolveExternalPid(EXTERNAL_PID);
+    var response = pidResolver.getObjectName(EXTERNAL_PID);
 
     // Then
     assertThat(response).isEqualTo(expected);
