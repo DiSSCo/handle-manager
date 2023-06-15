@@ -592,11 +592,9 @@ public class FdoRecordBuilder {
   private JsonNode setLocationXmlFromJson(JsonNode request, String handle, ObjectType type)
       throws InvalidRequestException, PidServiceInternalError {
     // Format request so that the given locations array is formatted according to 10320/loc specifications
-
     if (request.findValue(LOC_REQ) == null) {
       return request;
     }
-
     JsonNode locNode = request.get(LOC_REQ);
     ObjectNode requestObjectNode = request.deepCopy();
     try {
