@@ -23,11 +23,11 @@ public class PidResolverComponent {
 
   private final WebClient webClient;
 
-  @Cacheable("pid")
-  public JsonNode resolveExternalPid(String url)
+  private JsonNode resolveExternalPid(String url)
       throws UnprocessableEntityException, PidResolutionException {
-    log.info("Querying the following: {}", url);
-    var response = webClient.get().uri(url).retrieve()
+    var response = webClient.get()
+        .uri(url)
+        .retrieve()
         .onStatus(HttpStatus.NOT_FOUND::equals,
             r -> Mono.error(new PidResolutionException("Given PID not found: " + url)))
         .onStatus(HttpStatusCode::is4xxClientError,
@@ -43,11 +43,9 @@ public class PidResolverComponent {
 
     try {
       return response.toFuture().get();
-    } catch (InterruptedException e) {
+    } catch (InterruptedException | ExecutionException e) {
       log.warn("Interrupted connection. Unable to resolve the following: {}", url);
       Thread.currentThread().interrupt();
-      return null;
-    } catch (ExecutionException e) {
       if (e.getCause().getClass().equals(PidResolutionException.class)) {
         throw new PidResolutionException(e.getMessage());
       }
@@ -61,8 +59,10 @@ public class PidResolverComponent {
   }
 
 
+  @Cacheable("pidName")
   public String getObjectName(String pid)
       throws UnprocessableEntityException, PidResolutionException {
+    log.info("getting Pid name for: {}", pid);
     var pidRecord = resolveExternalPid(pid);
     if (pidRecord.get("name") != null) {
       return pidRecord.get("name").asText();
@@ -70,5 +70,4 @@ public class PidResolverComponent {
     log.warn("Given pid {} resolves, but does not include a name attribute", pid);
     return "";
   }
-
 }
