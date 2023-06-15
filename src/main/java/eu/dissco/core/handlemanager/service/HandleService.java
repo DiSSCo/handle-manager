@@ -383,7 +383,7 @@ public class HandleService {
   }
 
   // Update
-  public JsonApiWrapperWrite updateRecords(List<JsonNode> requests)
+  public JsonApiWrapperWrite updateRecords(List<JsonNode> requests, boolean incrementVersion)
       throws InvalidRequestException, PidResolutionException, PidServiceInternalError {
     var recordTimestamp = Instant.now().getEpochSecond();
     List<byte[]> handles = new ArrayList<>();
@@ -404,7 +404,7 @@ public class HandleService {
     checkInternalDuplicates(handles);
     checkHandlesWritable(handles);
 
-    handleRep.updateRecordBatch(recordTimestamp, attributesToUpdate);
+    handleRep.updateRecordBatch(recordTimestamp, attributesToUpdate, incrementVersion);
     var updatedRecords = resolveAndFormatRecords(handles);
 
     List<JsonApiDataLinks> dataList = new ArrayList<>();
@@ -492,5 +492,11 @@ public class HandleService {
     }
     return new JsonApiWrapperWrite(dataList);
   }
+
+  public void rollbackHandles(List<String> handles){
+    handleRep.rollbackHandles(handles);
+  }
+
+
 }
 

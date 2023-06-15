@@ -1,5 +1,4 @@
 FROM eclipse-temurin:17-alpine AS builder
-RUN apk update && apk upgrade --no-cache
 WORKDIR application
 ARG JAR_FILE=target/*spring-boot.jar
 COPY ${JAR_FILE} application.jar

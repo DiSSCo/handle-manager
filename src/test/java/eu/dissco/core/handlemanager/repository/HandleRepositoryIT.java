@@ -3,7 +3,6 @@ package eu.dissco.core.handlemanager.repository;
 import static eu.dissco.core.handlemanager.database.jooq.Tables.HANDLES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
 import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
-import static eu.dissco.core.handlemanager.domain.PidRecords.LOC;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MATERIAL_SAMPLE_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_RECORD_ISSUE_NUMBER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
@@ -282,11 +281,11 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> originalRecord = genHandleRecordAttributes(handle);
     List<HandleAttribute> recordUpdate = genUpdateRecordAttributesAltLoc(handle);
-    var responseExpected = incrementVersion(genHandleRecordAttributesAltLoc(handle));
+    var responseExpected = incrementVersion(genHandleRecordAttributesAltLoc(handle), true);
     postAttributes(originalRecord);
 
     // When
-    handleRep.updateRecord(CREATED.getEpochSecond(), recordUpdate);
+    handleRep.updateRecord(CREATED.getEpochSecond(), recordUpdate, true);
     var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
             Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
         .where(Handles.HANDLES.HANDLE.eq(handle)).and(Handles.HANDLES.TYPE.notEqual(
@@ -309,11 +308,11 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     for (byte[] handle : handles) {
       postAttributes(genHandleRecordAttributes(handle));
       updateAttributes.add(genUpdateRecordAttributesAltLoc(handle));
-      responseExpected.addAll(incrementVersion(genHandleRecordAttributesAltLoc(handle)));
+      responseExpected.addAll(incrementVersion(genHandleRecordAttributesAltLoc(handle), true));
     }
 
     // When
-    handleRep.updateRecordBatch(CREATED.getEpochSecond(), updateAttributes);
+    handleRep.updateRecordBatch(CREATED.getEpochSecond(), updateAttributes, true);
     var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
             Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
         .where(Handles.HANDLES.HANDLE.in(handles)).and(Handles.HANDLES.TYPE.notEqual(
@@ -335,7 +334,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     List<HandleAttribute> tombstoneAttributes = new ArrayList<>();
     for (var handle : handles) {
       postAttributes(genDigitalSpecimenAttributes(handle));
-      tombstoneAttributes.addAll(incrementVersion(genTombstoneRecordFullAttributes(handle)));
+      tombstoneAttributes.addAll(incrementVersion(genTombstoneRecordFullAttributes(handle), true));
     }
 
     // When
@@ -355,7 +354,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> originalRecord = genDigitalSpecimenAttributes(handle);
-    var tombstoneAttributes = incrementVersion(genTombstoneRecordFullAttributes(handle));
+    var tombstoneAttributes = incrementVersion(genTombstoneRecordFullAttributes(handle), true);
 
     postAttributes(originalRecord);
 
@@ -369,6 +368,42 @@ class HandleRepositoryIT extends BaseRepositoryIT {
 
     // Then
     assertThat(responseReceived).hasSameElementsAs(tombstoneAttributes);
+  }
+
+  @Test
+  void testRollbackHandleCreation() throws Exception {
+    // Given
+    var expected = genHandleRecordAttributes(HANDLE.getBytes(StandardCharsets.UTF_8));
+    postAttributes(expected);
+    postAttributes(genHandleRecordAttributes(HANDLE_ALT.getBytes(StandardCharsets.UTF_8)));
+
+    // When
+    handleRep.rollbackHandles(List.of(HANDLE_ALT));
+    var response = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
+        Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(HANDLES).fetch(this::mapToAttribute);
+
+    // Then
+    assertThat(response).hasSameElementsAs(expected);
+  }
+
+  void testRollbackHandleUpdate() throws Exception {
+    // Given
+    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
+    List<HandleAttribute> originalRecord = genHandleRecordAttributes(handle);
+    List<HandleAttribute> recordUpdate = genUpdateRecordAttributesAltLoc(handle);
+    var responseExpected = incrementVersion(genHandleRecordAttributesAltLoc(handle), false);
+    postAttributes(originalRecord);
+
+    // When
+    handleRep.updateRecord(CREATED.getEpochSecond(), recordUpdate, false);
+    var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
+            Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
+        .where(Handles.HANDLES.HANDLE.eq(handle)).and(Handles.HANDLES.TYPE.notEqual(
+            HS_ADMIN.getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
+        .fetch(this::mapToAttribute);
+
+    // Then
+    assertThat(responseReceived).hasSameElementsAs(responseExpected);
   }
 
   @Test
@@ -448,12 +483,14 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     return new ArrayList<>(handles);
   }
 
-  private List<HandleAttribute> incrementVersion(List<HandleAttribute> handleAttributes) {
+  private List<HandleAttribute> incrementVersion(List<HandleAttribute> handleAttributes,
+      boolean increaseVersionNum) {
     for (int i = 0; i < handleAttributes.size(); i++) {
       if (handleAttributes.get(i).type().equals(PID_RECORD_ISSUE_NUMBER)) {
         var removedRecord = handleAttributes.remove(i);
-        byte[] issueNum = String.valueOf(Integer.parseInt(new String(removedRecord.data())) + 1)
-            .getBytes(StandardCharsets.UTF_8);
+        var currentVersion = Integer.parseInt(new String(removedRecord.data()));
+        var newVersionNum = increaseVersionNum ? currentVersion + 1 : currentVersion - 1;
+        byte[] issueNum = String.valueOf(newVersionNum).getBytes(StandardCharsets.UTF_8);
         handleAttributes.add(i,
             new HandleAttribute(removedRecord.index(), removedRecord.handle(), removedRecord.type(),
                 issueNum));

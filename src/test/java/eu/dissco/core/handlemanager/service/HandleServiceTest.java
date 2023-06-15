@@ -46,7 +46,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mockStatic;
@@ -494,7 +493,7 @@ class HandleServiceTest {
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(updatedAttributeRecord);
 
     // When
-    var responseReceived = service.updateRecords(updateRequest);
+    var responseReceived = service.updateRecords(updateRequest, true);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -517,7 +516,7 @@ class HandleServiceTest {
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(updatedAttributeRecord);
 
     // When
-    var responseReceived = service.updateRecords(updateRequest);
+    var responseReceived = service.updateRecords(updateRequest, true);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -535,7 +534,7 @@ class HandleServiceTest {
 
     // Then
     assertThrows(InvalidRequestException.class, () -> {
-      service.updateRecords(updateRequest);
+      service.updateRecords(updateRequest, true);
     });
   }
 
@@ -548,7 +547,7 @@ class HandleServiceTest {
 
     // Then
     assertThrows(PidResolutionException.class, () -> {
-      service.updateRecords(updateRequest);
+      service.updateRecords(updateRequest, true);
     });
   }
 
@@ -716,6 +715,18 @@ class HandleServiceTest {
     assertThat(response).isEqualTo(expected);
     then(handleRep).should()
         .postAndUpdateHandles(CREATED.getEpochSecond(), newRecord, new ArrayList<>());
+  }
+
+  @Test
+  void testRollbackHandleCreation(){
+    // Given
+    var handleList = List.of(HANDLE, HANDLE_ALT);
+
+    // When
+    service.rollbackHandles(handleList);
+
+    // Then
+    then(handleRep).should().rollbackHandles(handleList);
   }
 
   JsonApiDataLinks upsertedResponse(List<HandleAttribute> handleRecord, String handle)
