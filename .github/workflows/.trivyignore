@@ -1,0 +1,5 @@
+# Date: June 12, 2023
+# Issue: libcrypto3/libssl3 out of date. Alpine needs to fix this.
+# Temporary fix: hardcode openssl version in Dockerfile
+# Long-term solution: Wait for Alpine to fix. Github issue has been opened.
+# CVE-2023-2650
