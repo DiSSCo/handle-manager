@@ -19,14 +19,12 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAt
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributesAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordFullAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRecordAttributesAltLoc;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.setLocations;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.jooq.impl.DSL.exp;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import eu.dissco.core.handlemanager.database.jooq.tables.Handles;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -269,7 +267,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     postAttributes(nonTargetAttributes);
 
     // When
-    var responseReceived = handleRep.searchByPhysicalIdentifier(List.of(targetPhysicalIdentifer));
+    var responseReceived = handleRep.searchByPhysicalIdentifierFullRecord(List.of(targetPhysicalIdentifer));
 
     // Then
     assertThat(responseReceived).hasSameElementsAs(responseExpected);

@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
 import org.jooq.Query;
 import org.jooq.Record4;
+import org.jooq.SelectConditionStep;
 import org.springframework.stereotype.Repository;
 
 @Slf4j
@@ -67,13 +68,13 @@ public class HandleRepository {
         .fetch(this::mapToAttribute);
   }
 
+  public List<HandleAttribute> searchByPhysicalIdentifier(List<byte[]> physicalIdentifiers){
+    return searchByPhysicalIdentifierQuery(physicalIdentifiers)
+        .fetch(this::mapToAttribute);
+  }
 
-  public List<HandleAttribute> searchByPhysicalIdentifier(List<byte[]> physicalIdentifiers) {
-    var physicalIdentifierTable = context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE,
-            HANDLES.DATA)
-        .from(HANDLES)
-        .where(HANDLES.TYPE.eq(PRIMARY_SPECIMEN_OBJECT_ID.getBytes(StandardCharsets.UTF_8)))
-        .and((HANDLES.DATA).in(physicalIdentifiers))
+  public List<HandleAttribute> searchByPhysicalIdentifierFullRecord(List<byte[]> physicalIdentifiers) {
+    var physicalIdentifierTable = searchByPhysicalIdentifierQuery(physicalIdentifiers)
         .asTable("physicalIdentifierTable");
 
     return context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
@@ -84,6 +85,13 @@ public class HandleRepository {
         .fetch(this::mapToAttribute);
   }
 
+  private SelectConditionStep<Record4<Integer, byte[], byte[], byte[]>> searchByPhysicalIdentifierQuery(List<byte[]> physicalIdentifiers){
+    return context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE,
+            HANDLES.DATA)
+        .from(HANDLES)
+        .where(HANDLES.TYPE.eq(PRIMARY_SPECIMEN_OBJECT_ID.getBytes(StandardCharsets.UTF_8)))
+        .and((HANDLES.DATA).in(physicalIdentifiers));
+  }
 
   // Get List of Pids
   public List<String> getAllHandles(byte[] pidStatus, int pageNum, int pageSize) {

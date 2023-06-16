@@ -159,8 +159,9 @@ public class HandleController {
   // Upsert
   @Operation(summary="Create a PID Record; if it already exists, update contents. DigitalSpecimens only.")
   @PatchMapping(value="/upsert")
-  public ResponseEntity<JsonApiWrapperWrite> upsertRecord(List<JsonNode> requests)
+  public ResponseEntity<JsonApiWrapperWrite> upsertRecord(@RequestBody List<JsonNode> requests)
       throws InvalidRequestException, UnprocessableEntityException, PidResolutionException, PidServiceInternalError, JsonProcessingException {
+    log.info("received upsert request");
     for (var request: requests){
       schemaValidator.validatePostRequest(request);
       if (!request.get(NODE_DATA).get(NODE_TYPE).asText().equals(ObjectType.DIGITAL_SPECIMEN.toString())){
