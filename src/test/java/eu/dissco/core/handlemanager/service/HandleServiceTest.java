@@ -647,7 +647,7 @@ class HandleServiceTest {
         List.of(upsertedResponse(existingRecord, HANDLE), upsertedResponse(newRecord, HANDLE_ALT))
     );
 
-    given(handleRep.searchByPhysicalIdentifierFullRecord(anyList())).willReturn(
+    given(handleRep.searchByPhysicalIdentifier(anyList())).willReturn(
         List.of(new HandleAttribute(FIELD_IDX.get(PRIMARY_SPECIMEN_OBJECT_ID), handles.get(0),
             PRIMARY_SPECIMEN_OBJECT_ID_TYPE, physicalIds.get(0))));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(
@@ -675,7 +675,7 @@ class HandleServiceTest {
         List.of(upsertedResponse(existingRecord, HANDLE))
     );
 
-    given(handleRep.searchByPhysicalIdentifierFullRecord(anyList())).willReturn(
+    given(handleRep.searchByPhysicalIdentifier(anyList())).willReturn(
         List.of(new HandleAttribute(FIELD_IDX.get(PRIMARY_SPECIMEN_OBJECT_ID), handles.get(0),
             PRIMARY_SPECIMEN_OBJECT_ID_TYPE, PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(
             StandardCharsets.UTF_8))));
@@ -703,7 +703,7 @@ class HandleServiceTest {
         List.of(upsertedResponse(newRecord, HANDLE_ALT))
     );
 
-    given(handleRep.searchByPhysicalIdentifierFullRecord(anyList())).willReturn(new ArrayList<>());
+    given(handleRep.searchByPhysicalIdentifier(anyList())).willReturn(new ArrayList<>());
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(newRecord);
     given(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(any(), any())).willReturn(newRecord);
     given(hgService.genHandleList(anyInt())).willReturn(List.of(handles.get(0)));
