@@ -12,11 +12,13 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties("application")
 public class ApplicationProperties {
 
-  // application.base-url
   @NotBlank
   private String apiUrl;
 
   @NotBlank
   private String uiUrl;
+
+  @NotBlank
+  private String orchestrationUrl;
 
 }

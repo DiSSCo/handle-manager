@@ -11,7 +11,6 @@ public enum ObjectType {
   @JsonProperty("annotation") ANNOTATION("annotation"),
   @JsonProperty("sourceSystem") SOURCE_SYSTEM("sourceSystem"),
   @JsonProperty("mapping") MAPPING("mapping"),
-  @JsonProperty("translator") TRANSLATOR("translator"),
   @JsonProperty("organisation") ORGANISATION("organisation"),
   @JsonProperty("tombstone") TOMBSTONE("tombstone");
 

@@ -31,6 +31,8 @@ spec:
               value: https://sandbox.dissco.tech
             - name: application.api-url
               value: ${application.api-url}/api/v1
+            - name: application.orchestration-url
+              value: https://orchestration.dissco.tech/api/v1
             - name: spring.datasource.username
               valueFrom:
                 secretKeyRef:

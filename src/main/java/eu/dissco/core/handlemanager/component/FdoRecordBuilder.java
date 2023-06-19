@@ -658,10 +658,10 @@ public class FdoRecordBuilder {
         return new String[]{api, ui};
       }
       case MAPPING -> {
-        return new String[]{appProperties.getApiUrl() + "/mapping/" + handle};
+        return new String[]{appProperties.getOrchestrationUrl() + "/mapping/" + handle};
       }
       case SOURCE_SYSTEM -> {
-        return new String[]{appProperties.getApiUrl() + "/source-system/" + handle};
+        return new String[]{appProperties.getOrchestrationUrl() + "/source-system/" + handle};
       }
       case MEDIA_OBJECT -> {
         String api = appProperties.getApiUrl() + "/digitalMedia/" + handle;
