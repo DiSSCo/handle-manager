@@ -29,6 +29,7 @@ import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
  class ServiceUtilsTest {
@@ -90,7 +91,7 @@ import org.junit.jupiter.api.Test;
   @Test
   void testCollectToSingletonException(){
    // Given
-   var duplicates = List.of("a", "a").stream().filter(s -> s.equals("a"));
+   var duplicates = Stream.of("a", "a");
 
    // Then
    assertThrowsExactly(IllegalStateException.class, () ->
