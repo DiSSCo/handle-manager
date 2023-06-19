@@ -664,7 +664,7 @@ class HandleServiceTest {
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(
         Stream.concat(existingRecord.stream(), newRecord.stream()).toList());
     given(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(any(), any())).willReturn(
-        existingRecord);
+        newRecord);
     given(fdoRecordBuilder.prepareUpdateAttributes(any(), any())).willReturn(
         existingRecord);
     given(hgService.genHandleList(anyInt())).willReturn(new ArrayList<>(List.of(newHandle)));
@@ -675,7 +675,7 @@ class HandleServiceTest {
     // Then
     assertThat(response).isEqualTo(expected);
     then(handleRep).should()
-        .postAndUpdateHandles(CREATED.getEpochSecond(), existingRecordWithStatus, List.of(existingRecord));
+        .postAndUpdateHandles(CREATED.getEpochSecond(), newRecord, List.of(existingRecordWithStatus));
   }
 
   @Test
