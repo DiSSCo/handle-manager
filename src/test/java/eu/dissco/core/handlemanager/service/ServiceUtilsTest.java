@@ -19,6 +19,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaRequestOb
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.MediaObjectRequest;
@@ -89,11 +90,11 @@ import org.junit.jupiter.api.Test;
   @Test
   void testCollectToSingletonException(){
    // Given
-   var duplicates = List.of("a", "a");
+   var duplicates = List.of("a", "a").stream().filter(s -> s.equals("a"));
 
-   // When
-   assertThrows(IllegalStateException.class, () ->
-       duplicates.stream().filter(s -> s.equals("a")).collect(ServiceUtils.toSingleton()));
+   // Then
+   assertThrowsExactly(IllegalStateException.class, () ->
+       duplicates.collect(ServiceUtils.toSingleton()));
   }
 
   private DigitalSpecimenRequest givenCetafTypeDSRecord(){
