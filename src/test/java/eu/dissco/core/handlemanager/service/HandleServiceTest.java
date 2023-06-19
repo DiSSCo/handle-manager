@@ -1,6 +1,7 @@
 package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
+import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID_TYPE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
@@ -636,35 +637,45 @@ class HandleServiceTest {
   @Test
   void testUpsertDigitalSpecimens() throws Exception {
     // Given
+    var existingHandle = handles.get(0);
+    var newHandle = handles.get(1);
     List<byte[]> physicalIds = List.of(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, "alt").stream()
         .map(id -> id.getBytes(
             StandardCharsets.UTF_8)).toList();
+
     List<JsonNode> requests = List.of(
         genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS),
         genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(
             new String(physicalIds.get(1), StandardCharsets.UTF_8)), RECORD_TYPE_DS));
-    var existingRecord = genDigitalSpecimenAttributes(handles.get(0));
-    var newRecord = genDigitalSpecimenAttributes(handles.get(1));
+    var existingRecord = genDigitalSpecimenAttributes(existingHandle);
+    var newRecord = genDigitalSpecimenAttributes(newHandle);
+    var existingRecordWithStatus = new ArrayList<>(existingRecord);
+    existingRecordWithStatus.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS),
+        existingHandle, PID_STATUS, PID_STATUS_TESTVAL.getBytes(
+        StandardCharsets.UTF_8)));
     var expected = new JsonApiWrapperWrite(
-        List.of(upsertedResponse(existingRecord, HANDLE), upsertedResponse(newRecord, HANDLE_ALT))
+        List.of(upsertedResponse(existingRecordWithStatus, new String(existingHandle, StandardCharsets.UTF_8)),
+            upsertedResponse(newRecord, new String(newHandle)))
     );
 
     given(handleRep.searchByPhysicalIdentifier(anyList())).willReturn(
-        List.of(new HandleAttribute(FIELD_IDX.get(PRIMARY_SPECIMEN_OBJECT_ID), handles.get(0),
+        List.of(new HandleAttribute(FIELD_IDX.get(PRIMARY_SPECIMEN_OBJECT_ID), existingHandle,
             PRIMARY_SPECIMEN_OBJECT_ID_TYPE, physicalIds.get(0))));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(
         Stream.concat(existingRecord.stream(), newRecord.stream()).toList());
     given(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(any(), any())).willReturn(
-        existingRecord, newRecord);
-    given(hgService.genHandleList(anyInt())).willReturn(new ArrayList<>(List.of(handles.get(1))));
+        existingRecord);
+    given(fdoRecordBuilder.prepareUpdateAttributes(any(), any())).willReturn(
+        existingRecord);
+    given(hgService.genHandleList(anyInt())).willReturn(new ArrayList<>(List.of(newHandle)));
 
     // When
     var response = service.upsertDigitalSpecimens(requests);
 
     // Then
-    then(handleRep).should()
-        .postAndUpdateHandles(CREATED.getEpochSecond(), newRecord, List.of(existingRecord));
     assertThat(response).isEqualTo(expected);
+    then(handleRep).should()
+        .postAndUpdateHandles(CREATED.getEpochSecond(), existingRecordWithStatus, List.of(existingRecord));
   }
 
   @Test
@@ -691,8 +702,13 @@ class HandleServiceTest {
     List<JsonNode> requests = List.of(
         genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS));
     var existingRecord = genDigitalSpecimenAttributes(handles.get(0));
+    var existingRecordWithStatus = new ArrayList<>(existingRecord);
+    existingRecordWithStatus.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS),
+        handles.get(0), PID_STATUS, PID_STATUS_TESTVAL.getBytes(
+        StandardCharsets.UTF_8)));
+
     var expected = new JsonApiWrapperWrite(
-        List.of(upsertedResponse(existingRecord, HANDLE))
+        List.of(upsertedResponse(existingRecordWithStatus, HANDLE))
     );
 
     given(handleRep.searchByPhysicalIdentifier(anyList())).willReturn(
@@ -700,7 +716,7 @@ class HandleServiceTest {
             PRIMARY_SPECIMEN_OBJECT_ID_TYPE, PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(
             StandardCharsets.UTF_8))));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(existingRecord);
-    given(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(any(), any())).willReturn(
+    given(fdoRecordBuilder.prepareUpdateAttributes(any(), any())).willReturn(
         existingRecord);
     given(hgService.genHandleList(0)).willReturn(new ArrayList<>());
 
@@ -708,9 +724,9 @@ class HandleServiceTest {
     var response = service.upsertDigitalSpecimens(requests);
 
     // Then
-    then(handleRep).should()
-        .postAndUpdateHandles(CREATED.getEpochSecond(), new ArrayList<>(), List.of(existingRecord));
     assertThat(response).isEqualTo(expected);
+    then(handleRep).should()
+        .postAndUpdateHandles(CREATED.getEpochSecond(), new ArrayList<>(), List.of(existingRecordWithStatus));
   }
 
   @Test
