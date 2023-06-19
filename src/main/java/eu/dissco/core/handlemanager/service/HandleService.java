@@ -400,8 +400,8 @@ public class HandleService {
           upsertRequest.handle().getBytes(StandardCharsets.UTF_8), PID_STATUS, "TEST".getBytes(
           StandardCharsets.UTF_8));
       var jsonNode = mapper.valueToTree(upsertRequest.request());
-      var upsertAttributeSingleSpecimen = fdoRecordBuilder.prepareUpdateAttributes(
-          upsertRequest.handle().getBytes(StandardCharsets.UTF_8), jsonNode);
+      var upsertAttributeSingleSpecimen = new ArrayList<>(fdoRecordBuilder.prepareUpdateAttributes(
+          upsertRequest.handle().getBytes(StandardCharsets.UTF_8), jsonNode));
       upsertAttributeSingleSpecimen.add(pidStatusActive);
       upsertAttributes.add(upsertAttributeSingleSpecimen);
     }

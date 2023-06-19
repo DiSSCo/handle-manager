@@ -73,6 +73,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -457,6 +458,7 @@ public class FdoRecordBuilder {
         new TypeReference<Map<String, String>>() {
         });
     return updateRequestMap.entrySet().stream()
+        .filter(entry -> entry.getValue()!=null)
         .map(entry -> new HandleAttribute(FIELD_IDX.get(entry.getKey()), handle, entry.getKey(),
             entry.getValue().getBytes(StandardCharsets.UTF_8)))
         .toList();
