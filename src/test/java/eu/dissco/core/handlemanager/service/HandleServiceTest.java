@@ -417,8 +417,9 @@ class HandleServiceTest {
 
     List<JsonNode> requests = new ArrayList<>();
     for (byte[] handle : handles) {
+      var physId = new String(handle) + "a";
       requests.add(
-          genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS));
+          genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(physId), RECORD_TYPE_DS));
       flatList.addAll(genDigitalSpecimenAttributes(handle));
     }
 
@@ -441,8 +442,9 @@ class HandleServiceTest {
 
     List<JsonNode> requests = new ArrayList<>();
     for (byte[] handle : handles) {
+      var physId = new String(handle) + "a";
       requests.add(
-          genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(), RECORD_TYPE_DS_BOTANY));
+          genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(physId), RECORD_TYPE_DS_BOTANY));
       flatList.addAll(genDigitalSpecimenBotanyAttributes(handle));
     }
 
@@ -663,6 +665,24 @@ class HandleServiceTest {
     then(handleRep).should()
         .postAndUpdateHandles(CREATED.getEpochSecond(), newRecord, List.of(existingRecord));
     assertThat(response).isEqualTo(expected);
+  }
+
+  @Test
+  void testInternalDuplicateSpecimenIds() throws Exception {
+    // Given
+    List<JsonNode> requests = List.of(
+        genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS),
+        genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS)
+    );
+    var expectedMsg = "Bad Request. Some PhysicalSpecimenObjectIds are duplicated in request body";
+    given(hgService.genHandleList(anyInt())).willReturn(handles);
+
+
+    // When
+    var response = assertThrows(InvalidRequestException.class, () -> service.createRecords(requests));
+
+    // Then
+    assertThat(response).hasMessage(expectedMsg);
   }
 
   @Test

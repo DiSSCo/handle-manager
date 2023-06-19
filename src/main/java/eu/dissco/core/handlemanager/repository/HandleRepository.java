@@ -69,6 +69,7 @@ public class HandleRepository {
   }
 
   public List<HandleAttribute> searchByPhysicalIdentifier(List<byte[]> physicalIdentifiers){
+
     return searchByPhysicalIdentifierQuery(physicalIdentifiers)
         .fetch(this::mapToAttribute);
   }

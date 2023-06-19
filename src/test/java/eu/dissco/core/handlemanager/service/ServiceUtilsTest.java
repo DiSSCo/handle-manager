@@ -18,6 +18,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.STRUCTURAL_TYPE_T
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.attributes.MediaObjectRequest;
@@ -25,6 +26,8 @@ import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdentifier;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
  class ServiceUtilsTest {
@@ -81,6 +84,16 @@ import org.junit.jupiter.api.Test;
 
    // Then
    assertThat(result).isEqualTo(expected);
+  }
+
+  @Test
+  void testCollectToSingletonException(){
+   // Given
+   var duplicates = List.of("a", "a");
+
+   // When
+   assertThrows(IllegalStateException.class, () ->
+       duplicates.stream().filter(s -> s.equals("a")).collect(ServiceUtils.toSingleton()));
   }
 
   private DigitalSpecimenRequest givenCetafTypeDSRecord(){

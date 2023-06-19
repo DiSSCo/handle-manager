@@ -15,10 +15,12 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_STATUS_TESTVA
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenAttributes;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDoiRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributesAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordFullAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRecordAttributesAltLoc;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObject;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.jooq.impl.DSL.exp;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -249,7 +251,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
-  void testSearchByPhysicalIdentifier(){
+  void testSearchByPhysicalIdentifierFullRecord(){
     // Given
     var targetPhysicalIdentifer = PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> responseExpected = new ArrayList<>();
@@ -271,6 +273,25 @@ class HandleRepositoryIT extends BaseRepositoryIT {
 
     // Then
     assertThat(responseReceived).hasSameElementsAs(responseExpected);
+  }
+
+  @Test
+  void testSearchByPhysicalSpecimenId() throws Exception {
+    //Given
+    var handle = HANDLE.getBytes(StandardCharsets.UTF_8);
+    var expected = List.of(new HandleAttribute(FIELD_IDX.get(PRIMARY_SPECIMEN_OBJECT_ID), handle,
+        PRIMARY_SPECIMEN_OBJECT_ID,
+        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+
+    postAttributes(genDoiRecordAttributes(handle));
+    postAttributes(expected);
+
+    // When
+    var response = handleRep.searchByPhysicalIdentifier(
+        List.of(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+
+    // Then
+    assertThat(response).isEqualTo(expected);
   }
 
   @Test

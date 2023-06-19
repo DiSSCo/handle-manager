@@ -256,7 +256,7 @@ public class HandleService {
     if (!digitalSpecimenList.isEmpty()){
       var requestPhysicalIds = getPhysicalIdsFromRequests(digitalSpecimenList);
       verifyNoInternalDuplicatePhysicalSpecimenObjectId(digitalSpecimenList, requestPhysicalIds);
-      verifyNoRegisteredSpecimens(requestPhysicalIds);
+      verifyNoRegisteredSpecimens(getPhysIdBytes(requestPhysicalIds));
     }
 
     handleRep.postAttributesToDb(recordTimestamp, handleAttributes);
@@ -267,7 +267,7 @@ public class HandleService {
   }
 
   private <T extends DigitalSpecimenRequest> void verifyNoInternalDuplicatePhysicalSpecimenObjectId(
-      List<T> requests, List<byte[]> physicalIds)
+      List<T> requests, Set<String> physicalIds)
       throws InvalidRequestException {
     if (physicalIds.size() < requests.size()) {
       throw new InvalidRequestException(
@@ -295,7 +295,8 @@ public class HandleService {
     }
 
     var physicalIds = getPhysicalIdsFromRequests(digitalSpecimenRequests);
-    var upsertRequests = getRegisteredSpecimensUpsert(digitalSpecimenRequests, physicalIds);
+    var physicalIdsBytes = getPhysIdBytes(physicalIds);
+    var upsertRequests = getRegisteredSpecimensUpsert(digitalSpecimenRequests, physicalIdsBytes);
     var upsertAttributes = prepareUpsertAttributes(upsertRequests);
 
     var createRequests = getCreateRequests(upsertRequests, digitalSpecimenRequests);
@@ -320,12 +321,17 @@ public class HandleService {
     return new JsonApiWrapperWrite(dataList);
   }
 
-  private <T extends DigitalSpecimenRequest> List<byte[]> getPhysicalIdsFromRequests(
+  private List<byte[]> getPhysIdBytes(Set<String> physIds){
+    return physIds.stream()
+        .map(physId -> physId.getBytes(StandardCharsets.UTF_8))
+        .toList();
+  }
+
+  private <T extends DigitalSpecimenRequest> Set<String> getPhysicalIdsFromRequests(
       List<T> digitalSpecimenRequests) {
     return digitalSpecimenRequests.stream()
         .map(ServiceUtils::setUniquePhysicalIdentifierId)
-        .map(physId -> physId.getBytes(StandardCharsets.UTF_8))
-        .toList();
+        .collect(Collectors.toSet());
   }
 
   private List<UpsertDigitalSpecimen> getRegisteredSpecimensUpsert(
