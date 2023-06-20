@@ -205,7 +205,7 @@ public class HandleController {
     return ResponseEntity.ok().build();
   }
 
-  @Operation(summary = "rollback handle creation")
+  @Operation(summary = "rollback handle update")
   @DeleteMapping(value="/rollback/update")
   public ResponseEntity<JsonApiWrapperWrite> rollbackHandleUpdate(@RequestBody List<JsonNode> requests)
       throws InvalidRequestException, PidResolutionException, PidServiceInternalError {
