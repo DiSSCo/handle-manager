@@ -86,16 +86,6 @@ import org.junit.jupiter.api.Test;
    assertThat(result).isEqualTo(expected);
   }
 
-  @Test
-  void testCollectToSingletonException(){
-   // Given
-   var duplicates = Stream.of("a", "a");
-
-   // Then
-   assertThrowsExactly(IllegalStateException.class, () ->
-       duplicates.collect(ServiceUtils.toSingleObject()));
-  }
-
   private DigitalSpecimenRequest givenCetafTypeDSRecord(){
    try {
     return new DigitalSpecimenRequest(

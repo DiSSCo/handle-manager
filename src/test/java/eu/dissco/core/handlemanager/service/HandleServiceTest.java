@@ -1,6 +1,8 @@
 package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
+import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
+import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID_TYPE;
@@ -71,6 +73,7 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
+import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
@@ -126,7 +129,8 @@ class HandleServiceTest {
 
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     String path = SANDBOX_URI + HANDLE;
-    List<HandleAttribute> recordAttributeList = genHandleRecordAttributes(handle, ObjectType.HANDLE);
+    List<HandleAttribute> recordAttributeList = genHandleRecordAttributes(handle,
+        ObjectType.HANDLE);
 
     var responseExpected = givenRecordResponseReadSingle(HANDLE, path, "PID",
         genObjectNodeAttributeRecord(recordAttributeList));
@@ -247,7 +251,8 @@ class HandleServiceTest {
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(handleRecord);
-    given(fdoRecordBuilder.prepareHandleRecordAttributes(any(), any(), eq(ObjectType.HANDLE))).willReturn(handleRecord);
+    given(fdoRecordBuilder.prepareHandleRecordAttributes(any(), any(),
+        eq(ObjectType.HANDLE))).willReturn(handleRecord);
 
     // When
     var responseReceived = service.createRecords(List.of(request));
@@ -266,7 +271,8 @@ class HandleServiceTest {
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(doiRecord);
-    given(fdoRecordBuilder.prepareDoiRecordAttributes(any(), any(), eq(ObjectType.DOI))).willReturn(doiRecord);
+    given(fdoRecordBuilder.prepareDoiRecordAttributes(any(), any(), eq(ObjectType.DOI))).willReturn(
+        doiRecord);
 
     // When
     var responseReceived = service.createRecords(List.of(request));
@@ -348,7 +354,8 @@ class HandleServiceTest {
     List<HandleAttribute> digitalSpecimenBotany = genDigitalSpecimenBotanyAttributes(handle);
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(handleRep.searchByPhysicalIdentifierFullRecord(anyList())).willReturn(digitalSpecimenBotany);
+    given(handleRep.searchByPhysicalIdentifierFullRecord(anyList())).willReturn(
+        digitalSpecimenBotany);
 
     // When
     Exception e = assertThrows(PidCreationException.class, () -> {
@@ -435,7 +442,8 @@ class HandleServiceTest {
     for (byte[] handle : handles) {
       var physId = new String(handle) + "a";
       requests.add(
-          genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(physId), RECORD_TYPE_DS));
+          genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(physId),
+              RECORD_TYPE_DS));
       flatList.addAll(genDigitalSpecimenAttributes(handle));
     }
 
@@ -501,7 +509,8 @@ class HandleServiceTest {
 
     List<JsonNode> requests = new ArrayList<>();
     for (byte[] handle : handles) {
-      requests.add(genCreateRecordRequest(givenSourceSystemRequestObject(), RECORD_TYPE_SOURCE_SYSTEM));
+      requests.add(
+          genCreateRecordRequest(givenSourceSystemRequestObject(), RECORD_TYPE_SOURCE_SYSTEM));
       flatList.addAll(genSourceSystemAttributes(handle));
     }
 
@@ -523,7 +532,8 @@ class HandleServiceTest {
 
     List<JsonNode> requests = new ArrayList<>();
     for (byte[] handle : handles) {
-      requests.add(genCreateRecordRequest(givenOrganisationRequestObject(), RECORD_TYPE_ORGANISATION));
+      requests.add(
+          genCreateRecordRequest(givenOrganisationRequestObject(), RECORD_TYPE_ORGANISATION));
       flatList.addAll(genOrganisationAttributes(handle));
     }
 
@@ -548,7 +558,8 @@ class HandleServiceTest {
     for (byte[] handle : handles) {
       var physId = new String(handle) + "a";
       requests.add(
-          genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(physId), RECORD_TYPE_DS_BOTANY));
+          genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(physId),
+              RECORD_TYPE_DS_BOTANY));
       flatList.addAll(genDigitalSpecimenBotanyAttributes(handle));
     }
 
@@ -742,34 +753,37 @@ class HandleServiceTest {
     // Given
     var existingHandle = handles.get(0);
     var newHandle = handles.get(1);
-    List<byte[]> physicalIds = List.of(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, "alt").stream()
-        .map(id -> id.getBytes(
-            StandardCharsets.UTF_8)).toList();
+    var existingPhysId = "Alt ID";
+    var newPhysId = PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 
+    var newRecordRequest = givenDigitalSpecimenRequestObjectNullOptionals(newPhysId);
+    var existingRecordRequest = givenDigitalSpecimenRequestObjectNullOptionals(existingPhysId);
     List<JsonNode> requests = List.of(
-        genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS),
-        genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(
-            new String(physicalIds.get(1), StandardCharsets.UTF_8)), RECORD_TYPE_DS));
-    var existingRecord = genDigitalSpecimenAttributes(existingHandle);
-    var newRecord = genDigitalSpecimenAttributes(newHandle);
-    var existingRecordWithStatus = new ArrayList<>(existingRecord);
-    existingRecordWithStatus.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS),
+        genCreateRecordRequest(newRecordRequest, RECORD_TYPE_DS),
+        genCreateRecordRequest(existingRecordRequest, RECORD_TYPE_DS));
+
+    var existingRecordAttributes = genDigitalSpecimenAttributes(existingHandle);
+    var newRecordAttriutes = genDigitalSpecimenAttributes(newHandle);
+    var existingRecordWithStatusAttributes = new ArrayList<>(existingRecordAttributes);
+    existingRecordWithStatusAttributes.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS),
         existingHandle, PID_STATUS, PID_STATUS_TESTVAL.getBytes(
         StandardCharsets.UTF_8)));
     var expected = new JsonApiWrapperWrite(
-        List.of(upsertedResponse(existingRecordWithStatus, new String(existingHandle, StandardCharsets.UTF_8)),
-            upsertedResponse(newRecord, new String(newHandle)))
+        List.of(upsertedResponse(existingRecordWithStatusAttributes,
+                new String(existingHandle, StandardCharsets.UTF_8)),
+            upsertedResponse(newRecordAttriutes, new String(newHandle)))
     );
 
     given(handleRep.searchByPhysicalIdentifier(anyList())).willReturn(
         List.of(new HandleAttribute(FIELD_IDX.get(PRIMARY_SPECIMEN_OBJECT_ID), existingHandle,
-            PRIMARY_SPECIMEN_OBJECT_ID_TYPE, physicalIds.get(0))));
+            PRIMARY_SPECIMEN_OBJECT_ID_TYPE, existingPhysId.getBytes(StandardCharsets.UTF_8))));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(
-        Stream.concat(existingRecord.stream(), newRecord.stream()).toList());
-    given(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(any(), any(), any())).willReturn(
-        newRecord);
-    given(fdoRecordBuilder.prepareUpdateAttributes(any(), any(), any())).willReturn(
-        existingRecord);
+        Stream.concat(existingRecordAttributes.stream(), newRecordAttriutes.stream()).toList());
+    given(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(eq(newRecordRequest), any(),
+        any())).willReturn(newRecordAttriutes);
+    given(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(eq(existingRecordRequest), any(),
+        any())).willReturn(
+        existingRecordAttributes);
     given(hgService.genHandleList(anyInt())).willReturn(new ArrayList<>(List.of(newHandle)));
 
     // When
@@ -778,7 +792,8 @@ class HandleServiceTest {
     // Then
     assertThat(response).isEqualTo(expected);
     then(handleRep).should()
-        .postAndUpdateHandles(CREATED.getEpochSecond(), newRecord, List.of(existingRecordWithStatus));
+        .postAndUpdateHandles(CREATED.getEpochSecond(), newRecordAttriutes,
+            List.of(existingRecordWithStatusAttributes));
   }
 
   @Test
@@ -791,9 +806,9 @@ class HandleServiceTest {
     var expectedMsg = "Bad Request. Some PhysicalSpecimenObjectIds are duplicated in request body";
     given(hgService.genHandleList(anyInt())).willReturn(handles);
 
-
     // When
-    var response = assertThrows(InvalidRequestException.class, () -> service.createRecords(requests));
+    var response = assertThrows(InvalidRequestException.class,
+        () -> service.createRecords(requests));
 
     // Then
     assertThat(response).hasMessage(expectedMsg);
@@ -819,7 +834,7 @@ class HandleServiceTest {
             PRIMARY_SPECIMEN_OBJECT_ID_TYPE, PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(
             StandardCharsets.UTF_8))));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(existingRecord);
-    given(fdoRecordBuilder.prepareUpdateAttributes(any(), any(), any())).willReturn(
+    given(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(any(), any(), any())).willReturn(
         existingRecord);
     given(hgService.genHandleList(0)).willReturn(new ArrayList<>());
 
@@ -829,7 +844,8 @@ class HandleServiceTest {
     // Then
     assertThat(response).isEqualTo(expected);
     then(handleRep).should()
-        .postAndUpdateHandles(CREATED.getEpochSecond(), new ArrayList<>(), List.of(existingRecordWithStatus));
+        .postAndUpdateHandles(CREATED.getEpochSecond(), new ArrayList<>(),
+            List.of(existingRecordWithStatus));
   }
 
   @Test
@@ -844,7 +860,8 @@ class HandleServiceTest {
 
     given(handleRep.searchByPhysicalIdentifier(anyList())).willReturn(new ArrayList<>());
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(newRecord);
-    given(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(any(), any(), any())).willReturn(newRecord);
+    given(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(any(), any(), any())).willReturn(
+        newRecord);
     given(hgService.genHandleList(anyInt())).willReturn(List.of(handles.get(0)));
 
     // When
@@ -857,7 +874,7 @@ class HandleServiceTest {
   }
 
   @Test
-  void testRollbackHandleCreation(){
+  void testRollbackHandleCreation() {
     // Given
     var handleList = List.of(HANDLE, HANDLE_ALT);
 

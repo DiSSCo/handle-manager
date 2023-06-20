@@ -170,6 +170,7 @@ class HandleControllerTest {
 
     var responseExpected = givenRecordResponseRead(handles, path, RECORD_TYPE_HANDLE);
     given(applicationProperties.getUiUrl()).willReturn(SANDBOX_URI);
+    given(applicationProperties.getMaxHandles()).willReturn(1000);
     given(service.resolveBatchRecord(anyList(), eq(path))).willReturn(responseExpected);
 
     // When
@@ -181,7 +182,7 @@ class HandleControllerTest {
   }
 
   @Test
-  void testResolveBatchHandleExceedsMax() throws Exception {
+  void testResolveBatchHandleExceedsMax() {
     // Given
     MockHttpServletRequest r = new MockHttpServletRequest();
     r.setRequestURI("view");
@@ -190,6 +191,7 @@ class HandleControllerTest {
     for (int i = 0; i<= maxHandles; i++){
       handleString.add(String.valueOf(i));
     }
+    given(applicationProperties.getMaxHandles()).willReturn(maxHandles);
 
     // When
     Exception e = assertThrows(InvalidRequestException.class, () -> {

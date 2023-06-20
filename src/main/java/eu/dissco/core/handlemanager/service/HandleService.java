@@ -7,7 +7,6 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
-import static eu.dissco.core.handlemanager.service.ServiceUtils.toSingleObject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -342,9 +341,9 @@ public class HandleService {
 
     var recordTimestamp = Instant.now().getEpochSecond();
 
-    handleRep.postAndUpdateHandles(recordTimestamp, createAttributes, upsertAttributes);
+    handleRep.postAndUpdateHandles(recordTimestamp, createAttributes, upsertAttributes);  // O(n), 1xdb
 
-    return concatAndFormatUpsertResponse(newHandles, upsertRequests);
+    return concatAndFormatUpsertResponse(newHandles, upsertRequests); // O(n), 1x db
   }
 
   private void logUpdates(List<UpsertDigitalSpecimen> upsertRequests){
@@ -398,20 +397,28 @@ public class HandleService {
       return new ArrayList<>();
     }
 
-    return registeredSpecimensHandleAttributes
-        .stream()
-        .map(row -> new UpsertDigitalSpecimen(
-            new String(row.handle(), StandardCharsets.UTF_8),
-            new String(row.data(), StandardCharsets.UTF_8),
-            getRequestFromPhysicalId(requests, new String(row.data(), StandardCharsets.UTF_8))))
-        .toList();
+    ArrayList<UpsertDigitalSpecimen> upsertDigitalSpecimen = new ArrayList<>();
+    for (var row : registeredSpecimensHandleAttributes){
+      var targetPhysId = new String(row.data(), StandardCharsets.UTF_8);
+      var targetRequest = getRequestFromPhysicalId(requests, targetPhysId);
+      requests.remove(targetRequest);
+      upsertDigitalSpecimen.add(new UpsertDigitalSpecimen(
+          new String(row.handle(), StandardCharsets.UTF_8),
+          targetPhysId,
+          targetRequest
+      ));
+    }
+    return upsertDigitalSpecimen;
   }
 
   private DigitalSpecimenRequest getRequestFromPhysicalId(List<DigitalSpecimenRequest> requests,
       String physicalId) {
-    return requests.stream()
-        .filter(request -> request.getPrimarySpecimenObjectId().equals(physicalId))
-        .collect(toSingleObject());
+    for (var request: requests){
+      if (request.getPrimarySpecimenObjectId().equals(physicalId)){
+        return request;
+      }
+    }
+    throw new IllegalStateException("Physical Identifier not found");
   }
 
   private List<DigitalSpecimenRequest> getCreateRequests(List<UpsertDigitalSpecimen> upsertRequests,
@@ -441,16 +448,16 @@ public class HandleService {
 
   private List<List<HandleAttribute>> prepareUpsertAttributes(
       List<UpsertDigitalSpecimen> upsertDigitalSpecimens)
-      throws InvalidRequestException, PidServiceInternalError {
+      throws InvalidRequestException, PidServiceInternalError, UnprocessableEntityException, PidResolutionException {
     List<List<HandleAttribute>> upsertAttributes = new ArrayList<>();
 
     for (var upsertRequest : upsertDigitalSpecimens) {
       var pidStatusActive = new HandleAttribute(FIELD_IDX.get(PID_STATUS),
           upsertRequest.handle().getBytes(StandardCharsets.UTF_8), PID_STATUS, "TEST".getBytes(
           StandardCharsets.UTF_8));
-      var jsonNode = mapper.valueToTree(upsertRequest.request());
-      var upsertAttributeSingleSpecimen = new ArrayList<>(fdoRecordBuilder.prepareUpdateAttributes(
-          upsertRequest.handle().getBytes(StandardCharsets.UTF_8), jsonNode, ObjectType.DIGITAL_SPECIMEN));
+      var upsertAttributeSingleSpecimen = new ArrayList<>(fdoRecordBuilder
+          .prepareDigitalSpecimenRecordAttributes(upsertRequest.request(),
+          upsertRequest.handle().getBytes(StandardCharsets.UTF_8), ObjectType.DIGITAL_SPECIMEN));
       upsertAttributeSingleSpecimen.add(pidStatusActive);
       upsertAttributes.add(upsertAttributeSingleSpecimen);
     }

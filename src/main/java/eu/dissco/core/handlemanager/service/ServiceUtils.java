@@ -3,8 +3,6 @@ package eu.dissco.core.handlemanager.service;
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
 
 public class ServiceUtils {
 
@@ -30,18 +28,6 @@ public class ServiceUtils {
     var hostIdArr = specimenHostPid.split("/");
     var hostId = hostIdArr[hostIdArr.length - 1];
     return (physicalIdentifier + ":" + hostId);
-  }
-
-  public static <T> Collector<T, ?, T> toSingleObject() {
-    return Collectors.collectingAndThen(
-        Collectors.toList(),
-        list -> {
-          if (list.size() != 1) {
-            throw new IllegalStateException();
-          }
-          return list.get(0);
-        }
-    );
   }
 
 }
