@@ -7,7 +7,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
-import static eu.dissco.core.handlemanager.service.ServiceUtils.toSingleton;
+import static eu.dissco.core.handlemanager.service.ServiceUtils.toSingleObject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -291,12 +291,9 @@ public class HandleService {
   }
 
   public JsonApiWrapperWrite upsertDigitalSpecimens(List<JsonNode> requests)
-      throws JsonProcessingException, UnprocessableEntityException, PidResolutionException, InvalidRequestException, PidServiceInternalError {
-    ArrayList<DigitalSpecimenRequest> digitalSpecimenRequests = new ArrayList<>();
-    for (var request : requests) {
-      digitalSpecimenRequests.add(mapper.treeToValue(request.get(NODE_DATA).get(NODE_ATTRIBUTES),
-          DigitalSpecimenRequest.class));
-    }
+      throws JsonProcessingException, UnprocessableEntityException, PidResolutionException,
+      InvalidRequestException, PidServiceInternalError {
+    var digitalSpecimenRequests = jsonNodeToDigitalSpecimenRequest(requests);
 
     var physicalIds = getPhysicalIdsFromRequests(digitalSpecimenRequests);
     var physicalIdsBytes = getPhysIdBytes(physicalIds);
@@ -316,11 +313,25 @@ public class HandleService {
 
     handleRep.postAndUpdateHandles(recordTimestamp, createAttributes, upsertAttributes);
 
+    return concatAndFormatUpsertResponse(newHandles, upsertRequests);
+  }
+
+  private List<DigitalSpecimenRequest> jsonNodeToDigitalSpecimenRequest(List<JsonNode> requests)
+      throws JsonProcessingException {
+    ArrayList<DigitalSpecimenRequest> digitalSpecimenRequests = new ArrayList<>();
+    for (var request : requests) {
+      digitalSpecimenRequests.add(mapper.treeToValue(request.get(NODE_DATA).get(NODE_ATTRIBUTES),
+          DigitalSpecimenRequest.class));
+    }
+    return digitalSpecimenRequests;
+  }
+
+  private JsonApiWrapperWrite concatAndFormatUpsertResponse(List<byte[]> newHandles, List<UpsertDigitalSpecimen> upsertRequests)
+      throws PidResolutionException {
     var allHandles = Stream.concat(
             newHandles.stream(), upsertRequests.stream().map(UpsertDigitalSpecimen::handle)
                 .map(s -> s.getBytes(StandardCharsets.UTF_8)))
         .toList();
-
     var upsertedRecords = resolveAndFormatRecords(allHandles);
     var dataList = upsertedRecords.stream()
         .map(upsertedRecord -> wrapData(upsertedRecord, ObjectType.DIGITAL_SPECIMEN.toString()))
@@ -362,7 +373,7 @@ public class HandleService {
       String physicalId) {
     return requests.stream()
         .filter(request -> request.getPrimarySpecimenObjectId().equals(physicalId))
-        .collect(toSingleton());
+        .collect(toSingleObject());
   }
 
   private List<DigitalSpecimenRequest> getCreateRequests(List<UpsertDigitalSpecimen> upsertRequests,

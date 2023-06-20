@@ -62,7 +62,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
 @ExtendWith(MockitoExtension.class)
 class HandleControllerTest {
@@ -204,7 +203,7 @@ class HandleControllerTest {
     given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecord(requestNode);
+    var responseReceived = controller.createRecord(requestNode, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -223,7 +222,7 @@ class HandleControllerTest {
     given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecord(requestNode);
+    var responseReceived = controller.createRecord(requestNode, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -242,7 +241,7 @@ class HandleControllerTest {
     given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecord(requestNode);
+    var responseReceived = controller.createRecord(requestNode, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -261,7 +260,7 @@ class HandleControllerTest {
     given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecord(requestNode);
+    var responseReceived = controller.createRecord(requestNode, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -280,7 +279,7 @@ class HandleControllerTest {
     given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecord(requestNode);
+    var responseReceived = controller.createRecord(requestNode, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -304,7 +303,7 @@ class HandleControllerTest {
     given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecords(requests);
+    var responseReceived = controller.createRecords(requests, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -327,7 +326,7 @@ class HandleControllerTest {
     given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecords(requests);
+    var responseReceived = controller.createRecords(requests, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -350,7 +349,7 @@ class HandleControllerTest {
     given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecords(requests);
+    var responseReceived = controller.createRecords(requests, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -375,7 +374,7 @@ class HandleControllerTest {
     given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecords(requests);
+    var responseReceived = controller.createRecords(requests, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -398,7 +397,7 @@ class HandleControllerTest {
     given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecords(requests);
+    var responseReceived = controller.createRecords(requests, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -426,7 +425,8 @@ class HandleControllerTest {
         responseExpected);
 
     // When
-    var responseReceived = controller.updateRecord(PREFIX, SUFFIX, updateRequestNode);
+    var responseReceived = controller.updateRecord(PREFIX, SUFFIX, updateRequestNode,
+        authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -443,7 +443,7 @@ class HandleControllerTest {
 
     // Then
     assertThrows(InvalidRequestException.class, () -> {
-      controller.updateRecord(PREFIX, SUFFIX, updateRequestNode);
+      controller.updateRecord(PREFIX, SUFFIX, updateRequestNode, authentication);
     });
   }
 
@@ -467,7 +467,7 @@ class HandleControllerTest {
     given(service.updateRecords(updateRequestList, true)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.updateRecords(updateRequestList);
+    var responseReceived = controller.updateRecords(updateRequestList, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -494,7 +494,7 @@ class HandleControllerTest {
     given(service.updateRecords(updateRequestList, false)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.rollbackHandleUpdate(updateRequestList);
+    var responseReceived = controller.rollbackHandleUpdate(updateRequestList, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -536,7 +536,7 @@ class HandleControllerTest {
     var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS);
 
     // When
-    var response = controller.upsertRecord(List.of(request));
+    var response = controller.upsertRecord(List.of(request), authentication);
 
     // Then
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -548,7 +548,8 @@ class HandleControllerTest {
     var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS_BOTANY);
 
     // Then
-    assertThrows(InvalidRequestException.class, () -> controller.upsertRecord(List.of(request)));
+    assertThrows(InvalidRequestException.class, () -> controller.upsertRecord(List.of(request),
+        authentication));
   }
 
   @Test
@@ -563,7 +564,7 @@ class HandleControllerTest {
         responseExpected);
 
     // When
-    var responseReceived = controller.archiveRecord(PREFIX, SUFFIX, archiveRequest);
+    var responseReceived = controller.archiveRecord(PREFIX, SUFFIX, archiveRequest, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -576,7 +577,8 @@ class HandleControllerTest {
     var archiveRequest = givenArchiveRequest();
 
     // When
-    assertThrows(InvalidRequestException.class, () -> controller.archiveRecord(PREFIX, "123", archiveRequest));
+    assertThrows(InvalidRequestException.class, () -> controller.archiveRecord(PREFIX, "123", archiveRequest,
+        authentication));
   }
 
   @Test
@@ -618,7 +620,7 @@ class HandleControllerTest {
 
     // Then
     assertThrows(InvalidRequestException.class, () -> {
-      controller.updateRecord(PREFIX, SUFFIX, archiveRequestNode);
+      controller.updateRecord(PREFIX, SUFFIX, archiveRequestNode, authentication);
     });
   }
 
@@ -649,7 +651,7 @@ class HandleControllerTest {
 
     // Then
     Exception exception = assertThrows(PidResolutionException.class, () -> {
-      controller.createRecord(requestNode);
+      controller.createRecord(requestNode, authentication);
     });
     assertThat(exception.getMessage()).isEqualTo(message);
   }

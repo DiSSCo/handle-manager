@@ -26,9 +26,6 @@ import eu.dissco.core.handlemanager.domain.requests.attributes.MediaObjectReques
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
 import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdentifier;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
@@ -95,7 +92,7 @@ import org.junit.jupiter.api.Test;
 
    // Then
    assertThrowsExactly(IllegalStateException.class, () ->
-       duplicates.collect(ServiceUtils.toSingleton()));
+       duplicates.collect(ServiceUtils.toSingleObject()));
   }
 
   private DigitalSpecimenRequest givenCetafTypeDSRecord(){

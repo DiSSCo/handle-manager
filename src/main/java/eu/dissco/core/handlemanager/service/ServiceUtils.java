@@ -32,7 +32,7 @@ public class ServiceUtils {
     return (physicalIdentifier + ":" + hostId);
   }
 
-  public static <T> Collector<T, ?, T> toSingleton() {
+  public static <T> Collector<T, ?, T> toSingleObject() {
     return Collectors.collectingAndThen(
         Collectors.toList(),
         list -> {
