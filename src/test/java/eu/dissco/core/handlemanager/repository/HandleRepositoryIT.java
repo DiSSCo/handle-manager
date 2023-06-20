@@ -27,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import eu.dissco.core.handlemanager.database.jooq.tables.Handles;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -59,7 +60,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   void testCreateRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    List<HandleAttribute> attributesToPost = genHandleRecordAttributes(handle);
+    List<HandleAttribute> attributesToPost = genHandleRecordAttributes(handle, ObjectType.HANDLE);
 
     // When
     handleRep.postAttributesToDb(CREATED.getEpochSecond(), attributesToPost);
@@ -147,7 +148,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   void testResolveSingleRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    List<HandleAttribute> responseExpected = genHandleRecordAttributes(handle);
+    List<HandleAttribute> responseExpected = genHandleRecordAttributes(handle, ObjectType.HANDLE);
     postAttributes(responseExpected);
 
     // When
@@ -165,7 +166,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
 
     List<HandleAttribute> responseExpected = new ArrayList<>();
     for (byte[] handle : handles) {
-      responseExpected.addAll(genHandleRecordAttributes(handle));
+      responseExpected.addAll(genHandleRecordAttributes(handle, ObjectType.HANDLE));
     }
 
     postAttributes(responseExpected);

@@ -20,13 +20,17 @@ import com.networknt.schema.ValidationMessage;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
 import eu.dissco.core.handlemanager.domain.requests.PutRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenBotanyRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.DoiRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.MediaObjectRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.ObjectType;
-import eu.dissco.core.handlemanager.domain.requests.attributes.TombstoneRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.AnnotationRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenBotanyRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.DoiRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.MappingRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.TombstoneRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.SourceSystemRequest;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -57,6 +61,15 @@ public class JsonSchemaValidator {
   private JsonNode mediaObjectPostReqJsonNode;
   private JsonNode mediaObjectPatchReqJsonNode;
   private JsonNode tombstoneReqJsonNode;
+  private JsonNode annotationPostReqJsonNode;
+  private JsonNode annotationPatchReqJsonNode;
+  private JsonNode mappingPostReqJsonNode;
+  private JsonNode mappingPatchReqJsonNode;
+  private JsonNode sourceSystemPostReqJsonNode;
+  private JsonNode sourceSystemPatchReqJsonNode;
+  private JsonNode organisationPostReqJsonNode;
+  private JsonNode organisationPatchReqJsonNode;
+
   // Schemas
   private JsonSchema postReqSchema;
   private JsonSchema patchReqSchema;
@@ -72,6 +85,14 @@ public class JsonSchemaValidator {
   private JsonSchema mediaObjectPostReqSchema;
   private JsonSchema mediaObjectPatchReqSchema;
   private JsonSchema tombstoneReqSchema;
+  private JsonSchema annotationPostReqSchema;
+  private JsonSchema annotationPatchReqSchema;
+  private JsonSchema mappingPostReqSchema;
+  private JsonSchema mappingPatchReqSchema;
+  private JsonSchema sourceSystemPostReqSchema;
+  private JsonSchema sourceSystemPatchReqSchema;
+  private JsonSchema organisationPostReqSchema;
+  private JsonSchema organisationPatchReqSchema;
 
   public JsonSchemaValidator() {
     setPostRequestAttributesJsonNodes();
@@ -89,6 +110,10 @@ public class JsonSchemaValidator {
         DigitalSpecimenBotanyRequest.class);
     mediaObjectPostReqJsonNode = schemaGenerator.generateSchema(MediaObjectRequest.class);
     tombstoneReqJsonNode = schemaGenerator.generateSchema(TombstoneRecordRequest.class);
+    annotationPostReqJsonNode = schemaGenerator.generateSchema(AnnotationRequest.class);
+    mappingPostReqJsonNode = schemaGenerator.generateSchema(MappingRequest.class);
+    sourceSystemPostReqJsonNode = schemaGenerator.generateSchema(SourceSystemRequest.class);
+    organisationPostReqJsonNode = schemaGenerator.generateSchema(OrganisationRequest.class);
   }
 
   private SchemaGeneratorConfig jacksonModuleSchemaConfig() {
@@ -135,6 +160,10 @@ public class JsonSchemaValidator {
     digitalSpecimenBotanyPatchReqJsonNode = schemaGenerator.generateSchema(
         DigitalSpecimenBotanyRequest.class);
     mediaObjectPatchReqJsonNode = schemaGenerator.generateSchema(MediaObjectRequest.class);
+    annotationPatchReqJsonNode = schemaGenerator.generateSchema(AnnotationRequest.class);
+    mappingPatchReqJsonNode = schemaGenerator.generateSchema(MappingRequest.class);
+    sourceSystemPatchReqJsonNode = schemaGenerator.generateSchema(SourceSystemRequest.class);
+    organisationPatchReqJsonNode = schemaGenerator.generateSchema(OrganisationRequest.class);
   }
 
   private SchemaGeneratorConfig attributesSchemaConfig() {
@@ -208,14 +237,23 @@ public class JsonSchemaValidator {
     digitalSpecimenPostReqSchema = factory.getSchema(digitalSpecimenPostReqJsonNode);
     digitalSpecimenBotanyPostReqSchema = factory.getSchema(digitalSpecimenBotanyPostReqJsonNode);
     mediaObjectPostReqSchema = factory.getSchema(mediaObjectPostReqJsonNode);
+    annotationPostReqSchema = factory.getSchema(annotationPostReqJsonNode);
+    mappingPostReqSchema = factory.getSchema(mappingPostReqJsonNode);
+    sourceSystemPostReqSchema = factory.getSchema(sourceSystemPostReqJsonNode);
+    organisationPostReqSchema = factory.getSchema(organisationPostReqJsonNode);
 
     handlePatchReqSchema = factory.getSchema(handlePatchReqJsonNode);
     doiPatchReqSchema = factory.getSchema(doiPatchReqJsonNode);
     digitalSpecimenPatchReqSchema = factory.getSchema(digitalSpecimenPatchReqJsonNode);
     digitalSpecimenBotanyPatchReqSchema = factory.getSchema(digitalSpecimenBotanyPatchReqJsonNode);
     mediaObjectPatchReqSchema = factory.getSchema(mediaObjectPatchReqJsonNode);
+    annotationPatchReqSchema = factory.getSchema(annotationPatchReqJsonNode);
+    mappingPatchReqSchema = factory.getSchema(mappingPatchReqJsonNode);
+    sourceSystemPatchReqSchema = factory.getSchema(sourceSystemPatchReqJsonNode);
+    organisationPatchReqSchema = factory.getSchema(organisationPatchReqJsonNode);
 
     tombstoneReqSchema = factory.getSchema(tombstoneReqJsonNode);
+
   }
 
   public void validatePostRequest(JsonNode requestRoot) throws InvalidRequestException {
@@ -234,6 +272,10 @@ public class JsonSchemaValidator {
       case DIGITAL_SPECIMEN_BOTANY ->
           validateRequestAttributes(attributes, digitalSpecimenBotanyPostReqSchema, type);
       case MEDIA_OBJECT -> validateRequestAttributes(attributes, mediaObjectPostReqSchema, type);
+      case ANNOTATION -> validateRequestAttributes(attributes, annotationPostReqSchema, type);
+      case MAPPING -> validateRequestAttributes(attributes, mappingPostReqSchema, type);
+      case SOURCE_SYSTEM -> validateRequestAttributes(attributes, sourceSystemPostReqSchema, type);
+      case ORGANISATION -> validateRequestAttributes(attributes, organisationPostReqSchema, type);
       default ->
           throw new InvalidRequestException("Invalid Request. Reason: Invalid type: " + type);
     }
@@ -254,6 +296,10 @@ public class JsonSchemaValidator {
       case DIGITAL_SPECIMEN_BOTANY ->
           validateRequestAttributes(attributes, digitalSpecimenBotanyPatchReqSchema, type);
       case MEDIA_OBJECT -> validateRequestAttributes(attributes, mediaObjectPatchReqSchema, type);
+      case ANNOTATION -> validateRequestAttributes(attributes, annotationPatchReqSchema, type);
+      case MAPPING -> validateRequestAttributes(attributes, mappingPatchReqSchema, type);
+      case SOURCE_SYSTEM -> validateRequestAttributes(attributes, sourceSystemPatchReqSchema, type);
+      case ORGANISATION -> validateRequestAttributes(attributes, organisationPatchReqSchema, type);
       default ->
           throw new InvalidRequestException("Invalid Request. Reason: Invalid type: " + type);
     }

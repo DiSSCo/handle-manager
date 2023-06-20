@@ -12,12 +12,17 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_URI;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_STATUS_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_ANNOTATION;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DOI;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS_BOTANY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_HANDLE;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MAPPING;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MEDIA;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_ORGANISATION;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_SOURCE_SYSTEM;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genAnnotationAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyAttributes;
@@ -25,8 +30,13 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecime
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDoiRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributesAltLoc;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMappingAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaObjectAttributes;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genOrganisationAttributes;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genSourceSystemAttributes;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMappingRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genObjectNodeAttributeRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordFullAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordRequestAttributes;
@@ -35,6 +45,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestB
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecordRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenOrganisationRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseRead;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseReadSingle;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWrite;
@@ -42,11 +53,13 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordRespon
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteArchive;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteGeneric;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSearchByPhysIdRequest;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemRequestObject;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mockStatic;
@@ -58,8 +71,8 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.domain.requests.attributes.ObjectType;
-import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -93,6 +106,7 @@ class HandleServiceTest {
   private HandleService service;
   private List<byte[]> handles;
   private MockedStatic<Instant> mockedStatic;
+  private MockedStatic<Clock> mockedClock;
 
   @BeforeEach
   void setup() {
@@ -104,6 +118,7 @@ class HandleServiceTest {
   @AfterEach
   void destroy() {
     mockedStatic.close();
+    mockedClock.close();
   }
 
   @Test
@@ -111,7 +126,7 @@ class HandleServiceTest {
 
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     String path = SANDBOX_URI + HANDLE;
-    List<HandleAttribute> recordAttributeList = genHandleRecordAttributes(handle);
+    List<HandleAttribute> recordAttributeList = genHandleRecordAttributes(handle, ObjectType.HANDLE);
 
     var responseExpected = givenRecordResponseReadSingle(HANDLE, path, "PID",
         genObjectNodeAttributeRecord(recordAttributeList));
@@ -146,7 +161,7 @@ class HandleServiceTest {
     String path = SANDBOX_URI;
     List<HandleAttribute> repositoryResponse = new ArrayList<>();
     for (byte[] handle : handles) {
-      repositoryResponse.addAll(genHandleRecordAttributes(handle));
+      repositoryResponse.addAll(genHandleRecordAttributes(handle, ObjectType.HANDLE));
     }
 
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(repositoryResponse);
@@ -228,14 +243,14 @@ class HandleServiceTest {
     byte[] handle = handles.get(0);
     var request = genCreateRecordRequest(givenHandleRecordRequestObject(), RECORD_TYPE_HANDLE);
     var responseExpected = givenRecordResponseWrite(List.of(handle), RECORD_TYPE_HANDLE);
-    List<HandleAttribute> handleRecord = genHandleRecordAttributes(handle);
+    List<HandleAttribute> handleRecord = genHandleRecordAttributes(handle, ObjectType.HANDLE);
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(handleRecord);
-    given(fdoRecordBuilder.prepareHandleRecordAttributes(any(), any())).willReturn(handleRecord);
+    given(fdoRecordBuilder.prepareHandleRecordAttributes(any(), any(), eq(ObjectType.HANDLE))).willReturn(handleRecord);
 
     // When
-    var responseReceived = service.createRecords(Arrays.asList(request));
+    var responseReceived = service.createRecords(List.of(request));
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -247,11 +262,11 @@ class HandleServiceTest {
     byte[] handle = handles.get(0);
     var request = genCreateRecordRequest(givenDoiRecordRequestObject(), RECORD_TYPE_DOI);
     var responseExpected = givenRecordResponseWrite(List.of(handle), RECORD_TYPE_DOI);
-    List<HandleAttribute> doiRecord = genDoiRecordAttributes(handle);
+    List<HandleAttribute> doiRecord = genDoiRecordAttributes(handle, ObjectType.HANDLE);
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(doiRecord);
-    given(fdoRecordBuilder.prepareDoiRecordAttributes(any(), any())).willReturn(doiRecord);
+    given(fdoRecordBuilder.prepareDoiRecordAttributes(any(), any(), eq(ObjectType.DOI))).willReturn(doiRecord);
 
     // When
     var responseReceived = service.createRecords(List.of(request));
@@ -350,7 +365,7 @@ class HandleServiceTest {
   void testCreateMediaObjectRecord() throws Exception {
     // Given
     byte[] handle = handles.get(0);
-    var request = genCreateRecordRequest(genMediaRequestObject(),
+    var request = genCreateRecordRequest(givenMediaRequestObject(),
         RECORD_TYPE_MEDIA);
     var responseExpected = givenRecordResponseWrite(List.of(handle), RECORD_TYPE_MEDIA);
     List<HandleAttribute> mediaObject = genMediaObjectAttributes(handle);
@@ -373,7 +388,7 @@ class HandleServiceTest {
     List<JsonNode> requests = new ArrayList<>();
     for (byte[] handle : handles) {
       requests.add(genCreateRecordRequest(givenHandleRecordRequestObject(), RECORD_TYPE_HANDLE));
-      flatList.addAll(genHandleRecordAttributes(handle));
+      flatList.addAll(genHandleRecordAttributes(handle, ObjectType.HANDLE));
     }
 
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_HANDLE);
@@ -396,7 +411,7 @@ class HandleServiceTest {
     List<JsonNode> requests = new ArrayList<>();
     for (byte[] handle : handles) {
       requests.add(genCreateRecordRequest(givenDoiRecordRequestObject(), RECORD_TYPE_DOI));
-      flatList.addAll(genDoiRecordAttributes(handle));
+      flatList.addAll(genDoiRecordAttributes(handle, ObjectType.DOI));
     }
 
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_DOI);
@@ -425,6 +440,94 @@ class HandleServiceTest {
     }
 
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_DS);
+    given(hgService.genHandleList(handles.size())).willReturn(handles);
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
+
+    // When
+    var responseReceived = service.createRecords(requests);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testCreateAnnotationsBatch() throws Exception {
+    // Given
+    List<HandleAttribute> flatList = new ArrayList<>();
+
+    List<JsonNode> requests = new ArrayList<>();
+    for (byte[] handle : handles) {
+      requests.add(genCreateRecordRequest(givenAnnotationRequestObject(), RECORD_TYPE_ANNOTATION));
+      flatList.addAll(genAnnotationAttributes(handle));
+    }
+
+    var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_ANNOTATION);
+    given(hgService.genHandleList(handles.size())).willReturn(handles);
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
+
+    // When
+    var responseReceived = service.createRecords(requests);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testCreateMappingBatch() throws Exception {
+    // Given
+    List<HandleAttribute> flatList = new ArrayList<>();
+
+    List<JsonNode> requests = new ArrayList<>();
+    for (byte[] handle : handles) {
+      requests.add(genCreateRecordRequest(givenMappingRequestObject(), RECORD_TYPE_MAPPING));
+      flatList.addAll(genMappingAttributes(handle));
+    }
+
+    var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_MAPPING);
+    given(hgService.genHandleList(handles.size())).willReturn(handles);
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
+
+    // When
+    var responseReceived = service.createRecords(requests);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testCreateSourceSystemBatch() throws Exception {
+    // Given
+    List<HandleAttribute> flatList = new ArrayList<>();
+
+    List<JsonNode> requests = new ArrayList<>();
+    for (byte[] handle : handles) {
+      requests.add(genCreateRecordRequest(givenSourceSystemRequestObject(), RECORD_TYPE_SOURCE_SYSTEM));
+      flatList.addAll(genSourceSystemAttributes(handle));
+    }
+
+    var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_SOURCE_SYSTEM);
+    given(hgService.genHandleList(handles.size())).willReturn(handles);
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
+
+    // When
+    var responseReceived = service.createRecords(requests);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testCreateOrganisationBatch() throws Exception {
+    // Given
+    List<HandleAttribute> flatList = new ArrayList<>();
+
+    List<JsonNode> requests = new ArrayList<>();
+    for (byte[] handle : handles) {
+      requests.add(genCreateRecordRequest(givenOrganisationRequestObject(), RECORD_TYPE_ORGANISATION));
+      flatList.addAll(genOrganisationAttributes(handle));
+    }
+
+    var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_ORGANISATION);
     given(hgService.genHandleList(handles.size())).willReturn(handles);
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
 
@@ -468,7 +571,7 @@ class HandleServiceTest {
 
     List<JsonNode> requests = new ArrayList<>();
     for (byte[] handle : handles) {
-      requests.add(genCreateRecordRequest(genMediaRequestObject(), RECORD_TYPE_MEDIA));
+      requests.add(genCreateRecordRequest(givenMediaRequestObject(), RECORD_TYPE_MEDIA));
       flatList.addAll(genMediaObjectAttributes(handle));
     }
 
@@ -489,7 +592,7 @@ class HandleServiceTest {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     var updateRequest = genUpdateRequestBatch(List.of(handle));
-    var updatedAttributeRecord = genHandleRecordAttributesAltLoc(handle);
+    var updatedAttributeRecord = genHandleRecordAttributesAltLoc(handle, ObjectType.HANDLE);
     var responseExpected = givenRecordResponseWriteAltLoc(List.of(handle));
 
     given(handleRep.checkHandlesWritable(anyList())).willReturn(List.of(handle));
@@ -510,7 +613,7 @@ class HandleServiceTest {
 
     List<HandleAttribute> updatedAttributeRecord = new ArrayList<>();
     for (byte[] handle : handles) {
-      updatedAttributeRecord.addAll(genHandleRecordAttributesAltLoc(handle));
+      updatedAttributeRecord.addAll(genHandleRecordAttributesAltLoc(handle, ObjectType.HANDLE));
     }
 
     var responseExpected = givenRecordResponseWriteAltLoc(handles);
@@ -779,6 +882,8 @@ class HandleServiceTest {
     mockedStatic = mockStatic(Instant.class);
     mockedStatic.when(Instant::now).thenReturn(instant);
     mockedStatic.when(() -> Instant.from(any())).thenReturn(instant);
+    mockedClock = mockStatic(Clock.class);
+    mockedClock.when(Clock::systemUTC).thenReturn(clock);
   }
 
   private List<byte[]> initHandleList() {

@@ -1,5 +1,7 @@
 package eu.dissco.core.handlemanager.component;
 
+import static eu.dissco.core.handlemanager.domain.PidRecords.ACCESS_RESTRICTED;
+import static eu.dissco.core.handlemanager.domain.PidRecords.ANNOTATION_TOPIC;
 import static eu.dissco.core.handlemanager.domain.PidRecords.BASE_TYPE_OF_SPECIMEN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_TYPE;
@@ -10,6 +12,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.INFORMATION_ARTEFACT_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUED_FOR_AGENT;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUED_FOR_AGENT_NAME;
+import static eu.dissco.core.handlemanager.domain.PidRecords.LINKED_URL;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LIVING_OR_PRESERVED;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LOC;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MARKED_AS_TYPE;
@@ -31,9 +34,11 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.REPLACE_OR_APPEND;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.STRUCTURAL_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_DIGITAL_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOPIC_DISCIPLINE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOPIC_ORIGIN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.WAS_DERIVED_FROM;
@@ -63,6 +68,8 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestA
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecordRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenOrganisationRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemRequestObject;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.AdditionalMatchers.not;
@@ -71,13 +78,17 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.LivingOrPreserved;
-import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
+import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.LivingOrPreserved;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
+import eu.dissco.core.handlemanager.properties.ApplicationProperties;
+import eu.dissco.core.handlemanager.repository.HandleRepository;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
@@ -107,21 +118,29 @@ class FdoRecordBuilderTest {
       BASE_TYPE_OF_SPECIMEN, INFORMATION_ARTEFACT_TYPE,
       MATERIAL_SAMPLE_TYPE, MARKED_AS_TYPE, WAS_DERIVED_FROM);
 
+  private static final Set<String> ANNOTATION_FIELDS = Set.of(SUBJECT_DIGITAL_OBJECT_ID,
+      ANNOTATION_TOPIC, REPLACE_OR_APPEND, ACCESS_RESTRICTED, LINKED_URL);
+
   private final byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
   private FdoRecordBuilder fdoRecordBuilder;
   @Mock
   private PidResolverComponent pidResolver;
+  @Mock
+  private HandleRepository handleRepository;
+  @Mock
+  private ApplicationProperties appProperties;
   private static final int HANDLE_QTY = 15;
   private static final int DOI_QTY = 20;
-  private static final int MEDIA_QTY = 24;
+  private static final int MEDIA_QTY = 25;
   private static final int DS_MANDATORY_QTY = 25;
   private static final int DS_OPTIONAL_QTY = 37;
   private static final int BOTANY_QTY = 25;
+  private static final int ANNOTATION_QTY = 20;
 
   @BeforeEach
   void init() {
     fdoRecordBuilder = new FdoRecordBuilder(TRANSFORMER_FACTORY, DOC_BUILDER_FACTORY, pidResolver,
-        MAPPER);
+        MAPPER, handleRepository, appProperties);
   }
 
   @Test
@@ -131,7 +150,7 @@ class FdoRecordBuilderTest {
     var request = givenHandleRecordRequestObject();
 
     // When
-    var result = fdoRecordBuilder.prepareHandleRecordAttributes(request, handle);
+    var result = fdoRecordBuilder.prepareHandleRecordAttributes(request, handle, ObjectType.HANDLE);
 
     // Then
     assertThat(result).hasSize(HANDLE_QTY);
@@ -145,7 +164,7 @@ class FdoRecordBuilderTest {
     var request = givenDoiRecordRequestObject();
 
     // When
-    var result = fdoRecordBuilder.prepareDoiRecordAttributes(request, handle);
+    var result = fdoRecordBuilder.prepareDoiRecordAttributes(request, handle, ObjectType.HANDLE);
 
     // Then
     assertThat(result).hasSize(DOI_QTY);
@@ -157,10 +176,10 @@ class FdoRecordBuilderTest {
   void testPrepareMediaObjectAttributes() throws Exception {
     // Given
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
-    var request = genMediaRequestObject();
+    var request = givenMediaRequestObject();
 
     // When
-    var result = fdoRecordBuilder.prepareMediaObjectAttributes(request, handle);
+    var result = fdoRecordBuilder.prepareMediaObjectAttributes(request, handle, ObjectType.MEDIA_OBJECT);
 
     // Then
     assertThat(result).hasSize(MEDIA_QTY);
@@ -173,7 +192,7 @@ class FdoRecordBuilderTest {
     var request = givenDigitalSpecimenRequestObjectNullOptionals();
 
     // When
-    var result = fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(request, handle);
+    var result = fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(request, handle, ObjectType.DIGITAL_SPECIMEN);
 
     // Then
     assertThat(result).hasSize(DS_MANDATORY_QTY);
@@ -189,7 +208,7 @@ class FdoRecordBuilderTest {
     var request = givenDigitalSpecimenRequestObjectOptionalsInit();
 
     // When
-    var result = fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(request, handle);
+    var result = fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(request, handle, ObjectType.DIGITAL_SPECIMEN);
 
     // Then
     assertThat(result).hasSize(DS_OPTIONAL_QTY);
@@ -200,13 +219,84 @@ class FdoRecordBuilderTest {
   }
 
   @Test
+  void testPrepareAnnotationAttributes() throws Exception {
+    // Given
+    given(pidResolver.getObjectName(any())).willReturn("placeholder");
+    given(handleRepository.resolveHandleAttributes(any(byte[].class))).willReturn(genHandleRecordAttributes(handle, ObjectType.ANNOTATION));
+    var request = givenAnnotationRequestObject();
+
+    // When
+    var result = fdoRecordBuilder.prepareAnnotationAttributes(request, handle, ObjectType.ANNOTATION);
+
+    // Then
+    assertThat(result).hasSize(ANNOTATION_QTY);
+    assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
+    assertThat(hasCorrectElements(result, ANNOTATION_FIELDS)).isTrue();
+  }
+
+  @Test
+  void testPrepareAnnotationAttributesPidResolution() throws Exception {
+    // Given
+    given(pidResolver.getObjectName(any())).willReturn("placeholder");
+    given(handleRepository.resolveHandleAttributes(any(byte[].class))).willReturn(new ArrayList<>());
+    var request = givenAnnotationRequestObject();
+
+    // Then
+    assertThrows(PidResolutionException.class, () -> fdoRecordBuilder.prepareAnnotationAttributes(request, handle, ObjectType.ANNOTATION));
+  }
+
+  @Test
+  void testPrepareMappingAttributes() throws Exception {
+    // Given
+    given(pidResolver.getObjectName(any())).willReturn("placeholder");
+    var request = givenMappingRequestObject();
+
+    // When
+    var result = fdoRecordBuilder.prepareMappingAttributes(request, handle, ObjectType.MAPPING);
+
+    // Then
+    assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
+    assertThat(result).hasSize(HANDLE_QTY+1);
+  }
+
+
+  @Test
+  void testPrepareSourceSystemAttributes() throws Exception {
+    // Given
+    given(pidResolver.getObjectName(any())).willReturn("placeholder");
+    var request = givenSourceSystemRequestObject();
+
+    // When
+    var result = fdoRecordBuilder.prepareSourceSystemAttributes(request, handle, ObjectType.SOURCE_SYSTEM);
+
+    // Then
+    assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
+    assertThat(result).hasSize(HANDLE_QTY+1);
+  }
+
+  @Test
+  void testPrepareOrganisationAttributes() throws Exception {
+    // Given
+    given(pidResolver.getObjectName(any())).willReturn("placeholder");
+    var request = givenOrganisationRequestObject();
+
+    // When
+    var result = fdoRecordBuilder.prepareOrganisationAttributes(request, handle, ObjectType.ORGANISATION);
+
+    // Then
+    assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
+    assertThat(hasCorrectElements(result, DOI_FIELDS)).isTrue();
+    assertThat(result).hasSize(DOI_QTY+3);
+  }
+
+  @Test
   void testPrepareDigitalSpecimenBotanyAttributes() throws Exception {
     // Given
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
     var request = genDigitalSpecimenBotanyRequestObject();
 
     // When
-    var result = fdoRecordBuilder.prepareDigitalSpecimenBotanyRecordAttributes(request, handle);
+    var result = fdoRecordBuilder.prepareDigitalSpecimenBotanyRecordAttributes(request, handle, ObjectType.DIGITAL_SPECIMEN);
 
     // Then
     assertThat(result).hasSize(BOTANY_QTY);
@@ -226,7 +316,7 @@ class FdoRecordBuilderTest {
     );
 
     // When
-    var result = fdoRecordBuilder.prepareHandleRecordAttributes(request, handle);
+    var result = fdoRecordBuilder.prepareHandleRecordAttributes(request, handle, ObjectType.HANDLE);
 
     // Then
     assertThat(result).hasSize(HANDLE_QTY);
@@ -248,7 +338,7 @@ class FdoRecordBuilderTest {
 
     // Then
     var e = assertThrows(InvalidRequestException.class,
-        () -> fdoRecordBuilder.prepareHandleRecordAttributes(request, handle));
+        () -> fdoRecordBuilder.prepareHandleRecordAttributes(request, handle, ObjectType.HANDLE));
     assertThat(e.getMessage()).contains(ROR_DOMAIN).contains(HANDLE_DOMAIN);
   }
 
@@ -266,7 +356,7 @@ class FdoRecordBuilderTest {
     );
 
     var e = assertThrows(InvalidRequestException.class,
-        () -> fdoRecordBuilder.prepareHandleRecordAttributes(request, handle));
+        () -> fdoRecordBuilder.prepareHandleRecordAttributes(request, handle, ObjectType.HANDLE));
     assertThat(e.getMessage()).contains(ROR_DOMAIN);
   }
 
@@ -288,7 +378,7 @@ class FdoRecordBuilderTest {
         null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 
     // When
-    var result = fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(request, handle);
+    var result = fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(request, handle, ObjectType.DIGITAL_SPECIMEN);
 
     // Then
     assertThat(result).hasSize(DS_MANDATORY_QTY);
@@ -314,7 +404,7 @@ class FdoRecordBuilderTest {
         null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 
     // When
-    var result = fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(request, handle);
+    var result = fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(request, handle, ObjectType.DIGITAL_SPECIMEN);
 
     // Then
     assertThat(result).hasSize(DS_MANDATORY_QTY - 1);
@@ -333,7 +423,7 @@ class FdoRecordBuilderTest {
     );
 
     var e = assertThrows(InvalidRequestException.class,
-        () -> fdoRecordBuilder.prepareHandleRecordAttributes(request, handle));
+        () -> fdoRecordBuilder.prepareHandleRecordAttributes(request, handle, ObjectType.HANDLE));
     assertThat(e.getMessage()).contains(HANDLE_DOMAIN);
   }
 
@@ -341,11 +431,11 @@ class FdoRecordBuilderTest {
   void testUpdateAttributesAltLoc() throws Exception {
     // Given
     var updateRequest = genUpdateRequestAltLoc();
-    var expected = genUpdateRecordAttributesAltLoc(HANDLE.getBytes(StandardCharsets.UTF_8));
+    var expected = genUpdateRecordAttributesAltLoc(HANDLE.getBytes(StandardCharsets.UTF_8), ObjectType.HANDLE);
 
     // When
     var response = fdoRecordBuilder.prepareUpdateAttributes(HANDLE.getBytes(StandardCharsets.UTF_8),
-        updateRequest);
+        updateRequest, ObjectType.HANDLE);
 
     // Then
     assertThat(response).isEqualTo(expected);
@@ -363,7 +453,7 @@ class FdoRecordBuilderTest {
 
     // When
     var response = fdoRecordBuilder.prepareUpdateAttributes(HANDLE.getBytes(StandardCharsets.UTF_8),
-        updateRequest);
+        updateRequest, ObjectType.DIGITAL_SPECIMEN);
 
     // Then
     assertThat(response).isEqualTo(expected);

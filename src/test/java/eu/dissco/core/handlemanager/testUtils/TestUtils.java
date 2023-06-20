@@ -1,15 +1,19 @@
 package eu.dissco.core.handlemanager.testUtils;
 
+import static eu.dissco.core.handlemanager.domain.PidRecords.ACCESS_RESTRICTED;
+import static eu.dissco.core.handlemanager.domain.PidRecords.ANNOTATION_TOPIC;
 import static eu.dissco.core.handlemanager.domain.PidRecords.BASE_TYPE_OF_SPECIMEN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.FDO_PROFILE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.FDO_RECORD_LICENSE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
+import static eu.dissco.core.handlemanager.domain.PidRecords.HOST_INSTITUTION;
 import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.INFORMATION_ARTEFACT_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUED_FOR_AGENT;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUED_FOR_AGENT_NAME;
+import static eu.dissco.core.handlemanager.domain.PidRecords.LINKED_URL;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LIVING_OR_PRESERVED;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LOC;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LOC_REQ;
@@ -17,10 +21,14 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.MARKED_AS_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MATERIAL_OR_DIGITAL_ENTITY;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MATERIAL_SAMPLE_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_HASH;
+import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_HASH_ALG;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_URL;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.OBJECT_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.ORGANISATION_ID;
+import static eu.dissco.core.handlemanager.domain.PidRecords.ORGANISATION_ID_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.ORGANISATION_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.OTHER_SPECIMEN_IDS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER;
@@ -37,11 +45,15 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.REPLACE_OR_APPEND;
+import static eu.dissco.core.handlemanager.domain.PidRecords.SOURCE_DATA_STANDARD;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.STRUCTURAL_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_DIGITAL_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_PHYSICAL_IDENTIFIER;
+import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_TEXT;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOPIC_DISCIPLINE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOPIC_DOMAIN;
@@ -59,15 +71,20 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperReadSingle;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenBotanyRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.DoiRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.LivingOrPreserved;
-import eu.dissco.core.handlemanager.domain.requests.attributes.MediaObjectRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
-import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdentifier;
-import eu.dissco.core.handlemanager.domain.requests.attributes.TombstoneRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.AnnotationRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenBotanyRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.DoiRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.MappingRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdentifier;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.ReplaceOrAppend;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.TombstoneRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.SourceSystemRequest;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -94,6 +111,7 @@ public class TestUtils {
 
   public static final Instant CREATED = Instant.parse("2022-11-01T09:59:24.00Z");
   public static final String ISSUE_DATE_TESTVAL = "2022-11-01";
+  private final static String HANDLE_URI = "https://hdl.handle.net/";
   public static final String HANDLE = "20.5000.1025/QRS-321-ABC";
   public static final String PREFIX = "20.5000.1025";
   public static final String SUFFIX = "QRS-321-ABC";
@@ -107,6 +125,10 @@ public class TestUtils {
   public static final String RECORD_TYPE_DS_BOTANY = "digitalSpecimenBotany";
   public static final String RECORD_TYPE_TOMBSTONE = "tombstone";
   public static final String RECORD_TYPE_MEDIA = "mediaObject";
+  public static final String RECORD_TYPE_SOURCE_SYSTEM = "sourceSystem";
+  public static final String RECORD_TYPE_MAPPING = "mapping";
+  public static final String RECORD_TYPE_ANNOTATION = "annotation";
+  public static final String RECORD_TYPE_ORGANISATION = "organisation";
 
   // Request Test Vals
   // Handles
@@ -114,7 +136,8 @@ public class TestUtils {
   public static final String ROR_DOMAIN = "https://ror.org/";
   public static final String FDO_PROFILE_TESTVAL = HANDLE_DOMAIN + "21.T11148/d8de0819e144e4096645";
   public static final String ISSUED_FOR_AGENT_TESTVAL = ROR_DOMAIN + "0566bfb96";
-  public static final String DIGITAL_OBJECT_TYPE_TESTVAL = HANDLE_DOMAIN + "21.T11148/1c699a5d1b4ad3ba4956";
+  public static final String DIGITAL_OBJECT_TYPE_TESTVAL =
+      HANDLE_DOMAIN + "21.T11148/1c699a5d1b4ad3ba4956";
   public static final String PID_ISSUER_TESTVAL_OTHER = HANDLE_DOMAIN + "20.5000.1025/PID-ISSUER";
   public static final String STRUCTURAL_TYPE_TESTVAL = "digital";
   public static final String[] LOC_TESTVAL = {"https://sandbox.dissco.tech/", "https://dissco.eu"};
@@ -134,17 +157,22 @@ public class TestUtils {
   public static final String SPECIMEN_HOST_TESTVAL = ROR_DOMAIN + "0x123";
   public static final String SPECIMEN_HOST_NAME_TESTVAL = "Naturalis";
   public static final String IN_COLLECTION_FACILITY_TESTVAL = "20.5000.1025/OTHER-TRIPLET";
-  //Botany Specimens
-  public static final String OBJECT_TYPE_TESTVAL = "Herbarium Sheet";
-  public static final LivingOrPreserved PRESERVED_OR_LIVING_TESTVAL = LivingOrPreserved.PRESERVED;
+  // Annotations
+  public static final String SUBJECT_DOI_TESTVAL = HANDLE_URI + "20.5000.1025/111";
+  public static final String ANNOTATION_TOPIC_TESTVAL = "note";
+  public static final String LINKED_URL_TESTVAL = "https://";
+
+
   // Media Objects
   public static final String MEDIA_URL_TESTVAL = "https://naturalis.nl/media/123";
   public static final String MEDIA_HASH_TESTVAL = "47bce5c74f589f48";
-  public static final String PTR_TYPE = "handle";
-  public static final String PTR_PRIMARY_NAME = "DiSSCo";
-  public static final String PTR_PID_DOI = "http://doi.org/" + PID_ISSUER_TESTVAL_OTHER;
+  public static final String MEDIA_HASH_ALG_TESTVAL = "SHA256";
+  // Mappings
+  public static final String SOURCE_DATA_STANDARD_TESTVAL = "dwc";
+
+  public static final String API_URL = "https://sandbox.dissco.tech/api/v1";
+  public static final String UI_URL = "https://sandbox.dissco.tech/";
   public static final String PTR_TYPE_DOI = "doi";
-  public static final String PTR_REGISTRATION_DOI_NAME = "Registration Agency";
   public final static String PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL = "BOTANICAL.QRS.123";
   public final static PhysicalIdentifier PHYSICAL_IDENTIFIER_TESTVAL_CETAF = new PhysicalIdentifier(
       PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
@@ -158,8 +186,6 @@ public class TestUtils {
   // Pid Type Record vals
   public final static String HANDLE_URI = "https://hdl.handle.net/";
   public static final String PTR_PID = HANDLE_URI + PID_ISSUER_TESTVAL_OTHER;
-  public final static String PTR_HANDLE_RECORD = genPtrHandleRecord(false);
-  public final static String PTR_DOI_RECORD = genPtrHandleRecord(true);
   public static ObjectMapper MAPPER = new ObjectMapper().findAndRegisterModules();
 
   static {
@@ -173,30 +199,8 @@ public class TestUtils {
     throw new IllegalStateException("Utility class");
   }
 
-  // Pid Type Records
-  private static String genPtrHandleRecord(boolean isDoi) {
-    ObjectMapper mapper = new ObjectMapper();
-    ObjectNode objectNode = mapper.createObjectNode();
-    if (isDoi) {
-      objectNode.put("pid", PTR_PID_DOI);
-      objectNode.put("pidType", PTR_TYPE_DOI);
-      objectNode.put("primaryNameFromPid", PTR_PRIMARY_NAME);
-      objectNode.put("registrationAgencyDoiName", PTR_REGISTRATION_DOI_NAME);
-    } else {
-      objectNode.put("pid", PTR_PID);
-      objectNode.put("pidType", PTR_TYPE);
-      objectNode.put("primaryNameFromPid", PTR_PRIMARY_NAME);
-    }
-    try {
-      return mapper.writeValueAsString(objectNode);
-    } catch (JsonProcessingException e) {
-      e.printStackTrace();
-      return "";
-    }
-  }
-
   // Single Handle Attribute Lists
-  public static List<HandleAttribute> genHandleRecordAttributes(byte[] handle) throws Exception{
+  public static List<HandleAttribute> genHandleRecordAttributes(byte[] handle, ObjectType type) throws Exception {
 
     List<HandleAttribute> fdoRecord = new ArrayList<>();
     var request = givenHandleRecordRequestObject();
@@ -262,13 +266,13 @@ public class TestUtils {
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS,
         "TEST".getBytes(StandardCharsets.UTF_8)));
 
-
     return fdoRecord;
   }
 
-  public static List<HandleAttribute> genHandleRecordAttributesAltLoc(byte[] handle)
+  public static List<HandleAttribute> genHandleRecordAttributesAltLoc(byte[] handle,
+      ObjectType type)
       throws Exception {
-    List<HandleAttribute> attributes = genHandleRecordAttributes(handle);
+    List<HandleAttribute> attributes = genHandleRecordAttributes(handle, type);
 
     byte[] locOriginal = setLocations(LOC_TESTVAL, new String(handle, StandardCharsets.UTF_8), true);
     var locOriginalAttr = new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, locOriginal);
@@ -281,8 +285,9 @@ public class TestUtils {
     return attributes;
   }
 
-  public static List<HandleAttribute> genTombstoneRecordFullAttributes(byte[] handle) throws Exception {
-    List<HandleAttribute> attributes = genTombstoneRecordRequestAttributes(handle);
+  public static List<HandleAttribute> genTombstoneRecordFullAttributes(byte[] handle)
+      throws Exception {
+    List<HandleAttribute> attributes = genHandleRecordAttributes(handle, ObjectType.HANDLE);
     HandleAttribute oldPidStatus = new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle,
         PID_STATUS, PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8));
     attributes.addAll(genHandleRecordAttributes(handle));
@@ -292,7 +297,7 @@ public class TestUtils {
     return attributes;
   }
 
-  public static List<HandleAttribute> genUpdateRecordAttributesAltLoc(byte[] handle)
+  public static List<HandleAttribute> genUpdateRecordAttributesAltLoc(byte[] handle, ObjectType type)
       throws ParserConfigurationException, TransformerException {
     byte[] locAlt = setLocations(LOC_ALT_TESTVAL, new String(handle, StandardCharsets.UTF_8), true);
     return List.of(new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, locAlt));
@@ -309,25 +314,29 @@ public class TestUtils {
     return tombstoneAttributes;
   }
 
-  public static List<HandleAttribute> genDoiRecordAttributes(byte[] handle) throws Exception{
-    List<HandleAttribute> fdoRecord = genHandleRecordAttributes(handle);
+  public static List<HandleAttribute> genDoiRecordAttributes(byte[] handle, ObjectType type) throws Exception {
+    List<HandleAttribute> fdoRecord = genHandleRecordAttributes(handle, type);
     var request = givenDoiRecordRequestObject();
 
     // 40: referentType
     fdoRecord.add(
-        new HandleAttribute(FIELD_IDX.get(REFERENT_TYPE), handle, REFERENT_TYPE, request.getReferentType().getBytes(StandardCharsets.UTF_8)));
+        new HandleAttribute(FIELD_IDX.get(REFERENT_TYPE), handle, REFERENT_TYPE,
+            request.getReferentType().getBytes(StandardCharsets.UTF_8)));
 
     // 41: referentDoiName
     fdoRecord.add(
-        new HandleAttribute(FIELD_IDX.get(REFERENT_DOI_NAME), handle, REFERENT_DOI_NAME_TESTVAL, handle));
+        new HandleAttribute(FIELD_IDX.get(REFERENT_DOI_NAME), handle, REFERENT_DOI_NAME_TESTVAL,
+            handle));
 
     // 42: referentName
     fdoRecord.add(
-        new HandleAttribute(FIELD_IDX.get(REFERENT_NAME), handle, REFERENT_NAME, request.getReferentName().getBytes(StandardCharsets.UTF_8)));
+        new HandleAttribute(FIELD_IDX.get(REFERENT_NAME), handle, REFERENT_NAME,
+            request.getReferentName().getBytes(StandardCharsets.UTF_8)));
 
     // 43: primaryReferentType
     fdoRecord.add(
-        new HandleAttribute(FIELD_IDX.get(PRIMARY_REFERENT_TYPE), handle, PRIMARY_REFERENT_TYPE, request.getPrimaryReferentType().getBytes(StandardCharsets.UTF_8)));
+        new HandleAttribute(FIELD_IDX.get(PRIMARY_REFERENT_TYPE), handle, PRIMARY_REFERENT_TYPE,
+            request.getPrimaryReferentType().getBytes(StandardCharsets.UTF_8)));
 
     // 44: referent
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(REFERENT), handle, REFERENT,
@@ -338,7 +347,7 @@ public class TestUtils {
 
   public static List<HandleAttribute> genDigitalSpecimenAttributes(byte[] handle)
       throws Exception {
-    List<HandleAttribute> fdoRecord = genDoiRecordAttributes(handle);
+    List<HandleAttribute> fdoRecord = genDoiRecordAttributes(handle, ObjectType.DIGITAL_SPECIMEN);
     var request = givenDigitalSpecimenRequestObjectNullOptionals();
 
     // 200: Specimen Host
@@ -369,7 +378,7 @@ public class TestUtils {
     // 204-217 are optional
 
     // 204: primarySpecimenObjectIdName
-    if (request.getPrimarySpecimenObjectIdName() != null ){
+    if (request.getPrimarySpecimenObjectIdName() != null) {
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(PRIMARY_SPECIMEN_OBJECT_ID_NAME), handle,
               PRIMARY_SPECIMEN_OBJECT_ID_NAME,
@@ -377,7 +386,7 @@ public class TestUtils {
     }
 
     // 205: specimenObjectIdAbsenceReason
-    if (request.getPrimarySpecimenObjectIdAbsenceReason() != null ){
+    if (request.getPrimarySpecimenObjectIdAbsenceReason() != null) {
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(PRIMARY_SPECIMEN_OBJECT_ID_ABSENCE), handle,
               PRIMARY_SPECIMEN_OBJECT_ID_ABSENCE,
@@ -385,8 +394,9 @@ public class TestUtils {
     }
 
     // 206: otherSpecimenIds
-    if (request.getOtherSpecimenIds() != null ){
-      var otherSpecimenIds = Arrays.toString(request.getOtherSpecimenIds()).getBytes(StandardCharsets.UTF_8);
+    if (request.getOtherSpecimenIds() != null) {
+      var otherSpecimenIds = Arrays.toString(request.getOtherSpecimenIds())
+          .getBytes(StandardCharsets.UTF_8);
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(OTHER_SPECIMEN_IDS), handle,
               OTHER_SPECIMEN_IDS,
@@ -394,7 +404,7 @@ public class TestUtils {
     }
 
     // 207: topicOrigin
-    if (request.getTopicOrigin() != null ){
+    if (request.getTopicOrigin() != null) {
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(TOPIC_ORIGIN), handle,
               TOPIC_ORIGIN,
@@ -402,7 +412,7 @@ public class TestUtils {
     }
 
     // 208: topicDomain
-    if (request.getTopicDomain() != null ){
+    if (request.getTopicDomain() != null) {
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(TOPIC_DOMAIN), handle,
               TOPIC_DOMAIN,
@@ -410,7 +420,7 @@ public class TestUtils {
     }
 
     // 209: topicDiscipline
-    if (request.getTopicDiscipline() != null ){
+    if (request.getTopicDiscipline() != null) {
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(TOPIC_DISCIPLINE), handle,
               TOPIC_DISCIPLINE,
@@ -418,7 +428,7 @@ public class TestUtils {
     }
 
     // 210: objectType
-    if (request.getObjectType() != null ){
+    if (request.getObjectType() != null) {
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(OBJECT_TYPE), handle,
               OBJECT_TYPE,
@@ -426,7 +436,7 @@ public class TestUtils {
     }
 
     // 211: livingOrPreserved
-    if (request.getLivingOrPreserved() != null ){
+    if (request.getLivingOrPreserved() != null) {
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(LIVING_OR_PRESERVED), handle,
               LIVING_OR_PRESERVED,
@@ -434,7 +444,7 @@ public class TestUtils {
     }
 
     // 212: baseTypeOfSpecimen
-    if (request.getBaseTypeOfSpecimen() != null ){
+    if (request.getBaseTypeOfSpecimen() != null) {
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(BASE_TYPE_OF_SPECIMEN), handle,
               BASE_TYPE_OF_SPECIMEN,
@@ -442,7 +452,7 @@ public class TestUtils {
     }
 
     // 213: informationArtefactType
-    if (request.getInformationArtefactType() != null ){
+    if (request.getInformationArtefactType() != null) {
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(INFORMATION_ARTEFACT_TYPE), handle,
               INFORMATION_ARTEFACT_TYPE,
@@ -450,7 +460,7 @@ public class TestUtils {
     }
 
     // 214: materialSampleType
-    if (request.getMaterialSampleType() != null ){
+    if (request.getMaterialSampleType() != null) {
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(MATERIAL_SAMPLE_TYPE), handle,
               MATERIAL_SAMPLE_TYPE,
@@ -458,7 +468,7 @@ public class TestUtils {
     }
 
     // 215: materialOrDigitalEntity
-    if (request.getMaterialSampleType() != null){
+    if (request.getMaterialSampleType() != null) {
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(MATERIAL_OR_DIGITAL_ENTITY), handle,
               MATERIAL_OR_DIGITAL_ENTITY,
@@ -466,7 +476,7 @@ public class TestUtils {
     }
 
     // 216: markedAsType
-    if (request.getMarkedAsType() != null ){
+    if (request.getMarkedAsType() != null) {
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(MARKED_AS_TYPE), handle,
               MARKED_AS_TYPE,
@@ -474,7 +484,7 @@ public class TestUtils {
     }
 
     // 217: wasDerivedFrom
-    if (request.getWasDerivedFrom() != null ){
+    if (request.getWasDerivedFrom() != null) {
       fdoRecord.add(
           new HandleAttribute(FIELD_IDX.get(WAS_DERIVED_FROM), handle,
               WAS_DERIVED_FROM,
@@ -491,25 +501,101 @@ public class TestUtils {
 
   public static List<HandleAttribute> genMediaObjectAttributes(byte[] handle)
       throws Exception {
-    List<HandleAttribute> handleRecord = genDoiRecordAttributes(handle);
-    byte[] ptr_record = PTR_HANDLE_RECORD.getBytes(StandardCharsets.UTF_8);
+    List<HandleAttribute> handleRecord = genDoiRecordAttributes(handle, ObjectType.MEDIA_OBJECT);
 
-    // 14 Media Hash
+    // Media Hash
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(MEDIA_HASH), handle,
         MEDIA_HASH, MEDIA_HASH_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
-    // 15 Subject Specimen Host
-    handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST), handle, SPECIMEN_HOST, ptr_record));
+    // Media hash Algorithm
+    handleRecord.add(new HandleAttribute(FIELD_IDX.get(MEDIA_HASH_ALG), handle,
+        MEDIA_HASH_ALG, MEDIA_HASH_ALG_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
-    // 16 media hash
+    // Subject Specimen Host
+    handleRecord.add(
+        new HandleAttribute(FIELD_IDX.get(SUBJECT_SPECIMEN_HOST), handle, SUBJECT_SPECIMEN_HOST,
+            SPECIMEN_HOST_TESTVAL.getBytes(
+                StandardCharsets.UTF_8)));
+
+    // Media URL
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(MEDIA_URL), handle,
         MEDIA_URL, MEDIA_URL_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
-    // 17 : Subject Physical Identifier
+    // Subject physical identifier
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(SUBJECT_PHYSICAL_IDENTIFIER), handle,
-        SUBJECT_PHYSICAL_IDENTIFIER, PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+        SUBJECT_PHYSICAL_IDENTIFIER,
+        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8)));
     return handleRecord;
+  }
+
+  public static List<HandleAttribute> genAnnotationAttributes(byte[] handle)
+      throws Exception {
+    var fdoRecord = genHandleRecordAttributes(handle, ObjectType.ANNOTATION);
+
+    // 500 subjectDigitalObjectId
+    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(SUBJECT_DIGITAL_OBJECT_ID), handle,
+        SUBJECT_DIGITAL_OBJECT_ID,
+        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+
+    // 501 AnnotationTopic
+    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(ANNOTATION_TOPIC), handle,
+        ANNOTATION_TOPIC, ANNOTATION_TOPIC_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+
+    // 502 replaceOrAppend
+    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(REPLACE_OR_APPEND), handle, REPLACE_OR_APPEND,
+        ReplaceOrAppend.REPLACE.getState().getBytes(StandardCharsets.UTF_8)));
+
+    // 503 AccessRestricted
+    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(ACCESS_RESTRICTED), handle, ACCESS_RESTRICTED,
+        String.valueOf(false).getBytes(StandardCharsets.UTF_8)));
+
+    // 504 LinkedObjectUrl
+      fdoRecord.add(new HandleAttribute(FIELD_IDX.get(LINKED_URL), handle, LINKED_URL,
+          LINKED_URL_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+
+    return fdoRecord;
+  }
+
+  public static List<HandleAttribute> genMappingAttributes(byte[] handle)
+      throws Exception {
+    var fdoRecord = genHandleRecordAttributes(handle, ObjectType.MAPPING);
+
+    // 500 subjectDigitalObjectId
+    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(SOURCE_DATA_STANDARD), handle,
+        SOURCE_DATA_STANDARD, SOURCE_DATA_STANDARD_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+
+    return fdoRecord;
+  }
+
+  public static List<HandleAttribute> genSourceSystemAttributes(byte[] handle)
+      throws Exception {
+    var fdoRecord = genHandleRecordAttributes(handle, ObjectType.SOURCE_SYSTEM);
+
+    // 600 hostInstitution
+    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(HOST_INSTITUTION), handle,
+        HOST_INSTITUTION, SPECIMEN_HOST_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+
+    return fdoRecord;
+  }
+
+  public static List<HandleAttribute> genOrganisationAttributes(byte[] handle)
+      throws Exception {
+    var fdoRecord = genDoiRecordAttributes(handle, ObjectType.ORGANISATION);
+
+    // 800 OrganisationIdentifier
+    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(ORGANISATION_ID), handle,
+        ORGANISATION_ID, SPECIMEN_HOST_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+
+    // 801 OrganisationIdentifier
+    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(ORGANISATION_ID_TYPE), handle,
+        ORGANISATION_ID_TYPE, PTR_TYPE_DOI.getBytes(StandardCharsets.UTF_8)));
+
+    // 802 OrganisationName
+    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(ORGANISATION_NAME), handle, ORGANISATION_NAME,
+        SPECIMEN_HOST_NAME_TESTVAL.getBytes(
+            StandardCharsets.UTF_8)));
+
+    return fdoRecord;
   }
 
   public static <T extends HandleRecordRequest> ObjectNode genCreateRecordRequest(T request,
@@ -595,14 +681,14 @@ public class TestUtils {
           SPECIMEN_HOST_TESTVAL,
           SPECIMEN_HOST_NAME_TESTVAL,
           PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-          null,null, null, null, null, null, null, null, null, null, null,null, null, null, null
+          null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
       );
     } catch (InvalidRequestException e) {
-     return null;
+      return null;
     }
   }
 
-  public static MediaObjectRequest genMediaRequestObject() {
+  public static MediaObjectRequest givenMediaRequestObject() {
     return new MediaObjectRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
@@ -613,11 +699,68 @@ public class TestUtils {
         REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL,
         MEDIA_HASH_TESTVAL,
-        MEDIA_URL_TESTVAL,
+        MEDIA_HASH_ALG_TESTVAL,
         SPECIMEN_HOST_TESTVAL,
+        MEDIA_URL_TESTVAL,
         PHYSICAL_IDENTIFIER_TESTVAL_CETAF
     );
   }
+
+  public static AnnotationRequest givenAnnotationRequestObject() {
+    return new AnnotationRequest(
+        FDO_PROFILE_TESTVAL,
+        ISSUED_FOR_AGENT_TESTVAL,
+        DIGITAL_OBJECT_TYPE_TESTVAL,
+        PID_ISSUER_TESTVAL_OTHER,
+        STRUCTURAL_TYPE_TESTVAL,
+        LOC_TESTVAL,
+        SUBJECT_DOI_TESTVAL,
+        ANNOTATION_TOPIC_TESTVAL,
+        ReplaceOrAppend.REPLACE,
+        false,
+        LINKED_URL_TESTVAL
+    );
+  }
+
+  public static MappingRequest givenMappingRequestObject() {
+    return new MappingRequest(
+        FDO_PROFILE_TESTVAL,
+        ISSUED_FOR_AGENT_TESTVAL,
+        DIGITAL_OBJECT_TYPE_TESTVAL,
+        PID_ISSUER_TESTVAL_OTHER,
+        STRUCTURAL_TYPE_TESTVAL,
+        LOC_TESTVAL,
+        SOURCE_DATA_STANDARD_TESTVAL
+    );
+  }
+
+  public static SourceSystemRequest givenSourceSystemRequestObject() {
+    return new SourceSystemRequest(
+        FDO_PROFILE_TESTVAL,
+        ISSUED_FOR_AGENT_TESTVAL,
+        DIGITAL_OBJECT_TYPE_TESTVAL,
+        PID_ISSUER_TESTVAL_OTHER,
+        STRUCTURAL_TYPE_TESTVAL,
+        LOC_TESTVAL,
+        SPECIMEN_HOST_TESTVAL
+    );
+  }
+
+  public static OrganisationRequest givenOrganisationRequestObject() {
+    return new OrganisationRequest(
+        FDO_PROFILE_TESTVAL,
+        ISSUED_FOR_AGENT_TESTVAL,
+        DIGITAL_OBJECT_TYPE_TESTVAL,
+        PID_ISSUER_TESTVAL_OTHER,
+        STRUCTURAL_TYPE_TESTVAL,
+        LOC_TESTVAL,
+        REFERENT_NAME_TESTVAL,
+        PRIMARY_REFERENT_TYPE_TESTVAL,
+        SPECIMEN_HOST_TESTVAL,
+        PTR_TYPE_DOI
+    );
+  }
+
 
   public static TombstoneRecordRequest genTombstoneRecordRequestObject() {
     return new TombstoneRecordRequest(
@@ -654,10 +797,12 @@ public class TestUtils {
     return new JsonApiWrapperRead(responseLink, dataNodes);
   }
 
-  public static JsonApiWrapperReadSingle givenRecordResponseReadSingle(String handle, String path, String type, JsonNode attributes){
+  public static JsonApiWrapperReadSingle givenRecordResponseReadSingle(String handle, String path,
+      String type, JsonNode attributes) {
     return new JsonApiWrapperReadSingle(
         new JsonApiLinks(path),
-        new JsonApiDataLinks(handle, type, attributes, new JsonApiLinks("https://hdl.handle.net/"+handle)));
+        new JsonApiDataLinks(handle, type, attributes,
+            new JsonApiLinks("https://hdl.handle.net/" + handle)));
   }
 
   public static JsonApiWrapperWrite givenRecordResponseWrite(List<byte[]> handles,
@@ -719,7 +864,7 @@ public class TestUtils {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
 
     for (byte[] handle : handles) {
-      var testDbRecord = genHandleRecordAttributesAltLoc(handle);
+      var testDbRecord = genHandleRecordAttributesAltLoc(handle, ObjectType.HANDLE);
       JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
 
       var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
@@ -750,11 +895,8 @@ public class TestUtils {
   public static List<HandleAttribute> genAttributes(String recordType, byte[] handle)
       throws Exception {
     switch (recordType) {
-      case RECORD_TYPE_HANDLE, "PID" -> {
-        return genHandleRecordAttributes(handle);
-      }
       case RECORD_TYPE_DOI -> {
-        return genDoiRecordAttributes(handle);
+        return genDoiRecordAttributes(handle, ObjectType.fromString(recordType));
       }
       case RECORD_TYPE_DS -> {
         return genDigitalSpecimenAttributes(handle);
@@ -765,8 +907,21 @@ public class TestUtils {
       case RECORD_TYPE_MEDIA -> {
         return genMediaObjectAttributes(handle);
       }
+      case RECORD_TYPE_ANNOTATION -> {
+        return genAnnotationAttributes(handle);
+      }
+      case RECORD_TYPE_MAPPING -> {
+        return genMappingAttributes(handle);
+      }
+      case RECORD_TYPE_SOURCE_SYSTEM -> {
+        return genSourceSystemAttributes(handle);
+      }
+      case RECORD_TYPE_ORGANISATION -> {
+        return genOrganisationAttributes(handle);
+      }
       default -> {
-        return null;
+        log.warn("Default type");
+        return genHandleRecordAttributes(handle, ObjectType.HANDLE);
       }
     }
   }
@@ -877,17 +1032,42 @@ public class TestUtils {
     return documentToString(doc).getBytes(StandardCharsets.UTF_8);
   }
 
-  private static String[] concatLocations(String[] userLocations, String handle){
+  private static String[] concatLocations(String[] userLocations, String handle, ObjectType type) {
     ArrayList<String> objectLocations = new ArrayList<>();
-    objectLocations.addAll(List.of(defaultLocations(handle)));
+    objectLocations.addAll(List.of(defaultLocations(handle, type)));
     objectLocations.addAll(List.of(userLocations));
     return objectLocations.toArray(new String[0]);
   }
 
-  private static String[] defaultLocations(String handle){
-    String api = "https://sandbox.dissco.tech/api/v1/specimens/" + handle;
-    String ui = "https://sandbox.dissco.tech/ds/" + handle;
-    return new String[]{api, ui};
+  private static String[] defaultLocations(String handle, ObjectType type) {
+    switch (type) {
+      case DIGITAL_SPECIMEN -> {
+        String api = API_URL + "/specimens/" + handle;
+        String ui = UI_URL + "/ds/" + handle;
+        return new String[]{api, ui};
+      }
+      case MAPPING -> {
+        return new String[]{API_URL + "/mapping/" + handle};
+      }
+      case SOURCE_SYSTEM -> {
+        return new String[]{API_URL + "/source-system/" + handle};
+      }
+      case MEDIA_OBJECT -> {
+        String api = API_URL + "/digitalMedia/" + handle;
+        String ui = UI_URL + "/dm/" + handle;
+        return new String[]{api, ui};
+      }
+      case ANNOTATION -> {
+        return new String[]{API_URL + "/annotations/" + handle};
+      }
+      case ORGANISATION -> {
+        return new String[]{SPECIMEN_HOST_TESTVAL};
+      }
+      default -> {
+        // Handle, DOI, Organisation (organisation handled separately)
+        return new String[]{};
+      }
+    }
   }
 
   private static String documentToString(Document document) throws TransformerException {

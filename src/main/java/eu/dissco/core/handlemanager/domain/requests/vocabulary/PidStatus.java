@@ -1,4 +1,4 @@
-package eu.dissco.core.handlemanager.domain.requests.attributes;
+package eu.dissco.core.handlemanager.domain.requests.vocabulary;
 
 import java.nio.charset.StandardCharsets;
 

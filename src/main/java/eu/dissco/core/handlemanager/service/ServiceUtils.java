@@ -1,10 +1,9 @@
 package eu.dissco.core.handlemanager.service;
 
-import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.MediaObjectRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
+import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
+import java.nio.charset.StandardCharsets;
 
 public class ServiceUtils {
 
@@ -23,7 +22,7 @@ public class ServiceUtils {
     if (physicalIdentifier.physicalIdType().equals(PhysicalIdType.CETAF)) {
       return physicalIdentifier.physicalId();
     }
-    return concatIds(physicalIdentifier.physicalId(), request.getSubjectSpecimenHostPid());
+    return concatIds(physicalIdentifier.physicalId(), request.getSubjectSpecimenHost());
   }
 
   private static String concatIds(String physicalIdentifier, String specimenHostPid) {
