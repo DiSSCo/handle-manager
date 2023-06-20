@@ -5,6 +5,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.DIGITAL_OBJECT_TY
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.FDO_PROFILE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.ISSUED_FOR_AGENT_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.LOC_TESTVAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.MEDIA_HASH_ALG_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MEDIA_HASH_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MEDIA_URL_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_ISSUER_TESTVAL_OTHER;
@@ -15,14 +16,14 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.ROR_DOMAIN;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_NAME_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.STRUCTURAL_TYPE_TESTVAL;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.MediaObjectRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
-import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdentifier;
+import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdentifier;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
@@ -59,8 +60,8 @@ import org.junit.jupiter.api.Test;
   @Test
   void testSetUniquePhysicalIdentifierMedia(){
    // Given
-   var request = genMediaRequestObject();
-   var expected = request.getSubjectPhysicalIdentifier().physicalId();
+   var request = givenMediaRequestObject();
+   var expected = request.getSubjectIdentifier().physicalId();
 
    // When
    var result =new String(setUniquePhysicalIdentifierId(request), StandardCharsets.UTF_8);
@@ -73,8 +74,8 @@ import org.junit.jupiter.api.Test;
   void testSetUniquePhysicalIdentifierMediaCombined(){
    // Given
    var request = givenCombinedMediaRequest();
-   var suffix = request.getSubjectSpecimenHostPid().replace(ROR_DOMAIN,"");
-   var expected = request.getSubjectPhysicalIdentifier().physicalId() + ":" + suffix;
+   var suffix = request.getSubjectSpecimenHost().replace(ROR_DOMAIN,"");
+   var expected = request.getSubjectIdentifier().physicalId() + ":" + suffix;
 
    // When
    var result = new String(setUniquePhysicalIdentifierId(request), StandardCharsets.UTF_8);
@@ -116,8 +117,9 @@ import org.junit.jupiter.api.Test;
        REFERENT_NAME_TESTVAL,
        PRIMARY_REFERENT_TYPE_TESTVAL,
        MEDIA_HASH_TESTVAL,
-       MEDIA_URL_TESTVAL,
+       MEDIA_HASH_ALG_TESTVAL,
        SPECIMEN_HOST_TESTVAL,
+       MEDIA_URL_TESTVAL,
        new PhysicalIdentifier("id", PhysicalIdType.COMBINED)
    );
   }

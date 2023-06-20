@@ -1,4 +1,4 @@
-package eu.dissco.core.handlemanager.domain.requests.attributes;
+package eu.dissco.core.handlemanager.domain.requests.vocabulary;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -8,6 +8,10 @@ public enum ObjectType {
   @JsonProperty("digitalSpecimen") DIGITAL_SPECIMEN("digitalSpecimen"),
   @JsonProperty("digitalSpecimenBotany") DIGITAL_SPECIMEN_BOTANY("digitalSpecimenBotany"),
   @JsonProperty("mediaObject") MEDIA_OBJECT("mediaObject"),
+  @JsonProperty("annotation") ANNOTATION("annotation"),
+  @JsonProperty("sourceSystem") SOURCE_SYSTEM("sourceSystem"),
+  @JsonProperty("mapping") MAPPING("mapping"),
+  @JsonProperty("organisation") ORGANISATION("organisation"),
   @JsonProperty("tombstone") TOMBSTONE("tombstone");
 
   private final String state;

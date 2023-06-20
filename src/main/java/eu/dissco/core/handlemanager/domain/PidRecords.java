@@ -63,9 +63,28 @@ public class PidRecords {
 
   // Media Object
   public static final String MEDIA_HASH = "mediaHash";
+  public static final String MEDIA_HASH_ALG = "mediaHashAlgorithm";
   public static final String SUBJECT_SPECIMEN_HOST = "subjectSpecimenHost";
   public static final String MEDIA_URL = "mediaUrl";
-  public static final String SUBJECT_PHYSICAL_IDENTIFIER = "subjectPhysicalIdentifier";
+  public static final String SUBJECT_PHYSICAL_IDENTIFIER = "subjectPrimarySpecimenObjectId";
+
+  // Annotations
+  public static final String SUBJECT_DIGITAL_OBJECT_ID = "subjectDigitalObjectId";
+  public static final String ANNOTATION_TOPIC = "annotationTopic";
+  public static final String REPLACE_OR_APPEND = "replaceOrAppend";
+  public static final String ACCESS_RESTRICTED = "accessRestricted";
+  public static final String LINKED_URL = "linkedObjectUrl";
+
+  // Source Systems
+  public static final String HOST_INSTITUTION = "hostInstitution";
+
+  // Mappings
+  public static final String SOURCE_DATA_STANDARD = "sourceDataStandard";
+
+  // Organisations
+  public static final String ORGANISATION_ID = "organisationIdentifier";
+  public static final String ORGANISATION_ID_TYPE = "organisationIdentifierType";
+  public static final String ORGANISATION_NAME = "organisationName";
 
   // Fields for requests
   public static final String PID_ISSUER_REQ = "pidIssuerPid";
@@ -113,7 +132,23 @@ public class PidRecords {
       Map.entry(MATERIAL_SAMPLE_TYPE, 214), Map.entry(MATERIAL_OR_DIGITAL_ENTITY, 215),
       Map.entry(MARKED_AS_TYPE, 216), Map.entry(WAS_DERIVED_FROM, 217),
 
-      Map.entry(MEDIA_HASH, 300), Map.entry(MEDIA_URL, 301), Map.entry(SUBJECT_PHYSICAL_IDENTIFIER, 302), Map.entry(SUBJECT_SPECIMEN_HOST, 303),
+      Map.entry(MEDIA_HASH, 400),
+      Map.entry(MEDIA_HASH_ALG, 401),
+      Map.entry(SUBJECT_SPECIMEN_HOST, 402),
+      Map.entry(MEDIA_URL, 403),
+      Map.entry(SUBJECT_PHYSICAL_IDENTIFIER, 404),
+
+      Map.entry(SUBJECT_DIGITAL_OBJECT_ID,500), Map.entry(ANNOTATION_TOPIC,501),
+      Map.entry(REPLACE_OR_APPEND,502), Map.entry(ACCESS_RESTRICTED,503),
+      Map.entry(LINKED_URL,504),
+
+      Map.entry(HOST_INSTITUTION,600),
+
+      Map.entry(SOURCE_DATA_STANDARD, 700),
+
+      Map.entry(ORGANISATION_ID, 800),
+      Map.entry(ORGANISATION_ID_TYPE, 801),
+      Map.entry(ORGANISATION_NAME, 802),
 
       Map.entry(HS_ADMIN, 100), Map.entry(LOC, 101));
 

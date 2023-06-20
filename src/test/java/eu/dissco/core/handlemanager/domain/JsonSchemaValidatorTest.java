@@ -1,43 +1,59 @@
 package eu.dissco.core.handlemanager.domain;
 
 import static eu.dissco.core.handlemanager.domain.PidRecords.FDO_PROFILE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.HOST_INSTITUTION;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LIVING_OR_PRESERVED;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_URL;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.ORGANISATION_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_NAME;
+import static eu.dissco.core.handlemanager.domain.PidRecords.SOURCE_DATA_STANDARD;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
+import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_DIGITAL_OBJECT_ID;
+import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_PHYSICAL_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_TEXT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.LOC_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MEDIA_URL_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_ISSUER_TESTVAL_OTHER;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_ANNOTATION;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DOI;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS_BOTANY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_HANDLE;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MAPPING;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MEDIA;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_ORGANISATION;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_SOURCE_SYSTEM;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.REFERENT_DOI_NAME_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genAnnotationAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMappingRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequestBatch;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecordRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenOrganisationRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemRequestObject;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaValidator;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import java.util.List;
@@ -128,7 +144,74 @@ class JsonSchemaValidatorTest {
   @Test
   void testPostMediaObjectRequest() {
     // Given
-    var request = genCreateRecordRequest(genMediaRequestObject(), RECORD_TYPE_MEDIA);
+    var request = genCreateRecordRequest(givenMediaRequestObject(), RECORD_TYPE_MEDIA);
+
+    // Then
+    assertDoesNotThrow(() -> {
+      schemaValidator.validatePostRequest(request);
+    });
+  }
+
+  @Test
+  void testPostAnnotationRequest() {
+    // Given
+    var request = genCreateRecordRequest(givenAnnotationRequestObject(), RECORD_TYPE_ANNOTATION);
+
+    // Then
+    assertDoesNotThrow(() -> {
+      schemaValidator.validatePostRequest(request);
+    });
+  }
+
+  @Test
+  void testPostOrganisationRequest() {
+    // Given
+    var request = genCreateRecordRequest(givenOrganisationRequestObject(), RECORD_TYPE_ORGANISATION);
+
+    // Then
+    assertDoesNotThrow(() -> {
+      schemaValidator.validatePostRequest(request);
+    });
+  }
+
+  @Test
+  void testPostOrganisationNullTypeRequest() {
+    // Given
+    var orgRequestObject =  new OrganisationRequest(
+        "FDO_PROFILE_TESTVAL",
+        "ISSUED_FOR_AGENT_TESTVAL",
+        "DIGITAL_OBJECT_TYPE_TESTVAL",
+        PID_ISSUER_TESTVAL_OTHER,
+        "STRUCTURAL_TYPE_TESTVAL",
+        LOC_TESTVAL,
+        "REFERENT_NAME_TESTVAL",
+        "PRIMARY_REFERENT_TYPE_TESTVAL",
+        SPECIMEN_HOST_TESTVAL,
+        null
+    );
+    var request = genCreateRecordRequest(orgRequestObject, RECORD_TYPE_ORGANISATION);
+
+    // Then
+    assertDoesNotThrow(() -> {
+      schemaValidator.validatePostRequest(request);
+    });
+  }
+
+  @Test
+  void testPostMappingRequest() {
+    // Given
+    var request = genCreateRecordRequest(givenMappingRequestObject(), RECORD_TYPE_MAPPING);
+
+    // Then
+    assertDoesNotThrow(() -> {
+      schemaValidator.validatePostRequest(request);
+    });
+  }
+
+  @Test
+  void testPostSourceSystemRequest() {
+    // Given
+    var request = genCreateRecordRequest(givenSourceSystemRequestObject(), RECORD_TYPE_SOURCE_SYSTEM);
 
     // Then
     assertDoesNotThrow(() -> {
@@ -184,6 +267,50 @@ class JsonSchemaValidatorTest {
   void testMediaObjectPatchRequest() {
     // Given
     var request = givenUpdateRequest(RECORD_TYPE_MEDIA, MEDIA_URL, MEDIA_URL_TESTVAL);
+
+    // Then
+    assertDoesNotThrow(() -> {
+      schemaValidator.validatePatchRequest(request);
+    });
+  }
+
+  @Test
+  void testAnnotationPatchRequest() {
+    // Given
+    var request = givenUpdateRequest(RECORD_TYPE_ANNOTATION, SUBJECT_DIGITAL_OBJECT_ID, "new");
+
+    // Then
+    assertDoesNotThrow(() -> {
+      schemaValidator.validatePatchRequest(request);
+    });
+  }
+
+  @Test
+  void testOrganisationPatchRequest() {
+    // Given
+    var request = givenUpdateRequest(RECORD_TYPE_ORGANISATION, ORGANISATION_ID, "new");
+
+    // Then
+    assertDoesNotThrow(() -> {
+      schemaValidator.validatePatchRequest(request);
+    });
+  }
+
+  @Test
+  void testMappingPatchRequest() {
+    // Given
+    var request = givenUpdateRequest(RECORD_TYPE_MAPPING, SOURCE_DATA_STANDARD, "new");
+
+    // Then
+    assertDoesNotThrow(() -> {
+      schemaValidator.validatePatchRequest(request);
+    });
+  }
+
+  @Test
+  void testSourceSystemPatchRequest() {
+    // Given
+    var request = givenUpdateRequest(RECORD_TYPE_SOURCE_SYSTEM, HOST_INSTITUTION, "new");
 
     // Then
     assertDoesNotThrow(() -> {
