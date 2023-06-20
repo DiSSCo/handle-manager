@@ -284,7 +284,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
         PRIMARY_SPECIMEN_OBJECT_ID,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
-    postAttributes(genDoiRecordAttributes(handle));
+    postAttributes(genDoiRecordAttributes(handle, ObjectType.DOI));
     postAttributes(expected);
 
     // When
@@ -431,7 +431,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     // Given
     var handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     var handleAlt = HANDLE_ALT.getBytes(StandardCharsets.UTF_8);
-    var existingRecord = genHandleRecordAttributes(handle);
+    var existingRecord = genHandleRecordAttributes(handle, ObjectType.HANDLE);
     postAttributes(existingRecord);
     var updatedRecord = new ArrayList<>(existingRecord);
     updatedRecord.add(new HandleAttribute(FIELD_IDX.get(MATERIAL_SAMPLE_TYPE), handle, MATERIAL_SAMPLE_TYPE, "digital".getBytes(StandardCharsets.UTF_8)));
@@ -440,7 +440,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     updatedRecord.remove(new HandleAttribute(FIELD_IDX.get(PID_RECORD_ISSUE_NUMBER), handle, PID_RECORD_ISSUE_NUMBER, String.valueOf(1).getBytes(
         StandardCharsets.UTF_8)));
 
-    var newRecord = genHandleRecordAttributes(handleAlt);
+    var newRecord = genHandleRecordAttributes(handleAlt, ObjectType.HANDLE);
     var expected = Stream.concat(updatedRecord.stream(), newRecord.stream()).toList();
 
     // When

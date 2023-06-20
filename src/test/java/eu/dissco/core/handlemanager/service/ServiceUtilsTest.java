@@ -62,8 +62,8 @@ import org.junit.jupiter.api.Test;
   @Test
   void testSetUniquePhysicalIdentifierMedia(){
    // Given
-   var request = genMediaRequestObject();
-   String expected = request.getSubjectPhysicalIdentifier().physicalId();
+   var request = givenMediaRequestObject();
+   String expected = request.getSubjectIdentifier().physicalId();
 
    // When
    String result = setUniquePhysicalIdentifierId(request);
@@ -76,8 +76,8 @@ import org.junit.jupiter.api.Test;
   void testSetUniquePhysicalIdentifierMediaCombined(){
    // Given
    var request = givenCombinedMediaRequest();
-   var suffix = request.getSubjectSpecimenHostPid().replace(ROR_DOMAIN,"");
-   String expected = request.getSubjectPhysicalIdentifier().physicalId() + ":" + suffix;
+   var suffix = request.getSubjectSpecimenHost().replace(ROR_DOMAIN,"");
+   String expected = request.getSubjectIdentifier().physicalId() + ":" + suffix;
 
    // When
    String result = setUniquePhysicalIdentifierId(request);

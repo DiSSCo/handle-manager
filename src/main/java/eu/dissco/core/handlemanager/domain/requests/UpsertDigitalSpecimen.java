@@ -1,6 +1,6 @@
 package eu.dissco.core.handlemanager.domain.requests;
 
-import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
 
 public record UpsertDigitalSpecimen(
     String handle,

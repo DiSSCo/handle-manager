@@ -287,7 +287,7 @@ class HandleServiceTest {
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(digitalSpecimen);
     given(handleRep.searchByPhysicalIdentifierFullRecord(anyList())).willReturn(new ArrayList<>());
-    given(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(any(), any())).willReturn(
+    given(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(any(), any(), any())).willReturn(
         digitalSpecimen);
 
     // When
@@ -592,7 +592,7 @@ class HandleServiceTest {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     var updateRequest = genUpdateRequestBatch(List.of(handle));
-    var updatedAttributeRecord = genHandleRecordAttributesAltLoc(handle, ObjectType.HANDLE);
+    var updatedAttributeRecord = genHandleRecordAttributesAltLoc(handle);
     var responseExpected = givenRecordResponseWriteAltLoc(List.of(handle));
 
     given(handleRep.checkHandlesWritable(anyList())).willReturn(List.of(handle));
@@ -613,7 +613,7 @@ class HandleServiceTest {
 
     List<HandleAttribute> updatedAttributeRecord = new ArrayList<>();
     for (byte[] handle : handles) {
-      updatedAttributeRecord.addAll(genHandleRecordAttributesAltLoc(handle, ObjectType.HANDLE));
+      updatedAttributeRecord.addAll(genHandleRecordAttributesAltLoc(handle));
     }
 
     var responseExpected = givenRecordResponseWriteAltLoc(handles);
@@ -766,9 +766,9 @@ class HandleServiceTest {
             PRIMARY_SPECIMEN_OBJECT_ID_TYPE, physicalIds.get(0))));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(
         Stream.concat(existingRecord.stream(), newRecord.stream()).toList());
-    given(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(any(), any())).willReturn(
+    given(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(any(), any(), any())).willReturn(
         newRecord);
-    given(fdoRecordBuilder.prepareUpdateAttributes(any(), any())).willReturn(
+    given(fdoRecordBuilder.prepareUpdateAttributes(any(), any(), any())).willReturn(
         existingRecord);
     given(hgService.genHandleList(anyInt())).willReturn(new ArrayList<>(List.of(newHandle)));
 
@@ -819,7 +819,7 @@ class HandleServiceTest {
             PRIMARY_SPECIMEN_OBJECT_ID_TYPE, PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(
             StandardCharsets.UTF_8))));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(existingRecord);
-    given(fdoRecordBuilder.prepareUpdateAttributes(any(), any())).willReturn(
+    given(fdoRecordBuilder.prepareUpdateAttributes(any(), any(), any())).willReturn(
         existingRecord);
     given(hgService.genHandleList(0)).willReturn(new ArrayList<>());
 
@@ -844,7 +844,7 @@ class HandleServiceTest {
 
     given(handleRep.searchByPhysicalIdentifier(anyList())).willReturn(new ArrayList<>());
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(newRecord);
-    given(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(any(), any())).willReturn(newRecord);
+    given(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(any(), any(), any())).willReturn(newRecord);
     given(hgService.genHandleList(anyInt())).willReturn(List.of(handles.get(0)));
 
     // When

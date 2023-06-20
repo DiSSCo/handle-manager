@@ -134,9 +134,11 @@ public class FdoRecordBuilder {
         new HandleAttribute(FIELD_IDX.get(HS_ADMIN), handle, HS_ADMIN, genAdminHandle()));
 
     // 101: 10320/loc
-    byte[] loc = setLocations(request.getLocations(), new String(handle, StandardCharsets.UTF_8),
-        true);
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, loc));
+    if (type != ObjectType.ORGANISATION) {
+      byte[] loc = setLocations(request.getLocations(), new String(handle, StandardCharsets.UTF_8),
+          type);
+      fdoRecord.add(new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, loc));
+    }
 
     // 1: FDO Profile
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(FDO_PROFILE), handle, FDO_PROFILE,
@@ -228,7 +230,8 @@ public class FdoRecordBuilder {
     }
   }
 
-  public List<HandleAttribute> prepareDoiRecordAttributes(DoiRecordRequest request, byte[] handle, ObjectType type)
+  public List<HandleAttribute> prepareDoiRecordAttributes(DoiRecordRequest request, byte[] handle,
+      ObjectType type)
       throws PidServiceInternalError, UnprocessableEntityException, PidResolutionException, InvalidRequestException {
     var fdoRecord = prepareHandleRecordAttributes(request, handle, type);
 
@@ -290,7 +293,8 @@ public class FdoRecordBuilder {
     return fdoRecord;
   }
 
-  public List<HandleAttribute> prepareAnnotationAttributes(AnnotationRequest request, byte[] handle, ObjectType type)
+  public List<HandleAttribute> prepareAnnotationAttributes(AnnotationRequest request, byte[] handle,
+      ObjectType type)
       throws UnprocessableEntityException, PidResolutionException, InvalidRequestException, PidServiceInternalError {
     var fdoRecord = prepareHandleRecordAttributes(request, handle, type);
 
@@ -355,11 +359,11 @@ public class FdoRecordBuilder {
 
     //101 10320/loc -> must contain ROR
     var objectLocations = new ArrayList<>(List.of(request.getOrganisationIdentifier()));
-    if (request.getLocations() != null){
+    if (request.getLocations() != null) {
       objectLocations.addAll(List.of(request.getLocations()));
     }
     byte[] loc = setLocations(objectLocations.toArray(new String[0]),
-        new String(handle, StandardCharsets.UTF_8), type);
+        new String(handle, StandardCharsets.UTF_8), ObjectType.ORGANISATION);
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, loc));
 
     // 800 OrganisationIdentifier
@@ -381,7 +385,8 @@ public class FdoRecordBuilder {
     return fdoRecord;
   }
 
-  public List<HandleAttribute> prepareMappingAttributes(MappingRequest request, byte[] handle, ObjectType type)
+  public List<HandleAttribute> prepareMappingAttributes(MappingRequest request, byte[] handle,
+      ObjectType type)
       throws UnprocessableEntityException, PidResolutionException, InvalidRequestException, PidServiceInternalError {
     var fdoRecord = prepareHandleRecordAttributes(request, handle, type);
 
@@ -576,7 +581,8 @@ public class FdoRecordBuilder {
     return prepareDigitalSpecimenRecordAttributes(request, handle, type);
   }
 
-  public List<HandleAttribute> prepareUpdateAttributes(byte[] handle, JsonNode requestAttributes, ObjectType type)
+  public List<HandleAttribute> prepareUpdateAttributes(byte[] handle, JsonNode requestAttributes,
+      ObjectType type)
       throws InvalidRequestException, PidServiceInternalError {
     requestAttributes = setLocationXmlFromJson(requestAttributes,
         new String(handle, StandardCharsets.UTF_8), type);
@@ -584,7 +590,7 @@ public class FdoRecordBuilder {
         new TypeReference<Map<String, String>>() {
         });
     return updateRequestMap.entrySet().stream()
-        .filter(entry -> entry.getValue()!=null)
+        .filter(entry -> entry.getValue() != null)
         .map(entry -> new HandleAttribute(FIELD_IDX.get(entry.getKey()), handle, entry.getKey(),
             entry.getValue().getBytes(StandardCharsets.UTF_8)))
         .toList();
@@ -592,7 +598,8 @@ public class FdoRecordBuilder {
 
   public List<HandleAttribute> prepareTombstoneAttributes(byte[] handle, JsonNode requestAttributes)
       throws InvalidRequestException, PidServiceInternalError {
-    var tombstoneAttributes = new ArrayList<>(prepareUpdateAttributes(handle, requestAttributes));
+    var tombstoneAttributes = new ArrayList<>(
+        prepareUpdateAttributes(handle, requestAttributes, ObjectType.TOMBSTONE));
     tombstoneAttributes.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS,
         "ARCHIVED".getBytes(StandardCharsets.UTF_8)));
     tombstoneAttributes.add(genLandingPage(handle));
@@ -601,7 +608,8 @@ public class FdoRecordBuilder {
 
   private HandleAttribute genLandingPage(byte[] handle) throws PidServiceInternalError {
     var landingPage = new String[]{"Placeholder landing page"};
-    var data = setLocations(landingPage, new String(handle, StandardCharsets.UTF_8), false);
+    var data = setLocations(landingPage, new String(handle, StandardCharsets.UTF_8),
+        ObjectType.TOMBSTONE);
     return new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, data);
   }
 
@@ -615,7 +623,8 @@ public class FdoRecordBuilder {
     ObjectNode requestObjectNode = request.deepCopy();
     try {
       String[] locArr = mapper.treeToValue(locNode, String[].class);
-      requestObjectNode.put(LOC, new String(setLocations(locArr, handle, type), StandardCharsets.UTF_8));
+      requestObjectNode.put(LOC,
+          new String(setLocations(locArr, handle, type), StandardCharsets.UTF_8));
       requestObjectNode.remove(LOC_REQ);
     } catch (IOException e) {
       throw new InvalidRequestException(
@@ -628,7 +637,7 @@ public class FdoRecordBuilder {
     return dt.format(Instant.now());
   }
 
-  public byte[] setLocations(String[] userLocations, String handle, boolean includeDefaultLocs)
+  public byte[] setLocations(String[] userLocations, String handle, ObjectType type)
       throws PidServiceInternalError {
 
     DocumentBuilder documentBuilder;
@@ -641,8 +650,7 @@ public class FdoRecordBuilder {
     var doc = documentBuilder.newDocument();
     var locations = doc.createElement(LOC_REQ);
     doc.appendChild(locations);
-    String[] objectLocations =
-        includeDefaultLocs ? concatLocations(userLocations, handle) : userLocations;
+    String[] objectLocations = concatLocations(userLocations, handle, type);
 
     for (int i = 0; i < objectLocations.length; i++) {
       var locs = doc.createElement("location");

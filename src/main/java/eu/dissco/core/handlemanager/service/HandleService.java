@@ -21,20 +21,15 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperReadSingle;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.UpsertDigitalSpecimen;
-import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenBotanyRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.DoiRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.MediaObjectRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.ObjectType;
-import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
-import eu.dissco.core.handlemanager.domain.requests.objects.AnnotationRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.objects.MappingRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
+
+import eu.dissco.core.handlemanager.domain.requests.objects.AnnotationRequest;
+
+import eu.dissco.core.handlemanager.domain.requests.objects.MappingRequest;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
 import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
@@ -431,7 +426,7 @@ public class HandleService {
     for (var digitalSpecimenRequest : digitalSpecimenRequests) {
       handleAttributes.addAll(
           fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(digitalSpecimenRequest,
-              handles.remove(0)));
+              handles.remove(0), ObjectType.DIGITAL_SPECIMEN));
     }
     return handleAttributes;
   }
@@ -447,7 +442,7 @@ public class HandleService {
           StandardCharsets.UTF_8));
       var jsonNode = mapper.valueToTree(upsertRequest.request());
       var upsertAttributeSingleSpecimen = new ArrayList<>(fdoRecordBuilder.prepareUpdateAttributes(
-          upsertRequest.handle().getBytes(StandardCharsets.UTF_8), jsonNode));
+          upsertRequest.handle().getBytes(StandardCharsets.UTF_8), jsonNode, ObjectType.DIGITAL_SPECIMEN));
       upsertAttributeSingleSpecimen.add(pidStatusActive);
       upsertAttributes.add(upsertAttributeSingleSpecimen);
     }

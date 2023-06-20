@@ -38,7 +38,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordRespon
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemRequestObject;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -49,13 +48,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.requests.RollbackRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.DigitalSpecimenRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.DoiRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
+import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.DoiRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
+
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaValidator;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
+import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.service.HandleService;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -87,10 +88,12 @@ class HandleControllerTest {
   private final String SANDBOX_URI = "https://sandbox.dissco.tech";
 
   public ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
+  @Mock
+  private ApplicationProperties applicationProperties;
 
   @BeforeEach
   void setup() {
-    controller = new HandleController(service, schemaValidator);
+    controller = new HandleController(service, schemaValidator, applicationProperties);
   }
 
   @Test
@@ -100,9 +103,9 @@ class HandleControllerTest {
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     MockHttpServletRequest r = new MockHttpServletRequest();
     r.setRequestURI(PREFIX + "/" + SUFFIX);
-
     var responseExpected = givenRecordResponseReadSingle(HANDLE, path, RECORD_TYPE_HANDLE, null);
 
+    given(applicationProperties.getUiUrl()).willReturn(SANDBOX_URI);
     given(service.resolveSingleRecord(handle, path)).willReturn(responseExpected);
 
     // When
@@ -166,6 +169,7 @@ class HandleControllerTest {
     List<byte[]> handles = List.of(HANDLE.getBytes(StandardCharsets.UTF_8), HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
     var responseExpected = givenRecordResponseRead(handles, path, RECORD_TYPE_HANDLE);
+    given(applicationProperties.getUiUrl()).willReturn(SANDBOX_URI);
     given(service.resolveBatchRecord(anyList(), eq(path))).willReturn(responseExpected);
 
     // When
@@ -426,7 +430,7 @@ class HandleControllerTest {
     given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecords(requests);
+    var responseReceived = controller.createRecords(requests, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -449,7 +453,7 @@ class HandleControllerTest {
     given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecords(requests);
+    var responseReceived = controller.createRecords(requests, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -472,7 +476,7 @@ class HandleControllerTest {
     given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecords(requests);
+    var responseReceived = controller.createRecords(requests, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);

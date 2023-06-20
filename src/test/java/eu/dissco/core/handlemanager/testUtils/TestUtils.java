@@ -111,7 +111,7 @@ public class TestUtils {
 
   public static final Instant CREATED = Instant.parse("2022-11-01T09:59:24.00Z");
   public static final String ISSUE_DATE_TESTVAL = "2022-11-01";
-  private final static String HANDLE_URI = "https://hdl.handle.net/";
+  public final static String HANDLE_URI = "https://hdl.handle.net/";
   public static final String HANDLE = "20.5000.1025/QRS-321-ABC";
   public static final String PREFIX = "20.5000.1025";
   public static final String SUFFIX = "QRS-321-ABC";
@@ -156,7 +156,6 @@ public class TestUtils {
   //Digital Specimens
   public static final String SPECIMEN_HOST_TESTVAL = ROR_DOMAIN + "0x123";
   public static final String SPECIMEN_HOST_NAME_TESTVAL = "Naturalis";
-  public static final String IN_COLLECTION_FACILITY_TESTVAL = "20.5000.1025/OTHER-TRIPLET";
   // Annotations
   public static final String SUBJECT_DOI_TESTVAL = HANDLE_URI + "20.5000.1025/111";
   public static final String ANNOTATION_TOPIC_TESTVAL = "note";
@@ -184,8 +183,6 @@ public class TestUtils {
   // Tombstone Record vals
   public final static String TOMBSTONE_TEXT_TESTVAL = "pid was deleted";
   // Pid Type Record vals
-  public final static String HANDLE_URI = "https://hdl.handle.net/";
-  public static final String PTR_PID = HANDLE_URI + PID_ISSUER_TESTVAL_OTHER;
   public static ObjectMapper MAPPER = new ObjectMapper().findAndRegisterModules();
 
   static {
@@ -200,12 +197,16 @@ public class TestUtils {
   }
 
   // Single Handle Attribute Lists
+
+  public static List<HandleAttribute> genHandleRecordAttributes(byte[] handle) throws Exception{
+    return genHandleRecordAttributes(handle, ObjectType.HANDLE);
+  }
   public static List<HandleAttribute> genHandleRecordAttributes(byte[] handle, ObjectType type) throws Exception {
 
     List<HandleAttribute> fdoRecord = new ArrayList<>();
     var request = givenHandleRecordRequestObject();
     byte[] loc = setLocations(request.getLocations(), new String(handle, StandardCharsets.UTF_8),
-        true);
+        type);
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, loc));
 
     // 1: FDO Profile
@@ -269,15 +270,14 @@ public class TestUtils {
     return fdoRecord;
   }
 
-  public static List<HandleAttribute> genHandleRecordAttributesAltLoc(byte[] handle,
-      ObjectType type)
+  public static List<HandleAttribute> genHandleRecordAttributesAltLoc(byte[] handle)
       throws Exception {
-    List<HandleAttribute> attributes = genHandleRecordAttributes(handle, type);
+    List<HandleAttribute> attributes = genHandleRecordAttributes(handle, ObjectType.HANDLE);
 
-    byte[] locOriginal = setLocations(LOC_TESTVAL, new String(handle, StandardCharsets.UTF_8), true);
+    byte[] locOriginal = setLocations(LOC_TESTVAL, new String(handle, StandardCharsets.UTF_8), ObjectType.HANDLE);
     var locOriginalAttr = new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, locOriginal);
 
-    byte[] locAlt = setLocations(LOC_ALT_TESTVAL, new String(handle, StandardCharsets.UTF_8), true);
+    byte[] locAlt = setLocations(LOC_ALT_TESTVAL, new String(handle, StandardCharsets.UTF_8), ObjectType.HANDLE);
     var locAltAttr = new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, locAlt);
 
     attributes.set(attributes.indexOf(locOriginalAttr), locAltAttr);
@@ -290,16 +290,16 @@ public class TestUtils {
     List<HandleAttribute> attributes = genHandleRecordAttributes(handle, ObjectType.HANDLE);
     HandleAttribute oldPidStatus = new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle,
         PID_STATUS, PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8));
-    attributes.addAll(genHandleRecordAttributes(handle));
+    attributes.addAll(genHandleRecordAttributes(handle, ObjectType.TOMBSTONE));
     attributes.remove(oldPidStatus);
     attributes = new ArrayList<>(attributes.stream().filter(row -> row.index()!=FIELD_IDX.get(LOC)).toList());
     attributes.add(givenLandingPageAttribute(handle));
     return attributes;
   }
 
-  public static List<HandleAttribute> genUpdateRecordAttributesAltLoc(byte[] handle, ObjectType type)
+  public static List<HandleAttribute> genUpdateRecordAttributesAltLoc(byte[] handle)
       throws ParserConfigurationException, TransformerException {
-    byte[] locAlt = setLocations(LOC_ALT_TESTVAL, new String(handle, StandardCharsets.UTF_8), true);
+    byte[] locAlt = setLocations(LOC_ALT_TESTVAL, new String(handle, StandardCharsets.UTF_8), ObjectType.HANDLE);
     return List.of(new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, locAlt));
   }
 
@@ -864,7 +864,7 @@ public class TestUtils {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
 
     for (byte[] handle : handles) {
-      var testDbRecord = genHandleRecordAttributesAltLoc(handle, ObjectType.HANDLE);
+      var testDbRecord = genHandleRecordAttributesAltLoc(handle);
       JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
 
       var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
@@ -1001,7 +1001,7 @@ public class TestUtils {
 
   public static byte[] givenLandingPage(String handle) throws Exception{
     var landingPage = new String[]{"Placeholder landing page"};
-    return setLocations(landingPage, handle, false);
+    return setLocations(landingPage, handle, ObjectType.TOMBSTONE);
   }
 
   public static HandleAttribute givenLandingPageAttribute(byte[] handle) throws Exception{
@@ -1009,8 +1009,7 @@ public class TestUtils {
     return new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, data);
   }
 
-  public static byte[] setLocations(String[] userLocations, String handle,
-      boolean includeDefaultLocs)
+  public static byte[] setLocations(String[] userLocations, String handle, ObjectType type)
       throws TransformerException, ParserConfigurationException {
     DOC_BUILDER_FACTORY.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
 
@@ -1019,7 +1018,7 @@ public class TestUtils {
     var doc = documentBuilder.newDocument();
     var locations = doc.createElement("locations");
     doc.appendChild(locations);
-    String[] objectLocations = includeDefaultLocs ?  concatLocations(userLocations, handle) : userLocations;
+    String[] objectLocations = concatLocations(userLocations, handle, type);
 
     for (int i = 0; i < objectLocations.length; i++) {
       var locs = doc.createElement("location");

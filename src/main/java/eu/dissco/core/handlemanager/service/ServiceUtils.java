@@ -3,7 +3,8 @@ package eu.dissco.core.handlemanager.service;
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
-import java.nio.charset.StandardCharsets;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 public class ServiceUtils {
 
@@ -18,7 +19,7 @@ public class ServiceUtils {
   }
 
   public static String setUniquePhysicalIdentifierId(MediaObjectRequest request) {
-    var physicalIdentifier = request.getSubjectPhysicalIdentifier();
+    var physicalIdentifier = request.getSubjectIdentifier();
     if (physicalIdentifier.physicalIdType().equals(PhysicalIdType.CETAF)) {
       return physicalIdentifier.physicalId();
     }

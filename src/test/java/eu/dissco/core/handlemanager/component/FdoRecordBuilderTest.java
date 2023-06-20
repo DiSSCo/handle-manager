@@ -60,14 +60,17 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TES
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.STRUCTURAL_TYPE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.TRANSFORMER_FACTORY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordRequestAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRecordAttributesAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestAltLoc;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecordRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMappingRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenOrganisationRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemRequestObject;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -431,7 +434,7 @@ class FdoRecordBuilderTest {
   void testUpdateAttributesAltLoc() throws Exception {
     // Given
     var updateRequest = genUpdateRequestAltLoc();
-    var expected = genUpdateRecordAttributesAltLoc(HANDLE.getBytes(StandardCharsets.UTF_8), ObjectType.HANDLE);
+    var expected = genUpdateRecordAttributesAltLoc(HANDLE.getBytes(StandardCharsets.UTF_8));
 
     // When
     var response = fdoRecordBuilder.prepareUpdateAttributes(HANDLE.getBytes(StandardCharsets.UTF_8),

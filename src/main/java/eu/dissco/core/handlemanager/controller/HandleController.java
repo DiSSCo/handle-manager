@@ -13,14 +13,15 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperReadSingle;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.requests.RollbackRequest;
-import eu.dissco.core.handlemanager.domain.requests.attributes.ObjectType;
-import eu.dissco.core.handlemanager.domain.requests.attributes.PhysicalIdType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaValidator;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
+import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.service.HandleService;
 import io.swagger.v3.oas.annotations.Operation;
 import java.nio.charset.StandardCharsets;
@@ -53,9 +54,9 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class HandleController {
 
-  private static final String SANDBOX_URI = "https://sandbox.dissco.tech";
   private final HandleService service;
   private final JsonSchemaValidator schemaValidator;
+  private final ApplicationProperties applicationProperties;
 
   // Getters
   @Operation(summary = "Resolve single PID record")
@@ -63,7 +64,7 @@ public class HandleController {
   public ResponseEntity<JsonApiWrapperReadSingle> resolvePid(@PathVariable("prefix") String prefix,
       @PathVariable("suffix") String suffix, HttpServletRequest r)
       throws PidResolutionException {
-    String path = SANDBOX_URI + r.getRequestURI();
+    String path = applicationProperties.getUiUrl() + r.getRequestURI();
     String handle = prefix + "/" + suffix;
 
     if (prefix.equals("20.5000.1025")) {
@@ -79,7 +80,7 @@ public class HandleController {
   public ResponseEntity<JsonApiWrapperRead> resolvePids(
       @RequestParam List<String> handles,
       HttpServletRequest r) throws PidResolutionException, InvalidRequestException {
-    String path = SANDBOX_URI + r.getRequestURI();
+    String path = applicationProperties.getUiUrl() + r.getRequestURI();
     int maxHandles = 200;
 
     if (handles.size() > maxHandles) {
