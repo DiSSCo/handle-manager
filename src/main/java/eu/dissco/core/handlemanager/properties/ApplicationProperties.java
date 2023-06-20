@@ -21,4 +21,7 @@ public class ApplicationProperties {
   @NotBlank
   private String orchestrationUrl;
 
+  @NotBlank
+  private int maxHandles;
+
 }

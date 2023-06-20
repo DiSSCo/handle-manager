@@ -81,12 +81,11 @@ public class HandleController {
       @RequestParam List<String> handles,
       HttpServletRequest r) throws PidResolutionException, InvalidRequestException {
     String path = applicationProperties.getUiUrl() + r.getRequestURI();
-    int maxHandles = 200;
 
-    if (handles.size() > maxHandles) {
+    if (handles.size() > applicationProperties.getMaxHandles()) {
       throw new InvalidRequestException(
           "Attempting to resolve more than maximum permitted PIDs in a single request. Maximum handles: "
-              + maxHandles);
+              + applicationProperties.getMaxHandles());
     }
     List<byte[]> handleBytes = new ArrayList<>();
     handles.forEach(h -> handleBytes.add(h.getBytes(StandardCharsets.UTF_8)));
@@ -226,8 +225,8 @@ public class HandleController {
     }
     var handles = ids.stream().map(JsonNode::asText).toList();
 
-    log.info("Rollback request received from user " + authentication.getName() + " for handles : "
-        + handles);
+    log.info("Rollback request received from user {} for handles : {}", authentication.getName(),
+        handles);
     service.rollbackHandles(handles);
     return ResponseEntity.ok().build();
   }

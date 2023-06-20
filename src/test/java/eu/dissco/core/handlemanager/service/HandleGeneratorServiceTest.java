@@ -4,7 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.lenient;
 
+import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -25,11 +27,15 @@ class HandleGeneratorServiceTest {
   @Mock
   private Random random;
 
+  @Mock
+  ApplicationProperties applicationProperties;
+
   private HandleGeneratorService hgService;
 
   @BeforeEach
   void setup() {
-    this.hgService = new HandleGeneratorService(handleRep, random);
+    this.hgService = new HandleGeneratorService(applicationProperties, handleRep, random);
+    lenient().when(applicationProperties.getMaxHandles()).thenReturn(1000);
   }
 
   @Test
@@ -83,7 +89,6 @@ class HandleGeneratorServiceTest {
 
   @Test
   void testDbCollision() {
-
     // Given
     byte[] expectedHandle1 = "20.5000.1025/BBB-BBB-BBB".getBytes(StandardCharsets.UTF_8);
     byte[] expectedHandle2 = "20.5000.1025/ABB-BBB-BBB".getBytes(StandardCharsets.UTF_8);
@@ -108,9 +113,6 @@ class HandleGeneratorServiceTest {
 
   @Test
   void testInvalidNumberOfHandles() {
-    // Given
-    Random randomGen = new Random();
-
     // When
     var tooFew = hgService.genHandleList(-1);
 
