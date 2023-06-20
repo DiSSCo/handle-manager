@@ -406,6 +406,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     assertThat(response).hasSameElementsAs(expected);
   }
 
+  @Test
   void testRollbackHandleUpdate() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);

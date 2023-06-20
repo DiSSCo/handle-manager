@@ -329,6 +329,7 @@ public class HandleService {
     var physicalIdsBytes = getPhysIdBytes(physicalIds);
     var upsertRequests = getRegisteredSpecimensUpsert(digitalSpecimenRequests, physicalIdsBytes);
     var upsertAttributes = prepareUpsertAttributes(upsertRequests);
+    logUpdates(upsertRequests);
 
     var createRequests = getCreateRequests(upsertRequests, digitalSpecimenRequests);
     var newHandles = hf.genHandleList(createRequests.size());
@@ -344,6 +345,13 @@ public class HandleService {
     handleRep.postAndUpdateHandles(recordTimestamp, createAttributes, upsertAttributes);
 
     return concatAndFormatUpsertResponse(newHandles, upsertRequests);
+  }
+
+  private void logUpdates(List<UpsertDigitalSpecimen> upsertRequests){
+    var registeredHandles = upsertRequests.stream().map(UpsertDigitalSpecimen::handle).toList();
+    if (!registeredHandles.isEmpty()){
+      log.info("Some specimens already have handles. Updating the following PID Records {}", registeredHandles);
+    }
   }
 
   private List<DigitalSpecimenRequest> jsonNodeToDigitalSpecimenRequest(List<JsonNode> requests)
