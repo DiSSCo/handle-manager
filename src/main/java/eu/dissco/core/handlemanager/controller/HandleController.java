@@ -219,6 +219,7 @@ public class HandleController {
   public ResponseEntity<Void> rollbackHandleCreation(@RequestBody RollbackRequest request,
       Authentication authentication)
       throws InvalidRequestException {
+    log.info("validating rollback creation request from user {}", authentication.getName());
     var ids = request.data().stream().map(d -> d.get(NODE_ID)).toList();
     if (ids.contains(null)) {
       throw new InvalidRequestException("Missing Handles (\"id\") in request");
