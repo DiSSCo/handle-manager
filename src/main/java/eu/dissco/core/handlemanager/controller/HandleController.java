@@ -187,7 +187,8 @@ public class HandleController {
       }
     }
     var ids = getPhysicalSpecimenIds(requests);
-    log.info("Received upsert request for physical specimens {} from user {}",ids, authentication.getName());
+    log.info("Received upsert request for physical specimens {} from user {}", ids,
+        authentication.getName());
     return ResponseEntity.ok(service.upsertDigitalSpecimens(requests));
   }
 
@@ -241,7 +242,8 @@ public class HandleController {
       schemaValidator.validatePatchRequest(request);
     }
     var handles = requests.stream().map(r -> r.get(NODE_DATA).get(NODE_ID).asText()).toList();
-    log.info("Received rollback update request for handles {} from user {}", handles, authentication.getName());
+    log.info("Received rollback update request for handles {} from user {}", handles,
+        authentication.getName());
     return ResponseEntity.status(HttpStatus.OK).body(service.updateRecords(requests, false));
   }
 
@@ -255,7 +257,7 @@ public class HandleController {
     return ResponseEntity.status(HttpStatus.OK).body(service.archiveRecordBatch(requests));
   }
 
-  private List<String> getPhysicalSpecimenIds(List<JsonNode> requests){
+  private List<String> getPhysicalSpecimenIds(List<JsonNode> requests) {
     return requests.stream().map(r -> r.get(NODE_DATA).get(NODE_ATTRIBUTES)
         .get(PRIMARY_SPECIMEN_OBJECT_ID).asText()).toList();
   }

@@ -114,7 +114,6 @@ public class HandleGeneratorService {
 
   private List<byte[]> newHandle(int numberOfHandles) { // Generates h number of handles
     if (numberOfHandles < 1) {
-      log.warn("Invalid number of handles to be generated");
       return new ArrayList<>();
     }
     if (numberOfHandles > MAX_HANDLES) {
