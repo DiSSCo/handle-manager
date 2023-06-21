@@ -4,6 +4,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
@@ -21,6 +22,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MAPPI
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MEDIA;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_ORGANISATION;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_SOURCE_SYSTEM;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.REFERENT_NAME_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genAnnotationAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
@@ -71,6 +73,8 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
+import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
+import eu.dissco.core.handlemanager.domain.requests.PatchRequestData;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
@@ -91,6 +95,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.parameters.P;
 
 @ExtendWith(MockitoExtension.class)
 class HandleServiceTest {
@@ -750,9 +755,9 @@ class HandleServiceTest {
     var existingHandle = handles.get(0);
     var newHandle = handles.get(1);
     var existingPhysId = "Alt ID";
-    var newPhysId = PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 
-    var newRecordRequest = givenDigitalSpecimenRequestObjectNullOptionals(newPhysId);
+    var newRecordRequest = givenDigitalSpecimenRequestObjectNullOptionals(
+        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL);
     var existingRecordRequest = givenDigitalSpecimenRequestObjectNullOptionals(existingPhysId);
     List<JsonNode> requests = List.of(
         genCreateRecordRequest(newRecordRequest, RECORD_TYPE_DS),
@@ -760,12 +765,8 @@ class HandleServiceTest {
 
     var existingRecordAttributes = genDigitalSpecimenAttributes(existingHandle);
     var newRecordAttriutes = genDigitalSpecimenAttributes(newHandle);
-    var existingRecordWithStatusAttributes = new ArrayList<>(existingRecordAttributes);
-    existingRecordWithStatusAttributes.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS),
-        existingHandle, PID_STATUS, PID_STATUS_TESTVAL.getBytes(
-        StandardCharsets.UTF_8)));
     var expected = new JsonApiWrapperWrite(
-        List.of(upsertedResponse(existingRecordWithStatusAttributes,
+        List.of(upsertedResponse(existingRecordAttributes,
                 new String(existingHandle, StandardCharsets.UTF_8)),
             upsertedResponse(newRecordAttriutes, new String(newHandle)))
     );
@@ -777,8 +778,7 @@ class HandleServiceTest {
         Stream.concat(existingRecordAttributes.stream(), newRecordAttriutes.stream()).toList());
     given(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(eq(newRecordRequest), any(),
         any())).willReturn(newRecordAttriutes);
-    given(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(eq(existingRecordRequest), any(),
-        any())).willReturn(
+    given(fdoRecordBuilder.prepareUpdateAttributes(any(), eq(MAPPER.valueToTree(existingRecordRequest)), any())).willReturn(
         existingRecordAttributes);
     given(hgService.genHandleList(anyInt())).willReturn(new ArrayList<>(List.of(newHandle)));
 
@@ -789,7 +789,7 @@ class HandleServiceTest {
     assertThat(response).isEqualTo(expected);
     then(handleRep).should()
         .postAndUpdateHandles(CREATED.getEpochSecond(), newRecordAttriutes,
-            List.of(existingRecordWithStatusAttributes));
+            List.of(existingRecordAttributes));
   }
 
   @Test
@@ -816,13 +816,9 @@ class HandleServiceTest {
     List<JsonNode> requests = List.of(
         genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS));
     var existingRecord = genDigitalSpecimenAttributes(handles.get(0));
-    var existingRecordWithStatus = new ArrayList<>(existingRecord);
-    existingRecordWithStatus.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS),
-        handles.get(0), PID_STATUS, PID_STATUS_TESTVAL.getBytes(
-        StandardCharsets.UTF_8)));
 
     var expected = new JsonApiWrapperWrite(
-        List.of(upsertedResponse(existingRecordWithStatus, HANDLE))
+        List.of(upsertedResponse(existingRecord, HANDLE))
     );
 
     given(handleRep.searchByPhysicalIdentifier(anyList())).willReturn(
@@ -830,7 +826,7 @@ class HandleServiceTest {
             PRIMARY_SPECIMEN_OBJECT_ID_TYPE, PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(
             StandardCharsets.UTF_8))));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(existingRecord);
-    given(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(any(), any(), any())).willReturn(
+    given(fdoRecordBuilder.prepareUpdateAttributes(any(), any(), any())).willReturn(
         existingRecord);
     given(hgService.genHandleList(0)).willReturn(new ArrayList<>());
 
@@ -841,7 +837,7 @@ class HandleServiceTest {
     assertThat(response).isEqualTo(expected);
     then(handleRep).should()
         .postAndUpdateHandles(CREATED.getEpochSecond(), new ArrayList<>(),
-            List.of(existingRecordWithStatus));
+            List.of(existingRecord));
   }
 
   @Test

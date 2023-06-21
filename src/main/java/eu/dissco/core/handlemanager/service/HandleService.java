@@ -452,13 +452,9 @@ public class HandleService {
     List<List<HandleAttribute>> upsertAttributes = new ArrayList<>();
 
     for (var upsertRequest : upsertDigitalSpecimens) {
-      var pidStatusActive = new HandleAttribute(FIELD_IDX.get(PID_STATUS),
-          upsertRequest.handle().getBytes(StandardCharsets.UTF_8), PID_STATUS, "TEST".getBytes(
-          StandardCharsets.UTF_8));
-      var upsertAttributeSingleSpecimen = new ArrayList<>(fdoRecordBuilder
-          .prepareDigitalSpecimenRecordAttributes(upsertRequest.request(),
-          upsertRequest.handle().getBytes(StandardCharsets.UTF_8), ObjectType.DIGITAL_SPECIMEN));
-      upsertAttributeSingleSpecimen.add(pidStatusActive);
+      ArrayList<HandleAttribute> upsertAttributeSingleSpecimen = new ArrayList<>(fdoRecordBuilder
+          .prepareUpdateAttributes(upsertRequest.handle().getBytes(StandardCharsets.UTF_8),
+              mapper.valueToTree(upsertRequest.request()),ObjectType.DIGITAL_SPECIMEN));
       upsertAttributes.add(upsertAttributeSingleSpecimen);
     }
     return upsertAttributes;
@@ -466,7 +462,7 @@ public class HandleService {
 
   // Update
   public JsonApiWrapperWrite updateRecords(List<JsonNode> requests, boolean incrementVersion)
-      throws InvalidRequestException, PidResolutionException, PidServiceInternalError {
+      throws InvalidRequestException, PidResolutionException, PidServiceInternalError, UnprocessableEntityException {
     var recordTimestamp = Instant.now().getEpochSecond();
     List<byte[]> handles = new ArrayList<>();
     List<List<HandleAttribute>> attributesToUpdate = new ArrayList<>();
@@ -545,7 +541,7 @@ public class HandleService {
 
   // Archive
   public JsonApiWrapperWrite archiveRecordBatch(List<JsonNode> requests)
-      throws InvalidRequestException, PidResolutionException, PidServiceInternalError {
+      throws InvalidRequestException, PidResolutionException, PidServiceInternalError, UnprocessableEntityException {
     var recordTimestamp = Instant.now().getEpochSecond();
     List<byte[]> handles = new ArrayList<>();
     List<HandleAttribute> archiveAttributes = new ArrayList<>();

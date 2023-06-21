@@ -45,6 +45,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REPLACE_OR_APPEND;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RESOLVABLE_KEYS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SOURCE_DATA_STANDARD;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST_NAME;
@@ -88,9 +89,11 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -121,6 +124,7 @@ public class FdoRecordBuilder {
   private static final String PROXY_ERROR = "Invalid attribute: %s must contain proxy: %s";
   private static final byte[] pidKernelMetadataLicense = "https://creativecommons.org/publicdomain/zero/1.0/".getBytes(
       StandardCharsets.UTF_8);
+
   private final DateTimeFormatter dt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
       .withZone(ZoneId.of("UTC"));
 
@@ -583,21 +587,52 @@ public class FdoRecordBuilder {
 
   public List<HandleAttribute> prepareUpdateAttributes(byte[] handle, JsonNode requestAttributes,
       ObjectType type)
-      throws InvalidRequestException, PidServiceInternalError {
+      throws InvalidRequestException, PidServiceInternalError, UnprocessableEntityException, PidResolutionException {
     requestAttributes = setLocationXmlFromJson(requestAttributes,
         new String(handle, StandardCharsets.UTF_8), type);
     Map<String, String> updateRequestMap = mapper.convertValue(requestAttributes,
         new TypeReference<Map<String, String>>() {
         });
-    return updateRequestMap.entrySet().stream()
+
+    var updatedAttributeList = new ArrayList<>(updateRequestMap.entrySet().stream()
         .filter(entry -> entry.getValue() != null)
         .map(entry -> new HandleAttribute(FIELD_IDX.get(entry.getKey()), handle, entry.getKey(),
             entry.getValue().getBytes(StandardCharsets.UTF_8)))
-        .toList();
+        .toList());
+        updatedAttributeList.addAll(addResolvedNames(updateRequestMap, handle));
+        return updatedAttributeList;
+  }
+
+  private List<HandleAttribute> addResolvedNames(Map<String, String> updateRequestMap, byte[] handle)
+      throws UnprocessableEntityException, PidResolutionException {
+
+    var resolvableKeys = updateRequestMap.entrySet()
+        .stream()
+        .filter(entry -> RESOLVABLE_KEYS.containsKey(entry.getKey())
+            && !hasResolvedPairInRequest(updateRequestMap, entry.getKey()))
+        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+    ArrayList<HandleAttribute> resolvedPidNameAttributes = new ArrayList<>();
+    if (resolvableKeys.isEmpty()){
+      return resolvedPidNameAttributes;
+    }
+
+    for (var resolvableKey : resolvableKeys.entrySet()) {
+      var targetAttribute = RESOLVABLE_KEYS.get(resolvableKey.getKey());
+      var resolvedPid = pidResolver.getObjectName(resolvableKey.getValue());
+      resolvedPidNameAttributes.add(new HandleAttribute(FIELD_IDX.get(targetAttribute),
+          handle, targetAttribute, resolvedPid.getBytes(StandardCharsets.UTF_8)));
+    }
+    return resolvedPidNameAttributes;
+  }
+
+  private boolean hasResolvedPairInRequest(Map<String, String> updateRequestMap, String pidToResolve){
+    var targetName = RESOLVABLE_KEYS.get(pidToResolve);
+    return updateRequestMap.containsKey(targetName);
   }
 
   public List<HandleAttribute> prepareTombstoneAttributes(byte[] handle, JsonNode requestAttributes)
-      throws InvalidRequestException, PidServiceInternalError {
+      throws InvalidRequestException, PidServiceInternalError, UnprocessableEntityException, PidResolutionException {
     var tombstoneAttributes = new ArrayList<>(
         prepareUpdateAttributes(handle, requestAttributes, ObjectType.TOMBSTONE));
     tombstoneAttributes.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS,

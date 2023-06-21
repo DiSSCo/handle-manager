@@ -1,15 +1,12 @@
 package eu.dissco.core.handlemanager.domain;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 public class PidRecords {
 
   // Handle
-
   public static final String FDO_PROFILE = "fdoProfile"; // 1
   public static final String FDO_RECORD_LICENSE = "fdoRecordLicense"; //2
   public static final String DIGITAL_OBJECT_TYPE = "digitalObjectType"; //3
@@ -97,17 +94,17 @@ public class PidRecords {
   public static final String NODE_ID = "id";
   public static final String NODE_TYPE = "type";
 
-  // Permitted fields for each record type
-  public static final Set<String> HANDLE_RECORD_FIELDS = Set.of(PID, PID_ISSUER,
-      DIGITAL_OBJECT_TYPE, LOC, PID_RECORD_ISSUE_DATE,
-      PID_RECORD_ISSUE_NUMBER, PID_STATUS, FDO_RECORD_LICENSE);
-  public static final Set<byte[]> TOMBSTONE_RECORD_FIELDS_BYTES;
-  public static final Set<String> TOMBSTONE_RECORD_FIELDS;
+  public static final Map<String, String> RESOLVABLE_KEYS;
+  static {
+    HashMap<String, String> hashMap = new HashMap<>();
+    hashMap.put(DIGITAL_OBJECT_TYPE, DIGITAL_OBJECT_NAME);
+    hashMap.put(PID_ISSUER, PID_ISSUER_NAME);
+    hashMap.put(ISSUED_FOR_AGENT, ISSUED_FOR_AGENT_NAME);
+    hashMap.put(SPECIMEN_HOST, SPECIMEN_HOST_NAME);
+    RESOLVABLE_KEYS = Collections.unmodifiableMap(hashMap);
+  }
+
   // Fields for request type (For checking update requests)
-  public static final Set<String> HANDLE_RECORD_REQ = Set.of(PID_ISSUER_REQ, LOC_REQ);
-  public static final Set<String> DOI_RECORD_REQ;
-  public static final Set<String> DIGITAL_SPECIMEN_REQ;
-  public static final Set<String> DIGITAL_SPECIMEN_BOTANY_REQ;
 
   public static final Map<String, Integer> FIELD_IDX = Map.ofEntries(Map.entry(FDO_PROFILE, 1),
       Map.entry(FDO_RECORD_LICENSE, 2), Map.entry(DIGITAL_OBJECT_TYPE, 3),
@@ -151,46 +148,6 @@ public class PidRecords {
       Map.entry(ORGANISATION_NAME, 802),
 
       Map.entry(HS_ADMIN, 100), Map.entry(LOC, 101));
-
-
-  static {
-    Set<String> tmp = new HashSet<>(HANDLE_RECORD_FIELDS);
-    tmp.add(TOMBSTONE_TEXT);
-    tmp.add(TOMBSTONE_PIDS);
-    TOMBSTONE_RECORD_FIELDS = Collections.unmodifiableSet(tmp);
-  }
-
-  static {
-    Set<byte[]> tmp = new HashSet<>();
-    for (String field : TOMBSTONE_RECORD_FIELDS) {
-      tmp.add(field.getBytes(StandardCharsets.UTF_8));
-    }
-    TOMBSTONE_RECORD_FIELDS_BYTES = Collections.unmodifiableSet(tmp);
-  }
-
-  // Request fields
-
-  static {
-    Set<String> tmp = new HashSet<>(HANDLE_RECORD_REQ);
-    tmp.add(REFERENT);
-    tmp.add(REFERENT_DOI_NAME_REQ);
-    DOI_RECORD_REQ = Collections.unmodifiableSet(tmp);
-  }
-
-  static {
-    Set<String> tmp = new HashSet<>(DOI_RECORD_REQ);
-    tmp.add(MATERIAL_OR_DIGITAL_ENTITY);
-    tmp.add(SPECIMEN_HOST_REQ);
-    tmp.add(IN_COLLECTION_FACILITY_REQ);
-    DIGITAL_SPECIMEN_REQ = Collections.unmodifiableSet(tmp);
-  }
-
-  static {
-    Set<String> tmp = new HashSet<>(DIGITAL_SPECIMEN_REQ);
-    tmp.add(OBJECT_TYPE);
-    tmp.add(LIVING_OR_PRESERVED);
-    DIGITAL_SPECIMEN_BOTANY_REQ = Collections.unmodifiableSet(tmp);
-  }
 
   private PidRecords() {
     throw new IllegalStateException("Utility class");

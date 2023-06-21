@@ -134,7 +134,7 @@ public class HandleController {
   public ResponseEntity<JsonApiWrapperWrite> updateRecord(@PathVariable("prefix") String prefix,
       @PathVariable("suffix") String suffix, @RequestBody JsonNode request,
       Authentication authentication)
-      throws InvalidRequestException, PidResolutionException, PidServiceInternalError {
+      throws InvalidRequestException, PidResolutionException, PidServiceInternalError, UnprocessableEntityException {
     log.info("Received single update request for PID {}/{} from user {}", prefix, suffix,
         authentication.getName());
     schemaValidator.validatePatchRequest(request);
@@ -157,7 +157,7 @@ public class HandleController {
   @PatchMapping(value = "")
   public ResponseEntity<JsonApiWrapperWrite> updateRecords(@RequestBody List<JsonNode> requests,
       Authentication authentication)
-      throws InvalidRequestException, PidResolutionException, PidServiceInternalError {
+      throws InvalidRequestException, PidResolutionException, PidServiceInternalError, UnprocessableEntityException {
     log.info("Validating batch update request from user {}", authentication.getName());
     for (JsonNode request : requests) {
       schemaValidator.validatePatchRequest(request);
@@ -196,7 +196,7 @@ public class HandleController {
   public ResponseEntity<JsonApiWrapperWrite> archiveRecord(@PathVariable("prefix") String prefix,
       @PathVariable("suffix") String suffix, @RequestBody JsonNode request,
       Authentication authentication)
-      throws InvalidRequestException, PidResolutionException, PidServiceInternalError {
+      throws InvalidRequestException, PidResolutionException, PidServiceInternalError, UnprocessableEntityException {
     log.info("Received archive request for PID {}/{} from user {}", prefix, suffix,
         authentication.getName());
     schemaValidator.validatePutRequest(request);
@@ -236,7 +236,7 @@ public class HandleController {
   @DeleteMapping(value = "/rollback/update")
   public ResponseEntity<JsonApiWrapperWrite> rollbackHandleUpdate(
       @RequestBody List<JsonNode> requests, Authentication authentication)
-      throws InvalidRequestException, PidResolutionException, PidServiceInternalError {
+      throws InvalidRequestException, PidResolutionException, PidServiceInternalError, UnprocessableEntityException {
     log.info("Validating rollback update request from user {}", authentication.getName());
     for (JsonNode request : requests) {
       schemaValidator.validatePatchRequest(request);
@@ -250,7 +250,7 @@ public class HandleController {
   @Operation(summary = "Archive multiple PID records")
   @PutMapping(value = "")
   public ResponseEntity<JsonApiWrapperWrite> archiveRecords(@RequestBody List<JsonNode> requests)
-      throws InvalidRequestException, PidResolutionException, PidServiceInternalError {
+      throws InvalidRequestException, PidResolutionException, PidServiceInternalError, UnprocessableEntityException {
     for (JsonNode request : requests) {
       schemaValidator.validatePutRequest(request);
     }
