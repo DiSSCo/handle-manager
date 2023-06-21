@@ -29,17 +29,19 @@ class HandleGeneratorServiceTest {
 
   @Mock
   ApplicationProperties applicationProperties;
+  private static final int MAX_HANDLES = 1000;
 
   private HandleGeneratorService hgService;
 
   @BeforeEach
   void setup() {
     this.hgService = new HandleGeneratorService(applicationProperties, handleRep, random);
-    lenient().when(applicationProperties.getMaxHandles()).thenReturn(1000);
+    lenient().when(applicationProperties.getMaxHandles()).thenReturn(MAX_HANDLES);
   }
 
   @Test
   void testSingleBatchGen() {
+    // Given
     String expectedHandle = "20.5000.1025/AAA-AAA-AAA";
     given(random.nextInt(anyInt())).willReturn(0);
 

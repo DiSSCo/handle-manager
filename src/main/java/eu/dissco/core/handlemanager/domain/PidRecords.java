@@ -106,7 +106,8 @@ public class PidRecords {
 
   // Fields for request type (For checking update requests)
 
-  public static final Map<String, Integer> FIELD_IDX = Map.ofEntries(Map.entry(FDO_PROFILE, 1),
+  public static final Map<String, Integer> FIELD_IDX = Map.<String, Integer>ofEntries(
+      Map.entry(FDO_PROFILE, 1),
       Map.entry(FDO_RECORD_LICENSE, 2), Map.entry(DIGITAL_OBJECT_TYPE, 3),
       Map.entry(DIGITAL_OBJECT_NAME, 4), Map.entry(PID, 5), Map.entry(PID_ISSUER, 6),
       Map.entry(PID_ISSUER_NAME, 7), Map.entry(ISSUED_FOR_AGENT, 8),
@@ -135,11 +136,11 @@ public class PidRecords {
       Map.entry(MEDIA_URL, 403),
       Map.entry(SUBJECT_PHYSICAL_IDENTIFIER, 404),
 
-      Map.entry(SUBJECT_DIGITAL_OBJECT_ID,500), Map.entry(ANNOTATION_TOPIC,501),
-      Map.entry(REPLACE_OR_APPEND,502), Map.entry(ACCESS_RESTRICTED,503),
-      Map.entry(LINKED_URL,504),
+      Map.entry(SUBJECT_DIGITAL_OBJECT_ID, 500), Map.entry(ANNOTATION_TOPIC, 501),
+      Map.entry(REPLACE_OR_APPEND, 502), Map.entry(ACCESS_RESTRICTED, 503),
+      Map.entry(LINKED_URL, 504),
 
-      Map.entry(HOST_INSTITUTION,600),
+      Map.entry(HOST_INSTITUTION, 600),
 
       Map.entry(SOURCE_DATA_STANDARD, 700),
 
