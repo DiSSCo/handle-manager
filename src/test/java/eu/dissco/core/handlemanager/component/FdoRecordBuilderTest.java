@@ -63,6 +63,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecime
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMappingRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMasRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRecordAttributesAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestAltLoc;
@@ -233,6 +234,20 @@ class FdoRecordBuilderTest {
     assertThat(result).hasSize(ANNOTATION_QTY);
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, ANNOTATION_FIELDS)).isTrue();
+  }
+
+  @Test
+  void testPrepareMasRecordAttributes() throws Exception {
+    // Given
+    given(pidResolver.getObjectName(any())).willReturn("placeholder");
+    var request = givenMasRecordRequestObject();
+
+    // When
+    var result = fdoRecordBuilder.prepareMasRecordAttributes(request, handle, ObjectType.HANDLE);
+
+    // Then
+    assertThat(result).hasSize(HANDLE_QTY);
+    assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
   }
 
   @Test

@@ -77,6 +77,7 @@ import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenReque
 import eu.dissco.core.handlemanager.domain.requests.objects.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MappingRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.MasRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
@@ -129,6 +130,7 @@ public class TestUtils {
   public static final String RECORD_TYPE_MAPPING = "mapping";
   public static final String RECORD_TYPE_ANNOTATION = "annotation";
   public static final String RECORD_TYPE_ORGANISATION = "organisation";
+  public static final String RECORD_TYPE_MAS = "machineAnnotationService";
 
   // Request Test Vals
   // Handles
@@ -751,6 +753,17 @@ public class TestUtils {
         PRIMARY_REFERENT_TYPE_TESTVAL,
         SPECIMEN_HOST_TESTVAL,
         PTR_TYPE_DOI
+    );
+  }
+
+  public static MasRequest givenMasRecordRequestObject() {
+    return new MasRequest(
+        FDO_PROFILE_TESTVAL,
+        ISSUED_FOR_AGENT_TESTVAL,
+        DIGITAL_OBJECT_TYPE_TESTVAL,
+        PID_ISSUER_TESTVAL_OTHER,
+        STRUCTURAL_TYPE_TESTVAL,
+        LOC_TESTVAL
     );
   }
 

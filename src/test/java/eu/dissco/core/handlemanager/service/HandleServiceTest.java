@@ -13,6 +13,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS_BOTANY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MAPPING;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MAS;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MEDIA;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_ORGANISATION;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_SOURCE_SYSTEM;
@@ -70,7 +71,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -354,6 +354,25 @@ class HandleServiceTest {
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(mediaObject);
+
+    // When
+    var responseReceived = service.createRecords(List.of(request));
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testCreateMasRecord() throws Exception {
+    // Given
+    byte[] handle = handles.get(0);
+    var request = genCreateRecordRequest(givenHandleRecordRequestObject(), RECORD_TYPE_MAS);
+    var responseExpected = givenRecordResponseWrite(List.of(handle), RECORD_TYPE_MAS);
+    List<HandleAttribute> handleRecord = genHandleRecordAttributes(handle, ObjectType.MAS);
+
+    given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
+    given(handleRep.resolveHandleAttributes(anyList())).willReturn(handleRecord);
+    given(fdoRecordBuilder.prepareMasRecordAttributes(any(), any(), eq(ObjectType.MAS))).willReturn(handleRecord);
 
     // When
     var responseReceived = service.createRecords(List.of(request));
