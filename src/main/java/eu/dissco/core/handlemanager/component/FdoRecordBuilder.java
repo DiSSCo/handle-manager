@@ -612,18 +612,15 @@ public class FdoRecordBuilder {
 
   private List<HandleAttribute> addResolvedNames(Map<String, String> updateRequestMap, byte[] handle)
       throws UnprocessableEntityException, PidResolutionException {
-
     var resolvableKeys = updateRequestMap.entrySet()
         .stream()
         .filter(entry -> RESOLVABLE_KEYS.containsKey(entry.getKey())
             && !hasResolvedPairInRequest(updateRequestMap, entry.getKey()))
         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-
-    ArrayList<HandleAttribute> resolvedPidNameAttributes = new ArrayList<>();
     if (resolvableKeys.isEmpty()){
-      return resolvedPidNameAttributes;
+      return new ArrayList<>();
     }
-
+    ArrayList<HandleAttribute> resolvedPidNameAttributes = new ArrayList<>();
     for (var resolvableKey : resolvableKeys.entrySet()) {
       var targetAttribute = RESOLVABLE_KEYS.get(resolvableKey.getKey());
       var resolvedPid = pidResolver.getObjectName(resolvableKey.getValue());

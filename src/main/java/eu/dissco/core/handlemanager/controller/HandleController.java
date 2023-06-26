@@ -120,7 +120,7 @@ public class HandleController {
   public ResponseEntity<JsonApiWrapperWrite> createRecords(@RequestBody List<JsonNode> requests,
       Authentication authentication)
       throws PidResolutionException, PidServiceInternalError, InvalidRequestException, PidCreationException {
-    log.info("Validating batch POST request from user {}", authentication);
+    log.info("Validating batch POST request from user {}", authentication.getName());
     for (JsonNode request : requests) {
       schemaValidator.validatePostRequest(request);
     }
@@ -206,10 +206,9 @@ public class HandleController {
     byte[] handleRequest = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
     if (!Arrays.equals(handle, handleRequest)) {
       throw new InvalidRequestException(
-          String.format(
-              "Handle in request path does not match id in request body. Path: %s, Body: %s",
-              new String(handle, StandardCharsets.UTF_8),
-              new String(handleRequest, StandardCharsets.UTF_8)));
+              "Handle in request path does not match id in request body. Path: "
+                  + new String(handle, StandardCharsets.UTF_8)
+                  + ". Body: " + new String(handleRequest, StandardCharsets.UTF_8));
     }
     return ResponseEntity.status(HttpStatus.OK).body(service.archiveRecordBatch(List.of(request)));
   }
