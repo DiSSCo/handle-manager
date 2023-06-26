@@ -12,7 +12,8 @@ public enum ObjectType {
   @JsonProperty("sourceSystem") SOURCE_SYSTEM("sourceSystem"),
   @JsonProperty("mapping") MAPPING("mapping"),
   @JsonProperty("organisation") ORGANISATION("organisation"),
-  @JsonProperty("tombstone") TOMBSTONE("tombstone");
+  @JsonProperty("tombstone") TOMBSTONE("tombstone"),
+  @JsonProperty("machineAnnotationService") MAS("machineAnnotationService");
 
   private final String state;
 

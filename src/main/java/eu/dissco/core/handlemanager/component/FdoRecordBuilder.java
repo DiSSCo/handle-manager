@@ -69,6 +69,7 @@ import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenBotan
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.MasRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MappingRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
@@ -321,6 +322,12 @@ public class FdoRecordBuilder {
     }
 
     return fdoRecord;
+  }
+
+  public List<HandleAttribute> prepareMasRecordAttributes(MasRequest request, byte[] handle, ObjectType type)
+      throws PidServiceInternalError, UnprocessableEntityException, PidResolutionException, InvalidRequestException {
+    return prepareHandleRecordAttributes(request, handle, type);
+
   }
 
   private void resolveInternalPid(AnnotationRequest request) throws PidResolutionException {
