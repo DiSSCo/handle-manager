@@ -24,6 +24,8 @@ import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenBotan
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.MasRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.MappingRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
 
 import eu.dissco.core.handlemanager.domain.requests.objects.AnnotationRequest;
@@ -274,6 +276,11 @@ public class HandleService {
                 OrganisationRequest.class);
             handleAttributes.addAll(
                 fdoRecordBuilder.prepareOrganisationAttributes(requestObject, handles.remove(0), type));
+          }
+          case MAS -> {
+            var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES), MasRequest.class);
+            handleAttributes.addAll(
+                fdoRecordBuilder.prepareMasRecordAttributes(requestObject, handles.remove(0), type));
           }
           default -> throw new InvalidRequestException(INVALID_TYPE_ERROR + type);
         }
