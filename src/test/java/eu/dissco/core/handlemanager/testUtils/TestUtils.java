@@ -157,7 +157,6 @@ public class TestUtils {
   //Digital Specimens
   public static final String SPECIMEN_HOST_TESTVAL = ROR_DOMAIN + "0x123";
   public static final String SPECIMEN_HOST_NAME_TESTVAL = "Naturalis";
-  public static final String IN_COLLECTION_FACILITY_TESTVAL = "20.5000.1025/OTHER-TRIPLET";
   // Annotations
   public static final String SUBJECT_DOI_TESTVAL = HANDLE_URI + "20.5000.1025/111";
   public static final String ANNOTATION_TOPIC_TESTVAL = "note";
@@ -170,6 +169,8 @@ public class TestUtils {
   public static final String MEDIA_HASH_ALG_TESTVAL = "SHA256";
   // Mappings
   public static final String SOURCE_DATA_STANDARD_TESTVAL = "dwc";
+  // MAS
+  public static final String MAS_NAME = "Plant Organ detection";
 
   public static final String API_URL = "https://sandbox.dissco.tech/api/v1";
   public static final String UI_URL = "https://sandbox.dissco.tech/";
@@ -762,7 +763,8 @@ public class TestUtils {
         DIGITAL_OBJECT_TYPE_TESTVAL,
         PID_ISSUER_TESTVAL_OTHER,
         STRUCTURAL_TYPE_TESTVAL,
-        LOC_TESTVAL
+        LOC_TESTVAL,
+        MAS_NAME
     );
   }
 

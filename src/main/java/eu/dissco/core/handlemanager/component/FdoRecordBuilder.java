@@ -17,6 +17,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.LIVING_OR_PRESERVED
 import static eu.dissco.core.handlemanager.domain.PidRecords.LOC;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LOC_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MARKED_AS_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.MAS_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MATERIAL_OR_DIGITAL_ENTITY;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MATERIAL_SAMPLE_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_HASH;
@@ -326,8 +327,13 @@ public class FdoRecordBuilder {
 
   public List<HandleAttribute> prepareMasRecordAttributes(MasRequest request, byte[] handle, ObjectType type)
       throws PidServiceInternalError, UnprocessableEntityException, PidResolutionException, InvalidRequestException {
-    return prepareHandleRecordAttributes(request, handle, type);
+    var fdoRecord = prepareHandleRecordAttributes(request, handle, type);
 
+    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(MAS_NAME), handle, MAS_NAME,
+        String.valueOf(request.getMasName()).getBytes(
+            StandardCharsets.UTF_8)));
+
+    return fdoRecord;
   }
 
   private void resolveInternalPid(AnnotationRequest request) throws PidResolutionException {

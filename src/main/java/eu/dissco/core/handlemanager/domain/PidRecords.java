@@ -74,6 +74,9 @@ public class PidRecords {
   // Mappings
   public static final String SOURCE_DATA_STANDARD = "sourceDataStandard";
 
+  // Machine Annotation Service
+  public static final String MAS_NAME = "machineAnnotationServiceName";
+
   // Organisations
   public static final String ORGANISATION_ID = "organisationIdentifier";
   public static final String ORGANISATION_ID_TYPE = "organisationIdentifierType";
@@ -124,6 +127,7 @@ public class PidRecords {
       Map.entry(SOURCE_SYSTEM_NAME, 600),
 
       Map.entry(SOURCE_DATA_STANDARD, 700),
+      Map.entry(MAS_NAME, 701),
 
       Map.entry(ORGANISATION_ID, 800),
       Map.entry(ORGANISATION_ID_TYPE, 801),
