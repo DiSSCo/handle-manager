@@ -91,6 +91,17 @@ public class PidRecords {
   public static final String NODE_ID = "id";
   public static final String NODE_TYPE = "type";
 
+  public static final Map<String, String> RESOLVABLE_KEYS;
+  static {
+    HashMap<String, String> hashMap = new HashMap<>();
+    hashMap.put(DIGITAL_OBJECT_TYPE, DIGITAL_OBJECT_NAME);
+    hashMap.put(PID_ISSUER, PID_ISSUER_NAME);
+    hashMap.put(ISSUED_FOR_AGENT, ISSUED_FOR_AGENT_NAME);
+    hashMap.put(SPECIMEN_HOST, SPECIMEN_HOST_NAME);
+    RESOLVABLE_KEYS = Collections.unmodifiableMap(hashMap);
+  }
+
+  // Fields for request type (For checking update requests)
 
   public static final Map<String, Integer> FIELD_IDX = Map.<String, Integer>ofEntries(
       Map.entry(FDO_PROFILE, 1),
