@@ -26,6 +26,7 @@ import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenReque
 import eu.dissco.core.handlemanager.domain.requests.objects.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MappingRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.MasRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.TombstoneRecordRequest;
@@ -69,6 +70,8 @@ public class JsonSchemaValidator {
   private JsonNode sourceSystemPatchReqJsonNode;
   private JsonNode organisationPostReqJsonNode;
   private JsonNode organisationPatchReqJsonNode;
+  private JsonNode masPostReqJsonNode;
+  private JsonNode masPatchReqJsonNode;
 
   // Schemas
   private JsonSchema postReqSchema;
@@ -93,6 +96,8 @@ public class JsonSchemaValidator {
   private JsonSchema sourceSystemPatchReqSchema;
   private JsonSchema organisationPostReqSchema;
   private JsonSchema organisationPatchReqSchema;
+  private JsonSchema masPostReqSchema;
+  private JsonSchema masPatchReqSchema;
 
   public JsonSchemaValidator() {
     setPostRequestAttributesJsonNodes();
@@ -114,6 +119,7 @@ public class JsonSchemaValidator {
     mappingPostReqJsonNode = schemaGenerator.generateSchema(MappingRequest.class);
     sourceSystemPostReqJsonNode = schemaGenerator.generateSchema(SourceSystemRequest.class);
     organisationPostReqJsonNode = schemaGenerator.generateSchema(OrganisationRequest.class);
+    masPostReqJsonNode = schemaGenerator.generateSchema(MasRequest.class);
   }
 
   private SchemaGeneratorConfig jacksonModuleSchemaConfig() {
@@ -164,6 +170,7 @@ public class JsonSchemaValidator {
     mappingPatchReqJsonNode = schemaGenerator.generateSchema(MappingRequest.class);
     sourceSystemPatchReqJsonNode = schemaGenerator.generateSchema(SourceSystemRequest.class);
     organisationPatchReqJsonNode = schemaGenerator.generateSchema(OrganisationRequest.class);
+    masPatchReqJsonNode = schemaGenerator.generateSchema(MasRequest.class);
   }
 
   private SchemaGeneratorConfig attributesSchemaConfig() {
@@ -241,6 +248,7 @@ public class JsonSchemaValidator {
     mappingPostReqSchema = factory.getSchema(mappingPostReqJsonNode);
     sourceSystemPostReqSchema = factory.getSchema(sourceSystemPostReqJsonNode);
     organisationPostReqSchema = factory.getSchema(organisationPostReqJsonNode);
+    masPostReqSchema = factory.getSchema(masPostReqJsonNode);
 
     handlePatchReqSchema = factory.getSchema(handlePatchReqJsonNode);
     doiPatchReqSchema = factory.getSchema(doiPatchReqJsonNode);
@@ -251,6 +259,7 @@ public class JsonSchemaValidator {
     mappingPatchReqSchema = factory.getSchema(mappingPatchReqJsonNode);
     sourceSystemPatchReqSchema = factory.getSchema(sourceSystemPatchReqJsonNode);
     organisationPatchReqSchema = factory.getSchema(organisationPatchReqJsonNode);
+    masPatchReqSchema = factory.getSchema(masPatchReqJsonNode);
 
     tombstoneReqSchema = factory.getSchema(tombstoneReqJsonNode);
 
@@ -276,6 +285,7 @@ public class JsonSchemaValidator {
       case MAPPING -> validateRequestAttributes(attributes, mappingPostReqSchema, type);
       case SOURCE_SYSTEM -> validateRequestAttributes(attributes, sourceSystemPostReqSchema, type);
       case ORGANISATION -> validateRequestAttributes(attributes, organisationPostReqSchema, type);
+      case MAS -> validateRequestAttributes(attributes, masPostReqSchema, type);
       default ->
           throw new InvalidRequestException("Invalid Request. Reason: Invalid type: " + type);
     }
@@ -300,6 +310,7 @@ public class JsonSchemaValidator {
       case MAPPING -> validateRequestAttributes(attributes, mappingPatchReqSchema, type);
       case SOURCE_SYSTEM -> validateRequestAttributes(attributes, sourceSystemPatchReqSchema, type);
       case ORGANISATION -> validateRequestAttributes(attributes, organisationPatchReqSchema, type);
+      case MAS -> validateRequestAttributes(attributes, masPatchReqSchema, type);
       default ->
           throw new InvalidRequestException("Invalid Request. Reason: Invalid type: " + type);
     }

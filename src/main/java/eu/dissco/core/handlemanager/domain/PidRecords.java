@@ -1,15 +1,10 @@
 package eu.dissco.core.handlemanager.domain;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 public class PidRecords {
 
   // Handle
-
   public static final String FDO_PROFILE = "fdoProfile"; // 1
   public static final String FDO_RECORD_LICENSE = "fdoRecordLicense"; //2
   public static final String DIGITAL_OBJECT_TYPE = "digitalObjectType"; //3
@@ -55,11 +50,9 @@ public class PidRecords {
   public static final String MARKED_AS_TYPE = "markedAsType"; // 216
   public static final String WAS_DERIVED_FROM = "wasDerivedFrom"; // 217
 
-
   // Handle Admin
   public static final String HS_ADMIN = "HS_ADMIN"; // 100
   public static final String LOC = "10320/loc"; //101
-
 
   // Media Object
   public static final String MEDIA_HASH = "mediaHash";
@@ -76,10 +69,13 @@ public class PidRecords {
   public static final String LINKED_URL = "linkedObjectUrl";
 
   // Source Systems
-  public static final String HOST_INSTITUTION = "hostInstitution";
+  public static final String SOURCE_SYSTEM_NAME = "sourceSystemName";
 
   // Mappings
   public static final String SOURCE_DATA_STANDARD = "sourceDataStandard";
+
+  // Machine Annotation Service
+  public static final String MAS_NAME = "machineAnnotationServiceName";
 
   // Organisations
   public static final String ORGANISATION_ID = "organisationIdentifier";
@@ -87,29 +83,15 @@ public class PidRecords {
   public static final String ORGANISATION_NAME = "organisationName";
 
   // Fields for requests
-  public static final String PID_ISSUER_REQ = "pidIssuerPid";
   public static final String LOC_REQ = "locations";
-  public static final String REFERENT_DOI_NAME_REQ = "referentDoiNamePid";
-  public static final String SPECIMEN_HOST_REQ = "specimenHostPid";
-  public static final String IN_COLLECTION_FACILITY_REQ = "inCollectionFacilityPid";
   public static final String NODE_ATTRIBUTES = "attributes";
   public static final String NODE_DATA = "data";
   public static final String NODE_ID = "id";
   public static final String NODE_TYPE = "type";
 
-  // Permitted fields for each record type
-  public static final Set<String> HANDLE_RECORD_FIELDS = Set.of(PID, PID_ISSUER,
-      DIGITAL_OBJECT_TYPE, LOC, PID_RECORD_ISSUE_DATE,
-      PID_RECORD_ISSUE_NUMBER, PID_STATUS, FDO_RECORD_LICENSE);
-  public static final Set<byte[]> TOMBSTONE_RECORD_FIELDS_BYTES;
-  public static final Set<String> TOMBSTONE_RECORD_FIELDS;
-  // Fields for request type (For checking update requests)
-  public static final Set<String> HANDLE_RECORD_REQ = Set.of(PID_ISSUER_REQ, LOC_REQ);
-  public static final Set<String> DOI_RECORD_REQ;
-  public static final Set<String> DIGITAL_SPECIMEN_REQ;
-  public static final Set<String> DIGITAL_SPECIMEN_BOTANY_REQ;
 
-  public static final Map<String, Integer> FIELD_IDX = Map.ofEntries(Map.entry(FDO_PROFILE, 1),
+  public static final Map<String, Integer> FIELD_IDX = Map.<String, Integer>ofEntries(
+      Map.entry(FDO_PROFILE, 1),
       Map.entry(FDO_RECORD_LICENSE, 2), Map.entry(DIGITAL_OBJECT_TYPE, 3),
       Map.entry(DIGITAL_OBJECT_NAME, 4), Map.entry(PID, 5), Map.entry(PID_ISSUER, 6),
       Map.entry(PID_ISSUER_NAME, 7), Map.entry(ISSUED_FOR_AGENT, 8),
@@ -138,59 +120,20 @@ public class PidRecords {
       Map.entry(MEDIA_URL, 403),
       Map.entry(SUBJECT_PHYSICAL_IDENTIFIER, 404),
 
-      Map.entry(SUBJECT_DIGITAL_OBJECT_ID,500), Map.entry(ANNOTATION_TOPIC,501),
-      Map.entry(REPLACE_OR_APPEND,502), Map.entry(ACCESS_RESTRICTED,503),
-      Map.entry(LINKED_URL,504),
+      Map.entry(SUBJECT_DIGITAL_OBJECT_ID, 500), Map.entry(ANNOTATION_TOPIC, 501),
+      Map.entry(REPLACE_OR_APPEND, 502), Map.entry(ACCESS_RESTRICTED, 503),
+      Map.entry(LINKED_URL, 504),
 
-      Map.entry(HOST_INSTITUTION,600),
+      Map.entry(SOURCE_SYSTEM_NAME, 600),
 
       Map.entry(SOURCE_DATA_STANDARD, 700),
+      Map.entry(MAS_NAME, 701),
 
       Map.entry(ORGANISATION_ID, 800),
       Map.entry(ORGANISATION_ID_TYPE, 801),
       Map.entry(ORGANISATION_NAME, 802),
 
       Map.entry(HS_ADMIN, 100), Map.entry(LOC, 101));
-
-
-  static {
-    Set<String> tmp = new HashSet<>(HANDLE_RECORD_FIELDS);
-    tmp.add(TOMBSTONE_TEXT);
-    tmp.add(TOMBSTONE_PIDS);
-    TOMBSTONE_RECORD_FIELDS = Collections.unmodifiableSet(tmp);
-  }
-
-  static {
-    Set<byte[]> tmp = new HashSet<>();
-    for (String field : TOMBSTONE_RECORD_FIELDS) {
-      tmp.add(field.getBytes(StandardCharsets.UTF_8));
-    }
-    TOMBSTONE_RECORD_FIELDS_BYTES = Collections.unmodifiableSet(tmp);
-  }
-
-  // Request fields
-
-  static {
-    Set<String> tmp = new HashSet<>(HANDLE_RECORD_REQ);
-    tmp.add(REFERENT);
-    tmp.add(REFERENT_DOI_NAME_REQ);
-    DOI_RECORD_REQ = Collections.unmodifiableSet(tmp);
-  }
-
-  static {
-    Set<String> tmp = new HashSet<>(DOI_RECORD_REQ);
-    tmp.add(MATERIAL_OR_DIGITAL_ENTITY);
-    tmp.add(SPECIMEN_HOST_REQ);
-    tmp.add(IN_COLLECTION_FACILITY_REQ);
-    DIGITAL_SPECIMEN_REQ = Collections.unmodifiableSet(tmp);
-  }
-
-  static {
-    Set<String> tmp = new HashSet<>(DIGITAL_SPECIMEN_REQ);
-    tmp.add(OBJECT_TYPE);
-    tmp.add(LIVING_OR_PRESERVED);
-    DIGITAL_SPECIMEN_BOTANY_REQ = Collections.unmodifiableSet(tmp);
-  }
 
   private PidRecords() {
     throw new IllegalStateException("Utility class");
