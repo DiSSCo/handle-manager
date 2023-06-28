@@ -8,7 +8,6 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_TYPE
 import static eu.dissco.core.handlemanager.domain.PidRecords.FDO_PROFILE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.FDO_RECORD_LICENSE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
-import static eu.dissco.core.handlemanager.domain.PidRecords.HOST_INSTITUTION;
 import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.INFORMATION_ARTEFACT_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUED_FOR_AGENT;
@@ -46,6 +45,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REPLACE_OR_APPEND;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SOURCE_DATA_STANDARD;
+import static eu.dissco.core.handlemanager.domain.PidRecords.SOURCE_SYSTEM_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.STRUCTURAL_TYPE;
@@ -346,9 +346,9 @@ public class FdoRecordBuilder {
       throws UnprocessableEntityException, PidResolutionException, InvalidRequestException, PidServiceInternalError {
     var fdoRecord = prepareHandleRecordAttributes(request, handle, type);
 
-    // 600 hostInstitution
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(HOST_INSTITUTION), handle,
-        HOST_INSTITUTION, request.getHostInstitution().getBytes(StandardCharsets.UTF_8)));
+    // 600 sourceSystemName
+    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(SOURCE_SYSTEM_NAME), handle,
+        SOURCE_SYSTEM_NAME, request.getSourceSystemName().getBytes(StandardCharsets.UTF_8)));
 
     return fdoRecord;
   }

@@ -10,10 +10,10 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 public class SourceSystemRequest extends HandleRecordRequest {
   @JsonProperty(required = true)
-  private final String hostInstitution;
+  private final String sourceSystemName;
   public SourceSystemRequest(String fdoProfile, String issuedForAgent, String digitalObjectType,
-      String pidIssuer, String structuralType, String[] locations, String hostInstitution) {
+      String pidIssuer, String structuralType, String[] locations, String sourceSystemName) {
     super(fdoProfile, issuedForAgent, digitalObjectType, pidIssuer, structuralType, locations);
-    this.hostInstitution = hostInstitution;
+    this.sourceSystemName = sourceSystemName;
   }
 }
