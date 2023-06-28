@@ -8,11 +8,11 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public class MasRequest extends HandleRecordRequest {
-  private final String masName;
+  private final String machineAnnotationServiceName;
 
   public MasRequest(String fdoProfile, String issuedForAgent,
       String digitalObjectType, String pidIssuer, String structuralType, String[] locations, String masName) {
     super(fdoProfile, issuedForAgent, digitalObjectType, pidIssuer, structuralType, locations);
-    this.masName = masName;
+    this.machineAnnotationServiceName = masName;
   }
 }

@@ -330,7 +330,7 @@ public class FdoRecordBuilder {
     var fdoRecord = prepareHandleRecordAttributes(request, handle, type);
 
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(MAS_NAME), handle, MAS_NAME,
-        String.valueOf(request.getMasName()).getBytes(
+        String.valueOf(request.getMachineAnnotationServiceName()).getBytes(
             StandardCharsets.UTF_8)));
 
     return fdoRecord;
