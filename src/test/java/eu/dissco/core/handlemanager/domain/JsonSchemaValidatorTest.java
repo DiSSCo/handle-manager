@@ -1,8 +1,8 @@
 package eu.dissco.core.handlemanager.domain;
 
 import static eu.dissco.core.handlemanager.domain.PidRecords.FDO_PROFILE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.HOST_INSTITUTION;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LIVING_OR_PRESERVED;
+import static eu.dissco.core.handlemanager.domain.PidRecords.MAS_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_URL;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
@@ -13,9 +13,9 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SOURCE_DATA_STANDARD;
+import static eu.dissco.core.handlemanager.domain.PidRecords.SOURCE_SYSTEM_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_DIGITAL_OBJECT_ID;
-import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_PHYSICAL_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_TEXT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.LOC_TESTVAL;
@@ -28,16 +28,17 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS_BOTANY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MAPPING;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MAS;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MEDIA;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_ORGANISATION;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_SOURCE_SYSTEM;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.REFERENT_DOI_NAME_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genAnnotationAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMappingRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMasRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequestBatch;
@@ -220,6 +221,17 @@ class JsonSchemaValidatorTest {
   }
 
   @Test
+  void testPostMasRequest() {
+    // Given
+    var request = genCreateRecordRequest(givenMasRecordRequestObject(), RECORD_TYPE_MAS);
+
+    // Then
+    assertDoesNotThrow(() -> {
+      schemaValidator.validatePostRequest(request);
+    });
+  }
+
+  @Test
   void testHandlePatchRequest() {
     // Given
     var request = givenUpdateRequest(RECORD_TYPE_HANDLE, PID_ISSUER, PID_ISSUER_TESTVAL_OTHER);
@@ -310,7 +322,18 @@ class JsonSchemaValidatorTest {
   @Test
   void testSourceSystemPatchRequest() {
     // Given
-    var request = givenUpdateRequest(RECORD_TYPE_SOURCE_SYSTEM, HOST_INSTITUTION, "new");
+    var request = givenUpdateRequest(RECORD_TYPE_SOURCE_SYSTEM, SOURCE_SYSTEM_NAME, "new");
+
+    // Then
+    assertDoesNotThrow(() -> {
+      schemaValidator.validatePatchRequest(request);
+    });
+  }
+
+  @Test
+  void testMasPatchRequest() {
+    // Given
+    var request = givenUpdateRequest(RECORD_TYPE_MAS, MAS_NAME, "new");
 
     // Then
     assertDoesNotThrow(() -> {

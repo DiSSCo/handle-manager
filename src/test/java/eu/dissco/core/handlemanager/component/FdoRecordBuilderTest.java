@@ -16,6 +16,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.LINKED_URL;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LIVING_OR_PRESERVED;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LOC;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MARKED_AS_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.MAS_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MATERIAL_OR_DIGITAL_ENTITY;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MATERIAL_SAMPLE_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.OBJECT_TYPE;
@@ -259,8 +260,9 @@ class FdoRecordBuilderTest {
     var result = fdoRecordBuilder.prepareMasRecordAttributes(request, handle, ObjectType.HANDLE);
 
     // Then
-    assertThat(result).hasSize(HANDLE_QTY);
+    assertThat(result).hasSize(HANDLE_QTY+1);
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
+    assertThat(hasCorrectElements(result, Set.of(MAS_NAME))).isTrue();
   }
 
   @Test

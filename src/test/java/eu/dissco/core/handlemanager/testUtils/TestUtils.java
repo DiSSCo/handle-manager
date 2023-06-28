@@ -8,7 +8,6 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_TYPE
 import static eu.dissco.core.handlemanager.domain.PidRecords.FDO_PROFILE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.FDO_RECORD_LICENSE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
-import static eu.dissco.core.handlemanager.domain.PidRecords.HOST_INSTITUTION;
 import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.INFORMATION_ARTEFACT_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUED_FOR_AGENT;
@@ -47,9 +46,9 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REPLACE_OR_APPEND;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SOURCE_DATA_STANDARD;
+import static eu.dissco.core.handlemanager.domain.PidRecords.SOURCE_SYSTEM_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST_NAME;
-import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.STRUCTURAL_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_DIGITAL_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_PHYSICAL_IDENTIFIER;
@@ -170,6 +169,8 @@ public class TestUtils {
   public static final String MEDIA_HASH_ALG_TESTVAL = "SHA256";
   // Mappings
   public static final String SOURCE_DATA_STANDARD_TESTVAL = "dwc";
+  // MAS
+  public static final String MAS_NAME = "Plant Organ detection";
 
   public static final String API_URL = "https://sandbox.dissco.tech/api/v1";
   public static final String UI_URL = "https://sandbox.dissco.tech/";
@@ -574,8 +575,8 @@ public class TestUtils {
     var fdoRecord = genHandleRecordAttributes(handle, ObjectType.SOURCE_SYSTEM);
 
     // 600 hostInstitution
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(HOST_INSTITUTION), handle,
-        HOST_INSTITUTION, SPECIMEN_HOST_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(SOURCE_SYSTEM_NAME), handle,
+        SOURCE_SYSTEM_NAME, SPECIMEN_HOST_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     return fdoRecord;
   }
@@ -770,7 +771,8 @@ public class TestUtils {
         DIGITAL_OBJECT_TYPE_TESTVAL,
         PID_ISSUER_TESTVAL_OTHER,
         STRUCTURAL_TYPE_TESTVAL,
-        LOC_TESTVAL
+        LOC_TESTVAL,
+        MAS_NAME
     );
   }
 
@@ -787,7 +789,7 @@ public class TestUtils {
     var attributeNode = MAPPER.createObjectNode();
     attributeNode.set(PRIMARY_SPECIMEN_OBJECT_ID, MAPPER.valueToTree(
         PHYSICAL_IDENTIFIER_TESTVAL_CETAF));
-    attributeNode.put(SPECIMEN_HOST_REQ, SPECIMEN_HOST_TESTVAL);
+    attributeNode.put(SPECIMEN_HOST, SPECIMEN_HOST_TESTVAL);
     dataNode.set(NODE_ATTRIBUTES, attributeNode);
     request.set(NODE_DATA, dataNode);
     return request;

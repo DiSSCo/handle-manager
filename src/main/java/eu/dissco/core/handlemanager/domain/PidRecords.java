@@ -52,11 +52,9 @@ public class PidRecords {
   public static final String MARKED_AS_TYPE = "markedAsType"; // 216
   public static final String WAS_DERIVED_FROM = "wasDerivedFrom"; // 217
 
-
   // Handle Admin
   public static final String HS_ADMIN = "HS_ADMIN"; // 100
   public static final String LOC = "10320/loc"; //101
-
 
   // Media Object
   public static final String MEDIA_HASH = "mediaHash";
@@ -73,10 +71,13 @@ public class PidRecords {
   public static final String LINKED_URL = "linkedObjectUrl";
 
   // Source Systems
-  public static final String HOST_INSTITUTION = "hostInstitution";
+  public static final String SOURCE_SYSTEM_NAME = "sourceSystemName";
 
   // Mappings
   public static final String SOURCE_DATA_STANDARD = "sourceDataStandard";
+
+  // Machine Annotation Service
+  public static final String MAS_NAME = "machineAnnotationServiceName";
 
   // Organisations
   public static final String ORGANISATION_ID = "organisationIdentifier";
@@ -84,27 +85,12 @@ public class PidRecords {
   public static final String ORGANISATION_NAME = "organisationName";
 
   // Fields for requests
-  public static final String PID_ISSUER_REQ = "pidIssuerPid";
   public static final String LOC_REQ = "locations";
-  public static final String REFERENT_DOI_NAME_REQ = "referentDoiNamePid";
-  public static final String SPECIMEN_HOST_REQ = "specimenHostPid";
-  public static final String IN_COLLECTION_FACILITY_REQ = "inCollectionFacilityPid";
   public static final String NODE_ATTRIBUTES = "attributes";
   public static final String NODE_DATA = "data";
   public static final String NODE_ID = "id";
   public static final String NODE_TYPE = "type";
 
-  public static final Map<String, String> RESOLVABLE_KEYS;
-  static {
-    HashMap<String, String> hashMap = new HashMap<>();
-    hashMap.put(DIGITAL_OBJECT_TYPE, DIGITAL_OBJECT_NAME);
-    hashMap.put(PID_ISSUER, PID_ISSUER_NAME);
-    hashMap.put(ISSUED_FOR_AGENT, ISSUED_FOR_AGENT_NAME);
-    hashMap.put(SPECIMEN_HOST, SPECIMEN_HOST_NAME);
-    RESOLVABLE_KEYS = Collections.unmodifiableMap(hashMap);
-  }
-
-  // Fields for request type (For checking update requests)
 
   public static final Map<String, Integer> FIELD_IDX = Map.<String, Integer>ofEntries(
       Map.entry(FDO_PROFILE, 1),
@@ -140,9 +126,10 @@ public class PidRecords {
       Map.entry(REPLACE_OR_APPEND, 502), Map.entry(ACCESS_RESTRICTED, 503),
       Map.entry(LINKED_URL, 504),
 
-      Map.entry(HOST_INSTITUTION, 600),
+      Map.entry(SOURCE_SYSTEM_NAME, 600),
 
       Map.entry(SOURCE_DATA_STANDARD, 700),
+      Map.entry(MAS_NAME, 701),
 
       Map.entry(ORGANISATION_ID, 800),
       Map.entry(ORGANISATION_ID_TYPE, 801),
