@@ -38,27 +38,28 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordRespon
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemRequestObject;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
+import eu.dissco.core.handlemanager.domain.requests.RollbackRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.PidStatus;
+
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaValidator;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
+import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.service.HandleService;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -66,16 +67,20 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.security.core.Authentication;
 
 @ExtendWith(MockitoExtension.class)
 class HandleControllerTest {
 
   @Mock
   private HandleService service;
+
   @Mock
-  JsonSchemaValidator schemaValidator;
+  private Authentication authentication;
+
+  @Mock
+  private JsonSchemaValidator schemaValidator;
 
 
   private HandleController controller;
@@ -83,29 +88,12 @@ class HandleControllerTest {
   private final String SANDBOX_URI = "https://sandbox.dissco.tech";
 
   public ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
+  @Mock
+  private ApplicationProperties applicationProperties;
 
   @BeforeEach
   void setup() {
-    controller = new HandleController(service, schemaValidator);
-  }
-
-  @Test
-  void testGetAllHandlesByPidStatus() throws Exception {
-    // Given
-    int pageSize = 10;
-    int pageNum = 1;
-    var pidStatus = PidStatus.TEST;
-    List<String> expectedHandles = Collections.nCopies(pageSize, HANDLE);
-
-    given(service.getHandlesPaged(pageNum, pageSize, pidStatus.getBytes())).willReturn(expectedHandles);
-
-    // When
-    ResponseEntity<List<String>> response = controller.getAllHandlesByPidStatus(pageNum, pageSize,
-        pidStatus);
-
-    // Then
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(expectedHandles).isEqualTo(response.getBody());
+    controller = new HandleController(service, schemaValidator, applicationProperties);
   }
 
   @Test
@@ -115,9 +103,9 @@ class HandleControllerTest {
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     MockHttpServletRequest r = new MockHttpServletRequest();
     r.setRequestURI(PREFIX + "/" + SUFFIX);
-
     var responseExpected = givenRecordResponseReadSingle(HANDLE, path, RECORD_TYPE_HANDLE, null);
 
+    given(applicationProperties.getUiUrl()).willReturn(SANDBOX_URI);
     given(service.resolveSingleRecord(handle, path)).willReturn(responseExpected);
 
     // When
@@ -126,6 +114,12 @@ class HandleControllerTest {
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testResolvePidBadPrefix(){
+    assertThrows(PidResolutionException.class, () ->
+        controller.resolvePid(SUFFIX, SUFFIX, new MockHttpServletRequest()));
   }
 
   @Test
@@ -175,6 +169,8 @@ class HandleControllerTest {
     List<byte[]> handles = List.of(HANDLE.getBytes(StandardCharsets.UTF_8), HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
     var responseExpected = givenRecordResponseRead(handles, path, RECORD_TYPE_HANDLE);
+    given(applicationProperties.getUiUrl()).willReturn(SANDBOX_URI);
+    given(applicationProperties.getMaxHandles()).willReturn(1000);
     given(service.resolveBatchRecord(anyList(), eq(path))).willReturn(responseExpected);
 
     // When
@@ -186,7 +182,7 @@ class HandleControllerTest {
   }
 
   @Test
-  void testResolveBatchHandleExceedsMax() throws Exception {
+  void testResolveBatchHandleExceedsMax() {
     // Given
     MockHttpServletRequest r = new MockHttpServletRequest();
     r.setRequestURI("view");
@@ -195,6 +191,7 @@ class HandleControllerTest {
     for (int i = 0; i<= maxHandles; i++){
       handleString.add(String.valueOf(i));
     }
+    given(applicationProperties.getMaxHandles()).willReturn(maxHandles);
 
     // When
     Exception e = assertThrows(InvalidRequestException.class, () -> {
@@ -203,19 +200,6 @@ class HandleControllerTest {
 
     // Then
     assertThat(e.getMessage()).contains(String.valueOf(maxHandles));
-  }
-
-  @Test
-  void testGetAllHandlesFailure() {
-    // Given
-    given(service.getHandlesPaged(1, 10)).willReturn(new ArrayList<>());
-
-    // When
-    var exception = assertThrowsExactly(PidResolutionException.class,
-        () -> controller.getAllHandlesByPidStatus(1, 10, PidStatus.ALL));
-
-    // Then
-    assertThat(exception).hasMessage("Unable to resolve pids");
   }
 
   // Single Handle Record Creation
@@ -231,7 +215,7 @@ class HandleControllerTest {
     given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecord(requestNode);
+    var responseReceived = controller.createRecord(requestNode, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -250,7 +234,7 @@ class HandleControllerTest {
     given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecord(requestNode);
+    var responseReceived = controller.createRecord(requestNode, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -269,7 +253,7 @@ class HandleControllerTest {
     given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecord(requestNode);
+    var responseReceived = controller.createRecord(requestNode, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -288,7 +272,7 @@ class HandleControllerTest {
     given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecord(requestNode);
+    var responseReceived = controller.createRecord(requestNode, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -307,7 +291,7 @@ class HandleControllerTest {
     given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecord(requestNode);
+    var responseReceived = controller.createRecord(requestNode, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -331,7 +315,7 @@ class HandleControllerTest {
     given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecords(requests);
+    var responseReceived = controller.createRecords(requests, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -354,7 +338,7 @@ class HandleControllerTest {
     given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecords(requests);
+    var responseReceived = controller.createRecords(requests, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -377,7 +361,7 @@ class HandleControllerTest {
     given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecords(requests);
+    var responseReceived = controller.createRecords(requests, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -402,7 +386,7 @@ class HandleControllerTest {
     given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecords(requests);
+    var responseReceived = controller.createRecords(requests, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -425,7 +409,7 @@ class HandleControllerTest {
     given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecords(requests);
+    var responseReceived = controller.createRecords(requests, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -448,7 +432,7 @@ class HandleControllerTest {
     given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecords(requests);
+    var responseReceived = controller.createRecords(requests, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -471,7 +455,7 @@ class HandleControllerTest {
     given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecords(requests);
+    var responseReceived = controller.createRecords(requests, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -494,7 +478,7 @@ class HandleControllerTest {
     given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecords(requests);
+    var responseReceived = controller.createRecords(requests, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -518,11 +502,12 @@ class HandleControllerTest {
     updateRequestNode.set(NODE_DATA, givenJsonNode(HANDLE, RECORD_TYPE_HANDLE, updateAttributes));
 
     var responseExpected = givenRecordResponseWriteAltLoc(List.of(handle));
-    given(service.updateRecords(List.of(updateRequestNode))).willReturn(
+    given(service.updateRecords(List.of(updateRequestNode), true)).willReturn(
         responseExpected);
 
     // When
-    var responseReceived = controller.updateRecord(PREFIX, SUFFIX, updateRequestNode);
+    var responseReceived = controller.updateRecord(PREFIX, SUFFIX, updateRequestNode,
+        authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -539,7 +524,7 @@ class HandleControllerTest {
 
     // Then
     assertThrows(InvalidRequestException.class, () -> {
-      controller.updateRecord(PREFIX, SUFFIX, updateRequestNode);
+      controller.updateRecord(PREFIX, SUFFIX, updateRequestNode, authentication);
     });
   }
 
@@ -560,14 +545,92 @@ class HandleControllerTest {
       updateRequestList.add(updateRequestNode.deepCopy());
     }
 
-    given(service.updateRecords(updateRequestList)).willReturn(responseExpected);
+    given(service.updateRecords(updateRequestList, true)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.updateRecords(updateRequestList);
+    var responseReceived = controller.updateRecords(updateRequestList, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testRollbackUpdate() throws Exception {
+    // Given
+    List<byte[]> handles = List.of(
+        HANDLE.getBytes(StandardCharsets.UTF_8),
+        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
+
+    List<JsonNode> updateRequestList = new ArrayList<>();
+    var responseExpected = givenRecordResponseWriteAltLoc(handles);
+
+    for (byte[] handle : handles) {
+      var updateAttributes = genUpdateRequestAltLoc();
+      ObjectNode updateRequestNode = mapper.createObjectNode();
+      updateRequestNode.set("data", givenJsonNode(HANDLE, RECORD_TYPE_HANDLE, updateAttributes));
+      updateRequestList.add(updateRequestNode.deepCopy());
+    }
+
+    given(service.updateRecords(updateRequestList, false)).willReturn(responseExpected);
+
+    // When
+    var responseReceived = controller.rollbackHandleUpdate(updateRequestList, authentication);
+
+    // Then
+    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testRollbackHandles() throws Exception{
+    // Given
+    var dataNode1 = MAPPER.createObjectNode();
+    dataNode1.put("id", HANDLE);
+    var dataNode2 = MAPPER.createObjectNode();
+    dataNode2.put("id", HANDLE_ALT);
+    List<JsonNode> dataNode = List.of(dataNode1, dataNode2);
+    var request = new RollbackRequest(dataNode);
+    given(authentication.getName()).willReturn("name");
+
+    // when
+    var response = controller.rollbackHandleCreation(request, authentication);
+
+    // Then
+    then(service).should().rollbackHandles(List.of(HANDLE, HANDLE_ALT));
+  }
+
+  @Test
+  void testRollbackHandlesBadRequest() {
+    // Given
+    List<JsonNode> dataNode = List.of(MAPPER.createObjectNode());
+    var request = new RollbackRequest(dataNode);
+
+    // Then
+    assertThrows(InvalidRequestException.class, () -> controller.rollbackHandleCreation(request, authentication));
+  }
+
+
+  @Test
+  void testUpsert() throws Exception{
+    // Given
+    var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS);
+
+    // When
+    var response = controller.upsertRecord(List.of(request), authentication);
+
+    // Then
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+  }
+
+  @Test
+  void testUpsertBadType() {
+    // Given
+    var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS_BOTANY);
+
+    // Then
+    assertThrows(InvalidRequestException.class, () -> controller.upsertRecord(List.of(request),
+        authentication));
   }
 
   @Test
@@ -582,11 +645,21 @@ class HandleControllerTest {
         responseExpected);
 
     // When
-    var responseReceived = controller.archiveRecord(PREFIX, SUFFIX, archiveRequest);
+    var responseReceived = controller.archiveRecord(PREFIX, SUFFIX, archiveRequest, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testArchiveRecordBadHandle() {
+    // Given
+    var archiveRequest = givenArchiveRequest();
+
+    // When
+    assertThrows(InvalidRequestException.class, () -> controller.archiveRecord(PREFIX, "123", archiveRequest,
+        authentication));
   }
 
   @Test
@@ -628,7 +701,7 @@ class HandleControllerTest {
 
     // Then
     assertThrows(InvalidRequestException.class, () -> {
-      controller.updateRecord(PREFIX, SUFFIX, archiveRequestNode);
+      controller.updateRecord(PREFIX, SUFFIX, archiveRequestNode, authentication);
     });
   }
 
@@ -659,7 +732,7 @@ class HandleControllerTest {
 
     // Then
     Exception exception = assertThrows(PidResolutionException.class, () -> {
-      controller.createRecord(requestNode);
+      controller.createRecord(requestNode, authentication);
     });
     assertThat(exception.getMessage()).isEqualTo(message);
   }

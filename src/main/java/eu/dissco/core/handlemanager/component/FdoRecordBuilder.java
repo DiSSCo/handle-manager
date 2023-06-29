@@ -45,6 +45,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REPLACE_OR_APPEND;
+import static eu.dissco.core.handlemanager.domain.PidRecords.RESOLVABLE_KEYS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SOURCE_DATA_STANDARD;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SOURCE_SYSTEM_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
@@ -90,8 +91,11 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -122,6 +126,7 @@ public class FdoRecordBuilder {
   private static final String PROXY_ERROR = "Invalid attribute: %s must contain proxy: %s";
   private static final byte[] pidKernelMetadataLicense = "https://creativecommons.org/publicdomain/zero/1.0/".getBytes(
       StandardCharsets.UTF_8);
+
   private final DateTimeFormatter dt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
       .withZone(ZoneId.of("UTC"));
 
@@ -135,10 +140,12 @@ public class FdoRecordBuilder {
         new HandleAttribute(FIELD_IDX.get(HS_ADMIN), handle, HS_ADMIN, genAdminHandle()));
 
     // 101: 10320/loc
-    if (type!=ObjectType.ORGANISATION){
-      byte[] loc = setLocations(request.getLocations(), new String(handle, StandardCharsets.UTF_8), type);
+    if (type != ObjectType.ORGANISATION) {
+      byte[] loc = setLocations(request.getLocations(), new String(handle, StandardCharsets.UTF_8),
+          type);
       fdoRecord.add(new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, loc));
     }
+
     // 1: FDO Profile
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(FDO_PROFILE), handle, FDO_PROFILE,
         request.getFdoProfile().getBytes(StandardCharsets.UTF_8)));
@@ -229,7 +236,8 @@ public class FdoRecordBuilder {
     }
   }
 
-  public List<HandleAttribute> prepareDoiRecordAttributes(DoiRecordRequest request, byte[] handle, ObjectType type)
+  public List<HandleAttribute> prepareDoiRecordAttributes(DoiRecordRequest request, byte[] handle,
+      ObjectType type)
       throws PidServiceInternalError, UnprocessableEntityException, PidResolutionException, InvalidRequestException {
     var fdoRecord = prepareHandleRecordAttributes(request, handle, type);
 
@@ -286,11 +294,13 @@ public class FdoRecordBuilder {
     // 404 : Subject Physical Identifier
     // Encoding here is UTF-8
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(SUBJECT_PHYSICAL_IDENTIFIER), handle,
-        SUBJECT_PHYSICAL_IDENTIFIER, setUniquePhysicalIdentifierId(request)));
+        SUBJECT_PHYSICAL_IDENTIFIER,
+        setUniquePhysicalIdentifierId(request).getBytes(StandardCharsets.UTF_8)));
     return fdoRecord;
   }
 
-  public List<HandleAttribute> prepareAnnotationAttributes(AnnotationRequest request, byte[] handle, ObjectType type)
+  public List<HandleAttribute> prepareAnnotationAttributes(AnnotationRequest request, byte[] handle,
+      ObjectType type)
       throws UnprocessableEntityException, PidResolutionException, InvalidRequestException, PidServiceInternalError {
     var fdoRecord = prepareHandleRecordAttributes(request, handle, type);
 
@@ -366,11 +376,11 @@ public class FdoRecordBuilder {
 
     //101 10320/loc -> must contain ROR
     var objectLocations = new ArrayList<>(List.of(request.getOrganisationIdentifier()));
-    if (request.getLocations() != null){
+    if (request.getLocations() != null) {
       objectLocations.addAll(List.of(request.getLocations()));
     }
     byte[] loc = setLocations(objectLocations.toArray(new String[0]),
-        new String(handle, StandardCharsets.UTF_8), type);
+        new String(handle, StandardCharsets.UTF_8), ObjectType.ORGANISATION);
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, loc));
 
     // 800 OrganisationIdentifier
@@ -392,7 +402,8 @@ public class FdoRecordBuilder {
     return fdoRecord;
   }
 
-  public List<HandleAttribute> prepareMappingAttributes(MappingRequest request, byte[] handle, ObjectType type)
+  public List<HandleAttribute> prepareMappingAttributes(MappingRequest request, byte[] handle,
+      ObjectType type)
       throws UnprocessableEntityException, PidResolutionException, InvalidRequestException, PidServiceInternalError {
     var fdoRecord = prepareHandleRecordAttributes(request, handle, type);
 
@@ -422,7 +433,7 @@ public class FdoRecordBuilder {
     fdoRecord.add(
         new HandleAttribute(FIELD_IDX.get(PRIMARY_SPECIMEN_OBJECT_ID), handle,
             PRIMARY_SPECIMEN_OBJECT_ID,
-            primarySpecimenObjectId));
+            primarySpecimenObjectId.getBytes(StandardCharsets.UTF_8)));
 
     // 203: primarySpecimenObjectIdType
     fdoRecord.add(
@@ -587,19 +598,65 @@ public class FdoRecordBuilder {
     return prepareDigitalSpecimenRecordAttributes(request, handle, type);
   }
 
-  public List<HandleAttribute> prepareUpdateAttributes(byte[] handle, JsonNode requestAttributes, ObjectType type)
-      throws InvalidRequestException, PidServiceInternalError {
+  public List<HandleAttribute> prepareUpdateAttributes(byte[] handle, JsonNode requestAttributes,
+      ObjectType type)
+      throws InvalidRequestException, PidServiceInternalError, UnprocessableEntityException, PidResolutionException {
     requestAttributes = setLocationXmlFromJson(requestAttributes,
         new String(handle, StandardCharsets.UTF_8), type);
     Map<String, String> updateRequestMap = mapper.convertValue(requestAttributes,
         new TypeReference<Map<String, String>>() {
         });
-    List<HandleAttribute> attributesToUpdate = new ArrayList<>();
-    updateRequestMap.forEach((key, value) ->
-        attributesToUpdate.add(new HandleAttribute(FIELD_IDX.get(key), handle, key, value.getBytes(
-            StandardCharsets.UTF_8))));
 
-    return attributesToUpdate;
+    var updatedAttributeList = new ArrayList<>(updateRequestMap.entrySet().stream()
+        .filter(entry -> entry.getValue() != null)
+        .map(entry -> new HandleAttribute(FIELD_IDX.get(entry.getKey()), handle, entry.getKey(),
+            entry.getValue().getBytes(StandardCharsets.UTF_8)))
+        .toList());
+        updatedAttributeList.addAll(addResolvedNames(updateRequestMap, handle));
+        return updatedAttributeList;
+  }
+
+  private List<HandleAttribute> addResolvedNames(Map<String, String> updateRequestMap, byte[] handle)
+      throws UnprocessableEntityException, PidResolutionException, InvalidRequestException {
+    var resolvableKeys = updateRequestMap.entrySet()
+        .stream()
+        .filter(entry -> RESOLVABLE_KEYS.containsKey(entry.getKey())
+            && !hasResolvedPairInRequest(updateRequestMap, entry.getKey()))
+        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    if (resolvableKeys.isEmpty()){
+      return new ArrayList<>();
+    }
+    ArrayList<HandleAttribute> resolvedPidNameAttributes = new ArrayList<>();
+    for (var resolvableKey : resolvableKeys.entrySet()) {
+      var targetAttribute = RESOLVABLE_KEYS.get(resolvableKey.getKey());
+
+      var resolvedPid = prepareRorOrHandle(resolvableKey.getValue());
+      resolvedPidNameAttributes.add(new HandleAttribute(FIELD_IDX.get(targetAttribute),
+          handle, targetAttribute, resolvedPid.getBytes(StandardCharsets.UTF_8)));
+    }
+    return resolvedPidNameAttributes;
+  }
+
+  private boolean hasResolvedPairInRequest(Map<String, String> updateRequestMap, String pidToResolve){
+    var targetName = RESOLVABLE_KEYS.get(pidToResolve);
+    return updateRequestMap.containsKey(targetName);
+  }
+
+  public List<HandleAttribute> prepareTombstoneAttributes(byte[] handle, JsonNode requestAttributes)
+      throws InvalidRequestException, PidServiceInternalError, UnprocessableEntityException, PidResolutionException {
+    var tombstoneAttributes = new ArrayList<>(
+        prepareUpdateAttributes(handle, requestAttributes, ObjectType.TOMBSTONE));
+    tombstoneAttributes.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS,
+        "ARCHIVED".getBytes(StandardCharsets.UTF_8)));
+    tombstoneAttributes.add(genLandingPage(handle));
+    return tombstoneAttributes;
+  }
+
+  private HandleAttribute genLandingPage(byte[] handle) throws PidServiceInternalError {
+    var landingPage = new String[]{"Placeholder landing page"};
+    var data = setLocations(landingPage, new String(handle, StandardCharsets.UTF_8),
+        ObjectType.TOMBSTONE);
+    return new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, data);
   }
 
   private JsonNode setLocationXmlFromJson(JsonNode request, String handle, ObjectType type)
@@ -612,7 +669,8 @@ public class FdoRecordBuilder {
     ObjectNode requestObjectNode = request.deepCopy();
     try {
       String[] locArr = mapper.treeToValue(locNode, String[].class);
-      requestObjectNode.put(LOC, new String(setLocations(locArr, handle, type), StandardCharsets.UTF_8));
+      requestObjectNode.put(LOC,
+          new String(setLocations(locArr, handle, type), StandardCharsets.UTF_8));
       requestObjectNode.remove(LOC_REQ);
     } catch (IOException e) {
       throw new InvalidRequestException(
@@ -625,7 +683,7 @@ public class FdoRecordBuilder {
     return dt.format(Instant.now());
   }
 
-  private byte[] setLocations(String[] userLocations, String handle, ObjectType type)
+  public byte[] setLocations(String[] userLocations, String handle, ObjectType type)
       throws PidServiceInternalError {
 
     DocumentBuilder documentBuilder;

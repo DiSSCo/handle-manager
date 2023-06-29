@@ -1,5 +1,6 @@
 package eu.dissco.core.handlemanager.service;
 
+import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -18,12 +19,11 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Slf4j
 public class HandleGeneratorService {
+  private final ApplicationProperties applicationProperties;
 
   private static final int LENGTH = 11;
   private static final String ALPHA_NUM = "ABCDEFGHJKLMNPQRSTVWXYZ1234567890";
   private static final String PREFIX = "20.5000.1025/";
-  private static final int MAX_HANDLES = 1000;
-
   private final char[] symbols = ALPHA_NUM.toCharArray();
   private final char[] buf = new char[LENGTH];
   private final HandleRepository handleRep;
@@ -41,7 +41,7 @@ public class HandleGeneratorService {
     return handleList;
   }
 
-  public Set<ByteBuffer> genHandleHash(int h) {
+  private Set<ByteBuffer> genHandleHash(int h) {
 
     /*
      * Generates a HashSet of minted handles of size h Calls the handlefactory
@@ -104,23 +104,22 @@ public class HandleGeneratorService {
     return new String(buf);
   }
 
-  public String newHandle() {
+  private String newHandle() {
     return PREFIX + newSuffix();
   }
 
-  public byte[] newHandleBytes() {
+  private byte[] newHandleBytes() {
     return newHandle().getBytes(StandardCharsets.UTF_8);
   }
 
-  public List<byte[]> newHandle(int numberOfHandles) { // Generates h number of handles
+  private List<byte[]> newHandle(int numberOfHandles) { // Generates h number of handles
     if (numberOfHandles < 1) {
-      log.warn("Invalid number of handles to be generated");
       return new ArrayList<>();
     }
-    if (numberOfHandles > MAX_HANDLES) {
-      log.warn("Max number of handles exceeded. Generating maximum {} handles",
-          String.valueOf(MAX_HANDLES));
-      numberOfHandles = MAX_HANDLES;
+    if (numberOfHandles > applicationProperties.getMaxHandles()) {
+      log.warn("Max number of handles exceeded. Generating maximum {} handles instead",
+          applicationProperties.getMaxHandles());
+      numberOfHandles = applicationProperties.getMaxHandles();
     }
 
     // We'll use this to make sure we're not duplicating results

@@ -19,13 +19,17 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.STRUCTURAL_TYPE_T
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdentifier;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
-import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
  class ServiceUtilsTest {
@@ -35,7 +39,7 @@ import org.junit.jupiter.api.Test;
     // Given
    var request = givenDigitalSpecimenRequestObjectNullOptionals();
    var suffix = request.getSpecimenHost().replace(ROR_DOMAIN,"");
-   var expected = (request.getPrimarySpecimenObjectId() + ":" + suffix).getBytes(StandardCharsets.UTF_8);
+   var expected = request.getPrimarySpecimenObjectId() + ":" + suffix;
 
    // When
    var result = setUniquePhysicalIdentifierId(request);
@@ -48,7 +52,7 @@ import org.junit.jupiter.api.Test;
   void testSetUniquePhysicalIdentifierCombined(){
    // Given
    var request = givenCetafTypeDSRecord();
-   var expected = request.getPrimarySpecimenObjectId().getBytes(StandardCharsets.UTF_8);
+   var expected = request.getPrimarySpecimenObjectId();
 
    // When
    var result = setUniquePhysicalIdentifierId(request);
@@ -61,10 +65,10 @@ import org.junit.jupiter.api.Test;
   void testSetUniquePhysicalIdentifierMedia(){
    // Given
    var request = givenMediaRequestObject();
-   var expected = request.getSubjectIdentifier().physicalId();
+   String expected = request.getSubjectIdentifier().physicalId();
 
    // When
-   var result =new String(setUniquePhysicalIdentifierId(request), StandardCharsets.UTF_8);
+   String result = setUniquePhysicalIdentifierId(request);
 
    // Then
    assertThat(result).isEqualTo(expected);
@@ -75,10 +79,10 @@ import org.junit.jupiter.api.Test;
    // Given
    var request = givenCombinedMediaRequest();
    var suffix = request.getSubjectSpecimenHost().replace(ROR_DOMAIN,"");
-   var expected = request.getSubjectIdentifier().physicalId() + ":" + suffix;
+   String expected = request.getSubjectIdentifier().physicalId() + ":" + suffix;
 
    // When
-   var result = new String(setUniquePhysicalIdentifierId(request), StandardCharsets.UTF_8);
+   String result = setUniquePhysicalIdentifierId(request);
 
    // Then
    assertThat(result).isEqualTo(expected);

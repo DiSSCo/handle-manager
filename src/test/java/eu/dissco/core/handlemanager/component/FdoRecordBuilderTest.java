@@ -43,6 +43,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_DIGITAL_OBJ
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOPIC_DISCIPLINE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOPIC_ORIGIN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.WAS_DERIVED_FROM;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.DIGITAL_OBJECT_TYPE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.DOC_BUILDER_FACTORY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.FDO_PROFILE_TESTVAL;
@@ -62,25 +63,37 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.STRUCTURAL_TYPE_T
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.TRANSFORMER_FACTORY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributes;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordRequestAttributes;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMappingRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMasRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRecordAttributesAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestAltLoc;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecordRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMappingRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenOrganisationRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemRequestObject;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.AdditionalMatchers.not;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
+import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
+import eu.dissco.core.handlemanager.domain.requests.PatchRequestData;
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.LivingOrPreserved;
@@ -446,10 +459,52 @@ class FdoRecordBuilderTest {
   }
 
   @Test
+  void testUpdateSpecimenHostResolveName() throws Exception{
+    // Given
+    var handle = HANDLE.getBytes(StandardCharsets.UTF_8);
+    var request = generalUpdateRequest(List.of(SPECIMEN_HOST), SPECIMEN_HOST_TESTVAL);
+    var apiLocation = "https://api.ror.org/organizations/0x123";
+    given(pidResolver.getObjectName(apiLocation)).willReturn(SPECIMEN_HOST_NAME_TESTVAL);
+    ArrayList<HandleAttribute> expected = new ArrayList<>();
+    expected.add(
+        new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST), handle, SPECIMEN_HOST,
+            SPECIMEN_HOST_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+    expected.add(
+        new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST_NAME), handle, SPECIMEN_HOST_NAME,
+            SPECIMEN_HOST_NAME_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+
+    // When
+    var response = fdoRecordBuilder.prepareUpdateAttributes(HANDLE.getBytes(), request, ObjectType.DIGITAL_SPECIMEN);
+
+    // Then
+    assertThat(response).isEqualTo(expected);
+  }
+  @Test
+  void testUpdateSpecimenHostNameInRequest() throws Exception{
+    // Given
+    var handle = HANDLE.getBytes(StandardCharsets.UTF_8);
+    var request = generalUpdateRequest(List.of(SPECIMEN_HOST, SPECIMEN_HOST_NAME), SPECIMEN_HOST_TESTVAL);
+    ArrayList<HandleAttribute> expected = new ArrayList<>();
+    expected.add(
+        new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST), handle, SPECIMEN_HOST,
+            SPECIMEN_HOST_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+    expected.add(
+        new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST_NAME), handle, SPECIMEN_HOST_NAME,
+            SPECIMEN_HOST_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+
+    // When
+    var response = fdoRecordBuilder.prepareUpdateAttributes(HANDLE.getBytes(), request, ObjectType.DIGITAL_SPECIMEN);
+
+    // Then
+    assertThat(response).isEqualTo(expected);
+    verifyNoInteractions(pidResolver);
+  }
+
+  @Test
   void testUpdateAttributesAltLoc() throws Exception {
     // Given
     var updateRequest = genUpdateRequestAltLoc();
-    var expected = genUpdateRecordAttributesAltLoc(HANDLE.getBytes(StandardCharsets.UTF_8), ObjectType.HANDLE);
+    var expected = genUpdateRecordAttributesAltLoc(HANDLE.getBytes(StandardCharsets.UTF_8));
 
     // When
     var response = fdoRecordBuilder.prepareUpdateAttributes(HANDLE.getBytes(StandardCharsets.UTF_8),
@@ -477,6 +532,17 @@ class FdoRecordBuilderTest {
     assertThat(response).isEqualTo(expected);
   }
 
+  @Test
+  void testTombstoneAttributes() throws Exception{
+    // Given
+    var expected = genTombstoneRecordRequestAttributes(HANDLE.getBytes(StandardCharsets.UTF_8));
+
+    // When
+    var response = fdoRecordBuilder.prepareTombstoneAttributes(HANDLE.getBytes(), genTombstoneRequest());
+
+    // Then
+    assertThat(response).isEqualTo(expected);
+  }
 
   private DigitalSpecimenRequest givenDigitalSpecimenRequestObjectOptionalsInit()
       throws InvalidRequestException {
@@ -514,4 +580,13 @@ class FdoRecordBuilderTest {
     }
     return false;
   }
+  private JsonNode generalUpdateRequest(List<String> attributesToUpdate, String placeholder){
+    var requestAttributes = MAPPER.createObjectNode();
+    for (var attribute: attributesToUpdate){
+      requestAttributes.put(attribute, placeholder);
+    }
+    return requestAttributes;
+  }
+
+
 }

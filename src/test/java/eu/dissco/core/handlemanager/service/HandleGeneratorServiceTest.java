@@ -4,7 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.lenient;
 
+import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -25,28 +27,21 @@ class HandleGeneratorServiceTest {
   @Mock
   private Random random;
 
+  @Mock
+  ApplicationProperties applicationProperties;
+  private static final int MAX_HANDLES = 1000;
+
   private HandleGeneratorService hgService;
 
   @BeforeEach
   void setup() {
-    this.hgService = new HandleGeneratorService(handleRep, random);
-  }
-
-  @Test
-  void testNewHandle() {
-    // Given
-    String expectedHandle = "20.5000.1025/AAA-AAA-AAA";
-    given(random.nextInt(anyInt())).willReturn(0);
-
-    // When
-    String newHandle = hgService.newHandle();
-
-    // Then
-    assertThat(newHandle).isEqualTo(expectedHandle);
+    this.hgService = new HandleGeneratorService(applicationProperties, handleRep, random);
+    lenient().when(applicationProperties.getMaxHandles()).thenReturn(MAX_HANDLES);
   }
 
   @Test
   void testSingleBatchGen() {
+    // Given
     String expectedHandle = "20.5000.1025/AAA-AAA-AAA";
     given(random.nextInt(anyInt())).willReturn(0);
 
@@ -96,7 +91,6 @@ class HandleGeneratorServiceTest {
 
   @Test
   void testDbCollision() {
-
     // Given
     byte[] expectedHandle1 = "20.5000.1025/BBB-BBB-BBB".getBytes(StandardCharsets.UTF_8);
     byte[] expectedHandle2 = "20.5000.1025/ABB-BBB-BBB".getBytes(StandardCharsets.UTF_8);
@@ -121,11 +115,8 @@ class HandleGeneratorServiceTest {
 
   @Test
   void testInvalidNumberOfHandles() {
-    // Given
-    Random randomGen = new Random();
-
     // When
-    var tooFew = hgService.newHandle(-1);
+    var tooFew = hgService.genHandleList(-1);
 
     // Then
     assertThat(tooFew).isEmpty();

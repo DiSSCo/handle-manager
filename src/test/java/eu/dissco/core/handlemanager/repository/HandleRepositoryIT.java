@@ -1,7 +1,9 @@
 package eu.dissco.core.handlemanager.repository;
 
 import static eu.dissco.core.handlemanager.database.jooq.Tables.HANDLES;
+import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
 import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
+import static eu.dissco.core.handlemanager.domain.PidRecords.MATERIAL_SAMPLE_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_RECORD_ISSUE_NUMBER;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID;
@@ -12,12 +14,15 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_STATUS_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenAttributes;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDoiRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributesAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordFullAttributes;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordRequestAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRecordAttributesAltLoc;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObject;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.jooq.impl.DSL.exp;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import eu.dissco.core.handlemanager.database.jooq.tables.Handles;
@@ -30,6 +35,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.jooq.Query;
 import org.jooq.Record4;
 import org.junit.jupiter.api.AfterEach;
@@ -65,7 +71,6 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     assertThat(attributesToPost).isEqualTo(postedRecordAttributes);
     assertThat(postedRecordContext).hasSize(attributesToPost.size());
   }
-
 
   @Test
   void testHandlesExistTrue() {
@@ -247,7 +252,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
-  void testSearchByPhysicalIdentifier(){
+  void testSearchByPhysicalIdentifierFullRecord(){
     // Given
     var targetPhysicalIdentifer = PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> responseExpected = new ArrayList<>();
@@ -265,24 +270,42 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     postAttributes(nonTargetAttributes);
 
     // When
-    var responseReceived = handleRep.searchByPhysicalIdentifier(List.of(targetPhysicalIdentifer));
+    var responseReceived = handleRep.searchByPhysicalIdentifierFullRecord(List.of(targetPhysicalIdentifer));
 
     // Then
     assertThat(responseReceived).hasSameElementsAs(responseExpected);
   }
 
   @Test
+  void testSearchByPhysicalSpecimenId() throws Exception {
+    //Given
+    var handle = HANDLE.getBytes(StandardCharsets.UTF_8);
+    var expected = List.of(new HandleAttribute(FIELD_IDX.get(PRIMARY_SPECIMEN_OBJECT_ID), handle,
+        PRIMARY_SPECIMEN_OBJECT_ID,
+        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+
+    postAttributes(genDoiRecordAttributes(handle, ObjectType.DOI));
+    postAttributes(expected);
+
+    // When
+    var response = handleRep.searchByPhysicalIdentifier(
+        List.of(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+
+    // Then
+    assertThat(response).isEqualTo(expected);
+  }
+
+  @Test
   void testUpdateRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    List<HandleAttribute> originalRecord = genHandleRecordAttributes(handle, ObjectType.HANDLE);
-    List<HandleAttribute> recordUpdate = genUpdateRecordAttributesAltLoc(handle, ObjectType.HANDLE);
-    var responseExpected = incrementVersion(genHandleRecordAttributesAltLoc(handle,
-        ObjectType.HANDLE));
+    List<HandleAttribute> originalRecord = genHandleRecordAttributes(handle);
+    List<HandleAttribute> recordUpdate = genUpdateRecordAttributesAltLoc(handle);
+    var responseExpected = incrementVersion(genHandleRecordAttributesAltLoc(handle), true);
     postAttributes(originalRecord);
 
     // When
-    handleRep.updateRecord(CREATED.getEpochSecond(), recordUpdate);
+    handleRep.updateRecord(CREATED.getEpochSecond(), recordUpdate, true);
     var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
             Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
         .where(Handles.HANDLES.HANDLE.eq(handle)).and(Handles.HANDLES.TYPE.notEqual(
@@ -303,14 +326,13 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     List<List<HandleAttribute>> updateAttributes = new ArrayList<>();
     List<HandleAttribute> responseExpected = new ArrayList<>();
     for (byte[] handle : handles) {
-      postAttributes(genHandleRecordAttributes(handle, ObjectType.HANDLE));
-      updateAttributes.add(genUpdateRecordAttributesAltLoc(handle, ObjectType.HANDLE));
-      responseExpected.addAll(incrementVersion(genHandleRecordAttributesAltLoc(handle,
-          ObjectType.HANDLE)));
+      postAttributes(genHandleRecordAttributes(handle));
+      updateAttributes.add(genUpdateRecordAttributesAltLoc(handle));
+      responseExpected.addAll(incrementVersion(genHandleRecordAttributesAltLoc(handle), true));
     }
 
     // When
-    handleRep.updateRecordBatch(CREATED.getEpochSecond(), updateAttributes);
+    handleRep.updateRecordBatch(CREATED.getEpochSecond(), updateAttributes, true);
     var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
             Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
         .where(Handles.HANDLES.HANDLE.in(handles)).and(Handles.HANDLES.TYPE.notEqual(
@@ -327,17 +349,16 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     // Given
     List<byte[]> handles = List.of(HANDLE.getBytes(StandardCharsets.UTF_8),
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
+    List<String> handlesStr = List.of(HANDLE, HANDLE_ALT);
 
-    List<HandleAttribute> archiveAttributes = new ArrayList<>();
-    List<HandleAttribute> responseExpected = new ArrayList<>();
-    for (byte[] handle : handles) {
-      postAttributes(genHandleRecordAttributes(handle, ObjectType.HANDLE));
-      archiveAttributes.addAll(genTombstoneRecordRequestAttributes(handle));
-      responseExpected.addAll(incrementVersion(genTombstoneRecordFullAttributes(handle)));
+    List<HandleAttribute> tombstoneAttributes = new ArrayList<>();
+    for (var handle : handles) {
+      postAttributes(genDigitalSpecimenAttributes(handle));
+      tombstoneAttributes.addAll(incrementVersion(genTombstoneRecordFullAttributes(handle), true));
     }
 
     // When
-    handleRep.archiveRecords(CREATED.getEpochSecond(), archiveAttributes);
+    handleRep.archiveRecords(CREATED.getEpochSecond(), tombstoneAttributes, handlesStr);
     var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
             Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
         .where(Handles.HANDLES.HANDLE.in(handles)).and(Handles.HANDLES.TYPE.notEqual(
@@ -345,20 +366,57 @@ class HandleRepositoryIT extends BaseRepositoryIT {
         .fetch(this::mapToAttribute);
 
     // Then
-    assertThat(responseReceived).hasSameElementsAs(responseExpected);
+    assertThat(responseReceived).hasSameElementsAs(tombstoneAttributes);
   }
 
   @Test
   void testArchiveRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    List<HandleAttribute> originalRecord = genHandleRecordAttributes(handle, ObjectType.HANDLE);
-    List<HandleAttribute> recordArchive = genTombstoneRecordRequestAttributes(handle);
-    var responseExpected = incrementVersion(genTombstoneRecordFullAttributes(handle));
+    List<HandleAttribute> originalRecord = genDigitalSpecimenAttributes(handle);
+    var tombstoneAttributes = incrementVersion(genTombstoneRecordFullAttributes(handle), true);
+
     postAttributes(originalRecord);
 
     // When
-    handleRep.archiveRecord(CREATED.getEpochSecond(), recordArchive);
+    handleRep.archiveRecords(CREATED.getEpochSecond(), tombstoneAttributes, List.of(HANDLE));
+    var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
+            Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
+        .where(Handles.HANDLES.HANDLE.eq(handle)).and(Handles.HANDLES.TYPE.notEqual(
+            HS_ADMIN.getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
+        .fetch(this::mapToAttribute);
+
+    // Then
+    assertThat(responseReceived).hasSameElementsAs(tombstoneAttributes);
+  }
+
+  @Test
+  void testRollbackHandleCreation() throws Exception {
+    // Given
+    var expected = genHandleRecordAttributes(HANDLE.getBytes(StandardCharsets.UTF_8));
+    postAttributes(expected);
+    postAttributes(genHandleRecordAttributes(HANDLE_ALT.getBytes(StandardCharsets.UTF_8)));
+
+    // When
+    handleRep.rollbackHandles(List.of(HANDLE_ALT));
+    var response = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
+        Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(HANDLES).fetch(this::mapToAttribute);
+
+    // Then
+    assertThat(response).hasSameElementsAs(expected);
+  }
+
+  @Test
+  void testRollbackHandleUpdate() throws Exception {
+    // Given
+    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
+    List<HandleAttribute> originalRecord = genHandleRecordAttributes(handle);
+    List<HandleAttribute> recordUpdate = genUpdateRecordAttributesAltLoc(handle);
+    var responseExpected = incrementVersion(genHandleRecordAttributesAltLoc(handle), false);
+    postAttributes(originalRecord);
+
+    // When
+    handleRep.updateRecord(CREATED.getEpochSecond(), recordUpdate, false);
     var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
             Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
         .where(Handles.HANDLES.HANDLE.eq(handle)).and(Handles.HANDLES.TYPE.notEqual(
@@ -367,6 +425,32 @@ class HandleRepositoryIT extends BaseRepositoryIT {
 
     // Then
     assertThat(responseReceived).hasSameElementsAs(responseExpected);
+  }
+
+  @Test
+  void testPostAndUpdateHandles() throws Exception {
+    // Given
+    var handle = HANDLE.getBytes(StandardCharsets.UTF_8);
+    var handleAlt = HANDLE_ALT.getBytes(StandardCharsets.UTF_8);
+    var existingRecord = genHandleRecordAttributes(handle, ObjectType.HANDLE);
+    postAttributes(existingRecord);
+    var updatedRecord = new ArrayList<>(existingRecord);
+    updatedRecord.add(new HandleAttribute(FIELD_IDX.get(MATERIAL_SAMPLE_TYPE), handle, MATERIAL_SAMPLE_TYPE, "digital".getBytes(StandardCharsets.UTF_8)));
+    updatedRecord.add(new HandleAttribute(FIELD_IDX.get(PID_RECORD_ISSUE_NUMBER), handle, PID_RECORD_ISSUE_NUMBER, String.valueOf(2).getBytes(
+        StandardCharsets.UTF_8)));
+    updatedRecord.remove(new HandleAttribute(FIELD_IDX.get(PID_RECORD_ISSUE_NUMBER), handle, PID_RECORD_ISSUE_NUMBER, String.valueOf(1).getBytes(
+        StandardCharsets.UTF_8)));
+
+    var newRecord = genHandleRecordAttributes(handleAlt, ObjectType.HANDLE);
+    var expected = Stream.concat(updatedRecord.stream(), newRecord.stream()).toList();
+
+    // When
+    handleRep.postAndUpdateHandles(CREATED.getEpochSecond(), newRecord, List.of(updatedRecord));
+    var response = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
+        Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(HANDLES).fetch(this::mapToAttribute);
+
+    // Then
+    assertThat(response).hasSameElementsAs(expected);
   }
 
   private void postAttributes(List<HandleAttribute> rows) {
@@ -420,12 +504,14 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     return new ArrayList<>(handles);
   }
 
-  private List<HandleAttribute> incrementVersion(List<HandleAttribute> handleAttributes) {
+  private List<HandleAttribute> incrementVersion(List<HandleAttribute> handleAttributes,
+      boolean increaseVersionNum) {
     for (int i = 0; i < handleAttributes.size(); i++) {
       if (handleAttributes.get(i).type().equals(PID_RECORD_ISSUE_NUMBER)) {
         var removedRecord = handleAttributes.remove(i);
-        byte[] issueNum = String.valueOf(Integer.parseInt(new String(removedRecord.data())) + 1)
-            .getBytes(StandardCharsets.UTF_8);
+        var currentVersion = Integer.parseInt(new String(removedRecord.data()));
+        var newVersionNum = increaseVersionNum ? currentVersion + 1 : currentVersion - 1;
+        byte[] issueNum = String.valueOf(newVersionNum).getBytes(StandardCharsets.UTF_8);
         handleAttributes.add(i,
             new HandleAttribute(removedRecord.index(), removedRecord.handle(), removedRecord.type(),
                 issueNum));
