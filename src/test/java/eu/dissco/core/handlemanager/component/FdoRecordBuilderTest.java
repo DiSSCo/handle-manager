@@ -463,7 +463,8 @@ class FdoRecordBuilderTest {
     // Given
     var handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     var request = generalUpdateRequest(List.of(SPECIMEN_HOST), SPECIMEN_HOST_TESTVAL);
-    given(pidResolver.getObjectName(SPECIMEN_HOST_TESTVAL)).willReturn(SPECIMEN_HOST_NAME_TESTVAL);
+    var apiLocation = "https://api.ror.org/organizations/0x123";
+    given(pidResolver.getObjectName(apiLocation)).willReturn(SPECIMEN_HOST_NAME_TESTVAL);
     ArrayList<HandleAttribute> expected = new ArrayList<>();
     expected.add(
         new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST), handle, SPECIMEN_HOST,
