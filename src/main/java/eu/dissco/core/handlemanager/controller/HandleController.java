@@ -124,7 +124,7 @@ public class HandleController {
     for (JsonNode request : requests) {
       schemaValidator.validatePostRequest(request);
     }
-    log.info("Received batch POST request for  from user {}", authentication);
+    log.info("Received batch POST request for  from user {}", authentication.getName());
     return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(requests));
   }
 
