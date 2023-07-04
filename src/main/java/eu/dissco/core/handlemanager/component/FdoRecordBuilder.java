@@ -742,6 +742,9 @@ public class FdoRecordBuilder {
       case ANNOTATION -> {
         return new String[]{appProperties.getApiUrl() + "/annotations/" + handle};
       }
+      case MAS -> {
+        return new String[]{appProperties.getOrchestrationUrl() + "/mas/" + handle};
+      }
       default -> {
         // Handle, DOI, Organisation (organisation handled separately)
         return new String[]{};

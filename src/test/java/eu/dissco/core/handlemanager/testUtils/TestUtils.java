@@ -174,6 +174,7 @@ public class TestUtils {
 
   public static final String API_URL = "https://sandbox.dissco.tech/api/v1";
   public static final String UI_URL = "https://sandbox.dissco.tech/";
+  public static final String ORCHESTRATION_URL = "https://orchestration.dissco.tech/api/v1";
   public static final String PTR_TYPE_DOI = "doi";
   public final static String PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL = "BOTANICAL.QRS.123";
   public final static PhysicalIdentifier PHYSICAL_IDENTIFIER_TESTVAL_CETAF = new PhysicalIdentifier(
@@ -1061,10 +1062,10 @@ public class TestUtils {
         return new String[]{api, ui};
       }
       case MAPPING -> {
-        return new String[]{API_URL + "/mapping/" + handle};
+        return new String[]{ORCHESTRATION_URL + "/mapping/" + handle};
       }
       case SOURCE_SYSTEM -> {
-        return new String[]{API_URL + "/source-system/" + handle};
+        return new String[]{ORCHESTRATION_URL + "/source-system/" + handle};
       }
       case MEDIA_OBJECT -> {
         String api = API_URL + "/digitalMedia/" + handle;
@@ -1076,6 +1077,9 @@ public class TestUtils {
       }
       case ORGANISATION -> {
         return new String[]{SPECIMEN_HOST_TESTVAL};
+      }
+      case MAS -> {
+        return new String[]{ORCHESTRATION_URL + "/mas/" + handle};
       }
       default -> {
         // Handle, DOI, Organisation (organisation handled separately)

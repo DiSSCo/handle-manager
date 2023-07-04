@@ -20,6 +20,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.MAS_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MATERIAL_OR_DIGITAL_ENTITY;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MATERIAL_SAMPLE_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.OBJECT_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.ORGANISATION_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.OTHER_SPECIMEN_IDS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER;
@@ -43,6 +44,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_DIGITAL_OBJ
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOPIC_DISCIPLINE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOPIC_ORIGIN;
 import static eu.dissco.core.handlemanager.domain.PidRecords.WAS_DERIVED_FROM;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.API_URL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.DIGITAL_OBJECT_TYPE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.DOC_BUILDER_FACTORY;
@@ -52,6 +54,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_DOMAIN;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.ISSUED_FOR_AGENT_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.LOC_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.ORCHESTRATION_URL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_ISSUER_TESTVAL_OTHER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_REFERENT_TYPE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
@@ -61,6 +64,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_NAM
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.STRUCTURAL_TYPE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.TRANSFORMER_FACTORY;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.UI_URL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordRequestAttributes;
@@ -79,6 +83,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMappingReque
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenOrganisationRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.setLocations;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.AdditionalMatchers.not;
@@ -157,6 +162,9 @@ class FdoRecordBuilderTest {
   void init() {
     fdoRecordBuilder = new FdoRecordBuilder(TRANSFORMER_FACTORY, DOC_BUILDER_FACTORY, pidResolver,
         MAPPER, handleRepository, appProperties);
+    given(appProperties.getApiUrl()).willReturn(API_URL);
+    given(appProperties.getOrchestrationUrl()).willReturn(ORCHESTRATION_URL);
+    given(appProperties.getUiUrl()).willReturn(UI_URL);
   }
 
   @Test
@@ -184,6 +192,7 @@ class FdoRecordBuilderTest {
 
     // Then
     assertThat(result).hasSize(DOI_QTY);
+    assertThat(hasCorrectLocations(result, request.getLocations(), ObjectType.HANDLE)).isTrue();
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, DOI_FIELDS)).isTrue();
   }
@@ -199,6 +208,7 @@ class FdoRecordBuilderTest {
 
     // Then
     assertThat(result).hasSize(MEDIA_QTY);
+    assertThat(hasCorrectLocations(result, request.getLocations(), ObjectType.MEDIA_OBJECT)).isTrue();
   }
 
   @Test
@@ -212,6 +222,7 @@ class FdoRecordBuilderTest {
 
     // Then
     assertThat(result).hasSize(DS_MANDATORY_QTY);
+    assertThat(hasCorrectLocations(result, request.getLocations(), ObjectType.DIGITAL_SPECIMEN)).isTrue();
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, DOI_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, DS_FIELDS_MANDATORY)).isTrue();
@@ -228,6 +239,7 @@ class FdoRecordBuilderTest {
 
     // Then
     assertThat(result).hasSize(DS_OPTIONAL_QTY);
+    assertThat(hasCorrectLocations(result, request.getLocations(), ObjectType.DIGITAL_SPECIMEN)).isTrue();
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, DOI_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, DS_FIELDS_MANDATORY)).isTrue();
@@ -246,6 +258,7 @@ class FdoRecordBuilderTest {
 
     // Then
     assertThat(result).hasSize(ANNOTATION_QTY);
+    assertThat(hasCorrectLocations(result, request.getLocations(), ObjectType.ANNOTATION)).isTrue();
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, ANNOTATION_FIELDS)).isTrue();
   }
@@ -257,10 +270,11 @@ class FdoRecordBuilderTest {
     var request = givenMasRecordRequestObject();
 
     // When
-    var result = fdoRecordBuilder.prepareMasRecordAttributes(request, handle, ObjectType.HANDLE);
+    var result = fdoRecordBuilder.prepareMasRecordAttributes(request, handle, ObjectType.MAS);
 
     // Then
     assertThat(result).hasSize(HANDLE_QTY+1);
+    assertThat(hasCorrectLocations(result, request.getLocations(), ObjectType.MAS)).isTrue();
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, Set.of(MAS_NAME))).isTrue();
   }
@@ -302,6 +316,7 @@ class FdoRecordBuilderTest {
 
     // Then
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
+    assertThat(hasCorrectLocations(result, request.getLocations(), ObjectType.SOURCE_SYSTEM)).isTrue();
     assertThat(result).hasSize(HANDLE_QTY+1);
   }
 
@@ -586,6 +601,16 @@ class FdoRecordBuilderTest {
       requestAttributes.put(attribute, placeholder);
     }
     return requestAttributes;
+  }
+
+  private boolean hasCorrectLocations(List<HandleAttribute> fdoRecord, String[] userLocations, ObjectType type) throws Exception{
+    var expectedLocations = new String(setLocations(userLocations, HANDLE, type));
+    for (var row: fdoRecord){
+      if (row.type().equals(LOC)){
+        return (new String(row.data(), StandardCharsets.UTF_8)).equals(expectedLocations);
+      }
+    }
+    throw new IllegalStateException("No locations in fdo record");
   }
 
 
