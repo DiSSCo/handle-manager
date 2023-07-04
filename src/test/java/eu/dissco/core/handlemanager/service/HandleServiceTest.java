@@ -1,10 +1,8 @@
 package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
@@ -23,7 +21,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MAS;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MEDIA;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_ORGANISATION;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_SOURCE_SYSTEM;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.REFERENT_NAME_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genAnnotationAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
@@ -34,20 +31,21 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDoiRecordAttri
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributesAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMappingAttributes;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMasAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaObjectAttributes;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genObjectNodeAttributeRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genOrganisationAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genSourceSystemAttributes;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMappingRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genObjectNodeAttributeRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordFullAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordRequestAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequestBatch;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestBatch;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecordRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMappingRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenOrganisationRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseRead;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseReadSingle;
@@ -68,14 +66,11 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mockStatic;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import eu.dissco.core.handlemanager.component.FdoRecordBuilder;
+import eu.dissco.core.handlemanager.component.FdoRecordComponent;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiDataLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
-
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
-import eu.dissco.core.handlemanager.domain.requests.PatchRequestData;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
@@ -96,7 +91,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.parameters.P;
 
 @ExtendWith(MockitoExtension.class)
 class HandleServiceTest {
@@ -105,7 +99,7 @@ class HandleServiceTest {
   @Mock
   private HandleRepository handleRep;
   @Mock
-  private FdoRecordBuilder fdoRecordBuilder;
+  private FdoRecordComponent fdoRecordComponent;
   @Mock
   private HandleGeneratorService hgService;
   private HandleService service;
@@ -115,7 +109,7 @@ class HandleServiceTest {
 
   @BeforeEach
   void setup() {
-    service = new HandleService(handleRep, fdoRecordBuilder, hgService, MAPPER);
+    service = new HandleService(handleRep, fdoRecordComponent, hgService, MAPPER);
     initTime();
     initHandleList();
   }
@@ -253,7 +247,7 @@ class HandleServiceTest {
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(handleRecord);
-    given(fdoRecordBuilder.prepareHandleRecordAttributes(any(), any(),
+    given(fdoRecordComponent.prepareHandleRecordAttributes(any(), any(),
         eq(ObjectType.HANDLE))).willReturn(handleRecord);
 
     // When
@@ -273,7 +267,7 @@ class HandleServiceTest {
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(doiRecord);
-    given(fdoRecordBuilder.prepareDoiRecordAttributes(any(), any(), eq(ObjectType.DOI))).willReturn(
+    given(fdoRecordComponent.prepareDoiRecordAttributes(any(), any(), eq(ObjectType.DOI))).willReturn(
         doiRecord);
 
     // When
@@ -295,7 +289,7 @@ class HandleServiceTest {
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(digitalSpecimen);
     given(handleRep.searchByPhysicalIdentifierFullRecord(anyList())).willReturn(new ArrayList<>());
-    given(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(any(), any(), any())).willReturn(
+    given(fdoRecordComponent.prepareDigitalSpecimenRecordAttributes(any(), any(), any())).willReturn(
         digitalSpecimen);
 
     // When
@@ -395,11 +389,11 @@ class HandleServiceTest {
     byte[] handle = handles.get(0);
     var request = genCreateRecordRequest(givenHandleRecordRequestObject(), RECORD_TYPE_MAS);
     var responseExpected = givenRecordResponseWrite(List.of(handle), RECORD_TYPE_MAS);
-    List<HandleAttribute> handleRecord = genHandleRecordAttributes(handle, ObjectType.MAS);
+    List<HandleAttribute> handleRecord = genMasAttributes(handle);
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(handleRecord);
-    given(fdoRecordBuilder.prepareMasRecordAttributes(any(), any(), eq(ObjectType.MAS))).willReturn(handleRecord);
+    given(fdoRecordComponent.prepareMasRecordAttributes(any(), any(), eq(ObjectType.MAS))).willReturn(handleRecord);
 
     // When
     var responseReceived = service.createRecords(List.of(request));
@@ -702,7 +696,7 @@ class HandleServiceTest {
 
     given(handleRep.checkHandlesWritable(anyList())).willReturn(handles);
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(tombstoneAttributesFull);
-    given(fdoRecordBuilder.prepareTombstoneAttributes(any(), any())).willReturn(
+    given(fdoRecordComponent.prepareTombstoneAttributes(any(), any())).willReturn(
         tombstoneAttributes);
 
     // When
@@ -737,7 +731,7 @@ class HandleServiceTest {
 
     given(handleRep.checkHandlesWritable(anyList())).willReturn(handles);
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(tombstoneAttributesResolved);
-    given(fdoRecordBuilder.prepareTombstoneAttributes(any(), any())).willReturn(
+    given(fdoRecordComponent.prepareTombstoneAttributes(any(), any())).willReturn(
         tombstoneAttributes.get(0), tombstoneAttributes.get(1));
 
     // When
@@ -796,9 +790,9 @@ class HandleServiceTest {
             PRIMARY_SPECIMEN_OBJECT_ID_TYPE, existingPhysId.getBytes(StandardCharsets.UTF_8))));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(
         Stream.concat(existingRecordAttributes.stream(), newRecordAttriutes.stream()).toList());
-    given(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(eq(newRecordRequest), any(),
+    given(fdoRecordComponent.prepareDigitalSpecimenRecordAttributes(eq(newRecordRequest), any(),
         any())).willReturn(newRecordAttriutes);
-    given(fdoRecordBuilder.prepareUpdateAttributes(any(), eq(MAPPER.valueToTree(existingRecordRequest)), any())).willReturn(
+    given(fdoRecordComponent.prepareUpdateAttributes(any(), eq(MAPPER.valueToTree(existingRecordRequest)), any())).willReturn(
         existingRecordAttributes);
     given(hgService.genHandleList(anyInt())).willReturn(new ArrayList<>(List.of(newHandle)));
 
@@ -846,7 +840,7 @@ class HandleServiceTest {
             PRIMARY_SPECIMEN_OBJECT_ID_TYPE, PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(
             StandardCharsets.UTF_8))));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(existingRecord);
-    given(fdoRecordBuilder.prepareUpdateAttributes(any(), any(), any())).willReturn(
+    given(fdoRecordComponent.prepareUpdateAttributes(any(), any(), any())).willReturn(
         existingRecord);
     given(hgService.genHandleList(0)).willReturn(new ArrayList<>());
 
@@ -872,7 +866,7 @@ class HandleServiceTest {
 
     given(handleRep.searchByPhysicalIdentifier(anyList())).willReturn(new ArrayList<>());
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(newRecord);
-    given(fdoRecordBuilder.prepareDigitalSpecimenRecordAttributes(any(), any(), any())).willReturn(
+    given(fdoRecordComponent.prepareDigitalSpecimenRecordAttributes(any(), any(), any())).willReturn(
         newRecord);
     given(hgService.genHandleList(anyInt())).willReturn(List.of(handles.get(0)));
 

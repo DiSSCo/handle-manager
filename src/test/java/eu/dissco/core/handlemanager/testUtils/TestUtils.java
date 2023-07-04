@@ -17,6 +17,7 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.LIVING_OR_PRESERVED
 import static eu.dissco.core.handlemanager.domain.PidRecords.LOC;
 import static eu.dissco.core.handlemanager.domain.PidRecords.LOC_REQ;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MARKED_AS_TYPE;
+import static eu.dissco.core.handlemanager.domain.PidRecords.MAS_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MATERIAL_OR_DIGITAL_ENTITY;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MATERIAL_SAMPLE_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_HASH;
@@ -78,13 +79,13 @@ import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MappingRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MasRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.SourceSystemRequest;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdentifier;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ReplaceOrAppend;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.TombstoneRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
-import eu.dissco.core.handlemanager.domain.requests.objects.SourceSystemRequest;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -170,7 +171,7 @@ public class TestUtils {
   // Mappings
   public static final String SOURCE_DATA_STANDARD_TESTVAL = "dwc";
   // MAS
-  public static final String MAS_NAME = "Plant Organ detection";
+  public static final String MAS_NAME_TESTVAL = "Plant Organ detection";
 
   public static final String API_URL = "https://sandbox.dissco.tech/api/v1";
   public static final String UI_URL = "https://sandbox.dissco.tech/";
@@ -211,6 +212,7 @@ public class TestUtils {
     var request = givenHandleRecordRequestObject();
     byte[] loc = setLocations(request.getLocations(), new String(handle, StandardCharsets.UTF_8),
         type);
+    var a = new String(loc, StandardCharsets.UTF_8);
     fdoRecord.add(new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, loc));
 
     // 1: FDO Profile
@@ -560,6 +562,16 @@ public class TestUtils {
     return fdoRecord;
   }
 
+  public static List<HandleAttribute> genMasAttributes(byte[] handle)
+      throws Exception {
+    var fdoRecord = genHandleRecordAttributes(handle, ObjectType.MAS);
+
+    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(MAS_NAME), handle, MAS_NAME,
+        (MAS_NAME_TESTVAL).getBytes(StandardCharsets.UTF_8)));
+
+    return fdoRecord;
+  }
+
   public static List<HandleAttribute> genMappingAttributes(byte[] handle)
       throws Exception {
     var fdoRecord = genHandleRecordAttributes(handle, ObjectType.MAPPING);
@@ -773,7 +785,7 @@ public class TestUtils {
         PID_ISSUER_TESTVAL_OTHER,
         STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
-        MAS_NAME
+        MAS_NAME_TESTVAL
     );
   }
 
@@ -934,6 +946,9 @@ public class TestUtils {
       }
       case RECORD_TYPE_ORGANISATION -> {
         return genOrganisationAttributes(handle);
+      }
+      case RECORD_TYPE_MAS -> {
+        return genMasAttributes(handle);
       }
       default -> {
         log.warn("Default type");
