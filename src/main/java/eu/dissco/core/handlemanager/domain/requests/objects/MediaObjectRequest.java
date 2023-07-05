@@ -12,15 +12,15 @@ import lombok.ToString;
 public class MediaObjectRequest extends DoiRecordRequest {
 
   @JsonProperty(required = true)
-  private final String mediaHash;
+  private final String mediaHash; // Remove
   @JsonProperty(required = true)
-  private final String mediaHashAlgorithm;
+  private final String mediaHashAlgorithm; // Remove
   @JsonProperty(required = true)
-  private final String subjectSpecimenHost;
+  private final String subjectSpecimenHost; // Remove
   @JsonProperty(required = true)
   private final String mediaUrl;
   @JsonProperty(required = true)
-  private final PhysicalIdentifier subjectIdentifier;
+  private final PhysicalIdentifier subjectIdentifier; // Rename -> subjectLocalId? TBD
 
   public MediaObjectRequest(
       String fdoProfile,

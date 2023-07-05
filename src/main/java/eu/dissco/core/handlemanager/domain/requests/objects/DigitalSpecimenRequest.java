@@ -37,6 +37,7 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
   private final String topicDomain;
   @Nullable
   private final String topicDiscipline;
+  // Add topic Category
   @Nullable
   private final String objectType;
   @Nullable

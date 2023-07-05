@@ -1,5 +1,9 @@
 package eu.dissco.core.handlemanager.testUtils;
 
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_HOST;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_OBJECT_TYPE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_LOCAL_ID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_PID;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ACCESS_RESTRICTED;
 import static eu.dissco.core.handlemanager.domain.PidRecords.ANNOTATION_TOPIC;
 import static eu.dissco.core.handlemanager.domain.PidRecords.BASE_TYPE_OF_SPECIMEN;
@@ -20,8 +24,6 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.MARKED_AS_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MAS_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MATERIAL_OR_DIGITAL_ENTITY;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MATERIAL_SAMPLE_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_HASH;
-import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_HASH_ALG;
 import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_URL;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
@@ -41,7 +43,6 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OB
 import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID_ABSENCE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_TYPE;
@@ -52,8 +53,6 @@ import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST_NAME;
 import static eu.dissco.core.handlemanager.domain.PidRecords.STRUCTURAL_TYPE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_DIGITAL_OBJECT_ID;
-import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_PHYSICAL_IDENTIFIER;
-import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_TEXT;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOPIC_DISCIPLINE;
 import static eu.dissco.core.handlemanager.domain.PidRecords.TOPIC_DOMAIN;
@@ -344,10 +343,6 @@ public class TestUtils {
         new HandleAttribute(FIELD_IDX.get(PRIMARY_REFERENT_TYPE), handle, PRIMARY_REFERENT_TYPE,
             request.getPrimaryReferentType().getBytes(StandardCharsets.UTF_8)));
 
-    // 44: referent
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(REFERENT), handle, REFERENT,
-        request.getReferent().getBytes(StandardCharsets.UTF_8)));
-
     return fdoRecord;
   }
 
@@ -509,28 +504,28 @@ public class TestUtils {
       throws Exception {
     List<HandleAttribute> handleRecord = genDoiRecordAttributes(handle, ObjectType.MEDIA_OBJECT);
 
-    // Media Hash
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(MEDIA_HASH), handle,
-        MEDIA_HASH, MEDIA_HASH_TESTVAL.getBytes(StandardCharsets.UTF_8)));
-
-    // Media hash Algorithm
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(MEDIA_HASH_ALG), handle,
-        MEDIA_HASH_ALG, MEDIA_HASH_ALG_TESTVAL.getBytes(StandardCharsets.UTF_8)));
-
-    // Subject Specimen Host
-    handleRecord.add(
-        new HandleAttribute(FIELD_IDX.get(SUBJECT_SPECIMEN_HOST), handle, SUBJECT_SPECIMEN_HOST,
-            SPECIMEN_HOST_TESTVAL.getBytes(
-                StandardCharsets.UTF_8)));
+    byte[] PLACEHOLDER = "Needs to be fixed!".getBytes(StandardCharsets.UTF_8);
 
     // Media URL
     handleRecord.add(new HandleAttribute(FIELD_IDX.get(MEDIA_URL), handle,
         MEDIA_URL, MEDIA_URL_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
-    // Subject physical identifier
-    handleRecord.add(new HandleAttribute(FIELD_IDX.get(SUBJECT_PHYSICAL_IDENTIFIER), handle,
-        SUBJECT_PHYSICAL_IDENTIFIER,
+    // 405 Media Object Type
+    handleRecord.add(new HandleAttribute(MEDIA_OBJECT_TYPE.index(), handle, MEDIA_OBJECT_TYPE.get(),
+        PLACEHOLDER));
+
+    // 406 Media Host
+    handleRecord.add(
+        new HandleAttribute(MEDIA_HOST.index(), handle, MEDIA_HOST.get(), PLACEHOLDER));
+
+    // 407 Subject Local Id
+    handleRecord.add(new HandleAttribute(SUBJECT_LOCAL_ID.index(), handle, SUBJECT_LOCAL_ID.get(),
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+
+    // 408 Subject PID -> might need to be resolved
+    handleRecord.add(
+        new HandleAttribute(SUBJECT_PID.index(), handle, SUBJECT_PID.get(), PLACEHOLDER));
+
     return handleRecord;
   }
 
