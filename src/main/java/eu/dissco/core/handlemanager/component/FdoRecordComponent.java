@@ -563,7 +563,7 @@ public class FdoRecordComponent {
               markedAsType.toString().getBytes(StandardCharsets.UTF_8)));
     }
 
-    // 218: wasDerivedFrom
+    // 218: wasDerivedFromEntity
     var wasDerivedFrom = request.getWasDerivedFrom();
     if (wasDerivedFrom != null) {
       fdoRecord.add(

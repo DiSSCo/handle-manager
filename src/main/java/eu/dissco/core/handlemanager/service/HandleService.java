@@ -1,10 +1,10 @@
 package eu.dissco.core.handlemanager.service;
 
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PID;
+import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
+import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
+import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ID;
+import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_TYPE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -142,7 +142,7 @@ public class HandleService {
   }
 
   private JsonApiDataLinks wrapData(JsonNode recordAttributes, String recordType) {
-    String pidLink = recordAttributes.get(PID).asText();
+    String pidLink = recordAttributes.get(PID.get()).asText();
     String pidName = getPidName(pidLink);
     var handleLink = new JsonApiLinks(pidLink);
     return new JsonApiDataLinks(pidName, recordType, recordAttributes, handleLink);
@@ -496,7 +496,7 @@ public class HandleService {
 
   private String getRecordTypeFromTypeList(JsonNode recordAttributes,
       Map<String, ObjectType> recordTypes) {
-    String pid = getPidName(recordAttributes.get(PID).asText());
+    String pid = getPidName(recordAttributes.get(PID.get()).asText());
     return recordTypes.get(pid).toString();
   }
 
@@ -567,7 +567,7 @@ public class HandleService {
     List<JsonApiDataLinks> dataList = new ArrayList<>();
 
     for (JsonNode updatedRecord : archivedRecords) {
-      String pidLink = updatedRecord.get(PID).asText();
+      String pidLink = updatedRecord.get(PID.get()).asText();
       String pidName = getPidName(pidLink);
       dataList.add(new JsonApiDataLinks(pidName, ObjectType.TOMBSTONE.toString(), updatedRecord,
           new JsonApiLinks(pidLink)));

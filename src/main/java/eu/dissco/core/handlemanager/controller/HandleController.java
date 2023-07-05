@@ -1,11 +1,11 @@
 package eu.dissco.core.handlemanager.controller;
 
 
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID;
+import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
+import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
+import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ID;
+import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_TYPE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -258,6 +258,6 @@ public class HandleController {
 
   private List<String> getPhysicalSpecimenIds(List<JsonNode> requests) {
     return requests.stream().map(r -> r.get(NODE_DATA).get(NODE_ATTRIBUTES)
-        .get(PRIMARY_SPECIMEN_OBJECT_ID).asText()).toList();
+        .get(PRIMARY_SPECIMEN_OBJECT_ID.get()).asText()).toList();
   }
 }

@@ -1,8 +1,8 @@
 package eu.dissco.core.handlemanager.domain.requests.validation;
 
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
+import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
+import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
+import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_TYPE;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.victools.jsonschema.generator.Option;

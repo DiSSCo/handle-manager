@@ -1,13 +1,7 @@
 package eu.dissco.core.handlemanager.repository;
 
 import static eu.dissco.core.handlemanager.database.jooq.Tables.HANDLES;
-import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
-import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
-import static eu.dissco.core.handlemanager.domain.PidRecords.MATERIAL_SAMPLE_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_RECORD_ISSUE_NUMBER;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID;
-import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.*;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
@@ -77,9 +71,9 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     // Given
     List<byte[]> handles = List.of(HANDLE.getBytes(StandardCharsets.UTF_8),
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-    List<HandleAttribute> rows = List.of(new HandleAttribute(1, handles.get(0), PID_STATUS,
+    List<HandleAttribute> rows = List.of(new HandleAttribute(1, handles.get(0), PID_STATUS.get(),
             PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8)),
-        new HandleAttribute(1, handles.get(1), PID_STATUS,
+        new HandleAttribute(1, handles.get(1), PID_STATUS.get(),
             PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     postAttributes(rows);
@@ -110,9 +104,9 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   void testHandlesWritableTrue() {
     List<byte[]> handles = List.of(HANDLE.getBytes(StandardCharsets.UTF_8),
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-    List<HandleAttribute> rows = List.of(new HandleAttribute(1, handles.get(0), PID_STATUS,
+    List<HandleAttribute> rows = List.of(new HandleAttribute(1, handles.get(0), PID_STATUS.get(),
             PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8)),
-        new HandleAttribute(1, handles.get(1), PID_STATUS,
+        new HandleAttribute(1, handles.get(1), PID_STATUS.get(),
             PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     postAttributes(rows);
@@ -129,9 +123,9 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   void testHandlesWritableFalse() {
     List<byte[]> handles = List.of(HANDLE.getBytes(StandardCharsets.UTF_8),
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-    List<HandleAttribute> rows = List.of(new HandleAttribute(1, handles.get(0), PID_STATUS,
+    List<HandleAttribute> rows = List.of(new HandleAttribute(1, handles.get(0), PID_STATUS.get(),
             "ARCHIVED".getBytes(StandardCharsets.UTF_8)),
-        new HandleAttribute(1, handles.get(1), PID_STATUS,
+        new HandleAttribute(1, handles.get(1), PID_STATUS.get(),
             "ARCHIVED".getBytes(StandardCharsets.UTF_8)));
 
     postAttributes(rows);
@@ -188,7 +182,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     List<HandleAttribute> rows = new ArrayList<>();
 
     for (String handle : handles) {
-      rows.add(new HandleAttribute(1, handle.getBytes(StandardCharsets.UTF_8), PID_STATUS,
+      rows.add(new HandleAttribute(1, handle.getBytes(StandardCharsets.UTF_8), PID_STATUS.get(),
           PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8)));
     }
     postAttributes(rows);
@@ -210,7 +204,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     List<HandleAttribute> rows = new ArrayList<>();
 
     for (String handle : handles) {
-      rows.add(new HandleAttribute(1, handle.getBytes(StandardCharsets.UTF_8), PID_STATUS,
+      rows.add(new HandleAttribute(1, handle.getBytes(StandardCharsets.UTF_8), PID_STATUS.get(),
           PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8)));
     }
     postAttributes(rows);
@@ -235,11 +229,11 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     List<HandleAttribute> rows = new ArrayList<>();
 
     for (String handle : responseExpected) {
-      rows.add(new HandleAttribute(1, handle.getBytes(StandardCharsets.UTF_8), PID_STATUS,
+      rows.add(new HandleAttribute(1, handle.getBytes(StandardCharsets.UTF_8), PID_STATUS.get(),
           pidStatusTarget));
     }
     for (String handle : extraHandles) {
-      rows.add(new HandleAttribute(1, handle.getBytes(StandardCharsets.UTF_8), PID_STATUS,
+      rows.add(new HandleAttribute(1, handle.getBytes(StandardCharsets.UTF_8), PID_STATUS.get(),
           PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8)));
     }
     postAttributes(rows);
@@ -257,13 +251,13 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     var targetPhysicalIdentifer = PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> responseExpected = new ArrayList<>();
     responseExpected.add(new HandleAttribute(1, HANDLE.getBytes(StandardCharsets.UTF_8),
-        PRIMARY_SPECIMEN_OBJECT_ID, targetPhysicalIdentifer));
-    responseExpected.add(new HandleAttribute(2, HANDLE.getBytes(StandardCharsets.UTF_8), SPECIMEN_HOST, SPECIMEN_HOST_TESTVAL.getBytes(
+        PRIMARY_SPECIMEN_OBJECT_ID.get(), targetPhysicalIdentifer));
+    responseExpected.add(new HandleAttribute(2, HANDLE.getBytes(StandardCharsets.UTF_8), SPECIMEN_HOST.get(), SPECIMEN_HOST_TESTVAL.getBytes(
         StandardCharsets.UTF_8)));
 
     List<HandleAttribute> nonTargetAttributes = new ArrayList<>();
     nonTargetAttributes.add(new HandleAttribute(1, HANDLE_ALT.getBytes(StandardCharsets.UTF_8),
-        PRIMARY_SPECIMEN_OBJECT_ID, "A".getBytes(
+        PRIMARY_SPECIMEN_OBJECT_ID.get(), "A".getBytes(
         StandardCharsets.UTF_8)));
 
     postAttributes(responseExpected);
@@ -280,8 +274,8 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   void testSearchByPhysicalSpecimenId() throws Exception {
     //Given
     var handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    var expected = List.of(new HandleAttribute(FIELD_IDX.get(PRIMARY_SPECIMEN_OBJECT_ID), handle,
-        PRIMARY_SPECIMEN_OBJECT_ID,
+    var expected = List.of(new HandleAttribute(PRIMARY_SPECIMEN_OBJECT_ID.index(), handle,
+        PRIMARY_SPECIMEN_OBJECT_ID.get(),
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     postAttributes(genDoiRecordAttributes(handle, ObjectType.DOI));
@@ -309,7 +303,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
             Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
         .where(Handles.HANDLES.HANDLE.eq(handle)).and(Handles.HANDLES.TYPE.notEqual(
-            HS_ADMIN.getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
+            HS_ADMIN.get().getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
         .fetch(this::mapToAttribute);
 
     // Then
@@ -336,7 +330,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
             Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
         .where(Handles.HANDLES.HANDLE.in(handles)).and(Handles.HANDLES.TYPE.notEqual(
-            HS_ADMIN.getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
+            HS_ADMIN.get().getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
         .fetch(this::mapToAttribute);
 
     // Then
@@ -362,7 +356,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
             Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
         .where(Handles.HANDLES.HANDLE.in(handles)).and(Handles.HANDLES.TYPE.notEqual(
-            HS_ADMIN.getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
+            HS_ADMIN.get().getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
         .fetch(this::mapToAttribute);
 
     // Then
@@ -383,7 +377,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
             Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
         .where(Handles.HANDLES.HANDLE.eq(handle)).and(Handles.HANDLES.TYPE.notEqual(
-            HS_ADMIN.getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
+            HS_ADMIN.get().getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
         .fetch(this::mapToAttribute);
 
     // Then
@@ -420,7 +414,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
             Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
         .where(Handles.HANDLES.HANDLE.eq(handle)).and(Handles.HANDLES.TYPE.notEqual(
-            HS_ADMIN.getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
+            HS_ADMIN.get().getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
         .fetch(this::mapToAttribute);
 
     // Then
@@ -435,10 +429,10 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     var existingRecord = genHandleRecordAttributes(handle, ObjectType.HANDLE);
     postAttributes(existingRecord);
     var updatedRecord = new ArrayList<>(existingRecord);
-    updatedRecord.add(new HandleAttribute(FIELD_IDX.get(MATERIAL_SAMPLE_TYPE), handle, MATERIAL_SAMPLE_TYPE, "digital".getBytes(StandardCharsets.UTF_8)));
-    updatedRecord.add(new HandleAttribute(FIELD_IDX.get(PID_RECORD_ISSUE_NUMBER), handle, PID_RECORD_ISSUE_NUMBER, String.valueOf(2).getBytes(
+    updatedRecord.add(new HandleAttribute(MATERIAL_SAMPLE_TYPE.index(), handle, MATERIAL_SAMPLE_TYPE.get(), "digital".getBytes(StandardCharsets.UTF_8)));
+    updatedRecord.add(new HandleAttribute(PID_RECORD_ISSUE_NUMBER.index(), handle, PID_RECORD_ISSUE_NUMBER.get(), String.valueOf(2).getBytes(
         StandardCharsets.UTF_8)));
-    updatedRecord.remove(new HandleAttribute(FIELD_IDX.get(PID_RECORD_ISSUE_NUMBER), handle, PID_RECORD_ISSUE_NUMBER, String.valueOf(1).getBytes(
+    updatedRecord.remove(new HandleAttribute(PID_RECORD_ISSUE_NUMBER.index(), handle, PID_RECORD_ISSUE_NUMBER.get(), String.valueOf(1).getBytes(
         StandardCharsets.UTF_8)));
 
     var newRecord = genHandleRecordAttributes(handleAlt, ObjectType.HANDLE);
@@ -507,7 +501,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   private List<HandleAttribute> incrementVersion(List<HandleAttribute> handleAttributes,
       boolean increaseVersionNum) {
     for (int i = 0; i < handleAttributes.size(); i++) {
-      if (handleAttributes.get(i).type().equals(PID_RECORD_ISSUE_NUMBER)) {
+      if (handleAttributes.get(i).type().equals(PID_RECORD_ISSUE_NUMBER.get())) {
         var removedRecord = handleAttributes.remove(i);
         var currentVersion = Integer.parseInt(new String(removedRecord.data()));
         var newVersionNum = increaseVersionNum ? currentVersion + 1 : currentVersion - 1;

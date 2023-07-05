@@ -1,8 +1,8 @@
 package eu.dissco.core.handlemanager.controller;
 
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
+import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
+import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
+import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ID;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
