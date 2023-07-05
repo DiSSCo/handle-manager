@@ -1,6 +1,10 @@
 package eu.dissco.core.handlemanager.testUtils;
 
 import static eu.dissco.core.handlemanager.domain.FdoProfile.*;
+import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
+import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
+import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ID;
+import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_TYPE;
 import static eu.dissco.core.handlemanager.service.ServiceUtils.setUniquePhysicalIdentifierId;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -918,10 +922,10 @@ public class TestUtils {
     List<JsonNode> requestNodeList = new ArrayList<>();
 
     for (String handle : handles) {
-      requestNodeData.put("type", RECORD_TYPE_HANDLE);
-      requestNodeData.put("id", handle);
-      requestNodeData.set("attributes", genTombstoneRequest());
-      requestNodeRoot.set("data", requestNodeData);
+      requestNodeData.put(NODE_TYPE, RECORD_TYPE_HANDLE);
+      requestNodeData.put(NODE_ID, handle);
+      requestNodeData.set(NODE_ATTRIBUTES, genTombstoneRequest());
+      requestNodeRoot.set(NODE_DATA, requestNodeData);
 
       requestNodeList.add(requestNodeRoot.deepCopy());
 

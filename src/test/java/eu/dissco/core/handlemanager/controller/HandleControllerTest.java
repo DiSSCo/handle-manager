@@ -3,6 +3,7 @@ package eu.dissco.core.handlemanager.controller;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ID;
+import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_TYPE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
@@ -487,9 +488,9 @@ class HandleControllerTest {
 
   private JsonNode givenJsonNode(String id, String type, JsonNode attributes) {
     ObjectNode node = mapper.createObjectNode();
-    node.put("id", id);
-    node.put("type", type);
-    node.set("attributes", attributes);
+    node.put(NODE_ID, id);
+    node.put(NODE_TYPE, type);
+    node.set(NODE_ATTRIBUTES, attributes);
     return node;
   }
 
@@ -703,22 +704,6 @@ class HandleControllerTest {
     assertThrows(InvalidRequestException.class, () -> {
       controller.updateRecord(PREFIX, SUFFIX, archiveRequestNode, authentication);
     });
-  }
-
-  private JsonNode excludeValue(String val) {
-
-    ObjectNode baseNode = mapper.createObjectNode();
-    baseNode.put("type", RECORD_TYPE_HANDLE);
-    baseNode.put("id", HANDLE);
-    baseNode.set("attributes", genUpdateRequestAltLoc());
-    if (val.equals("data")) {
-      return baseNode;
-    }
-
-    baseNode.remove(val);
-    ObjectNode baseNodeRoot = mapper.createObjectNode();
-    baseNodeRoot.set("data", baseNode);
-    return baseNodeRoot;
   }
 
   @Test
