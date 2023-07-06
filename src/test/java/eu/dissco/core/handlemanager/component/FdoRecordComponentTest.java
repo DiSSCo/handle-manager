@@ -1,48 +1,6 @@
 package eu.dissco.core.handlemanager.component;
 
-import static eu.dissco.core.handlemanager.domain.PidRecords.ACCESS_RESTRICTED;
-import static eu.dissco.core.handlemanager.domain.PidRecords.ANNOTATION_TOPIC;
-import static eu.dissco.core.handlemanager.domain.PidRecords.BASE_TYPE_OF_SPECIMEN;
-import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_NAME;
-import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.FDO_PROFILE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.FDO_RECORD_LICENSE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
-import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
-import static eu.dissco.core.handlemanager.domain.PidRecords.INFORMATION_ARTEFACT_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUED_FOR_AGENT;
-import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUED_FOR_AGENT_NAME;
-import static eu.dissco.core.handlemanager.domain.PidRecords.LINKED_URL;
-import static eu.dissco.core.handlemanager.domain.PidRecords.LIVING_OR_PRESERVED;
-import static eu.dissco.core.handlemanager.domain.PidRecords.LOC;
-import static eu.dissco.core.handlemanager.domain.PidRecords.MARKED_AS_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.MAS_NAME;
-import static eu.dissco.core.handlemanager.domain.PidRecords.MATERIAL_OR_DIGITAL_ENTITY;
-import static eu.dissco.core.handlemanager.domain.PidRecords.MATERIAL_SAMPLE_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.OBJECT_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.OTHER_SPECIMEN_IDS;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER_NAME;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_RECORD_ISSUE_DATE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_RECORD_ISSUE_NUMBER;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_REFERENT_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID_NAME;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT;
-import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
-import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_NAME;
-import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.REPLACE_OR_APPEND;
-import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
-import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST_NAME;
-import static eu.dissco.core.handlemanager.domain.PidRecords.STRUCTURAL_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_DIGITAL_OBJECT_ID;
-import static eu.dissco.core.handlemanager.domain.PidRecords.TOPIC_DISCIPLINE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.TOPIC_ORIGIN;
-import static eu.dissco.core.handlemanager.domain.PidRecords.WAS_DERIVED_FROM;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.*;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.API_URL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.DIGITAL_OBJECT_TYPE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.DOC_BUILDER_FACTORY;
@@ -114,23 +72,23 @@ import org.mockito.quality.Strictness;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class FdoRecordComponentTest {
 
-  private static final Set<String> HANDLE_FIELDS = Set.of(FDO_PROFILE, FDO_RECORD_LICENSE,
-      DIGITAL_OBJECT_TYPE, DIGITAL_OBJECT_NAME, PID, PID_ISSUER, PID_ISSUER_NAME, ISSUED_FOR_AGENT,
-      ISSUED_FOR_AGENT_NAME, PID_RECORD_ISSUE_DATE, PID_RECORD_ISSUE_NUMBER, STRUCTURAL_TYPE,
-      PID_STATUS, HS_ADMIN, LOC);
+  private static final Set<String> HANDLE_FIELDS = Set.of(FDO_PROFILE.get(), FDO_RECORD_LICENSE.get(),
+      DIGITAL_OBJECT_TYPE.get(), DIGITAL_OBJECT_NAME.get(), PID.get(), PID_ISSUER.get(), PID_ISSUER_NAME.get(), ISSUED_FOR_AGENT.get(),
+      ISSUED_FOR_AGENT_NAME.get(), PID_RECORD_ISSUE_DATE.get(), PID_RECORD_ISSUE_NUMBER.get(), STRUCTURAL_TYPE.get(),
+      PID_STATUS.get(), HS_ADMIN.get(), LOC.get());
 
-  private static final Set<String> DOI_FIELDS = Set.of(REFERENT_TYPE, REFERENT_DOI_NAME,
-      REFERENT_NAME, PRIMARY_REFERENT_TYPE, REFERENT);
-  private static final Set<String> DS_FIELDS_MANDATORY = Set.of(SPECIMEN_HOST, SPECIMEN_HOST_NAME,
-      PRIMARY_SPECIMEN_OBJECT_ID, PRIMARY_SPECIMEN_OBJECT_ID_TYPE, MATERIAL_OR_DIGITAL_ENTITY);
+  private static final Set<String> DOI_FIELDS = Set.of(REFERENT_TYPE.get(), REFERENT_DOI_NAME.get(),
+      REFERENT_NAME.get(), PRIMARY_REFERENT_TYPE.get());
+  private static final Set<String> DS_FIELDS_MANDATORY = Set.of(SPECIMEN_HOST.get(), SPECIMEN_HOST_NAME.get(),
+      PRIMARY_SPECIMEN_OBJECT_ID.get(), PRIMARY_SPECIMEN_OBJECT_ID_TYPE.get(), MATERIAL_OR_DIGITAL_ENTITY.get());
 
-  private static final Set<String> DS_FIELDS_OPTIONAL = Set.of(PRIMARY_SPECIMEN_OBJECT_ID_NAME,
-      OTHER_SPECIMEN_IDS, TOPIC_ORIGIN, TOPIC_DISCIPLINE, OBJECT_TYPE, LIVING_OR_PRESERVED,
-      BASE_TYPE_OF_SPECIMEN, INFORMATION_ARTEFACT_TYPE,
-      MATERIAL_SAMPLE_TYPE, MARKED_AS_TYPE, WAS_DERIVED_FROM);
+  private static final Set<String> DS_FIELDS_OPTIONAL = Set.of(PRIMARY_SPECIMEN_OBJECT_ID_NAME.get(),
+      OTHER_SPECIMEN_IDS.get(), TOPIC_ORIGIN.get(), TOPIC_DISCIPLINE.get(), LIVING_OR_PRESERVED.get(),
+      BASE_TYPE_OF_SPECIMEN.get(), INFORMATION_ARTEFACT_TYPE.get(),
+      MATERIAL_SAMPLE_TYPE.get(), MARKED_AS_TYPE.get(), WAS_DERIVED_FROM_ENTITY.get());
 
-  private static final Set<String> ANNOTATION_FIELDS = Set.of(SUBJECT_DIGITAL_OBJECT_ID,
-      ANNOTATION_TOPIC, REPLACE_OR_APPEND, ACCESS_RESTRICTED, LINKED_URL);
+  private static final Set<String> ANNOTATION_FIELDS = Set.of(SUBJECT_DIGITAL_OBJECT_IDS.get(),
+      ANNOTATION_TOPIC.get(), REPLACE_OR_APPEND.get(), ACCESS_RESTRICTED.get(), LINKED_OBJECT_URL.get(), LINKED_OBJECT_IS_PID.get());
 
   private final byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
   private FdoRecordComponent fdoRecordComponent;
@@ -141,12 +99,12 @@ class FdoRecordComponentTest {
   @Mock
   private ApplicationProperties appProperties;
   private static final int HANDLE_QTY = 15;
-  private static final int DOI_QTY = 20;
+  private static final int DOI_QTY = 19;
   private static final int MEDIA_QTY = 25;
-  private static final int DS_MANDATORY_QTY = 25;
-  private static final int DS_OPTIONAL_QTY = 37;
-  private static final int BOTANY_QTY = 25;
-  private static final int ANNOTATION_QTY = 20;
+  private static final int DS_MANDATORY_QTY = 24;
+  private static final int DS_OPTIONAL_QTY = 35;
+  private static final int BOTANY_QTY = 24;
+  private static final int ANNOTATION_QTY = 21;
 
   @BeforeEach
   void init() {
@@ -266,7 +224,7 @@ class FdoRecordComponentTest {
     assertThat(result).hasSize(HANDLE_QTY+1);
     assertThat(hasCorrectLocations(result, request.getLocations(), ObjectType.MAS)).isTrue();
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
-    assertThat(hasCorrectElements(result, Set.of(MAS_NAME))).isTrue();
+    assertThat(hasCorrectElements(result, Set.of(MAS_NAME.get()))).isTrue();
   }
 
   @Test
@@ -467,15 +425,15 @@ class FdoRecordComponentTest {
   void testUpdateSpecimenHostResolveName() throws Exception{
     // Given
     var handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    var request = generalUpdateRequest(List.of(SPECIMEN_HOST), SPECIMEN_HOST_TESTVAL);
+    var request = generalUpdateRequest(List.of(SPECIMEN_HOST.get()), SPECIMEN_HOST_TESTVAL);
     var apiLocation = "https://api.ror.org/organizations/0x123";
     given(pidResolver.getObjectName(apiLocation)).willReturn(SPECIMEN_HOST_NAME_TESTVAL);
     ArrayList<HandleAttribute> expected = new ArrayList<>();
     expected.add(
-        new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST), handle, SPECIMEN_HOST,
+        new HandleAttribute(SPECIMEN_HOST.index(), handle, SPECIMEN_HOST.get(),
             SPECIMEN_HOST_TESTVAL.getBytes(StandardCharsets.UTF_8)));
     expected.add(
-        new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST_NAME), handle, SPECIMEN_HOST_NAME,
+        new HandleAttribute(SPECIMEN_HOST_NAME.index(), handle, SPECIMEN_HOST_NAME.get(),
             SPECIMEN_HOST_NAME_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     // When
@@ -488,13 +446,13 @@ class FdoRecordComponentTest {
   void testUpdateSpecimenHostNameInRequest() throws Exception{
     // Given
     var handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    var request = generalUpdateRequest(List.of(SPECIMEN_HOST, SPECIMEN_HOST_NAME), SPECIMEN_HOST_TESTVAL);
+    var request = generalUpdateRequest(List.of(SPECIMEN_HOST.get(), SPECIMEN_HOST_NAME.get()), SPECIMEN_HOST_TESTVAL);
     ArrayList<HandleAttribute> expected = new ArrayList<>();
     expected.add(
-        new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST), handle, SPECIMEN_HOST,
+        new HandleAttribute(SPECIMEN_HOST.index(), handle, SPECIMEN_HOST.get(),
             SPECIMEN_HOST_TESTVAL.getBytes(StandardCharsets.UTF_8)));
     expected.add(
-        new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST_NAME), handle, SPECIMEN_HOST_NAME,
+        new HandleAttribute(SPECIMEN_HOST_NAME.index(), handle, SPECIMEN_HOST_NAME.get(),
             SPECIMEN_HOST_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     // When
@@ -523,10 +481,10 @@ class FdoRecordComponentTest {
   void testUpdateAttributesStructuralType() throws Exception {
     // Given
     var updateRequest = MAPPER.createObjectNode();
-    updateRequest.put(STRUCTURAL_TYPE, STRUCTURAL_TYPE_TESTVAL);
+    updateRequest.put(STRUCTURAL_TYPE.get(), STRUCTURAL_TYPE_TESTVAL);
     var expected = List.of(
-        new HandleAttribute(FIELD_IDX.get(STRUCTURAL_TYPE), HANDLE.getBytes(StandardCharsets.UTF_8),
-            STRUCTURAL_TYPE, STRUCTURAL_TYPE_TESTVAL.getBytes(
+        new HandleAttribute(STRUCTURAL_TYPE.index(), HANDLE.getBytes(StandardCharsets.UTF_8),
+            STRUCTURAL_TYPE.get(), STRUCTURAL_TYPE_TESTVAL.getBytes(
             StandardCharsets.UTF_8)));
 
     // When
@@ -596,7 +554,7 @@ class FdoRecordComponentTest {
   private boolean hasCorrectLocations(List<HandleAttribute> fdoRecord, String[] userLocations, ObjectType type) throws Exception{
     var expectedLocations = new String(setLocations(userLocations, HANDLE, type));
     for (var row: fdoRecord){
-      if (row.type().equals(LOC)){
+      if (row.type().equals(LOC.get())){
         return (new String(row.data(), StandardCharsets.UTF_8)).equals(expectedLocations);
       }
     }

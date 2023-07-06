@@ -1,63 +1,58 @@
 package eu.dissco.core.handlemanager.component;
 
-import static eu.dissco.core.handlemanager.domain.PidRecords.ACCESS_RESTRICTED;
-import static eu.dissco.core.handlemanager.domain.PidRecords.ANNOTATION_TOPIC;
-import static eu.dissco.core.handlemanager.domain.PidRecords.BASE_TYPE_OF_SPECIMEN;
-import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_NAME;
-import static eu.dissco.core.handlemanager.domain.PidRecords.DIGITAL_OBJECT_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.FDO_PROFILE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.FDO_RECORD_LICENSE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
-import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
-import static eu.dissco.core.handlemanager.domain.PidRecords.INFORMATION_ARTEFACT_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUED_FOR_AGENT;
-import static eu.dissco.core.handlemanager.domain.PidRecords.ISSUED_FOR_AGENT_NAME;
-import static eu.dissco.core.handlemanager.domain.PidRecords.LINKED_URL;
-import static eu.dissco.core.handlemanager.domain.PidRecords.LIVING_OR_PRESERVED;
-import static eu.dissco.core.handlemanager.domain.PidRecords.LOC;
-import static eu.dissco.core.handlemanager.domain.PidRecords.LOC_REQ;
-import static eu.dissco.core.handlemanager.domain.PidRecords.MARKED_AS_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.MAS_NAME;
-import static eu.dissco.core.handlemanager.domain.PidRecords.MATERIAL_OR_DIGITAL_ENTITY;
-import static eu.dissco.core.handlemanager.domain.PidRecords.MATERIAL_SAMPLE_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_HASH;
-import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_HASH_ALG;
-import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_URL;
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
-import static eu.dissco.core.handlemanager.domain.PidRecords.OBJECT_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.ORGANISATION_ID;
-import static eu.dissco.core.handlemanager.domain.PidRecords.ORGANISATION_ID_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.ORGANISATION_NAME;
-import static eu.dissco.core.handlemanager.domain.PidRecords.OTHER_SPECIMEN_IDS;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER_NAME;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_RECORD_ISSUE_DATE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_RECORD_ISSUE_NUMBER;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_REFERENT_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID_ABSENCE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID_NAME;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT;
-import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_DOI_NAME;
-import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_NAME;
-import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.REPLACE_OR_APPEND;
-import static eu.dissco.core.handlemanager.domain.PidRecords.RESOLVABLE_KEYS;
-import static eu.dissco.core.handlemanager.domain.PidRecords.SOURCE_DATA_STANDARD;
-import static eu.dissco.core.handlemanager.domain.PidRecords.SOURCE_SYSTEM_NAME;
-import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
-import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST_NAME;
-import static eu.dissco.core.handlemanager.domain.PidRecords.STRUCTURAL_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_DIGITAL_OBJECT_ID;
-import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_PHYSICAL_IDENTIFIER;
-import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_SPECIMEN_HOST;
-import static eu.dissco.core.handlemanager.domain.PidRecords.TOPIC_DISCIPLINE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.TOPIC_DOMAIN;
-import static eu.dissco.core.handlemanager.domain.PidRecords.TOPIC_ORIGIN;
-import static eu.dissco.core.handlemanager.domain.PidRecords.WAS_DERIVED_FROM;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.ACCESS_RESTRICTED;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.ANNOTATION_TOPIC;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.BASE_TYPE_OF_SPECIMEN;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.DIGITAL_OBJECT_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.DIGITAL_OBJECT_TYPE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.FDO_PROFILE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.FDO_RECORD_LICENSE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.HS_ADMIN;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.INFORMATION_ARTEFACT_TYPE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.ISSUED_FOR_AGENT;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.ISSUED_FOR_AGENT_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_OBJECT_IS_PID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_OBJECT_URL;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.LIVING_OR_PRESERVED;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.LOC;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MARKED_AS_TYPE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MAS_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MATERIAL_OR_DIGITAL_ENTITY;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MATERIAL_SAMPLE_TYPE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_HOST;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_OBJECT_TYPE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_URL;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.ORGANISATION_ID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.ORGANISATION_ID_TYPE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.ORGANISATION_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.OTHER_SPECIMEN_IDS;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_ISSUER;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_ISSUER_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_RECORD_ISSUE_DATE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_RECORD_ISSUE_NUMBER;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_STATUS;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_REFERENT_TYPE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID_TYPE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.REFERENT_DOI_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.REFERENT_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.REFERENT_TYPE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.REPLACE_OR_APPEND;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.SOURCE_DATA_STANDARD;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.SOURCE_SYSTEM_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.SPECIMEN_HOST;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.SPECIMEN_HOST_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.SPECIMEN_OBJECT_ID_ABSENCE_REASON;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.STRUCTURAL_TYPE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_DIGITAL_OBJECT_IDS;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_LOCAL_ID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_PID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_DISCIPLINE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_DOMAIN;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_ORIGIN;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.WAS_DERIVED_FROM_ENTITY;
 import static eu.dissco.core.handlemanager.service.ServiceUtils.setUniquePhysicalIdentifierId;
 import static eu.dissco.core.handlemanager.utils.AdminHandleGenerator.genAdminHandle;
 
@@ -65,6 +60,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import eu.dissco.core.handlemanager.domain.FdoProfile;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.objects.AnnotationRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenBotanyRequest;
@@ -91,6 +87,8 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -124,6 +122,19 @@ public class FdoRecordComponent {
   private static final String PROXY_ERROR = "Invalid attribute: %s must contain proxy: %s";
   private static final byte[] pidKernelMetadataLicense = "https://creativecommons.org/publicdomain/zero/1.0/".getBytes(
       StandardCharsets.UTF_8);
+  private static final byte[] PLACEHOLDER = "Needs to be fixed!".getBytes(StandardCharsets.UTF_8);
+  private static final String LOC_REQUEST = "locations";
+
+  public static final Map<String, String> RESOLVABLE_KEYS;
+
+  static {
+    HashMap<String, String> hashMap = new HashMap<>();
+    hashMap.put(DIGITAL_OBJECT_TYPE.get(), DIGITAL_OBJECT_NAME.get());
+    hashMap.put(PID_ISSUER.get(), PID_ISSUER_NAME.get());
+    hashMap.put(ISSUED_FOR_AGENT.get(), ISSUED_FOR_AGENT_NAME.get());
+    hashMap.put(SPECIMEN_HOST.get(), SPECIMEN_HOST_NAME.get());
+    RESOLVABLE_KEYS = Collections.unmodifiableMap(hashMap);
+  }
 
   private final DateTimeFormatter dt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
       .withZone(ZoneId.of("UTC"));
@@ -135,26 +146,26 @@ public class FdoRecordComponent {
 
     // 100: Admin Handle
     fdoRecord.add(
-        new HandleAttribute(FIELD_IDX.get(HS_ADMIN), handle, HS_ADMIN, genAdminHandle()));
+        new HandleAttribute(HS_ADMIN.index(), handle, HS_ADMIN.get(), genAdminHandle()));
 
     // 101: 10320/loc
     if (type != ObjectType.ORGANISATION) {
       byte[] loc = setLocations(request.getLocations(), new String(handle, StandardCharsets.UTF_8),
           type);
-      fdoRecord.add(new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, loc));
+      fdoRecord.add(new HandleAttribute(LOC.index(), handle, LOC.get(), loc));
     }
 
     // 1: FDO Profile
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(FDO_PROFILE), handle, FDO_PROFILE,
+    fdoRecord.add(new HandleAttribute(FDO_PROFILE.index(), handle, FDO_PROFILE.get(),
         request.getFdoProfile().getBytes(StandardCharsets.UTF_8)));
 
     // 2: FDO Record License
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(FDO_RECORD_LICENSE), handle,
-        FDO_RECORD_LICENSE, pidKernelMetadataLicense));
+    fdoRecord.add(new HandleAttribute(FDO_RECORD_LICENSE.index(), handle,
+        FDO_RECORD_LICENSE.get(), pidKernelMetadataLicense));
 
     // 3: DigitalObjectType
     fdoRecord.add(
-        new HandleAttribute(FIELD_IDX.get(DIGITAL_OBJECT_TYPE), handle, DIGITAL_OBJECT_TYPE,
+        new HandleAttribute(DIGITAL_OBJECT_TYPE.index(), handle, DIGITAL_OBJECT_TYPE.get(),
             request.getDigitalObjectType().getBytes(StandardCharsets.UTF_8)));
 
     // 4: DigitalObjectName - Handle
@@ -162,25 +173,25 @@ public class FdoRecordComponent {
     var digitalObjectName = pidResolver.getObjectName(request.getDigitalObjectType())
         .getBytes(StandardCharsets.UTF_8);
     fdoRecord.add(
-        new HandleAttribute(FIELD_IDX.get(DIGITAL_OBJECT_NAME), handle, DIGITAL_OBJECT_NAME,
+        new HandleAttribute(DIGITAL_OBJECT_NAME.index(), handle, DIGITAL_OBJECT_NAME.get(),
             digitalObjectName));
 
     // 5: Pid
     byte[] pid = (HANDLE_DOMAIN + new String(handle, StandardCharsets.UTF_8)).getBytes(
         StandardCharsets.UTF_8);
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(PID), handle, PID, pid));
+    fdoRecord.add(new HandleAttribute(PID.index(), handle, PID.get(), pid));
 
     // 6: PidIssuer
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(PID_ISSUER), handle, PID_ISSUER,
+    fdoRecord.add(new HandleAttribute(PID_ISSUER.index(), handle, PID_ISSUER.get(),
         request.getPidIssuer().getBytes(StandardCharsets.UTF_8)));
 
     // 7: pidIssuerName
     String pidIssuerName = prepareRorOrHandle(request.getPidIssuer());
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(PID_ISSUER_NAME), handle, PID_ISSUER_NAME,
+    fdoRecord.add(new HandleAttribute(PID_ISSUER_NAME.index(), handle, PID_ISSUER_NAME.get(),
         pidIssuerName.getBytes(StandardCharsets.UTF_8)));
 
     // 8: issuedForAgent
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(ISSUED_FOR_AGENT), handle, ISSUED_FOR_AGENT,
+    fdoRecord.add(new HandleAttribute(ISSUED_FOR_AGENT.index(), handle, ISSUED_FOR_AGENT.get(),
         request.getIssuedForAgent().getBytes(StandardCharsets.UTF_8)));
 
     // 9: issuedForAgentName
@@ -188,23 +199,23 @@ public class FdoRecordComponent {
     var issuedForAgentName = pidResolver.getObjectName(agentNameRor)
         .getBytes(StandardCharsets.UTF_8);
     fdoRecord.add(
-        new HandleAttribute(FIELD_IDX.get(ISSUED_FOR_AGENT_NAME), handle, ISSUED_FOR_AGENT_NAME,
+        new HandleAttribute(ISSUED_FOR_AGENT_NAME.index(), handle, ISSUED_FOR_AGENT_NAME.get(),
             issuedForAgentName));
 
     // 10: pidRecordIssueDate
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(PID_RECORD_ISSUE_DATE), handle,
-        PID_RECORD_ISSUE_DATE, getDate().getBytes(StandardCharsets.UTF_8)));
+    fdoRecord.add(new HandleAttribute(PID_RECORD_ISSUE_DATE.index(), handle,
+        PID_RECORD_ISSUE_DATE.get(), getDate().getBytes(StandardCharsets.UTF_8)));
 
     // 11: pidRecordIssueNumber
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(PID_RECORD_ISSUE_NUMBER), handle,
-        PID_RECORD_ISSUE_NUMBER, "1".getBytes(StandardCharsets.UTF_8)));
+    fdoRecord.add(new HandleAttribute(PID_RECORD_ISSUE_NUMBER.index(), handle,
+        PID_RECORD_ISSUE_NUMBER.get(), "1".getBytes(StandardCharsets.UTF_8)));
 
     // 12: structuralType
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(STRUCTURAL_TYPE), handle,
-        STRUCTURAL_TYPE, request.getStructuralType().getBytes(StandardCharsets.UTF_8)));
+    fdoRecord.add(new HandleAttribute(STRUCTURAL_TYPE.index(), handle,
+        STRUCTURAL_TYPE.get(), request.getStructuralType().getBytes(StandardCharsets.UTF_8)));
 
     // 13: PidStatus
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS,
+    fdoRecord.add(new HandleAttribute(PID_STATUS.index(), handle, PID_STATUS.get(),
         "TEST".getBytes(StandardCharsets.UTF_8)));
 
     return fdoRecord;
@@ -241,27 +252,23 @@ public class FdoRecordComponent {
 
     // 40: referentType
     fdoRecord.add(
-        new HandleAttribute(FIELD_IDX.get(REFERENT_TYPE), handle, REFERENT_TYPE,
+        new HandleAttribute(REFERENT_TYPE.index(), handle, REFERENT_TYPE.get(),
             request.getReferentType().getBytes(StandardCharsets.UTF_8)));
 
     // 41: referentDoiName
     fdoRecord.add(
-        new HandleAttribute(FIELD_IDX.get(REFERENT_DOI_NAME), handle, REFERENT_DOI_NAME, handle));
+        new HandleAttribute(REFERENT_DOI_NAME.index(), handle, REFERENT_DOI_NAME.get(), handle));
 
     // 42: referentName
     if (request.getReferentName() != null) {
       fdoRecord.add(
-          new HandleAttribute(FIELD_IDX.get(REFERENT_NAME), handle, REFERENT_NAME,
+          new HandleAttribute(REFERENT_NAME.index(), handle, REFERENT_NAME.get(),
               request.getReferentName().getBytes(StandardCharsets.UTF_8)));
     }
     // 43: primaryReferentType
     fdoRecord.add(
-        new HandleAttribute(FIELD_IDX.get(PRIMARY_REFERENT_TYPE), handle, PRIMARY_REFERENT_TYPE,
+        new HandleAttribute(PRIMARY_REFERENT_TYPE.index(), handle, PRIMARY_REFERENT_TYPE.get(),
             request.getPrimaryReferentType().getBytes(StandardCharsets.UTF_8)));
-
-    // 44: referent
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(REFERENT), handle, REFERENT,
-        request.getReferent().getBytes(StandardCharsets.UTF_8)));
 
     return fdoRecord;
   }
@@ -271,29 +278,28 @@ public class FdoRecordComponent {
       throws PidServiceInternalError, UnprocessableEntityException, PidResolutionException, InvalidRequestException {
     var fdoRecord = prepareDoiRecordAttributes(request, handle, type);
 
-    // 400 MediaHash
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(MEDIA_HASH), handle, MEDIA_HASH,
-        request.getMediaHash().getBytes(StandardCharsets.UTF_8)));
-
-    // 401 mediaHashAlgorithm
-    fdoRecord.add(
-        new HandleAttribute(FIELD_IDX.get(MEDIA_HASH_ALG), handle, MEDIA_HASH_ALG,
-            request.getMediaHashAlgorithm().getBytes(StandardCharsets.UTF_8)));
-
-    // 402 subjectSpecimenHost
-    fdoRecord.add(
-        new HandleAttribute(FIELD_IDX.get(SUBJECT_SPECIMEN_HOST), handle, SUBJECT_SPECIMEN_HOST,
-            request.getSubjectSpecimenHost().getBytes(StandardCharsets.UTF_8)));
-
     // 403 mediaUrl
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(MEDIA_URL), handle, MEDIA_URL,
+    fdoRecord.add(new HandleAttribute(MEDIA_URL.index(), handle, MEDIA_URL.get(),
         request.getMediaUrl().getBytes(StandardCharsets.UTF_8)));
 
-    // 404 : Subject Physical Identifier
-    // Encoding here is UTF-8
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(SUBJECT_PHYSICAL_IDENTIFIER), handle,
-        SUBJECT_PHYSICAL_IDENTIFIER,
-        setUniquePhysicalIdentifierId(request).getBytes(StandardCharsets.UTF_8)));
+    // 404 Media Object Type
+    fdoRecord.add(new HandleAttribute(MEDIA_OBJECT_TYPE.index(), handle, MEDIA_OBJECT_TYPE.get(),
+        PLACEHOLDER));
+
+    // 405 Media Object Type
+    fdoRecord.add(new HandleAttribute(MEDIA_OBJECT_TYPE.index(), handle, MEDIA_OBJECT_TYPE.get(),
+        PLACEHOLDER));
+
+    // 406 Media Host
+    fdoRecord.add(new HandleAttribute(MEDIA_HOST.index(), handle, MEDIA_HOST.get(), PLACEHOLDER));
+
+    // 407 Subject Local Id
+    fdoRecord.add(new HandleAttribute(SUBJECT_LOCAL_ID.index(), handle, SUBJECT_LOCAL_ID.get(),
+        request.getSubjectIdentifier().physicalId().getBytes(StandardCharsets.UTF_8)));
+
+    // 408 Subject PID -> might need to be resolved
+    fdoRecord.add(new HandleAttribute(SUBJECT_PID.index(), handle, SUBJECT_PID.get(), PLACEHOLDER));
+
     return fdoRecord;
   }
 
@@ -304,40 +310,47 @@ public class FdoRecordComponent {
 
     // 500 subjectDigitalObjectId
     resolveInternalPid(request);
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(SUBJECT_DIGITAL_OBJECT_ID), handle,
-        SUBJECT_DIGITAL_OBJECT_ID,
+    fdoRecord.add(new HandleAttribute(SUBJECT_DIGITAL_OBJECT_IDS.index(), handle,
+        SUBJECT_DIGITAL_OBJECT_IDS.get(),
         request.getSubjectDigitalObjectId().getBytes(StandardCharsets.UTF_8)));
 
     // 501 AnnotationTopic
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(ANNOTATION_TOPIC), handle,
-        ANNOTATION_TOPIC, request.getAnnotationTopic().getBytes(StandardCharsets.UTF_8)));
+    fdoRecord.add(new HandleAttribute(ANNOTATION_TOPIC.index(), handle,
+        ANNOTATION_TOPIC.get(), request.getAnnotationTopic().getBytes(StandardCharsets.UTF_8)));
 
     // 502 replaceOrAppend
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(REPLACE_OR_APPEND), handle, REPLACE_OR_APPEND,
+    fdoRecord.add(new HandleAttribute(REPLACE_OR_APPEND.index(), handle, REPLACE_OR_APPEND.get(),
         request.getReplaceOrAppend().getState().getBytes(
             StandardCharsets.UTF_8)));
 
     // 503 AccessRestricted
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(ACCESS_RESTRICTED), handle, ACCESS_RESTRICTED,
+    fdoRecord.add(new HandleAttribute(ACCESS_RESTRICTED.index(), handle, ACCESS_RESTRICTED.get(),
         String.valueOf(request.getAccessRestricted()).getBytes(
             StandardCharsets.UTF_8)));
 
     // 504 LinkedObjectUrl
     var linkedObjectUrl = request.getLinkedObjectUrl();
     if (linkedObjectUrl != null) {
-      fdoRecord.add(new HandleAttribute(FIELD_IDX.get(LINKED_URL), handle, LINKED_URL,
+      fdoRecord.add(new HandleAttribute(LINKED_OBJECT_URL.index(), handle, LINKED_OBJECT_URL.get(),
           linkedObjectUrl.getBytes(
               StandardCharsets.UTF_8)));
+    }
+
+    if (linkedObjectUrl != null) {
+      fdoRecord.add(
+          new HandleAttribute(LINKED_OBJECT_IS_PID.index(), handle, LINKED_OBJECT_IS_PID.get(),
+              PLACEHOLDER));
     }
 
     return fdoRecord;
   }
 
-  public List<HandleAttribute> prepareMasRecordAttributes(MasRequest request, byte[] handle, ObjectType type)
+  public List<HandleAttribute> prepareMasRecordAttributes(MasRequest request, byte[] handle,
+      ObjectType type)
       throws PidServiceInternalError, UnprocessableEntityException, PidResolutionException, InvalidRequestException {
     var fdoRecord = prepareHandleRecordAttributes(request, handle, type);
 
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(MAS_NAME), handle, MAS_NAME,
+    fdoRecord.add(new HandleAttribute(MAS_NAME.index(), handle, MAS_NAME.get(),
         String.valueOf(request.getMachineAnnotationServiceName()).getBytes(
             StandardCharsets.UTF_8)));
 
@@ -361,8 +374,8 @@ public class FdoRecordComponent {
     var fdoRecord = prepareHandleRecordAttributes(request, handle, type);
 
     // 600 sourceSystemName
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(SOURCE_SYSTEM_NAME), handle,
-        SOURCE_SYSTEM_NAME, request.getSourceSystemName().getBytes(StandardCharsets.UTF_8)));
+    fdoRecord.add(new HandleAttribute(SOURCE_SYSTEM_NAME.index(), handle,
+        SOURCE_SYSTEM_NAME.get(), request.getSourceSystemName().getBytes(StandardCharsets.UTF_8)));
 
     return fdoRecord;
   }
@@ -379,22 +392,23 @@ public class FdoRecordComponent {
     }
     byte[] loc = setLocations(objectLocations.toArray(new String[0]),
         new String(handle, StandardCharsets.UTF_8), ObjectType.ORGANISATION);
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, loc));
+    fdoRecord.add(new HandleAttribute(LOC.index(), handle, LOC.get(), loc));
 
-    // 800 OrganisationIdentifier
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(ORGANISATION_ID), handle,
-        ORGANISATION_ID, request.getOrganisationIdentifier().getBytes(StandardCharsets.UTF_8)));
+    // 601 OrganisationIdentifier
+    fdoRecord.add(new HandleAttribute(ORGANISATION_ID.index(), handle,
+        ORGANISATION_ID.get(),
+        request.getOrganisationIdentifier().getBytes(StandardCharsets.UTF_8)));
 
-    // 801 OrganisationIdentifierType
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(ORGANISATION_ID_TYPE), handle,
-        ORGANISATION_ID_TYPE,
+    // 602 OrganisationIdentifierType
+    fdoRecord.add(new HandleAttribute(ORGANISATION_ID_TYPE.index(), handle,
+        ORGANISATION_ID_TYPE.get(),
         request.getOrganisationIdentifierType().getBytes(StandardCharsets.UTF_8)));
 
-    // 802 OrganisationName
+    // 603 OrganisationName
     var organisationName = pidResolver.getObjectName(getRor(request.getOrganisationIdentifier()))
         .getBytes(
             StandardCharsets.UTF_8);
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(ORGANISATION_NAME), handle, ORGANISATION_NAME,
+    fdoRecord.add(new HandleAttribute(ORGANISATION_NAME.index(), handle, ORGANISATION_NAME.get(),
         organisationName));
 
     return fdoRecord;
@@ -406,8 +420,9 @@ public class FdoRecordComponent {
     var fdoRecord = prepareHandleRecordAttributes(request, handle, type);
 
     // 700 Source Data Standard
-    fdoRecord.add(new HandleAttribute(FIELD_IDX.get(SOURCE_DATA_STANDARD), handle,
-        SOURCE_DATA_STANDARD, request.getSourceDataStandard().getBytes(StandardCharsets.UTF_8)));
+    fdoRecord.add(new HandleAttribute(SOURCE_DATA_STANDARD.index(), handle,
+        SOURCE_DATA_STANDARD.get(),
+        request.getSourceDataStandard().getBytes(StandardCharsets.UTF_8)));
 
     return fdoRecord;
   }
@@ -419,8 +434,8 @@ public class FdoRecordComponent {
 
     // 200: Specimen Host
     fdoRecord.add(
-        new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST), handle,
-            SPECIMEN_HOST,
+        new HandleAttribute(SPECIMEN_HOST.index(), handle,
+            SPECIMEN_HOST.get(),
             request.getSpecimenHost().getBytes(StandardCharsets.UTF_8)));
 
     // 201: Specimen Host name
@@ -429,14 +444,14 @@ public class FdoRecordComponent {
     // 202: primarySpecimenObjectId
     var primarySpecimenObjectId = setUniquePhysicalIdentifierId(request);
     fdoRecord.add(
-        new HandleAttribute(FIELD_IDX.get(PRIMARY_SPECIMEN_OBJECT_ID), handle,
-            PRIMARY_SPECIMEN_OBJECT_ID,
+        new HandleAttribute(PRIMARY_SPECIMEN_OBJECT_ID.index(), handle,
+            PRIMARY_SPECIMEN_OBJECT_ID.get(),
             primarySpecimenObjectId.getBytes(StandardCharsets.UTF_8)));
 
     // 203: primarySpecimenObjectIdType
     fdoRecord.add(
-        new HandleAttribute(FIELD_IDX.get(PRIMARY_SPECIMEN_OBJECT_ID_TYPE), handle,
-            PRIMARY_SPECIMEN_OBJECT_ID_TYPE,
+        new HandleAttribute(PRIMARY_SPECIMEN_OBJECT_ID_TYPE.index(), handle,
+            PRIMARY_SPECIMEN_OBJECT_ID_TYPE.get(),
             request.getPrimarySpecimenObjectIdType().getBytes()));
 
     // 204-217 are optional
@@ -444,121 +459,116 @@ public class FdoRecordComponent {
     // 204: primarySpecimenObjectIdName
     if (request.getPrimarySpecimenObjectIdName() != null) {
       fdoRecord.add(
-          new HandleAttribute(FIELD_IDX.get(PRIMARY_SPECIMEN_OBJECT_ID_NAME), handle,
-              PRIMARY_SPECIMEN_OBJECT_ID_NAME,
+          new HandleAttribute(PRIMARY_SPECIMEN_OBJECT_ID_NAME.index(), handle,
+              PRIMARY_SPECIMEN_OBJECT_ID_NAME.get(),
               request.getPrimarySpecimenObjectIdName().getBytes(StandardCharsets.UTF_8)));
     }
 
-    // 205: specimenObjectIdAbsenceReason
+    // 205 normalisedSpecimenObjectId
+
+    // 206: specimenObjectIdAbsenceReason
     if (request.getPrimarySpecimenObjectIdAbsenceReason() != null) {
       fdoRecord.add(
-          new HandleAttribute(FIELD_IDX.get(PRIMARY_SPECIMEN_OBJECT_ID_ABSENCE), handle,
-              PRIMARY_SPECIMEN_OBJECT_ID_ABSENCE,
+          new HandleAttribute(SPECIMEN_OBJECT_ID_ABSENCE_REASON.index(), handle,
+              SPECIMEN_OBJECT_ID_ABSENCE_REASON.get(),
               request.getPrimarySpecimenObjectIdAbsenceReason().getBytes(StandardCharsets.UTF_8)));
     }
 
-    // 206: otherSpecimenIds
+    // 207: otherSpecimenIds
     if (request.getOtherSpecimenIds() != null) {
       var otherSpecimenIds = Arrays.toString(request.getOtherSpecimenIds())
           .getBytes(StandardCharsets.UTF_8);
       fdoRecord.add(
-          new HandleAttribute(FIELD_IDX.get(OTHER_SPECIMEN_IDS), handle,
-              OTHER_SPECIMEN_IDS,
+          new HandleAttribute(OTHER_SPECIMEN_IDS.index(), handle,
+              OTHER_SPECIMEN_IDS.get(),
               otherSpecimenIds));
     }
 
-    // 207: topicOrigin
+    // 208: topicOrigin
     if (request.getTopicOrigin() != null) {
       fdoRecord.add(
-          new HandleAttribute(FIELD_IDX.get(TOPIC_ORIGIN), handle,
-              TOPIC_ORIGIN,
+          new HandleAttribute(TOPIC_ORIGIN.index(), handle,
+              TOPIC_ORIGIN.get(),
               request.getTopicOrigin().getBytes(StandardCharsets.UTF_8)));
     }
 
-    // 208: topicDomain
+    // 209: topicDomain
     var topicDomain = request.getTopicDomain();
     if (topicDomain != null) {
       fdoRecord.add(
-          new HandleAttribute(FIELD_IDX.get(TOPIC_DOMAIN), handle,
-              TOPIC_DOMAIN,
+          new HandleAttribute(TOPIC_DOMAIN.index(), handle,
+              TOPIC_DOMAIN.get(),
               topicDomain.getBytes(StandardCharsets.UTF_8)));
     }
 
-    // 209: topicDiscipline
+    // 210: topicDiscipline
     var topicDisc = request.getTopicDiscipline();
     if (topicDisc != null) {
       fdoRecord.add(
-          new HandleAttribute(FIELD_IDX.get(TOPIC_DISCIPLINE), handle,
-              TOPIC_DISCIPLINE,
+          new HandleAttribute(TOPIC_DISCIPLINE.index(), handle,
+              TOPIC_DISCIPLINE.get(),
               topicDisc.getBytes(StandardCharsets.UTF_8)));
     }
 
-    // 210: objectType
-    var objType = request.getObjectType();
-    if (objType != null) {
-      fdoRecord.add(
-          new HandleAttribute(FIELD_IDX.get(OBJECT_TYPE), handle,
-              OBJECT_TYPE,
-              objType.getBytes(StandardCharsets.UTF_8)));
-    }
+    // 211 topicCategory
 
-    // 211: livingOrPreserved
+    // 212: livingOrPreserved
     var livingOrPres = request.getLivingOrPreserved();
     if (livingOrPres != null) {
       fdoRecord.add(
-          new HandleAttribute(FIELD_IDX.get(LIVING_OR_PRESERVED), handle,
-              LIVING_OR_PRESERVED,
+          new HandleAttribute(LIVING_OR_PRESERVED.index(), handle,
+              LIVING_OR_PRESERVED.get(),
               livingOrPres.getBytes()));
     }
 
-    // 212: baseTypeOfSpecimen
+    // 213 baseTypeOfSpecimen
     var baseType = request.getBaseTypeOfSpecimen();
     if (baseType != null) {
       fdoRecord.add(
-          new HandleAttribute(FIELD_IDX.get(BASE_TYPE_OF_SPECIMEN), handle,
-              BASE_TYPE_OF_SPECIMEN,
+          new HandleAttribute(BASE_TYPE_OF_SPECIMEN.index(), handle,
+              BASE_TYPE_OF_SPECIMEN.get(),
               baseType.getBytes(StandardCharsets.UTF_8)));
     }
 
-    // 213: informationArtefactType
+    // 214: informationArtefactType
     var artefactType = request.getInformationArtefactType();
     if (artefactType != null) {
       fdoRecord.add(
-          new HandleAttribute(FIELD_IDX.get(INFORMATION_ARTEFACT_TYPE), handle,
-              INFORMATION_ARTEFACT_TYPE,
+          new HandleAttribute(INFORMATION_ARTEFACT_TYPE.index(), handle,
+              INFORMATION_ARTEFACT_TYPE.get(),
               artefactType.getBytes(StandardCharsets.UTF_8)));
     }
 
-    // 214: materialSampleType
+    // 215: materialSampleType
     var matSamp = request.getMaterialSampleType();
     if (matSamp != null) {
       fdoRecord.add(
-          new HandleAttribute(FIELD_IDX.get(MATERIAL_SAMPLE_TYPE), handle,
-              MATERIAL_SAMPLE_TYPE,
+          new HandleAttribute(MATERIAL_SAMPLE_TYPE.index(), handle,
+              MATERIAL_SAMPLE_TYPE.get(),
               matSamp.getBytes(StandardCharsets.UTF_8)));
     }
 
-    // 215: materialOrDigitalEntity
+    // 216: materialOrDigitalEntity
     fdoRecord.add(
-        new HandleAttribute(FIELD_IDX.get(MATERIAL_OR_DIGITAL_ENTITY), handle,
-            MATERIAL_OR_DIGITAL_ENTITY,
+        new HandleAttribute(MATERIAL_OR_DIGITAL_ENTITY.index(), handle,
+            MATERIAL_OR_DIGITAL_ENTITY.get(),
             request.getMaterialOrDigitalEntity().getBytes()));
 
-    // 216: markedAsType
+    // 217: markedAsType
     var markedAsType = request.getMarkedAsType();
     if (markedAsType != null) {
       fdoRecord.add(
-          new HandleAttribute(FIELD_IDX.get(MARKED_AS_TYPE), handle,
-              MARKED_AS_TYPE,
+          new HandleAttribute(MARKED_AS_TYPE.index(), handle,
+              MARKED_AS_TYPE.get(),
               markedAsType.toString().getBytes(StandardCharsets.UTF_8)));
     }
 
-    // 217: wasDerivedFrom
+    // 218: wasDerivedFromEntity
     var wasDerivedFrom = request.getWasDerivedFrom();
     if (wasDerivedFrom != null) {
       fdoRecord.add(
-          new HandleAttribute(FIELD_IDX.get(WAS_DERIVED_FROM), handle,
-              WAS_DERIVED_FROM,
+          new HandleAttribute(WAS_DERIVED_FROM_ENTITY.index(), handle,
+              WAS_DERIVED_FROM_ENTITY.get(),
               wasDerivedFrom.getBytes(StandardCharsets.UTF_8)));
     }
 
@@ -570,19 +580,19 @@ public class FdoRecordComponent {
     var specimenHostName = request.getSpecimenHostName();
     if (specimenHostName != null) {
       fdoRecord.add(
-          new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST_NAME), handle,
-              SPECIMEN_HOST_NAME,
+          new HandleAttribute(SPECIMEN_HOST_NAME.index(), handle,
+              SPECIMEN_HOST_NAME.get(),
               specimenHostName.getBytes(StandardCharsets.UTF_8)));
     } else {
       try {
         var specimenHostNameResolved = pidResolver.getObjectName(getRor(request.getSpecimenHost()));
         fdoRecord.add(
-            new HandleAttribute(FIELD_IDX.get(SPECIMEN_HOST_NAME), handle,
-                SPECIMEN_HOST_NAME,
+            new HandleAttribute(SPECIMEN_HOST_NAME.index(), handle,
+                SPECIMEN_HOST_NAME.get(),
                 specimenHostNameResolved.getBytes(StandardCharsets.UTF_8)));
 
       } catch (Exception e) {
-        log.info(
+        log.error(
             "SpecimenHostId is not a resolvable ROR and no SpecimenHostName is provided in the request. SpecimenHostName field left blank. More information: "
                 + e.getMessage());
       }
@@ -607,21 +617,23 @@ public class FdoRecordComponent {
 
     var updatedAttributeList = new ArrayList<>(updateRequestMap.entrySet().stream()
         .filter(entry -> entry.getValue() != null)
-        .map(entry -> new HandleAttribute(FIELD_IDX.get(entry.getKey()), handle, entry.getKey(),
+        .map(entry -> new HandleAttribute(FdoProfile.retrieveIndex(entry.getKey()), handle,
+            entry.getKey(),
             entry.getValue().getBytes(StandardCharsets.UTF_8)))
         .toList());
-        updatedAttributeList.addAll(addResolvedNames(updateRequestMap, handle));
-        return updatedAttributeList;
+    updatedAttributeList.addAll(addResolvedNames(updateRequestMap, handle));
+    return updatedAttributeList;
   }
 
-  private List<HandleAttribute> addResolvedNames(Map<String, String> updateRequestMap, byte[] handle)
+  private List<HandleAttribute> addResolvedNames(Map<String, String> updateRequestMap,
+      byte[] handle)
       throws UnprocessableEntityException, PidResolutionException, InvalidRequestException {
     var resolvableKeys = updateRequestMap.entrySet()
         .stream()
         .filter(entry -> RESOLVABLE_KEYS.containsKey(entry.getKey())
             && !hasResolvedPairInRequest(updateRequestMap, entry.getKey()))
         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-    if (resolvableKeys.isEmpty()){
+    if (resolvableKeys.isEmpty()) {
       return new ArrayList<>();
     }
     ArrayList<HandleAttribute> resolvedPidNameAttributes = new ArrayList<>();
@@ -629,13 +641,14 @@ public class FdoRecordComponent {
       var targetAttribute = RESOLVABLE_KEYS.get(resolvableKey.getKey());
 
       var resolvedPid = prepareRorOrHandle(resolvableKey.getValue());
-      resolvedPidNameAttributes.add(new HandleAttribute(FIELD_IDX.get(targetAttribute),
+      resolvedPidNameAttributes.add(new HandleAttribute(FdoProfile.retrieveIndex(targetAttribute),
           handle, targetAttribute, resolvedPid.getBytes(StandardCharsets.UTF_8)));
     }
     return resolvedPidNameAttributes;
   }
 
-  private boolean hasResolvedPairInRequest(Map<String, String> updateRequestMap, String pidToResolve){
+  private boolean hasResolvedPairInRequest(Map<String, String> updateRequestMap,
+      String pidToResolve) {
     var targetName = RESOLVABLE_KEYS.get(pidToResolve);
     return updateRequestMap.containsKey(targetName);
   }
@@ -644,7 +657,7 @@ public class FdoRecordComponent {
       throws InvalidRequestException, PidServiceInternalError, UnprocessableEntityException, PidResolutionException {
     var tombstoneAttributes = new ArrayList<>(
         prepareUpdateAttributes(handle, requestAttributes, ObjectType.TOMBSTONE));
-    tombstoneAttributes.add(new HandleAttribute(FIELD_IDX.get(PID_STATUS), handle, PID_STATUS,
+    tombstoneAttributes.add(new HandleAttribute(PID_STATUS.index(), handle, PID_STATUS.get(),
         "ARCHIVED".getBytes(StandardCharsets.UTF_8)));
     tombstoneAttributes.add(genLandingPage(handle));
     return tombstoneAttributes;
@@ -654,22 +667,22 @@ public class FdoRecordComponent {
     var landingPage = new String[]{"Placeholder landing page"};
     var data = setLocations(landingPage, new String(handle, StandardCharsets.UTF_8),
         ObjectType.TOMBSTONE);
-    return new HandleAttribute(FIELD_IDX.get(LOC), handle, LOC, data);
+    return new HandleAttribute(LOC.index(), handle, LOC.get(), data);
   }
 
   private JsonNode setLocationXmlFromJson(JsonNode request, String handle, ObjectType type)
       throws InvalidRequestException, PidServiceInternalError {
     // Format request so that the given locations array is formatted according to 10320/loc specifications
-    if (request.findValue(LOC_REQ) == null) {
+    if (request.findValue(LOC_REQUEST) == null) {
       return request;
     }
-    JsonNode locNode = request.get(LOC_REQ);
+    JsonNode locNode = request.get(LOC_REQUEST);
     ObjectNode requestObjectNode = request.deepCopy();
     try {
       String[] locArr = mapper.treeToValue(locNode, String[].class);
-      requestObjectNode.put(LOC,
+      requestObjectNode.put(LOC.get(),
           new String(setLocations(locArr, handle, type), StandardCharsets.UTF_8));
-      requestObjectNode.remove(LOC_REQ);
+      requestObjectNode.remove(LOC_REQUEST);
     } catch (IOException e) {
       throw new InvalidRequestException(
           "An error has occurred parsing \"locations\" array. " + e.getMessage());
@@ -692,13 +705,13 @@ public class FdoRecordComponent {
     }
 
     var doc = documentBuilder.newDocument();
-    var locations = doc.createElement(LOC_REQ);
+    var locations = doc.createElement(LOC_REQUEST);
     doc.appendChild(locations);
     String[] objectLocations = concatLocations(userLocations, handle, type);
 
     for (int i = 0; i < objectLocations.length; i++) {
       var locs = doc.createElement("location");
-      locs.setAttribute(NODE_ID, String.valueOf(i));
+      locs.setAttribute("id", String.valueOf(i));
       locs.setAttribute("href", objectLocations[i]);
       String weight = i < 1 ? "1" : "0";
       locs.setAttribute("weight", weight);

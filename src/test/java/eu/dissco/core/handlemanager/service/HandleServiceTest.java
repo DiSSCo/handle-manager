@@ -1,8 +1,6 @@
 package eu.dissco.core.handlemanager.service;
 
-import static eu.dissco.core.handlemanager.domain.PidRecords.FIELD_IDX;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID_TYPE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.*;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
@@ -786,8 +784,8 @@ class HandleServiceTest {
     );
 
     given(handleRep.searchByPhysicalIdentifier(anyList())).willReturn(
-        List.of(new HandleAttribute(FIELD_IDX.get(PRIMARY_SPECIMEN_OBJECT_ID), existingHandle,
-            PRIMARY_SPECIMEN_OBJECT_ID_TYPE, existingPhysId.getBytes(StandardCharsets.UTF_8))));
+        List.of(new HandleAttribute(PRIMARY_SPECIMEN_OBJECT_ID.index(), existingHandle,
+            PRIMARY_SPECIMEN_OBJECT_ID_TYPE.get(), existingPhysId.getBytes(StandardCharsets.UTF_8))));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(
         Stream.concat(existingRecordAttributes.stream(), newRecordAttriutes.stream()).toList());
     given(fdoRecordComponent.prepareDigitalSpecimenRecordAttributes(eq(newRecordRequest), any(),
@@ -836,8 +834,8 @@ class HandleServiceTest {
     );
 
     given(handleRep.searchByPhysicalIdentifier(anyList())).willReturn(
-        List.of(new HandleAttribute(FIELD_IDX.get(PRIMARY_SPECIMEN_OBJECT_ID), handles.get(0),
-            PRIMARY_SPECIMEN_OBJECT_ID_TYPE, PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(
+        List.of(new HandleAttribute(PRIMARY_SPECIMEN_OBJECT_ID.index(), handles.get(0),
+            PRIMARY_SPECIMEN_OBJECT_ID.get(), PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(
             StandardCharsets.UTF_8))));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(existingRecord);
     given(fdoRecordComponent.prepareUpdateAttributes(any(), any(), any())).willReturn(

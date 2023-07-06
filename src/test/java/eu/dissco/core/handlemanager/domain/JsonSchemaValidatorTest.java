@@ -1,22 +1,10 @@
 package eu.dissco.core.handlemanager.domain;
 
-import static eu.dissco.core.handlemanager.domain.PidRecords.FDO_PROFILE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.LIVING_OR_PRESERVED;
-import static eu.dissco.core.handlemanager.domain.PidRecords.MAS_NAME;
-import static eu.dissco.core.handlemanager.domain.PidRecords.MEDIA_URL;
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ATTRIBUTES;
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_DATA;
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_ID;
-import static eu.dissco.core.handlemanager.domain.PidRecords.NODE_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.ORGANISATION_ID;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_ISSUER;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID_TYPE;
-import static eu.dissco.core.handlemanager.domain.PidRecords.REFERENT_NAME;
-import static eu.dissco.core.handlemanager.domain.PidRecords.SOURCE_DATA_STANDARD;
-import static eu.dissco.core.handlemanager.domain.PidRecords.SOURCE_SYSTEM_NAME;
-import static eu.dissco.core.handlemanager.domain.PidRecords.SPECIMEN_HOST;
-import static eu.dissco.core.handlemanager.domain.PidRecords.SUBJECT_DIGITAL_OBJECT_ID;
-import static eu.dissco.core.handlemanager.domain.PidRecords.TOMBSTONE_TEXT;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.*;
+import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
+import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
+import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ID;
+import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_TYPE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.LOC_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
@@ -234,7 +222,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testHandlePatchRequest() {
     // Given
-    var request = givenUpdateRequest(RECORD_TYPE_HANDLE, PID_ISSUER, PID_ISSUER_TESTVAL_OTHER);
+    var request = givenUpdateRequest(RECORD_TYPE_HANDLE, PID_ISSUER.get(), PID_ISSUER_TESTVAL_OTHER);
 
     // Then
     assertDoesNotThrow(() -> {
@@ -245,7 +233,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testDoiPatchRequest() {
     // Given
-    var request = givenUpdateRequest(RECORD_TYPE_DOI, REFERENT_NAME, REFERENT_DOI_NAME_TESTVAL);
+    var request = givenUpdateRequest(RECORD_TYPE_DOI, REFERENT_NAME.get(), REFERENT_DOI_NAME_TESTVAL);
 
     // Then
     assertDoesNotThrow(() -> {
@@ -256,7 +244,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testDigitalSpecimenPatchRequest() {
     // Given
-    var request = givenUpdateRequest(RECORD_TYPE_DS, SPECIMEN_HOST, SPECIMEN_HOST_TESTVAL);
+    var request = givenUpdateRequest(RECORD_TYPE_DS, SPECIMEN_HOST.get(), SPECIMEN_HOST_TESTVAL);
 
     // Then
     assertDoesNotThrow(() -> {
@@ -267,7 +255,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testDigitalSpecimenBotanyPatchRequest() {
     // Given
-    var request = givenUpdateRequest(RECORD_TYPE_DS_BOTANY, LIVING_OR_PRESERVED, "living");
+    var request = givenUpdateRequest(RECORD_TYPE_DS_BOTANY, LIVING_OR_PRESERVED.get(), "living");
 
     // Then
     assertDoesNotThrow(() -> {
@@ -278,7 +266,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testMediaObjectPatchRequest() {
     // Given
-    var request = givenUpdateRequest(RECORD_TYPE_MEDIA, MEDIA_URL, MEDIA_URL_TESTVAL);
+    var request = givenUpdateRequest(RECORD_TYPE_MEDIA, MEDIA_URL.get(), MEDIA_URL_TESTVAL);
 
     // Then
     assertDoesNotThrow(() -> {
@@ -289,7 +277,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testAnnotationPatchRequest() {
     // Given
-    var request = givenUpdateRequest(RECORD_TYPE_ANNOTATION, SUBJECT_DIGITAL_OBJECT_ID, "new");
+    var request = givenUpdateRequest(RECORD_TYPE_ANNOTATION, ANNOTATION_TOPIC.get(), "new");
 
     // Then
     assertDoesNotThrow(() -> {
@@ -300,7 +288,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testOrganisationPatchRequest() {
     // Given
-    var request = givenUpdateRequest(RECORD_TYPE_ORGANISATION, ORGANISATION_ID, "new");
+    var request = givenUpdateRequest(RECORD_TYPE_ORGANISATION, ORGANISATION_ID.get(), "new");
 
     // Then
     assertDoesNotThrow(() -> {
@@ -311,7 +299,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testMappingPatchRequest() {
     // Given
-    var request = givenUpdateRequest(RECORD_TYPE_MAPPING, SOURCE_DATA_STANDARD, "new");
+    var request = givenUpdateRequest(RECORD_TYPE_MAPPING, SOURCE_DATA_STANDARD.get(), "new");
 
     // Then
     assertDoesNotThrow(() -> {
@@ -322,7 +310,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testSourceSystemPatchRequest() {
     // Given
-    var request = givenUpdateRequest(RECORD_TYPE_SOURCE_SYSTEM, SOURCE_SYSTEM_NAME, "new");
+    var request = givenUpdateRequest(RECORD_TYPE_SOURCE_SYSTEM, SOURCE_SYSTEM_NAME.get(), "new");
 
     // Then
     assertDoesNotThrow(() -> {
@@ -333,7 +321,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testMasPatchRequest() {
     // Given
-    var request = givenUpdateRequest(RECORD_TYPE_MAS, MAS_NAME, "new");
+    var request = givenUpdateRequest(RECORD_TYPE_MAS, MAS_NAME.get(), "new");
 
     // Then
     assertDoesNotThrow(() -> {
@@ -381,7 +369,7 @@ class JsonSchemaValidatorTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {LIVING_OR_PRESERVED, PRIMARY_SPECIMEN_OBJECT_ID_TYPE})
+  @ValueSource(strings = {"livingOrPreserved", "primarySpecimenObjectIdType"})
   void testBadEnumValueRequest(String targetEnum){
     // Given
     ObjectNode request = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(), RECORD_TYPE_DS_BOTANY);
@@ -412,7 +400,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testBadPostHandleRequestMissingRequiredProperty() {
     // Given
-    String missingAttribute = FDO_PROFILE;
+    String missingAttribute = FDO_PROFILE.get();
     var request = genCreateRecordRequest(givenHandleRecordRequestObject(), RECORD_TYPE_HANDLE);
     ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(missingAttribute);
 
@@ -452,7 +440,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testBadPostDigitalSpecimenRequestMissingProperty() {
     // Given
-    String missingAttribute = SPECIMEN_HOST;
+    String missingAttribute = SPECIMEN_HOST.get();
     var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS);
     ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(missingAttribute);
 
@@ -506,7 +494,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testBadPostMediaObjectRequestMissingProperty() {
     // Given
-    String missingAttribute = MEDIA_URL;
+    String missingAttribute = MEDIA_URL.get();
     var request = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(),
         RECORD_TYPE_MEDIA);
     ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(missingAttribute);
@@ -567,7 +555,7 @@ class JsonSchemaValidatorTest {
     // Given
     var request = genTombstoneRequestBatch(List.of(HANDLE)).get(0);
     ((ObjectNode) request.get(NODE_DATA)).remove(NODE_TYPE);
-    ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(TOMBSTONE_TEXT);
+    ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(TOMBSTONE_TEXT.get());
 
     // When
     Exception e = assertThrows(InvalidRequestException.class, () -> {
@@ -575,7 +563,7 @@ class JsonSchemaValidatorTest {
     });
 
     // Then
-    assertThat(e.getMessage()).contains(MISSING_MSG).contains(TOMBSTONE_TEXT);
+    assertThat(e.getMessage()).contains(MISSING_MSG).contains(TOMBSTONE_TEXT.get());
   }
 
 }

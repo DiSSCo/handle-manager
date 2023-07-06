@@ -1,10 +1,7 @@
 package eu.dissco.core.handlemanager.repository;
 
 import static eu.dissco.core.handlemanager.database.jooq.tables.Handles.HANDLES;
-import static eu.dissco.core.handlemanager.domain.PidRecords.HS_ADMIN;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_RECORD_ISSUE_NUMBER;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PID_STATUS;
-import static eu.dissco.core.handlemanager.domain.PidRecords.PRIMARY_SPECIMEN_OBJECT_ID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.*;
 
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import java.nio.charset.StandardCharsets;
@@ -44,7 +41,7 @@ public class HandleRepository {
         .selectDistinct(HANDLES.HANDLE)
         .from(HANDLES)
         .where(HANDLES.HANDLE.in(handles))
-        .and(HANDLES.TYPE.eq(PID_STATUS.getBytes(StandardCharsets.UTF_8)))
+        .and(HANDLES.TYPE.eq(PID_STATUS.get().getBytes(StandardCharsets.UTF_8)))
         .and(HANDLES.DATA.notEqual("ARCHIVED".getBytes()))
         .fetch()
         .getValues(HANDLES.HANDLE, byte[].class);
@@ -55,7 +52,7 @@ public class HandleRepository {
         .select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
         .from(HANDLES)
         .where(HANDLES.HANDLE.eq(handle))
-        .and(HANDLES.TYPE.notEqual(HS_ADMIN.getBytes(StandardCharsets.UTF_8)))
+        .and(HANDLES.TYPE.notEqual(HS_ADMIN.get().getBytes(StandardCharsets.UTF_8)))
         .fetch(this::mapToAttribute);
   }
 
@@ -64,7 +61,7 @@ public class HandleRepository {
         .select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
         .from(HANDLES)
         .where(HANDLES.HANDLE.in(handles))
-        .and(HANDLES.TYPE.notEqual(HS_ADMIN.getBytes(StandardCharsets.UTF_8)))
+        .and(HANDLES.TYPE.notEqual(HS_ADMIN.get().getBytes(StandardCharsets.UTF_8)))
         .fetch(this::mapToAttribute);
   }
 
@@ -82,7 +79,7 @@ public class HandleRepository {
         .from(HANDLES)
         .join(physicalIdentifierTable)
         .on(HANDLES.HANDLE.eq(physicalIdentifierTable.field(HANDLES.HANDLE)))
-        .where(HANDLES.TYPE.notEqual(HS_ADMIN.getBytes(StandardCharsets.UTF_8)))
+        .where(HANDLES.TYPE.notEqual(HS_ADMIN.get().getBytes(StandardCharsets.UTF_8)))
         .fetch(this::mapToAttribute);
   }
 
@@ -90,7 +87,7 @@ public class HandleRepository {
     return context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE,
             HANDLES.DATA)
         .from(HANDLES)
-        .where(HANDLES.TYPE.eq(PRIMARY_SPECIMEN_OBJECT_ID.getBytes(StandardCharsets.UTF_8)))
+        .where(HANDLES.TYPE.eq(PRIMARY_SPECIMEN_OBJECT_ID.get().getBytes(StandardCharsets.UTF_8)))
         .and((HANDLES.DATA).in(physicalIdentifiers));
   }
 
@@ -101,7 +98,7 @@ public class HandleRepository {
     return context
         .selectDistinct(HANDLES.HANDLE)
         .from(HANDLES)
-        .where(HANDLES.TYPE.eq(PID_STATUS.getBytes(StandardCharsets.UTF_8)))
+        .where(HANDLES.TYPE.eq(PID_STATUS.get().getBytes(StandardCharsets.UTF_8)))
         .and(HANDLES.DATA.eq(pidStatus))
         .limit(pageSize)
         .offset(offset)
@@ -237,7 +234,7 @@ public class HandleRepository {
         Integer.parseInt(Objects.requireNonNull(context.select(HANDLES.DATA)
             .from(HANDLES)
             .where(HANDLES.HANDLE.eq(handle))
-            .and(HANDLES.TYPE.eq(PID_RECORD_ISSUE_NUMBER.getBytes(StandardCharsets.UTF_8)))
+            .and(HANDLES.TYPE.eq(PID_RECORD_ISSUE_NUMBER.get().getBytes(StandardCharsets.UTF_8)))
             .fetchOne(dbRecord -> new String(dbRecord.value1(), StandardCharsets.UTF_8))));
     int version = incrementVersion ? currentVersion + 1 : currentVersion - 1;
 
@@ -245,7 +242,7 @@ public class HandleRepository {
         .set(HANDLES.DATA, String.valueOf(version).getBytes(StandardCharsets.UTF_8))
         .set(HANDLES.TIMESTAMP, recordTimestamp)
         .where(HANDLES.HANDLE.eq(handle))
-        .and(HANDLES.TYPE.eq(PID_RECORD_ISSUE_NUMBER.getBytes(StandardCharsets.UTF_8)));
+        .and(HANDLES.TYPE.eq(PID_RECORD_ISSUE_NUMBER.get().getBytes(StandardCharsets.UTF_8)));
   }
 
   public void rollbackHandles(List<String> handles){
