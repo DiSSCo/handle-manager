@@ -1,7 +1,6 @@
 package eu.dissco.core.handlemanager.domain.requests.objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdentifier;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -38,7 +37,8 @@ public class MediaObjectRequest extends DoiRecordRequest {
       String subjectSpecimenHost,
       String mediaUrl,
       String subjectIdentifier) {
-    super(fdoProfile, issuedForAgent, digitalObjectTypePid, pidIssuer, structuralType, locations, referentName, primaryReferentType);
+    super(fdoProfile, issuedForAgent, digitalObjectTypePid, pidIssuer, structuralType, locations,
+        referentName, primaryReferentType);
     this.mediaHash = mediaHash;
     this.mediaHashAlgorithm = mediaHashAlgorithm;
     this.subjectSpecimenHost = subjectSpecimenHost;
