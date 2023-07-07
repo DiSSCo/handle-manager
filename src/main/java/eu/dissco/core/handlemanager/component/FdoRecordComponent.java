@@ -295,7 +295,7 @@ public class FdoRecordComponent {
 
     // 407 Subject Local Id
     fdoRecord.add(new HandleAttribute(SUBJECT_LOCAL_ID.index(), handle, SUBJECT_LOCAL_ID.get(),
-        request.getSubjectIdentifier().physicalId().getBytes(StandardCharsets.UTF_8)));
+        request.getSubjectIdentifier().getBytes(StandardCharsets.UTF_8)));
 
     // 408 Subject PID -> might need to be resolved
     fdoRecord.add(new HandleAttribute(SUBJECT_PID.index(), handle, SUBJECT_PID.get(), PLACEHOLDER));

@@ -16,20 +16,14 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.ROR_DOMAIN;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_NAME_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.STRUCTURAL_TYPE_TESTVAL;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdentifier;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
  class ServiceUtilsTest {
@@ -65,21 +59,7 @@ import org.junit.jupiter.api.Test;
   void testSetUniquePhysicalIdentifierMedia(){
    // Given
    var request = givenMediaRequestObject();
-   String expected = request.getSubjectIdentifier().physicalId();
-
-   // When
-   String result = setUniquePhysicalIdentifierId(request);
-
-   // Then
-   assertThat(result).isEqualTo(expected);
-  }
-
-  @Test
-  void testSetUniquePhysicalIdentifierMediaCombined(){
-   // Given
-   var request = givenCombinedMediaRequest();
-   var suffix = request.getSubjectSpecimenHost().replace(ROR_DOMAIN,"");
-   String expected = request.getSubjectIdentifier().physicalId() + ":" + suffix;
+   String expected = request.getSubjectIdentifier() + ":0x123";
 
    // When
    String result = setUniquePhysicalIdentifierId(request);
@@ -124,7 +104,7 @@ import org.junit.jupiter.api.Test;
        MEDIA_HASH_ALG_TESTVAL,
        SPECIMEN_HOST_TESTVAL,
        MEDIA_URL_TESTVAL,
-       new PhysicalIdentifier("id", PhysicalIdType.COMBINED)
+       PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL
    );
   }
 
