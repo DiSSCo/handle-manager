@@ -18,10 +18,7 @@ public class ServiceUtils {
 
   public static String setUniquePhysicalIdentifierId(MediaObjectRequest request) {
     var physicalIdentifier = request.getSubjectIdentifier();
-    if (physicalIdentifier.physicalIdType().equals(PhysicalIdType.CETAF)) {
-      return physicalIdentifier.physicalId();
-    }
-    return concatIds(physicalIdentifier.physicalId(), request.getSubjectSpecimenHost());
+    return concatIds(physicalIdentifier, request.getSubjectSpecimenHost());
   }
 
   private static String concatIds(String physicalIdentifier, String specimenHostPid) {
