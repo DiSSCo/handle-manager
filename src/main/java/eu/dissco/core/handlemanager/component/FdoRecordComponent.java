@@ -286,10 +286,6 @@ public class FdoRecordComponent {
     fdoRecord.add(new HandleAttribute(MEDIA_OBJECT_TYPE.index(), handle, MEDIA_OBJECT_TYPE.get(),
         PLACEHOLDER));
 
-    // 405 Media Object Type
-    fdoRecord.add(new HandleAttribute(MEDIA_OBJECT_TYPE.index(), handle, MEDIA_OBJECT_TYPE.get(),
-        PLACEHOLDER));
-
     // 406 Media Host
     fdoRecord.add(new HandleAttribute(MEDIA_HOST.index(), handle, MEDIA_HOST.get(), PLACEHOLDER));
 
