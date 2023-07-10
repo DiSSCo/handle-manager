@@ -58,6 +58,7 @@ import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
@@ -100,7 +101,7 @@ class FdoRecordComponentTest {
   private ApplicationProperties appProperties;
   private static final int HANDLE_QTY = 15;
   private static final int DOI_QTY = 19;
-  private static final int MEDIA_QTY = 25;
+  private static final int MEDIA_QTY = 24;
   private static final int DS_MANDATORY_QTY = 24;
   private static final int DS_OPTIONAL_QTY = 35;
   private static final int BOTANY_QTY = 24;
@@ -127,6 +128,7 @@ class FdoRecordComponentTest {
     // Then
     assertThat(result).hasSize(HANDLE_QTY);
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
+    assertThat(hasNoDuplicateElements(result)).isTrue();
   }
 
   @Test
@@ -143,6 +145,7 @@ class FdoRecordComponentTest {
     assertThat(hasCorrectLocations(result, request.getLocations(), ObjectType.HANDLE)).isTrue();
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, DOI_FIELDS)).isTrue();
+    assertThat(hasNoDuplicateElements(result)).isTrue();
   }
 
   @Test
@@ -157,6 +160,7 @@ class FdoRecordComponentTest {
     // Then
     assertThat(result).hasSize(MEDIA_QTY);
     assertThat(hasCorrectLocations(result, request.getLocations(), ObjectType.MEDIA_OBJECT)).isTrue();
+    assertThat(hasNoDuplicateElements(result)).isTrue();
   }
 
   @Test
@@ -174,6 +178,7 @@ class FdoRecordComponentTest {
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, DOI_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, DS_FIELDS_MANDATORY)).isTrue();
+    assertThat(hasNoDuplicateElements(result)).isTrue();
   }
 
   @Test
@@ -192,6 +197,7 @@ class FdoRecordComponentTest {
     assertThat(hasCorrectElements(result, DOI_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, DS_FIELDS_MANDATORY)).isTrue();
     assertThat(hasCorrectElements(result, DS_FIELDS_OPTIONAL)).isTrue();
+    assertThat(hasNoDuplicateElements(result)).isTrue();
   }
 
   @Test
@@ -209,6 +215,7 @@ class FdoRecordComponentTest {
     assertThat(hasCorrectLocations(result, request.getLocations(), ObjectType.ANNOTATION)).isTrue();
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, ANNOTATION_FIELDS)).isTrue();
+    assertThat(hasNoDuplicateElements(result)).isTrue();
   }
 
   @Test
@@ -225,6 +232,7 @@ class FdoRecordComponentTest {
     assertThat(hasCorrectLocations(result, request.getLocations(), ObjectType.MAS)).isTrue();
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, Set.of(MAS_NAME.get()))).isTrue();
+    assertThat(hasNoDuplicateElements(result)).isTrue();
   }
 
   @Test
@@ -250,6 +258,8 @@ class FdoRecordComponentTest {
     // Then
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
     assertThat(result).hasSize(HANDLE_QTY+1);
+    assertThat(hasNoDuplicateElements(result)).isTrue();
+
   }
 
 
@@ -266,6 +276,7 @@ class FdoRecordComponentTest {
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
     assertThat(hasCorrectLocations(result, request.getLocations(), ObjectType.SOURCE_SYSTEM)).isTrue();
     assertThat(result).hasSize(HANDLE_QTY+1);
+    assertThat(hasNoDuplicateElements(result)).isTrue();
   }
 
   @Test
@@ -281,6 +292,8 @@ class FdoRecordComponentTest {
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, DOI_FIELDS)).isTrue();
     assertThat(result).hasSize(DOI_QTY+3);
+    assertThat(hasNoDuplicateElements(result)).isTrue();
+
   }
 
   @Test
@@ -294,6 +307,7 @@ class FdoRecordComponentTest {
 
     // Then
     assertThat(result).hasSize(BOTANY_QTY);
+    assertThat(hasNoDuplicateElements(result)).isTrue();
   }
 
   @Test
@@ -315,6 +329,7 @@ class FdoRecordComponentTest {
     // Then
     assertThat(result).hasSize(HANDLE_QTY);
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
+    assertThat(hasNoDuplicateElements(result)).isTrue();
   }
 
   @Test
@@ -376,6 +391,7 @@ class FdoRecordComponentTest {
 
     // Then
     assertThat(result).hasSize(DS_MANDATORY_QTY);
+    assertThat(hasNoDuplicateElements(result)).isTrue();
   }
 
   @Test
@@ -402,6 +418,7 @@ class FdoRecordComponentTest {
 
     // Then
     assertThat(result).hasSize(DS_MANDATORY_QTY - 1);
+    assertThat(hasNoDuplicateElements(result)).isTrue();
   }
 
   @Test
@@ -441,6 +458,7 @@ class FdoRecordComponentTest {
 
     // Then
     assertThat(response).isEqualTo(expected);
+    assertThat(hasNoDuplicateElements(response)).isTrue();
   }
   @Test
   void testUpdateSpecimenHostNameInRequest() throws Exception{
@@ -461,6 +479,7 @@ class FdoRecordComponentTest {
     // Then
     assertThat(response).isEqualTo(expected);
     verifyNoInteractions(pidResolver);
+    assertThat(hasNoDuplicateElements(response)).isTrue();
   }
 
   @Test
@@ -475,6 +494,7 @@ class FdoRecordComponentTest {
 
     // Then
     assertThat(response).isEqualTo(expected);
+    assertThat(hasNoDuplicateElements(response)).isTrue();
   }
 
   @Test
@@ -493,6 +513,7 @@ class FdoRecordComponentTest {
 
     // Then
     assertThat(response).isEqualTo(expected);
+    assertThat(hasNoDuplicateElements(response)).isTrue();
   }
 
   @Test
@@ -505,6 +526,7 @@ class FdoRecordComponentTest {
 
     // Then
     assertThat(response).isEqualTo(expected);
+    assertThat(hasNoDuplicateElements(response)).isTrue();
   }
 
   private DigitalSpecimenRequest givenDigitalSpecimenRequestObjectOptionalsInit()
@@ -559,6 +581,10 @@ class FdoRecordComponentTest {
       }
     }
     throw new IllegalStateException("No locations in fdo record");
+  }
+
+  private boolean hasNoDuplicateElements(List<HandleAttribute> fdoRecord){
+    return fdoRecord.size()==(new HashSet<>(fdoRecord).size());
   }
 
 
