@@ -55,19 +55,6 @@ import org.junit.jupiter.api.Test;
    assertThat(result).isEqualTo(expected);
   }
 
-  @Test
-  void testSetUniquePhysicalIdentifierMedia(){
-   // Given
-   var request = givenMediaRequestObject();
-   String expected = request.getSubjectIdentifier() + ":0x123";
-
-   // When
-   String result = setUniquePhysicalIdentifierId(request);
-
-   // Then
-   assertThat(result).isEqualTo(expected);
-  }
-
   private DigitalSpecimenRequest givenCetafTypeDSRecord(){
    try {
     return new DigitalSpecimenRequest(
@@ -100,9 +87,6 @@ import org.junit.jupiter.api.Test;
        LOC_TESTVAL,
        REFERENT_NAME_TESTVAL,
        PRIMARY_REFERENT_TYPE_TESTVAL,
-       MEDIA_HASH_TESTVAL,
-       MEDIA_HASH_ALG_TESTVAL,
-       SPECIMEN_HOST_TESTVAL,
        MEDIA_URL_TESTVAL,
        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL
    );

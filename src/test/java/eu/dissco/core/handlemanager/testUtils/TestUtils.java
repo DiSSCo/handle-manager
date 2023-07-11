@@ -477,8 +477,8 @@ public class TestUtils {
     var fdoRecord = genHandleRecordAttributes(handle, ObjectType.ANNOTATION);
 
     // 500 subjectDigitalObjectId
-    fdoRecord.add(new HandleAttribute(SUBJECT_DIGITAL_OBJECT_IDS.index(), handle,
-        SUBJECT_DIGITAL_OBJECT_IDS.get(),
+    fdoRecord.add(new HandleAttribute(SUBJECT_DIGITAL_OBJECT_ID.index(), handle,
+        SUBJECT_DIGITAL_OBJECT_ID.get(),
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     // 501 AnnotationTopic
@@ -487,7 +487,7 @@ public class TestUtils {
 
     // 502 replaceOrAppend
     fdoRecord.add(new HandleAttribute(REPLACE_OR_APPEND.index(), handle, REPLACE_OR_APPEND.get(),
-        ReplaceOrAppend.REPLACE.getState().getBytes(StandardCharsets.UTF_8)));
+        ReplaceOrAppend.REPLACE.toString().getBytes(StandardCharsets.UTF_8)));
 
     // 503 AccessRestricted
     fdoRecord.add(new HandleAttribute(ACCESS_RESTRICTED.index(), handle, ACCESS_RESTRICTED.get(),
@@ -652,9 +652,6 @@ public class TestUtils {
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL,
-        MEDIA_HASH_TESTVAL,
-        MEDIA_HASH_ALG_TESTVAL,
-        SPECIMEN_HOST_TESTVAL,
         MEDIA_URL_TESTVAL,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL
     );

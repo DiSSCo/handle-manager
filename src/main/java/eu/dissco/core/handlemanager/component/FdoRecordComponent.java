@@ -46,7 +46,7 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.SPECIMEN_HOST_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.SPECIMEN_OBJECT_ID_ABSENCE_REASON;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.STRUCTURAL_TYPE;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_DIGITAL_OBJECT_IDS;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_DIGITAL_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_LOCAL_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_PID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_DISCIPLINE;
@@ -291,7 +291,7 @@ public class FdoRecordComponent {
 
     // 407 Subject Local Id
     fdoRecord.add(new HandleAttribute(SUBJECT_LOCAL_ID.index(), handle, SUBJECT_LOCAL_ID.get(),
-        request.getSubjectIdentifier().getBytes(StandardCharsets.UTF_8)));
+        request.getSubjectLocalIdentifier().getBytes(StandardCharsets.UTF_8)));
 
     // 408 Subject PID -> might need to be resolved
     fdoRecord.add(new HandleAttribute(SUBJECT_PID.index(), handle, SUBJECT_PID.get(), PLACEHOLDER));
@@ -306,8 +306,8 @@ public class FdoRecordComponent {
 
     // 500 subjectDigitalObjectId
     resolveInternalPid(request);
-    fdoRecord.add(new HandleAttribute(SUBJECT_DIGITAL_OBJECT_IDS.index(), handle,
-        SUBJECT_DIGITAL_OBJECT_IDS.get(),
+    fdoRecord.add(new HandleAttribute(SUBJECT_DIGITAL_OBJECT_ID.index(), handle,
+        SUBJECT_DIGITAL_OBJECT_ID.get(),
         request.getSubjectDigitalObjectId().getBytes(StandardCharsets.UTF_8)));
 
     // 501 AnnotationTopic
@@ -316,7 +316,7 @@ public class FdoRecordComponent {
 
     // 502 replaceOrAppend
     fdoRecord.add(new HandleAttribute(REPLACE_OR_APPEND.index(), handle, REPLACE_OR_APPEND.get(),
-        request.getReplaceOrAppend().getState().getBytes(
+        request.getReplaceOrAppend().toString().getBytes(
             StandardCharsets.UTF_8)));
 
     // 503 AccessRestricted

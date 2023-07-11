@@ -88,7 +88,7 @@ class FdoRecordComponentTest {
       BASE_TYPE_OF_SPECIMEN.get(), INFORMATION_ARTEFACT_TYPE.get(),
       MATERIAL_SAMPLE_TYPE.get(), MARKED_AS_TYPE.get(), WAS_DERIVED_FROM_ENTITY.get());
 
-  private static final Set<String> ANNOTATION_FIELDS = Set.of(SUBJECT_DIGITAL_OBJECT_IDS.get(),
+  private static final Set<String> ANNOTATION_FIELDS = Set.of(SUBJECT_DIGITAL_OBJECT_ID.get(),
       ANNOTATION_TOPIC.get(), REPLACE_OR_APPEND.get(), ACCESS_RESTRICTED.get(), LINKED_OBJECT_URL.get(), LINKED_OBJECT_IS_PID.get());
 
   private final byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
