@@ -12,7 +12,8 @@ public enum ReplaceOrAppend {
     this.state = state;
   }
 
-  public String getState(){
+  @Override
+  public String toString(){
     return this.state;
   }
 

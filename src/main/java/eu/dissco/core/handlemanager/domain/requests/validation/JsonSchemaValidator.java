@@ -1,5 +1,6 @@
 package eu.dissco.core.handlemanager.domain.requests.validation;
 
+import static com.github.victools.jsonschema.module.jackson.JacksonOption.FLATTENED_ENUMS_FROM_JSONVALUE;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_TYPE;
@@ -153,13 +154,14 @@ public class JsonSchemaValidator {
 
     // Allow null if specified
     configBuilder.forFields()
-        .withNullableCheck(field ->  field.getAnnotationConsideringFieldAndGetter(Nullable.class) != null);
+        .withNullableCheck(
+            field -> field.getAnnotationConsideringFieldAndGetter(Nullable.class) != null);
 
     return configBuilder.build();
   }
 
   private void setPatchRequestAttributesJsonNodes() {
-    var schemaGenerator = new SchemaGenerator( attributesSchemaConfig() );
+    var schemaGenerator = new SchemaGenerator(attributesSchemaConfig());
     handlePatchReqJsonNode = schemaGenerator.generateSchema(HandleRecordRequest.class);
     doiPatchReqJsonNode = schemaGenerator.generateSchema(DoiRecordRequest.class);
     digitalSpecimenPatchReqJsonNode = schemaGenerator.generateSchema(DigitalSpecimenRequest.class);
@@ -221,13 +223,11 @@ public class JsonSchemaValidator {
         .withAdditionalPropertiesResolver(field -> field.getType().getErasedType() == JsonNode.class
             ? null : Void.class);
 
-
     configBuilder.forTypesInGeneral()
         .withEnumResolver(scope -> scope.getType().getErasedType().isEnum()
             ? Stream.of(scope.getType().getErasedType().getEnumConstants())
             .map(v -> ((Enum) v).name()).toList()
             : null);
-
 
     return configBuilder.build();
   }
@@ -326,7 +326,8 @@ public class JsonSchemaValidator {
   }
 
 
-  private void validateTombstoneRequestAttributes(JsonNode requestAttributes) throws InvalidRequestException {
+  private void validateTombstoneRequestAttributes(JsonNode requestAttributes)
+      throws InvalidRequestException {
     var validationErrors = tombstoneReqSchema.validate(requestAttributes);
     if (!validationErrors.isEmpty()) {
       throw new InvalidRequestException(
@@ -353,10 +354,9 @@ public class JsonSchemaValidator {
         missingAttributes.add(Arrays.toString(validationError.getArguments()));
       } else if (validationError.getType().equals("additionalProperties")) {
         unrecognizedAttributes.add(Arrays.toString(validationError.getArguments()));
-      } else if (validationError.getType().equals("enum")){
+      } else if (validationError.getType().equals("enum")) {
         enumErrors.add(validationError.getMessage());
-      }
-      else {
+      } else {
         otherErrors.add(validationError.getMessage());
       }
     }

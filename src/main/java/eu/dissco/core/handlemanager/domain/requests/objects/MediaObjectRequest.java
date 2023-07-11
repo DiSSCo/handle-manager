@@ -11,15 +11,9 @@ import lombok.ToString;
 public class MediaObjectRequest extends DoiRecordRequest {
 
   @JsonProperty(required = true)
-  private final String mediaHash; // Remove
-  @JsonProperty(required = true)
-  private final String mediaHashAlgorithm; // Remove
-  @JsonProperty(required = true)
-  private final String subjectSpecimenHost; // Remove
-  @JsonProperty(required = true)
   private final String mediaUrl;
   @JsonProperty(required = true)
-  private final String subjectIdentifier; // Rename -> subjectLocalId? TBD
+  private final String subjectLocalIdentifier;
 
   public MediaObjectRequest(
       String fdoProfile,
@@ -32,17 +26,11 @@ public class MediaObjectRequest extends DoiRecordRequest {
       String referentName,
       String primaryReferentType,
       // Media
-      String mediaHash,
-      String mediaHashAlgorithm,
-      String subjectSpecimenHost,
       String mediaUrl,
-      String subjectIdentifier) {
+      String subjectLocalIdentifier) {
     super(fdoProfile, issuedForAgent, digitalObjectTypePid, pidIssuer, structuralType, locations,
         referentName, primaryReferentType);
-    this.mediaHash = mediaHash;
-    this.mediaHashAlgorithm = mediaHashAlgorithm;
-    this.subjectSpecimenHost = subjectSpecimenHost;
     this.mediaUrl = mediaUrl;
-    this.subjectIdentifier = subjectIdentifier;
+    this.subjectLocalIdentifier = subjectLocalIdentifier;
   }
 }

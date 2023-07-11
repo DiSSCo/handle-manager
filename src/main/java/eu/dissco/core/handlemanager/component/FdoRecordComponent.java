@@ -295,7 +295,7 @@ public class FdoRecordComponent {
 
     // 407 Subject Local Id
     fdoRecord.add(new HandleAttribute(SUBJECT_LOCAL_ID.index(), handle, SUBJECT_LOCAL_ID.get(),
-        request.getSubjectIdentifier().getBytes(StandardCharsets.UTF_8)));
+        request.getSubjectLocalIdentifier().getBytes(StandardCharsets.UTF_8)));
 
     // 408 Subject PID -> might need to be resolved
     fdoRecord.add(new HandleAttribute(SUBJECT_PID.index(), handle, SUBJECT_PID.get(), PLACEHOLDER));
@@ -320,7 +320,7 @@ public class FdoRecordComponent {
 
     // 502 replaceOrAppend
     fdoRecord.add(new HandleAttribute(REPLACE_OR_APPEND.index(), handle, REPLACE_OR_APPEND.get(),
-        request.getReplaceOrAppend().getState().getBytes(
+        request.getReplaceOrAppend().toString().getBytes(
             StandardCharsets.UTF_8)));
 
     // 503 AccessRestricted

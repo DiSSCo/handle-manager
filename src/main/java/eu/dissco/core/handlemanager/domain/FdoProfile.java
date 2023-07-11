@@ -53,12 +53,12 @@ public enum FdoProfile {
   MEDIA_URL("mediaUrl", 403),
   MEDIA_OBJECT_TYPE("mediaObjectType", 405),
   MEDIA_HOST("mediaHost", 406),
-  SUBJECT_LOCAL_ID("subjectLocalId", 407),
+  SUBJECT_LOCAL_ID("subjectLocalIdentifier", 407),
   SUBJECT_PID("subjectPid", 408),
 
 
   // Annotation
-  SUBJECT_DIGITAL_OBJECT_IDS("subjectDigitalObjectIds", 500),
+  SUBJECT_DIGITAL_OBJECT_IDS("subjectDigitalObjectId", 500),
   ANNOTATION_TOPIC("annotationTopic", 501),
   REPLACE_OR_APPEND("replaceOrAppend", 502),
   ACCESS_RESTRICTED("accessRestricted", 503),

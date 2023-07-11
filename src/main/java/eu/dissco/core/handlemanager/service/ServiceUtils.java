@@ -1,7 +1,6 @@
 package eu.dissco.core.handlemanager.service;
 
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
-import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
 
 public class ServiceUtils {
@@ -14,11 +13,6 @@ public class ServiceUtils {
       return physicalIdentifier;
     }
     return concatIds(physicalIdentifier, request.getSpecimenHost());
-  }
-
-  public static String setUniquePhysicalIdentifierId(MediaObjectRequest request) {
-    var physicalIdentifier = request.getSubjectIdentifier();
-    return concatIds(physicalIdentifier, request.getSubjectSpecimenHost());
   }
 
   private static String concatIds(String physicalIdentifier, String specimenHostPid) {
