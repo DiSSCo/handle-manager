@@ -20,9 +20,6 @@ public class DoiRecordRequest extends HandleRecordRequest {
   @JsonPropertyDescription("Primary referent Type. Defaults to \"creation\"")
   private final String primaryReferentType;
 
-  @JsonPropertyDescription("Currently populated with placeholder string")
-  private final String referent;
-
   public DoiRecordRequest(
       // Handle
       String fdoProfile,
@@ -36,7 +33,6 @@ public class DoiRecordRequest extends HandleRecordRequest {
       String primaryReferentType) {
     super(fdoProfile, issuedForAgent, digitalObjectType, pidIssuer, structuralType, locations);
     this.referentType = PLACEHOLDER;
-    this.referent = PLACEHOLDER;
     this.referentName = referentName;
     this.primaryReferentType = primaryReferentType == null ? "creation" : primaryReferentType;
   }
