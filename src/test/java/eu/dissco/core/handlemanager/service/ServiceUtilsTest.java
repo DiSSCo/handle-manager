@@ -5,8 +5,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.DIGITAL_OBJECT_TY
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.FDO_PROFILE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.ISSUED_FOR_AGENT_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.LOC_TESTVAL;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.MEDIA_HASH_ALG_TESTVAL;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.MEDIA_HASH_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MEDIA_URL_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_ISSUER_TESTVAL_OTHER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_REFERENT_TYPE_TESTVAL;
@@ -17,7 +15,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_NAM
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.STRUCTURAL_TYPE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;

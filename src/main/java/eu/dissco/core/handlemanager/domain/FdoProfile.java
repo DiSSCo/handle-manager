@@ -1,5 +1,6 @@
 package eu.dissco.core.handlemanager.domain;
 
+import eu.dissco.core.handlemanager.exceptions.UnrecognizedFdoAttributeException;
 import java.util.Arrays;
 
 public enum FdoProfile {
@@ -104,7 +105,7 @@ public enum FdoProfile {
     if (fdoProfile.isPresent()) {
       return fdoProfile.get().index;
     }
-    throw new IllegalStateException(
+    throw new UnrecognizedFdoAttributeException(
         "Unable to locate index for requested attribute " + searchAttribute);
   }
 
