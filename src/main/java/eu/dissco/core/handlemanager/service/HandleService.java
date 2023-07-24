@@ -291,7 +291,7 @@ public class HandleService {
       verifyNoInternalDuplicatePhysicalSpecimenObjectId(digitalSpecimenList, requestPhysicalIds);
       verifyNoRegisteredSpecimens(getPhysIdBytes(requestPhysicalIds));
     }
-
+    log.info("Persisting new handles to db");
     handleRep.postAttributesToDb(recordTimestamp, handleAttributes);
 
     var postedRecordAttributes = resolveAndFormatRecords(handlesPost);
@@ -343,6 +343,7 @@ public class HandleService {
 
     var recordTimestamp = Instant.now().getEpochSecond();
 
+    log.info("Persisting update to db.");
     handleRep.postAndUpdateHandles(recordTimestamp, createAttributes, upsertAttributes);  // O(n), 1xdb
 
     return concatAndFormatUpsertResponse(newHandles, upsertRequests); // O(n), 1x db
