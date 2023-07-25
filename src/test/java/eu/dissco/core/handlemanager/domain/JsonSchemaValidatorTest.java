@@ -13,7 +13,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_ISSUER_TESTVA
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_ANNOTATION;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DOI;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS_BOTANY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MAPPING;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MAS;
@@ -23,7 +22,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_SOURC
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.REFERENT_DOI_NAME_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMappingRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMasRecordRequestObject;
@@ -112,17 +110,6 @@ class JsonSchemaValidatorTest {
   void testPostDigitalSpecimenRequest() {
     // Given
     var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS);
-
-    // Then
-    assertDoesNotThrow(() -> {
-      schemaValidator.validatePostRequest(request);
-    });
-  }
-
-  @Test
-  void testPostDigitalSpecimenBotanyRequest() {
-    // Given
-    var request = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(), RECORD_TYPE_DS_BOTANY);
 
     // Then
     assertDoesNotThrow(() -> {
@@ -253,17 +240,6 @@ class JsonSchemaValidatorTest {
   }
 
   @Test
-  void testDigitalSpecimenBotanyPatchRequest() {
-    // Given
-    var request = givenUpdateRequest(RECORD_TYPE_DS_BOTANY, LIVING_OR_PRESERVED.get(), "living");
-
-    // Then
-    assertDoesNotThrow(() -> {
-      schemaValidator.validatePatchRequest(request);
-    });
-  }
-
-  @Test
   void testMediaObjectPatchRequest() {
     // Given
     var request = givenUpdateRequest(RECORD_TYPE_MEDIA, MEDIA_URL.get(), MEDIA_URL_TESTVAL);
@@ -372,7 +348,7 @@ class JsonSchemaValidatorTest {
   @ValueSource(strings = {"livingOrPreserved", "primarySpecimenObjectIdType"})
   void testBadEnumValueRequest(String targetEnum){
     // Given
-    ObjectNode request = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(), RECORD_TYPE_DS_BOTANY);
+    ObjectNode request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS);
     ((ObjectNode) request.get("data").get("attributes")).remove(targetEnum);
     ((ObjectNode) request.get("data").get("attributes")).put(targetEnum, UNKNOWN_VAL);
 
@@ -465,20 +441,6 @@ class JsonSchemaValidatorTest {
   }
 
   @Test
-  void testBadPostDigitalSpecimenBotanyRequestUnknownProperty() {
-    // Given
-    var request = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(),
-        RECORD_TYPE_DS_BOTANY);
-    ((ObjectNode) request.get(NODE_DATA)).put(UNKNOWN_ATTRIBUTE, UNKNOWN_VAL);
-
-    // Then
-    Exception e = assertThrows(InvalidRequestException.class, () -> {
-       schemaValidator.validatePostRequest(request);
-    });
-    assertThat(e.getMessage()).contains(UNRECOGNIZED_MSG).contains(UNKNOWN_ATTRIBUTE);
-  }
-
-  @Test
   void testBadPostMediaObjectRequestUnknownProperty() {
     // Given
     var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_MEDIA);
@@ -495,7 +457,7 @@ class JsonSchemaValidatorTest {
   void testBadPostMediaObjectRequestMissingProperty() {
     // Given
     String missingAttribute = MEDIA_URL.get();
-    var request = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(),
+    var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(),
         RECORD_TYPE_MEDIA);
     ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(missingAttribute);
 
@@ -520,8 +482,7 @@ class JsonSchemaValidatorTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {RECORD_TYPE_HANDLE, RECORD_TYPE_DOI, RECORD_TYPE_DS,
-      RECORD_TYPE_DS_BOTANY, RECORD_TYPE_MEDIA})
+  @ValueSource(strings = {RECORD_TYPE_HANDLE, RECORD_TYPE_DOI, RECORD_TYPE_DS, RECORD_TYPE_MEDIA})
   void testBadPatchRequestUnknownProperty(String recordType) {
     // Given
     var request = givenUpdateRequest(recordType, UNKNOWN_ATTRIBUTE, UNKNOWN_VAL);

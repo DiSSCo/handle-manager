@@ -18,7 +18,6 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperReadSingle;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.objects.AnnotationRequest;
-import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
@@ -69,7 +68,6 @@ public class TestUtils {
   public static final String RECORD_TYPE_HANDLE = "handle";
   public static final String RECORD_TYPE_DOI = "doi";
   public static final String RECORD_TYPE_DS = "digitalSpecimen";
-  public static final String RECORD_TYPE_DS_BOTANY = "digitalSpecimenBotany";
   public static final String RECORD_TYPE_TOMBSTONE = "tombstone";
   public static final String RECORD_TYPE_MEDIA = "mediaObject";
   public static final String RECORD_TYPE_SOURCE_SYSTEM = "sourceSystem";
@@ -440,11 +438,6 @@ public class TestUtils {
     return fdoRecord;
   }
 
-  public static List<HandleAttribute> genDigitalSpecimenBotanyAttributes(byte[] handle)
-      throws Exception {
-    return genDigitalSpecimenAttributes(handle);
-  }
-
   public static List<HandleAttribute> genMediaObjectAttributes(byte[] handle)
       throws Exception {
     List<HandleAttribute> handleRecord = genDoiRecordAttributes(handle, ObjectType.MEDIA_OBJECT);
@@ -618,27 +611,6 @@ public class TestUtils {
           physicalId,
           null,null, null, null, null, null, null, null, null, null, null,null, null, null, null
           );
-    } catch (InvalidRequestException e) {
-      return null;
-    }
-  }
-
-  public static DigitalSpecimenBotanyRequest genDigitalSpecimenBotanyRequestObject() {
-    try {
-      return new DigitalSpecimenBotanyRequest(
-          FDO_PROFILE_TESTVAL,
-          ISSUED_FOR_AGENT_TESTVAL,
-          DIGITAL_OBJECT_TYPE_TESTVAL,
-          PID_ISSUER_TESTVAL_OTHER,
-          STRUCTURAL_TYPE_TESTVAL,
-          LOC_TESTVAL,
-          REFERENT_NAME_TESTVAL,
-          PRIMARY_REFERENT_TYPE_TESTVAL,
-          SPECIMEN_HOST_TESTVAL,
-          SPECIMEN_HOST_NAME_TESTVAL,
-          PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-          null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
-      );
     } catch (InvalidRequestException e) {
       return null;
     }
@@ -865,9 +837,6 @@ public class TestUtils {
       }
       case RECORD_TYPE_DS -> {
         return genDigitalSpecimenAttributes(handle);
-      }
-      case RECORD_TYPE_DS_BOTANY -> {
-        return genDigitalSpecimenBotanyAttributes(handle);
       }
       case RECORD_TYPE_MEDIA -> {
         return genMediaObjectAttributes(handle);

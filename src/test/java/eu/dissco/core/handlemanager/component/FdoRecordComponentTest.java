@@ -21,7 +21,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TES
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.STRUCTURAL_TYPE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.TRANSFORMER_FACTORY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.UI_URL;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordRequestAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequest;
@@ -104,7 +103,6 @@ class FdoRecordComponentTest {
   private static final int MEDIA_QTY = 24;
   private static final int DS_MANDATORY_QTY = 25;
   private static final int DS_OPTIONAL_QTY = 36;
-  private static final int BOTANY_QTY = 25;
   private static final int ANNOTATION_QTY = 21;
 
   @BeforeEach
@@ -294,20 +292,6 @@ class FdoRecordComponentTest {
     assertThat(result).hasSize(DOI_QTY+3);
     assertThat(hasNoDuplicateElements(result)).isTrue();
 
-  }
-
-  @Test
-  void testPrepareDigitalSpecimenBotanyAttributes() throws Exception {
-    // Given
-    given(pidResolver.getObjectName(any())).willReturn("placeholder");
-    var request = genDigitalSpecimenBotanyRequestObject();
-
-    // When
-    var result = fdoRecordComponent.prepareDigitalSpecimenBotanyRecordAttributes(request, handle, ObjectType.DIGITAL_SPECIMEN);
-
-    // Then
-    assertThat(result).hasSize(BOTANY_QTY);
-    assertThat(hasNoDuplicateElements(result)).isTrue();
   }
 
   @Test

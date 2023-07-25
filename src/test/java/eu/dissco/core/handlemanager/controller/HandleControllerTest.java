@@ -12,7 +12,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_ANNOTATION;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DOI;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS_BOTANY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MAPPING;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MEDIA;
@@ -20,7 +19,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_SOURC
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SUFFIX;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMappingRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
@@ -262,25 +260,6 @@ class HandleControllerTest {
   }
 
   @Test
-  void testCreateDigitalSpecimenBotanyRecord() throws Exception {
-    // Given
-    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    HandleRecordRequest requestObject = genDigitalSpecimenBotanyRequestObject();
-    ObjectNode requestNode = genCreateRecordRequest(requestObject, RECORD_TYPE_DS_BOTANY);
-    JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(handle),
-        RECORD_TYPE_DS_BOTANY);
-
-    given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
-
-    // When
-    var responseReceived = controller.createRecord(requestNode, authentication);
-
-    // Then
-    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
-  }
-
-  @Test
   void testCreateMediaObjectRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
@@ -359,31 +338,6 @@ class HandleControllerTest {
       requests.add(genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS));
     });
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_DS);
-    given(service.createRecords(requests)).willReturn(responseExpected);
-
-    // When
-    var responseReceived = controller.createRecords(requests, authentication);
-
-    // Then
-    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
-  }
-
-  @Test
-  void testCreateDigitalSpecimenBotanyBatch() throws Exception {
-    // Given
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
-        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-
-    List<JsonNode> requests = new ArrayList<>();
-
-    handles.forEach(handle -> {
-      requests.add(
-          genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(), RECORD_TYPE_DS_BOTANY));
-    });
-
-    var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_DS_BOTANY);
     given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When
@@ -627,7 +581,7 @@ class HandleControllerTest {
   @Test
   void testUpsertBadType() {
     // Given
-    var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS_BOTANY);
+    var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_MAPPING);
 
     // Then
     assertThrows(InvalidRequestException.class, () -> controller.upsertRecord(List.of(request),
