@@ -154,7 +154,8 @@ public class TestUtils {
   //DOIs
 
   //Digital Specimens
-  public static final String SPECIMEN_HOST_TESTVAL = ROR_DOMAIN + "0x123";
+  public static final String ROR_IDENTIFIER = "0x123";
+  public static final String SPECIMEN_HOST_TESTVAL = ROR_DOMAIN + ROR_IDENTIFIER;
   public static final String SPECIMEN_HOST_NAME_TESTVAL = "Naturalis";
   // Annotations
   public static final String SUBJECT_DOI_TESTVAL = HANDLE_URI + "20.5000.1025/111";
