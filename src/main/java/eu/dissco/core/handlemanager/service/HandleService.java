@@ -335,6 +335,9 @@ public class HandleService {
 
     var createRequests = getCreateRequests(upsertRequests, digitalSpecimenRequests);
     var newHandles = hf.genHandleList(createRequests.size());
+    if (!newHandles.isEmpty()){
+      log.info("Successfully minted {} new handle(s)", newHandles.size());
+    }
     var createAttributes = getCreateAttributes(createRequests, newHandles);
 
     var allRequests = Stream.concat(
@@ -344,10 +347,10 @@ public class HandleService {
 
     var recordTimestamp = Instant.now().getEpochSecond();
 
-    log.info("Persisting update to db.");
-    handleRep.postAndUpdateHandles(recordTimestamp, createAttributes, upsertAttributes);  // O(n), 1xdb
+    log.info("Persisting upserts to db.");
+    handleRep.postAndUpdateHandles(recordTimestamp, createAttributes, upsertAttributes);
 
-    return concatAndFormatUpsertResponse(newHandles, upsertRequests); // O(n), 1x db
+    return concatAndFormatUpsertResponse(newHandles, upsertRequests);
   }
 
   private void logUpdates(List<UpsertDigitalSpecimen> upsertRequests){
