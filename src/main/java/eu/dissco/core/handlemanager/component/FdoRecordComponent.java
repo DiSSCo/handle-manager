@@ -22,6 +22,7 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.MATERIAL_SAMPLE_TYP
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_HOST;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_OBJECT_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_URL;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ORGANISATION_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ORGANISATION_ID_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ORGANISATION_NAME;
@@ -438,11 +439,10 @@ public class FdoRecordComponent {
     fdoRecord = setSpecimenHostName(request, fdoRecord, handle);
 
     // 202: primarySpecimenObjectId
-    var primarySpecimenObjectId = setUniquePhysicalIdentifierId(request);
     fdoRecord.add(
         new HandleAttribute(PRIMARY_SPECIMEN_OBJECT_ID.index(), handle,
             PRIMARY_SPECIMEN_OBJECT_ID.get(),
-            primarySpecimenObjectId.getBytes(StandardCharsets.UTF_8)));
+            request.getPrimarySpecimenObjectId().getBytes(StandardCharsets.UTF_8)));
 
     // 203: primarySpecimenObjectIdType
     fdoRecord.add(
@@ -461,6 +461,11 @@ public class FdoRecordComponent {
     }
 
     // 205 normalisedSpecimenObjectId
+    var normalisedPrimarySpecimenObjectId = setUniquePhysicalIdentifierId(request);
+    fdoRecord.add(
+        new HandleAttribute(NORMALISED_SPECIMEN_OBJECT_ID.index(), handle,
+            NORMALISED_SPECIMEN_OBJECT_ID.get(),
+            normalisedPrimarySpecimenObjectId.getBytes(StandardCharsets.UTF_8)));
 
     // 206: specimenObjectIdAbsenceReason
     if (request.getPrimarySpecimenObjectIdAbsenceReason() != null) {

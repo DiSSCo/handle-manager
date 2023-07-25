@@ -162,7 +162,7 @@ public class HandleService {
       throws PidResolutionException, InvalidRequestException {
 
     var physicalIdentifier = setPhysicalId(physicalId, physicalIdType, specimenHostPid);
-    var returnedRows = handleRep.searchByPhysicalIdentifierFullRecord(List.of(physicalIdentifier));
+    var returnedRows = handleRep.searchByNormalisedPhysicalIdentifierFullRecord(List.of(physicalIdentifier));
     var handleNames = listHandleNamesReturnedFromQuery(returnedRows);
     if (handleNames.size() > 1) {
       throw new PidResolutionException(
@@ -313,7 +313,7 @@ public class HandleService {
 
   private void verifyNoRegisteredSpecimens(List<byte[]> physicalIds)
       throws PidCreationException {
-    var registeredSpecimens = handleRep.searchByPhysicalIdentifierFullRecord(physicalIds);
+    var registeredSpecimens = handleRep.searchByNormalisedPhysicalIdentifierFullRecord(physicalIds);
     if (!registeredSpecimens.isEmpty()) {
       var registeredHandles = listHandleNamesReturnedFromQuery(registeredSpecimens);
       throw new PidCreationException(
@@ -396,7 +396,7 @@ public class HandleService {
   private List<UpsertDigitalSpecimen> getRegisteredSpecimensUpsert(
       List<DigitalSpecimenRequest> requests, List<byte[]> physicalIds) {
     var registeredSpecimensHandleAttributes = new HashSet<>(
-        handleRep.searchByPhysicalIdentifier(physicalIds));
+        handleRep.searchByNormalisedPhysicalIdentifier(physicalIds));
     if (registeredSpecimensHandleAttributes.isEmpty()) {
       return new ArrayList<>();
     }

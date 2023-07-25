@@ -125,6 +125,7 @@ public class TestUtils {
   public static final String ORCHESTRATION_URL = "https://orchestration.dissco.tech/api/v1";
   public static final String PTR_TYPE_DOI = "doi";
   public final static String PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL = "BOTANICAL.QRS.123";
+  public final static String NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL = PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL + ":" + ROR_IDENTIFIER;
   public final static PhysicalIdentifier PHYSICAL_IDENTIFIER_TESTVAL_CETAF = new PhysicalIdentifier(
       PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
       PhysicalIdType.CETAF

@@ -180,7 +180,7 @@ class HandleServiceTest {
     var responseExpected = givenRecordResponseWriteGeneric(
         List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), RECORD_TYPE_DS);
 
-    given(handleRep.searchByPhysicalIdentifierFullRecord(anyList()))
+    given(handleRep.searchByNormalisedPhysicalIdentifierFullRecord(anyList()))
         .willReturn(expectedAttributes);
 
     // When
@@ -203,7 +203,7 @@ class HandleServiceTest {
     var responseExpected = givenRecordResponseWriteGeneric(
         List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), RECORD_TYPE_DS);
 
-    given(handleRep.searchByPhysicalIdentifierFullRecord(anyList()))
+    given(handleRep.searchByNormalisedPhysicalIdentifierFullRecord(anyList()))
         .willReturn(attributeList);
 
     // When
@@ -224,7 +224,7 @@ class HandleServiceTest {
     var responseExpected = givenRecordResponseWriteGeneric(
         List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), RECORD_TYPE_DS);
 
-    given(handleRep.searchByPhysicalIdentifierFullRecord(anyList()))
+    given(handleRep.searchByNormalisedPhysicalIdentifierFullRecord(anyList()))
         .willReturn(expectedAttributes);
 
     // When
@@ -287,7 +287,7 @@ class HandleServiceTest {
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(digitalSpecimen);
-    given(handleRep.searchByPhysicalIdentifierFullRecord(anyList())).willReturn(new ArrayList<>());
+    given(handleRep.searchByNormalisedPhysicalIdentifierFullRecord(anyList())).willReturn(new ArrayList<>());
     given(fdoRecordComponent.prepareDigitalSpecimenRecordAttributes(any(), any(), any())).willReturn(
         digitalSpecimen);
 
@@ -307,7 +307,7 @@ class HandleServiceTest {
     List<HandleAttribute> digitalSpecimen = genDigitalSpecimenAttributes(handle);
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(handleRep.searchByPhysicalIdentifierFullRecord(anyList())).willReturn(digitalSpecimen);
+    given(handleRep.searchByNormalisedPhysicalIdentifierFullRecord(anyList())).willReturn(digitalSpecimen);
 
     // When
     Exception e = assertThrows(PidCreationException.class, () -> {
@@ -331,7 +331,7 @@ class HandleServiceTest {
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(DigitalSpecimenBotany);
-    given(handleRep.searchByPhysicalIdentifierFullRecord(anyList())).willReturn(new ArrayList<>());
+    given(handleRep.searchByNormalisedPhysicalIdentifierFullRecord(anyList())).willReturn(new ArrayList<>());
 
     // When
     var responseReceived = service.createRecords(List.of(request));
@@ -349,7 +349,7 @@ class HandleServiceTest {
     List<HandleAttribute> digitalSpecimenBotany = genDigitalSpecimenBotanyAttributes(handle);
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(handleRep.searchByPhysicalIdentifierFullRecord(anyList())).willReturn(
+    given(handleRep.searchByNormalisedPhysicalIdentifierFullRecord(anyList())).willReturn(
         digitalSpecimenBotany);
 
     // When
@@ -784,7 +784,7 @@ class HandleServiceTest {
             upsertedResponse(newRecordAttributes, new String(newHandle)))
     );
 
-    given(handleRep.searchByPhysicalIdentifier(anyList())).willReturn(
+    given(handleRep.searchByNormalisedPhysicalIdentifier(anyList())).willReturn(
         List.of(new HandleAttribute(PRIMARY_SPECIMEN_OBJECT_ID.index(), existingHandle,
             PRIMARY_SPECIMEN_OBJECT_ID_TYPE.get(), (existingPhysId+":"+ROR_IDENTIFIER).getBytes(StandardCharsets.UTF_8))));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(
@@ -834,7 +834,7 @@ class HandleServiceTest {
         List.of(upsertedResponse(existingRecord, HANDLE))
     );
 
-    given(handleRep.searchByPhysicalIdentifier(anyList())).willReturn(
+    given(handleRep.searchByNormalisedPhysicalIdentifier(anyList())).willReturn(
         List.of(new HandleAttribute(PRIMARY_SPECIMEN_OBJECT_ID.index(), handles.get(0),
             PRIMARY_SPECIMEN_OBJECT_ID.get(), (PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL+":"+ROR_IDENTIFIER).getBytes(
             StandardCharsets.UTF_8))));
@@ -863,7 +863,7 @@ class HandleServiceTest {
         List.of(upsertedResponse(newRecord, HANDLE_ALT))
     );
 
-    given(handleRep.searchByPhysicalIdentifier(anyList())).willReturn(new ArrayList<>());
+    given(handleRep.searchByNormalisedPhysicalIdentifier(anyList())).willReturn(new ArrayList<>());
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(newRecord);
     given(fdoRecordComponent.prepareDigitalSpecimenRecordAttributes(any(), any(), any())).willReturn(
         newRecord);

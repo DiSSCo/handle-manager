@@ -81,7 +81,7 @@ class FdoRecordComponentTest {
   private static final Set<String> DOI_FIELDS = Set.of(REFERENT_TYPE.get(), REFERENT_DOI_NAME.get(),
       REFERENT_NAME.get(), PRIMARY_REFERENT_TYPE.get());
   private static final Set<String> DS_FIELDS_MANDATORY = Set.of(SPECIMEN_HOST.get(), SPECIMEN_HOST_NAME.get(),
-      PRIMARY_SPECIMEN_OBJECT_ID.get(), PRIMARY_SPECIMEN_OBJECT_ID_TYPE.get(), MATERIAL_OR_DIGITAL_ENTITY.get());
+      PRIMARY_SPECIMEN_OBJECT_ID.get(), PRIMARY_SPECIMEN_OBJECT_ID_TYPE.get(), MATERIAL_OR_DIGITAL_ENTITY.get(), NORMALISED_SPECIMEN_OBJECT_ID.get());
 
   private static final Set<String> DS_FIELDS_OPTIONAL = Set.of(PRIMARY_SPECIMEN_OBJECT_ID_NAME.get(),
       OTHER_SPECIMEN_IDS.get(), TOPIC_ORIGIN.get(), TOPIC_DISCIPLINE.get(), LIVING_OR_PRESERVED.get(),
@@ -102,9 +102,9 @@ class FdoRecordComponentTest {
   private static final int HANDLE_QTY = 15;
   private static final int DOI_QTY = 19;
   private static final int MEDIA_QTY = 24;
-  private static final int DS_MANDATORY_QTY = 24;
-  private static final int DS_OPTIONAL_QTY = 35;
-  private static final int BOTANY_QTY = 24;
+  private static final int DS_MANDATORY_QTY = 25;
+  private static final int DS_OPTIONAL_QTY = 36;
+  private static final int BOTANY_QTY = 25;
   private static final int ANNOTATION_QTY = 21;
 
   @BeforeEach
