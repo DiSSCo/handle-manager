@@ -65,30 +65,34 @@ public class HandleRepository {
         .fetch(this::mapToAttribute);
   }
 
-  public List<HandleAttribute> searchByPhysicalIdentifier(List<byte[]> physicalIdentifiers){
+  public List<HandleAttribute> searchByNormalisedPhysicalIdentifier(List<byte[]> normalisedPhysicalIdentifiers) {
 
-    return searchByPhysicalIdentifierQuery(physicalIdentifiers)
+    return searchByNormalisedPhysicalIdentifierQuery(normalisedPhysicalIdentifiers)
         .fetch(this::mapToAttribute);
   }
 
-  public List<HandleAttribute> searchByPhysicalIdentifierFullRecord(List<byte[]> physicalIdentifiers) {
-    var physicalIdentifierTable = searchByPhysicalIdentifierQuery(physicalIdentifiers)
-        .asTable("physicalIdentifierTable");
+  public List<HandleAttribute> searchByNormalisedPhysicalIdentifierFullRecord(
+      List<byte[]> normalisedPhysicalIdentifiers) {
+    var normalisedPhysicalIdentifierTable = searchByNormalisedPhysicalIdentifierQuery(
+        normalisedPhysicalIdentifiers)
+        .asTable("normalisedPhysicalIdentifierTable");
 
     return context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
         .from(HANDLES)
-        .join(physicalIdentifierTable)
-        .on(HANDLES.HANDLE.eq(physicalIdentifierTable.field(HANDLES.HANDLE)))
+        .join(normalisedPhysicalIdentifierTable)
+        .on(HANDLES.HANDLE.eq(normalisedPhysicalIdentifierTable.field(HANDLES.HANDLE)))
         .where(HANDLES.TYPE.notEqual(HS_ADMIN.get().getBytes(StandardCharsets.UTF_8)))
         .fetch(this::mapToAttribute);
   }
 
-  private SelectConditionStep<Record4<Integer, byte[], byte[], byte[]>> searchByPhysicalIdentifierQuery(List<byte[]> physicalIdentifiers){
+  private SelectConditionStep<Record4<Integer, byte[], byte[], byte[]>>
+  searchByNormalisedPhysicalIdentifierQuery(List<byte[]> normalisedPhysicalIdentifiers) {
     return context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE,
             HANDLES.DATA)
         .from(HANDLES)
-        .where(HANDLES.TYPE.eq(PRIMARY_SPECIMEN_OBJECT_ID.get().getBytes(StandardCharsets.UTF_8)))
-        .and((HANDLES.DATA).in(physicalIdentifiers));
+        .where(
+            HANDLES.TYPE.eq(NORMALISED_SPECIMEN_OBJECT_ID.get().getBytes(StandardCharsets.UTF_8)))
+        .and((HANDLES.DATA).in(normalisedPhysicalIdentifiers));
   }
 
   // Get List of Pids
@@ -131,7 +135,8 @@ public class HandleRepository {
     context.batch(queryList).execute();
   }
 
-  private List<Query> prepareBatchPostQuery(long recordTimestamp, List<HandleAttribute> handleAttributes){
+  private List<Query> prepareBatchPostQuery(long recordTimestamp,
+      List<HandleAttribute> handleAttributes) {
     var queryList = new ArrayList<Query>();
 
     for (var handleAttribute : handleAttributes) {
@@ -152,12 +157,13 @@ public class HandleRepository {
   }
 
   // Archive
-  public void archiveRecords(long recordTimestamp, List<HandleAttribute> handleAttributes, List<String> handles) {
+  public void archiveRecords(long recordTimestamp, List<HandleAttribute> handleAttributes,
+      List<String> handles) {
     updateRecord(recordTimestamp, handleAttributes, true);
     deleteNonTombstoneAttributes(handles);
   }
 
-  private void deleteNonTombstoneAttributes(List<String> handles){
+  private void deleteNonTombstoneAttributes(List<String> handles) {
     context.delete(HANDLES)
         .where(HANDLES.HANDLE.in(handles))
         .and(HANDLES.IDX.notBetween(1).and(39))
@@ -165,7 +171,8 @@ public class HandleRepository {
         .execute();
   }
 
-  public void postAndUpdateHandles(long recordTimestamp, List<HandleAttribute> createAttributes, List<List<HandleAttribute>> updateAttributes){
+  public void postAndUpdateHandles(long recordTimestamp, List<HandleAttribute> createAttributes,
+      List<List<HandleAttribute>> updateAttributes) {
     var queryList = prepareBatchUpdateQuery(recordTimestamp, updateAttributes, true);
     queryList.addAll(prepareBatchPostQuery(recordTimestamp, createAttributes));
     context.batch(queryList).execute();
@@ -184,8 +191,9 @@ public class HandleRepository {
     context.batch(queryList).execute();
   }
 
-  private List<Query> prepareBatchUpdateQuery(long recordTimestamp, List<List<HandleAttribute>> handleRecords,
-      boolean incrementVersion){
+  private List<Query> prepareBatchUpdateQuery(long recordTimestamp,
+      List<List<HandleAttribute>> handleRecords,
+      boolean incrementVersion) {
     List<Query> queryList = new ArrayList<>();
     for (List<HandleAttribute> handleRecord : handleRecords) {
       queryList.addAll(
@@ -223,7 +231,8 @@ public class HandleRepository {
           .set(HANDLES.PUB_WRITE, false);
       queryList.add(query);
       if (updatedHandles.add(handleAttribute.handle())) {
-        queryList.add(versionIncrement(handleAttribute.handle(), recordTimestamp, incrementVersion));
+        queryList.add(
+            versionIncrement(handleAttribute.handle(), recordTimestamp, incrementVersion));
       }
     }
     return queryList;
@@ -245,13 +254,13 @@ public class HandleRepository {
         .and(HANDLES.TYPE.eq(PID_RECORD_ISSUE_NUMBER.get().getBytes(StandardCharsets.UTF_8)));
   }
 
-  public void rollbackHandles(List<String> handles){
+  public void rollbackHandles(List<String> handles) {
     context.delete(HANDLES)
         .where(HANDLES.HANDLE.in(handles))
         .execute();
   }
 
-  private int getOffset(int pageNum, int pageSize){
+  private int getOffset(int pageNum, int pageSize) {
     int offset = 0;
     if (pageNum > 1) {
       offset = offset + (pageSize * (pageNum - 1));

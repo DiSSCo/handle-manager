@@ -102,7 +102,8 @@ public class TestUtils {
   //DOIs
 
   //Digital Specimens
-  public static final String SPECIMEN_HOST_TESTVAL = ROR_DOMAIN + "0x123";
+  public static final String ROR_IDENTIFIER = "0x123";
+  public static final String SPECIMEN_HOST_TESTVAL = ROR_DOMAIN + ROR_IDENTIFIER;
   public static final String SPECIMEN_HOST_NAME_TESTVAL = "Naturalis";
   // Annotations
   public static final String SUBJECT_DOI_TESTVAL = HANDLE_URI + "20.5000.1025/111";
@@ -124,6 +125,7 @@ public class TestUtils {
   public static final String ORCHESTRATION_URL = "https://orchestration.dissco.tech/api/v1";
   public static final String PTR_TYPE_DOI = "doi";
   public final static String PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL = "BOTANICAL.QRS.123";
+  public final static String NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL = PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL + ":" + ROR_IDENTIFIER;
   public final static PhysicalIdentifier PHYSICAL_IDENTIFIER_TESTVAL_CETAF = new PhysicalIdentifier(
       PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
       PhysicalIdType.CETAF

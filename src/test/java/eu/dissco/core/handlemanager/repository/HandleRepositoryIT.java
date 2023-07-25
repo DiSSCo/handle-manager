@@ -5,6 +5,7 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.*;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_STATUS_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
@@ -14,7 +15,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAt
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributesAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordFullAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRecordAttributesAltLoc;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObject;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.jooq.impl.DSL.exp;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -248,23 +248,23 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   @Test
   void testSearchByPhysicalIdentifierFullRecord(){
     // Given
-    var targetPhysicalIdentifer = PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8);
+    var targetPhysicalIdentifier = NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8);
     List<HandleAttribute> responseExpected = new ArrayList<>();
     responseExpected.add(new HandleAttribute(1, HANDLE.getBytes(StandardCharsets.UTF_8),
-        PRIMARY_SPECIMEN_OBJECT_ID.get(), targetPhysicalIdentifer));
+        NORMALISED_SPECIMEN_OBJECT_ID.get(), targetPhysicalIdentifier));
     responseExpected.add(new HandleAttribute(2, HANDLE.getBytes(StandardCharsets.UTF_8), SPECIMEN_HOST.get(), SPECIMEN_HOST_TESTVAL.getBytes(
         StandardCharsets.UTF_8)));
 
     List<HandleAttribute> nonTargetAttributes = new ArrayList<>();
     nonTargetAttributes.add(new HandleAttribute(1, HANDLE_ALT.getBytes(StandardCharsets.UTF_8),
-        PRIMARY_SPECIMEN_OBJECT_ID.get(), "A".getBytes(
+        NORMALISED_SPECIMEN_OBJECT_ID.get(), "A".getBytes(
         StandardCharsets.UTF_8)));
 
     postAttributes(responseExpected);
     postAttributes(nonTargetAttributes);
 
     // When
-    var responseReceived = handleRep.searchByPhysicalIdentifierFullRecord(List.of(targetPhysicalIdentifer));
+    var responseReceived = handleRep.searchByNormalisedPhysicalIdentifierFullRecord(List.of(targetPhysicalIdentifier));
 
     // Then
     assertThat(responseReceived).hasSameElementsAs(responseExpected);
@@ -274,16 +274,16 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   void testSearchByPhysicalSpecimenId() throws Exception {
     //Given
     var handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    var expected = List.of(new HandleAttribute(PRIMARY_SPECIMEN_OBJECT_ID.index(), handle,
-        PRIMARY_SPECIMEN_OBJECT_ID.get(),
-        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+    var expected = List.of(new HandleAttribute(NORMALISED_SPECIMEN_OBJECT_ID.index(), handle,
+        NORMALISED_SPECIMEN_OBJECT_ID.get(),
+        NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     postAttributes(genDoiRecordAttributes(handle, ObjectType.DOI));
     postAttributes(expected);
 
     // When
-    var response = handleRep.searchByPhysicalIdentifier(
-        List.of(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+    var response = handleRep.searchByNormalisedPhysicalIdentifier(
+        List.of(NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     // Then
     assertThat(response).isEqualTo(expected);

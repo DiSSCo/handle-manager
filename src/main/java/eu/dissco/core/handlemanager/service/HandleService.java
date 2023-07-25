@@ -5,6 +5,7 @@ import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_TYPE;
+import static eu.dissco.core.handlemanager.service.ServiceUtils.setUniquePhysicalIdentifierId;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -161,7 +162,7 @@ public class HandleService {
       throws PidResolutionException, InvalidRequestException {
 
     var physicalIdentifier = setPhysicalId(physicalId, physicalIdType, specimenHostPid);
-    var returnedRows = handleRep.searchByPhysicalIdentifierFullRecord(List.of(physicalIdentifier));
+    var returnedRows = handleRep.searchByNormalisedPhysicalIdentifierFullRecord(List.of(physicalIdentifier));
     var handleNames = listHandleNamesReturnedFromQuery(returnedRows);
     if (handleNames.size() > 1) {
       throw new PidResolutionException(
@@ -312,7 +313,7 @@ public class HandleService {
 
   private void verifyNoRegisteredSpecimens(List<byte[]> physicalIds)
       throws PidCreationException {
-    var registeredSpecimens = handleRep.searchByPhysicalIdentifierFullRecord(physicalIds);
+    var registeredSpecimens = handleRep.searchByNormalisedPhysicalIdentifierFullRecord(physicalIds);
     if (!registeredSpecimens.isEmpty()) {
       var registeredHandles = listHandleNamesReturnedFromQuery(registeredSpecimens);
       throw new PidCreationException(
@@ -334,6 +335,9 @@ public class HandleService {
 
     var createRequests = getCreateRequests(upsertRequests, digitalSpecimenRequests);
     var newHandles = hf.genHandleList(createRequests.size());
+    if (!newHandles.isEmpty()){
+      log.info("Successfully minted {} new handle(s)", newHandles.size());
+    }
     var createAttributes = getCreateAttributes(createRequests, newHandles);
 
     var allRequests = Stream.concat(
@@ -343,10 +347,10 @@ public class HandleService {
 
     var recordTimestamp = Instant.now().getEpochSecond();
 
-    log.info("Persisting update to db.");
-    handleRep.postAndUpdateHandles(recordTimestamp, createAttributes, upsertAttributes);  // O(n), 1xdb
+    log.info("Persisting upserts to db.");
+    handleRep.postAndUpdateHandles(recordTimestamp, createAttributes, upsertAttributes);
 
-    return concatAndFormatUpsertResponse(newHandles, upsertRequests); // O(n), 1x db
+    return concatAndFormatUpsertResponse(newHandles, upsertRequests);
   }
 
   private void logUpdates(List<UpsertDigitalSpecimen> upsertRequests){
@@ -395,7 +399,7 @@ public class HandleService {
   private List<UpsertDigitalSpecimen> getRegisteredSpecimensUpsert(
       List<DigitalSpecimenRequest> requests, List<byte[]> physicalIds) {
     var registeredSpecimensHandleAttributes = new HashSet<>(
-        handleRep.searchByPhysicalIdentifier(physicalIds));
+        handleRep.searchByNormalisedPhysicalIdentifier(physicalIds));
     if (registeredSpecimensHandleAttributes.isEmpty()) {
       return new ArrayList<>();
     }
@@ -417,7 +421,7 @@ public class HandleService {
   private DigitalSpecimenRequest getRequestFromPhysicalId(List<DigitalSpecimenRequest> requests,
       String physicalId) {
     for (var request: requests){
-      if (request.getPrimarySpecimenObjectId().equals(physicalId)){
+      if (setUniquePhysicalIdentifierId(request).equals(physicalId)){
         return request;
       }
     }
