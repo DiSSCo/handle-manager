@@ -675,7 +675,7 @@ class HandleControllerTest {
     given(service.archiveRecordBatch(archiveRequestList)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.archiveRecords(archiveRequestList);
+    var responseReceived = controller.archiveRecords(archiveRequestList, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
