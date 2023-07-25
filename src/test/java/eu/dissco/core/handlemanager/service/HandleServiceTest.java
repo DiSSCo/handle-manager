@@ -19,6 +19,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MAS;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MEDIA;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_ORGANISATION;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_SOURCE_SYSTEM;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.ROR_IDENTIFIER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genAnnotationAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
@@ -776,20 +777,20 @@ class HandleServiceTest {
         genCreateRecordRequest(existingRecordRequest, RECORD_TYPE_DS));
 
     var existingRecordAttributes = genDigitalSpecimenAttributes(existingHandle);
-    var newRecordAttriutes = genDigitalSpecimenAttributes(newHandle);
+    var newRecordAttributes = genDigitalSpecimenAttributes(newHandle);
     var expected = new JsonApiWrapperWrite(
         List.of(upsertedResponse(existingRecordAttributes,
                 new String(existingHandle, StandardCharsets.UTF_8)),
-            upsertedResponse(newRecordAttriutes, new String(newHandle)))
+            upsertedResponse(newRecordAttributes, new String(newHandle)))
     );
 
     given(handleRep.searchByPhysicalIdentifier(anyList())).willReturn(
         List.of(new HandleAttribute(PRIMARY_SPECIMEN_OBJECT_ID.index(), existingHandle,
-            PRIMARY_SPECIMEN_OBJECT_ID_TYPE.get(), existingPhysId.getBytes(StandardCharsets.UTF_8))));
+            PRIMARY_SPECIMEN_OBJECT_ID_TYPE.get(), (existingPhysId+":"+ROR_IDENTIFIER).getBytes(StandardCharsets.UTF_8))));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(
-        Stream.concat(existingRecordAttributes.stream(), newRecordAttriutes.stream()).toList());
+        Stream.concat(existingRecordAttributes.stream(), newRecordAttributes.stream()).toList());
     given(fdoRecordComponent.prepareDigitalSpecimenRecordAttributes(eq(newRecordRequest), any(),
-        any())).willReturn(newRecordAttriutes);
+        any())).willReturn(newRecordAttributes);
     given(fdoRecordComponent.prepareUpdateAttributes(any(), eq(MAPPER.valueToTree(existingRecordRequest)), any())).willReturn(
         existingRecordAttributes);
     given(hgService.genHandleList(anyInt())).willReturn(new ArrayList<>(List.of(newHandle)));
@@ -800,7 +801,7 @@ class HandleServiceTest {
     // Then
     assertThat(response).isEqualTo(expected);
     then(handleRep).should()
-        .postAndUpdateHandles(CREATED.getEpochSecond(), newRecordAttriutes,
+        .postAndUpdateHandles(CREATED.getEpochSecond(), newRecordAttributes,
             List.of(existingRecordAttributes));
   }
 
@@ -835,7 +836,7 @@ class HandleServiceTest {
 
     given(handleRep.searchByPhysicalIdentifier(anyList())).willReturn(
         List.of(new HandleAttribute(PRIMARY_SPECIMEN_OBJECT_ID.index(), handles.get(0),
-            PRIMARY_SPECIMEN_OBJECT_ID.get(), PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(
+            PRIMARY_SPECIMEN_OBJECT_ID.get(), (PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL+":"+ROR_IDENTIFIER).getBytes(
             StandardCharsets.UTF_8))));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(existingRecord);
     given(fdoRecordComponent.prepareUpdateAttributes(any(), any(), any())).willReturn(
