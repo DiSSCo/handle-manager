@@ -13,7 +13,8 @@ public record DcAttributes(
     DcSubjet subject,
     List<DcCreator> contributors,
     List<DcDate> dates,
-    List<DcAlternateIdentifier> alternateIdentifiers
+    List<DcAlternateIdentifier> alternateIdentifiers,
+    List<DcNameIdentifiers> nameIdentifiers
 ) {
   @JsonProperty("event")
   private static final String EVENT = "publish";
