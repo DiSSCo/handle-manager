@@ -57,6 +57,7 @@ public class HandleController {
   private final HandleService service;
   private final JsonSchemaValidator schemaValidator;
   private final ApplicationProperties applicationProperties;
+  private static final int LOG_LIMIT = 4;
 
   // Getters
   @Operation(summary = "Resolve single PID record")
@@ -124,7 +125,6 @@ public class HandleController {
     for (JsonNode request : requests) {
       schemaValidator.validatePostRequest(request);
     }
-    log.info("Received batch POST request for  from user {}", authentication.getName());
     return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(requests));
   }
 
@@ -162,9 +162,8 @@ public class HandleController {
     for (JsonNode request : requests) {
       schemaValidator.validatePatchRequest(request);
     }
-    var ids = requests.stream().map(r -> r.get(NODE_DATA).get(NODE_ID).asText()).toList();
-    log.info("Received batch update request for PIDS {} from user {}", ids,
-        authentication.getName());
+    var ids = requests.stream().map(r -> r.get(NODE_DATA).get(NODE_ID).asText()).limit(LOG_LIMIT).toList();
+    log.info("Received valid batch update request for {} PIDS {} ...", requests.size(), ids);
     return ResponseEntity.status(HttpStatus.OK).body(service.updateRecords(requests, true));
   }
 
@@ -186,8 +185,7 @@ public class HandleController {
       }
     }
     var ids = getPhysicalSpecimenIds(requests);
-    log.info("Received upsert request for physical specimens {} from user {}", ids,
-        authentication.getName());
+    log.info("Received valid upsert request for {} physical specimens: {}... ", requests.size(), ids);
     return ResponseEntity.ok(service.upsertDigitalSpecimens(requests));
   }
 
@@ -225,8 +223,8 @@ public class HandleController {
     }
     var handles = ids.stream().map(JsonNode::asText).toList();
 
-    log.info("Rollback request received from user {} for handles : {}", authentication.getName(),
-        handles);
+    log.info("Recieved valid rollback creation request for {} handles : {}...", handles.size(),
+        handles.stream().limit(LOG_LIMIT).toList());
     service.rollbackHandles(handles);
     return ResponseEntity.ok().build();
   }
@@ -240,24 +238,25 @@ public class HandleController {
     for (JsonNode request : requests) {
       schemaValidator.validatePatchRequest(request);
     }
-    var handles = requests.stream().map(r -> r.get(NODE_DATA).get(NODE_ID).asText()).toList();
-    log.info("Received rollback update request for handles {} from user {}", handles,
-        authentication.getName());
+    var handles = requests.stream().map(r -> r.get(NODE_DATA).get(NODE_ID).asText()).limit(LOG_LIMIT).toList();
+    log.info("Received valid rollback update request for {} handles: {}...", requests.size(), handles);
     return ResponseEntity.status(HttpStatus.OK).body(service.updateRecords(requests, false));
   }
 
   @Operation(summary = "Archive multiple PID records")
   @PutMapping(value = "")
-  public ResponseEntity<JsonApiWrapperWrite> archiveRecords(@RequestBody List<JsonNode> requests)
+  public ResponseEntity<JsonApiWrapperWrite> archiveRecords(@RequestBody List<JsonNode> requests, Authentication authentication)
       throws InvalidRequestException, PidResolutionException, PidServiceInternalError, UnprocessableEntityException {
+    log.info("Validating archive request from user {}", authentication.getName());
     for (JsonNode request : requests) {
       schemaValidator.validatePutRequest(request);
     }
+    log.info("Received valid archive request");
     return ResponseEntity.status(HttpStatus.OK).body(service.archiveRecordBatch(requests));
   }
 
   private List<String> getPhysicalSpecimenIds(List<JsonNode> requests) {
     return requests.stream().map(r -> r.get(NODE_DATA).get(NODE_ATTRIBUTES)
-        .get(PRIMARY_SPECIMEN_OBJECT_ID.get()).asText()).toList();
+        .get(PRIMARY_SPECIMEN_OBJECT_ID.get()).asText()).limit(LOG_LIMIT).toList();
   }
 }
