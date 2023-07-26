@@ -12,7 +12,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_ANNOTATION;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DOI;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS_BOTANY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MAPPING;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MAS;
@@ -24,8 +23,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TES
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genAnnotationAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenAttributes;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyAttributes;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenBotanyRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDoiRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributesAltLoc;
@@ -321,49 +318,6 @@ class HandleServiceTest {
   }
 
   @Test
-  void testCreateDigitalSpecimenBotany() throws Exception {
-    // Given
-    byte[] handle = handles.get(0);
-    var request = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(),
-        RECORD_TYPE_DS_BOTANY);
-    var responseExpected = givenRecordResponseWrite(List.of(handle), RECORD_TYPE_DS_BOTANY);
-    List<HandleAttribute> DigitalSpecimenBotany = genDigitalSpecimenBotanyAttributes(handle);
-
-    given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(handleRep.resolveHandleAttributes(anyList())).willReturn(DigitalSpecimenBotany);
-    given(handleRep.searchByNormalisedPhysicalIdentifierFullRecord(anyList())).willReturn(new ArrayList<>());
-
-    // When
-    var responseReceived = service.createRecords(List.of(request));
-
-    // Then
-    assertThat(responseReceived).isEqualTo(responseExpected);
-  }
-
-  @Test
-  void testCreateDigitalSpecimenBotanySpecimenExists() throws Exception {
-    // Given
-    byte[] handle = handles.get(0);
-    var request = genCreateRecordRequest(genDigitalSpecimenBotanyRequestObject(),
-        RECORD_TYPE_DS_BOTANY);
-    List<HandleAttribute> digitalSpecimenBotany = genDigitalSpecimenBotanyAttributes(handle);
-
-    given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(handleRep.searchByNormalisedPhysicalIdentifierFullRecord(anyList())).willReturn(
-        digitalSpecimenBotany);
-
-    // When
-    Exception e = assertThrows(PidCreationException.class, () -> {
-      service.createRecords(List.of(request));
-    });
-
-    // Then
-    assertThat(e).hasMessage(
-        "Unable to create PID records. Some requested records are already registered. Verify the following digital specimens:"
-            + List.of(new String(handle, StandardCharsets.UTF_8)));
-  }
-
-  @Test
   void testCreateMediaObjectRecord() throws Exception {
     // Given
     byte[] handle = handles.get(0);
@@ -552,33 +506,6 @@ class HandleServiceTest {
     }
 
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_ORGANISATION);
-    given(hgService.genHandleList(handles.size())).willReturn(handles);
-    given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
-
-    // When
-    var responseReceived = service.createRecords(requests);
-
-    // Then
-    assertThat(responseReceived).isEqualTo(responseExpected);
-  }
-
-  @Test
-  void testCreateDigitalSpecimenBotanyBatch() throws Exception {
-    // Given
-
-    List<HandleAttribute> flatList = new ArrayList<>();
-
-    List<JsonNode> requests = new ArrayList<>();
-    for (byte[] handle : handles) {
-      var physId = new String(handle) + "a";
-      requests.add(
-          genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(physId),
-              RECORD_TYPE_DS_BOTANY));
-      flatList.addAll(genDigitalSpecimenBotanyAttributes(handle));
-    }
-
-    var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_DS_BOTANY);
-
     given(hgService.genHandleList(handles.size())).willReturn(handles);
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
 

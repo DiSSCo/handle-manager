@@ -20,7 +20,6 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.UpsertDigitalSpecimen;
 import eu.dissco.core.handlemanager.domain.requests.objects.AnnotationRequest;
-import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
@@ -232,14 +231,6 @@ public class HandleService {
                 DigitalSpecimenRequest.class);
             handleAttributes.addAll(
                 fdoRecordComponent.prepareDigitalSpecimenRecordAttributes(requestObject,
-                    handles.remove(0), type));
-            digitalSpecimenList.add((T) requestObject);
-          }
-          case DIGITAL_SPECIMEN_BOTANY -> {
-            var requestObject = mapper.treeToValue(
-                dataNode.get(NODE_ATTRIBUTES), DigitalSpecimenBotanyRequest.class);
-            handleAttributes.addAll(
-                fdoRecordComponent.prepareDigitalSpecimenBotanyRecordAttributes(requestObject,
                     handles.remove(0), type));
             digitalSpecimenList.add((T) requestObject);
           }

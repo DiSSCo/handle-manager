@@ -64,7 +64,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.FdoProfile;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.objects.AnnotationRequest;
-import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenBotanyRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
@@ -599,12 +598,6 @@ public class FdoRecordComponent {
       }
     }
     return fdoRecord;
-  }
-
-  public List<HandleAttribute> prepareDigitalSpecimenBotanyRecordAttributes(
-      DigitalSpecimenBotanyRequest request, byte[] handle, ObjectType type)
-      throws PidServiceInternalError, UnprocessableEntityException, PidResolutionException, InvalidRequestException {
-    return prepareDigitalSpecimenRecordAttributes(request, handle, type);
   }
 
   public List<HandleAttribute> prepareUpdateAttributes(byte[] handle, JsonNode requestAttributes,

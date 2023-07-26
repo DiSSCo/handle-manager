@@ -6,7 +6,6 @@ public enum ObjectType {
   @JsonProperty("handle") HANDLE("handle"),
   @JsonProperty("doi") DOI("doi"),
   @JsonProperty("digitalSpecimen") DIGITAL_SPECIMEN("digitalSpecimen"),
-  @JsonProperty("digitalSpecimenBotany") DIGITAL_SPECIMEN_BOTANY("digitalSpecimenBotany"),
   @JsonProperty("mediaObject") MEDIA_OBJECT("mediaObject"),
   @JsonProperty("annotation") ANNOTATION("annotation"),
   @JsonProperty("sourceSystem") SOURCE_SYSTEM("sourceSystem"),
