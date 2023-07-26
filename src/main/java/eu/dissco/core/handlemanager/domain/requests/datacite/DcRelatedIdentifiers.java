@@ -1,7 +1,12 @@
 package eu.dissco.core.handlemanager.domain.requests.datacite;
 
-public record DcRelatedIdentifiers (
-    String schemeUri
+record DcRelatedIdentifiers (
+    String schemeUri,
+    String schemeType,
+    String relationType,
+    String relatedIdentifier,
+    String resourceTypeGeneral,
+    String relatedMetadataScheme
 ){
 
 }

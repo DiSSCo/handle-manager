@@ -1,6 +1,6 @@
 package eu.dissco.core.handlemanager.domain.requests.datacite;
 
-public record DcType(
+record DcType(
     String resourceType,
     String resourceTypeGeneral
 ) {
