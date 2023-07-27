@@ -7,6 +7,7 @@ import java.time.Duration;
 import java.util.concurrent.ExecutionException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -21,6 +22,7 @@ import reactor.util.retry.Retry;
 @Slf4j
 public class PidResolverComponent {
 
+  @Qualifier("pidResolver")
   private final WebClient webClient;
 
   private JsonNode resolveExternalPid(String url)

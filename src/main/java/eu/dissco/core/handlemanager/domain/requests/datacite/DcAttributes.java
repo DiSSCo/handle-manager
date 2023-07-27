@@ -9,6 +9,7 @@ import static eu.dissco.core.handlemanager.domain.requests.datacite.DcAttributes
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
+import jakarta.annotation.Nullable;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -18,30 +19,30 @@ import java.util.List;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
+import lombok.Setter;
 
-@Value
+@Getter
 @RequiredArgsConstructor
 public class DcAttributes {
 
-  String suffix;
-  List<DcCreator> creators; // IssuedForAgent
-  List<DcTitle> titles; // ReferentName
-  int publicationYear;
-  List<DcSubject> subjects; // topic origin, topic domain, topic discipline, topic category (last one to do)
-  List<DcContributor> contributors; // SpecimenHost
-  List<DcDate> dates; // IssueDate
-  List<DcAlternateIdentifier> alternateIdentifiers; // primarySpecimenObjectId
-  List<DcType> types; // needs mapping
-  List<DcRelatedIdentifiers> relatedIdentifiers; // tombstone pids; primary specimenObjectid
-  List<DcDescription> descriptions; // needs mapping (208-215)
-  String url; // What to do with multiple locations?
+  private final String suffix;
+  private final List<DcCreator> creators; // IssuedForAgent
+  private final List<DcTitle> titles; // ReferentName
+  private final int publicationYear;
+  private final List<DcSubject> subjects; // topic origin, topic domain, topic discipline, topic category (last one to do)
+  private final List<DcContributor> contributors; // SpecimenHost
+  private final List<DcDate> dates; // IssueDate
+  private final List<DcAlternateIdentifier> alternateIdentifiers; // primarySpecimenObjectId
+  private final List<DcType> types; // needs mapping
+  private final List<DcRelatedIdentifiers> relatedIdentifiers; // tombstone pids; primary specimenObjectid
+  @Nullable
+  private final List<DcDescription> descriptions; // needs mapping (208-215)
+  private final String url; // What to do with multiple locations?
+  @Setter
+  private String event;
 
   @JsonProperty("prefix")
   private static final String PREFIX = "10.20.5000.1025";
-
-  @JsonProperty("event")
-  private static final String EVENT = "publish";
 
   @JsonProperty("publisher")
   private static final String PUBLISHER = "Distributed System of Scientific Collections";
@@ -54,6 +55,7 @@ public class DcAttributes {
 
   public DcAttributes(Instant created, DigitalSpecimenRequest request, String suffix, String url) {
     var zonedDateTime = created.atZone(ZoneId.of("UTC"));
+    this.event = "register";
     this.suffix = suffix;
     this.creators = buildCreators();
     this.titles = buildTitles(request);
