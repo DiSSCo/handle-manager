@@ -1,4 +1,4 @@
-package eu.dissco.core.handlemanager.component;
+package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ACCESS_RESTRICTED;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ANNOTATION_TOPIC;
@@ -79,6 +79,7 @@ import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
+import eu.dissco.core.handlemanager.web.PidResolver;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
@@ -102,17 +103,17 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 
 @RequiredArgsConstructor
-@Component
+@Service
 @Slf4j
-public class FdoRecordComponent {
+public class FdoRecordService {
 
   private final TransformerFactory tf;
   private final DocumentBuilderFactory dbf;
-  private final PidResolverComponent pidResolver;
+  private final PidResolver pidResolver;
   private final ObjectMapper mapper;
   private final HandleRepository handleRep;
   private final ApplicationProperties appProperties;

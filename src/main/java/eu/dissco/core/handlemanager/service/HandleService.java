@@ -11,7 +11,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import eu.dissco.core.handlemanager.component.FdoRecordComponent;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiDataLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
@@ -57,7 +56,7 @@ public class HandleService {
 
   private static final String INVALID_TYPE_ERROR = "Invalid request. Reason: unrecognized type. Check: ";
   private final HandleRepository handleRep;
-  private final FdoRecordComponent fdoRecordComponent;
+  private final FdoRecordService fdoRecordService;
   private final HandleGeneratorService hf;
   private final ObjectMapper mapper;
 
@@ -218,19 +217,19 @@ public class HandleService {
             var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 HandleRecordRequest.class);
             handleAttributes.addAll(
-                fdoRecordComponent.prepareHandleRecordAttributes(requestObject, handles.remove(0), type));
+                fdoRecordService.prepareHandleRecordAttributes(requestObject, handles.remove(0), type));
           }
           case DOI -> {
             var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 DoiRecordRequest.class);
             handleAttributes.addAll(
-                fdoRecordComponent.prepareDoiRecordAttributes(requestObject, handles.remove(0), type));
+                fdoRecordService.prepareDoiRecordAttributes(requestObject, handles.remove(0), type));
           }
           case DIGITAL_SPECIMEN -> {
             var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 DigitalSpecimenRequest.class);
             handleAttributes.addAll(
-                fdoRecordComponent.prepareDigitalSpecimenRecordAttributes(requestObject,
+                fdoRecordService.prepareDigitalSpecimenRecordAttributes(requestObject,
                     handles.remove(0), type));
             digitalSpecimenList.add((T) requestObject);
           }
@@ -238,36 +237,36 @@ public class HandleService {
             var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 MediaObjectRequest.class);
             handleAttributes.addAll(
-                fdoRecordComponent.prepareMediaObjectAttributes(requestObject, handles.remove(0), type));
+                fdoRecordService.prepareMediaObjectAttributes(requestObject, handles.remove(0), type));
           }
           case ANNOTATION -> {
             var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 AnnotationRequest.class);
             handleAttributes.addAll(
-                fdoRecordComponent.prepareAnnotationAttributes(requestObject, handles.remove(0), type));
+                fdoRecordService.prepareAnnotationAttributes(requestObject, handles.remove(0), type));
           }
           case MAPPING -> {
             var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 MappingRequest.class);
             handleAttributes.addAll(
-                fdoRecordComponent.prepareMappingAttributes(requestObject, handles.remove(0), type));
+                fdoRecordService.prepareMappingAttributes(requestObject, handles.remove(0), type));
           }
           case SOURCE_SYSTEM -> {
             var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 SourceSystemRequest.class);
             handleAttributes.addAll(
-                fdoRecordComponent.prepareSourceSystemAttributes(requestObject, handles.remove(0), type));
+                fdoRecordService.prepareSourceSystemAttributes(requestObject, handles.remove(0), type));
           }
           case ORGANISATION -> {
             var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 OrganisationRequest.class);
             handleAttributes.addAll(
-                fdoRecordComponent.prepareOrganisationAttributes(requestObject, handles.remove(0), type));
+                fdoRecordService.prepareOrganisationAttributes(requestObject, handles.remove(0), type));
           }
           case MAS -> {
             var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES), MasRequest.class);
             handleAttributes.addAll(
-                fdoRecordComponent.prepareMasRecordAttributes(requestObject, handles.remove(0), type));
+                fdoRecordService.prepareMasRecordAttributes(requestObject, handles.remove(0), type));
           }
           default -> throw new InvalidRequestException(INVALID_TYPE_ERROR + type);
         }
@@ -438,7 +437,7 @@ public class HandleService {
     List<HandleAttribute> handleAttributes = new ArrayList<>();
     for (var digitalSpecimenRequest : digitalSpecimenRequests) {
       handleAttributes.addAll(
-          fdoRecordComponent.prepareDigitalSpecimenRecordAttributes(digitalSpecimenRequest,
+          fdoRecordService.prepareDigitalSpecimenRecordAttributes(digitalSpecimenRequest,
               handles.remove(0), ObjectType.DIGITAL_SPECIMEN));
     }
     return handleAttributes;
@@ -450,7 +449,7 @@ public class HandleService {
     List<List<HandleAttribute>> upsertAttributes = new ArrayList<>();
 
     for (var upsertRequest : upsertDigitalSpecimens) {
-      ArrayList<HandleAttribute> upsertAttributeSingleSpecimen = new ArrayList<>(fdoRecordComponent
+      ArrayList<HandleAttribute> upsertAttributeSingleSpecimen = new ArrayList<>(fdoRecordService
           .prepareUpdateAttributes(upsertRequest.handle().getBytes(StandardCharsets.UTF_8),
               mapper.valueToTree(upsertRequest.request()),ObjectType.DIGITAL_SPECIMEN));
       upsertAttributes.add(upsertAttributeSingleSpecimen);
@@ -474,7 +473,7 @@ public class HandleService {
       ObjectType type = ObjectType.fromString(data.get(NODE_TYPE).asText());
       recordTypes.put(new String(handle, StandardCharsets.UTF_8), type);
 
-      var attributes = fdoRecordComponent.prepareUpdateAttributes(handle, requestAttributes, type);
+      var attributes = fdoRecordService.prepareUpdateAttributes(handle, requestAttributes, type);
       attributesToUpdate.add(attributes);
     }
     checkInternalDuplicates(handles);
@@ -550,7 +549,7 @@ public class HandleService {
       var handle = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
       handles.add(handle);
       archiveAttributes.addAll(
-          fdoRecordComponent.prepareTombstoneAttributes(handle, requestAttributes));
+          fdoRecordService.prepareTombstoneAttributes(handle, requestAttributes));
     }
 
     checkInternalDuplicates(handles);

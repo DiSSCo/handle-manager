@@ -8,6 +8,7 @@ import static org.junit.Assert.assertThrows;
 
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
+import eu.dissco.core.handlemanager.web.PidResolver;
 import java.io.IOException;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -23,10 +24,10 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
 
 @ExtendWith(MockitoExtension.class)
-class PidResolverComponentTest {
+class PidResolverTest {
 
   private static MockWebServer mockServer;
-  private PidResolverComponent pidResolver;
+  private PidResolver pidResolver;
 
   @BeforeAll
   static void init() throws IOException {
@@ -40,7 +41,7 @@ class PidResolverComponentTest {
         .clientConnector(new ReactorClientHttpConnector(HttpClient.create().followRedirect(true)))
         .baseUrl(String.format("http://%s:%s", mockServer.getHostName(), mockServer.getPort()))
         .build();
-    pidResolver = new PidResolverComponent(webClient);
+    pidResolver = new PidResolver(webClient);
   }
 
   @AfterAll
