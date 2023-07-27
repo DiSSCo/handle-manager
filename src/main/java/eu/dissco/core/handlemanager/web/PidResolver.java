@@ -1,4 +1,4 @@
-package eu.dissco.core.handlemanager.component;
+package eu.dissco.core.handlemanager.web;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -19,7 +19,7 @@ import reactor.util.retry.Retry;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class PidResolverComponent {
+public class PidResolver {
 
   private final WebClient webClient;
 
