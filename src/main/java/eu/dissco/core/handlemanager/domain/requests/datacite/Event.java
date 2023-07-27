@@ -1,6 +1,6 @@
 package eu.dissco.core.handlemanager.domain.requests.datacite;
 
-enum Event {
+public enum Event {
   PUBLISH ("publish"),
   REGISTER("register"),
   HIDE("hide");

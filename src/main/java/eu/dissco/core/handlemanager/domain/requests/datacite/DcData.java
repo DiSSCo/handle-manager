@@ -1,8 +1,8 @@
 package eu.dissco.core.handlemanager.domain.requests.datacite;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
-import java.time.Instant;
+import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
+import java.util.List;
 import lombok.Getter;
 
 @Getter
@@ -12,12 +12,8 @@ class DcData {
 
   private final DcAttributes attributes;
 
-  protected DcData(Instant created, DigitalSpecimenRequest request, String suffix, String url){
-    this.attributes = new DcAttributes(created, request, suffix, url);
-  }
-
-  protected void setEvent(Event event){
-    attributes.setEvent(event);
+  protected DcData(List<HandleAttribute> pidRecord){
+    this.attributes = new DcAttributes(pidRecord);
   }
 
 }

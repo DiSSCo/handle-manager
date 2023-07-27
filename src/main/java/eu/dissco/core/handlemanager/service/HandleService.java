@@ -5,6 +5,7 @@ import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_TYPE;
+import static eu.dissco.core.handlemanager.service.ServiceUtils.mapResolvedRecords;
 import static eu.dissco.core.handlemanager.service.ServiceUtils.setUniquePhysicalIdentifierId;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -85,7 +86,7 @@ public class HandleService {
   private List<JsonNode> resolveAndFormatRecords(List<byte[]> handles)
       throws PidResolutionException {
     var dbRecord = handleRep.resolveHandleAttributes(handles);
-    var handleMap = mapRecords(dbRecord);
+    var handleMap = mapResolvedRecords(dbRecord);
     Set<String> resolvedHandles = new HashSet<>();
 
     List<JsonNode> rootNodeList = new ArrayList<>();
@@ -121,23 +122,6 @@ public class HandleService {
 
   private String getPidName(String pidLink) {
     return pidLink.substring(pidLink.length() - 24);
-  }
-
-  private HashMap<String, List<HandleAttribute>> mapRecords(List<HandleAttribute> flatList) {
-
-    HashMap<String, List<HandleAttribute>> handleMap = new HashMap<>();
-
-    for (HandleAttribute row : flatList) {
-      String handle = new String(row.handle(), StandardCharsets.UTF_8);
-      if (handleMap.containsKey(handle)) {
-        List<HandleAttribute> tmpList = new ArrayList<>(handleMap.get(handle));
-        tmpList.add(row);
-        handleMap.replace(handle, tmpList);
-      } else {
-        handleMap.put(handle, List.of(row));
-      }
-    }
-    return handleMap;
   }
 
   private JsonApiDataLinks wrapData(JsonNode recordAttributes, String recordType) {

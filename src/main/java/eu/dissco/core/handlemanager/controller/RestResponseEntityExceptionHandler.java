@@ -1,5 +1,6 @@
 package eu.dissco.core.handlemanager.controller;
 
+import eu.dissco.core.handlemanager.exceptions.DataCiteException;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -63,6 +64,15 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
     var exceptionResponse = new ExceptionResponse(String.valueOf(HttpStatus.UNPROCESSABLE_ENTITY),
         "Unprocessable Entity Exception", e.getMessage());
     return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(exceptionResponse);
+  }
+
+  @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+  @ExceptionHandler(DataCiteException.class)
+  public ResponseEntity<ExceptionResponse> dataCiteException(DataCiteException e){
+    var exceptionResponse = new ExceptionResponse(String.valueOf(HttpStatus.UNPROCESSABLE_ENTITY),
+        "DataCite Exception", e.getMessage());
+    return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(exceptionResponse);
+
   }
 
 }

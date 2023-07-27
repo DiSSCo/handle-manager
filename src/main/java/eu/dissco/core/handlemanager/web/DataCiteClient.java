@@ -20,14 +20,14 @@ import reactor.util.retry.Retry;
 @RequiredArgsConstructor
 @Component
 @Slf4j
-public class DataCiteComponent {
+public class DataCiteClient {
 
-  @Qualifier("datacite")
-  WebClient webClient;
+  @Qualifier("dataCite")
+  private final WebClient webClient;
 
-  DataCiteProperties properties;
+  private final DataCiteProperties properties;
 
-  public void sendDoiRequest(DcRequest requestBody) throws DataCiteException {
+  public void sendDoiRequest(JsonNode requestBody) throws DataCiteException {
 
     var response = webClient.method(HttpMethod.POST)
         .body(BodyInserters.fromValue(requestBody))

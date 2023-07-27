@@ -1,7 +1,7 @@
 package eu.dissco.core.handlemanager.domain.requests.datacite;
 
-import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
-import java.time.Instant;
+import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
+import java.util.List;
 import lombok.Getter;
 
 @Getter
@@ -9,12 +9,8 @@ public class DcRequest {
 
   private final DcData data;
 
-  public DcRequest(Instant created, DigitalSpecimenRequest request, String suffix, String url){
-    this.data = new DcData(created, request, suffix, url);
-  }
-
-  public void setEvent(Event event){
-    data.setEvent(event);
+  public DcRequest(List<HandleAttribute> pidRecord){
+    this.data = new DcData(pidRecord);
   }
 
 }

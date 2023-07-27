@@ -22,7 +22,7 @@ import reactor.util.retry.Retry;
 @Slf4j
 public class PidResolver {
 
-  @Qualifier("pidResolver")
+  @Qualifier("pidResolverClient")
   private final WebClient webClient;
 
   private JsonNode resolveExternalPid(String url)
