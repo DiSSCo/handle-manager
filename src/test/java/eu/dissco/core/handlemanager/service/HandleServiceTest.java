@@ -62,7 +62,6 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mockStatic;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import eu.dissco.core.handlemanager.component.FdoRecordComponent;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiDataLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
@@ -95,7 +94,7 @@ class HandleServiceTest {
   @Mock
   private HandleRepository handleRep;
   @Mock
-  private FdoRecordComponent fdoRecordComponent;
+  private FdoRecordService fdoRecordService;
   @Mock
   private HandleGeneratorService hgService;
   private HandleService service;
@@ -105,7 +104,7 @@ class HandleServiceTest {
 
   @BeforeEach
   void setup() {
-    service = new HandleService(handleRep, fdoRecordComponent, hgService, MAPPER);
+    service = new HandleService(handleRep, fdoRecordService, hgService, MAPPER);
     initTime();
     initHandleList();
   }
@@ -243,7 +242,7 @@ class HandleServiceTest {
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(handleRecord);
-    given(fdoRecordComponent.prepareHandleRecordAttributes(any(), any(),
+    given(fdoRecordService.prepareHandleRecordAttributes(any(), any(),
         eq(ObjectType.HANDLE))).willReturn(handleRecord);
 
     // When
@@ -263,7 +262,7 @@ class HandleServiceTest {
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(doiRecord);
-    given(fdoRecordComponent.prepareDoiRecordAttributes(any(), any(), eq(ObjectType.DOI))).willReturn(
+    given(fdoRecordService.prepareDoiRecordAttributes(any(), any(), eq(ObjectType.DOI))).willReturn(
         doiRecord);
 
     // When
@@ -285,7 +284,7 @@ class HandleServiceTest {
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(digitalSpecimen);
     given(handleRep.searchByNormalisedPhysicalIdentifierFullRecord(anyList())).willReturn(new ArrayList<>());
-    given(fdoRecordComponent.prepareDigitalSpecimenRecordAttributes(any(), any(), any())).willReturn(
+    given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(any(), any(), any())).willReturn(
         digitalSpecimen);
 
     // When
@@ -346,7 +345,7 @@ class HandleServiceTest {
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(handleRecord);
-    given(fdoRecordComponent.prepareMasRecordAttributes(any(), any(), eq(ObjectType.MAS))).willReturn(handleRecord);
+    given(fdoRecordService.prepareMasRecordAttributes(any(), any(), eq(ObjectType.MAS))).willReturn(handleRecord);
 
     // When
     var responseReceived = service.createRecords(List.of(request));
@@ -622,7 +621,7 @@ class HandleServiceTest {
 
     given(handleRep.checkHandlesWritable(anyList())).willReturn(handles);
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(tombstoneAttributesFull);
-    given(fdoRecordComponent.prepareTombstoneAttributes(any(), any())).willReturn(
+    given(fdoRecordService.prepareTombstoneAttributes(any(), any())).willReturn(
         tombstoneAttributes);
 
     // When
@@ -657,7 +656,7 @@ class HandleServiceTest {
 
     given(handleRep.checkHandlesWritable(anyList())).willReturn(handles);
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(tombstoneAttributesResolved);
-    given(fdoRecordComponent.prepareTombstoneAttributes(any(), any())).willReturn(
+    given(fdoRecordService.prepareTombstoneAttributes(any(), any())).willReturn(
         tombstoneAttributes.get(0), tombstoneAttributes.get(1));
 
     // When
@@ -716,9 +715,9 @@ class HandleServiceTest {
             PRIMARY_SPECIMEN_OBJECT_ID_TYPE.get(), (existingPhysId+":"+ROR_IDENTIFIER).getBytes(StandardCharsets.UTF_8))));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(
         Stream.concat(existingRecordAttributes.stream(), newRecordAttributes.stream()).toList());
-    given(fdoRecordComponent.prepareDigitalSpecimenRecordAttributes(eq(newRecordRequest), any(),
+    given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(eq(newRecordRequest), any(),
         any())).willReturn(newRecordAttributes);
-    given(fdoRecordComponent.prepareUpdateAttributes(any(), eq(MAPPER.valueToTree(existingRecordRequest)), any())).willReturn(
+    given(fdoRecordService.prepareUpdateAttributes(any(), eq(MAPPER.valueToTree(existingRecordRequest)), any())).willReturn(
         existingRecordAttributes);
     given(hgService.genHandleList(anyInt())).willReturn(new ArrayList<>(List.of(newHandle)));
 
@@ -766,7 +765,7 @@ class HandleServiceTest {
             PRIMARY_SPECIMEN_OBJECT_ID.get(), (PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL+":"+ROR_IDENTIFIER).getBytes(
             StandardCharsets.UTF_8))));
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(existingRecord);
-    given(fdoRecordComponent.prepareUpdateAttributes(any(), any(), any())).willReturn(
+    given(fdoRecordService.prepareUpdateAttributes(any(), any(), any())).willReturn(
         existingRecord);
     given(hgService.genHandleList(0)).willReturn(new ArrayList<>());
 
@@ -792,7 +791,7 @@ class HandleServiceTest {
 
     given(handleRep.searchByNormalisedPhysicalIdentifier(anyList())).willReturn(new ArrayList<>());
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(newRecord);
-    given(fdoRecordComponent.prepareDigitalSpecimenRecordAttributes(any(), any(), any())).willReturn(
+    given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(any(), any(), any())).willReturn(
         newRecord);
     given(hgService.genHandleList(anyInt())).willReturn(List.of(handles.get(0)));
 

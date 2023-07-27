@@ -55,6 +55,8 @@ import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
+import eu.dissco.core.handlemanager.service.FdoRecordService;
+import eu.dissco.core.handlemanager.web.PidResolver;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -70,7 +72,7 @@ import org.mockito.quality.Strictness;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-class FdoRecordComponentTest {
+class FdoRecordServiceTest {
 
   private static final Set<String> HANDLE_FIELDS = Set.of(FDO_PROFILE.get(), FDO_RECORD_LICENSE.get(),
       DIGITAL_OBJECT_TYPE.get(), DIGITAL_OBJECT_NAME.get(), PID.get(), PID_ISSUER.get(), PID_ISSUER_NAME.get(), ISSUED_FOR_AGENT.get(),
@@ -91,9 +93,9 @@ class FdoRecordComponentTest {
       ANNOTATION_TOPIC.get(), REPLACE_OR_APPEND.get(), ACCESS_RESTRICTED.get(), LINKED_OBJECT_URL.get(), LINKED_OBJECT_IS_PID.get());
 
   private final byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-  private FdoRecordComponent fdoRecordComponent;
+  private FdoRecordService fdoRecordService;
   @Mock
-  private PidResolverComponent pidResolver;
+  private PidResolver pidResolver;
   @Mock
   private HandleRepository handleRepository;
   @Mock
@@ -107,7 +109,7 @@ class FdoRecordComponentTest {
 
   @BeforeEach
   void init() {
-    fdoRecordComponent = new FdoRecordComponent(TRANSFORMER_FACTORY, DOC_BUILDER_FACTORY, pidResolver,
+    fdoRecordService = new FdoRecordService(TRANSFORMER_FACTORY, DOC_BUILDER_FACTORY, pidResolver,
         MAPPER, handleRepository, appProperties);
     given(appProperties.getApiUrl()).willReturn(API_URL);
     given(appProperties.getOrchestrationUrl()).willReturn(ORCHESTRATION_URL);
@@ -121,7 +123,7 @@ class FdoRecordComponentTest {
     var request = givenHandleRecordRequestObject();
 
     // When
-    var result = fdoRecordComponent.prepareHandleRecordAttributes(request, handle, ObjectType.HANDLE);
+    var result = fdoRecordService.prepareHandleRecordAttributes(request, handle, ObjectType.HANDLE);
 
     // Then
     assertThat(result).hasSize(HANDLE_QTY);
@@ -136,7 +138,7 @@ class FdoRecordComponentTest {
     var request = givenDoiRecordRequestObject();
 
     // When
-    var result = fdoRecordComponent.prepareDoiRecordAttributes(request, handle, ObjectType.HANDLE);
+    var result = fdoRecordService.prepareDoiRecordAttributes(request, handle, ObjectType.HANDLE);
 
     // Then
     assertThat(result).hasSize(DOI_QTY);
@@ -153,7 +155,7 @@ class FdoRecordComponentTest {
     var request = givenMediaRequestObject();
 
     // When
-    var result = fdoRecordComponent.prepareMediaObjectAttributes(request, handle, ObjectType.MEDIA_OBJECT);
+    var result = fdoRecordService.prepareMediaObjectAttributes(request, handle, ObjectType.MEDIA_OBJECT);
 
     // Then
     assertThat(result).hasSize(MEDIA_QTY);
@@ -168,7 +170,7 @@ class FdoRecordComponentTest {
     var request = givenDigitalSpecimenRequestObjectNullOptionals();
 
     // When
-    var result = fdoRecordComponent.prepareDigitalSpecimenRecordAttributes(request, handle, ObjectType.DIGITAL_SPECIMEN);
+    var result = fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle, ObjectType.DIGITAL_SPECIMEN);
 
     // Then
     assertThat(result).hasSize(DS_MANDATORY_QTY);
@@ -186,7 +188,7 @@ class FdoRecordComponentTest {
     var request = givenDigitalSpecimenRequestObjectOptionalsInit();
 
     // When
-    var result = fdoRecordComponent.prepareDigitalSpecimenRecordAttributes(request, handle, ObjectType.DIGITAL_SPECIMEN);
+    var result = fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle, ObjectType.DIGITAL_SPECIMEN);
 
     // Then
     assertThat(result).hasSize(DS_OPTIONAL_QTY);
@@ -206,7 +208,7 @@ class FdoRecordComponentTest {
     var request = givenAnnotationRequestObject();
 
     // When
-    var result = fdoRecordComponent.prepareAnnotationAttributes(request, handle, ObjectType.ANNOTATION);
+    var result = fdoRecordService.prepareAnnotationAttributes(request, handle, ObjectType.ANNOTATION);
 
     // Then
     assertThat(result).hasSize(ANNOTATION_QTY);
@@ -223,7 +225,7 @@ class FdoRecordComponentTest {
     var request = givenMasRecordRequestObject();
 
     // When
-    var result = fdoRecordComponent.prepareMasRecordAttributes(request, handle, ObjectType.MAS);
+    var result = fdoRecordService.prepareMasRecordAttributes(request, handle, ObjectType.MAS);
 
     // Then
     assertThat(result).hasSize(HANDLE_QTY+1);
@@ -241,7 +243,7 @@ class FdoRecordComponentTest {
     var request = givenAnnotationRequestObject();
 
     // Then
-    assertThrows(PidResolutionException.class, () -> fdoRecordComponent.prepareAnnotationAttributes(request, handle, ObjectType.ANNOTATION));
+    assertThrows(PidResolutionException.class, () -> fdoRecordService.prepareAnnotationAttributes(request, handle, ObjectType.ANNOTATION));
   }
 
   @Test
@@ -251,7 +253,7 @@ class FdoRecordComponentTest {
     var request = givenMappingRequestObject();
 
     // When
-    var result = fdoRecordComponent.prepareMappingAttributes(request, handle, ObjectType.MAPPING);
+    var result = fdoRecordService.prepareMappingAttributes(request, handle, ObjectType.MAPPING);
 
     // Then
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
@@ -268,7 +270,7 @@ class FdoRecordComponentTest {
     var request = givenSourceSystemRequestObject();
 
     // When
-    var result = fdoRecordComponent.prepareSourceSystemAttributes(request, handle, ObjectType.SOURCE_SYSTEM);
+    var result = fdoRecordService.prepareSourceSystemAttributes(request, handle, ObjectType.SOURCE_SYSTEM);
 
     // Then
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
@@ -284,7 +286,7 @@ class FdoRecordComponentTest {
     var request = givenOrganisationRequestObject();
 
     // When
-    var result = fdoRecordComponent.prepareOrganisationAttributes(request, handle, ObjectType.ORGANISATION);
+    var result = fdoRecordService.prepareOrganisationAttributes(request, handle, ObjectType.ORGANISATION);
 
     // Then
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
@@ -308,7 +310,7 @@ class FdoRecordComponentTest {
     );
 
     // When
-    var result = fdoRecordComponent.prepareHandleRecordAttributes(request, handle, ObjectType.HANDLE);
+    var result = fdoRecordService.prepareHandleRecordAttributes(request, handle, ObjectType.HANDLE);
 
     // Then
     assertThat(result).hasSize(HANDLE_QTY);
@@ -331,7 +333,7 @@ class FdoRecordComponentTest {
 
     // Then
     var e = assertThrows(InvalidRequestException.class,
-        () -> fdoRecordComponent.prepareHandleRecordAttributes(request, handle, ObjectType.HANDLE));
+        () -> fdoRecordService.prepareHandleRecordAttributes(request, handle, ObjectType.HANDLE));
     assertThat(e.getMessage()).contains(ROR_DOMAIN).contains(HANDLE_DOMAIN);
   }
 
@@ -349,7 +351,7 @@ class FdoRecordComponentTest {
     );
 
     var e = assertThrows(InvalidRequestException.class,
-        () -> fdoRecordComponent.prepareHandleRecordAttributes(request, handle, ObjectType.HANDLE));
+        () -> fdoRecordService.prepareHandleRecordAttributes(request, handle, ObjectType.HANDLE));
     assertThat(e.getMessage()).contains(ROR_DOMAIN);
   }
 
@@ -371,7 +373,7 @@ class FdoRecordComponentTest {
         null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 
     // When
-    var result = fdoRecordComponent.prepareDigitalSpecimenRecordAttributes(request, handle, ObjectType.DIGITAL_SPECIMEN);
+    var result = fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle, ObjectType.DIGITAL_SPECIMEN);
 
     // Then
     assertThat(result).hasSize(DS_MANDATORY_QTY);
@@ -398,7 +400,7 @@ class FdoRecordComponentTest {
         null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 
     // When
-    var result = fdoRecordComponent.prepareDigitalSpecimenRecordAttributes(request, handle, ObjectType.DIGITAL_SPECIMEN);
+    var result = fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle, ObjectType.DIGITAL_SPECIMEN);
 
     // Then
     assertThat(result).hasSize(DS_MANDATORY_QTY - 1);
@@ -418,7 +420,7 @@ class FdoRecordComponentTest {
     );
 
     var e = assertThrows(InvalidRequestException.class,
-        () -> fdoRecordComponent.prepareHandleRecordAttributes(request, handle, ObjectType.HANDLE));
+        () -> fdoRecordService.prepareHandleRecordAttributes(request, handle, ObjectType.HANDLE));
     assertThat(e.getMessage()).contains(HANDLE_DOMAIN);
   }
 
@@ -438,7 +440,7 @@ class FdoRecordComponentTest {
             SPECIMEN_HOST_NAME_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     // When
-    var response = fdoRecordComponent.prepareUpdateAttributes(HANDLE.getBytes(), request, ObjectType.DIGITAL_SPECIMEN);
+    var response = fdoRecordService.prepareUpdateAttributes(HANDLE.getBytes(), request, ObjectType.DIGITAL_SPECIMEN);
 
     // Then
     assertThat(response).isEqualTo(expected);
@@ -458,7 +460,7 @@ class FdoRecordComponentTest {
             SPECIMEN_HOST_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     // When
-    var response = fdoRecordComponent.prepareUpdateAttributes(HANDLE.getBytes(), request, ObjectType.DIGITAL_SPECIMEN);
+    var response = fdoRecordService.prepareUpdateAttributes(HANDLE.getBytes(), request, ObjectType.DIGITAL_SPECIMEN);
 
     // Then
     assertThat(response).isEqualTo(expected);
@@ -473,7 +475,7 @@ class FdoRecordComponentTest {
     var expected = genUpdateRecordAttributesAltLoc(HANDLE.getBytes(StandardCharsets.UTF_8));
 
     // When
-    var response = fdoRecordComponent.prepareUpdateAttributes(HANDLE.getBytes(StandardCharsets.UTF_8),
+    var response = fdoRecordService.prepareUpdateAttributes(HANDLE.getBytes(StandardCharsets.UTF_8),
         updateRequest, ObjectType.HANDLE);
 
     // Then
@@ -492,7 +494,7 @@ class FdoRecordComponentTest {
             StandardCharsets.UTF_8)));
 
     // When
-    var response = fdoRecordComponent.prepareUpdateAttributes(HANDLE.getBytes(StandardCharsets.UTF_8),
+    var response = fdoRecordService.prepareUpdateAttributes(HANDLE.getBytes(StandardCharsets.UTF_8),
         updateRequest, ObjectType.DIGITAL_SPECIMEN);
 
     // Then
@@ -506,7 +508,7 @@ class FdoRecordComponentTest {
     var expected = genTombstoneRecordRequestAttributes(HANDLE.getBytes(StandardCharsets.UTF_8));
 
     // When
-    var response = fdoRecordComponent.prepareTombstoneAttributes(HANDLE.getBytes(), genTombstoneRequest());
+    var response = fdoRecordService.prepareTombstoneAttributes(HANDLE.getBytes(), genTombstoneRequest());
 
     // Then
     assertThat(response).isEqualTo(expected);
