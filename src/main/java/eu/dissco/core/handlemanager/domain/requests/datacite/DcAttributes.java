@@ -23,7 +23,7 @@ import lombok.Setter;
 
 @Getter
 @RequiredArgsConstructor
-public class DcAttributes {
+class DcAttributes {
 
   private final String suffix;
   private final List<DcCreator> creators; // IssuedForAgent
@@ -38,7 +38,6 @@ public class DcAttributes {
   @Nullable
   private final List<DcDescription> descriptions; // needs mapping (208-215)
   private final String url; // What to do with multiple locations?
-  @Setter
   private String event;
 
   @JsonProperty("prefix")
@@ -77,6 +76,10 @@ public class DcAttributes {
                 "https://ror.org/0566bfb96",
                 "ROR"
             ))));
+  }
+
+  protected void setEvent(Event event){
+    this.event = event.toString();
   }
 
   private static List<DcTitle> buildTitles(DigitalSpecimenRequest request) {

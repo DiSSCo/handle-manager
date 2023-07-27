@@ -16,4 +16,7 @@ public class DataCiteProperties {
   @NotBlank
   private String password;
 
+  @NotBlank
+  private String endpoint;
+
 }

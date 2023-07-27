@@ -13,4 +13,8 @@ public class DcRequest {
     this.data = new DcData(created, request, suffix, url);
   }
 
+  public void setEvent(Event event){
+    data.setEvent(event);
+  }
+
 }

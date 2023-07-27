@@ -6,14 +6,18 @@ import java.time.Instant;
 import lombok.Getter;
 
 @Getter
-public class DcData {
+class DcData {
   @JsonProperty("type")
   private static final String TYPE = "dois";
 
   private final DcAttributes attributes;
 
-  public DcData(Instant created, DigitalSpecimenRequest request, String suffix, String url){
+  protected DcData(Instant created, DigitalSpecimenRequest request, String suffix, String url){
     this.attributes = new DcAttributes(created, request, suffix, url);
+  }
+
+  protected void setEvent(Event event){
+    attributes.setEvent(event);
   }
 
 }
