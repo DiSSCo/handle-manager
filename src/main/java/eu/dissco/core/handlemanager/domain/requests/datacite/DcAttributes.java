@@ -17,10 +17,12 @@ import static eu.dissco.core.handlemanager.domain.requests.datacite.DcAttributes
 import static eu.dissco.core.handlemanager.domain.requests.datacite.DcAttributes.UriScheme.ROR;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import eu.dissco.core.handlemanager.domain.FdoProfile;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.exceptions.DataCiteException;
+import eu.dissco.core.handlemanager.utils.XmlLocReader;
 import jakarta.annotation.Nullable;
 import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
@@ -29,17 +31,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-@RequiredArgsConstructor
 @Slf4j
 @Getter
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonInclude(Include.NON_NULL)
 class DcAttributes {
 
   private final String suffix;
@@ -60,24 +58,21 @@ class DcAttributes {
   private final String publisher = "Distributed System of Scientific Collections";
   private final String schemaVersion = "http://datacite.org/schema/kernel-4.4";
   private final String event = "publish";
-
-
+  @Getter(AccessLevel.NONE)
+  private final List<String> xmlLocations;
+  @Getter(AccessLevel.NONE)
+  private final XmlLocReader xmlLocReader;
   @Getter(AccessLevel.NONE)
   private final List<HandleAttribute> pidRecord;
-
   @Getter(AccessLevel.NONE)
   private final String handle;
-
   @Getter(AccessLevel.NONE)
   private static final String MISSING_MANDATORY_VALUE_MSG = "Unable to create DOI. Missing mandatory DataCite attribute %s in existing Handle Profile for handle %s";
-
-  @Getter(AccessLevel.NONE)
-  Pattern regexPattern = Pattern.compile("\"[^\"]*\"");
-
   @Getter(AccessLevel.NONE)
   private static final DateTimeFormatter dt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
   public DcAttributes(List<HandleAttribute> pidRecord) {
+    this.xmlLocReader = new XmlLocReader();
     this.pidRecord = pidRecord;
     this.handle = new String(pidRecord.get(0).handle(), StandardCharsets.UTF_8);
     this.suffix = handle.replace("20.5000.1025/", "");
@@ -88,11 +83,12 @@ class DcAttributes {
     this.subjects = setSubjects();
     this.dates = setDates();
     this.contributors = setContributors();
+    this.xmlLocations = setXmlLocations();
     this.alternateIdentifiers = setAltIds();
     this.types = setType();
-    this.relatedIdentifiers = null;
+    this.relatedIdentifiers = setRelatedIdentifiers();
     this.descriptions = setDescription();
-    this.url = getFirstLocation();
+    this.url = xmlLocations.get(0);
   }
 
   private static List<DcCreator> setCreators() {
@@ -153,6 +149,14 @@ class DcAttributes {
         new DcNameIdentifiers(uri.getUri(), specimenHost.get(), uri.getSchemeName()))));
   }
 
+  private List<String> setXmlLocations(){
+    var loc = getPidData(LOC);
+    if (loc.isEmpty()) {
+      throw new DataCiteException(String.format(MISSING_MANDATORY_VALUE_MSG, LOC.get(), handle));
+    }
+    return xmlLocReader.getLocationsFromXml(loc.get());
+  }
+
   private static UriScheme getIdentifierScheme(String identifier) {
     if (identifier.contains("ror")) {
       return ROR;
@@ -189,16 +193,14 @@ class DcAttributes {
         new DcDescription(MATERIAL_SAMPLE_TYPE.get() + ": " + s))).orElse(Collections.emptyList());
   }
 
-  private String getFirstLocation() {
-    var loc = getPidData(LOC);
-    if (loc.isEmpty()) {
-      throw new DataCiteException(String.format(MISSING_MANDATORY_VALUE_MSG, LOC.get(), handle));
+  private List<DcRelatedIdentifiers> setRelatedIdentifiers() {
+    List<DcRelatedIdentifiers> relatedIdentifiersList = new ArrayList<>();
+    var locs = new ArrayList<>(xmlLocations);
+    locs.remove(0);
+    for (var location : locs){
+      relatedIdentifiersList.add(new DcRelatedIdentifiers("IsVariantFormOf", location, "URL", "Dataset"));
     }
-    Matcher matcher = regexPattern.matcher(loc.get());
-    if (matcher.find()) {
-      return matcher.group().replace("\"", "");
-    }
-    throw new DataCiteException(String.format(MISSING_MANDATORY_VALUE_MSG, "Location url", handle));
+    return relatedIdentifiersList;
   }
 
   protected enum UriScheme {

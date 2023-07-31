@@ -20,12 +20,15 @@ import org.springframework.web.bind.annotation.RestController;
 @ControllerAdvice
 @Slf4j
 public class DataCiteController {
+
   private final DataCiteService dataCiteService;
 
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-  public ResponseEntity<List<JsonNode>> registerDoi(@RequestBody List<String> handles){
+  public ResponseEntity<List<JsonNode>> registerDoi(@RequestBody List<String> handles) {
     return ResponseEntity.status(HttpStatus.OK).body(dataCiteService.registerDoi(handles));
   }
+
+
 
 
 }

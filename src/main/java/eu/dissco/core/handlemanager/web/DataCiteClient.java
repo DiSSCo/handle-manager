@@ -38,13 +38,12 @@ public class DataCiteClient {
 
     try {
       return response.toFuture().get();
-    } catch (InterruptedException e ) {
+    } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      throw new DataCiteException("An Interrupted Exception has occurred in communicating with the DataCite API.");
-    } catch (ExecutionException e){
+      throw new DataCiteException(
+          "An Interrupted Exception has occurred in communicating with the DataCite API.");
+    } catch (ExecutionException e) {
       throw new DataCiteException(e.getCause().getMessage());
     }
   }
-
-
 }
