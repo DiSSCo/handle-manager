@@ -37,7 +37,7 @@ public class PidResolver {
                 new UnprocessableEntityException("a fatal client-side error has occurred")))
         .bodyToMono(JsonNode.class)
         .retryWhen(Retry.fixedDelay(3, Duration.ofSeconds(2))
-            .filter(this::is5xxServerError)
+              .filter(WebClientUtils::is5xxServerError)
             .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) ->
                 new UnprocessableEntityException(
                     "External Service failed to process after max retries")
@@ -54,12 +54,6 @@ public class PidResolver {
       throw new UnprocessableEntityException(e.getMessage());
     }
   }
-
-  public boolean is5xxServerError(Throwable throwable) {
-    return throwable instanceof WebClientResponseException webClientResponseException
-        && webClientResponseException.getStatusCode().is5xxServerError();
-  }
-
 
   @Cacheable("pidName")
   public String getObjectName(String pid)

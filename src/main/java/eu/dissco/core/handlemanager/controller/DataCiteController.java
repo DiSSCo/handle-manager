@@ -1,9 +1,11 @@
 package eu.dissco.core.handlemanager.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.service.DataCiteService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -21,9 +23,8 @@ public class DataCiteController {
   private final DataCiteService dataCiteService;
 
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-  public ResponseEntity<Void> registerDoi(@RequestBody List<String> handles){
-    dataCiteService.registerDoi(handles);
-    return ResponseEntity.ok().build();
+  public ResponseEntity<List<JsonNode>> registerDoi(@RequestBody List<String> handles){
+    return ResponseEntity.status(HttpStatus.OK).body(dataCiteService.registerDoi(handles));
   }
 
 

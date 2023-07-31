@@ -8,7 +8,7 @@ import org.springframework.validation.annotation.Validated;
 @Data
 @Validated
 @ConfigurationProperties("datacite")
-public class DataCiteProperties {
+public class DataCiteConnectionProperties {
 
   @NotBlank
   private String repositoryId;

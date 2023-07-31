@@ -2,6 +2,7 @@ package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.service.ServiceUtils.mapResolvedRecords;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.domain.requests.datacite.DcRequest;
 import eu.dissco.core.handlemanager.exceptions.DataCiteException;
@@ -22,13 +23,14 @@ public class DataCiteService {
   private final HandleRepository handleRep;
   private final ObjectMapper mapper;
 
-  public void registerDoi(List<String> handles)
+  public List<JsonNode> registerDoi(List<String> handles)
       throws DataCiteException {
 
     var handleBytes = handles.stream().map(h -> h.getBytes(StandardCharsets.UTF_8)).toList();
     log.info("Retrieving handle records from database");
     var resolvedRecordsFlatList = handleRep.resolveHandleAttributes(handleBytes);
     var pidMap = mapResolvedRecords(resolvedRecordsFlatList);
+    List<JsonNode> response = new ArrayList<>();
     List<DcRequest> dcRequests = new ArrayList<>();
     for (var handleRecord : pidMap.entrySet()){
       dcRequests.add(new DcRequest(handleRecord.getValue()));
@@ -38,10 +40,12 @@ public class DataCiteService {
       var requestBody = mapper.valueToTree(dcRequest);
       log.info(requestBody.toPrettyString());
 
-      dataCiteClient.sendDoiRequest(requestBody);
+      response.add(dataCiteClient.sendDoiRequest(requestBody));
     }
     log.info("Successfully inserted DOIs to DataCite");
+    return response;
   }
+
 
 
 }

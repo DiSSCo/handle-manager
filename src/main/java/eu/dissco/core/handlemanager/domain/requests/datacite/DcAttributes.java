@@ -1,7 +1,7 @@
 package eu.dissco.core.handlemanager.domain.requests.datacite;
 
+import static eu.dissco.core.handlemanager.domain.FdoProfile.DIGITAL_OBJECT_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DIGITAL_OBJECT_TYPE;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.FDO_PROFILE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.LOC;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MATERIAL_SAMPLE_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_RECORD_ISSUE_DATE;
@@ -17,15 +17,11 @@ import static eu.dissco.core.handlemanager.domain.requests.datacite.DcAttributes
 import static eu.dissco.core.handlemanager.domain.requests.datacite.DcAttributes.UriScheme.ROR;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import eu.dissco.core.handlemanager.domain.FdoProfile;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.exceptions.DataCiteException;
 import jakarta.annotation.Nullable;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -37,40 +33,41 @@ import java.util.regex.Pattern;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-@Getter
 @RequiredArgsConstructor
 @Slf4j
+@Getter
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 class DcAttributes {
-
   private final String suffix;
+  private final String doi;
+  
   private final List<DcCreator> creators; // IssuedForAgent
+  
   private final List<DcTitle> titles; // ReferentName
+  
   private final int publicationYear;
+  
   private final List<DcSubject> subjects; // topic origin, topic domain, topic discipline, topic category (last one to do)
+  
   private final List<DcContributor> contributors; // SpecimenHost
+  
   private final List<DcDate> dates; // IssueDate
+  
   private final List<DcAlternateIdentifier> alternateIdentifiers; // primarySpecimenObjectId
-  private final List<DcType> types; // needs mapping
+  
+  private final DcType types;
+  
   private final List<DcRelatedIdentifiers> relatedIdentifiers; // tombstone pids; primary specimenObjectid
   @Nullable
-  private final List<DcDescription> descriptions; // needs mapping (208-215)
+  private final List<DcDescription> descriptions;
   private final String url; // What to do with multiple locations?
+  
+  private final String prefix = "10.82621";
+  private final String publisher = "Distributed System of Scientific Collections";
+  private final String schemaVersion = "http://datacite.org/schema/kernel-4.4";
 
-  @JsonProperty("event")
-  private static final String EVENT = "publish";
-
-  @JsonProperty("prefix")
-  private static final String PREFIX = "10.22";
-
-  @JsonProperty("publisher")
-  private static final String PUBLISHER = "Distributed System of Scientific Collections";
-
-  @JsonProperty("schemaVersion")
-  private static final String SCHEMA_VERSION = "http://datacite.org/schema/kernel-4.4";
 
   @Getter(AccessLevel.NONE)
   private final List<HandleAttribute> pidRecord;
@@ -84,7 +81,6 @@ class DcAttributes {
   @Getter(AccessLevel.NONE)
   Pattern regexPattern = Pattern.compile("\"[^\"]*\"");
 
-
   @Getter(AccessLevel.NONE)
   private static final DateTimeFormatter dt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -92,6 +88,7 @@ class DcAttributes {
     this.pidRecord = pidRecord;
     this.handle = new String(pidRecord.get(0).handle(), StandardCharsets.UTF_8);
     this.suffix = handle.replace("20.5000.1025/", "");
+    this.doi = this.prefix + "/" + this.suffix;
     this.creators = buildCreators();
     this.titles = buildTitles();
     this.publicationYear = getPublicationYear();
@@ -99,7 +96,7 @@ class DcAttributes {
     this.dates = buildDates();
     this.contributors = buildContributors();
     this.alternateIdentifiers = buildAltIds();
-    this.types = buildTypes();
+    this.types = buildType();
     this.relatedIdentifiers = null;
     this.descriptions = buildDescription();
     this.url = getFirstLocation();
@@ -134,7 +131,6 @@ class DcAttributes {
         new String(pidRecord.get(0).handle(), StandardCharsets.UTF_8));
     return Optional.empty();
   }
-
 
   private List<DcSubject> buildSubjects() {
     var subjectList = new ArrayList<DcSubject>();
@@ -185,13 +181,13 @@ class DcAttributes {
         new DcAlternateIdentifier("Handle", handle));
   }
 
-  private List<DcType> buildTypes() {
-    var objectType = getPidData(DIGITAL_OBJECT_TYPE);
+  private DcType buildType() {
+    var objectType = getPidData(DIGITAL_OBJECT_NAME);
     if (objectType.isEmpty()) {
       throw new DataCiteException(
-          String.format(MISSING_MANDATORY_VALUE_MSG, DIGITAL_OBJECT_TYPE.get(), handle));
+          String.format(MISSING_MANDATORY_VALUE_MSG, DIGITAL_OBJECT_NAME.get(), handle));
     }
-    return List.of(new DcType(objectType.get(), "TBD"));
+    return new DcType(objectType.get());
   }
 
   private List<DcDescription> buildDescription() {
