@@ -17,6 +17,7 @@ import static eu.dissco.core.handlemanager.domain.requests.datacite.DcAttributes
 import static eu.dissco.core.handlemanager.domain.requests.datacite.DcAttributes.UriScheme.ROR;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import eu.dissco.core.handlemanager.domain.FdoProfile;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.exceptions.DataCiteException;
@@ -40,33 +41,25 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 class DcAttributes {
+
   private final String suffix;
   private final String doi;
-  
   private final List<DcCreator> creators; // IssuedForAgent
-  
   private final List<DcTitle> titles; // ReferentName
-  
-  private final int publicationYear;
-  
+  private final Integer publicationYear;
   private final List<DcSubject> subjects; // topic origin, topic domain, topic discipline, topic category (last one to do)
-  
   private final List<DcContributor> contributors; // SpecimenHost
-  
   private final List<DcDate> dates; // IssueDate
-  
   private final List<DcAlternateIdentifier> alternateIdentifiers; // primarySpecimenObjectId
-  
   private final DcType types;
-  
   private final List<DcRelatedIdentifiers> relatedIdentifiers; // tombstone pids; primary specimenObjectid
   @Nullable
   private final List<DcDescription> descriptions;
   private final String url; // What to do with multiple locations?
-  
   private final String prefix = "10.82621";
   private final String publisher = "Distributed System of Scientific Collections";
   private final String schemaVersion = "http://datacite.org/schema/kernel-4.4";
+  private final String event = "publish";
 
 
   @Getter(AccessLevel.NONE)
@@ -89,30 +82,30 @@ class DcAttributes {
     this.handle = new String(pidRecord.get(0).handle(), StandardCharsets.UTF_8);
     this.suffix = handle.replace("20.5000.1025/", "");
     this.doi = this.prefix + "/" + this.suffix;
-    this.creators = buildCreators();
-    this.titles = buildTitles();
-    this.publicationYear = getPublicationYear();
-    this.subjects = buildSubjects();
-    this.dates = buildDates();
-    this.contributors = buildContributors();
-    this.alternateIdentifiers = buildAltIds();
-    this.types = buildType();
+    this.creators = setCreators();
+    this.titles = setTitles();
+    this.publicationYear = setPublicationYear();
+    this.subjects = setSubjects();
+    this.dates = setDates();
+    this.contributors = setContributors();
+    this.alternateIdentifiers = setAltIds();
+    this.types = setType();
     this.relatedIdentifiers = null;
-    this.descriptions = buildDescription();
+    this.descriptions = setDescription();
     this.url = getFirstLocation();
   }
 
-  private static List<DcCreator> buildCreators() {
+  private static List<DcCreator> setCreators() {
     return List.of(new DcCreator("Digital System of Scientific Collections",
         List.of(new DcNameIdentifiers("https://ror.org", "https://ror.org/0566bfb96", "ROR"))));
   }
 
-  private List<DcTitle> buildTitles() {
+  private List<DcTitle> setTitles() {
     var title = getPidData(REFERENT_NAME);
     return title.map(s -> List.of(new DcTitle(s, "en-GB", null))).orElse(Collections.emptyList());
   }
 
-  private int getPublicationYear() {
+  private Integer setPublicationYear() {
     var created = getPidData(PID_RECORD_ISSUE_DATE);
     if (created.isEmpty()) {
       throw new DataCiteException(
@@ -132,7 +125,7 @@ class DcAttributes {
     return Optional.empty();
   }
 
-  private List<DcSubject> buildSubjects() {
+  private List<DcSubject> setSubjects() {
     var subjectList = new ArrayList<DcSubject>();
     getPidData(TOPIC_ORIGIN).ifPresent(data -> subjectList.add(
         new DcSubject(data, TOPIC_ORIGIN.get(), null, null, null)));
@@ -143,13 +136,13 @@ class DcAttributes {
     return subjectList;
   }
 
-  private List<DcDate> buildDates() {
+  private List<DcDate> setDates() {
     var created = getPidData(PID_RECORD_ISSUE_DATE);
     return created.map(s -> List.of(new DcDate(ZonedDateTime.parse(s).format(dt), "Issued")))
         .orElse(null);
   }
 
-  private List<DcContributor> buildContributors() {
+  private List<DcContributor> setContributors() {
     var specimenHost = getPidData(SPECIMEN_HOST);
     var specimenHostName = getPidData(SPECIMEN_HOST_NAME);
     if (specimenHost.isEmpty() || specimenHostName.isEmpty()) {
@@ -170,7 +163,7 @@ class DcAttributes {
     return QID;
   }
 
-  private List<DcAlternateIdentifier> buildAltIds() {
+  private List<DcAlternateIdentifier> setAltIds() {
     var physicalId = getPidData(PRIMARY_SPECIMEN_OBJECT_ID);
     if (physicalId.isEmpty()) {
       throw new DataCiteException(
@@ -181,7 +174,7 @@ class DcAttributes {
         new DcAlternateIdentifier("Handle", handle));
   }
 
-  private DcType buildType() {
+  private DcType setType() {
     var objectType = getPidData(DIGITAL_OBJECT_NAME);
     if (objectType.isEmpty()) {
       throw new DataCiteException(
@@ -190,7 +183,7 @@ class DcAttributes {
     return new DcType(objectType.get());
   }
 
-  private List<DcDescription> buildDescription() {
+  private List<DcDescription> setDescription() {
     var materialSampleType = getPidData(MATERIAL_SAMPLE_TYPE);
     return materialSampleType.map(s -> List.of(
         new DcDescription(MATERIAL_SAMPLE_TYPE.get() + ": " + s))).orElse(Collections.emptyList());
