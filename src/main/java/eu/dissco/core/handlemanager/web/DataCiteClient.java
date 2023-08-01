@@ -22,10 +22,7 @@ public class DataCiteClient {
   @Qualifier("dataCite")
   private final WebClient webClient;
 
-  private final DataCiteConnectionProperties properties;
-
   public JsonNode sendDoiRequest(JsonNode requestBody) throws DataCiteException {
-
     var response = webClient.method(HttpMethod.POST)
         .body(BodyInserters.fromValue(requestBody))
         .retrieve()
@@ -43,6 +40,7 @@ public class DataCiteClient {
       throw new DataCiteException(
           "An Interrupted Exception has occurred in communicating with the DataCite API.");
     } catch (ExecutionException e) {
+      log.error("An execution Exception with the DataCite API has occurred", e);
       throw new DataCiteException(e.getCause().getMessage());
     }
   }

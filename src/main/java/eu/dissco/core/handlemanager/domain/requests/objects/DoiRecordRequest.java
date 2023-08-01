@@ -1,5 +1,6 @@
 package eu.dissco.core.handlemanager.domain.requests.objects;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -14,6 +15,7 @@ public class DoiRecordRequest extends HandleRecordRequest {
 
   private final String referentType;
 
+  @JsonProperty(required = true)
   @JsonPropertyDescription("Local name of the object (human-readable)")
   private final String referentName;
 

@@ -56,6 +56,7 @@ class DcAttributes {
   private final String publisher = "Distributed System of Scientific Collections";
   private final String schemaVersion = "http://datacite.org/schema/kernel-4.4";
   private final String event = "publish";
+  @Getter(AccessLevel.NONE)
   private final List<String> xmlLocations;
   @Getter(AccessLevel.NONE)
   private final XmlLocReader xmlLocReader;
@@ -81,11 +82,11 @@ class DcAttributes {
     this.dates = setDates();
     this.contributors = setContributors();
     this.xmlLocations = setXmlLocations();
+    this.url = xmlLocReader.getLandingPageLocation(xmlLocations, "https://sandbox.dissco.tech/ds/");
     this.alternateIdentifiers = setAltIds();
     this.types = setType();
     this.relatedIdentifiers = setRelatedIdentifiers();
     this.descriptions = setDescription();
-    this.url = xmlLocations.get(0);
   }
 
   private static List<DcCreator> setCreators() {
@@ -95,7 +96,10 @@ class DcAttributes {
 
   private List<DcTitle> setTitles() {
     var title = getPidData(REFERENT_NAME);
-    return title.map(t -> List.of(new DcTitle(t))).orElse(Collections.emptyList());
+    if (title.isPresent()){
+      return List.of(new DcTitle(title.get()));
+    }
+    throw new DataCiteException(String.format(MISSING_MANDATORY_VALUE_MSG, REFERENT_NAME.get(), handle));
   }
 
   private Integer setPublicationYear() {
@@ -113,8 +117,8 @@ class DcAttributes {
         return Optional.of(new String(pidRow.data(), StandardCharsets.UTF_8));
       }
     }
-    log.warn("Unable to find attribute {} in pid record for handle record {}", attribute.get(),
-        new String(pidRecord.get(0).handle(), StandardCharsets.UTF_8));
+    //log.warn("Unable to find attribute {} in pid record for handle record {}", attribute.get(),
+    //    new String(pidRecord.get(0).handle(), StandardCharsets.UTF_8));
     return Optional.empty();
   }
 
@@ -186,14 +190,15 @@ class DcAttributes {
 
   private List<DcDescription> setDescription() {
     var materialSampleType = getPidData(MATERIAL_SAMPLE_TYPE);
+    String descriptionString = "Digital Specimen hosted at " + getPidData(SPECIMEN_HOST_NAME).get();
     return materialSampleType.map(s -> List.of(
-        new DcDescription(MATERIAL_SAMPLE_TYPE.get() + ": " + s))).orElse(Collections.emptyList());
+        new DcDescription(descriptionString + ". " +MATERIAL_SAMPLE_TYPE.get() + ": " + s))).orElse(List.of(new DcDescription(descriptionString)));
   }
 
   private List<DcRelatedIdentifiers> setRelatedIdentifiers() {
     List<DcRelatedIdentifiers> relatedIdentifiersList = new ArrayList<>();
     var locs = new ArrayList<>(xmlLocations);
-    locs.remove(0);
+    locs.remove(url);
     for (var location : locs){
       relatedIdentifiersList.add(new DcRelatedIdentifiers("IsVariantFormOf", location, "URL"));
     }

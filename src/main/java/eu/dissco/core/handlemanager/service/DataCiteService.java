@@ -29,7 +29,6 @@ public class DataCiteService {
 
   public List<JsonNode> registerDoi(List<String> handles)
       throws DataCiteException {
-
     var handleBytes = handles.stream().map(h -> h.getBytes(StandardCharsets.UTF_8)).toList();
     log.info("Retrieving handle records from database");
     var resolvedRecordsFlatList = handleRep.resolveHandleAttributes(handleBytes);
@@ -43,8 +42,8 @@ public class DataCiteService {
     for (var dcRequest : dcRequests){
       log.info("Posting DOI to DataCite");
       var requestBody = mapper.valueToTree(dcRequest);
-      log.info(requestBody.toPrettyString());
       response.add(dataCiteClient.sendDoiRequest(requestBody));
+      log.info("DOI posted successfully");
     }
     return response;
   }
@@ -52,7 +51,7 @@ public class DataCiteService {
   private void allHandlesPresent(List<String> handles, Set<String> keys){
     var handleSet = new HashSet<>(handles);
     handleSet.removeAll(keys);
-    if(!handles.isEmpty()){
+    if(!handleSet.isEmpty()){
       log.warn("Some handles were not found: {}", handleSet);
     }
   }

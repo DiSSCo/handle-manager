@@ -30,6 +30,16 @@ public class XmlLocReader {
     }
   }
 
+  public String getLandingPageLocation(List<String> locations, String targetLoc){
+    for (var location : locations){
+      if (location.contains(targetLoc)){
+        return location;
+      }
+    }
+    log.error("Unable to find landing page location from 10320/loc in handle record. Using first value in field");
+    return locations.get(0);
+  }
+
   @Data
   protected static class LocationParentXml {
     @JacksonXmlCData
