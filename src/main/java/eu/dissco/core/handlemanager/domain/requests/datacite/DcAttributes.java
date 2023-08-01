@@ -51,12 +51,11 @@ class DcAttributes {
   private final List<DcRelatedIdentifiers> relatedIdentifiers; // tombstone pids; primary specimenObjectid
   @Nullable
   private final List<DcDescription> descriptions;
-  private final String url; // What to do with multiple locations?
+  private final String url;
   private final String prefix = "10.82621";
   private final String publisher = "Distributed System of Scientific Collections";
   private final String schemaVersion = "http://datacite.org/schema/kernel-4.4";
   private final String event = "publish";
-  @Getter(AccessLevel.NONE)
   private final List<String> xmlLocations;
   @Getter(AccessLevel.NONE)
   private final XmlLocReader xmlLocReader;
@@ -96,7 +95,7 @@ class DcAttributes {
 
   private List<DcTitle> setTitles() {
     var title = getPidData(REFERENT_NAME);
-    return title.map(s -> List.of(new DcTitle(s, "en-GB", null))).orElse(Collections.emptyList());
+    return title.map(t -> List.of(new DcTitle(t))).orElse(Collections.emptyList());
   }
 
   private Integer setPublicationYear() {
@@ -196,7 +195,7 @@ class DcAttributes {
     var locs = new ArrayList<>(xmlLocations);
     locs.remove(0);
     for (var location : locs){
-      relatedIdentifiersList.add(new DcRelatedIdentifiers("IsVariantFormOf", location, "URL", "Dataset"));
+      relatedIdentifiersList.add(new DcRelatedIdentifiers("IsVariantFormOf", location, "URL"));
     }
     return relatedIdentifiersList;
   }
