@@ -25,9 +25,11 @@ public class DataCiteController {
   private final DataCiteService dataCiteService;
 
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-  public ResponseEntity<List<JsonNode>> registerDoi(@RequestBody List<String> handles) {
-    log.info("Received doi registration request");
-    return ResponseEntity.status(HttpStatus.OK).body(dataCiteService.registerDoi(handles));
+  public ResponseEntity<Void> registerDoi(@RequestBody List<String> handles) {
+    log.info("Received doi registration request for {} handles", handles.size());
+    dataCiteService.registerDoi(handles);
+    log.info("Successfully registered DOIs");
+    return ResponseEntity.ok().build();
   }
 
 
