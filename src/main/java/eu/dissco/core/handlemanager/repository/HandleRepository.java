@@ -71,6 +71,15 @@ public class HandleRepository {
         .fetch(this::mapToAttribute);
   }
 
+  public List<HandleAttribute> getPrimarySpecimenObjectId(List<byte[]> handles){
+    return context
+        .select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
+        .from(HANDLES)
+        .where(HANDLES.HANDLE.in(handles))
+        .and(HANDLES.TYPE.eq(PRIMARY_SPECIMEN_OBJECT_ID.get().getBytes(StandardCharsets.UTF_8)))
+        .fetch(this::mapToAttribute);
+  }
+
   public List<HandleAttribute> searchByNormalisedPhysicalIdentifierFullRecord(
       List<byte[]> normalisedPhysicalIdentifiers) {
     var normalisedPhysicalIdentifierTable = searchByNormalisedPhysicalIdentifierQuery(

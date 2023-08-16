@@ -1,10 +1,13 @@
 package eu.dissco.core.handlemanager.service;
 
+import static eu.dissco.core.handlemanager.domain.FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_TYPE;
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType.DIGITAL_SPECIMEN;
 import static eu.dissco.core.handlemanager.service.ServiceUtils.setUniquePhysicalIdentifierId;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -105,6 +108,19 @@ public class HandleService {
           "Unable to resolve the following handles: " + unresolvedHandles);
     }
     return rootNodeList;
+  }
+
+  private JsonApiWrapperWrite resolveAndFormatUpsertResponse(List<byte[]> handles, ObjectType type){
+    var newHandleRecords = handleRep.getPrimarySpecimenObjectId(handles);
+    List<JsonApiDataLinks> jsonApiDataLinks = new ArrayList<>();
+    for (var row : newHandleRecords){
+      var attributes = mapper.createObjectNode();
+      attributes.put(PRIMARY_SPECIMEN_OBJECT_ID.get(), new String(row.data(), StandardCharsets.UTF_8));
+      var id = new String(row.handle(), StandardCharsets.UTF_8);
+      var links = new JsonApiLinks("https://hdl.handle.net/"+id);
+      jsonApiDataLinks.add(new JsonApiDataLinks(id, type.toString(), attributes, links));
+    }
+    return new JsonApiWrapperWrite(jsonApiDataLinks);
   }
 
   // Getters
@@ -340,7 +356,16 @@ public class HandleService {
     log.info("Persisting upserts to db.");
     handleRep.postAndUpdateHandles(recordTimestamp, createAttributes, upsertAttributes);
 
-    return concatAndFormatUpsertResponse(newHandles, upsertRequests);
+    var allHandles = concatHandles(newHandles, upsertRequests);
+
+    return resolveAndFormatUpsertResponse(allHandles, DIGITAL_SPECIMEN);
+  }
+
+  private List<byte[]> concatHandles(List<byte[]> newHandles, List<UpsertDigitalSpecimen> upsertRequests){
+    return Stream.concat(
+            newHandles.stream(), upsertRequests.stream().map(UpsertDigitalSpecimen::handle)
+                .map(s -> s.getBytes(StandardCharsets.UTF_8)))
+        .toList();
   }
 
   private void logUpdates(List<UpsertDigitalSpecimen> upsertRequests){
@@ -358,19 +383,6 @@ public class HandleService {
           DigitalSpecimenRequest.class));
     }
     return digitalSpecimenRequests;
-  }
-
-  private JsonApiWrapperWrite concatAndFormatUpsertResponse(List<byte[]> newHandles, List<UpsertDigitalSpecimen> upsertRequests)
-      throws PidResolutionException {
-    var allHandles = Stream.concat(
-            newHandles.stream(), upsertRequests.stream().map(UpsertDigitalSpecimen::handle)
-                .map(s -> s.getBytes(StandardCharsets.UTF_8)))
-        .toList();
-    var upsertedRecords = resolveAndFormatRecords(allHandles);
-    var dataList = upsertedRecords.stream()
-        .map(upsertedRecord -> wrapData(upsertedRecord, ObjectType.DIGITAL_SPECIMEN.toString()))
-        .toList();
-    return new JsonApiWrapperWrite(dataList);
   }
 
   private List<byte[]> getPhysIdBytes(Set<String> physIds) {
@@ -438,7 +450,7 @@ public class HandleService {
     for (var digitalSpecimenRequest : digitalSpecimenRequests) {
       handleAttributes.addAll(
           fdoRecordService.prepareDigitalSpecimenRecordAttributes(digitalSpecimenRequest,
-              handles.remove(0), ObjectType.DIGITAL_SPECIMEN));
+              handles.remove(0), DIGITAL_SPECIMEN));
     }
     return handleAttributes;
   }
@@ -451,7 +463,7 @@ public class HandleService {
     for (var upsertRequest : upsertDigitalSpecimens) {
       ArrayList<HandleAttribute> upsertAttributeSingleSpecimen = new ArrayList<>(fdoRecordService
           .prepareUpdateAttributes(upsertRequest.handle().getBytes(StandardCharsets.UTF_8),
-              mapper.valueToTree(upsertRequest.request()),ObjectType.DIGITAL_SPECIMEN));
+              mapper.valueToTree(upsertRequest.request()), DIGITAL_SPECIMEN));
       upsertAttributes.add(upsertAttributeSingleSpecimen);
     }
     return upsertAttributes;
