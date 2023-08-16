@@ -98,20 +98,19 @@ public class HandleService {
       resolvedHandles.add(
           new String(handleRecord.getValue().get(0).handle(), StandardCharsets.UTF_8));
     }
-
-    if (handles.size() > resolvedHandles.size()) {
-      Set<String> unresolvedHandles = handles.stream()
-          .filter(h -> !resolvedHandles.contains(new String(h, StandardCharsets.UTF_8)))
-          .map(h -> new String(h, StandardCharsets.UTF_8)).collect(Collectors.toSet());
-
-      throw new PidResolutionException(
-          "Unable to resolve the following handles: " + unresolvedHandles);
-    }
+    checkAllHandlesResolve(handles, resolvedHandles);
     return rootNodeList;
   }
 
-  private JsonApiWrapperWrite resolveAndFormatUpsertResponse(List<byte[]> handles, ObjectType type){
+  private JsonApiWrapperWrite resolveAndFormatUpsertResponse(List<byte[]> handles, ObjectType type)
+      throws PidResolutionException {
     var newHandleRecords = handleRep.getPrimarySpecimenObjectId(handles);
+    Set<String> resolvedHandles = newHandleRecords.stream()
+        .map(row -> new String(row.handle(), StandardCharsets.UTF_8))
+        .collect(
+        Collectors.toSet());
+    checkAllHandlesResolve(handles, resolvedHandles);
+
     List<JsonApiDataLinks> jsonApiDataLinks = new ArrayList<>();
     for (var row : newHandleRecords){
       var attributes = mapper.createObjectNode();
@@ -121,6 +120,19 @@ public class HandleService {
       jsonApiDataLinks.add(new JsonApiDataLinks(id, type.toString(), attributes, links));
     }
     return new JsonApiWrapperWrite(jsonApiDataLinks);
+  }
+
+  private void checkAllHandlesResolve(List<byte[]> handles, Set<String> resolvedHandles)
+      throws PidResolutionException {
+    if (handles.size() > resolvedHandles.size()) {
+      Set<String> unresolvedHandles = handles.stream()
+          .filter(h -> !resolvedHandles.contains(new String(h, StandardCharsets.UTF_8)))
+          .map(h -> new String(h, StandardCharsets.UTF_8)).collect(Collectors.toSet());
+
+      throw new PidResolutionException(
+          "Unable to resolve the following handles: " + unresolvedHandles);
+    }
+
   }
 
   // Getters

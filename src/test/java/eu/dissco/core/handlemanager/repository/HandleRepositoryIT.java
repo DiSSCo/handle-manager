@@ -153,6 +153,28 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
+  void testGetPrimarySpecimenObjectIds() throws Exception {
+    // Given
+    var handle = HANDLE.getBytes(StandardCharsets.UTF_8);
+    var handleAlt = HANDLE_ALT.getBytes(StandardCharsets.UTF_8);
+    var postedAttributes = Stream.concat(
+        genHandleRecordAttributes(handle, ObjectType.DIGITAL_SPECIMEN).stream(),
+        genHandleRecordAttributes(handleAlt, ObjectType.DIGITAL_SPECIMEN).stream()).toList();
+    postAttributes(postedAttributes);
+    List<HandleAttribute> expected = new ArrayList<>();
+    for (var row : postedAttributes) {
+      if (row.type().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())) {
+        expected.add(row);
+      }
+    }
+    // When
+    var result = handleRep.getPrimarySpecimenObjectId(List.of(handle, handleAlt));
+
+    // Then
+    assertThat(result).hasSameElementsAs(expected);
+  }
+
+  @Test
   void testResolveBatchRecord() throws Exception {
     // Given
     List<byte[]> handles = List.of(HANDLE.getBytes(StandardCharsets.UTF_8),
@@ -200,7 +222,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     int pageNum = 2;
     int pageSize = 5;
 
-    List<String> handles = genListofHandlesString(pageSize+1);
+    List<String> handles = genListofHandlesString(pageSize + 1);
     List<HandleAttribute> rows = new ArrayList<>();
 
     for (String handle : handles) {
@@ -246,14 +268,17 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
-  void testSearchByPhysicalIdentifierFullRecord(){
+  void testSearchByPhysicalIdentifierFullRecord() {
     // Given
-    var targetPhysicalIdentifier = NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8);
+    var targetPhysicalIdentifier = NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(
+        StandardCharsets.UTF_8);
     List<HandleAttribute> responseExpected = new ArrayList<>();
     responseExpected.add(new HandleAttribute(1, HANDLE.getBytes(StandardCharsets.UTF_8),
         NORMALISED_SPECIMEN_OBJECT_ID.get(), targetPhysicalIdentifier));
-    responseExpected.add(new HandleAttribute(2, HANDLE.getBytes(StandardCharsets.UTF_8), SPECIMEN_HOST.get(), SPECIMEN_HOST_TESTVAL.getBytes(
-        StandardCharsets.UTF_8)));
+    responseExpected.add(
+        new HandleAttribute(2, HANDLE.getBytes(StandardCharsets.UTF_8), SPECIMEN_HOST.get(),
+            SPECIMEN_HOST_TESTVAL.getBytes(
+                StandardCharsets.UTF_8)));
 
     List<HandleAttribute> nonTargetAttributes = new ArrayList<>();
     nonTargetAttributes.add(new HandleAttribute(1, HANDLE_ALT.getBytes(StandardCharsets.UTF_8),
@@ -264,7 +289,8 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     postAttributes(nonTargetAttributes);
 
     // When
-    var responseReceived = handleRep.searchByNormalisedPhysicalIdentifierFullRecord(List.of(targetPhysicalIdentifier));
+    var responseReceived = handleRep.searchByNormalisedPhysicalIdentifierFullRecord(
+        List.of(targetPhysicalIdentifier));
 
     // Then
     assertThat(responseReceived).hasSameElementsAs(responseExpected);
@@ -429,11 +455,17 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     var existingRecord = genHandleRecordAttributes(handle, ObjectType.HANDLE);
     postAttributes(existingRecord);
     var updatedRecord = new ArrayList<>(existingRecord);
-    updatedRecord.add(new HandleAttribute(MATERIAL_SAMPLE_TYPE.index(), handle, MATERIAL_SAMPLE_TYPE.get(), "digital".getBytes(StandardCharsets.UTF_8)));
-    updatedRecord.add(new HandleAttribute(PID_RECORD_ISSUE_NUMBER.index(), handle, PID_RECORD_ISSUE_NUMBER.get(), String.valueOf(2).getBytes(
-        StandardCharsets.UTF_8)));
-    updatedRecord.remove(new HandleAttribute(PID_RECORD_ISSUE_NUMBER.index(), handle, PID_RECORD_ISSUE_NUMBER.get(), String.valueOf(1).getBytes(
-        StandardCharsets.UTF_8)));
+    updatedRecord.add(
+        new HandleAttribute(MATERIAL_SAMPLE_TYPE.index(), handle, MATERIAL_SAMPLE_TYPE.get(),
+            "digital".getBytes(StandardCharsets.UTF_8)));
+    updatedRecord.add(
+        new HandleAttribute(PID_RECORD_ISSUE_NUMBER.index(), handle, PID_RECORD_ISSUE_NUMBER.get(),
+            String.valueOf(2).getBytes(
+                StandardCharsets.UTF_8)));
+    updatedRecord.remove(
+        new HandleAttribute(PID_RECORD_ISSUE_NUMBER.index(), handle, PID_RECORD_ISSUE_NUMBER.get(),
+            String.valueOf(1).getBytes(
+                StandardCharsets.UTF_8)));
 
     var newRecord = genHandleRecordAttributes(handleAlt, ObjectType.HANDLE);
     var expected = Stream.concat(updatedRecord.stream(), newRecord.stream()).toList();

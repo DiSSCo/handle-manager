@@ -704,17 +704,19 @@ class HandleServiceTest {
 
     var existingRecordAttributes = genDigitalSpecimenAttributes(existingHandle);
     var newRecordAttributes = genDigitalSpecimenAttributes(newHandle);
+    var primarySpecimenObjectIdAttributes = getPrimarySpecimenObjectIds(
+        Stream.concat(existingRecordAttributes.stream(), newRecordAttributes.stream()).toList());
+
     var expected = new JsonApiWrapperWrite(
-        List.of(upsertedResponse(existingRecordAttributes,
+        List.of(upsertedResponse(getPrimarySpecimenObjectIds(existingRecordAttributes),
                 new String(existingHandle, StandardCharsets.UTF_8)),
-            upsertedResponse(newRecordAttributes, new String(newHandle)))
+            upsertedResponse(getPrimarySpecimenObjectIds(newRecordAttributes), new String(newHandle)))
     );
 
     given(handleRep.searchByNormalisedPhysicalIdentifier(anyList())).willReturn(
         List.of(new HandleAttribute(PRIMARY_SPECIMEN_OBJECT_ID.index(), existingHandle,
             PRIMARY_SPECIMEN_OBJECT_ID_TYPE.get(), (existingPhysId+":"+ROR_IDENTIFIER).getBytes(StandardCharsets.UTF_8))));
-    given(handleRep.resolveHandleAttributes(anyList())).willReturn(
-        Stream.concat(existingRecordAttributes.stream(), newRecordAttributes.stream()).toList());
+    given(handleRep.getPrimarySpecimenObjectId(anyList())).willReturn(primarySpecimenObjectIdAttributes);
     given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(eq(newRecordRequest), any(),
         any())).willReturn(newRecordAttributes);
     given(fdoRecordService.prepareUpdateAttributes(any(), eq(MAPPER.valueToTree(existingRecordRequest)), any())).willReturn(
@@ -732,7 +734,7 @@ class HandleServiceTest {
   }
 
   @Test
-  void testInternalDuplicateSpecimenIds() throws Exception {
+  void testInternalDuplicateSpecimenIds() {
     // Given
     List<JsonNode> requests = List.of(
         genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS),
@@ -757,14 +759,14 @@ class HandleServiceTest {
     var existingRecord = genDigitalSpecimenAttributes(handles.get(0));
 
     var expected = new JsonApiWrapperWrite(
-        List.of(upsertedResponse(existingRecord, HANDLE))
+        List.of(upsertedResponse(getPrimarySpecimenObjectIds(existingRecord), HANDLE))
     );
 
     given(handleRep.searchByNormalisedPhysicalIdentifier(anyList())).willReturn(
         List.of(new HandleAttribute(PRIMARY_SPECIMEN_OBJECT_ID.index(), handles.get(0),
             PRIMARY_SPECIMEN_OBJECT_ID.get(), (PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL+":"+ROR_IDENTIFIER).getBytes(
             StandardCharsets.UTF_8))));
-    given(handleRep.resolveHandleAttributes(anyList())).willReturn(existingRecord);
+    given(handleRep.getPrimarySpecimenObjectId(anyList())).willReturn(getPrimarySpecimenObjectIds(existingRecord));
     given(fdoRecordService.prepareUpdateAttributes(any(), any(), any())).willReturn(
         existingRecord);
     given(hgService.genHandleList(0)).willReturn(new ArrayList<>());
@@ -786,11 +788,11 @@ class HandleServiceTest {
         genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS));
     var newRecord = genDigitalSpecimenAttributes(handles.get(1));
     var expected = new JsonApiWrapperWrite(
-        List.of(upsertedResponse(newRecord, HANDLE_ALT))
+        List.of(upsertedResponse(getPrimarySpecimenObjectIds(newRecord), HANDLE_ALT))
     );
 
     given(handleRep.searchByNormalisedPhysicalIdentifier(anyList())).willReturn(new ArrayList<>());
-    given(handleRep.resolveHandleAttributes(anyList())).willReturn(newRecord);
+    given(handleRep.getPrimarySpecimenObjectId(anyList())).willReturn(getPrimarySpecimenObjectIds(newRecord));
     given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(any(), any(), any())).willReturn(
         newRecord);
     given(hgService.genHandleList(anyInt())).willReturn(List.of(handles.get(0)));
@@ -834,10 +836,19 @@ class HandleServiceTest {
     mockedClock.when(Clock::systemUTC).thenReturn(clock);
   }
 
-  private List<byte[]> initHandleList() {
+  private void initHandleList() {
     handles = new ArrayList<>();
     handles.add(HANDLE.getBytes(StandardCharsets.UTF_8));
     handles.add(HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-    return handles;
+  }
+
+  private List<HandleAttribute> getPrimarySpecimenObjectIds(List<HandleAttribute> handleAttributes){
+    List<HandleAttribute> primaryIdList = new ArrayList<>();
+    for(var row: handleAttributes){
+      if (row.type().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())){
+        primaryIdList.add(row);
+      }
+    }
+    return primaryIdList;
   }
 }
