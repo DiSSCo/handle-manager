@@ -90,7 +90,7 @@ class DcAttributes {
   }
 
   private static List<DcCreator> setCreators() {
-    return List.of(new DcCreator("Digital System of Scientific Collections",
+    return List.of(new DcCreator("Distributed System of Scientific Collections",
         List.of(new DcNameIdentifiers("https://ror.org", "https://ror.org/0566bfb96", "ROR"))));
   }
 
@@ -117,8 +117,8 @@ class DcAttributes {
         return Optional.of(new String(pidRow.data(), StandardCharsets.UTF_8));
       }
     }
-    //log.warn("Unable to find attribute {} in pid record for handle record {}", attribute.get(),
-    //    new String(pidRecord.get(0).handle(), StandardCharsets.UTF_8));
+    log.warn("Unable to find attribute {} in pid record for handle record {}", attribute.get(),
+        new String(pidRecord.get(0).handle(), StandardCharsets.UTF_8));
     return Optional.empty();
   }
 
@@ -190,7 +190,7 @@ class DcAttributes {
 
   private List<DcDescription> setDescription() {
     var materialSampleType = getPidData(MATERIAL_SAMPLE_TYPE);
-    String descriptionString = "Digital Specimen hosted at " + getPidData(SPECIMEN_HOST_NAME).get();
+    String descriptionString = "Digital Specimen for the physical specimen hosted at " + getPidData(SPECIMEN_HOST_NAME).get();
     return materialSampleType.map(s -> List.of(
         new DcDescription(descriptionString + ". " +MATERIAL_SAMPLE_TYPE.get() + ": " + s))).orElse(List.of(new DcDescription(descriptionString)));
   }
