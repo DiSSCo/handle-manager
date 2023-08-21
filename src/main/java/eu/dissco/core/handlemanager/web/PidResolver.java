@@ -23,6 +23,30 @@ public class PidResolver {
 
   private final WebClient webClient;
 
+  @Cacheable("pidName")
+  public String getObjectName(String pid)
+      throws UnprocessableEntityException, PidResolutionException {
+    log.info("getting Pid name for: {}", pid);
+    var pidRecord = resolveExternalPid(pid);
+    if (pidRecord.get("name") != null) {
+      return pidRecord.get("name").asText();
+    }
+    log.warn("Given pid {} resolves, but does not include a name attribute", pid);
+    return "";
+  }
+
+  @Cacheable("Qid")
+  public String resolveQid(String qid) throws UnprocessableEntityException, PidResolutionException {
+    var qidRecord = resolveExternalPid(qid);
+    if (qidRecord.get("labels").get("en")!=null){
+      return qidRecord.get("labels").get("en").asText();
+    }
+    log.warn("Given Qid {} resolves, but does not include a name attribute", qid);
+    return "";
+  }
+
+
+
   private JsonNode resolveExternalPid(String url)
       throws UnprocessableEntityException, PidResolutionException {
     var response = webClient.get()
@@ -58,16 +82,4 @@ public class PidResolver {
         && webClientResponseException.getStatusCode().is5xxServerError();
   }
 
-
-  @Cacheable("pidName")
-  public String getObjectName(String pid)
-      throws UnprocessableEntityException, PidResolutionException {
-    log.info("getting Pid name for: {}", pid);
-    var pidRecord = resolveExternalPid(pid);
-    if (pidRecord.get("name") != null) {
-      return pidRecord.get("name").asText();
-    }
-    log.warn("Given pid {} resolves, but does not include a name attribute", pid);
-    return "";
-  }
 }

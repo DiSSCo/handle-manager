@@ -105,6 +105,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
+import org.webjars.NotFoundException;
 
 @RequiredArgsConstructor
 @Service
@@ -120,6 +121,7 @@ public class FdoRecordService {
   private static final String HANDLE_DOMAIN = "https://hdl.handle.net/";
   private static final String ROR_API_DOMAIN = "https://api.ror.org/organizations/";
   private static final String ROR_DOMAIN = "https://ror.org/";
+  private static final String WIKIDATA_API = "https://wikidata.org/w/rest.php/wikibase/v0/entities/items/";
   private static final String PROXY_ERROR = "Invalid attribute: %s must contain proxy: %s";
   private static final byte[] pidKernelMetadataLicense = "https://creativecommons.org/publicdomain/zero/1.0/".getBytes(
       StandardCharsets.UTF_8);
@@ -228,6 +230,8 @@ public class FdoRecordService {
       return pidResolver.getObjectName(getRor(url));
     } else if (url.contains(HANDLE_DOMAIN)) {
       return pidResolver.getObjectName(url);
+    } else if(Character.toLowerCase(url.charAt(0))=='q'){
+      return pidResolver.resolveQid(WIKIDATA_API+url);
     }
     throw new InvalidRequestException(
         String.format(PROXY_ERROR, url, (ROR_DOMAIN + " or " + HANDLE_DOMAIN)));
@@ -585,18 +589,25 @@ public class FdoRecordService {
               SPECIMEN_HOST_NAME.get(),
               specimenHostName.getBytes(StandardCharsets.UTF_8)));
     } else {
+      String specimenHostNameResolved;
       try {
-        var specimenHostNameResolved = pidResolver.getObjectName(getRor(request.getSpecimenHost()));
+        String specimenHostId = request.getSpecimenHost();
+        if(specimenHostId.contains(ROR_DOMAIN)){
+          specimenHostNameResolved = pidResolver.getObjectName(getRor(specimenHostId));
+        } else{
+          specimenHostNameResolved = pidResolver.resolveQid(WIKIDATA_API + specimenHostId);
+        }
         fdoRecord.add(
             new HandleAttribute(SPECIMEN_HOST_NAME.index(), handle,
                 SPECIMEN_HOST_NAME.get(),
                 specimenHostNameResolved.getBytes(StandardCharsets.UTF_8)));
-
-      } catch (Exception e) {
+      } catch (NotFoundException | UnprocessableEntityException | InvalidRequestException |
+               PidResolutionException e ) {
         log.error(
             "SpecimenHostId is not a resolvable ROR and no SpecimenHostName is provided in the request. SpecimenHostName field left blank. More information: "
                 + e.getMessage());
       }
+
     }
     return fdoRecord;
   }
