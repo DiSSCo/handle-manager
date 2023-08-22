@@ -1,6 +1,5 @@
 package eu.dissco.core.handlemanager.service;
 
-import static eu.dissco.core.handlemanager.domain.FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
@@ -102,26 +101,6 @@ public class HandleService {
     return rootNodeList;
   }
 
-  private JsonApiWrapperWrite resolveAndFormatUpsertResponse(List<byte[]> handles, ObjectType type)
-      throws PidResolutionException {
-    var newHandleRecords = handleRep.getPrimarySpecimenObjectId(handles);
-    Set<String> resolvedHandles = newHandleRecords.stream()
-        .map(row -> new String(row.handle(), StandardCharsets.UTF_8))
-        .collect(
-        Collectors.toSet());
-    checkAllHandlesResolve(handles, resolvedHandles);
-
-    List<JsonApiDataLinks> jsonApiDataLinks = new ArrayList<>();
-    for (var row : newHandleRecords){
-      var attributes = mapper.createObjectNode();
-      attributes.put(PRIMARY_SPECIMEN_OBJECT_ID.get(), new String(row.data(), StandardCharsets.UTF_8));
-      var id = new String(row.handle(), StandardCharsets.UTF_8);
-      var links = new JsonApiLinks("https://hdl.handle.net/"+id);
-      jsonApiDataLinks.add(new JsonApiDataLinks(id, type.toString(), attributes, links));
-    }
-    return new JsonApiWrapperWrite(jsonApiDataLinks);
-  }
-
   private void checkAllHandlesResolve(List<byte[]> handles, Set<String> resolvedHandles)
       throws PidResolutionException {
     if (handles.size() > resolvedHandles.size()) {
@@ -132,7 +111,6 @@ public class HandleService {
       throw new PidResolutionException(
           "Unable to resolve the following handles: " + unresolvedHandles);
     }
-
   }
 
   // Getters
@@ -368,16 +346,34 @@ public class HandleService {
     log.info("Persisting upserts to db.");
     handleRep.postAndUpdateHandles(recordTimestamp, createAttributes, upsertAttributes);
 
-    var allHandles = concatHandles(newHandles, upsertRequests);
+    var concatAttributes = concatHandleAttributes(createAttributes, upsertAttributes);
 
-    return resolveAndFormatUpsertResponse(allHandles, DIGITAL_SPECIMEN);
+    return concatAndFormatUpsertResponse(concatAttributes);
   }
 
-  private List<byte[]> concatHandles(List<byte[]> newHandles, List<UpsertDigitalSpecimen> upsertRequests){
-    return Stream.concat(
-            newHandles.stream(), upsertRequests.stream().map(UpsertDigitalSpecimen::handle)
-                .map(s -> s.getBytes(StandardCharsets.UTF_8)))
-        .toList();
+  private List<HandleAttribute> concatHandleAttributes(List<HandleAttribute> createAttributes, List<List<HandleAttribute>> upsertAttributes){
+    List<HandleAttribute> upsertListFlat = new ArrayList<>();
+    for (var upsertRecord : upsertAttributes){
+      upsertListFlat.addAll(upsertRecord);
+    }
+    return Stream.concat(createAttributes.stream(), upsertListFlat.stream()).toList();
+  }
+
+  private JsonApiWrapperWrite concatAndFormatUpsertResponse(List<HandleAttribute> records) {
+    Set<String> handles = new HashSet<>();
+    List<JsonApiDataLinks> dataLinksList = new ArrayList<>();
+    for (var row: records){
+      if (row.type().equals(PRIMARY_SPECIMEN_OBJECT_ID.get()) &&
+          !handles.contains(new String(row.handle(), StandardCharsets.UTF_8))){
+        String h = new String(row.handle(), StandardCharsets.UTF_8);
+        handles.add(h);
+        String pidLink = "https://hdl.handle.net/" + h;
+        var node = mapper.createObjectNode();
+        node.put(PRIMARY_SPECIMEN_OBJECT_ID.get(), new String(row.data(), StandardCharsets.UTF_8));
+        dataLinksList.add(new JsonApiDataLinks(h, DIGITAL_SPECIMEN.toString(), node, new JsonApiLinks(pidLink)));
+      }
+    }
+    return new JsonApiWrapperWrite(dataLinksList);
   }
 
   private void logUpdates(List<UpsertDigitalSpecimen> upsertRequests){

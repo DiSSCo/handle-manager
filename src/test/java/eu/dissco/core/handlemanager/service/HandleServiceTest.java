@@ -702,21 +702,19 @@ class HandleServiceTest {
         genCreateRecordRequest(newRecordRequest, RECORD_TYPE_DS),
         genCreateRecordRequest(existingRecordRequest, RECORD_TYPE_DS));
 
-    var existingRecordAttributes = genDigitalSpecimenAttributes(existingHandle);
-    var newRecordAttributes = genDigitalSpecimenAttributes(newHandle);
+    var existingRecordAttributes = genDigitalSpecimenAttributes(existingHandle, existingRecordRequest);
+    var newRecordAttributes = genDigitalSpecimenAttributes(newHandle, newRecordRequest);
     var primarySpecimenObjectIdAttributes = getPrimarySpecimenObjectIds(
         Stream.concat(existingRecordAttributes.stream(), newRecordAttributes.stream()).toList());
 
     var expected = new JsonApiWrapperWrite(
-        List.of(upsertedResponse(getPrimarySpecimenObjectIds(existingRecordAttributes),
-                new String(existingHandle, StandardCharsets.UTF_8)),
-            upsertedResponse(getPrimarySpecimenObjectIds(newRecordAttributes), new String(newHandle)))
-    );
+        List.of(upsertedResponse(getPrimarySpecimenObjectIds(newRecordAttributes), new String(newHandle)),
+            upsertedResponse(getPrimarySpecimenObjectIds(existingRecordAttributes),
+                new String(existingHandle, StandardCharsets.UTF_8))));
 
     given(handleRep.searchByNormalisedPhysicalIdentifier(anyList())).willReturn(
         List.of(new HandleAttribute(PRIMARY_SPECIMEN_OBJECT_ID.index(), existingHandle,
             PRIMARY_SPECIMEN_OBJECT_ID_TYPE.get(), (existingPhysId+":"+ROR_IDENTIFIER).getBytes(StandardCharsets.UTF_8))));
-    given(handleRep.getPrimarySpecimenObjectId(anyList())).willReturn(primarySpecimenObjectIdAttributes);
     given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(eq(newRecordRequest), any(),
         any())).willReturn(newRecordAttributes);
     given(fdoRecordService.prepareUpdateAttributes(any(), eq(MAPPER.valueToTree(existingRecordRequest)), any())).willReturn(
@@ -766,7 +764,6 @@ class HandleServiceTest {
         List.of(new HandleAttribute(PRIMARY_SPECIMEN_OBJECT_ID.index(), handles.get(0),
             PRIMARY_SPECIMEN_OBJECT_ID.get(), (PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL+":"+ROR_IDENTIFIER).getBytes(
             StandardCharsets.UTF_8))));
-    given(handleRep.getPrimarySpecimenObjectId(anyList())).willReturn(getPrimarySpecimenObjectIds(existingRecord));
     given(fdoRecordService.prepareUpdateAttributes(any(), any(), any())).willReturn(
         existingRecord);
     given(hgService.genHandleList(0)).willReturn(new ArrayList<>());
@@ -792,7 +789,6 @@ class HandleServiceTest {
     );
 
     given(handleRep.searchByNormalisedPhysicalIdentifier(anyList())).willReturn(new ArrayList<>());
-    given(handleRep.getPrimarySpecimenObjectId(anyList())).willReturn(getPrimarySpecimenObjectIds(newRecord));
     given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(any(), any(), any())).willReturn(
         newRecord);
     given(hgService.genHandleList(anyInt())).willReturn(List.of(handles.get(0)));
