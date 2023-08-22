@@ -1,10 +1,12 @@
 package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_TYPE;
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType.DIGITAL_SPECIMEN;
 import static eu.dissco.core.handlemanager.service.ServiceUtils.setUniquePhysicalIdentifierId;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -95,7 +97,12 @@ public class HandleService {
       resolvedHandles.add(
           new String(handleRecord.getValue().get(0).handle(), StandardCharsets.UTF_8));
     }
+    checkAllHandlesResolve(handles, resolvedHandles);
+    return rootNodeList;
+  }
 
+  private void checkAllHandlesResolve(List<byte[]> handles, Set<String> resolvedHandles)
+      throws PidResolutionException {
     if (handles.size() > resolvedHandles.size()) {
       Set<String> unresolvedHandles = handles.stream()
           .filter(h -> !resolvedHandles.contains(new String(h, StandardCharsets.UTF_8)))
@@ -104,7 +111,6 @@ public class HandleService {
       throw new PidResolutionException(
           "Unable to resolve the following handles: " + unresolvedHandles);
     }
-    return rootNodeList;
   }
 
   // Getters
@@ -340,7 +346,31 @@ public class HandleService {
     log.info("Persisting upserts to db.");
     handleRep.postAndUpdateHandles(recordTimestamp, createAttributes, upsertAttributes);
 
-    return concatAndFormatUpsertResponse(newHandles, upsertRequests);
+    var concatAttributes = concatHandleAttributes(createAttributes, upsertAttributes);
+
+    return concatAndFormatUpsertResponse(concatAttributes);
+  }
+
+  private List<HandleAttribute> concatHandleAttributes(List<HandleAttribute> createAttributes, List<List<HandleAttribute>> upsertAttributes){
+    List<HandleAttribute> upsertListFlat = new ArrayList<>();
+    for (var upsertRecord : upsertAttributes){
+      upsertListFlat.addAll(upsertRecord);
+    }
+    return Stream.concat(createAttributes.stream(), upsertListFlat.stream()).toList();
+  }
+
+  private JsonApiWrapperWrite concatAndFormatUpsertResponse(List<HandleAttribute> records) {
+    List<JsonApiDataLinks> dataLinksList = new ArrayList<>();
+    for (var row: records){
+      if (row.type().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())){
+        String h = new String(row.handle(), StandardCharsets.UTF_8);
+        String pidLink = "https://hdl.handle.net/" + h;
+        var node = mapper.createObjectNode();
+        node.put(PRIMARY_SPECIMEN_OBJECT_ID.get(), new String(row.data(), StandardCharsets.UTF_8));
+        dataLinksList.add(new JsonApiDataLinks(h, DIGITAL_SPECIMEN.toString(), node, new JsonApiLinks(pidLink)));
+      }
+    }
+    return new JsonApiWrapperWrite(dataLinksList);
   }
 
   private void logUpdates(List<UpsertDigitalSpecimen> upsertRequests){
@@ -358,19 +388,6 @@ public class HandleService {
           DigitalSpecimenRequest.class));
     }
     return digitalSpecimenRequests;
-  }
-
-  private JsonApiWrapperWrite concatAndFormatUpsertResponse(List<byte[]> newHandles, List<UpsertDigitalSpecimen> upsertRequests)
-      throws PidResolutionException {
-    var allHandles = Stream.concat(
-            newHandles.stream(), upsertRequests.stream().map(UpsertDigitalSpecimen::handle)
-                .map(s -> s.getBytes(StandardCharsets.UTF_8)))
-        .toList();
-    var upsertedRecords = resolveAndFormatRecords(allHandles);
-    var dataList = upsertedRecords.stream()
-        .map(upsertedRecord -> wrapData(upsertedRecord, ObjectType.DIGITAL_SPECIMEN.toString()))
-        .toList();
-    return new JsonApiWrapperWrite(dataList);
   }
 
   private List<byte[]> getPhysIdBytes(Set<String> physIds) {
@@ -438,7 +455,7 @@ public class HandleService {
     for (var digitalSpecimenRequest : digitalSpecimenRequests) {
       handleAttributes.addAll(
           fdoRecordService.prepareDigitalSpecimenRecordAttributes(digitalSpecimenRequest,
-              handles.remove(0), ObjectType.DIGITAL_SPECIMEN));
+              handles.remove(0), DIGITAL_SPECIMEN));
     }
     return handleAttributes;
   }
@@ -451,7 +468,7 @@ public class HandleService {
     for (var upsertRequest : upsertDigitalSpecimens) {
       ArrayList<HandleAttribute> upsertAttributeSingleSpecimen = new ArrayList<>(fdoRecordService
           .prepareUpdateAttributes(upsertRequest.handle().getBytes(StandardCharsets.UTF_8),
-              mapper.valueToTree(upsertRequest.request()),ObjectType.DIGITAL_SPECIMEN));
+              mapper.valueToTree(upsertRequest.request()), DIGITAL_SPECIMEN));
       upsertAttributes.add(upsertAttributeSingleSpecimen);
     }
     return upsertAttributes;

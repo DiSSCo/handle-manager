@@ -293,11 +293,8 @@ public class TestUtils {
     return fdoRecord;
   }
 
-  public static List<HandleAttribute> genDigitalSpecimenAttributes(byte[] handle)
-      throws Exception {
+  public static List<HandleAttribute> genDigitalSpecimenAttributes(byte[] handle, DigitalSpecimenRequest request) throws Exception{
     List<HandleAttribute> fdoRecord = genDoiRecordAttributes(handle, ObjectType.DIGITAL_SPECIMEN);
-    var request = givenDigitalSpecimenRequestObjectNullOptionals();
-
     // 200: Specimen Host
     fdoRecord.add(
         new HandleAttribute(SPECIMEN_HOST.index(), handle,
@@ -436,6 +433,13 @@ public class TestUtils {
     }
 
     return fdoRecord;
+
+  }
+
+  public static List<HandleAttribute> genDigitalSpecimenAttributes(byte[] handle)
+      throws Exception {
+    var request = givenDigitalSpecimenRequestObjectNullOptionals();
+    return genDigitalSpecimenAttributes(handle, request);
   }
 
   public static List<HandleAttribute> genMediaObjectAttributes(byte[] handle)
