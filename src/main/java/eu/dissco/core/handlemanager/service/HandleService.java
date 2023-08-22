@@ -360,13 +360,10 @@ public class HandleService {
   }
 
   private JsonApiWrapperWrite concatAndFormatUpsertResponse(List<HandleAttribute> records) {
-    Set<String> handles = new HashSet<>();
     List<JsonApiDataLinks> dataLinksList = new ArrayList<>();
     for (var row: records){
-      if (row.type().equals(PRIMARY_SPECIMEN_OBJECT_ID.get()) &&
-          !handles.contains(new String(row.handle(), StandardCharsets.UTF_8))){
+      if (row.type().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())){
         String h = new String(row.handle(), StandardCharsets.UTF_8);
-        handles.add(h);
         String pidLink = "https://hdl.handle.net/" + h;
         var node = mapper.createObjectNode();
         node.put(PRIMARY_SPECIMEN_OBJECT_ID.get(), new String(row.data(), StandardCharsets.UTF_8));
