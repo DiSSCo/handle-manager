@@ -94,6 +94,24 @@ class PidResolverTest {
   }
 
   @Test
+  void testResolveQidFails() throws Exception {
+    // Given
+    var expectedResponse = MAPPER.readTree("""
+        {
+          "type": "item"
+          }
+        }
+        """);
+    mockServer.enqueue(new MockResponse()
+        .setBody(MAPPER.writeValueAsString(expectedResponse))
+        .setResponseCode(HttpStatus.OK.value())
+        .addHeader("Content-Type", "application/json"));
+
+    // then
+    assertThrows(PidResolutionException.class, ()->pidResolver.resolveQid("qid"));
+  }
+
+  @Test
   void testResolveExternalPidNoName() throws Exception {
     // Given
     var expectedResponse = MAPPER.readTree(loadResourceFile("pidrecord/pidRecordNoName.json"));

@@ -38,11 +38,12 @@ public class PidResolver {
   @Cacheable("Qid")
   public String resolveQid(String qid) throws UnprocessableEntityException, PidResolutionException {
     var qidRecord = resolveExternalPid(qid);
-    if (qidRecord.get("labels").get("en")!=null){
+    try {
       return qidRecord.get("labels").get("en").asText();
+    } catch (NullPointerException e){
+      log.error("Given Qid {} resolves, but does not include a name attribute. Response from wikidata: \n{}", qid, qidRecord);
+      throw new PidResolutionException("Given QID "+ qid + "resolves but does not include a name");
     }
-    log.warn("Given Qid {} resolves, but does not include a name attribute", qid);
-    return "";
   }
 
 
