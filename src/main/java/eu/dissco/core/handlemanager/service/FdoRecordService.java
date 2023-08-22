@@ -590,24 +590,31 @@ public class FdoRecordService {
       String specimenHostNameResolved;
       try {
         String specimenHostId = request.getSpecimenHost();
-        if(specimenHostId.contains(ROR_DOMAIN)){
-          specimenHostNameResolved = pidResolver.getObjectName(getRor(specimenHostId));
-        } else{
-          specimenHostNameResolved = pidResolver.resolveQid(WIKIDATA_API + specimenHostId);
+        if (isAcceptedSpecimenHostId(specimenHostId)) {
+          if (specimenHostId.contains(ROR_DOMAIN)) {
+            specimenHostNameResolved = pidResolver.getObjectName(getRor(specimenHostId));
+          } else {
+            specimenHostNameResolved = pidResolver.resolveQid(WIKIDATA_API + specimenHostId);
+          }
+          fdoRecord.add(
+              new HandleAttribute(SPECIMEN_HOST_NAME.index(), handle,
+                  SPECIMEN_HOST_NAME.get(),
+                  specimenHostNameResolved.getBytes(StandardCharsets.UTF_8)));
+        } else {
+          log.warn("Specimen host ID {} is neither QID nor ROR.", specimenHostId);
         }
-        fdoRecord.add(
-            new HandleAttribute(SPECIMEN_HOST_NAME.index(), handle,
-                SPECIMEN_HOST_NAME.get(),
-                specimenHostNameResolved.getBytes(StandardCharsets.UTF_8)));
       } catch (NotFoundException | UnprocessableEntityException | InvalidRequestException |
-               PidResolutionException e ) {
+               PidResolutionException e) {
         log.error(
             "SpecimenHostId is not a resolvable ROR and no SpecimenHostName is provided in the request. SpecimenHostName field left blank. More information: "
                 + e.getMessage());
       }
-
     }
     return fdoRecord;
+  }
+
+  private boolean isAcceptedSpecimenHostId(String id) {
+    return (id.contains(ROR_DOMAIN) || id.toLowerCase().charAt(0) == 'q');
   }
 
   public List<HandleAttribute> prepareUpdateAttributes(byte[] handle, JsonNode requestAttributes,
