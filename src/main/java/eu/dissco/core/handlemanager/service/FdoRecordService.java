@@ -230,8 +230,6 @@ public class FdoRecordService {
       return pidResolver.getObjectName(getRor(url));
     } else if (url.contains(HANDLE_DOMAIN)) {
       return pidResolver.getObjectName(url);
-    } else if(Character.toLowerCase(url.charAt(0))=='q'){
-      return pidResolver.resolveQid(WIKIDATA_API+url);
     }
     throw new InvalidRequestException(
         String.format(PROXY_ERROR, url, (ROR_DOMAIN + " or " + HANDLE_DOMAIN)));
