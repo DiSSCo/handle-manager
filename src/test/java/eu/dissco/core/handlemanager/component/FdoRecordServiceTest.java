@@ -42,6 +42,7 @@ import static org.mockito.AdditionalMatchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -179,6 +180,36 @@ class FdoRecordServiceTest {
     assertThat(hasCorrectElements(result, DOI_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, DS_FIELDS_MANDATORY)).isTrue();
     assertThat(hasNoDuplicateElements(result)).isTrue();
+  }
+
+  @Test
+  void testPrepareDigitalSpecimenRecordMandatoryAttributesQNumber() throws Exception {
+    // Given
+    String qid = "Q12345";
+    String qidUrl = "https://wikidata.org/w/rest.php/wikibase/v0/entities/items/"+qid;
+    given(pidResolver.getObjectName(any())).willReturn("placeholder");
+    given(pidResolver.resolveQid(any())).willReturn("placeholder");
+    var request = new DigitalSpecimenRequest(
+        FDO_PROFILE_TESTVAL,
+        ISSUED_FOR_AGENT_TESTVAL,
+        DIGITAL_OBJECT_TYPE_TESTVAL,
+        PID_ISSUER_TESTVAL_OTHER,
+        STRUCTURAL_TYPE_TESTVAL,
+        LOC_TESTVAL,
+        REFERENT_NAME_TESTVAL,
+        PRIMARY_REFERENT_TYPE_TESTVAL,
+        qid,
+        null,
+        "PhysicalId",
+        null,null, null, null, null, null, null, null, null, null, null,null, null, null, null
+    );
+
+
+    // When
+    fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle, ObjectType.DIGITAL_SPECIMEN);
+
+    // Then
+    then(pidResolver).should().resolveQid(qidUrl);
   }
 
   @Test

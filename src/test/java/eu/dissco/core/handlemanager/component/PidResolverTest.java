@@ -67,6 +67,33 @@ class PidResolverTest {
   }
 
   @Test
+  void testResolveQid() throws Exception {
+    // Given
+    var expected = "Naturalis Biodiversity Center";
+    var expectedResponse = MAPPER.readTree("""
+        {
+          "type": "item",
+          "labels": {
+            "la": "Museum Historiae Naturalis Lugduno-Batavum",
+            "ca": "Naturalis",
+            "de": "Naturalis",
+            "en": "Naturalis Biodiversity Center"
+          }
+        }
+        """);
+    mockServer.enqueue(new MockResponse()
+        .setBody(MAPPER.writeValueAsString(expectedResponse))
+        .setResponseCode(HttpStatus.OK.value())
+        .addHeader("Content-Type", "application/json"));
+
+    // When
+    var response = pidResolver.resolveQid("Q641676");
+
+    // Then
+    assertThat(response).isEqualTo(expected);
+  }
+
+  @Test
   void testResolveExternalPidNoName() throws Exception {
     // Given
     var expectedResponse = MAPPER.readTree(loadResourceFile("pidrecord/pidRecordNoName.json"));
@@ -124,7 +151,7 @@ class PidResolverTest {
 
     // Then
     assertThat(response).isEqualTo(expected);
-    assertThat(mockServer.getRequestCount()-requestCount).isEqualTo(2);
+    assertThat(mockServer.getRequestCount() - requestCount).isEqualTo(2);
   }
 
   @Test
@@ -138,7 +165,7 @@ class PidResolverTest {
 
     // Then
     assertThrows(UnprocessableEntityException.class, () -> pidResolver.getObjectName(EXTERNAL_PID));
-    assertThat(mockServer.getRequestCount()-requestCount).isEqualTo(4);
+    assertThat(mockServer.getRequestCount() - requestCount).isEqualTo(4);
   }
 
 
