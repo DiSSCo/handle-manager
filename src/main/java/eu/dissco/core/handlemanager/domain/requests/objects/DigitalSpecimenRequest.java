@@ -16,7 +16,7 @@ import org.springframework.lang.Nullable;
 public class DigitalSpecimenRequest extends DoiRecordRequest {
 
   @JsonProperty(required = true)
-  @JsonPropertyDescription("ROR of the host institution")
+  @JsonPropertyDescription("ROR or Qnumber of the host institution")
   private final String specimenHost;
   @Nullable
   private final String specimenHostName;

@@ -8,7 +8,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
 
 @Configuration
-public class HandleResolverWebClient {
+public class WebClientConfig {
 
   @Bean
   public WebClient handleResolverClient() {
