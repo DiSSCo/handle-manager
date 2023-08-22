@@ -204,12 +204,38 @@ class FdoRecordServiceTest {
         null,null, null, null, null, null, null, null, null, null, null,null, null, null, null
     );
 
-
     // When
     fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle, ObjectType.DIGITAL_SPECIMEN);
 
     // Then
     then(pidResolver).should().resolveQid(qidUrl);
+  }
+
+  @Test
+  void testPrepareDigitalSpecimenRecordMandatoryAttributesBadSpecimenHost() throws Exception {
+    // Given
+    String specimenId = "12345";
+    given(pidResolver.getObjectName(any())).willReturn("placeholder");
+    var request = new DigitalSpecimenRequest(
+        FDO_PROFILE_TESTVAL,
+        ISSUED_FOR_AGENT_TESTVAL,
+        DIGITAL_OBJECT_TYPE_TESTVAL,
+        PID_ISSUER_TESTVAL_OTHER,
+        STRUCTURAL_TYPE_TESTVAL,
+        LOC_TESTVAL,
+        REFERENT_NAME_TESTVAL,
+        PRIMARY_REFERENT_TYPE_TESTVAL,
+        specimenId,
+        null,
+        "PhysicalId",
+        null,null, null, null, null, null, null, null, null, null, null,null, null, null, null
+    );
+
+    // When
+    var result = fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle, ObjectType.DIGITAL_SPECIMEN);
+
+    // Then
+    assertThat(result).hasSize(DS_MANDATORY_QTY-1);
   }
 
   @Test

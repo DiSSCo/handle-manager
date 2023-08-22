@@ -112,6 +112,17 @@ class PidResolverTest {
   }
 
   @Test
+  void testResolveQidNotFound() throws Exception {
+    // Given
+    mockServer.enqueue(new MockResponse()
+        .setResponseCode(HttpStatus.NOT_FOUND.value())
+        .addHeader("Content-Type", "application/json"));
+
+    // then
+    assertThrows(PidResolutionException.class, ()->pidResolver.resolveQid("qid"));
+  }
+
+  @Test
   void testResolveExternalPidNoName() throws Exception {
     // Given
     var expectedResponse = MAPPER.readTree(loadResourceFile("pidrecord/pidRecordNoName.json"));
