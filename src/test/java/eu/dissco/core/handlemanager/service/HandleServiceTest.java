@@ -326,7 +326,8 @@ class HandleServiceTest {
     var responseExpected = givenRecordResponseWrite(List.of(handle), RECORD_TYPE_MEDIA);
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(fdoRecordService.prepareMediaObjectAttributes(any(), any(), any())).willReturn(genMediaObjectAttributes(handle));
+    given(fdoRecordService.prepareMediaObjectAttributes(any(), any(), any())).willReturn(
+        genMediaObjectAttributes(handle));
 
     // When
     var responseReceived = service.createRecords(List.of(request));
@@ -633,11 +634,6 @@ class HandleServiceTest {
     var archiveRequest = genTombstoneRequestBatch(List.of(HANDLE, HANDLE_ALT));
 
     var responseExpected = givenRecordResponseWriteArchive(List.of(handle, handleAlt));
-    var tombstoneAttributesResolved = new ArrayList<>(
-        Stream.concat(genTombstoneRecordFullAttributes(HANDLE.getBytes(
-                    StandardCharsets.UTF_8)).stream(),
-                genTombstoneRecordFullAttributes(HANDLE_ALT.getBytes(StandardCharsets.UTF_8)).stream())
-            .toList());
 
     var tombstoneAttributes = List.of(
         genTombstoneRecordRequestAttributes(handle),
@@ -808,6 +804,22 @@ class HandleServiceTest {
 
     // Then
     then(handleRep).should().rollbackHandles(handleList);
+  }
+
+  @Test
+  void testRollbackHandlesFromPhysId() {
+    // Given
+    given(handleRep.searchByNormalisedPhysicalIdentifier(anyList())).willReturn(List.of(
+        new HandleAttribute(1, HANDLE.getBytes(StandardCharsets.UTF_8),
+            PRIMARY_SPECIMEN_OBJECT_ID.get(),
+            PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8))));
+
+    // When
+    service.rollbackHandlesFromPhysId(List.of(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
+        "This phys id is not in the database"));
+
+    // Then
+    then(handleRep).should().rollbackHandles(List.of(HANDLE));
   }
 
   JsonApiDataLinks upsertedResponse(List<HandleAttribute> handleRecord, String handle)

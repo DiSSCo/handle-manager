@@ -243,6 +243,16 @@ public class HandleController {
     return ResponseEntity.status(HttpStatus.OK).body(service.updateRecords(requests, false));
   }
 
+  @Operation(summary = "rollback handle update")
+  @DeleteMapping(value = "/rollback/physId")
+  public ResponseEntity<Void> rollbackHandlePhysId(
+      @RequestBody List<String> physicalIds, Authentication authentication) {
+    log.info("Validating rollback update request from user {}", authentication.getName());
+    service.rollbackHandlesFromPhysId(physicalIds);
+    return ResponseEntity.ok().build();
+  }
+
+
   @Operation(summary = "Archive multiple PID records")
   @PutMapping(value = "")
   public ResponseEntity<JsonApiWrapperWrite> archiveRecords(@RequestBody List<JsonNode> requests, Authentication authentication)
