@@ -7,6 +7,7 @@ import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_TYPE;
 import static eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType.DIGITAL_SPECIMEN;
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType.TOMBSTONE;
 import static eu.dissco.core.handlemanager.service.ServiceUtils.setUniquePhysicalIdentifierId;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -57,6 +58,7 @@ import org.springframework.stereotype.Service;
 public class HandleService {
 
   private static final String INVALID_TYPE_ERROR = "Invalid request. Reason: unrecognized type. Check: ";
+  private static final String HANDLE_DOMAIN = "https://hdl.handle.net/";
   private final HandleRepository handleRep;
   private final FdoRecordService fdoRecordService;
   private final HandleGeneratorService hf;
@@ -65,7 +67,9 @@ public class HandleService {
   // Resolve Record
   public JsonApiWrapperReadSingle resolveSingleRecord(byte[] handle, String path)
       throws PidResolutionException {
-    var recordAttributeList = resolveAndFormatRecords(List.of(handle)).get(0);
+    var dbRecord = handleRep.resolveHandleAttributes(handle);
+    verifyHandleResolution(List.of(handle), dbRecord);
+    var recordAttributeList = formatRecords(dbRecord).get(0);
     var dataNode = wrapData(recordAttributeList, "PID");
     var linksNode = new JsonApiLinks(path);
     return new JsonApiWrapperReadSingle(linksNode, dataNode);
@@ -74,43 +78,39 @@ public class HandleService {
   public JsonApiWrapperRead resolveBatchRecord(List<byte[]> handles, String path)
       throws PidResolutionException {
     List<JsonApiDataLinks> dataList = new ArrayList<>();
-
-    var recordAttributeList = resolveAndFormatRecords(handles);
+    var dbRecords = handleRep.resolveHandleAttributes(handles);
+    verifyHandleResolution(handles, dbRecords);
+    var recordAttributeList = formatRecords(dbRecords);
     for (JsonNode recordAttributes : recordAttributeList) {
       dataList.add(wrapData(recordAttributes, "PID"));
     }
     return new JsonApiWrapperRead(new JsonApiLinks(path), dataList);
   }
 
-
-  // Response Formatting
-  private List<JsonNode> resolveAndFormatRecords(List<byte[]> handles)
-      throws PidResolutionException {
-    var dbRecord = handleRep.resolveHandleAttributes(handles);
-    var handleMap = mapRecords(dbRecord);
-    Set<String> resolvedHandles = new HashSet<>();
-
-    List<JsonNode> rootNodeList = new ArrayList<>();
-
-    for (var handleRecord : handleMap.entrySet()) {
-      rootNodeList.add(jsonFormatSingleRecord(handleRecord.getValue()));
-      resolvedHandles.add(
-          new String(handleRecord.getValue().get(0).handle(), StandardCharsets.UTF_8));
+  private void verifyHandleResolution(List<byte[]> handles, List<HandleAttribute> dbRecords) throws PidResolutionException {
+    var resolvedHandles = dbRecords.stream()
+        .map(HandleAttribute::handle)
+        .map(handle -> new String(handle, StandardCharsets.UTF_8))
+        .collect(Collectors.toSet());
+    if (handles.size()==resolvedHandles.size()){
+      return;
     }
-    checkAllHandlesResolve(handles, resolvedHandles);
-    return rootNodeList;
+    var handlesString = handles.stream().map(handle -> new String(handle, StandardCharsets.UTF_8)).collect(
+        Collectors.toSet());
+    handlesString.removeAll(resolvedHandles);
+    log.error("Unable to resolve the following handles: {}", handlesString);
+    throw new PidResolutionException("Handles not found: "+ handlesString);
   }
 
-  private void checkAllHandlesResolve(List<byte[]> handles, Set<String> resolvedHandles)
-      throws PidResolutionException {
-    if (handles.size() > resolvedHandles.size()) {
-      Set<String> unresolvedHandles = handles.stream()
-          .filter(h -> !resolvedHandles.contains(new String(h, StandardCharsets.UTF_8)))
-          .map(h -> new String(h, StandardCharsets.UTF_8)).collect(Collectors.toSet());
 
-      throw new PidResolutionException(
-          "Unable to resolve the following handles: " + unresolvedHandles);
+  // Response Formatting
+  private List<JsonNode> formatRecords(List<HandleAttribute> dbRecord) {
+    var handleMap = mapRecords(dbRecord);
+    List<JsonNode> rootNodeList = new ArrayList<>();
+    for (var handleRecord : handleMap.entrySet()) {
+      rootNodeList.add(jsonFormatSingleRecord(handleRecord.getValue()));
     }
+    return rootNodeList;
   }
 
   // Getters
@@ -207,7 +207,6 @@ public class HandleService {
 
     var recordTimestamp = Instant.now().getEpochSecond();
     List<byte[]> handles = hf.genHandleList(requests.size());
-    List<byte[]> handlesPost = new ArrayList<>(handles);
     List<T> digitalSpecimenList = new ArrayList<>();
 
     List<HandleAttribute> handleAttributes = new ArrayList<>();
@@ -291,7 +290,7 @@ public class HandleService {
     log.info("Persisting new handles to db");
     handleRep.postAttributesToDb(recordTimestamp, handleAttributes);
 
-    var postedRecordAttributes = resolveAndFormatRecords(handlesPost);
+    var postedRecordAttributes = formatRecords(handleAttributes);
     var dataList = postedRecordAttributes.stream().map(
         recordAttributes -> wrapData(recordAttributes,
             getRecordTypeFromTypeList(recordAttributes, recordTypes))).toList();
@@ -364,7 +363,7 @@ public class HandleService {
     for (var row: records){
       if (row.type().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())){
         String h = new String(row.handle(), StandardCharsets.UTF_8);
-        String pidLink = "https://hdl.handle.net/" + h;
+        String pidLink = HANDLE_DOMAIN + h;
         var node = mapper.createObjectNode();
         node.put(PRIMARY_SPECIMEN_OBJECT_ID.get(), new String(row.data(), StandardCharsets.UTF_8));
         dataLinksList.add(new JsonApiDataLinks(h, DIGITAL_SPECIMEN.toString(), node, new JsonApiLinks(pidLink)));
@@ -489,7 +488,6 @@ public class HandleService {
       JsonNode requestAttributes = data.get(NODE_ATTRIBUTES);
       ObjectType type = ObjectType.fromString(data.get(NODE_TYPE).asText());
       recordTypes.put(new String(handle, StandardCharsets.UTF_8), type);
-
       var attributes = fdoRecordService.prepareUpdateAttributes(handle, requestAttributes, type);
       attributesToUpdate.add(attributes);
     }
@@ -497,11 +495,26 @@ public class HandleService {
     checkHandlesWritable(handles);
 
     handleRep.updateRecordBatch(recordTimestamp, attributesToUpdate, incrementVersion);
-    var updatedRecords = resolveAndFormatRecords(handles);
+    return formatUpdates(attributesToUpdate, recordTypes);
+  }
 
+  private JsonApiWrapperWrite formatUpdates(List<List<HandleAttribute>> updatedRecords, Map<String, ObjectType> recordTypes){
     List<JsonApiDataLinks> dataList = new ArrayList<>();
-    for (JsonNode updatedRecord : updatedRecords) {
-      dataList.add(wrapData(updatedRecord, getRecordTypeFromTypeList(updatedRecord, recordTypes)));
+    for (var updatedRecord : updatedRecords){
+      String handle = new String(updatedRecord.get(0).handle(), StandardCharsets.UTF_8);
+      var attributeNode = jsonFormatSingleRecord(updatedRecord);
+      var type = recordTypes.get(handle).toString();
+      dataList.add(new JsonApiDataLinks(handle, type, attributeNode, new JsonApiLinks(HANDLE_DOMAIN+handle)));
+    }
+    return new JsonApiWrapperWrite(dataList);
+  }
+
+  private JsonApiWrapperWrite formatArchives(List<List<HandleAttribute>> archiveRecords){
+    List<JsonApiDataLinks> dataList = new ArrayList<>();
+    for (var archiveRecord : archiveRecords){
+      String handle = new String(archiveRecord.get(0).handle(), StandardCharsets.UTF_8);
+      var attributeNode = jsonFormatSingleRecord(archiveRecord);
+      dataList.add(new JsonApiDataLinks(handle, TOMBSTONE.toString(), attributeNode, new JsonApiLinks(HANDLE_DOMAIN+handle)));
     }
     return new JsonApiWrapperWrite(dataList);
   }
@@ -558,33 +571,26 @@ public class HandleService {
       throws InvalidRequestException, PidResolutionException, PidServiceInternalError, UnprocessableEntityException {
     var recordTimestamp = Instant.now().getEpochSecond();
     List<byte[]> handles = new ArrayList<>();
-    List<HandleAttribute> archiveAttributes = new ArrayList<>();
+    List<HandleAttribute> archiveAttributesFlat = new ArrayList<>();
+    List<List<HandleAttribute>> archiveAttributes = new ArrayList<>();
 
     for (JsonNode root : requests) {
       JsonNode data = root.get(NODE_DATA);
       JsonNode requestAttributes = data.get(NODE_ATTRIBUTES);
       var handle = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
       handles.add(handle);
-      archiveAttributes.addAll(
-          fdoRecordService.prepareTombstoneAttributes(handle, requestAttributes));
+      var recordAttributes = fdoRecordService.prepareTombstoneAttributes(handle, requestAttributes);
+      archiveAttributesFlat.addAll(recordAttributes);
+      archiveAttributes.add(recordAttributes);
     }
 
     checkInternalDuplicates(handles);
     checkHandlesWritable(handles);
 
-    handleRep.archiveRecords(recordTimestamp, archiveAttributes,
+    handleRep.archiveRecords(recordTimestamp, archiveAttributesFlat,
         handles.stream().map(h -> new String(h, StandardCharsets.UTF_8)).toList());
-    var archivedRecords = resolveAndFormatRecords(handles);
 
-    List<JsonApiDataLinks> dataList = new ArrayList<>();
-
-    for (JsonNode updatedRecord : archivedRecords) {
-      String pidLink = updatedRecord.get(PID.get()).asText();
-      String pidName = getPidName(pidLink);
-      dataList.add(new JsonApiDataLinks(pidName, ObjectType.TOMBSTONE.toString(), updatedRecord,
-          new JsonApiLinks(pidLink)));
-    }
-    return new JsonApiWrapperWrite(dataList);
+    return formatArchives(archiveAttributes);
   }
 
   public void rollbackHandles(List<String> handles) {

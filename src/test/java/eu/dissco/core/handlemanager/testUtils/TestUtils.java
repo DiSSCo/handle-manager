@@ -805,7 +805,7 @@ public class TestUtils {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
 
     for (byte[] handle : handles) {
-      var testDbRecord = genHandleRecordAttributesAltLoc(handle);
+      var testDbRecord = genUpdateRecordAttributesAltLoc(handle);
       JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
 
       var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
@@ -822,7 +822,7 @@ public class TestUtils {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
 
     for (byte[] handle : handles) {
-      var testDbRecord = genTombstoneRecordFullAttributes(handle);
+      var testDbRecord = genTombstoneRecordRequestAttributes(handle);
       JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
 
       var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));

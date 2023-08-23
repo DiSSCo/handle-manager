@@ -35,6 +35,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genSourceSystemAt
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordFullAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordRequestAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequestBatch;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRecordAttributesAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestBatch;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
@@ -54,6 +55,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystem
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
@@ -126,7 +128,7 @@ class HandleServiceTest {
     var responseExpected = givenRecordResponseReadSingle(HANDLE, path, "PID",
         genObjectNodeAttributeRecord(recordAttributeList));
 
-    given(handleRep.resolveHandleAttributes(anyList())).willReturn(recordAttributeList);
+    given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(recordAttributeList);
 
     // When
     var responseReceived = service.resolveSingleRecord(handle, path);
@@ -140,7 +142,7 @@ class HandleServiceTest {
 
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     String path = SANDBOX_URI + HANDLE;
-    given(handleRep.resolveHandleAttributes(anyList())).willReturn(new ArrayList<>());
+    given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(new ArrayList<>());
 
     // When
     var exception = assertThrows(PidResolutionException.class, () -> {
@@ -241,7 +243,6 @@ class HandleServiceTest {
     List<HandleAttribute> handleRecord = genHandleRecordAttributes(handle, ObjectType.HANDLE);
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(handleRep.resolveHandleAttributes(anyList())).willReturn(handleRecord);
     given(fdoRecordService.prepareHandleRecordAttributes(any(), any(),
         eq(ObjectType.HANDLE))).willReturn(handleRecord);
 
@@ -261,7 +262,6 @@ class HandleServiceTest {
     List<HandleAttribute> doiRecord = genDoiRecordAttributes(handle, ObjectType.HANDLE);
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(handleRep.resolveHandleAttributes(anyList())).willReturn(doiRecord);
     given(fdoRecordService.prepareDoiRecordAttributes(any(), any(), eq(ObjectType.DOI))).willReturn(
         doiRecord);
 
@@ -282,8 +282,8 @@ class HandleServiceTest {
     List<HandleAttribute> digitalSpecimen = genDigitalSpecimenAttributes(handle);
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(handleRep.resolveHandleAttributes(anyList())).willReturn(digitalSpecimen);
-    given(handleRep.searchByNormalisedPhysicalIdentifierFullRecord(anyList())).willReturn(new ArrayList<>());
+    given(handleRep.searchByNormalisedPhysicalIdentifierFullRecord(anyList())).willReturn(
+        new ArrayList<>());
     given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(any(), any(), any())).willReturn(
         digitalSpecimen);
 
@@ -303,7 +303,8 @@ class HandleServiceTest {
     List<HandleAttribute> digitalSpecimen = genDigitalSpecimenAttributes(handle);
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(handleRep.searchByNormalisedPhysicalIdentifierFullRecord(anyList())).willReturn(digitalSpecimen);
+    given(handleRep.searchByNormalisedPhysicalIdentifierFullRecord(anyList())).willReturn(
+        digitalSpecimen);
 
     // When
     Exception e = assertThrows(PidCreationException.class, () -> {
@@ -323,10 +324,9 @@ class HandleServiceTest {
     var request = genCreateRecordRequest(givenMediaRequestObject(),
         RECORD_TYPE_MEDIA);
     var responseExpected = givenRecordResponseWrite(List.of(handle), RECORD_TYPE_MEDIA);
-    List<HandleAttribute> mediaObject = genMediaObjectAttributes(handle);
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(handleRep.resolveHandleAttributes(anyList())).willReturn(mediaObject);
+    given(fdoRecordService.prepareMediaObjectAttributes(any(), any(), any())).willReturn(genMediaObjectAttributes(handle));
 
     // When
     var responseReceived = service.createRecords(List.of(request));
@@ -344,8 +344,8 @@ class HandleServiceTest {
     List<HandleAttribute> handleRecord = genMasAttributes(handle);
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(handleRep.resolveHandleAttributes(anyList())).willReturn(handleRecord);
-    given(fdoRecordService.prepareMasRecordAttributes(any(), any(), eq(ObjectType.MAS))).willReturn(handleRecord);
+    given(fdoRecordService.prepareMasRecordAttributes(any(), any(), eq(ObjectType.MAS))).willReturn(
+        handleRecord);
 
     // When
     var responseReceived = service.createRecords(List.of(request));
@@ -357,18 +357,18 @@ class HandleServiceTest {
   @Test
   void testCreateHandleRecordBatch() throws Exception {
     // Given
-    List<HandleAttribute> flatList = new ArrayList<>();
 
     List<JsonNode> requests = new ArrayList<>();
     for (byte[] handle : handles) {
       requests.add(genCreateRecordRequest(givenHandleRecordRequestObject(), RECORD_TYPE_HANDLE));
-      flatList.addAll(genHandleRecordAttributes(handle, ObjectType.HANDLE));
     }
 
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_HANDLE);
 
     given(hgService.genHandleList(handles.size())).willReturn(handles);
-    given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
+    given(fdoRecordService.prepareHandleRecordAttributes(any(), any(), any()))
+        .willReturn(genHandleRecordAttributes(handles.get(0), ObjectType.HANDLE))
+        .willReturn(genHandleRecordAttributes(handles.get(1), ObjectType.HANDLE));
 
     // When
     var responseReceived = service.createRecords(requests);
@@ -391,7 +391,7 @@ class HandleServiceTest {
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_DOI);
 
     given(hgService.genHandleList(handles.size())).willReturn(handles);
-    given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
+    given(fdoRecordService.prepareDoiRecordAttributes(any(), any(), any())).willReturn(flatList);
 
     // When
     var responseReceived = service.createRecords(requests);
@@ -403,20 +403,19 @@ class HandleServiceTest {
   @Test
   void testCreateDigitalSpecimenBatch() throws Exception {
     // Given
-    List<HandleAttribute> flatList = new ArrayList<>();
-
     List<JsonNode> requests = new ArrayList<>();
     for (byte[] handle : handles) {
       var physId = new String(handle) + "a";
       requests.add(
           genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(physId),
               RECORD_TYPE_DS));
-      flatList.addAll(genDigitalSpecimenAttributes(handle));
     }
 
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_DS);
     given(hgService.genHandleList(handles.size())).willReturn(handles);
-    given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
+    given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(any(), any(), any()))
+        .willReturn(genDigitalSpecimenAttributes(handles.get(0)))
+        .willReturn(genDigitalSpecimenAttributes(handles.get(1)));
 
     // When
     var responseReceived = service.createRecords(requests);
@@ -428,17 +427,17 @@ class HandleServiceTest {
   @Test
   void testCreateAnnotationsBatch() throws Exception {
     // Given
-    List<HandleAttribute> flatList = new ArrayList<>();
 
     List<JsonNode> requests = new ArrayList<>();
     for (byte[] handle : handles) {
       requests.add(genCreateRecordRequest(givenAnnotationRequestObject(), RECORD_TYPE_ANNOTATION));
-      flatList.addAll(genAnnotationAttributes(handle));
     }
 
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_ANNOTATION);
     given(hgService.genHandleList(handles.size())).willReturn(handles);
-    given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
+    given(fdoRecordService.prepareAnnotationAttributes(any(), any(), any()))
+        .willReturn(genAnnotationAttributes(handles.get(0)))
+        .willReturn(genAnnotationAttributes(handles.get(1)));
 
     // When
     var responseReceived = service.createRecords(requests);
@@ -450,17 +449,16 @@ class HandleServiceTest {
   @Test
   void testCreateMappingBatch() throws Exception {
     // Given
-    List<HandleAttribute> flatList = new ArrayList<>();
-
     List<JsonNode> requests = new ArrayList<>();
     for (byte[] handle : handles) {
       requests.add(genCreateRecordRequest(givenMappingRequestObject(), RECORD_TYPE_MAPPING));
-      flatList.addAll(genMappingAttributes(handle));
     }
 
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_MAPPING);
     given(hgService.genHandleList(handles.size())).willReturn(handles);
-    given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
+    given(fdoRecordService.prepareMappingAttributes(any(), any(), any()))
+        .willReturn(genMappingAttributes(handles.get(0)))
+        .willReturn(genMappingAttributes(handles.get(1)));
 
     // When
     var responseReceived = service.createRecords(requests);
@@ -472,18 +470,17 @@ class HandleServiceTest {
   @Test
   void testCreateSourceSystemBatch() throws Exception {
     // Given
-    List<HandleAttribute> flatList = new ArrayList<>();
-
     List<JsonNode> requests = new ArrayList<>();
     for (byte[] handle : handles) {
       requests.add(
           genCreateRecordRequest(givenSourceSystemRequestObject(), RECORD_TYPE_SOURCE_SYSTEM));
-      flatList.addAll(genSourceSystemAttributes(handle));
     }
 
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_SOURCE_SYSTEM);
     given(hgService.genHandleList(handles.size())).willReturn(handles);
-    given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
+    given(fdoRecordService.prepareSourceSystemAttributes(any(), any(), any()))
+        .willReturn(genSourceSystemAttributes(handles.get(0)))
+        .willReturn(genSourceSystemAttributes(handles.get(1)));
 
     // When
     var responseReceived = service.createRecords(requests);
@@ -506,7 +503,7 @@ class HandleServiceTest {
 
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_ORGANISATION);
     given(hgService.genHandleList(handles.size())).willReturn(handles);
-    given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
+    given(fdoRecordService.prepareOrganisationAttributes(any(), any(), any())).willReturn(flatList);
 
     // When
     var responseReceived = service.createRecords(requests);
@@ -529,7 +526,7 @@ class HandleServiceTest {
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_MEDIA);
 
     given(hgService.genHandleList(handles.size())).willReturn(handles);
-    given(handleRep.resolveHandleAttributes(anyList())).willReturn(flatList);
+    given(fdoRecordService.prepareMediaObjectAttributes(any(), any(), any())).willReturn(flatList);
 
     // When
     var responseReceived = service.createRecords(requests);
@@ -543,11 +540,12 @@ class HandleServiceTest {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     var updateRequest = genUpdateRequestBatch(List.of(handle));
-    var updatedAttributeRecord = genHandleRecordAttributesAltLoc(handle);
+    var updatedAttributeRecord = genUpdateRecordAttributesAltLoc(handle);
     var responseExpected = givenRecordResponseWriteAltLoc(List.of(handle));
 
     given(handleRep.checkHandlesWritable(anyList())).willReturn(List.of(handle));
-    given(handleRep.resolveHandleAttributes(anyList())).willReturn(updatedAttributeRecord);
+    given(fdoRecordService.prepareUpdateAttributes(any(), any(), any()))
+        .willReturn(updatedAttributeRecord);
 
     // When
     var responseReceived = service.updateRecords(updateRequest, true);
@@ -562,15 +560,12 @@ class HandleServiceTest {
 
     List<JsonNode> updateRequest = genUpdateRequestBatch(handles);
 
-    List<HandleAttribute> updatedAttributeRecord = new ArrayList<>();
-    for (byte[] handle : handles) {
-      updatedAttributeRecord.addAll(genHandleRecordAttributesAltLoc(handle));
-    }
-
     var responseExpected = givenRecordResponseWriteAltLoc(handles);
 
     given(handleRep.checkHandlesWritable(anyList())).willReturn(handles);
-    given(handleRep.resolveHandleAttributes(anyList())).willReturn(updatedAttributeRecord);
+    given(fdoRecordService.prepareUpdateAttributes(any(), any(), any()))
+        .willReturn(genUpdateRecordAttributesAltLoc(handles.get(0)))
+        .willReturn(genUpdateRecordAttributesAltLoc(handles.get(1)));
 
     // When
     var responseReceived = service.updateRecords(updateRequest, true);
@@ -613,14 +608,11 @@ class HandleServiceTest {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     var archiveRequest = genTombstoneRequestBatch(List.of(HANDLE));
-    var originalRecord = genDigitalSpecimenAttributes(HANDLE.getBytes(StandardCharsets.UTF_8));
-    var tombstoneAttributesFull = genTombstoneRecordFullAttributes(handle);
 
     var responseExpected = givenRecordResponseWriteArchive(List.of(handle));
     var tombstoneAttributes = genTombstoneRecordRequestAttributes(handle);
 
     given(handleRep.checkHandlesWritable(anyList())).willReturn(handles);
-    given(handleRep.resolveHandleAttributes(anyList())).willReturn(tombstoneAttributesFull);
     given(fdoRecordService.prepareTombstoneAttributes(any(), any())).willReturn(
         tombstoneAttributes);
 
@@ -655,7 +647,6 @@ class HandleServiceTest {
         tombstoneAttributes.get(1).stream()).toList();
 
     given(handleRep.checkHandlesWritable(anyList())).willReturn(handles);
-    given(handleRep.resolveHandleAttributes(anyList())).willReturn(tombstoneAttributesResolved);
     given(fdoRecordService.prepareTombstoneAttributes(any(), any())).willReturn(
         tombstoneAttributes.get(0), tombstoneAttributes.get(1));
 
@@ -702,22 +693,26 @@ class HandleServiceTest {
         genCreateRecordRequest(newRecordRequest, RECORD_TYPE_DS),
         genCreateRecordRequest(existingRecordRequest, RECORD_TYPE_DS));
 
-    var existingRecordAttributes = genDigitalSpecimenAttributes(existingHandle, existingRecordRequest);
+    var existingRecordAttributes = genDigitalSpecimenAttributes(existingHandle,
+        existingRecordRequest);
     var newRecordAttributes = genDigitalSpecimenAttributes(newHandle, newRecordRequest);
     var primarySpecimenObjectIdAttributes = getPrimarySpecimenObjectIds(
         Stream.concat(existingRecordAttributes.stream(), newRecordAttributes.stream()).toList());
 
     var expected = new JsonApiWrapperWrite(
-        List.of(upsertedResponse(getPrimarySpecimenObjectIds(newRecordAttributes), new String(newHandle)),
+        List.of(upsertedResponse(getPrimarySpecimenObjectIds(newRecordAttributes),
+                new String(newHandle)),
             upsertedResponse(getPrimarySpecimenObjectIds(existingRecordAttributes),
                 new String(existingHandle, StandardCharsets.UTF_8))));
 
     given(handleRep.searchByNormalisedPhysicalIdentifier(anyList())).willReturn(
         List.of(new HandleAttribute(PRIMARY_SPECIMEN_OBJECT_ID.index(), existingHandle,
-            PRIMARY_SPECIMEN_OBJECT_ID_TYPE.get(), (existingPhysId+":"+ROR_IDENTIFIER).getBytes(StandardCharsets.UTF_8))));
+            PRIMARY_SPECIMEN_OBJECT_ID_TYPE.get(),
+            (existingPhysId + ":" + ROR_IDENTIFIER).getBytes(StandardCharsets.UTF_8))));
     given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(eq(newRecordRequest), any(),
         any())).willReturn(newRecordAttributes);
-    given(fdoRecordService.prepareUpdateAttributes(any(), eq(MAPPER.valueToTree(existingRecordRequest)), any())).willReturn(
+    given(fdoRecordService.prepareUpdateAttributes(any(),
+        eq(MAPPER.valueToTree(existingRecordRequest)), any())).willReturn(
         existingRecordAttributes);
     given(hgService.genHandleList(anyInt())).willReturn(new ArrayList<>(List.of(newHandle)));
 
@@ -762,8 +757,9 @@ class HandleServiceTest {
 
     given(handleRep.searchByNormalisedPhysicalIdentifier(anyList())).willReturn(
         List.of(new HandleAttribute(PRIMARY_SPECIMEN_OBJECT_ID.index(), handles.get(0),
-            PRIMARY_SPECIMEN_OBJECT_ID.get(), (PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL+":"+ROR_IDENTIFIER).getBytes(
-            StandardCharsets.UTF_8))));
+            PRIMARY_SPECIMEN_OBJECT_ID.get(),
+            (PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL + ":" + ROR_IDENTIFIER).getBytes(
+                StandardCharsets.UTF_8))));
     given(fdoRecordService.prepareUpdateAttributes(any(), any(), any())).willReturn(
         existingRecord);
     given(hgService.genHandleList(0)).willReturn(new ArrayList<>());
@@ -838,10 +834,11 @@ class HandleServiceTest {
     handles.add(HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
   }
 
-  private List<HandleAttribute> getPrimarySpecimenObjectIds(List<HandleAttribute> handleAttributes){
+  private List<HandleAttribute> getPrimarySpecimenObjectIds(
+      List<HandleAttribute> handleAttributes) {
     List<HandleAttribute> primaryIdList = new ArrayList<>();
-    for(var row: handleAttributes){
-      if (row.type().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())){
+    for (var row : handleAttributes) {
+      if (row.type().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())) {
         primaryIdList.add(row);
       }
     }
