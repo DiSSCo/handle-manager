@@ -26,7 +26,12 @@ Example: `20.5000.1025/E3W-9A2-413`.
 
 The API is documented with a Swagger endpoint.
 
-## Connection Properties
+This API adheres to JsonApi Standard where appropriate. Endpoints intended for internal use may
+divert from the standard. Updating and archiving endpoints return only the updated fields of the
+object, not the complete object. This is done to minimize the traffic load and time for the update
+of the handles.
+
+## Database Connection Properties
 
 `spring.datasource.url` - JDBC URL of the database
 
@@ -34,7 +39,17 @@ The API is documented with a Swagger endpoint.
 
 `spring.datasource.password` - Password for the User
 
-## JWT Properties
-`spring.security.oauth2.authorizationserver.endpoint.jwk-set-uri`
+## Security Properties
+`spring.security.oauth2.resourceserver.jwt.issuer-uri` - Resource server for keycloak
 
-`jwt.auth.converter.resource-id`
+`spring.security.oauth2.authorizationserver.endpoint.jwk-set-uri` - Keycloak Token Endpoint
+
+## Application Properties
+
+`application.ui-url` 
+
+`application.api-url`
+
+`application.orchestration-url`
+
+`application.max-handles`
