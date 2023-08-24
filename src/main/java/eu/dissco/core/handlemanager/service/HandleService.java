@@ -87,19 +87,21 @@ public class HandleService {
     return new JsonApiWrapperRead(new JsonApiLinks(path), dataList);
   }
 
-  private void verifyHandleResolution(List<byte[]> handles, List<HandleAttribute> dbRecords) throws PidResolutionException {
+  private void verifyHandleResolution(List<byte[]> handles, List<HandleAttribute> dbRecords)
+      throws PidResolutionException {
     var resolvedHandles = dbRecords.stream()
         .map(HandleAttribute::handle)
         .map(handle -> new String(handle, StandardCharsets.UTF_8))
         .collect(Collectors.toSet());
-    if (handles.size()==resolvedHandles.size()){
+    if (handles.size() == resolvedHandles.size()) {
       return;
     }
-    var handlesString = handles.stream().map(handle -> new String(handle, StandardCharsets.UTF_8)).collect(
-        Collectors.toSet());
+    var handlesString = handles.stream()
+        .map(handle -> new String(handle, StandardCharsets.UTF_8))
+        .collect(Collectors.toSet());
     handlesString.removeAll(resolvedHandles);
     log.error("Unable to resolve the following handles: {}", handlesString);
-    throw new PidResolutionException("Handles not found: "+ handlesString);
+    throw new PidResolutionException("Handles not found: " + handlesString);
   }
 
 
@@ -166,7 +168,8 @@ public class HandleService {
       throws PidResolutionException, InvalidRequestException {
 
     var physicalIdentifier = setPhysicalId(physicalId, physicalIdType, specimenHostPid);
-    var returnedRows = handleRep.searchByNormalisedPhysicalIdentifierFullRecord(List.of(physicalIdentifier));
+    var returnedRows = handleRep.searchByNormalisedPhysicalIdentifierFullRecord(
+        List.of(physicalIdentifier));
     var handleNames = listHandleNamesReturnedFromQuery(returnedRows);
     if (handleNames.size() > 1) {
       throw new PidResolutionException(
@@ -222,13 +225,15 @@ public class HandleService {
             var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 HandleRecordRequest.class);
             handleAttributes.addAll(
-                fdoRecordService.prepareHandleRecordAttributes(requestObject, handles.remove(0), type));
+                fdoRecordService.prepareHandleRecordAttributes(requestObject, handles.remove(0),
+                    type));
           }
           case DOI -> {
             var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 DoiRecordRequest.class);
             handleAttributes.addAll(
-                fdoRecordService.prepareDoiRecordAttributes(requestObject, handles.remove(0), type));
+                fdoRecordService.prepareDoiRecordAttributes(requestObject, handles.remove(0),
+                    type));
           }
           case DIGITAL_SPECIMEN -> {
             var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
@@ -242,13 +247,15 @@ public class HandleService {
             var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 MediaObjectRequest.class);
             handleAttributes.addAll(
-                fdoRecordService.prepareMediaObjectAttributes(requestObject, handles.remove(0), type));
+                fdoRecordService.prepareMediaObjectAttributes(requestObject, handles.remove(0),
+                    type));
           }
           case ANNOTATION -> {
             var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 AnnotationRequest.class);
             handleAttributes.addAll(
-                fdoRecordService.prepareAnnotationAttributes(requestObject, handles.remove(0), type));
+                fdoRecordService.prepareAnnotationAttributes(requestObject, handles.remove(0),
+                    type));
           }
           case MAPPING -> {
             var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
@@ -260,18 +267,21 @@ public class HandleService {
             var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 SourceSystemRequest.class);
             handleAttributes.addAll(
-                fdoRecordService.prepareSourceSystemAttributes(requestObject, handles.remove(0), type));
+                fdoRecordService.prepareSourceSystemAttributes(requestObject, handles.remove(0),
+                    type));
           }
           case ORGANISATION -> {
             var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 OrganisationRequest.class);
             handleAttributes.addAll(
-                fdoRecordService.prepareOrganisationAttributes(requestObject, handles.remove(0), type));
+                fdoRecordService.prepareOrganisationAttributes(requestObject, handles.remove(0),
+                    type));
           }
           case MAS -> {
             var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES), MasRequest.class);
             handleAttributes.addAll(
-                fdoRecordService.prepareMasRecordAttributes(requestObject, handles.remove(0), type));
+                fdoRecordService.prepareMasRecordAttributes(requestObject, handles.remove(0),
+                    type));
           }
           default -> throw new InvalidRequestException(INVALID_TYPE_ERROR + type);
         }
@@ -330,7 +340,7 @@ public class HandleService {
 
     var createRequests = getCreateRequests(upsertRequests, digitalSpecimenRequests);
     var newHandles = hf.genHandleList(createRequests.size());
-    if (!newHandles.isEmpty()){
+    if (!newHandles.isEmpty()) {
       log.info("Successfully minted {} new handle(s)", newHandles.size());
     }
     var createAttributes = getCreateAttributes(createRequests, newHandles);
@@ -350,9 +360,10 @@ public class HandleService {
     return concatAndFormatUpsertResponse(concatAttributes);
   }
 
-  private List<HandleAttribute> concatHandleAttributes(List<HandleAttribute> createAttributes, List<List<HandleAttribute>> upsertAttributes){
+  private List<HandleAttribute> concatHandleAttributes(List<HandleAttribute> createAttributes,
+      List<List<HandleAttribute>> upsertAttributes) {
     List<HandleAttribute> upsertListFlat = new ArrayList<>();
-    for (var upsertRecord : upsertAttributes){
+    for (var upsertRecord : upsertAttributes) {
       upsertListFlat.addAll(upsertRecord);
     }
     return Stream.concat(createAttributes.stream(), upsertListFlat.stream()).toList();
@@ -360,22 +371,24 @@ public class HandleService {
 
   private JsonApiWrapperWrite concatAndFormatUpsertResponse(List<HandleAttribute> records) {
     List<JsonApiDataLinks> dataLinksList = new ArrayList<>();
-    for (var row: records){
-      if (row.type().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())){
+    for (var row : records) {
+      if (row.type().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())) {
         String h = new String(row.handle(), StandardCharsets.UTF_8);
         String pidLink = HANDLE_DOMAIN + h;
         var node = mapper.createObjectNode();
         node.put(PRIMARY_SPECIMEN_OBJECT_ID.get(), new String(row.data(), StandardCharsets.UTF_8));
-        dataLinksList.add(new JsonApiDataLinks(h, DIGITAL_SPECIMEN.toString(), node, new JsonApiLinks(pidLink)));
+        dataLinksList.add(
+            new JsonApiDataLinks(h, DIGITAL_SPECIMEN.toString(), node, new JsonApiLinks(pidLink)));
       }
     }
     return new JsonApiWrapperWrite(dataLinksList);
   }
 
-  private void logUpdates(List<UpsertDigitalSpecimen> upsertRequests){
+  private void logUpdates(List<UpsertDigitalSpecimen> upsertRequests) {
     var registeredHandles = upsertRequests.stream().map(UpsertDigitalSpecimen::handle).toList();
-    if (!registeredHandles.isEmpty()){
-      log.info("Some specimens already have handles. Updating the following PID Records {}", registeredHandles);
+    if (!registeredHandles.isEmpty()) {
+      log.info("Some specimens already have handles. Updating the following PID Records {}",
+          registeredHandles);
     }
   }
 
@@ -411,7 +424,7 @@ public class HandleService {
     }
 
     ArrayList<UpsertDigitalSpecimen> upsertDigitalSpecimen = new ArrayList<>();
-    for (var row : registeredSpecimensHandleAttributes){
+    for (var row : registeredSpecimensHandleAttributes) {
       var targetPhysId = new String(row.data(), StandardCharsets.UTF_8);
       var targetRequest = getRequestFromPhysicalId(requests, targetPhysId);
       requests.remove(targetRequest);
@@ -426,8 +439,8 @@ public class HandleService {
 
   private DigitalSpecimenRequest getRequestFromPhysicalId(List<DigitalSpecimenRequest> requests,
       String physicalId) {
-    for (var request: requests){
-      if (setUniquePhysicalIdentifierId(request).equals(physicalId)){
+    for (var request : requests) {
+      if (setUniquePhysicalIdentifierId(request).equals(physicalId)) {
         return request;
       }
     }
@@ -439,7 +452,6 @@ public class HandleService {
     var upsertRequestsSet = upsertRequests
         .stream()
         .map(UpsertDigitalSpecimen::request).collect(Collectors.toSet());
-
     return digitalSpecimenRequests
         .stream()
         .filter(r -> (!upsertRequestsSet.contains(r)))
@@ -463,7 +475,6 @@ public class HandleService {
       List<UpsertDigitalSpecimen> upsertDigitalSpecimens)
       throws InvalidRequestException, PidServiceInternalError, UnprocessableEntityException, PidResolutionException {
     List<List<HandleAttribute>> upsertAttributes = new ArrayList<>();
-
     for (var upsertRequest : upsertDigitalSpecimens) {
       ArrayList<HandleAttribute> upsertAttributeSingleSpecimen = new ArrayList<>(fdoRecordService
           .prepareUpdateAttributes(upsertRequest.handle().getBytes(StandardCharsets.UTF_8),
@@ -480,7 +491,6 @@ public class HandleService {
     List<byte[]> handles = new ArrayList<>();
     List<List<HandleAttribute>> attributesToUpdate = new ArrayList<>();
     Map<String, ObjectType> recordTypes = new HashMap<>();
-
     for (JsonNode root : requests) {
       JsonNode data = root.get(NODE_DATA);
       byte[] handle = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
@@ -498,23 +508,26 @@ public class HandleService {
     return formatUpdates(attributesToUpdate, recordTypes);
   }
 
-  private JsonApiWrapperWrite formatUpdates(List<List<HandleAttribute>> updatedRecords, Map<String, ObjectType> recordTypes){
+  private JsonApiWrapperWrite formatUpdates(List<List<HandleAttribute>> updatedRecords,
+      Map<String, ObjectType> recordTypes) {
     List<JsonApiDataLinks> dataList = new ArrayList<>();
-    for (var updatedRecord : updatedRecords){
+    for (var updatedRecord : updatedRecords) {
       String handle = new String(updatedRecord.get(0).handle(), StandardCharsets.UTF_8);
       var attributeNode = jsonFormatSingleRecord(updatedRecord);
       var type = recordTypes.get(handle).toString();
-      dataList.add(new JsonApiDataLinks(handle, type, attributeNode, new JsonApiLinks(HANDLE_DOMAIN+handle)));
+      dataList.add(new JsonApiDataLinks(handle, type, attributeNode,
+          new JsonApiLinks(HANDLE_DOMAIN + handle)));
     }
     return new JsonApiWrapperWrite(dataList);
   }
 
-  private JsonApiWrapperWrite formatArchives(List<List<HandleAttribute>> archiveRecords){
+  private JsonApiWrapperWrite formatArchives(List<List<HandleAttribute>> archiveRecords) {
     List<JsonApiDataLinks> dataList = new ArrayList<>();
-    for (var archiveRecord : archiveRecords){
+    for (var archiveRecord : archiveRecords) {
       String handle = new String(archiveRecord.get(0).handle(), StandardCharsets.UTF_8);
       var attributeNode = jsonFormatSingleRecord(archiveRecord);
-      dataList.add(new JsonApiDataLinks(handle, TOMBSTONE.toString(), attributeNode, new JsonApiLinks(HANDLE_DOMAIN+handle)));
+      dataList.add(new JsonApiDataLinks(handle, TOMBSTONE.toString(), attributeNode,
+          new JsonApiLinks(HANDLE_DOMAIN + handle)));
     }
     return new JsonApiWrapperWrite(dataList);
   }
@@ -525,10 +538,8 @@ public class HandleService {
     return recordTypes.get(pid).toString();
   }
 
-
   private void checkHandlesWritable(List<byte[]> handles) throws PidResolutionException {
     Set<byte[]> handlesToUpdate = new HashSet<>(handles);
-
     Set<byte[]> handlesExist = new HashSet<>(handleRep.checkHandlesWritable(handles));
     if (handlesExist.size() < handles.size()) {
       handlesToUpdate.removeAll(handlesExist);
@@ -571,8 +582,8 @@ public class HandleService {
       throws InvalidRequestException, PidResolutionException, PidServiceInternalError, UnprocessableEntityException {
     var recordTimestamp = Instant.now().getEpochSecond();
     List<byte[]> handles = new ArrayList<>();
-    List<HandleAttribute> archiveAttributesFlat = new ArrayList<>();
-    List<List<HandleAttribute>> archiveAttributes = new ArrayList<>();
+    var archiveAttributesFlat = new ArrayList<HandleAttribute>();
+    var archiveAttributes = new ArrayList<List<HandleAttribute>>();
 
     for (JsonNode root : requests) {
       JsonNode data = root.get(NODE_DATA);
