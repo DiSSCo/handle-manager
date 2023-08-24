@@ -19,15 +19,15 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_SOURC
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SUFFIX;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMappingRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestAltLoc;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecordRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMappingRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseRead;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseReadSingle;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWrite;
@@ -50,7 +50,6 @@ import eu.dissco.core.handlemanager.domain.requests.RollbackRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
-
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaValidator;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
@@ -80,7 +79,6 @@ class HandleControllerTest {
 
   @Mock
   private JsonSchemaValidator schemaValidator;
-
 
   private HandleController controller;
 
@@ -116,7 +114,7 @@ class HandleControllerTest {
   }
 
   @Test
-  void testResolvePidBadPrefix(){
+  void testResolvePidBadPrefix() {
     assertThrows(PidResolutionException.class, () ->
         controller.resolvePid(SUFFIX, SUFFIX, new MockHttpServletRequest()));
   }
@@ -127,12 +125,13 @@ class HandleControllerTest {
 
     var responseExpected = givenRecordResponseWriteGeneric(
         List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), RECORD_TYPE_DS);
-    given(service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, PhysicalIdType.CETAF,
-        SPECIMEN_HOST_TESTVAL)).willReturn(responseExpected);
+    given(
+        service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, PhysicalIdType.CETAF,
+            SPECIMEN_HOST_TESTVAL)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, PhysicalIdType.CETAF,
-        SPECIMEN_HOST_TESTVAL);
+    var responseReceived = controller.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
+        PhysicalIdType.CETAF, SPECIMEN_HOST_TESTVAL);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -147,10 +146,13 @@ class HandleControllerTest {
     String specimenHostPid = SPECIMEN_HOST_TESTVAL;
     var responseExpected = givenRecordResponseWriteGeneric(
         List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), RECORD_TYPE_DS);
-    given(service.searchByPhysicalSpecimenId(physicalId, physicalIdType, specimenHostPid)).willReturn(responseExpected);
+    given(
+        service.searchByPhysicalSpecimenId(physicalId, physicalIdType, specimenHostPid)).willReturn(
+        responseExpected);
 
     // When
-    var responseReceived = controller.searchByPhysicalSpecimenId(physicalId, physicalIdType, specimenHostPid);
+    var responseReceived = controller.searchByPhysicalSpecimenId(physicalId, physicalIdType,
+        specimenHostPid);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -165,7 +167,8 @@ class HandleControllerTest {
     r.setRequestURI("view");
 
     List<String> handleString = List.of(HANDLE, HANDLE_ALT);
-    List<byte[]> handles = List.of(HANDLE.getBytes(StandardCharsets.UTF_8), HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
+    List<byte[]> handles = List.of(HANDLE.getBytes(StandardCharsets.UTF_8),
+        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
     var responseExpected = givenRecordResponseRead(handles, path, RECORD_TYPE_HANDLE);
     given(applicationProperties.getUiUrl()).willReturn(SANDBOX_URI);
@@ -187,7 +190,7 @@ class HandleControllerTest {
     r.setRequestURI("view");
     int maxHandles = 200;
     List<String> handleString = new ArrayList<>();
-    for (int i = 0; i<= maxHandles; i++){
+    for (int i = 0; i <= maxHandles; i++) {
       handleString.add(String.valueOf(i));
     }
     given(applicationProperties.getMaxHandles()).willReturn(maxHandles);
@@ -335,7 +338,8 @@ class HandleControllerTest {
     List<JsonNode> requests = new ArrayList<>();
 
     handles.forEach(handle -> {
-      requests.add(genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS));
+      requests.add(
+          genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS));
     });
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_DS);
     given(service.createRecords(requests)).willReturn(responseExpected);
@@ -380,7 +384,8 @@ class HandleControllerTest {
 
     List<JsonNode> requests = new ArrayList<>();
     handles.forEach(handle -> {
-      requests.add(genCreateRecordRequest(givenSourceSystemRequestObject(), RECORD_TYPE_SOURCE_SYSTEM));
+      requests.add(
+          genCreateRecordRequest(givenSourceSystemRequestObject(), RECORD_TYPE_SOURCE_SYSTEM));
     });
 
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_SOURCE_SYSTEM);
@@ -538,7 +543,7 @@ class HandleControllerTest {
   }
 
   @Test
-  void testRollbackHandles() throws Exception{
+  void testRollbackHandles() throws Exception {
     // Given
     var dataNode1 = MAPPER.createObjectNode();
     dataNode1.put("id", HANDLE);
@@ -548,11 +553,24 @@ class HandleControllerTest {
     var request = new RollbackRequest(dataNode);
     given(authentication.getName()).willReturn("name");
 
-    // when
-    var response = controller.rollbackHandleCreation(request, authentication);
+    // When
+    controller.rollbackHandleCreation(request, authentication);
 
     // Then
     then(service).should().rollbackHandles(List.of(HANDLE, HANDLE_ALT));
+  }
+
+  @Test
+  void testRollbackHandlesByPhysId() {
+    // Given
+    given(authentication.getName()).willReturn("name");
+    var physIds = List.of("a", "b");
+
+    // When
+    controller.rollbackHandlePhysId(physIds, authentication);
+
+    //Then
+    then(service).should().rollbackHandlesFromPhysId(physIds);
   }
 
   @Test
@@ -562,14 +580,16 @@ class HandleControllerTest {
     var request = new RollbackRequest(dataNode);
 
     // Then
-    assertThrows(InvalidRequestException.class, () -> controller.rollbackHandleCreation(request, authentication));
+    assertThrows(InvalidRequestException.class,
+        () -> controller.rollbackHandleCreation(request, authentication));
   }
 
 
   @Test
-  void testUpsert() throws Exception{
+  void testUpsert() throws Exception {
     // Given
-    var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS);
+    var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(),
+        RECORD_TYPE_DS);
 
     // When
     var response = controller.upsertRecord(List.of(request), authentication);
@@ -581,7 +601,8 @@ class HandleControllerTest {
   @Test
   void testUpsertBadType() {
     // Given
-    var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_MAPPING);
+    var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(),
+        RECORD_TYPE_MAPPING);
 
     // Then
     assertThrows(InvalidRequestException.class, () -> controller.upsertRecord(List.of(request),
@@ -613,8 +634,9 @@ class HandleControllerTest {
     var archiveRequest = givenArchiveRequest();
 
     // When
-    assertThrows(InvalidRequestException.class, () -> controller.archiveRecord(PREFIX, "123", archiveRequest,
-        authentication));
+    assertThrows(InvalidRequestException.class,
+        () -> controller.archiveRecord(PREFIX, "123", archiveRequest,
+            authentication));
   }
 
   @Test
