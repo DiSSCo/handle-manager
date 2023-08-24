@@ -615,6 +615,5 @@ public class HandleService {
     handleRep.rollbackHandles(handles);
   }
 
-
 }
 
