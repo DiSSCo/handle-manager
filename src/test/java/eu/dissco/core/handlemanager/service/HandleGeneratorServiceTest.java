@@ -1,5 +1,6 @@
 package eu.dissco.core.handlemanager.service;
 
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PREFIX;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -44,6 +45,7 @@ class HandleGeneratorServiceTest {
     // Given
     String expectedHandle = "20.5000.1025/AAA-AAA-AAA";
     given(random.nextInt(anyInt())).willReturn(0);
+    given(applicationProperties.getPrefix()).willReturn(PREFIX);
 
     // When
     String generatedHandle = new String(hgService.genHandleList(1).get(0), StandardCharsets.UTF_8);
@@ -59,6 +61,7 @@ class HandleGeneratorServiceTest {
     String expectedHandle2 = "20.5000.1025/ABB-BBB-BBB";
 
     given(random.nextInt(anyInt())).willReturn(0, 1);
+    given(applicationProperties.getPrefix()).willReturn(PREFIX);
 
     // When
     List<byte[]> handleList = hgService.genHandleList(2);
@@ -78,6 +81,7 @@ class HandleGeneratorServiceTest {
     given(random.nextInt(anyInt())).willReturn(0, 0, 0, 0, 0, 0, 0, 0, 0)// First
         .willReturn(0, 0, 0, 0, 0, 0, 0, 0, 0) // Collision
         .willReturn(1);
+    given(applicationProperties.getPrefix()).willReturn(PREFIX);
 
     // When
     List<byte[]> handleList = hgService.genHandleList(2);
@@ -102,6 +106,7 @@ class HandleGeneratorServiceTest {
     given(handleRep.getHandlesExist(anyList()))
         .willReturn(handleListInternalDuplicate)
         .willReturn(new ArrayList<>());
+    given(applicationProperties.getPrefix()).willReturn(PREFIX);
 
     // When
     List<byte[]> generatedHandleList = hgService.genHandleList(2);

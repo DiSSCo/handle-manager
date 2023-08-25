@@ -104,6 +104,7 @@ class HandleControllerTest {
 
     given(applicationProperties.getUiUrl()).willReturn(SANDBOX_URI);
     given(service.resolveSingleRecord(handle, path)).willReturn(responseExpected);
+    given(applicationProperties.getPrefix()).willReturn(PREFIX);
 
     // When
     var responseReceived = controller.resolvePid(PREFIX, SUFFIX, r);
