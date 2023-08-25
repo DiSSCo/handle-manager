@@ -19,15 +19,16 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Slf4j
 public class HandleGeneratorService {
+
   private final ApplicationProperties applicationProperties;
 
   private static final int LENGTH = 11;
   private static final String ALPHA_NUM = "ABCDEFGHJKLMNPQRSTVWXYZ1234567890";
-  private static final String PREFIX = "20.5000.1025/";
   private final char[] symbols = ALPHA_NUM.toCharArray();
   private final char[] buf = new char[LENGTH];
   private final HandleRepository handleRep;
   private final Random random;
+
 
   public List<byte[]> genHandleList(int h) {
     return unwrapBytes((HashSet<ByteBuffer>) genHandleHash(h));
@@ -105,7 +106,7 @@ public class HandleGeneratorService {
   }
 
   private String newHandle() {
-    return PREFIX + newSuffix();
+    return applicationProperties.getPrefix() + "/" + newSuffix();
   }
 
   private byte[] newHandleBytes() {

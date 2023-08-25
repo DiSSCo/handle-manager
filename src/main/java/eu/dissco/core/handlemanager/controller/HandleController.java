@@ -1,11 +1,11 @@
 package eu.dissco.core.handlemanager.controller;
 
 
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_TYPE;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -13,9 +13,9 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperReadSingle;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.requests.RollbackRequest;
+import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaValidator;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
-import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaValidator;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -24,12 +24,11 @@ import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.service.HandleService;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -59,6 +58,7 @@ public class HandleController {
   private final ApplicationProperties applicationProperties;
   private static final int LOG_LIMIT = 4;
 
+
   // Getters
   @Operation(summary = "Resolve single PID record")
   @GetMapping("/{prefix}/{suffix}")
@@ -68,7 +68,7 @@ public class HandleController {
     String path = applicationProperties.getUiUrl() + r.getRequestURI();
     String handle = prefix + "/" + suffix;
 
-    if (prefix.equals("20.5000.1025")) {
+    if (prefix.equals(applicationProperties.getPrefix())) {
       var node = service.resolveSingleRecord(handle.getBytes(StandardCharsets.UTF_8), path);
       return ResponseEntity.status(HttpStatus.OK).body(node);
     }
@@ -162,7 +162,8 @@ public class HandleController {
     for (JsonNode request : requests) {
       schemaValidator.validatePatchRequest(request);
     }
-    var ids = requests.stream().map(r -> r.get(NODE_DATA).get(NODE_ID).asText()).limit(LOG_LIMIT).toList();
+    var ids = requests.stream().map(r -> r.get(NODE_DATA).get(NODE_ID).asText()).limit(LOG_LIMIT)
+        .toList();
     log.info("Received valid batch update request for {} PIDS {} ...", requests.size(), ids);
     return ResponseEntity.status(HttpStatus.OK).body(service.updateRecords(requests, true));
   }
@@ -185,7 +186,8 @@ public class HandleController {
       }
     }
     var ids = getPhysicalSpecimenIds(requests);
-    log.info("Received valid upsert request for {} physical specimens: {}... ", requests.size(), ids);
+    log.info("Received valid upsert request for {} physical specimens: {}... ", requests.size(),
+        ids);
     return ResponseEntity.ok(service.upsertDigitalSpecimens(requests));
   }
 
@@ -204,9 +206,9 @@ public class HandleController {
     byte[] handleRequest = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
     if (!Arrays.equals(handle, handleRequest)) {
       throw new InvalidRequestException(
-              "Handle in request path does not match id in request body. Path: "
-                  + new String(handle, StandardCharsets.UTF_8)
-                  + ". Body: " + new String(handleRequest, StandardCharsets.UTF_8));
+          "Handle in request path does not match id in request body. Path: "
+              + new String(handle, StandardCharsets.UTF_8)
+              + ". Body: " + new String(handleRequest, StandardCharsets.UTF_8));
     }
     return ResponseEntity.status(HttpStatus.OK).body(service.archiveRecordBatch(List.of(request)));
   }
@@ -238,8 +240,10 @@ public class HandleController {
     for (JsonNode request : requests) {
       schemaValidator.validatePatchRequest(request);
     }
-    var handles = requests.stream().map(r -> r.get(NODE_DATA).get(NODE_ID).asText()).limit(LOG_LIMIT).toList();
-    log.info("Received valid rollback update request for {} handles: {}...", requests.size(), handles);
+    var handles = requests.stream().map(r -> r.get(NODE_DATA).get(NODE_ID).asText())
+        .limit(LOG_LIMIT).toList();
+    log.info("Received valid rollback update request for {} handles: {}...", requests.size(),
+        handles);
     return ResponseEntity.status(HttpStatus.OK).body(service.updateRecords(requests, false));
   }
 
@@ -255,7 +259,8 @@ public class HandleController {
 
   @Operation(summary = "Archive multiple PID records")
   @PutMapping(value = "")
-  public ResponseEntity<JsonApiWrapperWrite> archiveRecords(@RequestBody List<JsonNode> requests, Authentication authentication)
+  public ResponseEntity<JsonApiWrapperWrite> archiveRecords(@RequestBody List<JsonNode> requests,
+      Authentication authentication)
       throws InvalidRequestException, PidResolutionException, PidServiceInternalError, UnprocessableEntityException {
     log.info("Validating archive request from user {}", authentication.getName());
     for (JsonNode request : requests) {

@@ -25,4 +25,7 @@ public class ApplicationProperties {
   @NotNull
   private Integer maxHandles;
 
+  @NotBlank
+  private String prefix;
+
 }
