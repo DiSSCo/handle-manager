@@ -43,7 +43,7 @@ class HandleGeneratorServiceTest {
   @Test
   void testSingleBatchGen() {
     // Given
-    String expectedHandle = "20.5000.1025/AAA-AAA-AAA";
+    String expectedHandle = PREFIX + "/AAA-AAA-AAA";
     given(random.nextInt(anyInt())).willReturn(0);
     given(applicationProperties.getPrefix()).willReturn(PREFIX);
 
@@ -57,8 +57,8 @@ class HandleGeneratorServiceTest {
   @Test
   void testBatchGen() {
     // Given
-    String expectedHandle1 = "20.5000.1025/BBB-BBB-BBB";
-    String expectedHandle2 = "20.5000.1025/ABB-BBB-BBB";
+    String expectedHandle1 = PREFIX + "/BBB-BBB-BBB";
+    String expectedHandle2 = PREFIX + "/ABB-BBB-BBB";
 
     given(random.nextInt(anyInt())).willReturn(0, 1);
     given(applicationProperties.getPrefix()).willReturn(PREFIX);
@@ -75,8 +75,8 @@ class HandleGeneratorServiceTest {
 
   @Test
   void testInternalCollision() {
-    String expectedHandle1 = "20.5000.1025/BBB-BBB-BBB";
-    String expectedHandle2 = "20.5000.1025/AAA-AAA-AAA";
+    String expectedHandle1 = PREFIX + "/BBB-BBB-BBB";
+    String expectedHandle2 = PREFIX + "/AAA-AAA-AAA";
 
     given(random.nextInt(anyInt())).willReturn(0, 0, 0, 0, 0, 0, 0, 0, 0)// First
         .willReturn(0, 0, 0, 0, 0, 0, 0, 0, 0) // Collision
@@ -96,8 +96,8 @@ class HandleGeneratorServiceTest {
   @Test
   void testDbCollision() {
     // Given
-    byte[] expectedHandle1 = "20.5000.1025/BBB-BBB-BBB".getBytes(StandardCharsets.UTF_8);
-    byte[] expectedHandle2 = "20.5000.1025/ABB-BBB-BBB".getBytes(StandardCharsets.UTF_8);
+    byte[] expectedHandle1 = (PREFIX + "/BBB-BBB-BBB").getBytes(StandardCharsets.UTF_8);
+    byte[] expectedHandle2 = (PREFIX + "/ABB-BBB-BBB").getBytes(StandardCharsets.UTF_8);
 
     List<byte[]> handleListInternalDuplicate = new ArrayList<>();
     handleListInternalDuplicate.add(expectedHandle1);

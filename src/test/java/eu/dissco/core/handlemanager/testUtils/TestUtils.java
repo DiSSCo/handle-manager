@@ -26,11 +26,11 @@ import eu.dissco.core.handlemanager.domain.requests.objects.MasRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.SourceSystemRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.TombstoneRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdentifier;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ReplaceOrAppend;
-import eu.dissco.core.handlemanager.domain.requests.objects.TombstoneRecordRequest;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -58,10 +58,10 @@ public class TestUtils {
   public static final Instant CREATED = Instant.parse("2022-11-01T09:59:24.00Z");
   public static final String ISSUE_DATE_TESTVAL = "2022-11-01";
   public final static String HANDLE_URI = "https://hdl.handle.net/";
-  public static final String HANDLE = "20.5000.1025/QRS-321-ABC";
   public static final String PREFIX = "20.5000.1025";
+  public static final String HANDLE = PREFIX + "/QRS-321-ABC";
   public static final String SUFFIX = "QRS-321-ABC";
-  public static final String HANDLE_ALT = "20.5000.1025/ABC-123-QRS";
+  public static final String HANDLE_ALT = PREFIX + "/ABC-123-QRS";
   public static final List<String> HANDLE_LIST_STR;
 
   // Record types
@@ -104,15 +104,13 @@ public class TestUtils {
   public static final String SPECIMEN_HOST_TESTVAL = ROR_DOMAIN + ROR_IDENTIFIER;
   public static final String SPECIMEN_HOST_NAME_TESTVAL = "Naturalis";
   // Annotations
-  public static final String SUBJECT_DOI_TESTVAL = HANDLE_URI + "20.5000.1025/111";
+  public static final String SUBJECT_DOI_TESTVAL = HANDLE_URI + PREFIX + "/111";
   public static final String ANNOTATION_TOPIC_TESTVAL = "note";
   public static final String LINKED_URL_TESTVAL = "https://";
 
 
   // Media Objects
   public static final String MEDIA_URL_TESTVAL = "https://naturalis.nl/media/123";
-  public static final String MEDIA_HASH_TESTVAL = "47bce5c74f589f48";
-  public static final String MEDIA_HASH_ALG_TESTVAL = "SHA256";
   // Mappings
   public static final String SOURCE_DATA_STANDARD_TESTVAL = "dwc";
   // MAS
@@ -123,7 +121,8 @@ public class TestUtils {
   public static final String ORCHESTRATION_URL = "https://orchestration.dissco.tech/api/v1";
   public static final String PTR_TYPE_DOI = "doi";
   public final static String PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL = "BOTANICAL.QRS.123";
-  public final static String NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL = PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL + ":" + ROR_IDENTIFIER;
+  public final static String NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL =
+      PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL + ":" + ROR_IDENTIFIER;
   public final static PhysicalIdentifier PHYSICAL_IDENTIFIER_TESTVAL_CETAF = new PhysicalIdentifier(
       PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
       PhysicalIdType.CETAF
@@ -149,10 +148,12 @@ public class TestUtils {
 
   // Single Handle Attribute Lists
 
-  public static List<HandleAttribute> genHandleRecordAttributes(byte[] handle) throws Exception{
+  public static List<HandleAttribute> genHandleRecordAttributes(byte[] handle) throws Exception {
     return genHandleRecordAttributes(handle, ObjectType.HANDLE);
   }
-  public static List<HandleAttribute> genHandleRecordAttributes(byte[] handle, ObjectType type) throws Exception {
+
+  public static List<HandleAttribute> genHandleRecordAttributes(byte[] handle, ObjectType type)
+      throws Exception {
 
     List<HandleAttribute> fdoRecord = new ArrayList<>();
     var request = givenHandleRecordRequestObject();
@@ -226,10 +227,12 @@ public class TestUtils {
       throws Exception {
     List<HandleAttribute> attributes = genHandleRecordAttributes(handle, ObjectType.HANDLE);
 
-    byte[] locOriginal = setLocations(LOC_TESTVAL, new String(handle, StandardCharsets.UTF_8), ObjectType.HANDLE);
+    byte[] locOriginal = setLocations(LOC_TESTVAL, new String(handle, StandardCharsets.UTF_8),
+        ObjectType.HANDLE);
     var locOriginalAttr = new HandleAttribute(LOC.index(), handle, LOC.get(), locOriginal);
 
-    byte[] locAlt = setLocations(LOC_ALT_TESTVAL, new String(handle, StandardCharsets.UTF_8), ObjectType.HANDLE);
+    byte[] locAlt = setLocations(LOC_ALT_TESTVAL, new String(handle, StandardCharsets.UTF_8),
+        ObjectType.HANDLE);
     var locAltAttr = new HandleAttribute(LOC.index(), handle, LOC.get(), locAlt);
 
     attributes.set(attributes.indexOf(locOriginalAttr), locAltAttr);
@@ -244,18 +247,21 @@ public class TestUtils {
         PID_STATUS.get(), PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8));
     attributes.addAll(genHandleRecordAttributes(handle, ObjectType.TOMBSTONE));
     attributes.remove(oldPidStatus);
-    attributes = new ArrayList<>((attributes.stream().filter(row -> row.index()!=LOC.index())).toList());
+    attributes = new ArrayList<>(
+        (attributes.stream().filter(row -> row.index() != LOC.index())).toList());
     attributes.add(givenLandingPageAttribute(handle));
     return attributes;
   }
 
   public static List<HandleAttribute> genUpdateRecordAttributesAltLoc(byte[] handle)
       throws ParserConfigurationException, TransformerException {
-    byte[] locAlt = setLocations(LOC_ALT_TESTVAL, new String(handle, StandardCharsets.UTF_8), ObjectType.HANDLE);
+    byte[] locAlt = setLocations(LOC_ALT_TESTVAL, new String(handle, StandardCharsets.UTF_8),
+        ObjectType.HANDLE);
     return List.of(new HandleAttribute(LOC.index(), handle, LOC.get(), locAlt));
   }
 
-  public static List<HandleAttribute> genTombstoneRecordRequestAttributes(byte[] handle) throws Exception{
+  public static List<HandleAttribute> genTombstoneRecordRequestAttributes(byte[] handle)
+      throws Exception {
     List<HandleAttribute> tombstoneAttributes = new ArrayList<>();
     tombstoneAttributes.add(
         new HandleAttribute(TOMBSTONE_TEXT.index(), handle, TOMBSTONE_TEXT.get(),
@@ -266,7 +272,8 @@ public class TestUtils {
     return tombstoneAttributes;
   }
 
-  public static List<HandleAttribute> genDoiRecordAttributes(byte[] handle, ObjectType type) throws Exception {
+  public static List<HandleAttribute> genDoiRecordAttributes(byte[] handle, ObjectType type)
+      throws Exception {
     List<HandleAttribute> fdoRecord = genHandleRecordAttributes(handle, type);
     var request = givenDoiRecordRequestObject();
 
@@ -293,7 +300,8 @@ public class TestUtils {
     return fdoRecord;
   }
 
-  public static List<HandleAttribute> genDigitalSpecimenAttributes(byte[] handle, DigitalSpecimenRequest request) throws Exception{
+  public static List<HandleAttribute> genDigitalSpecimenAttributes(byte[] handle,
+      DigitalSpecimenRequest request) throws Exception {
     List<HandleAttribute> fdoRecord = genDoiRecordAttributes(handle, ObjectType.DIGITAL_SPECIMEN);
     // 200: Specimen Host
     fdoRecord.add(
@@ -493,8 +501,8 @@ public class TestUtils {
         String.valueOf(false).getBytes(StandardCharsets.UTF_8)));
 
     // 504 LinkedObjectUrl
-      fdoRecord.add(new HandleAttribute(LINKED_OBJECT_URL.index(), handle, LINKED_OBJECT_URL.get(),
-          LINKED_URL_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+    fdoRecord.add(new HandleAttribute(LINKED_OBJECT_URL.index(), handle, LINKED_OBJECT_URL.get(),
+        LINKED_URL_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     return fdoRecord;
   }
@@ -595,11 +603,12 @@ public class TestUtils {
     );
   }
 
-  public static DigitalSpecimenRequest givenDigitalSpecimenRequestObjectNullOptionals(){
+  public static DigitalSpecimenRequest givenDigitalSpecimenRequestObjectNullOptionals() {
     return givenDigitalSpecimenRequestObjectNullOptionals(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL);
   }
 
-  public static DigitalSpecimenRequest givenDigitalSpecimenRequestObjectNullOptionals(String physicalId) {
+  public static DigitalSpecimenRequest givenDigitalSpecimenRequestObjectNullOptionals(
+      String physicalId) {
     try {
       return new DigitalSpecimenRequest(
           FDO_PROFILE_TESTVAL,
@@ -613,8 +622,8 @@ public class TestUtils {
           SPECIMEN_HOST_TESTVAL,
           SPECIMEN_HOST_NAME_TESTVAL,
           physicalId,
-          null,null, null, null, null, null, null, null, null, null, null,null, null, null, null
-          );
+          null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
+      );
     } catch (InvalidRequestException e) {
       return null;
     }
@@ -940,12 +949,12 @@ public class TestUtils {
 
   // Other Functions
 
-  public static byte[] givenLandingPage(String handle) throws Exception{
+  public static byte[] givenLandingPage(String handle) throws Exception {
     var landingPage = new String[]{"Placeholder landing page"};
     return setLocations(landingPage, handle, ObjectType.TOMBSTONE);
   }
 
-  public static HandleAttribute givenLandingPageAttribute(byte[] handle) throws Exception{
+  public static HandleAttribute givenLandingPageAttribute(byte[] handle) throws Exception {
     var data = givenLandingPage(new String(handle, StandardCharsets.UTF_8));
     return new HandleAttribute(LOC.index(), handle, LOC.get(), data);
   }
