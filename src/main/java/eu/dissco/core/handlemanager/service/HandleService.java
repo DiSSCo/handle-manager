@@ -1,5 +1,6 @@
 package eu.dissco.core.handlemanager.service;
 
+import static eu.dissco.core.handlemanager.domain.FdoProfile.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
@@ -108,22 +109,11 @@ public class HandleService {
   // Response Formatting
   private List<JsonNode> formatRecords(List<HandleAttribute> dbRecord) {
     var handleMap = mapRecords(dbRecord);
-    removeHsAdmin(handleMap);
     List<JsonNode> rootNodeList = new ArrayList<>();
     for (var handleRecord : handleMap.entrySet()) {
       rootNodeList.add(jsonFormatSingleRecord(handleRecord.getValue()));
     }
     return rootNodeList;
-  }
-
-  private Map<String, List<HandleAttribute>> removeHsAdmin(
-      Map<String, List<HandleAttribute>> handleMap) {
-    for (var entry : handleMap.entrySet()) {
-      var handle = entry.getKey();
-      var dbRecord = entry.getValue();
-      dbRecord.remove(fdoRecordService.genHsAdmin(handle.getBytes(StandardCharsets.UTF_8)));
-    }
-    return handleMap;
   }
 
   // Getters
@@ -168,8 +158,12 @@ public class HandleService {
 
   private JsonNode jsonFormatSingleRecord(List<HandleAttribute> dbRecord) {
     ObjectNode rootNode = mapper.createObjectNode();
-    dbRecord.forEach(
-        row -> rootNode.put(row.type(), new String(row.data(), StandardCharsets.UTF_8)));
+    for (var row : dbRecord) {
+      if (row.index() != HS_ADMIN.index()) {
+        rootNode.put(row.type(), new String(row.data(), StandardCharsets.UTF_8));
+      }
+    }
+
     return rootNode;
   }
 

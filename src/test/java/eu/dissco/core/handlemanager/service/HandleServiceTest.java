@@ -152,8 +152,7 @@ class HandleServiceTest {
         genObjectNodeAttributeRecord(recordAttributeList));
 
     given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(recordAttributeList);
-    given(fdoRecordService.genHsAdmin(any())).willReturn(adminHandle);
-
+    
     // When
     var responseReceived = service.resolveSingleRecord(handle, path);
 
