@@ -16,6 +16,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_HANDL
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MAPPING;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MEDIA;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_SOURCE_SYSTEM;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.SOURCE_SYSTEM_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SUFFIX;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
@@ -127,12 +128,13 @@ class HandleControllerTest {
     var responseExpected = givenRecordResponseWriteGeneric(
         List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), RECORD_TYPE_DS);
     given(
-        service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, PhysicalIdType.CETAF,
-            SPECIMEN_HOST_TESTVAL)).willReturn(responseExpected);
+        service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, PhysicalIdType.LOCAL,
+            SOURCE_SYSTEM_TESTVAL)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        PhysicalIdType.CETAF, SPECIMEN_HOST_TESTVAL);
+    var responseReceived = controller.searchByPrimarySpecimenObjectId(
+        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
+        PhysicalIdType.LOCAL, SOURCE_SYSTEM_TESTVAL);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -143,7 +145,7 @@ class HandleControllerTest {
   void testSearchByPhysicalIdCombined() throws Exception {
     // Given
     String physicalId = PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
-    var physicalIdType = PhysicalIdType.COMBINED;
+    var physicalIdType = PhysicalIdType.LOCAL;
     String specimenHostPid = SPECIMEN_HOST_TESTVAL;
     var responseExpected = givenRecordResponseWriteGeneric(
         List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), RECORD_TYPE_DS);
@@ -152,7 +154,7 @@ class HandleControllerTest {
         responseExpected);
 
     // When
-    var responseReceived = controller.searchByPhysicalSpecimenId(physicalId, physicalIdType,
+    var responseReceived = controller.searchByPrimarySpecimenObjectId(physicalId, physicalIdType,
         specimenHostPid);
 
     // Then

@@ -8,7 +8,6 @@ import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_TYPE;
 import static eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType.DIGITAL_SPECIMEN;
 import static eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType.TOMBSTONE;
-import static eu.dissco.core.handlemanager.service.ServiceUtils.setUniquePhysicalIdentifierId;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -166,7 +165,6 @@ public class HandleService {
   public JsonApiWrapperWrite searchByPhysicalSpecimenId(String physicalId,
       PhysicalIdType physicalIdType, String specimenHostPid)
       throws PidResolutionException, InvalidRequestException {
-
     var physicalIdentifier = setPhysicalId(physicalId, physicalIdType, specimenHostPid);
     var returnedRows = handleRep.searchByNormalisedPhysicalIdentifierFullRecord(
         List.of(physicalIdentifier));
@@ -183,17 +181,15 @@ public class HandleService {
   }
 
   private byte[] setPhysicalId(String physicalIdentifier, PhysicalIdType physicalIdType,
-      String specimenHostPid)
+      String sourceSystemId)
       throws InvalidRequestException {
-    if (physicalIdType.equals(PhysicalIdType.COMBINED)) {
-      if (specimenHostPid == null) {
-        throw new InvalidRequestException("Missing specimen host ID.");
-      }
-      var hostIdArr = specimenHostPid.split("/");
-      return (physicalIdentifier + ":" + hostIdArr[hostIdArr.length - 1]).getBytes(
-          StandardCharsets.UTF_8);
+    if (physicalIdType.isGlobal()) {
+      return physicalIdentifier.getBytes(StandardCharsets.UTF_8);
     }
-    return physicalIdentifier.getBytes(StandardCharsets.UTF_8);
+    if (sourceSystemId == null) {
+      throw new InvalidRequestException("Missing specimen host ID.");
+    }
+    return (physicalIdentifier + ":" + sourceSystemId).getBytes(StandardCharsets.UTF_8);
   }
 
 
@@ -411,7 +407,7 @@ public class HandleService {
   private <T extends DigitalSpecimenRequest> Set<String> getPhysicalIdsFromRequests(
       List<T> digitalSpecimenRequests) {
     return digitalSpecimenRequests.stream()
-        .map(ServiceUtils::setUniquePhysicalIdentifierId)
+        .map(DigitalSpecimenRequest::getNormalisedPrimarySpecimenObjectId)
         .collect(Collectors.toSet());
   }
 
@@ -440,7 +436,7 @@ public class HandleService {
   private DigitalSpecimenRequest getRequestFromPhysicalId(List<DigitalSpecimenRequest> requests,
       String physicalId) {
     for (var request : requests) {
-      if (setUniquePhysicalIdentifierId(request).equals(physicalId)) {
+      if (request.getNormalisedPrimarySpecimenObjectId().equals(physicalId)) {
         return request;
       }
     }
@@ -608,10 +604,12 @@ public class HandleService {
     handleRep.rollbackHandles(handles);
   }
 
-  public void rollbackHandlesFromPhysId(List<String> physicalIds){
-    var physicalIdsBytes = physicalIds.stream().map(id -> id.getBytes(StandardCharsets.UTF_8)).toList();
+  public void rollbackHandlesFromPhysId(List<String> physicalIds) {
+    var physicalIdsBytes = physicalIds.stream().map(id -> id.getBytes(StandardCharsets.UTF_8))
+        .toList();
     var handles = handleRep.searchByNormalisedPhysicalIdentifier(physicalIdsBytes).stream()
-        .map(HandleAttribute::handle).map(handle -> new String(handle, StandardCharsets.UTF_8)).toList();
+        .map(HandleAttribute::handle).map(handle -> new String(handle, StandardCharsets.UTF_8))
+        .toList();
     handleRep.rollbackHandles(handles);
   }
 

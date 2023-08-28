@@ -4,14 +4,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.nio.charset.StandardCharsets;
 
 public enum PhysicalIdType {
-
-  @JsonProperty("cetaf") CETAF("cetaf"),
-  @JsonProperty("combined") COMBINED("combined");
+  @JsonProperty("global") GLOBAL("global"),
+  @JsonProperty("resolvable") RESOLVABLE("resolvable"),
+  @JsonProperty("local") LOCAL("local");
 
   private final String state;
+  private final boolean isGlobal;
 
   private PhysicalIdType(@JsonProperty("physicalIdType") String state) {
     this.state = state;
+    this.isGlobal = !state.equals("local") && !state.equals("combined");
   }
 
   @Override
@@ -21,5 +23,9 @@ public enum PhysicalIdType {
 
   public byte[] getBytes() {
     return state.getBytes(StandardCharsets.UTF_8);
+  }
+
+  public boolean isGlobal() {
+    return this.isGlobal;
   }
 }

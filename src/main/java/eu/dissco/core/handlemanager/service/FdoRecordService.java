@@ -54,7 +54,6 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_DISCIPLINE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_DOMAIN;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_ORIGIN;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.WAS_DERIVED_FROM_ENTITY;
-import static eu.dissco.core.handlemanager.service.ServiceUtils.setUniquePhysicalIdentifierId;
 import static eu.dissco.core.handlemanager.utils.AdminHandleGenerator.genAdminHandle;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -87,7 +86,6 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -463,11 +461,10 @@ public class FdoRecordService {
     }
 
     // 205 normalisedSpecimenObjectId
-    var normalisedPrimarySpecimenObjectId = setUniquePhysicalIdentifierId(request);
     fdoRecord.add(
         new HandleAttribute(NORMALISED_SPECIMEN_OBJECT_ID.index(), handle,
             NORMALISED_SPECIMEN_OBJECT_ID.get(),
-            normalisedPrimarySpecimenObjectId.getBytes(StandardCharsets.UTF_8)));
+            request.getNormalisedPrimarySpecimenObjectId().getBytes(StandardCharsets.UTF_8)));
 
     // 206: specimenObjectIdAbsenceReason
     if (request.getPrimarySpecimenObjectIdAbsenceReason() != null) {
@@ -479,7 +476,7 @@ public class FdoRecordService {
 
     // 207: otherSpecimenIds
     if (request.getOtherSpecimenIds() != null) {
-      var otherSpecimenIds = Arrays.toString(request.getOtherSpecimenIds())
+      var otherSpecimenIds = request.getOtherSpecimenIds().toString()
           .getBytes(StandardCharsets.UTF_8);
       fdoRecord.add(
           new HandleAttribute(OTHER_SPECIMEN_IDS.index(), handle,
@@ -567,7 +564,7 @@ public class FdoRecordService {
     }
 
     // 218: wasDerivedFromEntity
-    var wasDerivedFrom = request.getWasDerivedFrom();
+    var wasDerivedFrom = request.getDerivedFromEntity();
     if (wasDerivedFrom != null) {
       fdoRecord.add(
           new HandleAttribute(WAS_DERIVED_FROM_ENTITY.index(), handle,
