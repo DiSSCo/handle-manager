@@ -129,7 +129,7 @@ public class HandleService {
   // Response Formatting
 
   private String getPidName(String pidLink) {
-    return pidLink.substring(pidLink.length() - 24);
+    return pidLink.substring(HANDLE_DOMAIN.length());
   }
 
   private HashMap<String, List<HandleAttribute>> mapRecords(List<HandleAttribute> flatList) {
