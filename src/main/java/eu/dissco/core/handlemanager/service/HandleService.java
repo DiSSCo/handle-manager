@@ -108,11 +108,22 @@ public class HandleService {
   // Response Formatting
   private List<JsonNode> formatRecords(List<HandleAttribute> dbRecord) {
     var handleMap = mapRecords(dbRecord);
+    removeHsAdmin(handleMap);
     List<JsonNode> rootNodeList = new ArrayList<>();
     for (var handleRecord : handleMap.entrySet()) {
       rootNodeList.add(jsonFormatSingleRecord(handleRecord.getValue()));
     }
     return rootNodeList;
+  }
+
+  private Map<String, List<HandleAttribute>> removeHsAdmin(
+      Map<String, List<HandleAttribute>> handleMap) {
+    for (var entry : handleMap.entrySet()) {
+      var handle = entry.getKey();
+      var dbRecord = entry.getValue();
+      dbRecord.remove(fdoRecordService.genHsAdmin(handle.getBytes(StandardCharsets.UTF_8)));
+    }
+    return handleMap;
   }
 
   // Getters
@@ -608,10 +619,12 @@ public class HandleService {
     handleRep.rollbackHandles(handles);
   }
 
-  public void rollbackHandlesFromPhysId(List<String> physicalIds){
-    var physicalIdsBytes = physicalIds.stream().map(id -> id.getBytes(StandardCharsets.UTF_8)).toList();
+  public void rollbackHandlesFromPhysId(List<String> physicalIds) {
+    var physicalIdsBytes = physicalIds.stream().map(id -> id.getBytes(StandardCharsets.UTF_8))
+        .toList();
     var handles = handleRep.searchByNormalisedPhysicalIdentifier(physicalIdsBytes).stream()
-        .map(HandleAttribute::handle).map(handle -> new String(handle, StandardCharsets.UTF_8)).toList();
+        .map(HandleAttribute::handle).map(handle -> new String(handle, StandardCharsets.UTF_8))
+        .toList();
     handleRep.rollbackHandles(handles);
   }
 

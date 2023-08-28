@@ -1,6 +1,8 @@
 package eu.dissco.core.handlemanager.service;
 
-import static eu.dissco.core.handlemanager.domain.FdoProfile.*;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.HS_ADMIN;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID_TYPE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
@@ -25,14 +27,12 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRe
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDoiRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributes;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributesAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMappingAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMasAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaObjectAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genObjectNodeAttributeRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genOrganisationAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genSourceSystemAttributes;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordFullAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordRequestAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequestBatch;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRecordAttributesAltLoc;
@@ -52,10 +52,10 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordRespon
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteGeneric;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSearchByPhysIdRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemRequestObject;
+import static eu.dissco.core.handlemanager.utils.AdminHandleGenerator.genAdminHandle;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
@@ -129,6 +129,30 @@ class HandleServiceTest {
         genObjectNodeAttributeRecord(recordAttributeList));
 
     given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(recordAttributeList);
+
+    // When
+    var responseReceived = service.resolveSingleRecord(handle, path);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testRemoveHsAdmin() throws Exception {
+
+    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
+    String path = SANDBOX_URI + HANDLE;
+    var adminHandle = new HandleAttribute(HS_ADMIN.index(), handle, HS_ADMIN.get(),
+        genAdminHandle());
+    var recordAttributeList = genHandleRecordAttributes(handle,
+        ObjectType.HANDLE);
+    recordAttributeList.add(adminHandle);
+
+    var responseExpected = givenRecordResponseReadSingle(HANDLE, path, "PID",
+        genObjectNodeAttributeRecord(recordAttributeList));
+
+    given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(recordAttributeList);
+    given(fdoRecordService.genHsAdmin(any())).willReturn(adminHandle);
 
     // When
     var responseReceived = service.resolveSingleRecord(handle, path);
