@@ -128,7 +128,7 @@ public class HandleService {
   // Response Formatting
 
   private String getPidName(String pidLink) {
-    return pidLink.substring(pidLink.length() - 24);
+    return pidLink.substring(HANDLE_DOMAIN.length());
   }
 
   private HashMap<String, List<HandleAttribute>> mapRecords(List<HandleAttribute> flatList) {
@@ -608,10 +608,12 @@ public class HandleService {
     handleRep.rollbackHandles(handles);
   }
 
-  public void rollbackHandlesFromPhysId(List<String> physicalIds){
-    var physicalIdsBytes = physicalIds.stream().map(id -> id.getBytes(StandardCharsets.UTF_8)).toList();
+  public void rollbackHandlesFromPhysId(List<String> physicalIds) {
+    var physicalIdsBytes = physicalIds.stream().map(id -> id.getBytes(StandardCharsets.UTF_8))
+        .toList();
     var handles = handleRep.searchByNormalisedPhysicalIdentifier(physicalIdsBytes).stream()
-        .map(HandleAttribute::handle).map(handle -> new String(handle, StandardCharsets.UTF_8)).toList();
+        .map(HandleAttribute::handle).map(handle -> new String(handle, StandardCharsets.UTF_8))
+        .toList();
     handleRep.rollbackHandles(handles);
   }
 
