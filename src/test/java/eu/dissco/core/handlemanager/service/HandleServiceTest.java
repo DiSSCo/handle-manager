@@ -246,10 +246,19 @@ class HandleServiceTest {
     // When
     var responseReceived = service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
         PhysicalIdType.LOCAL,
-        SPECIMEN_HOST_TESTVAL);
+        SOURCE_SYSTEM_TESTVAL);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testSearchByPhysicalSpecimenMissingSourceSystemId() {
+    // Then
+    assertThrows(InvalidRequestException.class,
+        () -> service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
+            PhysicalIdType.LOCAL,
+            null));
   }
 
   @Test
