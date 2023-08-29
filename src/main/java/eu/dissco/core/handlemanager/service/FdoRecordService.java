@@ -50,6 +50,7 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.STRUCTURAL_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_DIGITAL_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_LOCAL_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_PID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_CATEGORY;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_DISCIPLINE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_DOMAIN;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_ORIGIN;
@@ -511,6 +512,12 @@ public class FdoRecordService {
     }
 
     // 211 topicCategory
+    var topicCategory = request.getTopicCategory();
+    if (topicCategory != null) {
+      fdoRecord.add(new HandleAttribute(TOPIC_CATEGORY.index(), handle, TOPIC_CATEGORY.get(),
+          topicCategory.getBytes(
+              StandardCharsets.UTF_8)));
+    }
 
     // 212: livingOrPreserved
     var livingOrPres = request.getLivingOrPreserved();
