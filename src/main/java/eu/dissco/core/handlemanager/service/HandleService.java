@@ -1,5 +1,6 @@
 package eu.dissco.core.handlemanager.service;
 
+import static eu.dissco.core.handlemanager.domain.FdoProfile.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
@@ -157,8 +158,12 @@ public class HandleService {
 
   private JsonNode jsonFormatSingleRecord(List<HandleAttribute> dbRecord) {
     ObjectNode rootNode = mapper.createObjectNode();
-    dbRecord.forEach(
-        row -> rootNode.put(row.type(), new String(row.data(), StandardCharsets.UTF_8)));
+    for (var row : dbRecord) {
+      if (row.index() != HS_ADMIN.index()) {
+        rootNode.put(row.type(), new String(row.data(), StandardCharsets.UTF_8));
+      }
+    }
+
     return rootNode;
   }
 
