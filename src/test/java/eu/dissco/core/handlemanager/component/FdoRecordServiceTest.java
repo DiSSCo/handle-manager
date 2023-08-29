@@ -39,6 +39,7 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.SPECIMEN_HOST_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.STRUCTURAL_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_DIGITAL_OBJECT_ID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_CATEGORY;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_DISCIPLINE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_ORIGIN;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.WAS_DERIVED_FROM_ENTITY;
@@ -135,7 +136,7 @@ class FdoRecordServiceTest {
 
   private static final Set<String> DS_FIELDS_OPTIONAL = Set.of(
       PRIMARY_SPECIMEN_OBJECT_ID_NAME.get(),
-      OTHER_SPECIMEN_IDS.get(), TOPIC_ORIGIN.get(), TOPIC_DISCIPLINE.get(),
+      OTHER_SPECIMEN_IDS.get(), TOPIC_ORIGIN.get(), TOPIC_DISCIPLINE.get(), TOPIC_CATEGORY.get(),
       LIVING_OR_PRESERVED.get(),
       BASE_TYPE_OF_SPECIMEN.get(), INFORMATION_ARTEFACT_TYPE.get(),
       MATERIAL_SAMPLE_TYPE.get(), MARKED_AS_TYPE.get(), WAS_DERIVED_FROM_ENTITY.get());
@@ -156,7 +157,7 @@ class FdoRecordServiceTest {
   private static final int DOI_QTY = 19;
   private static final int MEDIA_QTY = 24;
   private static final int DS_MANDATORY_QTY = 25;
-  private static final int DS_OPTIONAL_QTY = 36;
+  private static final int DS_OPTIONAL_QTY = 37;
   private static final int ANNOTATION_QTY = 21;
 
   @BeforeEach
