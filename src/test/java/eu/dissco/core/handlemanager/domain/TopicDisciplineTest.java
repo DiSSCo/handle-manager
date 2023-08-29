@@ -98,7 +98,7 @@ class TopicDisciplineTest {
     var targetDisc = TopicDiscipline.ECO;
 
     // When
-    assertThat(targetDisc.getCategories()).isEmpty();
+    assertThat(targetDisc.getTopicCategories()).isEmpty();
   }
 
 }

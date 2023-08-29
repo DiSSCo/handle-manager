@@ -13,6 +13,11 @@ public enum TopicOrigin {
     this.state = state;
   }
 
+  public boolean isCorrectMaterialSampleType(MaterialSampleType materialSampleType) {
+    return materialSampleType.equals(MaterialSampleType.ANY_AGGR) && this.state.equals(
+        "Mixed origin");
+  }
+
   @Override
   public String toString() {
     return this.state;

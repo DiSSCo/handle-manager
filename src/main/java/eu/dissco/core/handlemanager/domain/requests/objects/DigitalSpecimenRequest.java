@@ -4,7 +4,10 @@ import static eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalId
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.BaseTypeOfSpecimen;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.LivingOrPreserved;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialOrDigitalEntity;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialSampleType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicCategory;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicDiscipline;
@@ -47,17 +50,15 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
   @Nullable
   private final TopicCategory topicCategory;
   @Nullable
-  private final String objectType;
-  @Nullable
   private final LivingOrPreserved livingOrPreserved;
   @Nullable
-  private final String baseTypeOfSpecimen;
+  private final BaseTypeOfSpecimen baseTypeOfSpecimen;
   @Nullable
   private final String informationArtefactType;
   @Nullable
-  private final String materialSampleType;
+  private final MaterialSampleType materialSampleType;
   @Nullable
-  private final String materialOrDigitalEntity;
+  private final MaterialOrDigitalEntity materialOrDigitalEntity;
   @Nullable
   private final Boolean markedAsType;
   @Nullable
@@ -90,12 +91,11 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
       TopicDomain topicDomain,
       TopicDiscipline topicDiscipline,
       TopicCategory topicCategory,
-      String objectType,
       LivingOrPreserved livingOrPreserved,
-      String baseTypeOfSpecimen,
+      BaseTypeOfSpecimen baseTypeOfSpecimen,
       String informationArtefactType,
-      String materialSampleType,
-      String materialOrDigitalEntity,
+      MaterialSampleType materialSampleType,
+      MaterialOrDigitalEntity materialOrDigitalEntity,
       Boolean markedAsType,
       String derivedFromEntity,
       String sourceSystemId
@@ -114,18 +114,18 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
     this.topicDomain = topicDomain;
     this.topicDiscipline = topicDiscipline;
     this.topicCategory = topicCategory;
-    this.objectType = objectType;
     this.livingOrPreserved = livingOrPreserved;
     this.baseTypeOfSpecimen = baseTypeOfSpecimen;
     this.informationArtefactType = informationArtefactType;
     this.materialSampleType = materialSampleType;
-    this.materialOrDigitalEntity = setDefault(materialOrDigitalEntity, "digital");
+    this.materialOrDigitalEntity = materialOrDigitalEntity;
     this.markedAsType = markedAsType;
     this.derivedFromEntity = derivedFromEntity;
     this.sourceSystemId = sourceSystemId;
     idXorAbsence();
     this.normalisedPrimarySpecimenObjectId = normalisePrimarySpecimenObjectId();
     validateTopicCategory();
+    validateMaterialSampleType();
   }
 
   private void idXorAbsence() throws InvalidRequestException {
@@ -156,8 +156,32 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
     if (!isCorrect) {
       throw new InvalidRequestException(
           "Discipline/Category Mismatch. Provided TopicDiscipline " + this.topicDiscipline
-              + "  has the following topic categories " + this.topicDiscipline.getCategories()
+              + "  has the following topic categories " + this.topicDiscipline.getTopicCategories()
               .toString() + ". Provided topicCategory: " + this.topicCategory);
     }
   }
+
+  private void validateMaterialSampleType() throws InvalidRequestException {
+    if (this.materialSampleType == null) {
+      return;
+    }
+    if (this.topicDiscipline == null && this.topicDomain == null && this.topicOrigin == null) {
+      return;
+    }
+    if (this.topicDiscipline != null && this.topicDiscipline.isCorrectMaterialSampleType(
+        this.materialSampleType)) {
+      return;
+    }
+    if (this.topicDomain != null && this.topicDomain.isCorrectMaterialSampleType(
+        this.materialSampleType)) {
+      return;
+    }
+    if (this.topicOrigin != null && this.topicOrigin.isCorrectMaterialSampleType(
+        materialSampleType)) {
+      return;
+    }
+    throw new InvalidRequestException(
+        "Invalid material sample type for provided topicDiscipline/topicDomain/topicOrigin.");
+  }
+
 }

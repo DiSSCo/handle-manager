@@ -1,5 +1,16 @@
 package eu.dissco.core.handlemanager.domain.requests.vocabulary;
 
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialSampleType.AGGR;
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialSampleType.AGGR_BIOME;
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialSampleType.ANY_BIO;
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialSampleType.BUNDLE_BIOME;
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialSampleType.FLUID;
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialSampleType.FOSSIL;
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialSampleType.ORG_PART;
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialSampleType.ORG_PRODUCT;
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialSampleType.OTHER_SOLID;
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialSampleType.SLURRY_BIOME;
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialSampleType.WHOLE_ORG;
 import static eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicCategory.ALGAE;
 import static eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicCategory.AMPHIBIANS;
 import static eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicCategory.ANIMAL_GENE;
@@ -65,44 +76,65 @@ public enum TopicDiscipline {
 
   private final String state;
   @Getter
-  private final Set<TopicCategory> categories;
+  private Set<TopicCategory> topicCategories;
+  @Getter
+  private Set<MaterialSampleType> materialSampleTypes;
 
   private TopicDiscipline(String state) {
     this.state = state;
-    this.categories = setCategories(state);
+    setSubLists(state);
   }
 
   public boolean isCorrectCategory(TopicCategory target) {
-    return this.categories.contains(target);
+    return this.topicCategories.contains(target);
   }
 
-  private static Set<TopicCategory> setCategories(String state) {
+  public boolean isCorrectMaterialSampleType(MaterialSampleType materialSampleType) {
+    return this.materialSampleTypes.contains(materialSampleType);
+  }
+
+  private void setSubLists(String state) {
     switch (state) {
       case "Anthropology" -> {
-        return Set.of(HUMAN, HOMINID);
+        this.topicCategories = Set.of(HUMAN, HOMINID);
+        this.materialSampleTypes = Set.of(WHOLE_ORG, ORG_PART, ORG_PRODUCT);
       }
       case "Botany" -> {
-        return Set.of(MYCOLOGY, ALGAE, BRYO, PTERID, SEED, PLANT_GENE, OTHER_BOTANY);
+        this.topicCategories = Set.of(MYCOLOGY, ALGAE, BRYO, PTERID, SEED, PLANT_GENE,
+            OTHER_BOTANY);
+        this.materialSampleTypes = Set.of(WHOLE_ORG, AGGR_BIOME, ORG_PART, ORG_PRODUCT);
       }
       case "Geology" -> {
-        return Set.of(MINERALS, ROCKS, LOOSE_SEDIMENT, MIXED_SOLID, ICE, LIQUID_GAS, MIXED_GEO);
+        this.topicCategories = Set.of(MINERALS, ROCKS, LOOSE_SEDIMENT, MIXED_SOLID, ICE, LIQUID_GAS,
+            MIXED_GEO);
+        this.materialSampleTypes = Set.of(AGGR, SLURRY_BIOME, OTHER_SOLID, FLUID);
       }
       case "Zoology" -> {
-        return Set.of(INSECTS, ARACHNIDS, ECHINODERM, CRUSTACEANS, SPONGES, MOLLUSCA, CNIDARIA,
+        this.topicCategories = Set.of(INSECTS, ARACHNIDS, ECHINODERM, CRUSTACEANS, SPONGES,
+            MOLLUSCA, CNIDARIA,
             FISHES, AMPHIBIANS, BIRDS, MAMMALS, REPTILES, ANIMAL_GENE, OTHER_ZOO);
+        this.materialSampleTypes = Set.of(WHOLE_ORG, ORG_PART, ORG_PRODUCT, AGGR_BIOME);
       }
       case "Microbiology" -> {
-        return Set.of(PHAGES, PLASMIDS, BACTERIA, PROTOZOA, MICRO_EUKS, VIRUSES,
+        this.topicCategories = Set.of(PHAGES, PLASMIDS, BACTERIA, PROTOZOA, MICRO_EUKS, VIRUSES,
             MICRO_FUNGI, ALGAE, OTHER_MICRO);
+        this.materialSampleTypes = Set.of(BUNDLE_BIOME, WHOLE_ORG);
       }
       case "Palaeontology" -> {
-        return Set.of(INVERT_FOSSILS, VERT_FOSSILS, OTHER_PALEO, BOTANY_FOSSILS);
+        this.topicCategories = Set.of(INVERT_FOSSILS, VERT_FOSSILS, OTHER_PALEO, BOTANY_FOSSILS);
+        this.materialSampleTypes = Set.of(FOSSIL);
       }
       case "Astrogeology" -> {
-        return Set.of(FINDS, IMPACTS, SAMPLE_RETURNS);
+        this.topicCategories = Set.of(FINDS, IMPACTS, SAMPLE_RETURNS);
+        this.materialSampleTypes = Set.of(AGGR, OTHER_SOLID);
+      }
+      case "Other Biodiversity" -> {
+        this.topicCategories = Collections.emptySet();
+        this.materialSampleTypes = Set.of(ANY_BIO);
       }
       default -> {
-        return Collections.emptySet();
+        this.topicCategories = Collections.emptySet();
+        this.materialSampleTypes = Collections.emptySet();
       }
     }
   }

@@ -537,7 +537,7 @@ public class FdoRecordService {
       fdoRecord.add(
           new HandleAttribute(BASE_TYPE_OF_SPECIMEN.index(), handle,
               BASE_TYPE_OF_SPECIMEN.get(),
-              baseType.getBytes(StandardCharsets.UTF_8)));
+              baseType.toString().getBytes(StandardCharsets.UTF_8)));
     }
 
     // 214: informationArtefactType
@@ -555,14 +555,16 @@ public class FdoRecordService {
       fdoRecord.add(
           new HandleAttribute(MATERIAL_SAMPLE_TYPE.index(), handle,
               MATERIAL_SAMPLE_TYPE.get(),
-              matSamp.getBytes(StandardCharsets.UTF_8)));
+              matSamp.toString().getBytes(StandardCharsets.UTF_8)));
     }
 
     // 216: materialOrDigitalEntity
-    fdoRecord.add(
-        new HandleAttribute(MATERIAL_OR_DIGITAL_ENTITY.index(), handle,
-            MATERIAL_OR_DIGITAL_ENTITY.get(),
-            request.getMaterialOrDigitalEntity().getBytes(StandardCharsets.UTF_8)));
+    if (request.getMaterialOrDigitalEntity() != null) {
+      fdoRecord.add(
+          new HandleAttribute(MATERIAL_OR_DIGITAL_ENTITY.index(), handle,
+              MATERIAL_OR_DIGITAL_ENTITY.get(),
+              request.getMaterialOrDigitalEntity().toString().getBytes(StandardCharsets.UTF_8)));
+    }
 
     // 217: markedAsType
     var markedAsType = request.getMarkedAsType();

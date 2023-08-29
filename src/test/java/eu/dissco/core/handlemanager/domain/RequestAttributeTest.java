@@ -70,12 +70,11 @@ class RequestAttributeTest {
         SPECIMEN_HOST_NAME_TESTVAL,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
         null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-        null, SOURCE_SYSTEM_TESTVAL
+        SOURCE_SYSTEM_TESTVAL
     );
 
     // Then
     assertThat(request.getPrimarySpecimenObjectIdType()).isEqualTo(LOCAL);
-    assertThat(request.getMaterialOrDigitalEntity()).isEqualTo("digital");
   }
 
   @Test
@@ -94,7 +93,7 @@ class RequestAttributeTest {
         SPECIMEN_HOST_NAME_TESTVAL,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
         null, null, "haha", null, null, null, null, null, null, null, null, null, null, null, null,
-        null, SOURCE_SYSTEM_TESTVAL
+        SOURCE_SYSTEM_TESTVAL
     ));
     assertThat(e).hasMessage(
         "Request must contain exactly one of: [primarySpecimenObjectId, primarySpecimenObjectIdAbsenceReason]");

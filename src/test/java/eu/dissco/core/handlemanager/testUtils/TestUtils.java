@@ -442,7 +442,7 @@ public class TestUtils {
       fdoRecord.add(
           new HandleAttribute(BASE_TYPE_OF_SPECIMEN.index(), handle,
               BASE_TYPE_OF_SPECIMEN.get(),
-              request.getBaseTypeOfSpecimen().getBytes(StandardCharsets.UTF_8)));
+              request.getBaseTypeOfSpecimen().toString().getBytes(StandardCharsets.UTF_8)));
     }
 
     // 214: informationArtefactType
@@ -458,7 +458,7 @@ public class TestUtils {
       fdoRecord.add(
           new HandleAttribute(MATERIAL_SAMPLE_TYPE.index(), handle,
               MATERIAL_SAMPLE_TYPE.get(),
-              request.getMaterialSampleType().getBytes(StandardCharsets.UTF_8)));
+              request.getMaterialSampleType().toString().getBytes(StandardCharsets.UTF_8)));
     }
 
     // 216: materialOrDigitalEntity
@@ -466,7 +466,7 @@ public class TestUtils {
       fdoRecord.add(
           new HandleAttribute(MATERIAL_OR_DIGITAL_ENTITY.index(), handle,
               MATERIAL_OR_DIGITAL_ENTITY.get(),
-              request.getMaterialSampleType().getBytes()));
+              request.getMaterialSampleType().toString().getBytes()));
     }
 
     // 217: markedAsType
@@ -670,7 +670,7 @@ public class TestUtils {
           primarySpecimenObjectId,
           PhysicalIdType.LOCAL, null, null, null, null, null, null, null, null, null, null, null,
           null, null, null,
-          null, SOURCE_SYSTEM_TESTVAL
+          SOURCE_SYSTEM_TESTVAL
       );
     } catch (InvalidRequestException e) {
       throw new RuntimeException(e.getMessage());

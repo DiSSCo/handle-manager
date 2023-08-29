@@ -17,7 +17,6 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.LIVING_OR_PRESERVED
 import static eu.dissco.core.handlemanager.domain.FdoProfile.LOC;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MARKED_AS_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MAS_NAME;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.MATERIAL_OR_DIGITAL_ENTITY;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MATERIAL_SAMPLE_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.OTHER_SPECIMEN_IDS;
@@ -93,7 +92,10 @@ import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.OtherSpecimenId;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.BaseTypeOfSpecimen;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.LivingOrPreserved;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialOrDigitalEntity;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialSampleType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicCategory;
@@ -136,7 +138,7 @@ class FdoRecordServiceTest {
   private static final Set<String> DS_FIELDS_MANDATORY = Set.of(SPECIMEN_HOST.get(),
       SPECIMEN_HOST_NAME.get(),
       PRIMARY_SPECIMEN_OBJECT_ID.get(), PRIMARY_SPECIMEN_OBJECT_ID_TYPE.get(),
-      MATERIAL_OR_DIGITAL_ENTITY.get(), NORMALISED_SPECIMEN_OBJECT_ID.get());
+      NORMALISED_SPECIMEN_OBJECT_ID.get());
 
   private static final Set<String> DS_FIELDS_OPTIONAL = Set.of(
       PRIMARY_SPECIMEN_OBJECT_ID_NAME.get(),
@@ -160,7 +162,7 @@ class FdoRecordServiceTest {
   private static final int HANDLE_QTY = 15;
   private static final int DOI_QTY = 19;
   private static final int MEDIA_QTY = 24;
-  private static final int DS_MANDATORY_QTY = 25;
+  private static final int DS_MANDATORY_QTY = 24;
   private static final int DS_OPTIONAL_QTY = 37;
   private static final int ANNOTATION_QTY = 21;
 
@@ -262,7 +264,7 @@ class FdoRecordServiceTest {
         null,
         "PhysicalId",
         null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-        null, SOURCE_SYSTEM_TESTVAL
+        SOURCE_SYSTEM_TESTVAL
     );
 
     // When
@@ -291,7 +293,7 @@ class FdoRecordServiceTest {
         null,
         "PhysicalId",
         null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-        null, SOURCE_SYSTEM_TESTVAL
+        SOURCE_SYSTEM_TESTVAL
     );
 
     // When
@@ -501,7 +503,7 @@ class FdoRecordServiceTest {
         null,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
         null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-        null, SOURCE_SYSTEM_TESTVAL);
+        SOURCE_SYSTEM_TESTVAL);
 
     // When
     var result = fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle,
@@ -530,7 +532,7 @@ class FdoRecordServiceTest {
         null,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
         null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-        null, SOURCE_SYSTEM_TESTVAL);
+        SOURCE_SYSTEM_TESTVAL);
 
     // When
     var result = fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle,
@@ -671,8 +673,9 @@ class FdoRecordServiceTest {
         PhysicalIdType.LOCAL, "b", null,
         List.of(new OtherSpecimenId("Id", "local identifier", "id for institute")),
         TopicOrigin.NATURAL, TopicDomain.LIFE,
-        TopicDiscipline.ZOO, TopicCategory.AMPHIBIANS, "living", LivingOrPreserved.LIVING, "k", "l",
-        "m", "o", false, "p",
+        TopicDiscipline.ZOO, TopicCategory.AMPHIBIANS, LivingOrPreserved.LIVING,
+        BaseTypeOfSpecimen.MATERIAL, "l",
+        MaterialSampleType.ORG_PART, MaterialOrDigitalEntity.DIGITAL, false, "p",
         SOURCE_SYSTEM_TESTVAL);
   }
 

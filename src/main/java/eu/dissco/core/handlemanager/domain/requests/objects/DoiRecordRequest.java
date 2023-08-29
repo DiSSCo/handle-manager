@@ -35,6 +35,6 @@ public class DoiRecordRequest extends HandleRecordRequest {
     super(fdoProfile, issuedForAgent, digitalObjectType, pidIssuer, structuralType, locations);
     this.referentType = referentType;
     this.referentName = referentName;
-    this.primaryReferentType = primaryReferentType == null ? "creation" : primaryReferentType;
+    this.primaryReferentType = setDefault(primaryReferentType, "creation");
   }
 }
