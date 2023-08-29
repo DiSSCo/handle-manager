@@ -2,6 +2,7 @@ package eu.dissco.core.handlemanager.domain.requests.objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ReplaceOrAppend;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.StructuralType;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -11,6 +12,7 @@ import org.springframework.lang.Nullable;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public class AnnotationRequest extends HandleRecordRequest {
+
   @JsonProperty(required = true)
   private final String subjectDigitalObjectId;
   @JsonProperty(required = true)
@@ -27,17 +29,17 @@ public class AnnotationRequest extends HandleRecordRequest {
       String issuedForAgent,
       String digitalObjectType,
       String pidIssuer,
-      String structuralType,
       String[] locations,
       String subjectDigitalObjectId,
       String annotationTopic,
       ReplaceOrAppend replaceOrAppend,
       Boolean accessRestricted,
       String linkedObjectUrl) {
-    super(fdoProfile, issuedForAgent, digitalObjectType, pidIssuer, structuralType, locations);
-    this.subjectDigitalObjectId=subjectDigitalObjectId;
+    super(fdoProfile, issuedForAgent, digitalObjectType, pidIssuer, StructuralType.DIGITAL,
+        locations);
+    this.subjectDigitalObjectId = subjectDigitalObjectId;
     this.annotationTopic = annotationTopic;
-    this.replaceOrAppend=replaceOrAppend;
+    this.replaceOrAppend = replaceOrAppend;
     this.accessRestricted = accessRestricted != null && accessRestricted;
     this.linkedObjectUrl = linkedObjectUrl;
   }

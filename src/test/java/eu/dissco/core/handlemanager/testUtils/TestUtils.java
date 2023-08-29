@@ -81,6 +81,7 @@ import eu.dissco.core.handlemanager.domain.requests.objects.TombstoneRecordReque
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ReplaceOrAppend;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.StructuralType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -134,7 +135,7 @@ public class TestUtils {
   public static final String DIGITAL_OBJECT_TYPE_TESTVAL =
       HANDLE_DOMAIN + "21.T11148/1c699a5d1b4ad3ba4956";
   public static final String PID_ISSUER_TESTVAL_OTHER = HANDLE_DOMAIN + "20.5000.1025/PID-ISSUER";
-  public static final String STRUCTURAL_TYPE_TESTVAL = "digital";
+  public static final StructuralType STRUCTURAL_TYPE_TESTVAL = StructuralType.DIGITAL;
   public static final String[] LOC_TESTVAL = {"https://sandbox.dissco.tech/", "https://dissco.eu"};
   public static final String[] LOC_ALT_TESTVAL = {"naturalis.nl"};
 
@@ -260,7 +261,8 @@ public class TestUtils {
 
     // 12: structuralType
     fdoRecord.add(new HandleAttribute(STRUCTURAL_TYPE.index(), handle,
-        STRUCTURAL_TYPE.get(), STRUCTURAL_TYPE_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+        STRUCTURAL_TYPE.get(),
+        STRUCTURAL_TYPE_TESTVAL.toString().getBytes(StandardCharsets.UTF_8)));
 
     // 13: PidStatus
     fdoRecord.add(new HandleAttribute(PID_STATUS.index(), handle, PID_STATUS.get(),
@@ -661,7 +663,6 @@ public class TestUtils {
           ISSUED_FOR_AGENT_TESTVAL,
           DIGITAL_OBJECT_TYPE_TESTVAL,
           PID_ISSUER_TESTVAL_OTHER,
-          STRUCTURAL_TYPE_TESTVAL,
           LOC_TESTVAL,
           REFERENT_NAME_TESTVAL,
           PRIMARY_REFERENT_TYPE_TESTVAL,
@@ -683,7 +684,6 @@ public class TestUtils {
         ISSUED_FOR_AGENT_TESTVAL,
         DIGITAL_OBJECT_TYPE_TESTVAL,
         PID_ISSUER_TESTVAL_OTHER,
-        STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL,
@@ -698,7 +698,6 @@ public class TestUtils {
         ISSUED_FOR_AGENT_TESTVAL,
         DIGITAL_OBJECT_TYPE_TESTVAL,
         PID_ISSUER_TESTVAL_OTHER,
-        STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
         SUBJECT_DOI_TESTVAL,
         ANNOTATION_TOPIC_TESTVAL,
@@ -714,7 +713,6 @@ public class TestUtils {
         ISSUED_FOR_AGENT_TESTVAL,
         DIGITAL_OBJECT_TYPE_TESTVAL,
         PID_ISSUER_TESTVAL_OTHER,
-        STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
         SOURCE_DATA_STANDARD_TESTVAL
     );
@@ -726,7 +724,6 @@ public class TestUtils {
         ISSUED_FOR_AGENT_TESTVAL,
         DIGITAL_OBJECT_TYPE_TESTVAL,
         PID_ISSUER_TESTVAL_OTHER,
-        STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
         SPECIMEN_HOST_TESTVAL
     );
@@ -738,7 +735,6 @@ public class TestUtils {
         ISSUED_FOR_AGENT_TESTVAL,
         DIGITAL_OBJECT_TYPE_TESTVAL,
         PID_ISSUER_TESTVAL_OTHER,
-        STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL,
@@ -753,7 +749,6 @@ public class TestUtils {
         ISSUED_FOR_AGENT_TESTVAL,
         DIGITAL_OBJECT_TYPE_TESTVAL,
         PID_ISSUER_TESTVAL_OTHER,
-        STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
         MAS_NAME_TESTVAL
     );

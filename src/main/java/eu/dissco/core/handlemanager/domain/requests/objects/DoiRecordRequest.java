@@ -1,6 +1,7 @@
 package eu.dissco.core.handlemanager.domain.requests.objects;
 
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.StructuralType;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -26,7 +27,7 @@ public class DoiRecordRequest extends HandleRecordRequest {
       String issuedForAgent,
       String digitalObjectType,
       String pidIssuer,
-      String structuralType,
+      StructuralType structuralType,
       String[] locations,
       // Doi
       String referentName,

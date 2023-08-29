@@ -10,6 +10,7 @@ import eu.dissco.core.handlemanager.domain.requests.vocabulary.LivingOrPreserved
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialOrDigitalEntity;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialSampleType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.StructuralType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicCategory;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicDiscipline;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicDomain;
@@ -75,7 +76,6 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
       String issuedForAgent,
       String digitalObjectTypePid,
       String pidIssuer,
-      String structuralType,
       String[] locations,
       // Doi
       String referentName,
@@ -101,7 +101,8 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
       String derivedFromEntity,
       String sourceSystemId
   ) throws InvalidRequestException {
-    super(fdoProfile, issuedForAgent, digitalObjectTypePid, pidIssuer, structuralType, locations,
+    super(fdoProfile, issuedForAgent, digitalObjectTypePid, pidIssuer, StructuralType.DIGITAL,
+        locations,
         referentName, REFERENT_TYPE, primaryReferentType);
     this.specimenHost = specimenHost;
     this.specimenHostName = specimenHostName;

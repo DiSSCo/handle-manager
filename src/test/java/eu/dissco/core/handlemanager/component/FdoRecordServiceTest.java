@@ -257,7 +257,6 @@ class FdoRecordServiceTest {
         ISSUED_FOR_AGENT_TESTVAL,
         DIGITAL_OBJECT_TYPE_TESTVAL,
         PID_ISSUER_TESTVAL_OTHER,
-        STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL,
@@ -286,7 +285,6 @@ class FdoRecordServiceTest {
         ISSUED_FOR_AGENT_TESTVAL,
         DIGITAL_OBJECT_TYPE_TESTVAL,
         PID_ISSUER_TESTVAL_OTHER,
-        STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL,
@@ -496,7 +494,6 @@ class FdoRecordServiceTest {
         ISSUED_FOR_AGENT_TESTVAL,
         DIGITAL_OBJECT_TYPE_TESTVAL,
         PID_ISSUER_TESTVAL_OTHER,
-        STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL,
@@ -525,7 +522,6 @@ class FdoRecordServiceTest {
         ISSUED_FOR_AGENT_TESTVAL,
         DIGITAL_OBJECT_TYPE_TESTVAL,
         PID_ISSUER_TESTVAL_OTHER,
-        STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL,
@@ -628,10 +624,10 @@ class FdoRecordServiceTest {
   void testUpdateAttributesStructuralType() throws Exception {
     // Given
     var updateRequest = MAPPER.createObjectNode();
-    updateRequest.put(STRUCTURAL_TYPE.get(), STRUCTURAL_TYPE_TESTVAL);
+    updateRequest.put(STRUCTURAL_TYPE.get(), STRUCTURAL_TYPE_TESTVAL.toString());
     var expected = List.of(
         new HandleAttribute(STRUCTURAL_TYPE.index(), HANDLE.getBytes(StandardCharsets.UTF_8),
-            STRUCTURAL_TYPE.get(), STRUCTURAL_TYPE_TESTVAL.getBytes(
+            STRUCTURAL_TYPE.get(), STRUCTURAL_TYPE_TESTVAL.toString().getBytes(
             StandardCharsets.UTF_8)));
 
     // When
@@ -664,7 +660,6 @@ class FdoRecordServiceTest {
         ISSUED_FOR_AGENT_TESTVAL,
         DIGITAL_OBJECT_TYPE_TESTVAL,
         PID_ISSUER_TESTVAL_OTHER,
-        STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL,

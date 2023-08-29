@@ -173,7 +173,7 @@ public class FdoRecordService {
         new HandleAttribute(DIGITAL_OBJECT_TYPE.index(), handle, DIGITAL_OBJECT_TYPE.get(),
             request.getDigitalObjectType().getBytes(StandardCharsets.UTF_8)));
 
-    // 4: DigitalObjectName - Handle
+    // 4: DigitalObjectName
     checkHandle(request.getDigitalObjectType());
     var digitalObjectName = pidResolver.getObjectName(request.getDigitalObjectType())
         .getBytes(StandardCharsets.UTF_8);
@@ -217,7 +217,8 @@ public class FdoRecordService {
 
     // 12: structuralType
     fdoRecord.add(new HandleAttribute(STRUCTURAL_TYPE.index(), handle,
-        STRUCTURAL_TYPE.get(), request.getStructuralType().getBytes(StandardCharsets.UTF_8)));
+        STRUCTURAL_TYPE.get(),
+        request.getStructuralType().toString().getBytes(StandardCharsets.UTF_8)));
 
     // 13: PidStatus
     fdoRecord.add(new HandleAttribute(PID_STATUS.index(), handle, PID_STATUS.get(),

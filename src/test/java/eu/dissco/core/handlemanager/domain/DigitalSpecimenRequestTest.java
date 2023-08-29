@@ -11,7 +11,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.REFERENT_NAME_TES
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SOURCE_SYSTEM_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_NAME_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.STRUCTURAL_TYPE_TESTVAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -46,7 +45,6 @@ class DigitalSpecimenRequestTest {
         ISSUED_FOR_AGENT_TESTVAL,
         DIGITAL_OBJECT_TYPE_TESTVAL,
         PID_ISSUER_TESTVAL_OTHER,
-        STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL,
@@ -66,7 +64,6 @@ class DigitalSpecimenRequestTest {
         ISSUED_FOR_AGENT_TESTVAL,
         DIGITAL_OBJECT_TYPE_TESTVAL,
         PID_ISSUER_TESTVAL_OTHER,
-        STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL,
@@ -88,7 +85,6 @@ class DigitalSpecimenRequestTest {
         ISSUED_FOR_AGENT_TESTVAL,
         DIGITAL_OBJECT_TYPE_TESTVAL,
         PID_ISSUER_TESTVAL_OTHER,
-        STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL,
@@ -112,7 +108,6 @@ class DigitalSpecimenRequestTest {
         ISSUED_FOR_AGENT_TESTVAL,
         DIGITAL_OBJECT_TYPE_TESTVAL,
         PID_ISSUER_TESTVAL_OTHER,
-        STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL,
@@ -138,7 +133,6 @@ class DigitalSpecimenRequestTest {
         ISSUED_FOR_AGENT_TESTVAL,
         DIGITAL_OBJECT_TYPE_TESTVAL,
         PID_ISSUER_TESTVAL_OTHER,
-        STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL,
@@ -158,7 +152,6 @@ class DigitalSpecimenRequestTest {
         ISSUED_FOR_AGENT_TESTVAL,
         DIGITAL_OBJECT_TYPE_TESTVAL,
         PID_ISSUER_TESTVAL_OTHER,
-        STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL,
@@ -177,7 +170,6 @@ class DigitalSpecimenRequestTest {
         ISSUED_FOR_AGENT_TESTVAL,
         DIGITAL_OBJECT_TYPE_TESTVAL,
         PID_ISSUER_TESTVAL_OTHER,
-        STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL,

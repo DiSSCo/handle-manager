@@ -32,7 +32,6 @@ class RequestAttributeTest {
     );
     // Then
     assertThat(request.getPidIssuer()).isEqualTo("https://ror.org/04wxnsj81");
-    assertThat(request.getStructuralType()).isEqualTo("digital");
   }
 
   @Test
@@ -65,7 +64,6 @@ class RequestAttributeTest {
         null,
         null,
         null,
-        null,
         SPECIMEN_HOST_TESTVAL,
         SPECIMEN_HOST_NAME_TESTVAL,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
@@ -84,7 +82,6 @@ class RequestAttributeTest {
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
         DIGITAL_OBJECT_TYPE_TESTVAL,
-        null,
         null,
         null,
         null,
