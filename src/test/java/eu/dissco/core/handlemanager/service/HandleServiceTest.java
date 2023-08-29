@@ -2,8 +2,6 @@ package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID_TYPE;
-import static eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType.GLOBAL;
-import static eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType.LOCAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
@@ -52,6 +50,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordRespon
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteArchive;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteGeneric;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemRequestObject;
+import static eu.dissco.core.handlemanager.utils.AdminHandleGenerator.genAdminHandle;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -122,6 +121,29 @@ class HandleServiceTest {
     String path = SANDBOX_URI + HANDLE;
     List<HandleAttribute> recordAttributeList = genHandleRecordAttributes(handle,
         ObjectType.HANDLE);
+
+    var responseExpected = givenRecordResponseReadSingle(HANDLE, path, "PID",
+        genObjectNodeAttributeRecord(recordAttributeList));
+
+    given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(recordAttributeList);
+
+    // When
+    var responseReceived = service.resolveSingleRecord(handle, path);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testRemoveHsAdmin() throws Exception {
+
+    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
+    String path = SANDBOX_URI + HANDLE;
+    var adminHandle = new HandleAttribute(HS_ADMIN.index(), handle, HS_ADMIN.get(),
+        genAdminHandle());
+    var recordAttributeList = genHandleRecordAttributes(handle,
+        ObjectType.HANDLE);
+    recordAttributeList.add(adminHandle);
 
     var responseExpected = givenRecordResponseReadSingle(HANDLE, path, "PID",
         genObjectNodeAttributeRecord(recordAttributeList));

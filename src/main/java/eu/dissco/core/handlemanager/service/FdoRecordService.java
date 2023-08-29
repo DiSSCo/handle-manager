@@ -141,14 +141,17 @@ public class FdoRecordService {
   private final DateTimeFormatter dt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
       .withZone(ZoneId.of("UTC"));
 
+  public HandleAttribute genHsAdmin(byte[] handle) {
+    return new HandleAttribute(HS_ADMIN.index(), handle, HS_ADMIN.get(), genAdminHandle());
+  }
+
   public List<HandleAttribute> prepareHandleRecordAttributes(HandleRecordRequest request,
       byte[] handle, ObjectType type)
       throws PidServiceInternalError, InvalidRequestException, PidResolutionException, UnprocessableEntityException {
     List<HandleAttribute> fdoRecord = new ArrayList<>();
 
     // 100: Admin Handle
-    fdoRecord.add(
-        new HandleAttribute(HS_ADMIN.index(), handle, HS_ADMIN.get(), genAdminHandle()));
+    fdoRecord.add(genHsAdmin(handle));
 
     // 101: 10320/loc
     if (type != ObjectType.ORGANISATION) {
