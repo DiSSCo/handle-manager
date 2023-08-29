@@ -546,7 +546,7 @@ public class FdoRecordService {
       fdoRecord.add(
           new HandleAttribute(INFORMATION_ARTEFACT_TYPE.index(), handle,
               INFORMATION_ARTEFACT_TYPE.get(),
-              artefactType.getBytes(StandardCharsets.UTF_8)));
+              artefactType.toString().getBytes(StandardCharsets.UTF_8)));
     }
 
     // 215: materialSampleType

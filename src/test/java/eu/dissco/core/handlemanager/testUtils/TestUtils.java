@@ -450,7 +450,7 @@ public class TestUtils {
       fdoRecord.add(
           new HandleAttribute(INFORMATION_ARTEFACT_TYPE.index(), handle,
               INFORMATION_ARTEFACT_TYPE.get(),
-              request.getInformationArtefactType().getBytes(StandardCharsets.UTF_8)));
+              request.getInformationArtefactType().toString().getBytes(StandardCharsets.UTF_8)));
     }
 
     // 215: materialSampleType

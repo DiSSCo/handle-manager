@@ -70,8 +70,8 @@ public enum TopicDiscipline {
   @JsonProperty("Palaeontology") PALEO("Palaeontology"),
   @JsonProperty("Zoology") ZOO("Zoology"),
   @JsonProperty("Ecology") ECO("Ecology"),
-  @JsonProperty("Other Biodiversity") OTHER_BIO("Other Biodiversity"),
-  @JsonProperty("Other Other Geodiversity") OTHER_GEO("Other Geodiversity"),
+  @JsonProperty("Other biodiversity") OTHER_BIO("Other biodiversity"),
+  @JsonProperty("Other geodiversity") OTHER_GEO("Other geodiversity"),
   @JsonProperty("Astrogeology") ASTRO("Astrogeology");
 
   private final String state;

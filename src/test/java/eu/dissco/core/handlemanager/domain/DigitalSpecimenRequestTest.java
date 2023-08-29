@@ -17,6 +17,8 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.BaseTypeOfSpecimen;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.InformationArtefactType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialSampleType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicCategory;
@@ -165,6 +167,25 @@ class DigitalSpecimenRequestTest {
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
         PhysicalIdType.LOCAL, null, null, null, null, null, TopicDiscipline.ZOO, null,
         null, null, null, MaterialSampleType.OTHER_SOLID, null,
+        null, null, SOURCE_SYSTEM_TESTVAL));
+  }
+
+  @Test
+  void testInformationArtefactTypeFails() {
+    assertThrows(InvalidRequestException.class, () -> new DigitalSpecimenRequest(
+        FDO_PROFILE_TESTVAL,
+        ISSUED_FOR_AGENT_TESTVAL,
+        DIGITAL_OBJECT_TYPE_TESTVAL,
+        PID_ISSUER_TESTVAL_OTHER,
+        STRUCTURAL_TYPE_TESTVAL,
+        LOC_TESTVAL,
+        REFERENT_NAME_TESTVAL,
+        PRIMARY_REFERENT_TYPE_TESTVAL,
+        SPECIMEN_HOST_TESTVAL,
+        SPECIMEN_HOST_NAME_TESTVAL,
+        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
+        PhysicalIdType.LOCAL, null, null, null, null, null, null, null,
+        null, BaseTypeOfSpecimen.MATERIAL, InformationArtefactType.SOUND, null, null,
         null, null, SOURCE_SYSTEM_TESTVAL));
   }
 

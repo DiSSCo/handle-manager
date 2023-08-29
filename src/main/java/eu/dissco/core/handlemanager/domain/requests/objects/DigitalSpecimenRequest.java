@@ -5,6 +5,7 @@ import static eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalId
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.BaseTypeOfSpecimen;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.InformationArtefactType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.LivingOrPreserved;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialOrDigitalEntity;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialSampleType;
@@ -54,7 +55,7 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
   @Nullable
   private final BaseTypeOfSpecimen baseTypeOfSpecimen;
   @Nullable
-  private final String informationArtefactType;
+  private final InformationArtefactType informationArtefactType;
   @Nullable
   private final MaterialSampleType materialSampleType;
   @Nullable
@@ -93,7 +94,7 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
       TopicCategory topicCategory,
       LivingOrPreserved livingOrPreserved,
       BaseTypeOfSpecimen baseTypeOfSpecimen,
-      String informationArtefactType,
+      InformationArtefactType informationArtefactType,
       MaterialSampleType materialSampleType,
       MaterialOrDigitalEntity materialOrDigitalEntity,
       Boolean markedAsType,
@@ -126,6 +127,7 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
     this.normalisedPrimarySpecimenObjectId = normalisePrimarySpecimenObjectId();
     validateTopicCategory();
     validateMaterialSampleType();
+    validateInformationArtefactType();
   }
 
   private void idXorAbsence() throws InvalidRequestException {
@@ -182,6 +184,14 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
     }
     throw new InvalidRequestException(
         "Invalid material sample type for provided topicDiscipline/topicDomain/topicOrigin.");
+  }
+
+  private void validateInformationArtefactType() throws InvalidRequestException {
+    if (this.baseTypeOfSpecimen != null && this.baseTypeOfSpecimen.equals(
+        BaseTypeOfSpecimen.MATERIAL) && this.informationArtefactType != null) {
+      throw new InvalidRequestException(
+          "Field iformationArtefactType is only valid for Information Artefacts, not Material Entities");
+    }
   }
 
 }

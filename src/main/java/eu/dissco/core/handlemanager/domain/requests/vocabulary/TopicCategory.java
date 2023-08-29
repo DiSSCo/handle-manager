@@ -4,13 +4,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public enum TopicCategory {
 
-  @JsonProperty("Human Remains") HUMAN("Human Remains"),
-  @JsonProperty("Hominid Remains") HOMINID("Hominid Remains"),
+  @JsonProperty("Human remains") HUMAN("Human remains"),
+  @JsonProperty("Hominid remains") HOMINID("Hominid remains"),
   @JsonProperty("Mycology") MYCOLOGY("Mycology"),
   @JsonProperty("Algae") ALGAE("Algae"),
   @JsonProperty("Bryophytes") BRYO("Bryophytes"),
   @JsonProperty("Pteridophytes") PTERID("Pteridophytes"),
-  @JsonProperty("Seed Plants") SEED("Seed Plants"),
+  @JsonProperty("Seed plants") SEED("Seed plants"),
   @JsonProperty("PlantGeneticResources") PLANT_GENE("PlantGeneticResources"),
   @JsonProperty("Other Botany Objects") OTHER_BOTANY("Other Botany Objects"),
   @JsonProperty("Insects") INSECTS("Insects"),

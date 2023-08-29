@@ -93,6 +93,7 @@ import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenReque
 import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.OtherSpecimenId;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.BaseTypeOfSpecimen;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.InformationArtefactType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.LivingOrPreserved;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialOrDigitalEntity;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialSampleType;
@@ -674,7 +675,7 @@ class FdoRecordServiceTest {
         List.of(new OtherSpecimenId("Id", "local identifier", "id for institute")),
         TopicOrigin.NATURAL, TopicDomain.LIFE,
         TopicDiscipline.ZOO, TopicCategory.AMPHIBIANS, LivingOrPreserved.LIVING,
-        BaseTypeOfSpecimen.MATERIAL, "l",
+        BaseTypeOfSpecimen.INFO, InformationArtefactType.MOVING_IMG,
         MaterialSampleType.ORG_PART, MaterialOrDigitalEntity.DIGITAL, false, "p",
         SOURCE_SYSTEM_TESTVAL);
   }
