@@ -96,6 +96,10 @@ import eu.dissco.core.handlemanager.domain.requests.objects.OtherSpecimenId;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.LivingOrPreserved;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicCategory;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicDiscipline;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicDomain;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicOrigin;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
@@ -665,8 +669,10 @@ class FdoRecordServiceTest {
         SPECIMEN_HOST_NAME_TESTVAL,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
         PhysicalIdType.LOCAL, "b", null,
-        List.of(new OtherSpecimenId("Id", "local identifier", "id for institute")), "e", "f", "g",
-        "h", "living", LivingOrPreserved.LIVING, "k", "l", "m", "o", false, "p",
+        List.of(new OtherSpecimenId("Id", "local identifier", "id for institute")),
+        TopicOrigin.NATURAL, TopicDomain.LIFE,
+        TopicDiscipline.ZOO, TopicCategory.AMPHIBIANS, "living", LivingOrPreserved.LIVING, "k", "l",
+        "m", "o", false, "p",
         SOURCE_SYSTEM_TESTVAL);
   }
 

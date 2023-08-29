@@ -408,7 +408,7 @@ public class TestUtils {
       fdoRecord.add(
           new HandleAttribute(TOPIC_ORIGIN.index(), handle,
               TOPIC_ORIGIN.get(),
-              request.getTopicOrigin().getBytes(StandardCharsets.UTF_8)));
+              request.getTopicOrigin().toString().getBytes(StandardCharsets.UTF_8)));
     }
 
     // 209: topicDomain
@@ -416,7 +416,7 @@ public class TestUtils {
       fdoRecord.add(
           new HandleAttribute(TOPIC_DOMAIN.index(), handle,
               TOPIC_DOMAIN.get(),
-              request.getTopicDomain().getBytes(StandardCharsets.UTF_8)));
+              request.getTopicDomain().toString().getBytes(StandardCharsets.UTF_8)));
     }
 
     // 210: topicDiscipline
@@ -424,7 +424,7 @@ public class TestUtils {
       fdoRecord.add(
           new HandleAttribute(TOPIC_DISCIPLINE.index(), handle,
               TOPIC_DISCIPLINE.get(),
-              request.getTopicDiscipline().getBytes(StandardCharsets.UTF_8)));
+              request.getTopicDiscipline().toString().getBytes(StandardCharsets.UTF_8)));
     }
 
     // 211: topicCategory

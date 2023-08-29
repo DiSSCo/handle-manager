@@ -6,6 +6,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.LivingOrPreserved;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicCategory;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicDiscipline;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicDomain;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicOrigin;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import java.util.List;
 import lombok.EqualsAndHashCode;
@@ -35,13 +39,13 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
   @Nullable
   private final List<OtherSpecimenId> otherSpecimenIds;
   @Nullable
-  private final String topicOrigin;
+  private final TopicOrigin topicOrigin;
   @Nullable
-  private final String topicDomain;
+  private final TopicDomain topicDomain;
   @Nullable
-  private final String topicDiscipline;
+  private final TopicDiscipline topicDiscipline;
   @Nullable
-  private final String topicCategory;
+  private final TopicCategory topicCategory;
   @Nullable
   private final String objectType;
   @Nullable
@@ -82,10 +86,10 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
       String primarySpecimenObjectIdName,
       String primarySpecimenObjectIdAbsenceReason,
       List<OtherSpecimenId> otherSpecimenIds,
-      String topicOrigin,
-      String topicDomain,
-      String topicDiscipline,
-      String topicCategory,
+      TopicOrigin topicOrigin,
+      TopicDomain topicDomain,
+      TopicDiscipline topicDiscipline,
+      TopicCategory topicCategory,
       String objectType,
       LivingOrPreserved livingOrPreserved,
       String baseTypeOfSpecimen,
@@ -121,6 +125,7 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
     this.sourceSystemId = sourceSystemId;
     idXorAbsence();
     this.normalisedPrimarySpecimenObjectId = normalisePrimarySpecimenObjectId();
+    validateTopicCategory();
   }
 
   private void idXorAbsence() throws InvalidRequestException {
@@ -143,4 +148,16 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
     return this.primarySpecimenObjectId + ":" + this.sourceSystemId;
   }
 
+  private void validateTopicCategory() throws InvalidRequestException {
+    if (this.topicCategory == null || this.topicDiscipline == null) {
+      return;
+    }
+    var isCorrect = this.topicDiscipline.isCorrectCategory(this.topicCategory);
+    if (!isCorrect) {
+      throw new InvalidRequestException(
+          "Discipline/Category Mismatch. Provided TopicDiscipline " + this.topicDiscipline
+              + "  has the following topic categories " + this.topicDiscipline.getCategories()
+              .toString() + ". Provided topicCategory: " + this.topicCategory);
+    }
+  }
 }

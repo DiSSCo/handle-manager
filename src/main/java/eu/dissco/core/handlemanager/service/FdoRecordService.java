@@ -490,7 +490,7 @@ public class FdoRecordService {
       fdoRecord.add(
           new HandleAttribute(TOPIC_ORIGIN.index(), handle,
               TOPIC_ORIGIN.get(),
-              request.getTopicOrigin().getBytes(StandardCharsets.UTF_8)));
+              request.getTopicOrigin().toString().getBytes(StandardCharsets.UTF_8)));
     }
 
     // 209: topicDomain
@@ -499,7 +499,7 @@ public class FdoRecordService {
       fdoRecord.add(
           new HandleAttribute(TOPIC_DOMAIN.index(), handle,
               TOPIC_DOMAIN.get(),
-              topicDomain.getBytes(StandardCharsets.UTF_8)));
+              topicDomain.toString().getBytes(StandardCharsets.UTF_8)));
     }
 
     // 210: topicDiscipline
@@ -508,14 +508,14 @@ public class FdoRecordService {
       fdoRecord.add(
           new HandleAttribute(TOPIC_DISCIPLINE.index(), handle,
               TOPIC_DISCIPLINE.get(),
-              topicDisc.getBytes(StandardCharsets.UTF_8)));
+              topicDisc.toString().getBytes(StandardCharsets.UTF_8)));
     }
 
     // 211 topicCategory
     var topicCategory = request.getTopicCategory();
     if (topicCategory != null) {
       fdoRecord.add(new HandleAttribute(TOPIC_CATEGORY.index(), handle, TOPIC_CATEGORY.get(),
-          topicCategory.getBytes(
+          topicCategory.toString().getBytes(
               StandardCharsets.UTF_8)));
     }
 
@@ -559,7 +559,7 @@ public class FdoRecordService {
     fdoRecord.add(
         new HandleAttribute(MATERIAL_OR_DIGITAL_ENTITY.index(), handle,
             MATERIAL_OR_DIGITAL_ENTITY.get(),
-            request.getMaterialOrDigitalEntity().getBytes()));
+            request.getMaterialOrDigitalEntity().getBytes(StandardCharsets.UTF_8)));
 
     // 217: markedAsType
     var markedAsType = request.getMarkedAsType();
