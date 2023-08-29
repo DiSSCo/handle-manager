@@ -1,5 +1,6 @@
 package eu.dissco.core.handlemanager.service;
 
+import static eu.dissco.core.handlemanager.domain.FdoProfile.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID_TYPE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
@@ -67,6 +68,7 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -203,7 +205,7 @@ class HandleServiceTest {
 
     // When
     var responseReceived = service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        GLOBAL,
+        PhysicalIdType.GLOBAL,
         SPECIMEN_HOST_TESTVAL);
 
     // Then
@@ -222,7 +224,7 @@ class HandleServiceTest {
 
     // When
     Exception e = assertThrows(PidResolutionException.class, () -> {
-      service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, GLOBAL,
+      service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, PhysicalIdType.GLOBAL,
           SOURCE_SYSTEM_TESTVAL);
     });
 
@@ -243,7 +245,7 @@ class HandleServiceTest {
 
     // When
     var responseReceived = service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        LOCAL,
+        PhysicalIdType.LOCAL,
         SPECIMEN_HOST_TESTVAL);
 
     // Then
