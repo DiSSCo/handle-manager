@@ -46,6 +46,7 @@ class RequestAttributeTest {
         null,
         null,
         null,
+        "Digital Specimen",
         null
     );
 

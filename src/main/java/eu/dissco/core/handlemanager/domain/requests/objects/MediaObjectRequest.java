@@ -14,6 +14,7 @@ public class MediaObjectRequest extends DoiRecordRequest {
   private final String mediaUrl;
   @JsonProperty(required = true)
   private final String subjectLocalIdentifier; // Rename -> subjectLocalId? TBD
+  private static final String REFERENT_TYPE = "Digital Media Object";
 
   public MediaObjectRequest(
       String fdoProfile,
@@ -29,7 +30,7 @@ public class MediaObjectRequest extends DoiRecordRequest {
       String mediaUrl,
       String subjectLocalIdentifier) {
     super(fdoProfile, issuedForAgent, digitalObjectTypePid, pidIssuer, structuralType, locations,
-        referentName, primaryReferentType);
+        referentName, REFERENT_TYPE, primaryReferentType);
     this.mediaUrl = mediaUrl;
     this.subjectLocalIdentifier = subjectLocalIdentifier;
   }

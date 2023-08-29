@@ -61,6 +61,7 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
   @Nullable
   private final String sourceSystemId;
   private final String normalisedPrimarySpecimenObjectId;
+  private static final String REFERENT_TYPE = "Digital Specimen";
 
   public DigitalSpecimenRequest(
       // Handle
@@ -96,7 +97,7 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
       String sourceSystemId
   ) throws InvalidRequestException {
     super(fdoProfile, issuedForAgent, digitalObjectTypePid, pidIssuer, structuralType, locations,
-        referentName, primaryReferentType);
+        referentName, REFERENT_TYPE, primaryReferentType);
     this.specimenHost = specimenHost;
     this.specimenHostName = specimenHostName;
     this.primarySpecimenObjectId = primarySpecimenObjectId;

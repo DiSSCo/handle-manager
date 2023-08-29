@@ -644,6 +644,7 @@ public class TestUtils {
         STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,
+        "Digital Specimen",
         PRIMARY_REFERENT_TYPE_TESTVAL
     );
   }

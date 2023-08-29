@@ -30,9 +30,10 @@ public class DoiRecordRequest extends HandleRecordRequest {
       String[] locations,
       // Doi
       String referentName,
+      String referentType,
       String primaryReferentType) {
     super(fdoProfile, issuedForAgent, digitalObjectType, pidIssuer, structuralType, locations);
-    this.referentType = PLACEHOLDER;
+    this.referentType = referentType;
     this.referentName = referentName;
     this.primaryReferentType = primaryReferentType == null ? "creation" : primaryReferentType;
   }
