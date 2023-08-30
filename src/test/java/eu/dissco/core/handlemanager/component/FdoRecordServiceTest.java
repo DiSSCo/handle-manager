@@ -264,8 +264,8 @@ class FdoRecordServiceTest {
         null,
         "PhysicalId",
         null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-        SOURCE_SYSTEM_TESTVAL
-    );
+        SOURCE_SYSTEM_TESTVAL,
+        null);
 
     // When
     fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle,
@@ -292,8 +292,8 @@ class FdoRecordServiceTest {
         null,
         "PhysicalId",
         null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-        SOURCE_SYSTEM_TESTVAL
-    );
+        SOURCE_SYSTEM_TESTVAL,
+        null);
 
     // When
     var result = fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle,
@@ -501,7 +501,7 @@ class FdoRecordServiceTest {
         null,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
         null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-        SOURCE_SYSTEM_TESTVAL);
+        SOURCE_SYSTEM_TESTVAL, null);
 
     // When
     var result = fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle,
@@ -529,7 +529,7 @@ class FdoRecordServiceTest {
         null,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
         null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-        SOURCE_SYSTEM_TESTVAL);
+        SOURCE_SYSTEM_TESTVAL, null);
 
     // When
     var result = fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle,
@@ -672,7 +672,7 @@ class FdoRecordServiceTest {
         TopicDiscipline.ZOO, TopicCategory.AMPHIBIANS, LivingOrPreserved.LIVING,
         BaseTypeOfSpecimen.INFO, InformationArtefactType.MOVING_IMG,
         MaterialSampleType.ORG_PART, MaterialOrDigitalEntity.DIGITAL, false, "p",
-        SOURCE_SYSTEM_TESTVAL);
+        SOURCE_SYSTEM_TESTVAL, PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL + ":" + SOURCE_SYSTEM_TESTVAL);
   }
 
   private boolean hasCorrectElements(List<HandleAttribute> fdoRecord,

@@ -671,8 +671,8 @@ public class TestUtils {
           primarySpecimenObjectId,
           PhysicalIdType.LOCAL, null, null, null, null, null, null, null, null, null, null, null,
           null, null, null,
-          SOURCE_SYSTEM_TESTVAL
-      );
+          SOURCE_SYSTEM_TESTVAL,
+          null);
     } catch (InvalidRequestException e) {
       throw new RuntimeException(e.getMessage());
     }

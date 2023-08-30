@@ -40,6 +40,8 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
   @Nullable
   private final String primarySpecimenObjectIdName;
   @Nullable
+  private final String normalisedPrimarySpecimenObjectId;
+  @Nullable
   private final String primarySpecimenObjectIdAbsenceReason;
   @Nullable
   private final List<OtherSpecimenId> otherSpecimenIds;
@@ -67,7 +69,6 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
   private final String derivedFromEntity;
   @Nullable
   private final String sourceSystemId;
-  private final String normalisedPrimarySpecimenObjectId;
   private static final String REFERENT_TYPE = "Digital Specimen";
 
   public DigitalSpecimenRequest(
@@ -99,8 +100,8 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
       MaterialOrDigitalEntity materialOrDigitalEntity,
       Boolean markedAsType,
       String derivedFromEntity,
-      String sourceSystemId
-  ) throws InvalidRequestException {
+      String sourceSystemId,
+      String normalisedPrimarySpecimenObjetId) throws InvalidRequestException {
     super(fdoProfile, issuedForAgent, digitalObjectTypePid, pidIssuer, StructuralType.DIGITAL,
         locations,
         referentName, REFERENT_TYPE, primaryReferentType);
@@ -125,7 +126,9 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
     this.derivedFromEntity = derivedFromEntity;
     this.sourceSystemId = sourceSystemId;
     idXorAbsence();
-    this.normalisedPrimarySpecimenObjectId = normalisePrimarySpecimenObjectId();
+    this.normalisedPrimarySpecimenObjectId =
+        normalisedPrimarySpecimenObjetId == null ? normalisePrimarySpecimenObjectId()
+            : normalisedPrimarySpecimenObjetId;
     validateTopicCategory();
     validateMaterialSampleType();
     validateInformationArtefactType();

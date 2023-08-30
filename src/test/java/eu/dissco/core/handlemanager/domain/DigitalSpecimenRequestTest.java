@@ -53,8 +53,8 @@ class DigitalSpecimenRequestTest {
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
         PhysicalIdType.LOCAL, null, null, null, null, null, discipline, category, null, null, null,
         null, null, null, null,
-        SOURCE_SYSTEM_TESTVAL
-    ));
+        SOURCE_SYSTEM_TESTVAL,
+        null));
   }
 
   @Test
@@ -72,8 +72,8 @@ class DigitalSpecimenRequestTest {
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
         PhysicalIdType.LOCAL, null, null, null, null, null, null, null, null, null, null,
         null, null, null, null,
-        null
-    ));
+        null,
+        null));
   }
 
   @Test
@@ -93,8 +93,8 @@ class DigitalSpecimenRequestTest {
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
         PhysicalIdType.LOCAL, null, null, null, null, null, null, null, null, null, null,
         null, null, null, null,
-        SOURCE_SYSTEM_TESTVAL
-    );
+        SOURCE_SYSTEM_TESTVAL,
+        null);
 
     // Then
     assertThat(specimen.getNormalisedPrimarySpecimenObjectId()).isEqualTo(expected);
@@ -116,8 +116,8 @@ class DigitalSpecimenRequestTest {
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
         PhysicalIdType.RESOLVABLE, null, null, null, null, null, null, null, null, null, null,
         null, null, null, null,
-        null
-    );
+        null,
+        null);
 
     // Then
     assertThat(specimen.getNormalisedPrimarySpecimenObjectId()).isEqualTo(
@@ -141,7 +141,7 @@ class DigitalSpecimenRequestTest {
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
         PhysicalIdType.LOCAL, null, null, null, topicOrigin, topicDomain, topicDiscipline, null,
         null, null, null, materialSampleType, null,
-        null, null, SOURCE_SYSTEM_TESTVAL));
+        null, null, SOURCE_SYSTEM_TESTVAL, null));
 
   }
 
@@ -160,7 +160,7 @@ class DigitalSpecimenRequestTest {
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
         PhysicalIdType.LOCAL, null, null, null, null, null, TopicDiscipline.ZOO, null,
         null, null, null, MaterialSampleType.OTHER_SOLID, null,
-        null, null, SOURCE_SYSTEM_TESTVAL));
+        null, null, SOURCE_SYSTEM_TESTVAL, null));
   }
 
   @Test
@@ -178,7 +178,7 @@ class DigitalSpecimenRequestTest {
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
         PhysicalIdType.LOCAL, null, null, null, null, null, null, null,
         null, BaseTypeOfSpecimen.MATERIAL, InformationArtefactType.SOUND, null, null,
-        null, null, SOURCE_SYSTEM_TESTVAL));
+        null, null, SOURCE_SYSTEM_TESTVAL, null));
   }
 
   private static Stream<Arguments> correctMaterialSampleTypes() {
