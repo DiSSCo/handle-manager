@@ -3,7 +3,7 @@ package eu.dissco.core.handlemanager.domain;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ANNOTATION_TOPIC;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.FDO_PROFILE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MAS_NAME;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_URL;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_HOST;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ORGANISATION_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_ISSUER;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.REFERENT_NAME;
@@ -18,7 +18,7 @@ import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_TYPE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.LOC_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.MEDIA_URL_TESTVAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.MEDIA_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_ISSUER_TESTVAL_OTHER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_ANNOTATION;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DOI;
@@ -83,9 +83,7 @@ class JsonSchemaValidatorTest {
     var request = genCreateRecordRequest(givenHandleRecordRequestObject(), RECORD_TYPE_HANDLE);
 
     // Then
-    assertDoesNotThrow(() -> {
-      schemaValidator.validatePostRequest(request);
-    });
+    assertDoesNotThrow(() -> schemaValidator.validatePostRequest(request));
   }
 
   @Test
@@ -102,9 +100,7 @@ class JsonSchemaValidatorTest {
     var request = genCreateRecordRequest(requestAttributes, RECORD_TYPE_HANDLE);
 
     // Then
-    assertDoesNotThrow(() -> {
-      schemaValidator.validatePostRequest(request);
-    });
+    assertDoesNotThrow(() -> schemaValidator.validatePostRequest(request));
   }
 
   @Test
@@ -113,9 +109,7 @@ class JsonSchemaValidatorTest {
     var request = genCreateRecordRequest(givenDoiRecordRequestObject(), RECORD_TYPE_DOI);
 
     // Then
-    assertDoesNotThrow(() -> {
-      schemaValidator.validatePostRequest(request);
-    });
+    assertDoesNotThrow(() -> schemaValidator.validatePostRequest(request));
   }
 
   @Test
@@ -258,7 +252,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testMediaObjectPatchRequest() {
     // Given
-    var request = givenUpdateRequest(RECORD_TYPE_MEDIA, MEDIA_URL.get(), MEDIA_URL_TESTVAL);
+    var request = givenUpdateRequest(RECORD_TYPE_MEDIA, MEDIA_HOST.get(), MEDIA_HOST_TESTVAL);
 
     // Then
     assertDoesNotThrow(() -> {
@@ -476,7 +470,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testBadPostMediaObjectRequestMissingProperty() {
     // Given
-    String missingAttribute = MEDIA_URL.get();
+    String missingAttribute = MEDIA_HOST.get();
     var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(),
         RECORD_TYPE_MEDIA);
     ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(missingAttribute);

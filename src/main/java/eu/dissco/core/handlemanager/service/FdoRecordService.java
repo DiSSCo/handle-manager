@@ -118,7 +118,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
-import org.webjars.NotFoundException;
 
 @RequiredArgsConstructor
 @Service
@@ -299,11 +298,11 @@ public class FdoRecordService {
     var fdoRecord = prepareDoiRecordAttributes(request, handle, type);
 
     fdoRecord.add(new HandleAttribute(MEDIA_HOST, handle, request.getMediaHost()));
-    var mediaHostName = request.getMediaHostName();
-    if (mediaHostName == null) {
-      mediaHostName = pidResolver.getObjectName(request.getMediaHost());
+    var mediaHostName = setHostName(request.getMediaHostName(), request.getMediaHost(), handle,
+        MEDIA_HOST_NAME);
+    if (mediaHostName != null) {
+      fdoRecord.add(mediaHostName);
     }
-    fdoRecord.add(new HandleAttribute(MEDIA_HOST_NAME, handle, mediaHostName));
     if (request.getMediaFormat() != null) {
       fdoRecord.add(new HandleAttribute(MEDIA_FORMAT, handle, request.getMediaFormat().toString()));
     }
@@ -353,17 +352,14 @@ public class FdoRecordService {
       fdoRecord.add(
           new HandleAttribute(DERIVED_FROM_ENTITY, handle, request.getDerivedFromEntity()));
     }
-    if (request.getLicenseName() != null) {
-      fdoRecord.add(
-          new HandleAttribute(LICENSE_NAME, handle, request.getLicenseName()));
-    }
+    fdoRecord.add(new HandleAttribute(LICENSE_NAME, handle, request.getLicenseName()));
     if (request.getLicenseUrl() != null) {
-      fdoRecord.add(
-          new HandleAttribute(LICENSE_URL, handle, request.getLicenseUrl()));
+      fdoRecord.add(new HandleAttribute(LICENSE_URL, handle, request.getLicenseUrl()));
     }
-    if (request.getRightsholderName() != null) {
-      fdoRecord.add(
-          new HandleAttribute(RIGHTSHOLDER_NAME, handle, request.getRightsholderName()));
+    var rightsholderName = setHostName(request.getRightsholderName(), request.getRightsholderPid(),
+        handle, RIGHTSHOLDER_NAME);
+    if (rightsholderName != null) {
+      fdoRecord.add(rightsholderName);
     }
     if (request.getRightsholderPid() != null) {
       fdoRecord.add(
@@ -516,7 +512,11 @@ public class FdoRecordService {
             request.getSpecimenHost().getBytes(StandardCharsets.UTF_8)));
 
     // 201: Specimen Host name
-    fdoRecord = setSpecimenHostName(request, fdoRecord, handle);
+    var specimenHostName = setHostName(request.getSpecimenHostName(), request.getSpecimenHost(),
+        handle, SPECIMEN_HOST_NAME);
+    if (specimenHostName != null) {
+      fdoRecord.add(specimenHostName);
+    }
 
     // 202: primarySpecimenObjectId
     fdoRecord.add(
@@ -663,39 +663,32 @@ public class FdoRecordService {
     return fdoRecord;
   }
 
-  private List<HandleAttribute> setSpecimenHostName(DigitalSpecimenRequest request,
-      List<HandleAttribute> fdoRecord, byte[] handle) {
-    var specimenHostName = request.getSpecimenHostName();
-    if (specimenHostName != null) {
-      fdoRecord.add(
-          new HandleAttribute(SPECIMEN_HOST_NAME.index(), handle,
-              SPECIMEN_HOST_NAME.get(),
-              specimenHostName.getBytes(StandardCharsets.UTF_8)));
+  private HandleAttribute setHostName(String hostName, String hostId, byte[] handle,
+      FdoProfile targetAttribute) {
+    if (hostName != null) {
+      return new HandleAttribute(targetAttribute, handle, hostName);
     } else {
-      String specimenHostNameResolved;
+      String hostNameResolved;
       try {
-        String specimenHostId = request.getSpecimenHost();
-        if (isAcceptedSpecimenHostId(specimenHostId)) {
-          if (specimenHostId.contains(ROR_DOMAIN)) {
-            specimenHostNameResolved = pidResolver.getObjectName(getRor(specimenHostId));
+        if (isAcceptedSpecimenHostId(hostId)) {
+          if (hostId.contains(ROR_DOMAIN)) {
+            var a = getRor(hostId);
+            hostNameResolved = pidResolver.getObjectName(getRor(hostId));
           } else {
-            specimenHostNameResolved = pidResolver.resolveQid(WIKIDATA_API + specimenHostId);
+            hostNameResolved = pidResolver.resolveQid(WIKIDATA_API + hostId);
           }
-          fdoRecord.add(
-              new HandleAttribute(SPECIMEN_HOST_NAME.index(), handle,
-                  SPECIMEN_HOST_NAME.get(),
-                  specimenHostNameResolved.getBytes(StandardCharsets.UTF_8)));
+          return new HandleAttribute(targetAttribute, handle, hostNameResolved);
         } else {
-          log.warn("Specimen host ID {} is neither QID nor ROR.", specimenHostId);
+          log.warn("Specimen host ID {} is neither QID nor ROR.", hostId);
         }
-      } catch (NotFoundException | UnprocessableEntityException | InvalidRequestException |
+      } catch (UnprocessableEntityException | InvalidRequestException |
                PidResolutionException e) {
         log.error(
-            "SpecimenHostId is not a resolvable ROR and no SpecimenHostName is provided in the request. SpecimenHostName field left blank. More information: "
-                + e.getMessage());
+            "AgentId is not a resolvable ROR and no Name is provided in the request for the field {}. AgentName field left blank",
+            targetAttribute.get(), e);
       }
     }
-    return fdoRecord;
+    return null;
   }
 
   private boolean isAcceptedSpecimenHostId(String id) {

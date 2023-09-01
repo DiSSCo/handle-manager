@@ -51,6 +51,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_DOMAIN;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.ISSUED_FOR_AGENT_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.LOC_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.MEDIA_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.ORCHESTRATION_URL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_ISSUER_TESTVAL_OTHER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_REFERENT_TYPE_TESTVAL;
@@ -162,10 +163,12 @@ class FdoRecordServiceTest {
   private ApplicationProperties appProperties;
   private static final int HANDLE_QTY = 15;
   private static final int DOI_QTY = 19;
-  private static final int MEDIA_QTY = 24;
+  private static final int MEDIA_QTY = DOI_QTY + 9;
+  private static final int MEDIA_OPTIONAL_QTY = DOI_QTY + 20;
   private static final int DS_MANDATORY_QTY = 24;
   private static final int DS_OPTIONAL_QTY = 37;
   private static final int ANNOTATION_QTY = 21;
+  private static final String ROR_API = "https://api.ror.org/organizations/";
 
   @BeforeEach
   void init() {
@@ -220,6 +223,25 @@ class FdoRecordServiceTest {
 
     // Then
     assertThat(result).hasSize(MEDIA_QTY);
+    assertThat(
+        hasCorrectLocations(result, request.getLocations(), ObjectType.MEDIA_OBJECT)).isTrue();
+    assertThat(hasNoDuplicateElements(result)).isTrue();
+  }
+
+  @Test
+  void testPrepareMediaObjectAttributesNamesDontResolve() throws Exception {
+    // Given
+    var mediaHostRor = MEDIA_HOST_TESTVAL.replace(ROR_DOMAIN, ROR_API);
+    given(pidResolver.getObjectName(mediaHostRor)).willThrow(new PidResolutionException(""));
+    given(pidResolver.getObjectName(any())).willReturn("this is a placeholder");
+    var request = givenMediaRequestObject();
+
+    // When
+    var result = fdoRecordService.prepareMediaObjectAttributes(request, handle,
+        ObjectType.MEDIA_OBJECT);
+
+    // Then
+    assertThat(result).hasSize(MEDIA_QTY - 1);
     assertThat(
         hasCorrectLocations(result, request.getLocations(), ObjectType.MEDIA_OBJECT)).isTrue();
     assertThat(hasNoDuplicateElements(result)).isTrue();
@@ -514,9 +536,8 @@ class FdoRecordServiceTest {
 
   @Test
   void testSpecimenHostNotResolvable() throws Exception {
-    var rorApi = "https://api.ror.org/organizations/0x123";
-    given(pidResolver.getObjectName(rorApi)).willThrow(new PidResolutionException(""));
-    given(pidResolver.getObjectName(not(eq(rorApi)))).willReturn("placeholder");
+    given(pidResolver.getObjectName(ROR_API)).willThrow(new PidResolutionException(""));
+    given(pidResolver.getObjectName(not(eq(ROR_API)))).willReturn("placeholder");
     var request = new DigitalSpecimenRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,

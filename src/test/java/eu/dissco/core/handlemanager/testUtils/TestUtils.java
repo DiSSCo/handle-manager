@@ -3,6 +3,9 @@ package eu.dissco.core.handlemanager.testUtils;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ACCESS_RESTRICTED;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ANNOTATION_TOPIC;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.BASE_TYPE_OF_SPECIMEN;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.DC_TERMS_CONFORMS;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.DERIVED_FROM_ENTITY;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.DERIVED_FROM_PRIMARY_SPECIMEN_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DIGITAL_OBJECT_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DIGITAL_OBJECT_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.FDO_PROFILE;
@@ -11,6 +14,12 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.INFORMATION_ARTEFACT_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ISSUED_FOR_AGENT;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ISSUED_FOR_AGENT_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.IS_DERIVED_FROM_SPECIMEN;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.LICENSE_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.LICENSE_URL;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_ATTRIBUTE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_DO_PID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_DO_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_OBJECT_URL;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.LIVING_OR_PRESERVED;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.LOC;
@@ -18,6 +27,10 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.MARKED_AS_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MAS_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MATERIAL_OR_DIGITAL_ENTITY;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MATERIAL_SAMPLE_TYPE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_FORMAT;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_HOST;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_HOST_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_MIME_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ORGANISATION_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ORGANISATION_ID_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ORGANISATION_NAME;
@@ -28,6 +41,9 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_ISSUER_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_RECORD_ISSUE_DATE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_RECORD_ISSUE_NUMBER;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_STATUS;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_MEDIA_ID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_MO_ID_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_MO_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_REFERENT_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID_NAME;
@@ -36,6 +52,9 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.REFERENT_DOI_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.REFERENT_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.REFERENT_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.REPLACE_OR_APPEND;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.RIGHTSHOLDER_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.RIGHTSHOLDER_PID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.RIGHTSHOLDER_PID_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.SOURCE_DATA_STANDARD;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.SOURCE_SYSTEM_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.SPECIMEN_HOST;
@@ -77,6 +96,7 @@ import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimaryObjectIdType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ReplaceOrAppend;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.StructuralType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.media.LinkedDigitalObjectType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -155,7 +175,11 @@ public class TestUtils {
 
 
   // Media Objects
-  public static final String MEDIA_URL_TESTVAL = "https://naturalis.nl/media/123";
+  public static final String MEDIA_HOST_TESTVAL = SPECIMEN_HOST_TESTVAL;
+  public static final String MEDIA_HOST_NAME_TESTVAL = SPECIMEN_HOST_NAME_TESTVAL;
+  public static final LinkedDigitalObjectType LINKED_DIGITAL_OBJECT_TYPE_TESTVAL = LinkedDigitalObjectType.SPECIMEN;
+  public static final String LINKED_DO_PID_TESTVAL = HANDLE;
+  public static final String LICENSE_NAME_TESTVAL = "CC0 1.0 Universal (CC0 1.0) Public Domain Dedication";
   // Mappings
   public static final String SOURCE_DATA_STANDARD_TESTVAL = "dwc";
   // MAS
@@ -494,11 +518,90 @@ public class TestUtils {
 
   public static List<HandleAttribute> genMediaObjectAttributes(byte[] handle)
       throws Exception {
-    List<HandleAttribute> handleRecord = genDoiRecordAttributes(handle, ObjectType.MEDIA_OBJECT);
+    var request = givenMediaRequestObject();
+    return genMediaObjectAttributes(handle, request);
+  }
 
-    byte[] PLACEHOLDER = "Needs to be fixed!".getBytes(StandardCharsets.UTF_8);
+  public static List<HandleAttribute> genMediaObjectAttributes(byte[] handle,
+      MediaObjectRequest request) throws Exception {
+    List<HandleAttribute> fdoRecord = genDoiRecordAttributes(handle, ObjectType.MEDIA_OBJECT);
+    fdoRecord.add(new HandleAttribute(MEDIA_HOST, handle, request.getMediaHost()));
+    fdoRecord.add(new HandleAttribute(MEDIA_HOST_NAME, handle, request.getMediaHostName()));
+    if (request.getMediaFormat() != null) {
+      fdoRecord.add(new HandleAttribute(MEDIA_FORMAT, handle, request.getMediaFormat().toString()));
+    }
+    fdoRecord.add(new HandleAttribute(IS_DERIVED_FROM_SPECIMEN, handle,
+        request.getIsDerivedFromSpecimen().toString()));
+    if (request.getLinkedDigitalObjectPid() != null) {
+      fdoRecord.add(
+          new HandleAttribute(LINKED_DO_PID, handle, request.getLinkedDigitalObjectPid()));
+    }
+    if (request.getLinkedDigitalObjectType() != null) {
+      fdoRecord.add(
+          new HandleAttribute(LINKED_DO_TYPE, handle, request.getLinkedDigitalObjectType()
+              .toString()));
+    }
+    if (request.getLinkedAttribute() != null) {
+      fdoRecord.add(
+          new HandleAttribute(LINKED_ATTRIBUTE, handle, request.getLinkedAttribute()));
+    }
+    if (request.getPrimaryMediaId() != null) {
+      fdoRecord.add(
+          new HandleAttribute(PRIMARY_MEDIA_ID, handle, request.getPrimaryMediaId()));
+    }
+    if (request.getPrimaryMediaObjectIdType() != null) {
+      fdoRecord.add(
+          new HandleAttribute(PRIMARY_MO_TYPE, handle,
+              request.getPrimaryMediaObjectIdType().toString()));
+    }
+    if (request.getPrimaryMediaObjectIdName() != null) {
+      fdoRecord.add(
+          new HandleAttribute(PRIMARY_MO_ID_NAME, handle, request.getPrimaryMediaObjectIdName()));
+    }
+    if (request.getDerivedFromPrimarySpecimenObjectId() != null) {
+      fdoRecord.add(
+          new HandleAttribute(DERIVED_FROM_PRIMARY_SPECIMEN_ID, handle,
+              request.getDerivedFromPrimarySpecimenObjectId()));
+    }
+    if (request.getPrimaryMediaObjectType() != null) {
+      fdoRecord.add(
+          new HandleAttribute(PRIMARY_MEDIA_ID, handle,
+              request.getPrimaryMediaObjectType().toString()));
+    }
+    if (request.getMediaMimeType() != null) {
+      fdoRecord.add(
+          new HandleAttribute(MEDIA_MIME_TYPE, handle, request.getMediaMimeType()));
+    }
+    if (request.getDerivedFromEntity() != null) {
+      fdoRecord.add(
+          new HandleAttribute(DERIVED_FROM_ENTITY, handle, request.getDerivedFromEntity()));
+    }
+    if (request.getLicenseName() != null) {
+      fdoRecord.add(
+          new HandleAttribute(LICENSE_NAME, handle, request.getLicenseName()));
+    }
+    if (request.getLicenseUrl() != null) {
+      fdoRecord.add(
+          new HandleAttribute(LICENSE_URL, handle, request.getLicenseUrl()));
+    }
+    if (request.getRightsholderName() != null) {
+      fdoRecord.add(
+          new HandleAttribute(RIGHTSHOLDER_NAME, handle, request.getRightsholderName()));
+    }
+    if (request.getRightsholderPid() != null) {
+      fdoRecord.add(
+          new HandleAttribute(RIGHTSHOLDER_PID, handle, request.getRightsholderPid()));
+    }
+    if (request.getRightsholderPidType() != null) {
+      fdoRecord.add(
+          new HandleAttribute(RIGHTSHOLDER_PID_TYPE, handle, request.getRightsholderPidType()));
+    }
+    if (request.getDctermsConforms() != null) {
+      fdoRecord.add(
+          new HandleAttribute(DC_TERMS_CONFORMS, handle, request.getDctermsConforms()));
+    }
 
-    return handleRecord;
+    return fdoRecord;
   }
 
   public static List<HandleAttribute> genAnnotationAttributes(byte[] handle)
@@ -655,7 +758,6 @@ public class TestUtils {
   }
 
   public static MediaObjectRequest givenMediaRequestObject() throws InvalidRequestException {
-    // TODO
     return new MediaObjectRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
@@ -664,8 +766,10 @@ public class TestUtils {
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL,
-        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-        null, null, null, null
+        MEDIA_HOST_TESTVAL, MEDIA_HOST_NAME_TESTVAL, null, Boolean.TRUE, LINKED_DO_PID_TESTVAL,
+        LINKED_DIGITAL_OBJECT_TYPE_TESTVAL, null, null, null, null, HANDLE, null, null, null,
+        LICENSE_NAME_TESTVAL,
+        null, null, null, null, null
     );
   }
 

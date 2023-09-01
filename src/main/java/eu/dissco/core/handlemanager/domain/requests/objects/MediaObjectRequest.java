@@ -45,7 +45,6 @@ public class MediaObjectRequest extends DoiRecordRequest {
   private final String mediaMimeType;
   @Nullable
   private final String derivedFromEntity;
-  @Nullable
   private final String licenseName;
   @Nullable
   private final String licenseUrl;
