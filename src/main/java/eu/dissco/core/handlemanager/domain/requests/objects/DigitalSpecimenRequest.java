@@ -194,7 +194,7 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
     if (this.baseTypeOfSpecimen != null && this.baseTypeOfSpecimen.equals(
         BaseTypeOfSpecimen.MATERIAL) && this.informationArtefactType != null) {
       throw new InvalidRequestException(
-          "Field iformationArtefactType is only valid for Information Artefacts, not Material Entities");
+          "Field informationArtefactType is only valid for Information Artefacts, not Material Entities");
     }
   }
 
