@@ -309,15 +309,11 @@ public class FdoRecordService {
     }
     fdoRecord.add(new HandleAttribute(IS_DERIVED_FROM_SPECIMEN, handle,
         request.getIsDerivedFromSpecimen().toString()));
-    if (request.getLinkedDigitalObjectPid() != null) {
-      fdoRecord.add(
-          new HandleAttribute(LINKED_DO_PID, handle, request.getLinkedDigitalObjectPid()));
-    }
-    if (request.getLinkedDigitalObjectType() != null) {
-      fdoRecord.add(
-          new HandleAttribute(LINKED_DO_TYPE, handle, request.getLinkedDigitalObjectType()
-              .toString()));
-    }
+    fdoRecord.add(
+        new HandleAttribute(LINKED_DO_PID, handle, request.getLinkedDigitalObjectPid()));
+    fdoRecord.add(
+        new HandleAttribute(LINKED_DO_TYPE, handle, request.getLinkedDigitalObjectType()
+            .toString()));
     if (request.getLinkedAttribute() != null) {
       fdoRecord.add(
           new HandleAttribute(LINKED_ATTRIBUTE, handle, request.getLinkedAttribute()));
