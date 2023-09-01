@@ -594,7 +594,8 @@ public class TestUtils {
     }
     if (request.getRightsholderPidType() != null) {
       fdoRecord.add(
-          new HandleAttribute(RIGHTSHOLDER_PID_TYPE, handle, request.getRightsholderPidType()));
+          new HandleAttribute(RIGHTSHOLDER_PID_TYPE, handle,
+              request.getRightsholderPidType().toString()));
     }
     if (request.getDctermsConforms() != null) {
       fdoRecord.add(

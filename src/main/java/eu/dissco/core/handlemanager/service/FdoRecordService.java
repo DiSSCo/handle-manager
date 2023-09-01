@@ -45,6 +45,7 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_RECORD_ISSUE_NU
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_MEDIA_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_MO_ID_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_MO_ID_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_MO_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_REFERENT_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
@@ -334,15 +335,15 @@ public class FdoRecordService {
       fdoRecord.add(
           new HandleAttribute(PRIMARY_MO_ID_NAME, handle, request.getPrimaryMediaObjectIdName()));
     }
+    if (request.getPrimaryMediaObjectIdType() != null) {
+      fdoRecord.add(
+          new HandleAttribute(PRIMARY_MO_ID_TYPE, handle,
+              request.getPrimaryMediaObjectIdType().toString()));
+    }
     if (request.getDerivedFromPrimarySpecimenObjectId() != null) {
       fdoRecord.add(
           new HandleAttribute(DERIVED_FROM_PRIMARY_SPECIMEN_ID, handle,
               request.getDerivedFromPrimarySpecimenObjectId()));
-    }
-    if (request.getPrimaryMediaObjectType() != null) {
-      fdoRecord.add(
-          new HandleAttribute(PRIMARY_MEDIA_ID, handle,
-              request.getPrimaryMediaObjectType().toString()));
     }
     if (request.getMediaMimeType() != null) {
       fdoRecord.add(
@@ -367,7 +368,8 @@ public class FdoRecordService {
     }
     if (request.getRightsholderPidType() != null) {
       fdoRecord.add(
-          new HandleAttribute(RIGHTSHOLDER_PID_TYPE, handle, request.getRightsholderPidType()));
+          new HandleAttribute(RIGHTSHOLDER_PID_TYPE, handle,
+              request.getRightsholderPidType().toString()));
     }
     if (request.getDctermsConforms() != null) {
       fdoRecord.add(
@@ -672,7 +674,6 @@ public class FdoRecordService {
       try {
         if (isAcceptedSpecimenHostId(hostId)) {
           if (hostId.contains(ROR_DOMAIN)) {
-            var a = getRor(hostId);
             hostNameResolved = pidResolver.getObjectName(getRor(hostId));
           } else {
             hostNameResolved = pidResolver.resolveQid(WIKIDATA_API + hostId);
@@ -680,15 +681,16 @@ public class FdoRecordService {
           return new HandleAttribute(targetAttribute, handle, hostNameResolved);
         } else {
           log.warn("Specimen host ID {} is neither QID nor ROR.", hostId);
+          return null;
         }
       } catch (UnprocessableEntityException | InvalidRequestException |
                PidResolutionException e) {
         log.error(
             "AgentId is not a resolvable ROR and no Name is provided in the request for the field {}. AgentName field left blank",
             targetAttribute.get(), e);
+        return null;
       }
     }
-    return null;
   }
 
   private boolean isAcceptedSpecimenHostId(String id) {

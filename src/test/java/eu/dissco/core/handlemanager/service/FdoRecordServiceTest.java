@@ -1,8 +1,11 @@
-package eu.dissco.core.handlemanager.component;
+package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ACCESS_RESTRICTED;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ANNOTATION_TOPIC;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.BASE_TYPE_OF_SPECIMEN;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.DC_TERMS_CONFORMS;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.DERIVED_FROM_ENTITY;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.DERIVED_FROM_PRIMARY_SPECIMEN_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DIGITAL_OBJECT_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DIGITAL_OBJECT_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.FDO_PROFILE;
@@ -11,6 +14,12 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.INFORMATION_ARTEFACT_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ISSUED_FOR_AGENT;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ISSUED_FOR_AGENT_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.IS_DERIVED_FROM_SPECIMEN;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.LICENSE_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.LICENSE_URL;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_ATTRIBUTE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_DO_PID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_DO_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_OBJECT_IS_PID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_OBJECT_URL;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.LIVING_OR_PRESERVED;
@@ -18,6 +27,10 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.LOC;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MARKED_AS_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MAS_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MATERIAL_SAMPLE_TYPE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_FORMAT;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_HOST;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_HOST_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_MIME_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.OTHER_SPECIMEN_IDS;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PID;
@@ -26,6 +39,10 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_ISSUER_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_RECORD_ISSUE_DATE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_RECORD_ISSUE_NUMBER;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_STATUS;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_MEDIA_ID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_MO_ID_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_MO_ID_TYPE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_MO_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_REFERENT_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID_NAME;
@@ -34,6 +51,9 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.REFERENT_DOI_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.REFERENT_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.REFERENT_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.REPLACE_OR_APPEND;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.RIGHTSHOLDER_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.RIGHTSHOLDER_PID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.RIGHTSHOLDER_PID_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.SPECIMEN_HOST_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.STRUCTURAL_TYPE;
@@ -49,8 +69,12 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.FDO_PROFILE_TESTV
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_DOMAIN;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.ISSUED_FOR_AGENT_TESTVAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.LICENSE_NAME_TESTVAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.LINKED_DIGITAL_OBJECT_TYPE_TESTVAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.LINKED_DO_PID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.LOC_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.MEDIA_HOST_NAME_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MEDIA_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.ORCHESTRATION_URL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_ISSUER_TESTVAL_OTHER;
@@ -92,6 +116,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.OtherSpecimenId;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.BaseTypeOfSpecimen;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.InformationArtefactType;
@@ -104,11 +129,12 @@ import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicCategory;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicDiscipline;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicDomain;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicOrigin;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.media.MediaFormat;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.media.PrimaryMediaObjectType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
-import eu.dissco.core.handlemanager.service.FdoRecordService;
 import eu.dissco.core.handlemanager.web.PidResolver;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -141,6 +167,21 @@ class FdoRecordServiceTest {
       SPECIMEN_HOST_NAME.get(),
       PRIMARY_SPECIMEN_OBJECT_ID.get(), PRIMARY_SPECIMEN_OBJECT_ID_TYPE.get(),
       NORMALISED_SPECIMEN_OBJECT_ID.get());
+
+  private static final Set<String> MEDIA_FIELDS_MANDATORY = Set.of(MEDIA_HOST.get(),
+      IS_DERIVED_FROM_SPECIMEN.get(), LINKED_DO_PID.get(), LINKED_DO_TYPE.get(),
+      RIGHTSHOLDER_PID.get());
+
+  private static final Set<String> MEDIA_FIELDS_OPTIONAL = Set.of(
+      MEDIA_HOST.get(), MEDIA_HOST_NAME.get(), MEDIA_FORMAT.get(), IS_DERIVED_FROM_SPECIMEN.get(),
+      LINKED_DO_PID.get(),
+      LINKED_DO_TYPE.get(), LINKED_ATTRIBUTE.get(), PRIMARY_MEDIA_ID.get(),
+      PRIMARY_MO_ID_TYPE.get(),
+      PRIMARY_MO_ID_NAME.get(), DERIVED_FROM_PRIMARY_SPECIMEN_ID.get(), PRIMARY_MO_TYPE.get(),
+      MEDIA_MIME_TYPE.get(),
+      DERIVED_FROM_ENTITY.get(), LICENSE_NAME.get(), LICENSE_URL.get(), RIGHTSHOLDER_NAME.get(),
+      RIGHTSHOLDER_PID.get(), RIGHTSHOLDER_PID_TYPE.get(), DC_TERMS_CONFORMS.get());
+
 
   private static final Set<String> DS_FIELDS_OPTIONAL = Set.of(
       PRIMARY_SPECIMEN_OBJECT_ID_NAME.get(),
@@ -226,15 +267,52 @@ class FdoRecordServiceTest {
     assertThat(
         hasCorrectLocations(result, request.getLocations(), ObjectType.MEDIA_OBJECT)).isTrue();
     assertThat(hasNoDuplicateElements(result)).isTrue();
+    assertThat(hasCorrectElements(result, MEDIA_FIELDS_MANDATORY)).isTrue();
+    assertThat(result).contains(
+        new HandleAttribute(MEDIA_HOST_NAME, handle, request.getMediaHostName()));
+  }
+
+  @Test
+  void testPrepareMediaObjectFullAttributes() throws Exception {
+    // Given
+    given(pidResolver.getObjectName(any())).willReturn("placeholder");
+    var request = new MediaObjectRequest(
+        FDO_PROFILE_TESTVAL,
+        ISSUED_FOR_AGENT_TESTVAL,
+        DIGITAL_OBJECT_TYPE_TESTVAL,
+        PID_ISSUER_TESTVAL_OTHER,
+        LOC_TESTVAL,
+        REFERENT_NAME_TESTVAL,
+        PRIMARY_REFERENT_TYPE_TESTVAL,
+        MEDIA_HOST_TESTVAL, MEDIA_HOST_NAME_TESTVAL, MediaFormat.TEXT, Boolean.TRUE,
+        LINKED_DO_PID_TESTVAL,
+        LINKED_DIGITAL_OBJECT_TYPE_TESTVAL, "a", "b", PrimaryObjectIdType.GLOBAL, "d", HANDLE,
+        PrimaryMediaObjectType.IMAGE, "e", "f",
+        LICENSE_NAME_TESTVAL,
+        "g", "h", "i", PrimaryObjectIdType.LOCAL, "j"
+    );
+
+    // When
+    var result = fdoRecordService.prepareMediaObjectAttributes(request, handle,
+        ObjectType.MEDIA_OBJECT);
+
+    // Then
+
+    assertThat(
+        hasCorrectLocations(result, request.getLocations(), ObjectType.MEDIA_OBJECT)).isTrue();
+    assertThat(hasNoDuplicateElements(result)).isTrue();
+    assertThat(hasCorrectElements(result, MEDIA_FIELDS_OPTIONAL)).isTrue();
+    assertThat(result).hasSize(MEDIA_OPTIONAL_QTY);
   }
 
   @Test
   void testPrepareMediaObjectAttributesNamesDontResolve() throws Exception {
     // Given
-    var mediaHostRor = MEDIA_HOST_TESTVAL.replace(ROR_DOMAIN, ROR_API);
-    given(pidResolver.getObjectName(mediaHostRor)).willThrow(new PidResolutionException(""));
-    given(pidResolver.getObjectName(any())).willReturn("this is a placeholder");
     var request = givenMediaRequestObject();
+    var placeholder = "placeholder";
+    var mediaHostRor = MEDIA_HOST_TESTVAL.replace(ROR_DOMAIN, ROR_API);
+    given(pidResolver.getObjectName(not(eq(mediaHostRor)))).willReturn(placeholder);
+    given(pidResolver.getObjectName(mediaHostRor)).willThrow(new PidResolutionException(""));
 
     // When
     var result = fdoRecordService.prepareMediaObjectAttributes(request, handle,
@@ -245,6 +323,7 @@ class FdoRecordServiceTest {
     assertThat(
         hasCorrectLocations(result, request.getLocations(), ObjectType.MEDIA_OBJECT)).isTrue();
     assertThat(hasNoDuplicateElements(result)).isTrue();
+    assertThat(hasCorrectElements(result, MEDIA_FIELDS_MANDATORY)).isTrue();
   }
 
   @Test
@@ -536,8 +615,6 @@ class FdoRecordServiceTest {
 
   @Test
   void testSpecimenHostNotResolvable() throws Exception {
-    given(pidResolver.getObjectName(ROR_API)).willThrow(new PidResolutionException(""));
-    given(pidResolver.getObjectName(not(eq(ROR_API)))).willReturn("placeholder");
     var request = new DigitalSpecimenRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
@@ -551,6 +628,10 @@ class FdoRecordServiceTest {
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
         null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
         SOURCE_SYSTEM_TESTVAL, null);
+
+    var specimenHostRorApi = request.getSpecimenHost().replace(ROR_DOMAIN, ROR_API);
+    given(pidResolver.getObjectName(specimenHostRorApi)).willThrow(new PidResolutionException(""));
+    given(pidResolver.getObjectName(not(eq(specimenHostRorApi)))).willReturn("placeholder");
 
     // When
     var result = fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle,

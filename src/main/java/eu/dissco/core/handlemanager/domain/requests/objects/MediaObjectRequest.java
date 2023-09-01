@@ -53,7 +53,7 @@ public class MediaObjectRequest extends DoiRecordRequest {
   @Nullable
   private final String rightsholderPid;
   @Nullable
-  private final String rightsholderPidType;
+  private final PrimaryObjectIdType rightsholderPidType;
   @Nullable
   @JsonProperty(value = "dcterms:conforms")
   private final String dctermsConforms;
@@ -88,7 +88,7 @@ public class MediaObjectRequest extends DoiRecordRequest {
       String licenseUrl,
       String rightsholderPid,
       String rightsholderName,
-      String rightsholderPidType,
+      PrimaryObjectIdType rightsholderPidType,
       String dctermsConforms
   ) throws InvalidRequestException {
     super(fdoProfile, issuedForAgent, digitalObjectTypePid, pidIssuer, StructuralType.DIGITAL,
