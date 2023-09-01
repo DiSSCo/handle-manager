@@ -31,7 +31,7 @@ import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.SourceSystemRequest;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimaryObjectIdType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -90,7 +90,7 @@ public class HandleService {
   private void verifyHandleResolution(List<byte[]> handles, List<HandleAttribute> dbRecords)
       throws PidResolutionException {
     var resolvedHandles = dbRecords.stream()
-        .map(HandleAttribute::handle)
+        .map(HandleAttribute::getHandle)
         .map(handle -> new String(handle, StandardCharsets.UTF_8))
         .collect(Collectors.toSet());
     if (handles.size() == resolvedHandles.size()) {
@@ -136,7 +136,7 @@ public class HandleService {
     HashMap<String, List<HandleAttribute>> handleMap = new HashMap<>();
 
     for (HandleAttribute row : flatList) {
-      String handle = new String(row.handle(), StandardCharsets.UTF_8);
+      String handle = new String(row.getHandle(), StandardCharsets.UTF_8);
       if (handleMap.containsKey(handle)) {
         List<HandleAttribute> tmpList = new ArrayList<>(handleMap.get(handle));
         tmpList.add(row);
@@ -158,8 +158,8 @@ public class HandleService {
   private JsonNode jsonFormatSingleRecord(List<HandleAttribute> dbRecord) {
     ObjectNode rootNode = mapper.createObjectNode();
     for (var row : dbRecord) {
-      if (row.index() != HS_ADMIN.index()) {
-        rootNode.put(row.type(), new String(row.data(), StandardCharsets.UTF_8));
+      if (row.getIndex() != HS_ADMIN.index()) {
+        rootNode.put(row.getType(), new String(row.getData(), StandardCharsets.UTF_8));
       }
     }
 
@@ -168,7 +168,7 @@ public class HandleService {
 
   // Search by Physical Specimen Identifier
   public JsonApiWrapperWrite searchByPhysicalSpecimenId(String physicalId,
-      PhysicalIdType physicalIdType, String specimenHostPid)
+      PrimaryObjectIdType physicalIdType, String specimenHostPid)
       throws PidResolutionException, InvalidRequestException {
     var physicalIdentifier = setPhysicalId(physicalId, physicalIdType, specimenHostPid);
     var returnedRows = handleRep.searchByNormalisedPhysicalIdentifierFullRecord(
@@ -185,7 +185,7 @@ public class HandleService {
     return new JsonApiWrapperWrite(dataNode);
   }
 
-  private byte[] setPhysicalId(String physicalIdentifier, PhysicalIdType physicalIdType,
+  private byte[] setPhysicalId(String physicalIdentifier, PrimaryObjectIdType physicalIdType,
       String sourceSystemId)
       throws InvalidRequestException {
     if (physicalIdType.isGlobal()) {
@@ -200,7 +200,7 @@ public class HandleService {
 
   private Set<String> listHandleNamesReturnedFromQuery(List<HandleAttribute> rows) {
     Set<String> handles = new HashSet<>();
-    rows.forEach(row -> handles.add((new String(row.handle(), StandardCharsets.UTF_8))));
+    rows.forEach(row -> handles.add((new String(row.getHandle(), StandardCharsets.UTF_8))));
     return handles;
   }
 
@@ -373,11 +373,12 @@ public class HandleService {
   private JsonApiWrapperWrite concatAndFormatUpsertResponse(List<HandleAttribute> records) {
     List<JsonApiDataLinks> dataLinksList = new ArrayList<>();
     for (var row : records) {
-      if (row.type().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())) {
-        String h = new String(row.handle(), StandardCharsets.UTF_8);
+      if (row.getType().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())) {
+        String h = new String(row.getHandle(), StandardCharsets.UTF_8);
         String pidLink = HANDLE_DOMAIN + h;
         var node = mapper.createObjectNode();
-        node.put(PRIMARY_SPECIMEN_OBJECT_ID.get(), new String(row.data(), StandardCharsets.UTF_8));
+        node.put(PRIMARY_SPECIMEN_OBJECT_ID.get(),
+            new String(row.getData(), StandardCharsets.UTF_8));
         dataLinksList.add(
             new JsonApiDataLinks(h, DIGITAL_SPECIMEN.toString(), node, new JsonApiLinks(pidLink)));
       }
@@ -426,11 +427,11 @@ public class HandleService {
 
     ArrayList<UpsertDigitalSpecimen> upsertDigitalSpecimen = new ArrayList<>();
     for (var row : registeredSpecimensHandleAttributes) {
-      var targetPhysId = new String(row.data(), StandardCharsets.UTF_8);
+      var targetPhysId = new String(row.getData(), StandardCharsets.UTF_8);
       var targetRequest = getRequestFromPhysicalId(requests, targetPhysId);
       requests.remove(targetRequest);
       upsertDigitalSpecimen.add(new UpsertDigitalSpecimen(
-          new String(row.handle(), StandardCharsets.UTF_8),
+          new String(row.getHandle(), StandardCharsets.UTF_8),
           targetPhysId,
           targetRequest
       ));
@@ -513,7 +514,7 @@ public class HandleService {
       Map<String, ObjectType> recordTypes) {
     List<JsonApiDataLinks> dataList = new ArrayList<>();
     for (var updatedRecord : updatedRecords) {
-      String handle = new String(updatedRecord.get(0).handle(), StandardCharsets.UTF_8);
+      String handle = new String(updatedRecord.get(0).getHandle(), StandardCharsets.UTF_8);
       var attributeNode = jsonFormatSingleRecord(updatedRecord);
       var type = recordTypes.get(handle).toString();
       dataList.add(new JsonApiDataLinks(handle, type, attributeNode,
@@ -525,7 +526,7 @@ public class HandleService {
   private JsonApiWrapperWrite formatArchives(List<List<HandleAttribute>> archiveRecords) {
     List<JsonApiDataLinks> dataList = new ArrayList<>();
     for (var archiveRecord : archiveRecords) {
-      String handle = new String(archiveRecord.get(0).handle(), StandardCharsets.UTF_8);
+      String handle = new String(archiveRecord.get(0).getHandle(), StandardCharsets.UTF_8);
       var attributeNode = jsonFormatSingleRecord(archiveRecord);
       dataList.add(new JsonApiDataLinks(handle, TOMBSTONE.toString(), attributeNode,
           new JsonApiLinks(HANDLE_DOMAIN + handle)));
@@ -613,7 +614,7 @@ public class HandleService {
     var physicalIdsBytes = physicalIds.stream().map(id -> id.getBytes(StandardCharsets.UTF_8))
         .toList();
     var handles = handleRep.searchByNormalisedPhysicalIdentifier(physicalIdsBytes).stream()
-        .map(HandleAttribute::handle).map(handle -> new String(handle, StandardCharsets.UTF_8))
+        .map(HandleAttribute::getHandle).map(handle -> new String(handle, StandardCharsets.UTF_8))
         .toList();
     handleRep.rollbackHandles(handles);
   }

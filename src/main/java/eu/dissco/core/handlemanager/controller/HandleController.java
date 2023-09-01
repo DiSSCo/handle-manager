@@ -15,7 +15,7 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.requests.RollbackRequest;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaValidator;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimaryObjectIdType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -98,7 +98,7 @@ public class HandleController {
   @GetMapping("/records/primarySpecimenObjectId")
   public ResponseEntity<JsonApiWrapperWrite> searchByPrimarySpecimenObjectId(
       @RequestParam String primarySpecimenObjectId,
-      @RequestParam PhysicalIdType physicalIdentifierType,
+      @RequestParam PrimaryObjectIdType physicalIdentifierType,
       @RequestParam(required = false) String sourceSystemId)
       throws InvalidRequestException, PidResolutionException {
     return ResponseEntity.status(HttpStatus.OK).body(

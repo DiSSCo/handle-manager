@@ -98,7 +98,7 @@ import eu.dissco.core.handlemanager.domain.requests.vocabulary.LivingOrPreserved
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialOrDigitalEntity;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialSampleType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimaryObjectIdType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicCategory;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicDiscipline;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicDomain;
@@ -666,7 +666,7 @@ class FdoRecordServiceTest {
         SPECIMEN_HOST_TESTVAL,
         SPECIMEN_HOST_NAME_TESTVAL,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        PhysicalIdType.LOCAL, "b", null,
+        PrimaryObjectIdType.LOCAL, "b", null,
         List.of(new OtherSpecimenId("Id", "local identifier", "id for institute")),
         TopicOrigin.NATURAL, TopicDomain.LIFE,
         TopicDiscipline.ZOO, TopicCategory.AMPHIBIANS, LivingOrPreserved.LIVING,
@@ -687,7 +687,7 @@ class FdoRecordServiceTest {
 
   private boolean elementIsPresent(List<HandleAttribute> fdoRecord, String expectedAttribute) {
     for (var row : fdoRecord) {
-      if (row.type().equals(expectedAttribute)) {
+      if (row.getType().equals(expectedAttribute)) {
         return true;
       }
     }
@@ -706,8 +706,8 @@ class FdoRecordServiceTest {
       ObjectType type) throws Exception {
     var expectedLocations = new String(setLocations(userLocations, HANDLE, type));
     for (var row : fdoRecord) {
-      if (row.type().equals(LOC.get())) {
-        return (new String(row.data(), StandardCharsets.UTF_8)).equals(expectedLocations);
+      if (row.getType().equals(LOC.get())) {
+        return (new String(row.getData(), StandardCharsets.UTF_8)).equals(expectedLocations);
       }
     }
     throw new IllegalStateException("No locations in fdo record");

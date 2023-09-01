@@ -19,7 +19,7 @@ import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenReque
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.BaseTypeOfSpecimen;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.InformationArtefactType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialSampleType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimaryObjectIdType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicCategory;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicDiscipline;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicDomain;
@@ -51,7 +51,8 @@ class DigitalSpecimenRequestTest {
         SPECIMEN_HOST_TESTVAL,
         SPECIMEN_HOST_NAME_TESTVAL,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        PhysicalIdType.LOCAL, null, null, null, null, null, discipline, category, null, null, null,
+        PrimaryObjectIdType.LOCAL, null, null, null, null, null, discipline, category, null, null,
+        null,
         null, null, null, null,
         SOURCE_SYSTEM_TESTVAL,
         null));
@@ -70,7 +71,7 @@ class DigitalSpecimenRequestTest {
         SPECIMEN_HOST_TESTVAL,
         SPECIMEN_HOST_NAME_TESTVAL,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        PhysicalIdType.LOCAL, null, null, null, null, null, null, null, null, null, null,
+        PrimaryObjectIdType.LOCAL, null, null, null, null, null, null, null, null, null, null,
         null, null, null, null,
         null,
         null));
@@ -91,7 +92,7 @@ class DigitalSpecimenRequestTest {
         SPECIMEN_HOST_TESTVAL,
         SPECIMEN_HOST_NAME_TESTVAL,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        PhysicalIdType.LOCAL, null, null, null, null, null, null, null, null, null, null,
+        PrimaryObjectIdType.LOCAL, null, null, null, null, null, null, null, null, null, null,
         null, null, null, null,
         SOURCE_SYSTEM_TESTVAL,
         null);
@@ -114,7 +115,7 @@ class DigitalSpecimenRequestTest {
         SPECIMEN_HOST_TESTVAL,
         SPECIMEN_HOST_NAME_TESTVAL,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        PhysicalIdType.RESOLVABLE, null, null, null, null, null, null, null, null, null, null,
+        PrimaryObjectIdType.RESOLVABLE, null, null, null, null, null, null, null, null, null, null,
         null, null, null, null,
         null,
         null);
@@ -139,7 +140,8 @@ class DigitalSpecimenRequestTest {
         SPECIMEN_HOST_TESTVAL,
         SPECIMEN_HOST_NAME_TESTVAL,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        PhysicalIdType.LOCAL, null, null, null, topicOrigin, topicDomain, topicDiscipline, null,
+        PrimaryObjectIdType.LOCAL, null, null, null, topicOrigin, topicDomain, topicDiscipline,
+        null,
         null, null, null, materialSampleType, null,
         null, null, SOURCE_SYSTEM_TESTVAL, null));
 
@@ -158,7 +160,7 @@ class DigitalSpecimenRequestTest {
         SPECIMEN_HOST_TESTVAL,
         SPECIMEN_HOST_NAME_TESTVAL,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        PhysicalIdType.LOCAL, null, null, null, null, null, TopicDiscipline.ZOO, null,
+        PrimaryObjectIdType.LOCAL, null, null, null, null, null, TopicDiscipline.ZOO, null,
         null, null, null, MaterialSampleType.OTHER_SOLID, null,
         null, null, SOURCE_SYSTEM_TESTVAL, null));
   }
@@ -176,7 +178,7 @@ class DigitalSpecimenRequestTest {
         SPECIMEN_HOST_TESTVAL,
         SPECIMEN_HOST_NAME_TESTVAL,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        PhysicalIdType.LOCAL, null, null, null, null, null, null, null,
+        PrimaryObjectIdType.LOCAL, null, null, null, null, null, null, null,
         null, BaseTypeOfSpecimen.MATERIAL, InformationArtefactType.SOUND, null, null,
         null, null, SOURCE_SYSTEM_TESTVAL, null));
   }

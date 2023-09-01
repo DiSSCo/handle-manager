@@ -52,7 +52,7 @@ import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenReque
 import eu.dissco.core.handlemanager.domain.requests.objects.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaValidator;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimaryObjectIdType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
@@ -128,13 +128,14 @@ class HandleControllerTest {
     var responseExpected = givenRecordResponseWriteGeneric(
         List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), RECORD_TYPE_DS);
     given(
-        service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, PhysicalIdType.LOCAL,
+        service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
+            PrimaryObjectIdType.LOCAL,
             SOURCE_SYSTEM_TESTVAL)).willReturn(responseExpected);
 
     // When
     var responseReceived = controller.searchByPrimarySpecimenObjectId(
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        PhysicalIdType.LOCAL, SOURCE_SYSTEM_TESTVAL);
+        PrimaryObjectIdType.LOCAL, SOURCE_SYSTEM_TESTVAL);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -145,7 +146,7 @@ class HandleControllerTest {
   void testSearchByPhysicalIdCombined() throws Exception {
     // Given
     String physicalId = PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
-    var physicalIdType = PhysicalIdType.LOCAL;
+    var physicalIdType = PrimaryObjectIdType.LOCAL;
     String specimenHostPid = SPECIMEN_HOST_TESTVAL;
     var responseExpected = givenRecordResponseWriteGeneric(
         List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), RECORD_TYPE_DS);
@@ -363,9 +364,9 @@ class HandleControllerTest {
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
     List<JsonNode> requests = new ArrayList<>();
-    handles.forEach(handle -> {
+    for (var handle : handles) {
       requests.add(genCreateRecordRequest(givenMediaRequestObject(), RECORD_TYPE_MEDIA));
-    });
+    }
 
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_DOI);
     given(service.createRecords(requests)).willReturn(responseExpected);

@@ -68,7 +68,7 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimaryObjectIdType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -205,7 +205,7 @@ class HandleServiceTest {
 
     // When
     var responseReceived = service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        PhysicalIdType.GLOBAL,
+        PrimaryObjectIdType.GLOBAL,
         SPECIMEN_HOST_TESTVAL);
 
     // Then
@@ -224,7 +224,8 @@ class HandleServiceTest {
 
     // When
     Exception e = assertThrows(PidResolutionException.class, () -> {
-      service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, PhysicalIdType.GLOBAL,
+      service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
+          PrimaryObjectIdType.GLOBAL,
           SOURCE_SYSTEM_TESTVAL);
     });
 
@@ -245,7 +246,7 @@ class HandleServiceTest {
 
     // When
     var responseReceived = service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        PhysicalIdType.LOCAL,
+        PrimaryObjectIdType.LOCAL,
         SOURCE_SYSTEM_TESTVAL);
 
     // Then
@@ -257,7 +258,7 @@ class HandleServiceTest {
     // Then
     assertThrows(InvalidRequestException.class,
         () -> service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-            PhysicalIdType.LOCAL,
+            PrimaryObjectIdType.LOCAL,
             null));
   }
 
@@ -876,7 +877,7 @@ class HandleServiceTest {
       List<HandleAttribute> handleAttributes) {
     List<HandleAttribute> primaryIdList = new ArrayList<>();
     for (var row : handleAttributes) {
-      if (row.type().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())) {
+      if (row.getType().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())) {
         primaryIdList.add(row);
       }
     }

@@ -1,6 +1,6 @@
 package eu.dissco.core.handlemanager.domain.requests.objects;
 
-import static eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType.LOCAL;
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimaryObjectIdType.LOCAL;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -9,7 +9,7 @@ import eu.dissco.core.handlemanager.domain.requests.vocabulary.InformationArtefa
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.LivingOrPreserved;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialOrDigitalEntity;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialSampleType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimaryObjectIdType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.StructuralType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicCategory;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicDiscipline;
@@ -36,7 +36,7 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
   @JsonProperty(required = true)
   private final String primarySpecimenObjectId;
   @JsonPropertyDescription("ID Type. Either combined or cetaf. Defaults to combined.")
-  private final PhysicalIdType primarySpecimenObjectIdType;
+  private final PrimaryObjectIdType primarySpecimenObjectIdType;
   @Nullable
   private final String primarySpecimenObjectIdName;
   @Nullable
@@ -85,7 +85,7 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
       String specimenHost,
       String specimenHostName,
       String primarySpecimenObjectId,
-      PhysicalIdType primarySpecimenObjectIdType,
+      PrimaryObjectIdType primarySpecimenObjectIdType,
       String primarySpecimenObjectIdName,
       String primarySpecimenObjectIdAbsenceReason,
       List<OtherSpecimenId> otherSpecimenIds,

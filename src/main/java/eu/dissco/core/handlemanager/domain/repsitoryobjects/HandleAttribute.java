@@ -1,10 +1,33 @@
 package eu.dissco.core.handlemanager.domain.repsitoryobjects;
 
+import eu.dissco.core.handlemanager.domain.FdoProfile;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Objects;
+import lombok.Data;
 
-public record HandleAttribute(int index, byte[] handle, String type, byte[] data) {
+@Data
+public class HandleAttribute {
+
+  private final int index;
+  private final byte[] handle;
+  private final String type;
+  private final byte[] data;
+
+  public HandleAttribute(int index, byte[] handle, String type, byte[] data) {
+    this.index = index;
+    this.handle = handle;
+    this.type = type;
+    this.data = data;
+  }
+
+  public HandleAttribute(FdoProfile fdoAttribute, byte[] handle, String data) {
+    this.index = fdoAttribute.index();
+    this.handle = handle;
+    this.data = data.getBytes(StandardCharsets.UTF_8);
+    this.type = fdoAttribute.get();
+  }
+
 
   @Override
   public boolean equals(Object o) {

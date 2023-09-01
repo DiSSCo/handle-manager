@@ -1,7 +1,11 @@
 package eu.dissco.core.handlemanager.repository;
 
 import static eu.dissco.core.handlemanager.database.jooq.tables.Handles.HANDLES;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.*;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.HS_ADMIN;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_RECORD_ISSUE_NUMBER;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_STATUS;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
 
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import java.nio.charset.StandardCharsets;
@@ -65,13 +69,14 @@ public class HandleRepository {
         .fetch(this::mapToAttribute);
   }
 
-  public List<HandleAttribute> searchByNormalisedPhysicalIdentifier(List<byte[]> normalisedPhysicalIdentifiers) {
+  public List<HandleAttribute> searchByNormalisedPhysicalIdentifier(
+      List<byte[]> normalisedPhysicalIdentifiers) {
 
     return searchByNormalisedPhysicalIdentifierQuery(normalisedPhysicalIdentifiers)
         .fetch(this::mapToAttribute);
   }
 
-  public List<HandleAttribute> getPrimarySpecimenObjectId(List<byte[]> handles){
+  public List<HandleAttribute> getPrimarySpecimenObjectId(List<byte[]> handles) {
     return context
         .select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
         .from(HANDLES)
@@ -150,10 +155,10 @@ public class HandleRepository {
 
     for (var handleAttribute : handleAttributes) {
       var query = context.insertInto(HANDLES)
-          .set(HANDLES.HANDLE, handleAttribute.handle())
-          .set(HANDLES.IDX, handleAttribute.index())
-          .set(HANDLES.TYPE, handleAttribute.type().getBytes(StandardCharsets.UTF_8))
-          .set(HANDLES.DATA, handleAttribute.data())
+          .set(HANDLES.HANDLE, handleAttribute.getHandle())
+          .set(HANDLES.IDX, handleAttribute.getIndex())
+          .set(HANDLES.TYPE, handleAttribute.getType().getBytes(StandardCharsets.UTF_8))
+          .set(HANDLES.DATA, handleAttribute.getData())
           .set(HANDLES.TTL, TTL)
           .set(HANDLES.TIMESTAMP, recordTimestamp)
           .set(HANDLES.ADMIN_READ, true)
@@ -217,10 +222,10 @@ public class HandleRepository {
     Set<byte[]> updatedHandles = new HashSet<>();
     for (var handleAttribute : handleAttributes) {
       var query = context.insertInto(HANDLES)
-          .set(HANDLES.HANDLE, handleAttribute.handle())
-          .set(HANDLES.IDX, handleAttribute.index())
-          .set(HANDLES.TYPE, handleAttribute.type().getBytes(StandardCharsets.UTF_8))
-          .set(HANDLES.DATA, handleAttribute.data())
+          .set(HANDLES.HANDLE, handleAttribute.getHandle())
+          .set(HANDLES.IDX, handleAttribute.getIndex())
+          .set(HANDLES.TYPE, handleAttribute.getType().getBytes(StandardCharsets.UTF_8))
+          .set(HANDLES.DATA, handleAttribute.getData())
           .set(HANDLES.TTL, TTL)
           .set(HANDLES.TIMESTAMP, recordTimestamp)
           .set(HANDLES.ADMIN_READ, true)
@@ -228,10 +233,10 @@ public class HandleRepository {
           .set(HANDLES.PUB_READ, true)
           .set(HANDLES.PUB_WRITE, false)
           .onDuplicateKeyUpdate()
-          .set(HANDLES.HANDLE, handleAttribute.handle())
-          .set(HANDLES.IDX, handleAttribute.index())
-          .set(HANDLES.TYPE, handleAttribute.type().getBytes(StandardCharsets.UTF_8))
-          .set(HANDLES.DATA, handleAttribute.data())
+          .set(HANDLES.HANDLE, handleAttribute.getHandle())
+          .set(HANDLES.IDX, handleAttribute.getIndex())
+          .set(HANDLES.TYPE, handleAttribute.getType().getBytes(StandardCharsets.UTF_8))
+          .set(HANDLES.DATA, handleAttribute.getData())
           .set(HANDLES.TTL, TTL)
           .set(HANDLES.TIMESTAMP, recordTimestamp)
           .set(HANDLES.ADMIN_READ, true)
@@ -239,9 +244,9 @@ public class HandleRepository {
           .set(HANDLES.PUB_READ, true)
           .set(HANDLES.PUB_WRITE, false);
       queryList.add(query);
-      if (updatedHandles.add(handleAttribute.handle())) {
+      if (updatedHandles.add(handleAttribute.getHandle())) {
         queryList.add(
-            versionIncrement(handleAttribute.handle(), recordTimestamp, incrementVersion));
+            versionIncrement(handleAttribute.getHandle(), recordTimestamp, incrementVersion));
       }
     }
     return queryList;

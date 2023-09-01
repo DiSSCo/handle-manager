@@ -3,6 +3,9 @@ package eu.dissco.core.handlemanager.service;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ACCESS_RESTRICTED;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ANNOTATION_TOPIC;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.BASE_TYPE_OF_SPECIMEN;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.DC_TERMS_CONFORMS;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.DERIVED_FROM_ENTITY;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.DERIVED_FROM_PRIMARY_SPECIMEN_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DIGITAL_OBJECT_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DIGITAL_OBJECT_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.FDO_PROFILE;
@@ -11,6 +14,12 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.INFORMATION_ARTEFACT_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ISSUED_FOR_AGENT;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ISSUED_FOR_AGENT_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.IS_DERIVED_FROM_SPECIMEN;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.LICENSE_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.LICENSE_URL;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_ATTRIBUTE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_DO_PID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_DO_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_OBJECT_IS_PID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_OBJECT_URL;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.LIVING_OR_PRESERVED;
@@ -19,9 +28,10 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.MARKED_AS_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MAS_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MATERIAL_OR_DIGITAL_ENTITY;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MATERIAL_SAMPLE_TYPE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_FORMAT;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_HOST;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_OBJECT_TYPE;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_URL;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_HOST_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_MIME_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ORGANISATION_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ORGANISATION_ID_TYPE;
@@ -33,6 +43,9 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_ISSUER_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_RECORD_ISSUE_DATE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_RECORD_ISSUE_NUMBER;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_STATUS;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_MEDIA_ID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_MO_ID_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_MO_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_REFERENT_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID_NAME;
@@ -41,6 +54,9 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.REFERENT_DOI_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.REFERENT_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.REFERENT_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.REPLACE_OR_APPEND;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.RIGHTSHOLDER_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.RIGHTSHOLDER_PID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.RIGHTSHOLDER_PID_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.SOURCE_DATA_STANDARD;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.SOURCE_SYSTEM_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.SPECIMEN_HOST;
@@ -48,8 +64,6 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.SPECIMEN_HOST_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.SPECIMEN_OBJECT_ID_ABSENCE_REASON;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.STRUCTURAL_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_DIGITAL_OBJECT_ID;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_LOCAL_ID;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_PID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_CATEGORY;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_DISCIPLINE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_DOMAIN;
@@ -284,24 +298,85 @@ public class FdoRecordService {
       throws PidServiceInternalError, UnprocessableEntityException, PidResolutionException, InvalidRequestException {
     var fdoRecord = prepareDoiRecordAttributes(request, handle, type);
 
-    // 403 mediaUrl
-    fdoRecord.add(new HandleAttribute(MEDIA_URL.index(), handle, MEDIA_URL.get(),
-        request.getMediaUrl().getBytes(StandardCharsets.UTF_8)));
-
-    // 404 Media Object Type
-    fdoRecord.add(new HandleAttribute(MEDIA_OBJECT_TYPE.index(), handle, MEDIA_OBJECT_TYPE.get(),
-        PLACEHOLDER));
-
-    // 406 Media Host
-    fdoRecord.add(new HandleAttribute(MEDIA_HOST.index(), handle, MEDIA_HOST.get(), PLACEHOLDER));
-
-    // 407 Subject Local Id
-    fdoRecord.add(new HandleAttribute(SUBJECT_LOCAL_ID.index(), handle, SUBJECT_LOCAL_ID.get(),
-        request.getSubjectLocalIdentifier().getBytes(StandardCharsets.UTF_8)));
-
-    // 408 Subject PID -> might need to be resolved
-    fdoRecord.add(new HandleAttribute(SUBJECT_PID.index(), handle, SUBJECT_PID.get(), PLACEHOLDER));
-
+    fdoRecord.add(new HandleAttribute(MEDIA_HOST, handle, request.getMediaHost()));
+    var mediaHostName = request.getMediaHostName();
+    if (mediaHostName == null) {
+      mediaHostName = pidResolver.getObjectName(request.getMediaHost());
+    }
+    fdoRecord.add(new HandleAttribute(MEDIA_HOST_NAME, handle, mediaHostName));
+    if (request.getMediaFormat() != null) {
+      fdoRecord.add(new HandleAttribute(MEDIA_FORMAT, handle, request.getMediaFormat().toString()));
+    }
+    fdoRecord.add(new HandleAttribute(IS_DERIVED_FROM_SPECIMEN, handle,
+        request.getIsDerivedFromSpecimen().toString()));
+    if (request.getLinkedDigitalObjectPid() != null) {
+      fdoRecord.add(
+          new HandleAttribute(LINKED_DO_PID, handle, request.getLinkedDigitalObjectPid()));
+    }
+    if (request.getLinkedDigitalObjectType() != null) {
+      fdoRecord.add(
+          new HandleAttribute(LINKED_DO_TYPE, handle, request.getLinkedDigitalObjectType()
+              .toString()));
+    }
+    if (request.getLinkedAttribute() != null) {
+      fdoRecord.add(
+          new HandleAttribute(LINKED_ATTRIBUTE, handle, request.getLinkedAttribute()));
+    }
+    if (request.getPrimaryMediaId() != null) {
+      fdoRecord.add(
+          new HandleAttribute(PRIMARY_MEDIA_ID, handle, request.getPrimaryMediaId()));
+    }
+    if (request.getPrimaryMediaObjectIdType() != null) {
+      fdoRecord.add(
+          new HandleAttribute(PRIMARY_MO_TYPE, handle,
+              request.getPrimaryMediaObjectIdType().toString()));
+    }
+    if (request.getPrimaryMediaObjectIdName() != null) {
+      fdoRecord.add(
+          new HandleAttribute(PRIMARY_MO_ID_NAME, handle, request.getPrimaryMediaObjectIdName()));
+    }
+    if (request.getDerivedFromPrimarySpecimenObjectId() != null) {
+      fdoRecord.add(
+          new HandleAttribute(DERIVED_FROM_PRIMARY_SPECIMEN_ID, handle,
+              request.getDerivedFromPrimarySpecimenObjectId()));
+    }
+    if (request.getPrimaryMediaObjectType() != null) {
+      fdoRecord.add(
+          new HandleAttribute(PRIMARY_MEDIA_ID, handle,
+              request.getPrimaryMediaObjectType().toString()));
+    }
+    if (request.getMediaMimeType() != null) {
+      fdoRecord.add(
+          new HandleAttribute(MEDIA_MIME_TYPE, handle, request.getMediaMimeType()));
+    }
+    if (request.getDerivedFromEntity() != null) {
+      fdoRecord.add(
+          new HandleAttribute(DERIVED_FROM_ENTITY, handle, request.getDerivedFromEntity()));
+    }
+    if (request.getLicenseName() != null) {
+      fdoRecord.add(
+          new HandleAttribute(LICENSE_NAME, handle, request.getLicenseName()));
+    }
+    if (request.getLicenseUrl() != null) {
+      fdoRecord.add(
+          new HandleAttribute(LICENSE_URL, handle, request.getLicenseUrl()));
+    }
+    if (request.getRightsholderName() != null) {
+      fdoRecord.add(
+          new HandleAttribute(RIGHTSHOLDER_NAME, handle, request.getRightsholderName()));
+    }
+    if (request.getRightsholderPid() != null) {
+      fdoRecord.add(
+          new HandleAttribute(RIGHTSHOLDER_PID, handle, request.getRightsholderPid()));
+    }
+    if (request.getRightsholderPidType() != null) {
+      fdoRecord.add(
+          new HandleAttribute(RIGHTSHOLDER_PID_TYPE, handle, request.getRightsholderPidType()));
+    }
+    if (request.getDctermsConforms() != null) {
+      fdoRecord.add(
+          new HandleAttribute(DC_TERMS_CONFORMS, handle, request.getDctermsConforms()));
+    }
     return fdoRecord;
   }
 

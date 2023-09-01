@@ -51,12 +51,26 @@ public enum FdoProfile {
   WAS_DERIVED_FROM_ENTITY("wasDerivedFromEntity", 218),
 
   // Media
-  MEDIA_URL("mediaUrl", 403),
-  MEDIA_OBJECT_TYPE("mediaObjectType", 405),
-  MEDIA_HOST("mediaHost", 406),
-  SUBJECT_LOCAL_ID("subjectLocalIdentifier", 407),
-  SUBJECT_PID("subjectPid", 408),
-
+  MEDIA_HOST("mediaHost", 400),
+  MEDIA_HOST_NAME("mediaHostName", 401),
+  MEDIA_FORMAT("mediaFormat", 402),
+  IS_DERIVED_FROM_SPECIMEN("isDerivedFromSpecimen", 403),
+  LINKED_DO_PID("linkedDigitalObjectPid", 404),
+  LINKED_DO_TYPE("linkedDigitalObjectType", 405),
+  LINKED_ATTRIBUTE("linkedAttribute", 406),
+  PRIMARY_MEDIA_ID("primaryMediaId", 407),
+  PRIMARY_MO_ID_TYPE("primaryMediaObjectIdType", 408),
+  PRIMARY_MO_ID_NAME("primaryMediaObjectIdName", 409),
+  DERIVED_FROM_PRIMARY_SPECIMEN_ID("derivedFromPrimarySpecimenObjectId", 410),
+  PRIMARY_MO_TYPE("primaryMediaObjectType", 411),
+  MEDIA_MIME_TYPE("mediaMimeType", 412),
+  DERIVED_FROM_ENTITY("derivedFromEntity", 413),
+  LICENSE_NAME("licenseName", 414),
+  LICENSE_URL("licenseUrl", 415),
+  RIGHTSHOLDER_NAME("rightsholderName", 416),
+  RIGHTSHOLDER_PID("rigthsholderPid", 417),
+  RIGHTSHOLDER_PID_TYPE("rightsholderPidType", 418),
+  DC_TERMS_CONFORMS("dcterms:conforms", 419),
 
   // Annotation
   SUBJECT_DIGITAL_OBJECT_ID("subjectDigitalObjectId", 500),

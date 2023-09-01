@@ -131,7 +131,7 @@ class JsonSchemaValidatorTest {
   }
 
   @Test
-  void testPostMediaObjectRequest() {
+  void testPostMediaObjectRequest() throws Exception {
     // Given
     var request = genCreateRecordRequest(givenMediaRequestObject(), RECORD_TYPE_MEDIA);
 

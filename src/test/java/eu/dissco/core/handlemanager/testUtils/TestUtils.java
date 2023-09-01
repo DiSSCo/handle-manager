@@ -18,9 +18,6 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.MARKED_AS_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MAS_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MATERIAL_OR_DIGITAL_ENTITY;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MATERIAL_SAMPLE_TYPE;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_HOST;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_OBJECT_TYPE;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_URL;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ORGANISATION_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ORGANISATION_ID_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ORGANISATION_NAME;
@@ -46,8 +43,6 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.SPECIMEN_HOST_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.SPECIMEN_OBJECT_ID_ABSENCE_REASON;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.STRUCTURAL_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_DIGITAL_OBJECT_ID;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_LOCAL_ID;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_PID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.TOMBSTONE_TEXT;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_DISCIPLINE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_DOMAIN;
@@ -79,7 +74,7 @@ import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.SourceSystemRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.TombstoneRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimaryObjectIdType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ReplaceOrAppend;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.StructuralType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
@@ -296,7 +291,7 @@ public class TestUtils {
     attributes.addAll(genHandleRecordAttributes(handle, ObjectType.TOMBSTONE));
     attributes.remove(oldPidStatus);
     attributes = new ArrayList<>(
-        (attributes.stream().filter(row -> row.index() != LOC.index())).toList());
+        (attributes.stream().filter(row -> row.getIndex() != LOC.index())).toList());
     attributes.add(givenLandingPageAttribute(handle));
     return attributes;
   }
@@ -503,26 +498,6 @@ public class TestUtils {
 
     byte[] PLACEHOLDER = "Needs to be fixed!".getBytes(StandardCharsets.UTF_8);
 
-    // 403 Media URL
-    handleRecord.add(new HandleAttribute(MEDIA_URL.index(), handle,
-        MEDIA_URL.get(), MEDIA_URL_TESTVAL.getBytes(StandardCharsets.UTF_8)));
-
-    // 405 Media Object Type
-    handleRecord.add(new HandleAttribute(MEDIA_OBJECT_TYPE.index(), handle, MEDIA_OBJECT_TYPE.get(),
-        PLACEHOLDER));
-
-    // 406 Media Host
-    handleRecord.add(
-        new HandleAttribute(MEDIA_HOST.index(), handle, MEDIA_HOST.get(), PLACEHOLDER));
-
-    // 407 Subject Local Id
-    handleRecord.add(new HandleAttribute(SUBJECT_LOCAL_ID.index(), handle, SUBJECT_LOCAL_ID.get(),
-        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8)));
-
-    // 408 Subject PID -> might need to be resolved
-    handleRecord.add(
-        new HandleAttribute(SUBJECT_PID.index(), handle, SUBJECT_PID.get(), PLACEHOLDER));
-
     return handleRecord;
   }
 
@@ -669,7 +644,8 @@ public class TestUtils {
           SPECIMEN_HOST_TESTVAL,
           SPECIMEN_HOST_NAME_TESTVAL,
           primarySpecimenObjectId,
-          PhysicalIdType.LOCAL, null, null, null, null, null, null, null, null, null, null, null,
+          PrimaryObjectIdType.LOCAL, null, null, null, null, null, null, null, null, null, null,
+          null,
           null, null, null,
           SOURCE_SYSTEM_TESTVAL,
           null);
@@ -678,7 +654,8 @@ public class TestUtils {
     }
   }
 
-  public static MediaObjectRequest givenMediaRequestObject() {
+  public static MediaObjectRequest givenMediaRequestObject() throws InvalidRequestException {
+    // TODO
     return new MediaObjectRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
@@ -687,8 +664,8 @@ public class TestUtils {
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL,
-        MEDIA_URL_TESTVAL,
-        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null
     );
   }
 
@@ -969,9 +946,9 @@ public class TestUtils {
     ObjectNode rootNode = mapper.createObjectNode();
 
     for (HandleAttribute row : dbRecord) {
-      String type = row.type();
-      String data = new String(row.data());
-      if (row.index() != HS_ADMIN.index()) {
+      String type = row.getType();
+      String data = new String(row.getData());
+      if (row.getIndex() != HS_ADMIN.index()) {
         rootNode.put(type, data); // We never want HS_ADMIN in our json
       }
     }
