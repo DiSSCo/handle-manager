@@ -3,6 +3,7 @@ package eu.dissco.core.handlemanager.domain.requests.objects;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.StructuralType;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -30,7 +31,7 @@ public class HandleRecordRequest {
   private final String pidIssuer;
 
   @JsonPropertyDescription("Structural Type of the Object. Defaults to digital")
-  private final String structuralType;
+  private final StructuralType structuralType;
 
   @JsonPropertyDescription("Array containing the locations of the object.")
   @Nullable
@@ -45,18 +46,18 @@ public class HandleRecordRequest {
       String issuedForAgent,
       String digitalObjectType,
       String pidIssuer,
-      String structuralType,
+      StructuralType structuralType,
       String[] locations
-  ){
+  ) {
     this.fdoProfile = fdoProfile;
     this.issuedForAgent = issuedForAgent;
     this.digitalObjectType = digitalObjectType;
     this.pidIssuer = setDefault(pidIssuer, DATACITE_ROR);
-    this.structuralType = setDefault(structuralType, "digital");
+    this.structuralType = structuralType == null ? StructuralType.DIGITAL : structuralType;
     this.locations = locations;
   }
 
-  protected String setDefault(String attribute, String defaultVal){
+  protected String setDefault(String attribute, String defaultVal) {
     return attribute == null ? defaultVal : attribute;
   }
 

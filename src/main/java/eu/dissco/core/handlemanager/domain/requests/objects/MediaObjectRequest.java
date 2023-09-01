@@ -1,6 +1,7 @@
 package eu.dissco.core.handlemanager.domain.requests.objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.StructuralType;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -14,13 +15,13 @@ public class MediaObjectRequest extends DoiRecordRequest {
   private final String mediaUrl;
   @JsonProperty(required = true)
   private final String subjectLocalIdentifier; // Rename -> subjectLocalId? TBD
+  private static final String REFERENT_TYPE = "Digital Media Object";
 
   public MediaObjectRequest(
       String fdoProfile,
       String issuedForAgent,
       String digitalObjectTypePid,
       String pidIssuer,
-      String structuralType,
       String[] locations,
       // Doi
       String referentName,
@@ -28,8 +29,9 @@ public class MediaObjectRequest extends DoiRecordRequest {
       // Media
       String mediaUrl,
       String subjectLocalIdentifier) {
-    super(fdoProfile, issuedForAgent, digitalObjectTypePid, pidIssuer, structuralType, locations,
-        referentName, primaryReferentType);
+    super(fdoProfile, issuedForAgent, digitalObjectTypePid, pidIssuer, StructuralType.DIGITAL,
+        locations,
+        referentName, REFERENT_TYPE, primaryReferentType);
     this.mediaUrl = mediaUrl;
     this.subjectLocalIdentifier = subjectLocalIdentifier;
   }

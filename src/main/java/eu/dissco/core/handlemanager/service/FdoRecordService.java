@@ -50,11 +50,11 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.STRUCTURAL_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_DIGITAL_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_LOCAL_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_PID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_CATEGORY;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_DISCIPLINE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_DOMAIN;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_ORIGIN;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.WAS_DERIVED_FROM_ENTITY;
-import static eu.dissco.core.handlemanager.service.ServiceUtils.setUniquePhysicalIdentifierId;
 import static eu.dissco.core.handlemanager.utils.AdminHandleGenerator.genAdminHandle;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -87,7 +87,6 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -174,7 +173,7 @@ public class FdoRecordService {
         new HandleAttribute(DIGITAL_OBJECT_TYPE.index(), handle, DIGITAL_OBJECT_TYPE.get(),
             request.getDigitalObjectType().getBytes(StandardCharsets.UTF_8)));
 
-    // 4: DigitalObjectName - Handle
+    // 4: DigitalObjectName
     checkHandle(request.getDigitalObjectType());
     var digitalObjectName = pidResolver.getObjectName(request.getDigitalObjectType())
         .getBytes(StandardCharsets.UTF_8);
@@ -218,7 +217,8 @@ public class FdoRecordService {
 
     // 12: structuralType
     fdoRecord.add(new HandleAttribute(STRUCTURAL_TYPE.index(), handle,
-        STRUCTURAL_TYPE.get(), request.getStructuralType().getBytes(StandardCharsets.UTF_8)));
+        STRUCTURAL_TYPE.get(),
+        request.getStructuralType().toString().getBytes(StandardCharsets.UTF_8)));
 
     // 13: PidStatus
     fdoRecord.add(new HandleAttribute(PID_STATUS.index(), handle, PID_STATUS.get(),
@@ -466,11 +466,10 @@ public class FdoRecordService {
     }
 
     // 205 normalisedSpecimenObjectId
-    var normalisedPrimarySpecimenObjectId = setUniquePhysicalIdentifierId(request);
     fdoRecord.add(
         new HandleAttribute(NORMALISED_SPECIMEN_OBJECT_ID.index(), handle,
             NORMALISED_SPECIMEN_OBJECT_ID.get(),
-            normalisedPrimarySpecimenObjectId.getBytes(StandardCharsets.UTF_8)));
+            request.getNormalisedPrimarySpecimenObjectId().getBytes(StandardCharsets.UTF_8)));
 
     // 206: specimenObjectIdAbsenceReason
     if (request.getPrimarySpecimenObjectIdAbsenceReason() != null) {
@@ -482,7 +481,7 @@ public class FdoRecordService {
 
     // 207: otherSpecimenIds
     if (request.getOtherSpecimenIds() != null) {
-      var otherSpecimenIds = Arrays.toString(request.getOtherSpecimenIds())
+      var otherSpecimenIds = request.getOtherSpecimenIds().toString()
           .getBytes(StandardCharsets.UTF_8);
       fdoRecord.add(
           new HandleAttribute(OTHER_SPECIMEN_IDS.index(), handle,
@@ -495,7 +494,7 @@ public class FdoRecordService {
       fdoRecord.add(
           new HandleAttribute(TOPIC_ORIGIN.index(), handle,
               TOPIC_ORIGIN.get(),
-              request.getTopicOrigin().getBytes(StandardCharsets.UTF_8)));
+              request.getTopicOrigin().toString().getBytes(StandardCharsets.UTF_8)));
     }
 
     // 209: topicDomain
@@ -504,7 +503,7 @@ public class FdoRecordService {
       fdoRecord.add(
           new HandleAttribute(TOPIC_DOMAIN.index(), handle,
               TOPIC_DOMAIN.get(),
-              topicDomain.getBytes(StandardCharsets.UTF_8)));
+              topicDomain.toString().getBytes(StandardCharsets.UTF_8)));
     }
 
     // 210: topicDiscipline
@@ -513,10 +512,16 @@ public class FdoRecordService {
       fdoRecord.add(
           new HandleAttribute(TOPIC_DISCIPLINE.index(), handle,
               TOPIC_DISCIPLINE.get(),
-              topicDisc.getBytes(StandardCharsets.UTF_8)));
+              topicDisc.toString().getBytes(StandardCharsets.UTF_8)));
     }
 
     // 211 topicCategory
+    var topicCategory = request.getTopicCategory();
+    if (topicCategory != null) {
+      fdoRecord.add(new HandleAttribute(TOPIC_CATEGORY.index(), handle, TOPIC_CATEGORY.get(),
+          topicCategory.toString().getBytes(
+              StandardCharsets.UTF_8)));
+    }
 
     // 212: livingOrPreserved
     var livingOrPres = request.getLivingOrPreserved();
@@ -533,7 +538,7 @@ public class FdoRecordService {
       fdoRecord.add(
           new HandleAttribute(BASE_TYPE_OF_SPECIMEN.index(), handle,
               BASE_TYPE_OF_SPECIMEN.get(),
-              baseType.getBytes(StandardCharsets.UTF_8)));
+              baseType.toString().getBytes(StandardCharsets.UTF_8)));
     }
 
     // 214: informationArtefactType
@@ -542,7 +547,7 @@ public class FdoRecordService {
       fdoRecord.add(
           new HandleAttribute(INFORMATION_ARTEFACT_TYPE.index(), handle,
               INFORMATION_ARTEFACT_TYPE.get(),
-              artefactType.getBytes(StandardCharsets.UTF_8)));
+              artefactType.toString().getBytes(StandardCharsets.UTF_8)));
     }
 
     // 215: materialSampleType
@@ -551,14 +556,16 @@ public class FdoRecordService {
       fdoRecord.add(
           new HandleAttribute(MATERIAL_SAMPLE_TYPE.index(), handle,
               MATERIAL_SAMPLE_TYPE.get(),
-              matSamp.getBytes(StandardCharsets.UTF_8)));
+              matSamp.toString().getBytes(StandardCharsets.UTF_8)));
     }
 
     // 216: materialOrDigitalEntity
-    fdoRecord.add(
-        new HandleAttribute(MATERIAL_OR_DIGITAL_ENTITY.index(), handle,
-            MATERIAL_OR_DIGITAL_ENTITY.get(),
-            request.getMaterialOrDigitalEntity().getBytes()));
+    if (request.getMaterialOrDigitalEntity() != null) {
+      fdoRecord.add(
+          new HandleAttribute(MATERIAL_OR_DIGITAL_ENTITY.index(), handle,
+              MATERIAL_OR_DIGITAL_ENTITY.get(),
+              request.getMaterialOrDigitalEntity().toString().getBytes(StandardCharsets.UTF_8)));
+    }
 
     // 217: markedAsType
     var markedAsType = request.getMarkedAsType();
@@ -570,7 +577,7 @@ public class FdoRecordService {
     }
 
     // 218: wasDerivedFromEntity
-    var wasDerivedFrom = request.getWasDerivedFrom();
+    var wasDerivedFrom = request.getDerivedFromEntity();
     if (wasDerivedFrom != null) {
       fdoRecord.add(
           new HandleAttribute(WAS_DERIVED_FROM_ENTITY.index(), handle,

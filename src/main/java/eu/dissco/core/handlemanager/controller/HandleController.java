@@ -96,14 +96,14 @@ public class HandleController {
 
   @Operation(summary = "Given a physical identifier (i.e. local identifier), resolve PID record")
   @GetMapping("/records/primarySpecimenObjectId")
-  public ResponseEntity<JsonApiWrapperWrite> searchByPhysicalSpecimenId(
-      @RequestParam String physicalIdentifier,
+  public ResponseEntity<JsonApiWrapperWrite> searchByPrimarySpecimenObjectId(
+      @RequestParam String primarySpecimenObjectId,
       @RequestParam PhysicalIdType physicalIdentifierType,
-      @RequestParam(required = false) String specimenHostPid)
+      @RequestParam(required = false) String sourceSystemId)
       throws InvalidRequestException, PidResolutionException {
     return ResponseEntity.status(HttpStatus.OK).body(
-        service.searchByPhysicalSpecimenId(physicalIdentifier, physicalIdentifierType,
-            specimenHostPid));
+        service.searchByPhysicalSpecimenId(primarySpecimenObjectId, physicalIdentifierType,
+            sourceSystemId));
   }
 
   @Operation(summary = "Create single PID Record")

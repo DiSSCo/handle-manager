@@ -1,11 +1,62 @@
 package eu.dissco.core.handlemanager.testUtils;
 
-import static eu.dissco.core.handlemanager.domain.FdoProfile.*;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.ACCESS_RESTRICTED;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.ANNOTATION_TOPIC;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.BASE_TYPE_OF_SPECIMEN;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.DIGITAL_OBJECT_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.DIGITAL_OBJECT_TYPE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.FDO_PROFILE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.FDO_RECORD_LICENSE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.HS_ADMIN;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.INFORMATION_ARTEFACT_TYPE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.ISSUED_FOR_AGENT;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.ISSUED_FOR_AGENT_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_OBJECT_URL;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.LIVING_OR_PRESERVED;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.LOC;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MARKED_AS_TYPE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MAS_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MATERIAL_OR_DIGITAL_ENTITY;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MATERIAL_SAMPLE_TYPE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_HOST;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_OBJECT_TYPE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_URL;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.ORGANISATION_ID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.ORGANISATION_ID_TYPE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.ORGANISATION_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.OTHER_SPECIMEN_IDS;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_ISSUER;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_ISSUER_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_RECORD_ISSUE_DATE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_RECORD_ISSUE_NUMBER;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_STATUS;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_REFERENT_TYPE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID_TYPE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.REFERENT_DOI_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.REFERENT_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.REFERENT_TYPE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.REPLACE_OR_APPEND;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.SOURCE_DATA_STANDARD;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.SOURCE_SYSTEM_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.SPECIMEN_HOST;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.SPECIMEN_HOST_NAME;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.SPECIMEN_OBJECT_ID_ABSENCE_REASON;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.STRUCTURAL_TYPE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_DIGITAL_OBJECT_ID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_LOCAL_ID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_PID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.TOMBSTONE_TEXT;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_DISCIPLINE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_DOMAIN;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_ORIGIN;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.WAS_DERIVED_FROM_ENTITY;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_TYPE;
-import static eu.dissco.core.handlemanager.service.ServiceUtils.setUniquePhysicalIdentifierId;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -29,15 +80,14 @@ import eu.dissco.core.handlemanager.domain.requests.objects.SourceSystemRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.TombstoneRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.PhysicalIdentifier;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ReplaceOrAppend;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.StructuralType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
@@ -85,7 +135,7 @@ public class TestUtils {
   public static final String DIGITAL_OBJECT_TYPE_TESTVAL =
       HANDLE_DOMAIN + "21.T11148/1c699a5d1b4ad3ba4956";
   public static final String PID_ISSUER_TESTVAL_OTHER = HANDLE_DOMAIN + "20.5000.1025/PID-ISSUER";
-  public static final String STRUCTURAL_TYPE_TESTVAL = "digital";
+  public static final StructuralType STRUCTURAL_TYPE_TESTVAL = StructuralType.DIGITAL;
   public static final String[] LOC_TESTVAL = {"https://sandbox.dissco.tech/", "https://dissco.eu"};
   public static final String[] LOC_ALT_TESTVAL = {"naturalis.nl"};
 
@@ -123,12 +173,9 @@ public class TestUtils {
   public final static String PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL = "BOTANICAL.QRS.123";
   public final static String NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL =
       PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL + ":" + ROR_IDENTIFIER;
-  public final static PhysicalIdentifier PHYSICAL_IDENTIFIER_TESTVAL_CETAF = new PhysicalIdentifier(
-      PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-      PhysicalIdType.CETAF
-  );
   public final static String EXTERNAL_PID = "21.T11148/d8de0819e144e4096645";
   public static final String DIGITAL_OBJECT_NAME_TESTVAL = "digitalSpecimen";
+  public static final String SOURCE_SYSTEM_TESTVAL = "20.5000.1025/D6P-AQE-9RR";
 
   // Tombstone Record vals
   public final static String TOMBSTONE_TEXT_TESTVAL = "pid was deleted";
@@ -214,7 +261,8 @@ public class TestUtils {
 
     // 12: structuralType
     fdoRecord.add(new HandleAttribute(STRUCTURAL_TYPE.index(), handle,
-        STRUCTURAL_TYPE.get(), STRUCTURAL_TYPE_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+        STRUCTURAL_TYPE.get(),
+        STRUCTURAL_TYPE_TESTVAL.toString().getBytes(StandardCharsets.UTF_8)));
 
     // 13: PidStatus
     fdoRecord.add(new HandleAttribute(PID_STATUS.index(), handle, PID_STATUS.get(),
@@ -316,11 +364,10 @@ public class TestUtils {
             SPECIMEN_HOST_NAME_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     // 202: primarySpecimenObjectId
-    var primarySpecimenObjectId = setUniquePhysicalIdentifierId(request);
     fdoRecord.add(
         new HandleAttribute(PRIMARY_SPECIMEN_OBJECT_ID.index(), handle,
             PRIMARY_SPECIMEN_OBJECT_ID.get(),
-            primarySpecimenObjectId.getBytes(StandardCharsets.UTF_8)));
+            request.getNormalisedPrimarySpecimenObjectId().getBytes(StandardCharsets.UTF_8)));
 
     // 203: primarySpecimenObjectIdType
     fdoRecord.add(
@@ -349,8 +396,8 @@ public class TestUtils {
     }
 
     // 207: otherSpecimenIds
-    if (request.getOtherSpecimenIds() != null) {
-      var otherSpecimenIds = Arrays.toString(request.getOtherSpecimenIds())
+    if (request.getOtherSpecimenIds() != null && !request.getOtherSpecimenIds().isEmpty()) {
+      var otherSpecimenIds = request.getOtherSpecimenIds().toString()
           .getBytes(StandardCharsets.UTF_8);
       fdoRecord.add(
           new HandleAttribute(OTHER_SPECIMEN_IDS.index(), handle,
@@ -363,7 +410,7 @@ public class TestUtils {
       fdoRecord.add(
           new HandleAttribute(TOPIC_ORIGIN.index(), handle,
               TOPIC_ORIGIN.get(),
-              request.getTopicOrigin().getBytes(StandardCharsets.UTF_8)));
+              request.getTopicOrigin().toString().getBytes(StandardCharsets.UTF_8)));
     }
 
     // 209: topicDomain
@@ -371,7 +418,7 @@ public class TestUtils {
       fdoRecord.add(
           new HandleAttribute(TOPIC_DOMAIN.index(), handle,
               TOPIC_DOMAIN.get(),
-              request.getTopicDomain().getBytes(StandardCharsets.UTF_8)));
+              request.getTopicDomain().toString().getBytes(StandardCharsets.UTF_8)));
     }
 
     // 210: topicDiscipline
@@ -379,7 +426,7 @@ public class TestUtils {
       fdoRecord.add(
           new HandleAttribute(TOPIC_DISCIPLINE.index(), handle,
               TOPIC_DISCIPLINE.get(),
-              request.getTopicDiscipline().getBytes(StandardCharsets.UTF_8)));
+              request.getTopicDiscipline().toString().getBytes(StandardCharsets.UTF_8)));
     }
 
     // 211: topicCategory
@@ -397,7 +444,7 @@ public class TestUtils {
       fdoRecord.add(
           new HandleAttribute(BASE_TYPE_OF_SPECIMEN.index(), handle,
               BASE_TYPE_OF_SPECIMEN.get(),
-              request.getBaseTypeOfSpecimen().getBytes(StandardCharsets.UTF_8)));
+              request.getBaseTypeOfSpecimen().toString().getBytes(StandardCharsets.UTF_8)));
     }
 
     // 214: informationArtefactType
@@ -405,7 +452,7 @@ public class TestUtils {
       fdoRecord.add(
           new HandleAttribute(INFORMATION_ARTEFACT_TYPE.index(), handle,
               INFORMATION_ARTEFACT_TYPE.get(),
-              request.getInformationArtefactType().getBytes(StandardCharsets.UTF_8)));
+              request.getInformationArtefactType().toString().getBytes(StandardCharsets.UTF_8)));
     }
 
     // 215: materialSampleType
@@ -413,7 +460,7 @@ public class TestUtils {
       fdoRecord.add(
           new HandleAttribute(MATERIAL_SAMPLE_TYPE.index(), handle,
               MATERIAL_SAMPLE_TYPE.get(),
-              request.getMaterialSampleType().getBytes(StandardCharsets.UTF_8)));
+              request.getMaterialSampleType().toString().getBytes(StandardCharsets.UTF_8)));
     }
 
     // 216: materialOrDigitalEntity
@@ -421,7 +468,7 @@ public class TestUtils {
       fdoRecord.add(
           new HandleAttribute(MATERIAL_OR_DIGITAL_ENTITY.index(), handle,
               MATERIAL_OR_DIGITAL_ENTITY.get(),
-              request.getMaterialSampleType().getBytes()));
+              request.getMaterialSampleType().toString().getBytes()));
     }
 
     // 217: markedAsType
@@ -433,11 +480,11 @@ public class TestUtils {
     }
 
     // 218: wasDerivedFromEntity
-    if (request.getWasDerivedFrom() != null) {
+    if (request.getDerivedFromEntity() != null) {
       fdoRecord.add(
           new HandleAttribute(WAS_DERIVED_FROM_ENTITY.index(), handle,
               WAS_DERIVED_FROM_ENTITY.get(),
-              request.getWasDerivedFrom().getBytes(StandardCharsets.UTF_8)));
+              request.getDerivedFromEntity().getBytes(StandardCharsets.UTF_8)));
     }
 
     return fdoRecord;
@@ -599,6 +646,7 @@ public class TestUtils {
         STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,
+        "Digital Specimen",
         PRIMARY_REFERENT_TYPE_TESTVAL
     );
   }
@@ -608,24 +656,25 @@ public class TestUtils {
   }
 
   public static DigitalSpecimenRequest givenDigitalSpecimenRequestObjectNullOptionals(
-      String physicalId) {
+      String primarySpecimenObjectId) {
     try {
       return new DigitalSpecimenRequest(
           FDO_PROFILE_TESTVAL,
           ISSUED_FOR_AGENT_TESTVAL,
           DIGITAL_OBJECT_TYPE_TESTVAL,
           PID_ISSUER_TESTVAL_OTHER,
-          STRUCTURAL_TYPE_TESTVAL,
           LOC_TESTVAL,
           REFERENT_NAME_TESTVAL,
           PRIMARY_REFERENT_TYPE_TESTVAL,
           SPECIMEN_HOST_TESTVAL,
           SPECIMEN_HOST_NAME_TESTVAL,
-          physicalId,
-          null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
-      );
+          primarySpecimenObjectId,
+          PhysicalIdType.LOCAL, null, null, null, null, null, null, null, null, null, null, null,
+          null, null, null,
+          SOURCE_SYSTEM_TESTVAL,
+          null);
     } catch (InvalidRequestException e) {
-      return null;
+      throw new RuntimeException(e.getMessage());
     }
   }
 
@@ -635,7 +684,6 @@ public class TestUtils {
         ISSUED_FOR_AGENT_TESTVAL,
         DIGITAL_OBJECT_TYPE_TESTVAL,
         PID_ISSUER_TESTVAL_OTHER,
-        STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL,
@@ -650,7 +698,6 @@ public class TestUtils {
         ISSUED_FOR_AGENT_TESTVAL,
         DIGITAL_OBJECT_TYPE_TESTVAL,
         PID_ISSUER_TESTVAL_OTHER,
-        STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
         SUBJECT_DOI_TESTVAL,
         ANNOTATION_TOPIC_TESTVAL,
@@ -666,7 +713,6 @@ public class TestUtils {
         ISSUED_FOR_AGENT_TESTVAL,
         DIGITAL_OBJECT_TYPE_TESTVAL,
         PID_ISSUER_TESTVAL_OTHER,
-        STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
         SOURCE_DATA_STANDARD_TESTVAL
     );
@@ -678,7 +724,6 @@ public class TestUtils {
         ISSUED_FOR_AGENT_TESTVAL,
         DIGITAL_OBJECT_TYPE_TESTVAL,
         PID_ISSUER_TESTVAL_OTHER,
-        STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
         SPECIMEN_HOST_TESTVAL
     );
@@ -690,7 +735,6 @@ public class TestUtils {
         ISSUED_FOR_AGENT_TESTVAL,
         DIGITAL_OBJECT_TYPE_TESTVAL,
         PID_ISSUER_TESTVAL_OTHER,
-        STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL,
@@ -705,7 +749,6 @@ public class TestUtils {
         ISSUED_FOR_AGENT_TESTVAL,
         DIGITAL_OBJECT_TYPE_TESTVAL,
         PID_ISSUER_TESTVAL_OTHER,
-        STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
         MAS_NAME_TESTVAL
     );
@@ -716,18 +759,6 @@ public class TestUtils {
     return new TombstoneRecordRequest(
         TOMBSTONE_TEXT_TESTVAL
     );
-  }
-
-  public static ObjectNode givenSearchByPhysIdRequest() {
-    var request = MAPPER.createObjectNode();
-    var dataNode = MAPPER.createObjectNode();
-    var attributeNode = MAPPER.createObjectNode();
-    attributeNode.set(PRIMARY_SPECIMEN_OBJECT_ID.get(), MAPPER.valueToTree(
-        PHYSICAL_IDENTIFIER_TESTVAL_CETAF));
-    attributeNode.put(SPECIMEN_HOST.get(), SPECIMEN_HOST_TESTVAL);
-    dataNode.set("attributes", attributeNode);
-    request.set("data", dataNode);
-    return request;
   }
 
   public static JsonApiWrapperRead givenRecordResponseRead(List<byte[]> handles, String path,
