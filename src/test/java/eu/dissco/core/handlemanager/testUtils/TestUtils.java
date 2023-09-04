@@ -1024,7 +1024,7 @@ public class TestUtils {
       case DIGITAL_SPECIMEN -> {
         String api = API_URL + "/specimens/" + handle;
         String ui = UI_URL + "/ds/" + handle;
-        return new String[]{api, ui};
+        return new String[]{ui, api};
       }
       case MAPPING -> {
         return new String[]{ORCHESTRATION_URL + "/mapping/" + handle};
