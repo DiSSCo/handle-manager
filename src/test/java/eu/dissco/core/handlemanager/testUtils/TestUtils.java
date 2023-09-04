@@ -1106,7 +1106,7 @@ public class TestUtils {
       case DIGITAL_SPECIMEN -> {
         String api = API_URL + "/specimens/" + handle;
         String ui = UI_URL + "/ds/" + handle;
-        return new String[]{api, ui};
+        return new String[]{ui, api};
       }
       case MAPPING -> {
         return new String[]{ORCHESTRATION_URL + "/mapping/" + handle};
@@ -1117,7 +1117,7 @@ public class TestUtils {
       case MEDIA_OBJECT -> {
         String api = API_URL + "/digitalMedia/" + handle;
         String ui = UI_URL + "/dm/" + handle;
-        return new String[]{api, ui};
+        return new String[]{ui, api};
       }
       case ANNOTATION -> {
         return new String[]{API_URL + "/annotations/" + handle};

@@ -13,10 +13,10 @@ public enum TopicDomain {
 
   @JsonProperty("Life") LIFE("Life"),
   @JsonProperty("Environment") ENV("Environment"),
-  @JsonProperty("Earth system") EARTH("Earth system"),
+  @JsonProperty("Earth System") EARTH("Earth System"),
   @JsonProperty("Extraterrestrial") EXTRATERRESTRIAL("Extraterrestrial"),
-  @JsonProperty("Cultural artefacts") CULTURE("Cultural artefacts"),
-  @JsonProperty("Archive material") ARCHIVE("Archive material");
+  @JsonProperty("Cultural Artefacts") CULTURE("Cultural Artefacts"),
+  @JsonProperty("Archive Material") ARCHIVE("Archive Material");
   private final String state;
 
   private Set<MaterialSampleType> materialSampleTypes;
