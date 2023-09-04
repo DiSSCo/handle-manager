@@ -756,9 +756,9 @@ public class FdoRecordService {
   private String[] defaultLocations(String handle, ObjectType type) {
     switch (type) {
       case DIGITAL_SPECIMEN -> {
-        String ui = appProperties.getUiUrl() + "/ds/" + handle;
         String api = appProperties.getApiUrl() + "/specimens/" + handle;
-        return new String[]{api, ui};
+        String ui = appProperties.getUiUrl() + "/ds/" + handle;
+        return new String[]{ui, api};
       }
       case MAPPING -> {
         return new String[]{appProperties.getOrchestrationUrl() + "/mapping/" + handle};
@@ -767,9 +767,9 @@ public class FdoRecordService {
         return new String[]{appProperties.getOrchestrationUrl() + "/source-system/" + handle};
       }
       case MEDIA_OBJECT -> {
-        String ui = appProperties.getUiUrl() + "/dm/" + handle;
         String api = appProperties.getApiUrl() + "/digitalMedia/" + handle;
-        return new String[]{api, ui};
+        String ui = appProperties.getUiUrl() + "/dm/" + handle;
+        return new String[]{ui, api};
       }
       case ANNOTATION -> {
         return new String[]{appProperties.getApiUrl() + "/annotations/" + handle};
