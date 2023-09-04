@@ -758,7 +758,7 @@ public class FdoRecordService {
       case DIGITAL_SPECIMEN -> {
         String api = appProperties.getApiUrl() + "/specimens/" + handle;
         String ui = appProperties.getUiUrl() + "/ds/" + handle;
-        return new String[]{api, ui};
+        return new String[]{ui, api};
       }
       case MAPPING -> {
         return new String[]{appProperties.getOrchestrationUrl() + "/mapping/" + handle};
@@ -769,7 +769,7 @@ public class FdoRecordService {
       case MEDIA_OBJECT -> {
         String api = appProperties.getApiUrl() + "/digitalMedia/" + handle;
         String ui = appProperties.getUiUrl() + "/dm/" + handle;
-        return new String[]{api, ui};
+        return new String[]{ui, api};
       }
       case ANNOTATION -> {
         return new String[]{appProperties.getApiUrl() + "/annotations/" + handle};
