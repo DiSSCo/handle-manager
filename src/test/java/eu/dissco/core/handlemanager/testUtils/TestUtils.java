@@ -1022,8 +1022,8 @@ public class TestUtils {
   private static String[] defaultLocations(String handle, ObjectType type) {
     switch (type) {
       case DIGITAL_SPECIMEN -> {
-        String api = API_URL + "/specimens/" + handle;
         String ui = UI_URL + "/ds/" + handle;
+        String api = API_URL + "/specimens/" + handle;
         return new String[]{api, ui};
       }
       case MAPPING -> {
@@ -1033,8 +1033,8 @@ public class TestUtils {
         return new String[]{ORCHESTRATION_URL + "/source-system/" + handle};
       }
       case MEDIA_OBJECT -> {
-        String api = API_URL + "/digitalMedia/" + handle;
         String ui = UI_URL + "/dm/" + handle;
+        String api = API_URL + "/digitalMedia/" + handle;
         return new String[]{api, ui};
       }
       case ANNOTATION -> {
