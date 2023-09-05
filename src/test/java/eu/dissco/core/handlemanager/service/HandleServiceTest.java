@@ -4,13 +4,13 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_URL;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID_TYPE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_LOCAL_ID;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_LIST_STR;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_URI;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.MEDIA_URL_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_STATUS_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_ANNOTATION;
@@ -170,9 +170,8 @@ class HandleServiceTest {
     given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(new ArrayList<>());
 
     // When
-    var exception = assertThrows(PidResolutionException.class, () -> {
-      service.resolveSingleRecord(handle, path);
-    });
+    var exception = assertThrows(PidResolutionException.class,
+        () -> service.resolveSingleRecord(handle, path));
     // Then
     assertThat(exception.getMessage()).contains(HANDLE);
   }
@@ -308,12 +307,13 @@ class HandleServiceTest {
     byte[] handle = handles.get(0);
     var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(),
         RECORD_TYPE_DS);
-
-    var responseExpected = givenRecordResponseWriteSmallResponse(List.of(handle),
-        PRIMARY_SPECIMEN_OBJECT_ID,
-        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        ObjectType.DIGITAL_SPECIMEN);
     List<HandleAttribute> digitalSpecimen = genDigitalSpecimenAttributes(handle);
+    var digitalSpecimenSublist = digitalSpecimen.stream()
+        .filter(row -> row.type().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())).toList();
+
+    var responseExpected = givenRecordResponseWriteSmallResponse(digitalSpecimenSublist,
+        List.of(handle),
+        ObjectType.DIGITAL_SPECIMEN);
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(handleRep.searchByNormalisedPhysicalIdentifierFullRecord(anyList())).willReturn(
@@ -357,14 +357,18 @@ class HandleServiceTest {
     byte[] handle = handles.get(0);
     var request = genCreateRecordRequest(givenMediaRequestObject(),
         RECORD_TYPE_MEDIA);
-    var responseExpected = givenRecordResponseWriteSmallResponse(List.of(handle),
-        MEDIA_URL,
-        MEDIA_URL_TESTVAL,
+    var handleRecord = genMediaObjectAttributes(handle);
+    var handleRecordSublist = handleRecord.stream().filter(
+            row -> row.type().equals(MEDIA_URL.get()) || row.type().equals(SUBJECT_LOCAL_ID.get()))
+        .toList();
+
+    var responseExpected = givenRecordResponseWriteSmallResponse(handleRecordSublist,
+        List.of(handle),
         ObjectType.MEDIA_OBJECT);
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(fdoRecordService.prepareMediaObjectAttributes(any(), any(), any())).willReturn(
-        genMediaObjectAttributes(handle));
+        handleRecordSublist);
 
     // When
     var responseReceived = service.createRecords(List.of(request));
@@ -448,11 +452,13 @@ class HandleServiceTest {
           genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(physId),
               RECORD_TYPE_DS));
     }
+    var sublist = Stream.concat(genDigitalSpecimenAttributes(handles.get(0)).stream()
+            .filter(row -> row.type().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())),
+        genDigitalSpecimenAttributes(handles.get(1)).stream()
+            .filter(row -> row.type().equals(PRIMARY_SPECIMEN_OBJECT_ID.get()))).toList();
 
-    var responseExpected = givenRecordResponseWriteSmallResponse(handles,
-        PRIMARY_SPECIMEN_OBJECT_ID,
-        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        ObjectType.DIGITAL_SPECIMEN);
+    var responseExpected = givenRecordResponseWriteSmallResponse(
+        sublist, handles, ObjectType.DIGITAL_SPECIMEN);
 
     given(hgService.genHandleList(handles.size())).willReturn(handles);
     given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(any(), any(), any()))
@@ -561,10 +567,13 @@ class HandleServiceTest {
     for (byte[] handle : handles) {
       requests.add(genCreateRecordRequest(givenMediaRequestObject(), RECORD_TYPE_MEDIA));
     }
+    var sublist = Stream.concat(genMediaObjectAttributes(handles.get(0)).stream().filter(
+                row -> row.type().equals(MEDIA_URL.get()) || row.type().equals(SUBJECT_LOCAL_ID.get())),
+            genMediaObjectAttributes(handles.get(1)).stream().filter(
+                row -> row.type().equals(MEDIA_URL.get()) || row.type().equals(SUBJECT_LOCAL_ID.get())))
+        .toList();
 
-    var responseExpected = givenRecordResponseWriteSmallResponse(handles,
-        MEDIA_URL,
-        MEDIA_URL_TESTVAL,
+    var responseExpected = givenRecordResponseWriteSmallResponse(sublist, handles,
         ObjectType.MEDIA_OBJECT);
     given(hgService.genHandleList(handles.size())).willReturn(handles);
     given(fdoRecordService.prepareMediaObjectAttributes(any(), any(), any()))

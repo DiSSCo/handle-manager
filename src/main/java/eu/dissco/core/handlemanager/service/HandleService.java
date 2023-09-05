@@ -4,6 +4,7 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_URL;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_LOCAL_ID;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ID;
@@ -116,6 +117,16 @@ public class HandleService {
     return rootNodeList;
   }
 
+  private JsonNode jsonFormatSingleRecord(List<HandleAttribute> dbRecord) {
+    ObjectNode rootNode = mapper.createObjectNode();
+    for (var row : dbRecord) {
+      if (row.index() != HS_ADMIN.index()) {
+        rootNode.put(row.type(), new String(row.data(), StandardCharsets.UTF_8));
+      }
+    }
+    return rootNode;
+  }
+
   // Getters
 
   public List<String> getHandlesPaged(int pageNum, int pageSize, byte[] pidStatus) {
@@ -156,15 +167,6 @@ public class HandleService {
     return new JsonApiDataLinks(pidName, recordType, recordAttributes, handleLink);
   }
 
-  private JsonNode jsonFormatSingleRecord(List<HandleAttribute> dbRecord) {
-    ObjectNode rootNode = mapper.createObjectNode();
-    for (var row : dbRecord) {
-      if (row.index() != HS_ADMIN.index()) {
-        rootNode.put(row.type(), new String(row.data(), StandardCharsets.UTF_8));
-      }
-    }
-    return rootNode;
-  }
 
   private List<JsonApiDataLinks> formatCreateRecords(List<HandleAttribute> dbRecord,
       Map<String, ObjectType> recordTypes) {
@@ -172,34 +174,19 @@ public class HandleService {
     List<JsonApiDataLinks> dataLinksList = new ArrayList<>();
     for (var handleRecord : handleMap.entrySet()) {
       var type = recordTypes.get(handleRecord.getKey());
+      var subRecord = handleRecord.getValue();
       if (type.equals(ObjectType.MEDIA_OBJECT)) {
-        dataLinksList.addAll(formatSimpleResponse(handleRecord.getValue(), MEDIA_URL.get(),
-            ObjectType.MEDIA_OBJECT));
+        subRecord = subRecord.stream().filter(
+                row -> row.type().equals(MEDIA_URL.get()) || row.type().equals(SUBJECT_LOCAL_ID.get()))
+            .toList();
       } else if (type.equals(DIGITAL_SPECIMEN)) {
-        dataLinksList.addAll(
-            formatSimpleResponse(handleRecord.getValue(), PRIMARY_SPECIMEN_OBJECT_ID.get(),
-                DIGITAL_SPECIMEN));
-      } else {
-        var rootNode = jsonFormatSingleRecord(handleRecord.getValue());
-        dataLinksList.add(wrapData(rootNode, type.toString()));
+        subRecord = subRecord.stream()
+            .filter(row -> row.type().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())).toList();
       }
-    }
-    return dataLinksList;
-  }
-
-  private List<JsonApiDataLinks> formatSimpleResponse(List<HandleAttribute> records,
-      String returnAttribute, ObjectType type) {
-    List<JsonApiDataLinks> dataLinksList = new ArrayList<>();
-
-    for (var row : records) {
-      if (row.type().equals(returnAttribute)) {
-        String h = new String(row.handle(), StandardCharsets.UTF_8);
-        String pidLink = HANDLE_DOMAIN + h;
-        var node = mapper.createObjectNode();
-        node.put(returnAttribute, new String(row.data(), StandardCharsets.UTF_8));
-        dataLinksList.add(
-            new JsonApiDataLinks(h, type.toString(), node, new JsonApiLinks(pidLink)));
-      }
+      var rootNode = jsonFormatSingleRecord(subRecord);
+      String pidLink = HANDLE_DOMAIN + handleRecord.getKey();
+      dataLinksList.add(new JsonApiDataLinks(handleRecord.getKey(), type.toString(), rootNode,
+          new JsonApiLinks(pidLink)));
     }
     return dataLinksList;
   }
@@ -393,7 +380,23 @@ public class HandleService {
     var concatAttributes = concatHandleAttributes(createAttributes, upsertAttributes);
 
     return new JsonApiWrapperWrite(
-        formatSimpleResponse(concatAttributes, PRIMARY_SPECIMEN_OBJECT_ID.get(), DIGITAL_SPECIMEN));
+        formatUpsertResponse(concatAttributes));
+  }
+
+  private List<JsonApiDataLinks> formatUpsertResponse(List<HandleAttribute> records) {
+    List<JsonApiDataLinks> dataLinksList = new ArrayList<>();
+
+    for (var row : records) {
+      if (row.type().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())) {
+        String h = new String(row.handle(), StandardCharsets.UTF_8);
+        String pidLink = HANDLE_DOMAIN + h;
+        var node = mapper.createObjectNode();
+        node.put(PRIMARY_SPECIMEN_OBJECT_ID.get(), new String(row.data(), StandardCharsets.UTF_8));
+        dataLinksList.add(
+            new JsonApiDataLinks(h, DIGITAL_SPECIMEN.toString(), node, new JsonApiLinks(pidLink)));
+      }
+    }
+    return dataLinksList;
   }
 
   private List<HandleAttribute> concatHandleAttributes(List<HandleAttribute> createAttributes,
