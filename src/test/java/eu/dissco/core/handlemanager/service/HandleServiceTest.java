@@ -1,6 +1,7 @@
 package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.domain.FdoProfile.HS_ADMIN;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_URL;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID_TYPE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
@@ -9,6 +10,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_LIST_STR;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_URI;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.MEDIA_URL_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_STATUS_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_ANNOTATION;
@@ -50,6 +52,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordRespon
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteArchive;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteGeneric;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteSmallResponse;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemRequestObject;
 import static eu.dissco.core.handlemanager.utils.AdminHandleGenerator.genAdminHandle;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -305,7 +308,11 @@ class HandleServiceTest {
     byte[] handle = handles.get(0);
     var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(),
         RECORD_TYPE_DS);
-    var responseExpected = givenRecordResponseWrite(List.of(handle), RECORD_TYPE_DS);
+
+    var responseExpected = givenRecordResponseWriteSmallResponse(List.of(handle),
+        PRIMARY_SPECIMEN_OBJECT_ID,
+        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
+        ObjectType.DIGITAL_SPECIMEN);
     List<HandleAttribute> digitalSpecimen = genDigitalSpecimenAttributes(handle);
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
@@ -350,7 +357,10 @@ class HandleServiceTest {
     byte[] handle = handles.get(0);
     var request = genCreateRecordRequest(givenMediaRequestObject(),
         RECORD_TYPE_MEDIA);
-    var responseExpected = givenRecordResponseWrite(List.of(handle), RECORD_TYPE_MEDIA);
+    var responseExpected = givenRecordResponseWriteSmallResponse(List.of(handle),
+        MEDIA_URL,
+        MEDIA_URL_TESTVAL,
+        ObjectType.MEDIA_OBJECT);
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(fdoRecordService.prepareMediaObjectAttributes(any(), any(), any())).willReturn(
@@ -439,7 +449,11 @@ class HandleServiceTest {
               RECORD_TYPE_DS));
     }
 
-    var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_DS);
+    var responseExpected = givenRecordResponseWriteSmallResponse(handles,
+        PRIMARY_SPECIMEN_OBJECT_ID,
+        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
+        ObjectType.DIGITAL_SPECIMEN);
+
     given(hgService.genHandleList(handles.size())).willReturn(handles);
     given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(any(), any(), any()))
         .willReturn(genDigitalSpecimenAttributes(handles.get(0)))
@@ -543,18 +557,19 @@ class HandleServiceTest {
   @Test
   void testCreateMediaObjectBatch() throws Exception {
     // Given
-    List<HandleAttribute> flatList = new ArrayList<>();
-
     List<JsonNode> requests = new ArrayList<>();
     for (byte[] handle : handles) {
       requests.add(genCreateRecordRequest(givenMediaRequestObject(), RECORD_TYPE_MEDIA));
-      flatList.addAll(genMediaObjectAttributes(handle));
     }
 
-    var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_MEDIA);
-
+    var responseExpected = givenRecordResponseWriteSmallResponse(handles,
+        MEDIA_URL,
+        MEDIA_URL_TESTVAL,
+        ObjectType.MEDIA_OBJECT);
     given(hgService.genHandleList(handles.size())).willReturn(handles);
-    given(fdoRecordService.prepareMediaObjectAttributes(any(), any(), any())).willReturn(flatList);
+    given(fdoRecordService.prepareMediaObjectAttributes(any(), any(), any()))
+        .willReturn(genMediaObjectAttributes(handles.get(0)))
+        .willReturn(genMediaObjectAttributes(handles.get(1)));
 
     // When
     var responseReceived = service.createRecords(requests);

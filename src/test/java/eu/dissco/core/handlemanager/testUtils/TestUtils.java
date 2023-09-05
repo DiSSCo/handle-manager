@@ -62,6 +62,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import eu.dissco.core.handlemanager.domain.FdoProfile;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiDataLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
@@ -367,7 +368,7 @@ public class TestUtils {
     fdoRecord.add(
         new HandleAttribute(PRIMARY_SPECIMEN_OBJECT_ID.index(), handle,
             PRIMARY_SPECIMEN_OBJECT_ID.get(),
-            request.getNormalisedPrimarySpecimenObjectId().getBytes(StandardCharsets.UTF_8)));
+            request.getPrimarySpecimenObjectId().getBytes(StandardCharsets.UTF_8)));
 
     // 203: primarySpecimenObjectIdType
     fdoRecord.add(
@@ -801,6 +802,24 @@ public class TestUtils {
     }
     return new JsonApiWrapperWrite(dataNodes);
   }
+
+  public static JsonApiWrapperWrite givenRecordResponseWriteSmallResponse(List<byte[]> handles,
+      FdoProfile targetAttribute, String targetValue, ObjectType type) throws Exception {
+    List<JsonApiDataLinks> dataNodes = new ArrayList<>();
+    for (var handle : handles) {
+      var testDbRecord = List.of(new HandleAttribute(targetAttribute.index(),
+          handle, targetAttribute.get(), targetValue.getBytes(
+          StandardCharsets.UTF_8)));
+      JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
+
+      var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
+      dataNodes.add(
+          new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), type.toString(),
+              recordAttributes, pidLink));
+    }
+    return new JsonApiWrapperWrite(dataNodes);
+  }
+
 
   public static JsonApiWrapperWrite givenRecordResponseWriteGeneric(List<byte[]> handles,
       String recordType)
