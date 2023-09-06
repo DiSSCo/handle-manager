@@ -5,7 +5,6 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.ANNOTATION_TOPIC;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.BASE_TYPE_OF_SPECIMEN;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DC_TERMS_CONFORMS;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DERIVED_FROM_ENTITY;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.DERIVED_FROM_PRIMARY_SPECIMEN_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DIGITAL_OBJECT_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DIGITAL_OBJECT_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.FDO_PROFILE;
@@ -314,11 +313,6 @@ public class FdoRecordService {
           new HandleAttribute(PRIMARY_MO_ID_TYPE, handle,
               request.getPrimaryMediaObjectIdType().toString()));
     }
-    if (request.getDerivedFromPrimarySpecimenObjectId() != null) {
-      fdoRecord.add(
-          new HandleAttribute(DERIVED_FROM_PRIMARY_SPECIMEN_ID, handle,
-              request.getDerivedFromPrimarySpecimenObjectId()));
-    }
     if (request.getMediaMimeType() != null) {
       fdoRecord.add(
           new HandleAttribute(MEDIA_MIME_TYPE, handle, request.getMediaMimeType()));
@@ -327,7 +321,9 @@ public class FdoRecordService {
       fdoRecord.add(
           new HandleAttribute(DERIVED_FROM_ENTITY, handle, request.getDerivedFromEntity()));
     }
-    fdoRecord.add(new HandleAttribute(LICENSE_NAME, handle, request.getLicenseName()));
+    if (request.getLicenseName() != null) {
+      fdoRecord.add(new HandleAttribute(LICENSE_NAME, handle, request.getLicenseName()));
+    }
     if (request.getLicenseUrl() != null) {
       fdoRecord.add(new HandleAttribute(LICENSE_URL, handle, request.getLicenseUrl()));
     }

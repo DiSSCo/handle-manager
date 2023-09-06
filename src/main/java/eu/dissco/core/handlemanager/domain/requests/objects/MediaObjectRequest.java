@@ -38,8 +38,6 @@ public class MediaObjectRequest extends DoiRecordRequest {
   @Nullable
   private final String primaryMediaObjectIdName;
   @Nullable
-  private final String derivedFromPrimarySpecimenObjectId;
-  @Nullable
   private final PrimaryMediaObjectType primaryMediaObjectType;
   @Nullable
   private final String mediaMimeType;
@@ -80,7 +78,6 @@ public class MediaObjectRequest extends DoiRecordRequest {
       String primaryMediaId,
       PrimaryObjectIdType primaryMediaObjectIdType,
       String primaryMediaObjectIdName,
-      String derivedFromPrimarySpecimenObjectId,
       PrimaryMediaObjectType primaryMediaObjectType,
       String mediaMimeType,
       String derivedFromEntity,
@@ -104,7 +101,6 @@ public class MediaObjectRequest extends DoiRecordRequest {
     this.primaryMediaId = primaryMediaId;
     this.primaryMediaObjectIdType = primaryMediaObjectIdType;
     this.primaryMediaObjectIdName = primaryMediaObjectIdName;
-    this.derivedFromPrimarySpecimenObjectId = derivedFromPrimarySpecimenObjectId;
     this.primaryMediaObjectType = primaryMediaObjectType;
     this.mediaMimeType = mediaMimeType;
     this.derivedFromEntity = derivedFromEntity;
@@ -114,16 +110,7 @@ public class MediaObjectRequest extends DoiRecordRequest {
     this.rightsholderName = rightsholderName;
     this.rightsholderPidType = rightsholderPidType;
     this.dctermsConforms = dctermsConforms;
-    validatePrimarySpecimenObjectId();
     validateRightsholder(rightsholderName, rightsholderPid);
-  }
-
-  private void validatePrimarySpecimenObjectId() throws InvalidRequestException {
-    if (Boolean.TRUE.equals(this.isDerivedFromSpecimen)
-        && this.derivedFromPrimarySpecimenObjectId == null) {
-      throw new InvalidRequestException(
-          "Invalid media Request. Media object is derived from specimen, but no specimen id is provided");
-    }
   }
 
   private void validateRightsholder(String name, String pid) throws InvalidRequestException {
@@ -131,7 +118,6 @@ public class MediaObjectRequest extends DoiRecordRequest {
       throw new InvalidRequestException(
           "Invalid media request. Rightsholder name provided without an identifier");
     }
-
   }
 
 }

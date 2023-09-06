@@ -61,7 +61,6 @@ public enum FdoProfile {
   PRIMARY_MEDIA_ID("primaryMediaId", 407),
   PRIMARY_MO_ID_TYPE("primaryMediaObjectIdType", 408),
   PRIMARY_MO_ID_NAME("primaryMediaObjectIdName", 409),
-  DERIVED_FROM_PRIMARY_SPECIMEN_ID("derivedFromPrimarySpecimenObjectId", 410),
   PRIMARY_MO_TYPE("primaryMediaObjectType", 411),
   MEDIA_MIME_TYPE("mediaMimeType", 412),
   DERIVED_FROM_ENTITY("derivedFromEntity", 413),

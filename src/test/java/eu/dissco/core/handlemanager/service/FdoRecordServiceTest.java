@@ -5,7 +5,6 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.ANNOTATION_TOPIC;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.BASE_TYPE_OF_SPECIMEN;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DC_TERMS_CONFORMS;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DERIVED_FROM_ENTITY;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.DERIVED_FROM_PRIMARY_SPECIMEN_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DIGITAL_OBJECT_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DIGITAL_OBJECT_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.FDO_PROFILE;
@@ -177,7 +176,7 @@ class FdoRecordServiceTest {
       LINKED_DO_PID.get(),
       LINKED_DO_TYPE.get(), LINKED_ATTRIBUTE.get(), PRIMARY_MEDIA_ID.get(),
       PRIMARY_MO_ID_TYPE.get(),
-      PRIMARY_MO_ID_NAME.get(), DERIVED_FROM_PRIMARY_SPECIMEN_ID.get(), PRIMARY_MO_TYPE.get(),
+      PRIMARY_MO_ID_NAME.get(), PRIMARY_MO_TYPE.get(),
       MEDIA_MIME_TYPE.get(),
       DERIVED_FROM_ENTITY.get(), LICENSE_NAME.get(), LICENSE_URL.get(), RIGHTSHOLDER_NAME.get(),
       RIGHTSHOLDER_PID.get(), RIGHTSHOLDER_PID_TYPE.get(), DC_TERMS_CONFORMS.get());
@@ -204,8 +203,8 @@ class FdoRecordServiceTest {
   private ApplicationProperties appProperties;
   private static final int HANDLE_QTY = 15;
   private static final int DOI_QTY = 19;
-  private static final int MEDIA_QTY = DOI_QTY + 9;
-  private static final int MEDIA_OPTIONAL_QTY = DOI_QTY + 20;
+  private static final int MEDIA_QTY = DOI_QTY + 8;
+  private static final int MEDIA_OPTIONAL_QTY = DOI_QTY + 19;
   private static final int DS_MANDATORY_QTY = 24;
   private static final int DS_OPTIONAL_QTY = 37;
   private static final int ANNOTATION_QTY = 21;
@@ -286,7 +285,7 @@ class FdoRecordServiceTest {
         PRIMARY_REFERENT_TYPE_TESTVAL,
         MEDIA_HOST_TESTVAL, MEDIA_HOST_NAME_TESTVAL, MediaFormat.TEXT, Boolean.TRUE,
         LINKED_DO_PID_TESTVAL,
-        LINKED_DIGITAL_OBJECT_TYPE_TESTVAL, "a", "b", PrimaryObjectIdType.GLOBAL, "d", HANDLE,
+        LINKED_DIGITAL_OBJECT_TYPE_TESTVAL, "a", "b", PrimaryObjectIdType.GLOBAL, "d",
         PrimaryMediaObjectType.IMAGE, "e", "f",
         LICENSE_NAME_TESTVAL,
         "g", "h", "i", PrimaryObjectIdType.LOCAL, "j"

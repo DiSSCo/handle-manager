@@ -5,7 +5,6 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.ANNOTATION_TOPIC;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.BASE_TYPE_OF_SPECIMEN;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DC_TERMS_CONFORMS;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DERIVED_FROM_ENTITY;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.DERIVED_FROM_PRIMARY_SPECIMEN_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DIGITAL_OBJECT_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DIGITAL_OBJECT_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.FDO_PROFILE;
@@ -558,11 +557,6 @@ public class TestUtils {
       fdoRecord.add(
           new HandleAttribute(PRIMARY_MO_ID_NAME, handle, request.getPrimaryMediaObjectIdName()));
     }
-    if (request.getDerivedFromPrimarySpecimenObjectId() != null) {
-      fdoRecord.add(
-          new HandleAttribute(DERIVED_FROM_PRIMARY_SPECIMEN_ID, handle,
-              request.getDerivedFromPrimarySpecimenObjectId()));
-    }
     if (request.getPrimaryMediaObjectType() != null) {
       fdoRecord.add(
           new HandleAttribute(PRIMARY_MEDIA_ID, handle,
@@ -768,7 +762,7 @@ public class TestUtils {
         REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL,
         MEDIA_HOST_TESTVAL, MEDIA_HOST_NAME_TESTVAL, null, Boolean.TRUE, LINKED_DO_PID_TESTVAL,
-        LINKED_DIGITAL_OBJECT_TYPE_TESTVAL, null, null, null, null, HANDLE, null, null, null,
+        LINKED_DIGITAL_OBJECT_TYPE_TESTVAL, null, null, null, null, null, null, null,
         LICENSE_NAME_TESTVAL,
         null, null, null, null, null
     );
