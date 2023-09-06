@@ -1,10 +1,10 @@
 package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.domain.FdoProfile.HS_ADMIN;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_URL;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_DO_PID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_MEDIA_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_LOCAL_ID;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ID;
@@ -121,7 +121,7 @@ public class HandleService {
     ObjectNode rootNode = mapper.createObjectNode();
     for (var row : dbRecord) {
       if (row.getIndex() != HS_ADMIN.index()) {
-        rootNode.put(row.getType(),  new String(row.getData(), StandardCharsets.UTF_8));
+        rootNode.put(row.getType(), new String(row.getData(), StandardCharsets.UTF_8));
       }
     }
     return rootNode;
@@ -176,7 +176,8 @@ public class HandleService {
       var subRecord = handleRecord.getValue();
       if (type.equals(ObjectType.MEDIA_OBJECT)) {
         subRecord = subRecord.stream().filter(
-                row -> row.getType().equals(MEDIA_URL.get()) || row.getType().equals(SUBJECT_LOCAL_ID.get()))
+                row -> row.getType().equals(PRIMARY_MEDIA_ID.get()) || row.getType()
+                    .equals(LINKED_DO_PID.get()))
             .toList();
       } else if (type.equals(DIGITAL_SPECIMEN)) {
         subRecord = subRecord.stream()
