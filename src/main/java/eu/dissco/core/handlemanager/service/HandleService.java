@@ -1,8 +1,10 @@
 package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.domain.FdoProfile.HS_ADMIN;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_URL;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_LOCAL_ID;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ID;
@@ -104,8 +106,8 @@ public class HandleService {
     throw new PidResolutionException("Handles not found: " + handlesString);
   }
 
-
   // Response Formatting
+
   private List<JsonNode> formatRecords(List<HandleAttribute> dbRecord) {
     var handleMap = mapRecords(dbRecord);
     List<JsonNode> rootNodeList = new ArrayList<>();
@@ -113,6 +115,16 @@ public class HandleService {
       rootNodeList.add(jsonFormatSingleRecord(handleRecord.getValue()));
     }
     return rootNodeList;
+  }
+
+  private JsonNode jsonFormatSingleRecord(List<HandleAttribute> dbRecord) {
+    ObjectNode rootNode = mapper.createObjectNode();
+    for (var row : dbRecord) {
+      if (row.index() != HS_ADMIN.index()) {
+        rootNode.put(row.type(), new String(row.data(), StandardCharsets.UTF_8));
+      }
+    }
+    return rootNode;
   }
 
   // Getters
@@ -155,15 +167,28 @@ public class HandleService {
     return new JsonApiDataLinks(pidName, recordType, recordAttributes, handleLink);
   }
 
-  private JsonNode jsonFormatSingleRecord(List<HandleAttribute> dbRecord) {
-    ObjectNode rootNode = mapper.createObjectNode();
-    for (var row : dbRecord) {
-      if (row.index() != HS_ADMIN.index()) {
-        rootNode.put(row.type(), new String(row.data(), StandardCharsets.UTF_8));
-      }
-    }
 
-    return rootNode;
+  private List<JsonApiDataLinks> formatCreateRecords(List<HandleAttribute> dbRecord,
+      Map<String, ObjectType> recordTypes) {
+    var handleMap = mapRecords(dbRecord);
+    List<JsonApiDataLinks> dataLinksList = new ArrayList<>();
+    for (var handleRecord : handleMap.entrySet()) {
+      var type = recordTypes.get(handleRecord.getKey());
+      var subRecord = handleRecord.getValue();
+      if (type.equals(ObjectType.MEDIA_OBJECT)) {
+        subRecord = subRecord.stream().filter(
+                row -> row.type().equals(MEDIA_URL.get()) || row.type().equals(SUBJECT_LOCAL_ID.get()))
+            .toList();
+      } else if (type.equals(DIGITAL_SPECIMEN)) {
+        subRecord = subRecord.stream()
+            .filter(row -> row.type().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())).toList();
+      }
+      var rootNode = jsonFormatSingleRecord(subRecord);
+      String pidLink = HANDLE_DOMAIN + handleRecord.getKey();
+      dataLinksList.add(new JsonApiDataLinks(handleRecord.getKey(), type.toString(), rootNode,
+          new JsonApiLinks(pidLink)));
+    }
+    return dataLinksList;
   }
 
   // Search by Physical Specimen Identifier
@@ -301,11 +326,7 @@ public class HandleService {
     log.info("Persisting new handles to db");
     handleRep.postAttributesToDb(recordTimestamp, handleAttributes);
 
-    var postedRecordAttributes = formatRecords(handleAttributes);
-    var dataList = postedRecordAttributes.stream().map(
-        recordAttributes -> wrapData(recordAttributes,
-            getRecordTypeFromTypeList(recordAttributes, recordTypes))).toList();
-    return new JsonApiWrapperWrite(dataList);
+    return new JsonApiWrapperWrite(formatCreateRecords(handleAttributes, recordTypes));
   }
 
   private <T extends DigitalSpecimenRequest> void verifyNoInternalDuplicatePhysicalSpecimenObjectId(
@@ -358,20 +379,13 @@ public class HandleService {
 
     var concatAttributes = concatHandleAttributes(createAttributes, upsertAttributes);
 
-    return concatAndFormatUpsertResponse(concatAttributes);
+    return new JsonApiWrapperWrite(
+        formatUpsertResponse(concatAttributes));
   }
 
-  private List<HandleAttribute> concatHandleAttributes(List<HandleAttribute> createAttributes,
-      List<List<HandleAttribute>> upsertAttributes) {
-    List<HandleAttribute> upsertListFlat = new ArrayList<>();
-    for (var upsertRecord : upsertAttributes) {
-      upsertListFlat.addAll(upsertRecord);
-    }
-    return Stream.concat(createAttributes.stream(), upsertListFlat.stream()).toList();
-  }
-
-  private JsonApiWrapperWrite concatAndFormatUpsertResponse(List<HandleAttribute> records) {
+  private List<JsonApiDataLinks> formatUpsertResponse(List<HandleAttribute> records) {
     List<JsonApiDataLinks> dataLinksList = new ArrayList<>();
+
     for (var row : records) {
       if (row.type().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())) {
         String h = new String(row.handle(), StandardCharsets.UTF_8);
@@ -382,7 +396,16 @@ public class HandleService {
             new JsonApiDataLinks(h, DIGITAL_SPECIMEN.toString(), node, new JsonApiLinks(pidLink)));
       }
     }
-    return new JsonApiWrapperWrite(dataLinksList);
+    return dataLinksList;
+  }
+
+  private List<HandleAttribute> concatHandleAttributes(List<HandleAttribute> createAttributes,
+      List<List<HandleAttribute>> upsertAttributes) {
+    List<HandleAttribute> upsertListFlat = new ArrayList<>();
+    for (var upsertRecord : upsertAttributes) {
+      upsertListFlat.addAll(upsertRecord);
+    }
+    return Stream.concat(createAttributes.stream(), upsertListFlat.stream()).toList();
   }
 
   private void logUpdates(List<UpsertDigitalSpecimen> upsertRequests) {
@@ -531,12 +554,6 @@ public class HandleService {
           new JsonApiLinks(HANDLE_DOMAIN + handle)));
     }
     return new JsonApiWrapperWrite(dataList);
-  }
-
-  private String getRecordTypeFromTypeList(JsonNode recordAttributes,
-      Map<String, ObjectType> recordTypes) {
-    String pid = getPidName(recordAttributes.get(PID.get()).asText());
-    return recordTypes.get(pid).toString();
   }
 
   private void checkHandlesWritable(List<byte[]> handles) throws PidResolutionException {
