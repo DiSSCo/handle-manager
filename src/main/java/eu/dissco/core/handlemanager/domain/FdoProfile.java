@@ -35,7 +35,7 @@ public enum FdoProfile {
   PRIMARY_SPECIMEN_OBJECT_ID("primarySpecimenObjectId", 202),
   PRIMARY_SPECIMEN_OBJECT_ID_TYPE("primarySpecimenObjectIdType", 203),
   PRIMARY_SPECIMEN_OBJECT_ID_NAME("primarySpecimenObjectIdName", 204),
-  NORMALISED_SPECIMEN_OBJECT_ID("normalisedSpecimenObjectId", 205),
+  NORMALISED_SPECIMEN_OBJECT_ID("normalisedPrimarySpecimenObjectId", 205),
   SPECIMEN_OBJECT_ID_ABSENCE_REASON("specimenObjectIdAbsenceReason", 206),
   OTHER_SPECIMEN_IDS("otherSpecimenIds", 207),
   TOPIC_ORIGIN("topicOrigin", 208),

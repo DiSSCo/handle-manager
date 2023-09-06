@@ -113,7 +113,8 @@ public class HandleController {
       throws PidResolutionException, PidServiceInternalError, InvalidRequestException, PidCreationException {
     log.info("Received single POST request from user {}", authentication.getName());
     schemaValidator.validatePostRequest(request);
-    return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(List.of(request)));
+    return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(List.of(request)
+    ));
   }
 
   @Operation(summary = "Create multiple PID Records at a time.")

@@ -386,7 +386,7 @@ public class TestUtils {
     fdoRecord.add(
         new HandleAttribute(PRIMARY_SPECIMEN_OBJECT_ID.index(), handle,
             PRIMARY_SPECIMEN_OBJECT_ID.get(),
-            request.getNormalisedPrimarySpecimenObjectId().getBytes(StandardCharsets.UTF_8)));
+            request.getPrimarySpecimenObjectId().getBytes(StandardCharsets.UTF_8)));
 
     // 203: primarySpecimenObjectIdType
     fdoRecord.add(
@@ -883,6 +883,20 @@ public class TestUtils {
     }
     return new JsonApiWrapperWrite(dataNodes);
   }
+
+  public static JsonApiWrapperWrite givenRecordResponseWriteSmallResponse(
+      List<HandleAttribute> testDbRecord, List<byte[]> handles, ObjectType type) throws Exception {
+    List<JsonApiDataLinks> dataNodes = new ArrayList<>();
+    for (var handle : handles) {
+      JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
+      var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
+      dataNodes.add(
+          new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), type.toString(),
+              recordAttributes, pidLink));
+    }
+    return new JsonApiWrapperWrite(dataNodes);
+  }
+
 
   public static JsonApiWrapperWrite givenRecordResponseWriteGeneric(List<byte[]> handles,
       String recordType)
