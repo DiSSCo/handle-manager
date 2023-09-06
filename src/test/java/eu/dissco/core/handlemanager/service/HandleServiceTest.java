@@ -1,10 +1,10 @@
 package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.domain.FdoProfile.HS_ADMIN;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_URL;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_DO_PID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_MEDIA_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID_TYPE;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_LOCAL_ID;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
@@ -225,11 +225,10 @@ class HandleServiceTest {
         .willReturn(attributeList);
 
     // When
-    Exception e = assertThrows(PidResolutionException.class, () -> {
-      service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-          PrimaryObjectIdType.GLOBAL,
-          SOURCE_SYSTEM_TESTVAL);
-    });
+    Exception e = assertThrows(PidResolutionException.class,
+        () -> service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
+            PrimaryObjectIdType.GLOBAL,
+            SOURCE_SYSTEM_TESTVAL));
 
     // Then
     assertThat(e).hasMessage(
@@ -310,7 +309,7 @@ class HandleServiceTest {
         RECORD_TYPE_DS);
     List<HandleAttribute> digitalSpecimen = genDigitalSpecimenAttributes(handle);
     var digitalSpecimenSublist = digitalSpecimen.stream()
-        .filter(row -> row.type().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())).toList();
+        .filter(row -> row.getType().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())).toList();
 
     var responseExpected = givenRecordResponseWriteSmallResponse(digitalSpecimenSublist,
         List.of(handle),
@@ -342,9 +341,8 @@ class HandleServiceTest {
         digitalSpecimen);
 
     // When
-    Exception e = assertThrows(PidCreationException.class, () -> {
-      service.createRecords(List.of(request));
-    });
+    Exception e = assertThrows(PidCreationException.class,
+        () -> service.createRecords(List.of(request)));
 
     // Then
     assertThat(e).hasMessage(
@@ -360,7 +358,8 @@ class HandleServiceTest {
         RECORD_TYPE_MEDIA);
     var handleRecord = genMediaObjectAttributes(handle);
     var handleRecordSublist = handleRecord.stream().filter(
-            row -> row.type().equals(MEDIA_URL.get()) || row.type().equals(SUBJECT_LOCAL_ID.get()))
+            row -> row.getType().equals(PRIMARY_MEDIA_ID.get()) || row.getType()
+                .equals(LINKED_DO_PID.get()))
         .toList();
 
     var responseExpected = givenRecordResponseWriteSmallResponse(handleRecordSublist,
@@ -454,9 +453,9 @@ class HandleServiceTest {
               RECORD_TYPE_DS));
     }
     var sublist = Stream.concat(genDigitalSpecimenAttributes(handles.get(0)).stream()
-            .filter(row -> row.type().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())),
+            .filter(row -> row.getType().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())),
         genDigitalSpecimenAttributes(handles.get(1)).stream()
-            .filter(row -> row.type().equals(PRIMARY_SPECIMEN_OBJECT_ID.get()))).toList();
+            .filter(row -> row.getType().equals(PRIMARY_SPECIMEN_OBJECT_ID.get()))).toList();
 
     var responseExpected = givenRecordResponseWriteSmallResponse(
         sublist, handles, ObjectType.DIGITAL_SPECIMEN);
@@ -569,9 +568,11 @@ class HandleServiceTest {
       requests.add(genCreateRecordRequest(givenMediaRequestObject(), RECORD_TYPE_MEDIA));
     }
     var sublist = Stream.concat(genMediaObjectAttributes(handles.get(0)).stream().filter(
-                row -> row.type().equals(MEDIA_URL.get()) || row.type().equals(SUBJECT_LOCAL_ID.get())),
+                row -> row.getType().equals(PRIMARY_MEDIA_ID.get()) || row.getType()
+                    .equals(LINKED_DO_PID.get())),
             genMediaObjectAttributes(handles.get(1)).stream().filter(
-                row -> row.type().equals(MEDIA_URL.get()) || row.type().equals(SUBJECT_LOCAL_ID.get())))
+                row -> row.getType().equals(PRIMARY_MEDIA_ID.get()) || row.getType()
+                    .equals(LINKED_DO_PID.get())))
         .toList();
 
     var responseExpected = givenRecordResponseWriteSmallResponse(sublist, handles,
