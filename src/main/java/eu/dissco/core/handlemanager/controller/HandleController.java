@@ -73,7 +73,8 @@ public class HandleController {
       return ResponseEntity.status(HttpStatus.OK).body(node);
     }
     throw new PidResolutionException(
-        "Unable to resolve PIDs outside DiSSCo namespace. PID must start with prefix 20.5000.1025");
+        "Unable to resolve PIDs outside DiSSCo namespace. PID must start with prefix "
+            + applicationProperties.getPrefix());
   }
 
   @Operation(summary = "Resolve multiple PID records")
