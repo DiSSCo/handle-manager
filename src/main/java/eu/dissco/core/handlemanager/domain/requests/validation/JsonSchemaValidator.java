@@ -27,17 +27,16 @@ import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MappingRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MasRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
-import eu.dissco.core.handlemanager.domain.requests.objects.TombstoneRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.SourceSystemRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.TombstoneRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
+import jakarta.validation.constraints.NotEmpty;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Stream;
-
-import jakarta.validation.constraints.NotEmpty;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
@@ -146,13 +145,14 @@ public class JsonSchemaValidator {
 
     // Allow null if specified
     configBuilder.forFields()
-        .withNullableCheck(field ->  field.getAnnotationConsideringFieldAndGetter(Nullable.class) != null);
+        .withNullableCheck(
+            field -> field.getAnnotationConsideringFieldAndGetter(Nullable.class) != null);
 
     return configBuilder.build();
   }
 
   private void setPatchRequestAttributesJsonNodes() {
-    var schemaGenerator = new SchemaGenerator( attributesSchemaConfig() );
+    var schemaGenerator = new SchemaGenerator(attributesSchemaConfig());
     handlePatchReqJsonNode = schemaGenerator.generateSchema(HandleRecordRequest.class);
     doiPatchReqJsonNode = schemaGenerator.generateSchema(DoiRecordRequest.class);
     digitalSpecimenPatchReqJsonNode = schemaGenerator.generateSchema(DigitalSpecimenRequest.class);
@@ -212,13 +212,11 @@ public class JsonSchemaValidator {
         .withAdditionalPropertiesResolver(field -> field.getType().getErasedType() == JsonNode.class
             ? null : Void.class);
 
-
     configBuilder.forTypesInGeneral()
         .withEnumResolver(scope -> scope.getType().getErasedType().isEnum()
             ? Stream.of(scope.getType().getErasedType().getEnumConstants())
             .map(v -> ((Enum) v).name()).toList()
             : null);
-
 
     return configBuilder.build();
   }
@@ -257,7 +255,7 @@ public class JsonSchemaValidator {
   public void validatePostRequest(JsonNode requestRoot) throws InvalidRequestException {
     var validationErrors = postReqSchema.validate(requestRoot);
     if (!validationErrors.isEmpty()) {
-      throw new InvalidRequestException(setErrorMessage(validationErrors, "POST"));
+      throw new InvalidRequestException(setErrorMessage(validationErrors, "POST", null));
     }
 
     ObjectType type = ObjectType.fromString(requestRoot.get(NODE_DATA).get(NODE_TYPE).asText());
@@ -281,7 +279,8 @@ public class JsonSchemaValidator {
   public void validatePatchRequest(JsonNode requestRoot) throws InvalidRequestException {
     var validationErrors = patchReqSchema.validate(requestRoot);
     if (!validationErrors.isEmpty()) {
-      throw new InvalidRequestException(setErrorMessage(validationErrors, "PATCH (update)"));
+      throw new InvalidRequestException(
+          setErrorMessage(validationErrors, "PATCH (update)", null));
     }
     ObjectType type = ObjectType.fromString(requestRoot.get(NODE_DATA).get(NODE_TYPE).asText());
     var attributes = requestRoot.get(NODE_DATA).get(NODE_ATTRIBUTES);
@@ -304,18 +303,20 @@ public class JsonSchemaValidator {
   public void validatePutRequest(JsonNode requestRoot) throws InvalidRequestException {
     var validationErrors = putReqSchema.validate(requestRoot);
     if (!validationErrors.isEmpty()) {
-      throw new InvalidRequestException(setErrorMessage(validationErrors, "PUT (tombstone)"));
+      throw new InvalidRequestException(
+          setErrorMessage(validationErrors, "PUT (tombstone)", null));
     }
     var attributes = requestRoot.get(NODE_DATA).get(NODE_ATTRIBUTES);
     validateTombstoneRequestAttributes(attributes);
   }
 
 
-  private void validateTombstoneRequestAttributes(JsonNode requestAttributes) throws InvalidRequestException {
+  private void validateTombstoneRequestAttributes(JsonNode requestAttributes)
+      throws InvalidRequestException {
     var validationErrors = tombstoneReqSchema.validate(requestAttributes);
     if (!validationErrors.isEmpty()) {
       throw new InvalidRequestException(
-          setErrorMessage(validationErrors, ObjectType.TOMBSTONE.toString()));
+          setErrorMessage(validationErrors, ObjectType.TOMBSTONE.toString(), requestAttributes));
     }
   }
 
@@ -323,11 +324,13 @@ public class JsonSchemaValidator {
       ObjectType type) throws InvalidRequestException {
     var validationErrors = schema.validate(requestAttributes);
     if (!validationErrors.isEmpty()) {
-      throw new InvalidRequestException(setErrorMessage(validationErrors, String.valueOf(type)));
+      throw new InvalidRequestException(
+          setErrorMessage(validationErrors, String.valueOf(type), requestAttributes));
     }
   }
 
-  private String setErrorMessage(Set<ValidationMessage> validationErrors, String type) {
+  private String setErrorMessage(Set<ValidationMessage> validationErrors, String type,
+      JsonNode requestAttributes) {
     Set<String> missingAttributes = new HashSet<>();
     Set<String> unrecognizedAttributes = new HashSet<>();
     Set<String> enumErrors = new HashSet<>();
@@ -338,10 +341,12 @@ public class JsonSchemaValidator {
         missingAttributes.add(Arrays.toString(validationError.getArguments()));
       } else if (validationError.getType().equals("additionalProperties")) {
         unrecognizedAttributes.add(Arrays.toString(validationError.getArguments()));
-      } else if (validationError.getType().equals("enum")){
-        enumErrors.add(validationError.getMessage());
-      }
-      else {
+      } else if (validationError.getType().equals("enum")) {
+        var badEnumValue = getProblemEnumValue(requestAttributes, validationError.getPath());
+        var message = validationError.getMessage() + ". invalid value: " + badEnumValue;
+        enumErrors.add(message);
+        log.error("Bad enum val: {}", badEnumValue);
+      } else {
         otherErrors.add(validationError.getMessage());
       }
     }
@@ -360,6 +365,15 @@ public class JsonSchemaValidator {
     }
     log.error("Json Schema Validation error." + message);
     return message;
+  }
+
+  private String getProblemEnumValue(JsonNode request, String path) {
+    path = path.replace("$.", "");
+    try {
+      return request.get(path).asText();
+    } catch (NullPointerException npe) {
+      return "Unable to parse problem enum value";
+    }
   }
 
 }
