@@ -343,8 +343,7 @@ public class JsonSchemaValidator {
         unrecognizedAttributes.add(Arrays.toString(validationError.getArguments()));
       } else if (validationError.getType().equals("enum")) {
         var badEnumValue = getProblemEnumValue(requestAttributes, validationError.getPath());
-        var message = validationError.getMessage() + ". invalid value: " + badEnumValue;
-        enumErrors.add(message);
+        enumErrors.add(validationError.getMessage() + ". invalid value: " + badEnumValue);
         log.error("Bad enum val: {}", badEnumValue);
       } else {
         otherErrors.add(validationError.getMessage());
