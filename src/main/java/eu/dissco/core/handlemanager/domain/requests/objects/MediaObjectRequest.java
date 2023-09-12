@@ -45,7 +45,7 @@ public class MediaObjectRequest extends DoiRecordRequest {
   private final String derivedFromEntity;
   private final String licenseName;
   @Nullable
-  private final String licenseUrl;
+  private final String license;
   @Nullable
   private final String rightsholderName;
   @Nullable
@@ -82,7 +82,7 @@ public class MediaObjectRequest extends DoiRecordRequest {
       String mediaMimeType,
       String derivedFromEntity,
       String licenseName,
-      String licenseUrl,
+      String license,
       String rightsholderPid,
       String rightsholderName,
       PrimaryObjectIdType rightsholderPidType,
@@ -105,7 +105,7 @@ public class MediaObjectRequest extends DoiRecordRequest {
     this.mediaMimeType = mediaMimeType;
     this.derivedFromEntity = derivedFromEntity;
     this.licenseName = licenseName;
-    this.licenseUrl = licenseUrl;
+    this.license = license;
     this.rightsholderPid = rightsholderPid == null ? mediaHost : rightsholderPid;
     this.rightsholderName = rightsholderName;
     this.rightsholderPidType = rightsholderPidType;

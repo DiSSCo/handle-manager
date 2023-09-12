@@ -324,8 +324,8 @@ public class FdoRecordService {
     if (request.getLicenseName() != null) {
       fdoRecord.add(new HandleAttribute(LICENSE_NAME, handle, request.getLicenseName()));
     }
-    if (request.getLicenseUrl() != null) {
-      fdoRecord.add(new HandleAttribute(LICENSE_URL, handle, request.getLicenseUrl()));
+    if (request.getLicense() != null) {
+      fdoRecord.add(new HandleAttribute(LICENSE_URL, handle, request.getLicense()));
     }
     var rightsholderName = setHostName(request.getRightsholderName(), request.getRightsholderPid(),
         handle, RIGHTSHOLDER_NAME);

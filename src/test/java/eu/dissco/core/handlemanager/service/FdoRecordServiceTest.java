@@ -181,7 +181,6 @@ class FdoRecordServiceTest {
       DERIVED_FROM_ENTITY.get(), LICENSE_NAME.get(), LICENSE_URL.get(), RIGHTSHOLDER_NAME.get(),
       RIGHTSHOLDER_PID.get(), RIGHTSHOLDER_PID_TYPE.get(), DC_TERMS_CONFORMS.get());
 
-
   private static final Set<String> DS_FIELDS_OPTIONAL = Set.of(
       PRIMARY_SPECIMEN_OBJECT_ID_NAME.get(),
       OTHER_SPECIMEN_IDS.get(), TOPIC_ORIGIN.get(), TOPIC_DISCIPLINE.get(), TOPIC_CATEGORY.get(),

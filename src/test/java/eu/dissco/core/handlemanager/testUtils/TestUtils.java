@@ -574,9 +574,9 @@ public class TestUtils {
       fdoRecord.add(
           new HandleAttribute(LICENSE_NAME, handle, request.getLicenseName()));
     }
-    if (request.getLicenseUrl() != null) {
+    if (request.getLicense() != null) {
       fdoRecord.add(
-          new HandleAttribute(LICENSE_URL, handle, request.getLicenseUrl()));
+          new HandleAttribute(LICENSE_URL, handle, request.getLicense()));
     }
     if (request.getRightsholderName() != null) {
       fdoRecord.add(
