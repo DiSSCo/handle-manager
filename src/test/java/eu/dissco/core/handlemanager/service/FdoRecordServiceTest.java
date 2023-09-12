@@ -169,12 +169,12 @@ class FdoRecordServiceTest {
 
   private static final Set<String> MEDIA_FIELDS_MANDATORY = Set.of(MEDIA_HOST.get(),
       IS_DERIVED_FROM_SPECIMEN.get(), LINKED_DO_PID.get(), LINKED_DO_TYPE.get(),
-      RIGHTSHOLDER_PID.get());
+      RIGHTSHOLDER_PID.get(), PRIMARY_MEDIA_ID.get());
 
   private static final Set<String> MEDIA_FIELDS_OPTIONAL = Set.of(
       MEDIA_HOST.get(), MEDIA_HOST_NAME.get(), MEDIA_FORMAT.get(), IS_DERIVED_FROM_SPECIMEN.get(),
       LINKED_DO_PID.get(),
-      LINKED_DO_TYPE.get(), LINKED_ATTRIBUTE.get(), PRIMARY_MEDIA_ID.get(),
+      LINKED_DO_TYPE.get(), LINKED_ATTRIBUTE.get(),
       PRIMARY_MO_ID_TYPE.get(),
       PRIMARY_MO_ID_NAME.get(), PRIMARY_MO_TYPE.get(),
       MEDIA_MIME_TYPE.get(),
@@ -202,7 +202,7 @@ class FdoRecordServiceTest {
   private ApplicationProperties appProperties;
   private static final int HANDLE_QTY = 15;
   private static final int DOI_QTY = 19;
-  private static final int MEDIA_QTY = DOI_QTY + 8;
+  private static final int MEDIA_QTY = DOI_QTY + 9;
   private static final int MEDIA_OPTIONAL_QTY = DOI_QTY + 19;
   private static final int DS_MANDATORY_QTY = 24;
   private static final int DS_OPTIONAL_QTY = 37;

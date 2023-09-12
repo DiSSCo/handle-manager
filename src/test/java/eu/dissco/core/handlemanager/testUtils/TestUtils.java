@@ -762,7 +762,7 @@ public class TestUtils {
         REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL,
         MEDIA_HOST_TESTVAL, MEDIA_HOST_NAME_TESTVAL, null, Boolean.TRUE, LINKED_DO_PID_TESTVAL,
-        LINKED_DIGITAL_OBJECT_TYPE_TESTVAL, null, null, null, null, null, null, null,
+        LINKED_DIGITAL_OBJECT_TYPE_TESTVAL, null, HANDLE, null, null, null, null, null,
         LICENSE_NAME_TESTVAL,
         null, null, null, null, null
     );

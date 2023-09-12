@@ -31,7 +31,6 @@ public class MediaObjectRequest extends DoiRecordRequest {
   private final LinkedDigitalObjectType linkedDigitalObjectType;
   @Nullable
   private final String linkedAttribute;
-  @Nullable
   private final String primaryMediaId;
   @Nullable
   private final PrimaryObjectIdType primaryMediaObjectIdType;

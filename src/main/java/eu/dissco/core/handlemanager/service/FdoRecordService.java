@@ -295,10 +295,9 @@ public class FdoRecordService {
       fdoRecord.add(
           new HandleAttribute(LINKED_ATTRIBUTE, handle, request.getLinkedAttribute()));
     }
-    if (request.getPrimaryMediaId() != null) {
-      fdoRecord.add(
-          new HandleAttribute(PRIMARY_MEDIA_ID, handle, request.getPrimaryMediaId()));
-    }
+    fdoRecord.add(
+        new HandleAttribute(PRIMARY_MEDIA_ID, handle, request.getPrimaryMediaId()));
+
     if (request.getPrimaryMediaObjectIdType() != null) {
       fdoRecord.add(
           new HandleAttribute(PRIMARY_MO_TYPE, handle,
