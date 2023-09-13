@@ -255,7 +255,7 @@ public class JsonSchemaValidator {
   public void validatePostRequest(JsonNode requestRoot) throws InvalidRequestException {
     var validationErrors = postReqSchema.validate(requestRoot);
     if (!validationErrors.isEmpty()) {
-      throw new InvalidRequestException(setErrorMessage(validationErrors, "POST", null));
+      throw new InvalidRequestException(setErrorMessage(validationErrors, "POST"));
     }
 
     ObjectType type = ObjectType.fromString(requestRoot.get(NODE_DATA).get(NODE_TYPE).asText());
@@ -280,7 +280,7 @@ public class JsonSchemaValidator {
     var validationErrors = patchReqSchema.validate(requestRoot);
     if (!validationErrors.isEmpty()) {
       throw new InvalidRequestException(
-          setErrorMessage(validationErrors, "PATCH (update)", null));
+          setErrorMessage(validationErrors, "PATCH (update)"));
     }
     ObjectType type = ObjectType.fromString(requestRoot.get(NODE_DATA).get(NODE_TYPE).asText());
     var attributes = requestRoot.get(NODE_DATA).get(NODE_ATTRIBUTES);
@@ -304,7 +304,7 @@ public class JsonSchemaValidator {
     var validationErrors = putReqSchema.validate(requestRoot);
     if (!validationErrors.isEmpty()) {
       throw new InvalidRequestException(
-          setErrorMessage(validationErrors, "PUT (tombstone)", null));
+          setErrorMessage(validationErrors, "PUT (tombstone)"));
     }
     var attributes = requestRoot.get(NODE_DATA).get(NODE_ATTRIBUTES);
     validateTombstoneRequestAttributes(attributes);
@@ -327,6 +327,10 @@ public class JsonSchemaValidator {
       throw new InvalidRequestException(
           setErrorMessage(validationErrors, String.valueOf(type), requestAttributes));
     }
+  }
+
+  private String setErrorMessage(Set<ValidationMessage> validationErrors, String type) {
+    return setErrorMessage(validationErrors, type);
   }
 
   private String setErrorMessage(Set<ValidationMessage> validationErrors, String type,
