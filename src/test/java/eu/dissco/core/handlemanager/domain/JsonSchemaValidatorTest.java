@@ -374,7 +374,7 @@ class JsonSchemaValidatorTest {
       schemaValidator.validatePostRequest(request);
     });
 
-    assertThat(e.getMessage()).contains(ENUM_MSG).contains(targetEnum);
+    assertThat(e.getMessage()).contains(ENUM_MSG).contains(targetEnum).contains(UNKNOWN_VAL);
   }
 
   @Test
