@@ -1,13 +1,18 @@
 package eu.dissco.core.handlemanager.repository;
 
 import static eu.dissco.core.handlemanager.database.jooq.Tables.HANDLES;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.*;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.HS_ADMIN;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MATERIAL_SAMPLE_TYPE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_RECORD_ISSUE_NUMBER;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_STATUS;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_STATUS_TESTVAL;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDoiRecordAttributes;
@@ -16,7 +21,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAt
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordFullAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRecordAttributesAltLoc;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.jooq.impl.DSL.exp;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import eu.dissco.core.handlemanager.database.jooq.tables.Handles;
@@ -163,7 +167,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     postAttributes(postedAttributes);
     List<HandleAttribute> expected = new ArrayList<>();
     for (var row : postedAttributes) {
-      if (row.type().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())) {
+      if (row.getType().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())) {
         expected.add(row);
       }
     }
@@ -483,10 +487,10 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     List<Query> queryList = new ArrayList<>();
     for (var handleAttribute : rows) {
       var query = context.insertInto(Handles.HANDLES)
-          .set(Handles.HANDLES.HANDLE, handleAttribute.handle())
-          .set(Handles.HANDLES.IDX, handleAttribute.index())
-          .set(Handles.HANDLES.TYPE, handleAttribute.type().getBytes(StandardCharsets.UTF_8))
-          .set(Handles.HANDLES.DATA, handleAttribute.data()).set(Handles.HANDLES.TTL, 86400)
+          .set(Handles.HANDLES.HANDLE, handleAttribute.getHandle())
+          .set(Handles.HANDLES.IDX, handleAttribute.getIndex())
+          .set(Handles.HANDLES.TYPE, handleAttribute.getType().getBytes(StandardCharsets.UTF_8))
+          .set(Handles.HANDLES.DATA, handleAttribute.getData()).set(Handles.HANDLES.TTL, 86400)
           .set(Handles.HANDLES.TIMESTAMP, CREATED.getEpochSecond())
           .set(Handles.HANDLES.ADMIN_READ, true).set(Handles.HANDLES.ADMIN_WRITE, true)
           .set(Handles.HANDLES.PUB_READ, true).set(Handles.HANDLES.PUB_WRITE, false);
@@ -533,13 +537,14 @@ class HandleRepositoryIT extends BaseRepositoryIT {
   private List<HandleAttribute> incrementVersion(List<HandleAttribute> handleAttributes,
       boolean increaseVersionNum) {
     for (int i = 0; i < handleAttributes.size(); i++) {
-      if (handleAttributes.get(i).type().equals(PID_RECORD_ISSUE_NUMBER.get())) {
+      if (handleAttributes.get(i).getType().equals(PID_RECORD_ISSUE_NUMBER.get())) {
         var removedRecord = handleAttributes.remove(i);
-        var currentVersion = Integer.parseInt(new String(removedRecord.data()));
+        var currentVersion = Integer.parseInt(new String(removedRecord.getData()));
         var newVersionNum = increaseVersionNum ? currentVersion + 1 : currentVersion - 1;
         byte[] issueNum = String.valueOf(newVersionNum).getBytes(StandardCharsets.UTF_8);
         handleAttributes.add(i,
-            new HandleAttribute(removedRecord.index(), removedRecord.handle(), removedRecord.type(),
+            new HandleAttribute(removedRecord.getIndex(), removedRecord.getHandle(),
+                removedRecord.getType(),
                 issueNum));
       }
     }

@@ -19,7 +19,6 @@ public class AnnotationRequest extends HandleRecordRequest {
   private final String annotationTopic;
   @JsonProperty(required = true)
   private final ReplaceOrAppend replaceOrAppend;
-  @Nullable
   private final Boolean accessRestricted;
   @Nullable
   private final String linkedObjectUrl;
