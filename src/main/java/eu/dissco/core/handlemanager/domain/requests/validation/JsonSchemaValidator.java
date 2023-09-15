@@ -330,7 +330,7 @@ public class JsonSchemaValidator {
   }
 
   private String setErrorMessage(Set<ValidationMessage> validationErrors, String type) {
-    return setErrorMessage(validationErrors, type);
+    return setErrorMessage(validationErrors, type, null);
   }
 
   private String setErrorMessage(Set<ValidationMessage> validationErrors, String type,
