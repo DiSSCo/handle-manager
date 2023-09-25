@@ -622,11 +622,15 @@ public class FdoRecordService {
 
     var updatedAttributeList = new ArrayList<>(updateRequestMap.entrySet().stream()
         .filter(entry -> entry.getValue() != null)
+        .filter(entry -> !entry.getKey().equals("sourceSystemId"))
         .map(entry -> new HandleAttribute(FdoProfile.retrieveIndex(entry.getKey()), handle,
             entry.getKey(),
             entry.getValue().getBytes(StandardCharsets.UTF_8)))
         .toList());
     updatedAttributeList.addAll(addResolvedNames(updateRequestMap, handle));
+    if (updateRequestMap.containsKey("sourceSystemId")) {
+      log.warn("Update request contains Source System Id. Value is being ignored");
+    }
     return updatedAttributeList;
   }
 
