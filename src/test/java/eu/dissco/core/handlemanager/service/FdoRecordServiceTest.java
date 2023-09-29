@@ -147,6 +147,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.core.env.Environment;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -200,6 +201,9 @@ class FdoRecordServiceTest {
   private HandleRepository handleRepository;
   @Mock
   private ApplicationProperties appProperties;
+  @Mock
+  Environment env;
+  private static final String DOI = "doi";
   private static final int HANDLE_QTY = 15;
   private static final int DOI_QTY = 19;
   private static final int MEDIA_QTY = DOI_QTY + 9;
@@ -212,10 +216,11 @@ class FdoRecordServiceTest {
   @BeforeEach
   void init() {
     fdoRecordService = new FdoRecordService(TRANSFORMER_FACTORY, DOC_BUILDER_FACTORY, pidResolver,
-        MAPPER, handleRepository, appProperties);
+        MAPPER, handleRepository, appProperties, env);
     given(appProperties.getApiUrl()).willReturn(API_URL);
     given(appProperties.getOrchestrationUrl()).willReturn(ORCHESTRATION_URL);
     given(appProperties.getUiUrl()).willReturn(UI_URL);
+    given(env.matchesProfiles(DOI)).willReturn(false);
   }
 
   @Test
@@ -244,10 +249,29 @@ class FdoRecordServiceTest {
 
     // Then
     assertThat(result).hasSize(DOI_QTY);
-    assertThat(hasCorrectLocations(result, request.getLocations(), ObjectType.HANDLE)).isTrue();
+    assertThat(
+        hasCorrectLocations(result, request.getLocations(), ObjectType.HANDLE, false)).isTrue();
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, DOI_FIELDS)).isTrue();
     assertThat(hasNoDuplicateElements(result)).isTrue();
+  }
+
+  @Test
+  void testPrepareDoiRecordAttributesDoiProfile() throws Exception {
+    // Given
+    given(pidResolver.getObjectName(any())).willReturn("placeholder");
+    var request = givenDoiRecordRequestObject();
+    given(env.matchesProfiles(DOI)).willReturn(true);
+
+    // When
+    var result = fdoRecordService.prepareDoiRecordAttributes(request, handle, ObjectType.DOI);
+
+    // Then
+    assertThat(result).hasSize(DOI_QTY);
+    assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
+    assertThat(hasCorrectElements(result, DOI_FIELDS)).isTrue();
+    assertThat(hasNoDuplicateElements(result)).isTrue();
+    assertThat(hasCorrectLocations(result, request.getLocations(), ObjectType.DOI, true)).isTrue();
   }
 
   @Test
@@ -263,7 +287,8 @@ class FdoRecordServiceTest {
     // Then
     assertThat(result).hasSize(MEDIA_QTY);
     assertThat(
-        hasCorrectLocations(result, request.getLocations(), ObjectType.MEDIA_OBJECT)).isTrue();
+        hasCorrectLocations(result, request.getLocations(), ObjectType.MEDIA_OBJECT,
+            false)).isTrue();
     assertThat(hasNoDuplicateElements(result)).isTrue();
     assertThat(hasCorrectElements(result, MEDIA_FIELDS_MANDATORY)).isTrue();
     assertThat(result).contains(
@@ -297,7 +322,8 @@ class FdoRecordServiceTest {
     // Then
 
     assertThat(
-        hasCorrectLocations(result, request.getLocations(), ObjectType.MEDIA_OBJECT)).isTrue();
+        hasCorrectLocations(result, request.getLocations(), ObjectType.MEDIA_OBJECT,
+            false)).isTrue();
     assertThat(hasNoDuplicateElements(result)).isTrue();
     assertThat(hasCorrectElements(result, MEDIA_FIELDS_OPTIONAL)).isTrue();
     assertThat(result).hasSize(MEDIA_OPTIONAL_QTY);
@@ -319,7 +345,8 @@ class FdoRecordServiceTest {
     // Then
     assertThat(result).hasSize(MEDIA_QTY - 1);
     assertThat(
-        hasCorrectLocations(result, request.getLocations(), ObjectType.MEDIA_OBJECT)).isTrue();
+        hasCorrectLocations(result, request.getLocations(), ObjectType.MEDIA_OBJECT,
+            false)).isTrue();
     assertThat(hasNoDuplicateElements(result)).isTrue();
     assertThat(hasCorrectElements(result, MEDIA_FIELDS_MANDATORY)).isTrue();
   }
@@ -337,7 +364,8 @@ class FdoRecordServiceTest {
     // Then
     assertThat(result).hasSize(DS_MANDATORY_QTY);
     assertThat(
-        hasCorrectLocations(result, request.getLocations(), ObjectType.DIGITAL_SPECIMEN)).isTrue();
+        hasCorrectLocations(result, request.getLocations(), ObjectType.DIGITAL_SPECIMEN,
+            false)).isTrue();
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, DOI_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, DS_FIELDS_MANDATORY)).isTrue();
@@ -415,7 +443,8 @@ class FdoRecordServiceTest {
     // Then
     assertThat(result).hasSize(DS_OPTIONAL_QTY);
     assertThat(
-        hasCorrectLocations(result, request.getLocations(), ObjectType.DIGITAL_SPECIMEN)).isTrue();
+        hasCorrectLocations(result, request.getLocations(), ObjectType.DIGITAL_SPECIMEN,
+            false)).isTrue();
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, DOI_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, DS_FIELDS_MANDATORY)).isTrue();
@@ -437,7 +466,8 @@ class FdoRecordServiceTest {
 
     // Then
     assertThat(result).hasSize(ANNOTATION_QTY);
-    assertThat(hasCorrectLocations(result, request.getLocations(), ObjectType.ANNOTATION)).isTrue();
+    assertThat(
+        hasCorrectLocations(result, request.getLocations(), ObjectType.ANNOTATION, false)).isTrue();
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, ANNOTATION_FIELDS)).isTrue();
     assertThat(hasNoDuplicateElements(result)).isTrue();
@@ -454,7 +484,7 @@ class FdoRecordServiceTest {
 
     // Then
     assertThat(result).hasSize(HANDLE_QTY + 1);
-    assertThat(hasCorrectLocations(result, request.getLocations(), ObjectType.MAS)).isTrue();
+    assertThat(hasCorrectLocations(result, request.getLocations(), ObjectType.MAS, false)).isTrue();
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, Set.of(MAS_NAME.get()))).isTrue();
     assertThat(hasNoDuplicateElements(result)).isTrue();
@@ -503,7 +533,8 @@ class FdoRecordServiceTest {
     // Then
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
     assertThat(
-        hasCorrectLocations(result, request.getLocations(), ObjectType.SOURCE_SYSTEM)).isTrue();
+        hasCorrectLocations(result, request.getLocations(), ObjectType.SOURCE_SYSTEM,
+            false)).isTrue();
     assertThat(result).hasSize(HANDLE_QTY + 1);
     assertThat(hasNoDuplicateElements(result)).isTrue();
   }
@@ -803,8 +834,8 @@ class FdoRecordServiceTest {
   }
 
   private boolean hasCorrectLocations(List<HandleAttribute> fdoRecord, String[] userLocations,
-      ObjectType type) throws Exception {
-    var expectedLocations = new String(setLocations(userLocations, HANDLE, type));
+      ObjectType type, boolean isDoiProfileTest) throws Exception {
+    var expectedLocations = new String(setLocations(userLocations, HANDLE, type, isDoiProfileTest));
     for (var row : fdoRecord) {
       if (row.getType().equals(LOC.get())) {
         return (new String(row.getData(), StandardCharsets.UTF_8)).equals(expectedLocations);

@@ -75,6 +75,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.FdoProfile;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.objects.AnnotationRequest;
@@ -116,6 +117,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 
@@ -130,6 +132,7 @@ public class FdoRecordService {
   private final ObjectMapper mapper;
   private final HandleRepository handleRep;
   private final ApplicationProperties appProperties;
+  private final Environment env;
   private static final String HANDLE_DOMAIN = "https://hdl.handle.net/";
   private static final String ROR_API_DOMAIN = "https://api.ror.org/organizations/";
   private static final String ROR_DOMAIN = "https://ror.org/";
@@ -733,7 +736,11 @@ public class FdoRecordService {
   }
 
   private String[] concatLocations(String[] userLocations, String handle, ObjectType type) {
-    ArrayList<String> objectLocations = new ArrayList<>(List.of(defaultLocations(handle, type)));
+    ArrayList<String> objectLocations = new ArrayList<>();
+
+    if (!env.matchesProfiles(Profiles.DOI)) {
+      objectLocations.addAll(List.of(defaultLocations(handle, type)));
+    }
     if (userLocations != null) {
       objectLocations.addAll(List.of(userLocations));
     }
