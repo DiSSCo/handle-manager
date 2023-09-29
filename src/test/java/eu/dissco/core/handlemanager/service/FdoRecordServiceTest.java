@@ -64,6 +64,7 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.WAS_DERIVED_FROM_EN
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.API_URL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.DIGITAL_OBJECT_TYPE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.DOC_BUILDER_FACTORY;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.DOI_DOMAIN;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.FDO_PROFILE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_DOMAIN;
@@ -133,6 +134,7 @@ import eu.dissco.core.handlemanager.domain.requests.vocabulary.media.PrimaryMedi
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
+import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
 import eu.dissco.core.handlemanager.web.PidResolver;
 import java.nio.charset.StandardCharsets;
@@ -147,7 +149,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.springframework.core.env.Environment;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -202,7 +203,7 @@ class FdoRecordServiceTest {
   @Mock
   private ApplicationProperties appProperties;
   @Mock
-  Environment env;
+  ProfileProperties profileProperties;
   private static final String DOI = "doi";
   private static final int HANDLE_QTY = 15;
   private static final int DOI_QTY = 19;
@@ -216,11 +217,11 @@ class FdoRecordServiceTest {
   @BeforeEach
   void init() {
     fdoRecordService = new FdoRecordService(TRANSFORMER_FACTORY, DOC_BUILDER_FACTORY, pidResolver,
-        MAPPER, handleRepository, appProperties, env);
+        MAPPER, handleRepository, appProperties, profileProperties);
     given(appProperties.getApiUrl()).willReturn(API_URL);
     given(appProperties.getOrchestrationUrl()).willReturn(ORCHESTRATION_URL);
     given(appProperties.getUiUrl()).willReturn(UI_URL);
-    given(env.matchesProfiles(DOI)).willReturn(false);
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
   }
 
   @Test
@@ -261,7 +262,7 @@ class FdoRecordServiceTest {
     // Given
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
     var request = givenDoiRecordRequestObject();
-    given(env.matchesProfiles(DOI)).willReturn(true);
+    given(profileProperties.getDomain()).willReturn(DOI_DOMAIN);
 
     // When
     var result = fdoRecordService.prepareDoiRecordAttributes(request, handle, ObjectType.DOI);
