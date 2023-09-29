@@ -101,7 +101,6 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -738,7 +737,7 @@ public class FdoRecordService {
   private String[] concatLocations(String[] userLocations, String handle, ObjectType type) {
     ArrayList<String> objectLocations = new ArrayList<>();
 
-    if (!Arrays.asList(env.getActiveProfiles()).contains("doi")) {
+    if (!env.matchesProfiles("doi")) {
       objectLocations.addAll(List.of(defaultLocations(handle, type)));
     }
     if (userLocations != null) {

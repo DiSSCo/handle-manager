@@ -203,8 +203,7 @@ class FdoRecordServiceTest {
   private ApplicationProperties appProperties;
   @Mock
   Environment env;
-  private static final String[] defaultProfile = new String[]{"default"};
-  private static final String[] doiProfile = new String[]{"doi"};
+  private static final String DOI = "doi";
   private static final int HANDLE_QTY = 15;
   private static final int DOI_QTY = 19;
   private static final int MEDIA_QTY = DOI_QTY + 9;
@@ -221,7 +220,7 @@ class FdoRecordServiceTest {
     given(appProperties.getApiUrl()).willReturn(API_URL);
     given(appProperties.getOrchestrationUrl()).willReturn(ORCHESTRATION_URL);
     given(appProperties.getUiUrl()).willReturn(UI_URL);
-    given(env.getActiveProfiles()).willReturn(defaultProfile);
+    given(env.matchesProfiles(DOI)).willReturn(false);
   }
 
   @Test
@@ -262,7 +261,7 @@ class FdoRecordServiceTest {
     // Given
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
     var request = givenDoiRecordRequestObject();
-    given(env.getActiveProfiles()).willReturn(doiProfile);
+    given(env.matchesProfiles(DOI)).willReturn(true);
 
     // When
     var result = fdoRecordService.prepareDoiRecordAttributes(request, handle, ObjectType.DOI);
