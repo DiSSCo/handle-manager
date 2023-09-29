@@ -10,15 +10,15 @@ import org.springframework.validation.annotation.Validated;
 @Data
 @Validated
 @Component
-@ConfigurationProperties("spring.profiles.active")
+@ConfigurationProperties("spring.profiles")
 public class ProfileProperties {
 
-  private String env;
+  private String active;
   private String domain;
 
   @PostConstruct
   void setDomain() {
-    if (env.equals(Profiles.DOI)) {
+    if (active.equals(Profiles.DOI)) {
       domain = "https://doi.org/";
     } else {
       domain = "https://hdl.handle.net/";
