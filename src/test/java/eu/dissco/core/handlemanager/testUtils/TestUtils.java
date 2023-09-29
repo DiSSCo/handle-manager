@@ -143,6 +143,7 @@ public class TestUtils {
   // Request Test Vals
   // Handles
   public static final String HANDLE_DOMAIN = "https://hdl.handle.net/";
+  public static final String DOI_DOMAIN = "https://doi.org/";
   public static final String ROR_DOMAIN = "https://ror.org/";
   public static final String FDO_PROFILE_TESTVAL = HANDLE_DOMAIN + "21.T11148/d8de0819e144e4096645";
   public static final String ISSUED_FOR_AGENT_TESTVAL = ROR_DOMAIN + "0566bfb96";

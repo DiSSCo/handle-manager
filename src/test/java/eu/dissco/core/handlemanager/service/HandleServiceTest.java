@@ -6,8 +6,10 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_MEDIA_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID_TYPE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.DOI_DOMAIN;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_DOMAIN;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_LIST_STR;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_URI;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
@@ -75,6 +77,7 @@ import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimaryObjectIdTy
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
+import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
@@ -101,6 +104,8 @@ class HandleServiceTest {
   private FdoRecordService fdoRecordService;
   @Mock
   private HandleGeneratorService hgService;
+  @Mock
+  private ProfileProperties profileProperties;
   private HandleService service;
   private List<byte[]> handles;
   private MockedStatic<Instant> mockedStatic;
@@ -108,7 +113,7 @@ class HandleServiceTest {
 
   @BeforeEach
   void setup() {
-    service = new HandleService(handleRep, fdoRecordService, hgService, MAPPER);
+    service = new HandleService(handleRep, fdoRecordService, hgService, MAPPER, profileProperties);
     initTime();
     initHandleList();
   }
@@ -131,6 +136,8 @@ class HandleServiceTest {
         genObjectNodeAttributeRecord(recordAttributeList));
 
     given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(recordAttributeList);
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
     var responseReceived = service.resolveSingleRecord(handle, path);
@@ -154,6 +161,7 @@ class HandleServiceTest {
         genObjectNodeAttributeRecord(recordAttributeList));
 
     given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(recordAttributeList);
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
     var responseReceived = service.resolveSingleRecord(handle, path);
@@ -184,10 +192,11 @@ class HandleServiceTest {
     for (byte[] handle : handles) {
       repositoryResponse.addAll(genHandleRecordAttributes(handle, ObjectType.HANDLE));
     }
+    var responseExpected = givenRecordResponseRead(handles, path, "PID");
 
     given(handleRep.resolveHandleAttributes(anyList())).willReturn(repositoryResponse);
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
-    var responseExpected = givenRecordResponseRead(handles, path, "PID");
     // When
     var responseReceived = service.resolveBatchRecord(handles, path);
 
@@ -204,6 +213,7 @@ class HandleServiceTest {
 
     given(handleRep.searchByNormalisedPhysicalIdentifierFullRecord(anyList()))
         .willReturn(expectedAttributes);
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
     var responseReceived = service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
@@ -244,6 +254,7 @@ class HandleServiceTest {
 
     given(handleRep.searchByNormalisedPhysicalIdentifierFullRecord(anyList()))
         .willReturn(expectedAttributes);
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
     var responseReceived = service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
@@ -274,6 +285,7 @@ class HandleServiceTest {
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(fdoRecordService.prepareHandleRecordAttributes(any(), any(),
         eq(ObjectType.HANDLE))).willReturn(handleRecord);
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
     var responseReceived = service.createRecords(List.of(request));
@@ -293,6 +305,33 @@ class HandleServiceTest {
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(fdoRecordService.prepareDoiRecordAttributes(any(), any(), eq(ObjectType.DOI))).willReturn(
         doiRecord);
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
+
+    // When
+    var responseReceived = service.createRecords(List.of(request));
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testCreateDoiRecordDoiProfile() throws Exception {
+    // Given
+    byte[] handle = handles.get(0);
+    var request = genCreateRecordRequest(givenDoiRecordRequestObject(), RECORD_TYPE_DOI);
+    var templateDataLinks = givenRecordResponseWrite(List.of(handle), RECORD_TYPE_DOI).data()
+        .get(0);
+    var doiLinks = new JsonApiLinks(DOI_DOMAIN + new String(handle));
+    var expectedData = new JsonApiDataLinks(
+        templateDataLinks.id(), templateDataLinks.type(), templateDataLinks.attributes(), doiLinks);
+    var responseExpected = new JsonApiWrapperWrite(List.of(expectedData));
+
+    List<HandleAttribute> doiRecord = genDoiRecordAttributes(handle, ObjectType.HANDLE);
+
+    given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
+    given(fdoRecordService.prepareDoiRecordAttributes(any(), any(), eq(ObjectType.DOI))).willReturn(
+        doiRecord);
+    given(profileProperties.getDomain()).willReturn(DOI_DOMAIN);
 
     // When
     var responseReceived = service.createRecords(List.of(request));
@@ -320,6 +359,7 @@ class HandleServiceTest {
         new ArrayList<>());
     given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(any(), any(), any())).willReturn(
         digitalSpecimen);
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
     var responseReceived = service.createRecords(List.of(request));
@@ -369,6 +409,7 @@ class HandleServiceTest {
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(fdoRecordService.prepareMediaObjectAttributes(any(), any(), any())).willReturn(
         handleRecordSublist);
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
     var responseReceived = service.createRecords(List.of(request));
@@ -388,6 +429,7 @@ class HandleServiceTest {
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(fdoRecordService.prepareMasRecordAttributes(any(), any(), eq(ObjectType.MAS))).willReturn(
         handleRecord);
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
     var responseReceived = service.createRecords(List.of(request));
@@ -411,7 +453,8 @@ class HandleServiceTest {
     given(fdoRecordService.prepareHandleRecordAttributes(any(), any(), any()))
         .willReturn(genHandleRecordAttributes(handles.get(0), ObjectType.HANDLE))
         .willReturn(genHandleRecordAttributes(handles.get(1), ObjectType.HANDLE));
-
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
+    
     // When
     var responseReceived = service.createRecords(requests);
 
@@ -434,6 +477,7 @@ class HandleServiceTest {
 
     given(hgService.genHandleList(handles.size())).willReturn(handles);
     given(fdoRecordService.prepareDoiRecordAttributes(any(), any(), any())).willReturn(flatList);
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
     var responseReceived = service.createRecords(requests);
@@ -464,6 +508,7 @@ class HandleServiceTest {
     given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(any(), any(), any()))
         .willReturn(genDigitalSpecimenAttributes(handles.get(0)))
         .willReturn(genDigitalSpecimenAttributes(handles.get(1)));
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
     var responseReceived = service.createRecords(requests);
@@ -486,6 +531,7 @@ class HandleServiceTest {
     given(fdoRecordService.prepareAnnotationAttributes(any(), any(), any()))
         .willReturn(genAnnotationAttributes(handles.get(0)))
         .willReturn(genAnnotationAttributes(handles.get(1)));
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
     var responseReceived = service.createRecords(requests);
@@ -507,6 +553,7 @@ class HandleServiceTest {
     given(fdoRecordService.prepareMappingAttributes(any(), any(), any()))
         .willReturn(genMappingAttributes(handles.get(0)))
         .willReturn(genMappingAttributes(handles.get(1)));
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
     var responseReceived = service.createRecords(requests);
@@ -529,6 +576,7 @@ class HandleServiceTest {
     given(fdoRecordService.prepareSourceSystemAttributes(any(), any(), any()))
         .willReturn(genSourceSystemAttributes(handles.get(0)))
         .willReturn(genSourceSystemAttributes(handles.get(1)));
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
     var responseReceived = service.createRecords(requests);
@@ -552,6 +600,7 @@ class HandleServiceTest {
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_ORGANISATION);
     given(hgService.genHandleList(handles.size())).willReturn(handles);
     given(fdoRecordService.prepareOrganisationAttributes(any(), any(), any())).willReturn(flatList);
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
     var responseReceived = service.createRecords(requests);
@@ -581,6 +630,7 @@ class HandleServiceTest {
     given(fdoRecordService.prepareMediaObjectAttributes(any(), any(), any()))
         .willReturn(genMediaObjectAttributes(handles.get(0)))
         .willReturn(genMediaObjectAttributes(handles.get(1)));
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
     var responseReceived = service.createRecords(requests);
@@ -600,6 +650,7 @@ class HandleServiceTest {
     given(handleRep.checkHandlesWritable(anyList())).willReturn(List.of(handle));
     given(fdoRecordService.prepareUpdateAttributes(any(), any(), any()))
         .willReturn(updatedAttributeRecord);
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
     var responseReceived = service.updateRecords(updateRequest, true);
@@ -620,6 +671,7 @@ class HandleServiceTest {
     given(fdoRecordService.prepareUpdateAttributes(any(), any(), any()))
         .willReturn(genUpdateRecordAttributesAltLoc(handles.get(0)))
         .willReturn(genUpdateRecordAttributesAltLoc(handles.get(1)));
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
     var responseReceived = service.updateRecords(updateRequest, true);
@@ -669,6 +721,7 @@ class HandleServiceTest {
     given(handleRep.checkHandlesWritable(anyList())).willReturn(handles);
     given(fdoRecordService.prepareTombstoneAttributes(any(), any())).willReturn(
         tombstoneAttributes);
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
     var responseReceived = service.archiveRecordBatch(archiveRequest);
@@ -698,6 +751,7 @@ class HandleServiceTest {
     given(handleRep.checkHandlesWritable(anyList())).willReturn(handles);
     given(fdoRecordService.prepareTombstoneAttributes(any(), any())).willReturn(
         tombstoneAttributes.get(0), tombstoneAttributes.get(1));
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
     var responseReceived = service.archiveRecordBatch(archiveRequest);
@@ -763,6 +817,7 @@ class HandleServiceTest {
         eq(MAPPER.valueToTree(existingRecordRequest)), any())).willReturn(
         existingRecordAttributes);
     given(hgService.genHandleList(anyInt())).willReturn(new ArrayList<>(List.of(newHandle)));
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
     var response = service.upsertDigitalSpecimens(requests);
@@ -811,6 +866,7 @@ class HandleServiceTest {
     given(fdoRecordService.prepareUpdateAttributes(any(), any(), any())).willReturn(
         existingRecord);
     given(hgService.genHandleList(0)).willReturn(new ArrayList<>());
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
     var response = service.upsertDigitalSpecimens(requests);
@@ -836,6 +892,7 @@ class HandleServiceTest {
     given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(any(), any(), any())).willReturn(
         newRecord);
     given(hgService.genHandleList(anyInt())).willReturn(List.of(handles.get(0)));
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
     var response = service.upsertDigitalSpecimens(requests);

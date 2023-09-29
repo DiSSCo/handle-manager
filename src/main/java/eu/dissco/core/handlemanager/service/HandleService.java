@@ -39,6 +39,7 @@ import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
+import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -60,11 +61,11 @@ import org.springframework.stereotype.Service;
 public class HandleService {
 
   private static final String INVALID_TYPE_ERROR = "Invalid request. Reason: unrecognized type. Check: ";
-  private static final String HANDLE_DOMAIN = "https://hdl.handle.net/";
   private final HandleRepository handleRep;
   private final FdoRecordService fdoRecordService;
   private final HandleGeneratorService hf;
   private final ObjectMapper mapper;
+  private final ProfileProperties profileProperties;
 
   // Resolve Record
   public JsonApiWrapperReadSingle resolveSingleRecord(byte[] handle, String path)
@@ -140,7 +141,7 @@ public class HandleService {
   // Response Formatting
 
   private String getPidName(String pidLink) {
-    return pidLink.substring(HANDLE_DOMAIN.length());
+    return pidLink.substring(profileProperties.getDomain().length());
   }
 
   private HashMap<String, List<HandleAttribute>> mapRecords(List<HandleAttribute> flatList) {
@@ -184,7 +185,7 @@ public class HandleService {
             .filter(row -> row.getType().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())).toList();
       }
       var rootNode = jsonFormatSingleRecord(subRecord);
-      String pidLink = HANDLE_DOMAIN + handleRecord.getKey();
+      String pidLink = profileProperties.getDomain() + handleRecord.getKey();
       dataLinksList.add(new JsonApiDataLinks(handleRecord.getKey(), type.toString(), rootNode,
           new JsonApiLinks(pidLink)));
     }
@@ -388,7 +389,7 @@ public class HandleService {
     for (var row : records) {
       if (row.getType().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())) {
         String h = new String(row.getHandle(), StandardCharsets.UTF_8);
-        String pidLink = HANDLE_DOMAIN + h;
+        String pidLink = profileProperties.getDomain() + h;
         var node = mapper.createObjectNode();
         node.put(PRIMARY_SPECIMEN_OBJECT_ID.get(),
             new String(row.getData(), StandardCharsets.UTF_8));
@@ -540,7 +541,7 @@ public class HandleService {
       var attributeNode = jsonFormatSingleRecord(updatedRecord);
       var type = recordTypes.get(handle).toString();
       dataList.add(new JsonApiDataLinks(handle, type, attributeNode,
-          new JsonApiLinks(HANDLE_DOMAIN + handle)));
+          new JsonApiLinks(profileProperties.getDomain() + handle)));
     }
     return new JsonApiWrapperWrite(dataList);
   }
@@ -551,7 +552,7 @@ public class HandleService {
       String handle = new String(archiveRecord.get(0).getHandle(), StandardCharsets.UTF_8);
       var attributeNode = jsonFormatSingleRecord(archiveRecord);
       dataList.add(new JsonApiDataLinks(handle, TOMBSTONE.toString(), attributeNode,
-          new JsonApiLinks(HANDLE_DOMAIN + handle)));
+          new JsonApiLinks(profileProperties.getDomain() + handle)));
     }
     return new JsonApiWrapperWrite(dataList);
   }
