@@ -223,7 +223,7 @@ public class TestUtils {
     List<HandleAttribute> fdoRecord = new ArrayList<>();
     var request = givenHandleRecordRequestObject();
     byte[] loc = setLocations(request.getLocations(), new String(handle, StandardCharsets.UTF_8),
-        type);
+        type, false);
     var a = new String(loc, StandardCharsets.UTF_8);
     fdoRecord.add(new HandleAttribute(LOC.index(), handle, LOC.get(), loc));
 
@@ -294,11 +294,11 @@ public class TestUtils {
     List<HandleAttribute> attributes = genHandleRecordAttributes(handle, ObjectType.HANDLE);
 
     byte[] locOriginal = setLocations(LOC_TESTVAL, new String(handle, StandardCharsets.UTF_8),
-        ObjectType.HANDLE);
+        ObjectType.HANDLE, false);
     var locOriginalAttr = new HandleAttribute(LOC.index(), handle, LOC.get(), locOriginal);
 
     byte[] locAlt = setLocations(LOC_ALT_TESTVAL, new String(handle, StandardCharsets.UTF_8),
-        ObjectType.HANDLE);
+        ObjectType.HANDLE, false);
     var locAltAttr = new HandleAttribute(LOC.index(), handle, LOC.get(), locAlt);
 
     attributes.set(attributes.indexOf(locOriginalAttr), locAltAttr);
@@ -322,7 +322,7 @@ public class TestUtils {
   public static List<HandleAttribute> genUpdateRecordAttributesAltLoc(byte[] handle)
       throws ParserConfigurationException, TransformerException {
     byte[] locAlt = setLocations(LOC_ALT_TESTVAL, new String(handle, StandardCharsets.UTF_8),
-        ObjectType.HANDLE);
+        ObjectType.HANDLE, false);
     return List.of(new HandleAttribute(LOC.index(), handle, LOC.get(), locAlt));
   }
 
@@ -1072,7 +1072,7 @@ public class TestUtils {
 
   public static byte[] givenLandingPage(String handle) throws Exception {
     var landingPage = new String[]{"Placeholder landing page"};
-    return setLocations(landingPage, handle, ObjectType.TOMBSTONE);
+    return setLocations(landingPage, handle, ObjectType.TOMBSTONE, false);
   }
 
   public static HandleAttribute givenLandingPageAttribute(byte[] handle) throws Exception {
@@ -1080,7 +1080,8 @@ public class TestUtils {
     return new HandleAttribute(LOC.index(), handle, LOC.get(), data);
   }
 
-  public static byte[] setLocations(String[] userLocations, String handle, ObjectType type)
+  public static byte[] setLocations(String[] userLocations, String handle, ObjectType type,
+      boolean isDoi)
       throws TransformerException, ParserConfigurationException {
     DOC_BUILDER_FACTORY.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
 
@@ -1089,7 +1090,7 @@ public class TestUtils {
     var doc = documentBuilder.newDocument();
     var locations = doc.createElement("locations");
     doc.appendChild(locations);
-    String[] objectLocations = concatLocations(userLocations, handle, type);
+    String[] objectLocations = isDoi ? userLocations : concatLocations(userLocations, handle, type);
 
     for (int i = 0; i < objectLocations.length; i++) {
       var locs = doc.createElement("location");

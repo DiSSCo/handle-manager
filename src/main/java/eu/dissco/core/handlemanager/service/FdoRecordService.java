@@ -101,6 +101,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -116,6 +117,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 
@@ -130,6 +132,7 @@ public class FdoRecordService {
   private final ObjectMapper mapper;
   private final HandleRepository handleRep;
   private final ApplicationProperties appProperties;
+  private final Environment env;
   private static final String HANDLE_DOMAIN = "https://hdl.handle.net/";
   private static final String ROR_API_DOMAIN = "https://api.ror.org/organizations/";
   private static final String ROR_DOMAIN = "https://ror.org/";
@@ -733,7 +736,11 @@ public class FdoRecordService {
   }
 
   private String[] concatLocations(String[] userLocations, String handle, ObjectType type) {
-    ArrayList<String> objectLocations = new ArrayList<>(List.of(defaultLocations(handle, type)));
+    ArrayList<String> objectLocations = new ArrayList<>();
+
+    if (!Arrays.asList(env.getActiveProfiles()).contains("doi")) {
+      objectLocations.addAll(List.of(defaultLocations(handle, type)));
+    }
     if (userLocations != null) {
       objectLocations.addAll(List.of(userLocations));
     }
