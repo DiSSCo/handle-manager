@@ -75,6 +75,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.FdoProfile;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.objects.AnnotationRequest;
@@ -737,7 +738,7 @@ public class FdoRecordService {
   private String[] concatLocations(String[] userLocations, String handle, ObjectType type) {
     ArrayList<String> objectLocations = new ArrayList<>();
 
-    if (!env.matchesProfiles("doi")) {
+    if (!env.matchesProfiles(Profiles.DOI)) {
       objectLocations.addAll(List.of(defaultLocations(handle, type)));
     }
     if (userLocations != null) {
