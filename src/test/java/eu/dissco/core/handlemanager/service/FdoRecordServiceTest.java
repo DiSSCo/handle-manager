@@ -64,7 +64,6 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.WAS_DERIVED_FROM_EN
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.API_URL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.DIGITAL_OBJECT_TYPE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.DOC_BUILDER_FACTORY;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.DOI_DOMAIN;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.FDO_PROFILE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_DOMAIN;
@@ -262,7 +261,7 @@ class FdoRecordServiceTest {
     // Given
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
     var request = givenDoiRecordRequestObject();
-    given(profileProperties.getDomain()).willReturn(DOI_DOMAIN);
+    given(profileProperties.getDomain()).willReturn(DOI);
 
     // When
     var result = fdoRecordService.prepareDoiRecordAttributes(request, handle, ObjectType.DOI);
