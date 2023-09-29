@@ -1081,7 +1081,7 @@ public class TestUtils {
   }
 
   public static byte[] setLocations(String[] userLocations, String handle, ObjectType type,
-      boolean isDoi)
+      boolean isDoiProfileTest)
       throws TransformerException, ParserConfigurationException {
     DOC_BUILDER_FACTORY.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
 
@@ -1090,7 +1090,8 @@ public class TestUtils {
     var doc = documentBuilder.newDocument();
     var locations = doc.createElement("locations");
     doc.appendChild(locations);
-    String[] objectLocations = isDoi ? userLocations : concatLocations(userLocations, handle, type);
+    String[] objectLocations = isDoiProfileTest
+        ? userLocations : concatLocations(userLocations, handle, type);
 
     for (int i = 0; i < objectLocations.length; i++) {
       var locs = doc.createElement("location");
