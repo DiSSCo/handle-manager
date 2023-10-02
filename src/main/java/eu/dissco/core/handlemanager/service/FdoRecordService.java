@@ -93,7 +93,6 @@ import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
-import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.HandleRepository;
 import eu.dissco.core.handlemanager.web.PidResolver;
 import java.io.IOException;
@@ -118,6 +117,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 
@@ -132,7 +132,7 @@ public class FdoRecordService {
   private final ObjectMapper mapper;
   private final HandleRepository handleRep;
   private final ApplicationProperties appProperties;
-  private final ProfileProperties profileProperties;
+  private final Environment environment;
   private static final String HANDLE_DOMAIN = "https://hdl.handle.net/";
   private static final String ROR_API_DOMAIN = "https://api.ror.org/organizations/";
   private static final String ROR_DOMAIN = "https://ror.org/";
@@ -141,7 +141,6 @@ public class FdoRecordService {
   private static final String PID_KERNEL_METADATA_LICENSE = "https://creativecommons.org/publicdomain/zero/1.0/";
   private static final String PLACEHOLDER = "Needs to be fixed!";
   private static final String LOC_REQUEST = "locations";
-
   public static final Map<String, String> RESOLVABLE_KEYS;
 
   static {
@@ -738,7 +737,7 @@ public class FdoRecordService {
   private String[] concatLocations(String[] userLocations, String handle, ObjectType type) {
     ArrayList<String> objectLocations = new ArrayList<>();
 
-    if (!profileProperties.getDomain().equals(Profiles.DOI)) {
+    if (!environment.matchesProfiles(Profiles.DOI)) {
       objectLocations.addAll(List.of(defaultLocations(handle, type)));
     }
     if (userLocations != null) {
