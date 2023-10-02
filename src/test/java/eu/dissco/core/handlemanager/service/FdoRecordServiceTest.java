@@ -204,7 +204,6 @@ class FdoRecordServiceTest {
   private ApplicationProperties appProperties;
   @Mock
   Environment environment;
-  private static final String DOI = "doi";
   private static final int HANDLE_QTY = 15;
   private static final int DOI_QTY = 19;
   private static final int MEDIA_QTY = DOI_QTY + 9;
