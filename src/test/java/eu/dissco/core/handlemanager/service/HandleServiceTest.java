@@ -6,7 +6,6 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_MEDIA_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID_TYPE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.DOI_DOMAIN;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_DOMAIN;
@@ -26,6 +25,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_ORGAN
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_SOURCE_SYSTEM;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SOURCE_SYSTEM_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.UI_URL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genAnnotationAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenAttributes;
@@ -65,9 +65,9 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.mockStatic;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiDataLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
@@ -77,58 +77,30 @@ import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimaryObjectIdTy
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
-import eu.dissco.core.handlemanager.properties.ProfileProperties;
-import eu.dissco.core.handlemanager.repository.HandleRepository;
 import java.nio.charset.StandardCharsets;
-import java.time.Clock;
-import java.time.Instant;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.context.ActiveProfiles;
 
 @ExtendWith(MockitoExtension.class)
-class HandleServiceTest {
-
-  private final String SANDBOX_URI = "https://sandbox.dissco.tech/";
-  @Mock
-  private HandleRepository handleRep;
-  @Mock
-  private FdoRecordService fdoRecordService;
-  @Mock
-  private HandleGeneratorService hgService;
-  @Mock
-  private ProfileProperties profileProperties;
-  private HandleService service;
-  private List<byte[]> handles;
-  private MockedStatic<Instant> mockedStatic;
-  private MockedStatic<Clock> mockedClock;
+@ActiveProfiles(profiles = Profiles.HANDLE)
+class HandleServiceTest extends PidServiceTest {
 
   @BeforeEach
-  void setup() {
+  void initService() {
     service = new HandleService(handleRep, fdoRecordService, hgService, MAPPER, profileProperties);
-    initTime();
-    initHandleList();
-  }
-
-  @AfterEach
-  void destroy() {
-    mockedStatic.close();
-    mockedClock.close();
   }
 
   @Test
   void testResolveSingleRecord() throws Exception {
 
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    String path = SANDBOX_URI + HANDLE;
+    String path = UI_URL + HANDLE;
     List<HandleAttribute> recordAttributeList = genHandleRecordAttributes(handle,
         ObjectType.HANDLE);
 
@@ -150,7 +122,7 @@ class HandleServiceTest {
   void testRemoveHsAdmin() throws Exception {
 
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    String path = SANDBOX_URI + HANDLE;
+    String path = UI_URL + HANDLE;
     var adminHandle = new HandleAttribute(HS_ADMIN.index(), handle, HS_ADMIN.get(),
         genAdminHandle());
     var recordAttributeList = genHandleRecordAttributes(handle,
@@ -174,7 +146,7 @@ class HandleServiceTest {
   void testResolveSingleRecordNotFound() {
 
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    String path = SANDBOX_URI + HANDLE;
+    String path = UI_URL + HANDLE;
     given(handleRep.resolveHandleAttributes(any(byte[].class))).willReturn(new ArrayList<>());
 
     // When
@@ -187,7 +159,7 @@ class HandleServiceTest {
   @Test
   void testResolveBatchRecord() throws Exception {
     // Given
-    String path = SANDBOX_URI;
+    String path = UI_URL;
     List<HandleAttribute> repositoryResponse = new ArrayList<>();
     for (byte[] handle : handles) {
       repositoryResponse.addAll(genHandleRecordAttributes(handle, ObjectType.HANDLE));
@@ -315,32 +287,6 @@ class HandleServiceTest {
   }
 
   @Test
-  void testCreateDoiRecordDoiProfile() throws Exception {
-    // Given
-    byte[] handle = handles.get(0);
-    var request = genCreateRecordRequest(givenDoiRecordRequestObject(), RECORD_TYPE_DOI);
-    var templateDataLinks = givenRecordResponseWrite(List.of(handle), RECORD_TYPE_DOI).data()
-        .get(0);
-    var doiLinks = new JsonApiLinks(DOI_DOMAIN + new String(handle));
-    var expectedData = new JsonApiDataLinks(
-        templateDataLinks.id(), templateDataLinks.type(), templateDataLinks.attributes(), doiLinks);
-    var responseExpected = new JsonApiWrapperWrite(List.of(expectedData));
-
-    List<HandleAttribute> doiRecord = genDoiRecordAttributes(handle, ObjectType.HANDLE);
-
-    given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(fdoRecordService.prepareDoiRecordAttributes(any(), any(), eq(ObjectType.DOI))).willReturn(
-        doiRecord);
-    given(profileProperties.getDomain()).willReturn(DOI_DOMAIN);
-
-    // When
-    var responseReceived = service.createRecords(List.of(request));
-
-    // Then
-    assertThat(responseReceived).isEqualTo(responseExpected);
-  }
-
-  @Test
   void testCreateDigitalSpecimen() throws Exception {
     // Given
     byte[] handle = handles.get(0);
@@ -454,7 +400,7 @@ class HandleServiceTest {
         .willReturn(genHandleRecordAttributes(handles.get(0), ObjectType.HANDLE))
         .willReturn(genHandleRecordAttributes(handles.get(1), ObjectType.HANDLE));
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
-    
+
     // When
     var responseReceived = service.createRecords(requests);
 
@@ -937,22 +883,6 @@ class HandleServiceTest {
     var pidLink = new JsonApiLinks(HANDLE_URI + handle);
     return new JsonApiDataLinks(handle, ObjectType.DIGITAL_SPECIMEN.toString(),
         recordAttributes, pidLink);
-  }
-
-  private void initTime() {
-    Clock clock = Clock.fixed(CREATED, ZoneOffset.UTC);
-    Instant instant = Instant.now(clock);
-    mockedStatic = mockStatic(Instant.class);
-    mockedStatic.when(Instant::now).thenReturn(instant);
-    mockedStatic.when(() -> Instant.from(any())).thenReturn(instant);
-    mockedClock = mockStatic(Clock.class);
-    mockedClock.when(Clock::systemUTC).thenReturn(clock);
-  }
-
-  private void initHandleList() {
-    handles = new ArrayList<>();
-    handles.add(HANDLE.getBytes(StandardCharsets.UTF_8));
-    handles.add(HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
   }
 
   private List<HandleAttribute> getPrimarySpecimenObjectIds(

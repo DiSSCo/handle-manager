@@ -1,5 +1,6 @@
 package eu.dissco.core.handlemanager.service;
 
+
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_TYPE;
@@ -11,15 +12,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.domain.requests.objects.AnnotationRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
-import eu.dissco.core.handlemanager.domain.requests.objects.DoiRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.objects.MappingRequest;
-import eu.dissco.core.handlemanager.domain.requests.objects.MasRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
-import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
-import eu.dissco.core.handlemanager.domain.requests.objects.SourceSystemRequest;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
@@ -34,23 +28,24 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
 
-@Service
+@Profile(Profiles.DOI)
 @Slf4j
-@Profile(Profiles.HANDLE)
-public class HandleService extends PidService {
+public class DoiService extends PidService {
 
-  public HandleService(HandleRepository handleRep,
+  public DoiService(HandleRepository handleRep,
       FdoRecordService fdoRecordService, HandleGeneratorService hf,
       ObjectMapper mapper,
       ProfileProperties profileProperties) {
     super(handleRep, fdoRecordService, hf, mapper, profileProperties);
   }
 
-  // Pid Record Creation
+  private static final String TYPE_ERROR_MESSAGE = "Error creating DOI for object of Type %s. Only Digital Specimens and Media Objects use DOIs.";
+
+  @Override
   public JsonApiWrapperWrite createRecords(
       List<JsonNode> requests)
       throws PidResolutionException, PidServiceInternalError, InvalidRequestException, PidCreationException {
@@ -68,20 +63,6 @@ public class HandleService extends PidService {
       recordTypes.put(new String(handles.get(0), StandardCharsets.UTF_8), type);
       try {
         switch (type) {
-          case HANDLE -> {
-            var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
-                HandleRecordRequest.class);
-            handleAttributes.addAll(
-                fdoRecordService.prepareHandleRecordAttributes(requestObject, handles.remove(0),
-                    type));
-          }
-          case DOI -> {
-            var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
-                DoiRecordRequest.class);
-            handleAttributes.addAll(
-                fdoRecordService.prepareDoiRecordAttributes(requestObject, handles.remove(0),
-                    type));
-          }
           case DIGITAL_SPECIMEN -> {
             var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 DigitalSpecimenRequest.class);
@@ -97,41 +78,8 @@ public class HandleService extends PidService {
                 fdoRecordService.prepareMediaObjectAttributes(requestObject, handles.remove(0),
                     type));
           }
-          case ANNOTATION -> {
-            var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
-                AnnotationRequest.class);
-            handleAttributes.addAll(
-                fdoRecordService.prepareAnnotationAttributes(requestObject, handles.remove(0),
-                    type));
-          }
-          case MAPPING -> {
-            var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
-                MappingRequest.class);
-            handleAttributes.addAll(
-                fdoRecordService.prepareMappingAttributes(requestObject, handles.remove(0), type));
-          }
-          case SOURCE_SYSTEM -> {
-            var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
-                SourceSystemRequest.class);
-            handleAttributes.addAll(
-                fdoRecordService.prepareSourceSystemAttributes(requestObject, handles.remove(0),
-                    type));
-          }
-          case ORGANISATION -> {
-            var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
-                OrganisationRequest.class);
-            handleAttributes.addAll(
-                fdoRecordService.prepareOrganisationAttributes(requestObject, handles.remove(0),
-                    type));
-          }
-          case MAS -> {
-            var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES), MasRequest.class);
-            handleAttributes.addAll(
-                fdoRecordService.prepareMasRecordAttributes(requestObject, handles.remove(0),
-                    type));
-          }
-          default -> throw new InvalidRequestException(
-              "Invalid request. Unrecognized object type: " + type);
+          default -> throw new InvalidRequestException(String.format(
+              TYPE_ERROR_MESSAGE, type));
         }
       } catch (JsonProcessingException | UnprocessableEntityException e) {
         throw new InvalidRequestException(
@@ -141,11 +89,29 @@ public class HandleService extends PidService {
     }
 
     validateDigitalSpecimens(digitalSpecimenList);
+
     log.info("Persisting new handles to db");
     handleRep.postAttributesToDb(recordTimestamp, handleAttributes);
 
     return new JsonApiWrapperWrite(formatCreateRecords(handleAttributes, recordTypes));
   }
 
-}
+  @Override
+  public JsonApiWrapperWrite updateRecords(List<JsonNode> requests, boolean incrementVersion)
+      throws InvalidRequestException, PidResolutionException, PidServiceInternalError, UnprocessableEntityException {
+    var types = requests.stream()
+        .map(request -> request.get(NODE_DATA).get(NODE_TYPE).asText())
+        .filter(type -> !type.equals(ObjectType.DOI.toString())
+            || type.equals(ObjectType.MEDIA_OBJECT.toString())
+            || type.equals(ObjectType.DIGITAL_SPECIMEN.toString()))
+        .collect(Collectors.toSet());
 
+    if (!types.isEmpty()) {
+      throw new InvalidRequestException(String.format(TYPE_ERROR_MESSAGE, types));
+    }
+    return super.updateRecords(requests, incrementVersion);
+
+  }
+
+
+}

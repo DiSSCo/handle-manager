@@ -2,23 +2,23 @@ package eu.dissco.core.handlemanager.properties;
 
 import eu.dissco.core.handlemanager.Profiles;
 import jakarta.annotation.PostConstruct;
-import lombok.Data;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
-import org.springframework.validation.annotation.Validated;
 
-@Data
-@Validated
 @Component
-@ConfigurationProperties("spring.profiles")
+@RequiredArgsConstructor
 public class ProfileProperties {
 
-  private String active;
+  private final Environment env;
+
+  @Getter
   private String domain;
 
   @PostConstruct
   void setDomain() {
-    if (active.equals(Profiles.DOI)) {
+    if (env.matchesProfiles(Profiles.DOI)) {
       domain = "https://doi.org/";
     } else {
       domain = "https://hdl.handle.net/";
