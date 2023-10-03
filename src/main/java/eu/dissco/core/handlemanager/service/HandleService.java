@@ -44,7 +44,7 @@ import org.springframework.stereotype.Service;
 public class HandleService extends PidService {
 
   public HandleService(PidRepository pidRepository,
-      FdoRecordService fdoRecordService, HandleGeneratorService hf,
+      FdoRecordService fdoRecordService, PidNameGeneratorService hf,
       ObjectMapper mapper,
       ProfileProperties profileProperties) {
     super(pidRepository, fdoRecordService, hf, mapper, profileProperties);

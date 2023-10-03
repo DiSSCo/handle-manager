@@ -37,7 +37,7 @@ import org.springframework.context.annotation.Profile;
 public class DoiService extends PidService {
 
   public DoiService(PidRepository pidRepository,
-      FdoRecordService fdoRecordService, HandleGeneratorService hf,
+      FdoRecordService fdoRecordService, PidNameGeneratorService hf,
       ObjectMapper mapper,
       ProfileProperties profileProperties) {
     super(pidRepository, fdoRecordService, hf, mapper, profileProperties);

@@ -54,7 +54,7 @@ public abstract class PidService {
 
   protected final PidRepository pidRepository;
   protected final FdoRecordService fdoRecordService;
-  protected final HandleGeneratorService hf;
+  protected final PidNameGeneratorService hf;
   protected final ObjectMapper mapper;
   protected final ProfileProperties profileProperties;
 

@@ -31,7 +31,8 @@ class DoiServiceTest extends PidServiceTest {
 
   @BeforeEach
   void initService() {
-    service = new DoiService(pidRepository, fdoRecordService, hgService, MAPPER, profileProperties);
+    service = new DoiService(pidRepository, fdoRecordService, pidNameGeneratorService, MAPPER,
+        profileProperties);
   }
 
   @Test
@@ -48,7 +49,7 @@ class DoiServiceTest extends PidServiceTest {
         List.of(handle),
         ObjectType.DIGITAL_SPECIMEN);
 
-    given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
+    given(pidNameGeneratorService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(pidRepository.searchByNormalisedPhysicalIdentifierFullRecord(anyList())).willReturn(
         new ArrayList<>());
     given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(any(), any(), any())).willReturn(
@@ -66,7 +67,8 @@ class DoiServiceTest extends PidServiceTest {
   void testCreateInvalidType() {
     // Given
     var request = genCreateRecordRequest(givenDoiRecordRequestObject(), RECORD_TYPE_HANDLE);
-    given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handles.get(0))));
+    given(pidNameGeneratorService.genHandleList(1)).willReturn(
+        new ArrayList<>(List.of(handles.get(0))));
 
     // Then
     assertThrows(InvalidRequestException.class, () -> service.createRecords(List.of(request)));

@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class HandleGeneratorService {
+public class PidNameGeneratorService {
 
   private final ApplicationProperties applicationProperties;
 

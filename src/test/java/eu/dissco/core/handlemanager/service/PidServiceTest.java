@@ -29,7 +29,7 @@ abstract class PidServiceTest {
   @Mock
   protected FdoRecordService fdoRecordService;
   @Mock
-  protected HandleGeneratorService hgService;
+  protected PidNameGeneratorService pidNameGeneratorService;
   @Mock
   protected ProfileProperties profileProperties;
   protected PidService service;
