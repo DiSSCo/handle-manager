@@ -1,7 +1,7 @@
 package eu.dissco.core.handlemanager.service;
 
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
-import eu.dissco.core.handlemanager.repository.HandleRepository;
+import eu.dissco.core.handlemanager.repository.PidRepository;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -26,7 +26,7 @@ public class HandleGeneratorService {
   private static final String ALPHA_NUM = "ABCDEFGHJKLMNPQRSTVWXYZ1234567890";
   private final char[] symbols = ALPHA_NUM.toCharArray();
   private final char[] buf = new char[LENGTH];
-  private final HandleRepository handleRep;
+  private final PidRepository pidRepository;
   private final Random random;
 
 
@@ -57,7 +57,7 @@ public class HandleGeneratorService {
     HashSet<ByteBuffer> handleHash = wrapBytes(handleList);
 
     // Check for duplicates from repository and wrap the duplicates
-    HashSet<ByteBuffer> duplicates = wrapBytes(handleRep.getHandlesExist(handleList));
+    HashSet<ByteBuffer> duplicates = wrapBytes(pidRepository.getHandlesExist(handleList));
 
     // If a duplicate was found, recursively call this function
     // Generate new handles for every duplicate found and add it to our hash list

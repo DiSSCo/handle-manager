@@ -21,7 +21,7 @@ import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
-import eu.dissco.core.handlemanager.repository.HandleRepository;
+import eu.dissco.core.handlemanager.repository.PidRepository;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -36,11 +36,11 @@ import org.springframework.context.annotation.Profile;
 @Slf4j
 public class DoiService extends PidService {
 
-  public DoiService(HandleRepository handleRep,
+  public DoiService(PidRepository pidRepository,
       FdoRecordService fdoRecordService, HandleGeneratorService hf,
       ObjectMapper mapper,
       ProfileProperties profileProperties) {
-    super(handleRep, fdoRecordService, hf, mapper, profileProperties);
+    super(pidRepository, fdoRecordService, hf, mapper, profileProperties);
   }
 
   private static final String TYPE_ERROR_MESSAGE = "Error creating DOI for object of Type %s. Only Digital Specimens and Media Objects use DOIs.";
@@ -91,7 +91,7 @@ public class DoiService extends PidService {
     validateDigitalSpecimens(digitalSpecimenList);
 
     log.info("Persisting new DOIs to db");
-    handleRep.postAttributesToDb(recordTimestamp, handleAttributes);
+    pidRepository.postAttributesToDb(recordTimestamp, handleAttributes);
 
     return new JsonApiWrapperWrite(formatCreateRecords(handleAttributes, recordTypes));
   }

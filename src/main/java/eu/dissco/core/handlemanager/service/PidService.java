@@ -32,7 +32,7 @@ import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
-import eu.dissco.core.handlemanager.repository.HandleRepository;
+import eu.dissco.core.handlemanager.repository.PidRepository;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -52,7 +52,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public abstract class PidService {
 
-  protected final HandleRepository handleRep;
+  protected final PidRepository pidRepository;
   protected final FdoRecordService fdoRecordService;
   protected final HandleGeneratorService hf;
   protected final ObjectMapper mapper;
@@ -146,7 +146,7 @@ public abstract class PidService {
 
   public JsonApiWrapperReadSingle resolveSingleRecord(byte[] handle, String path)
       throws PidResolutionException {
-    var dbRecord = handleRep.resolveHandleAttributes(handle);
+    var dbRecord = pidRepository.resolveHandleAttributes(handle);
     verifyHandleResolution(List.of(handle), dbRecord);
     var recordAttributeList = formatRecords(dbRecord).get(0);
     var dataNode = wrapData(recordAttributeList, "PID");
@@ -157,7 +157,7 @@ public abstract class PidService {
   public JsonApiWrapperRead resolveBatchRecord(List<byte[]> handles, String path)
       throws PidResolutionException {
     List<JsonApiDataLinks> dataList = new ArrayList<>();
-    var dbRecords = handleRep.resolveHandleAttributes(handles);
+    var dbRecords = pidRepository.resolveHandleAttributes(handles);
     verifyHandleResolution(handles, dbRecords);
     var recordAttributeList = formatRecords(dbRecords);
     for (JsonNode recordAttributes : recordAttributeList) {
@@ -168,11 +168,11 @@ public abstract class PidService {
 
   // Getters
   public List<String> getHandlesPaged(int pageNum, int pageSize, byte[] pidStatus) {
-    return handleRep.getAllHandles(pidStatus, pageNum, pageSize);
+    return pidRepository.getAllHandles(pidStatus, pageNum, pageSize);
   }
 
   public List<String> getHandlesPaged(int pageNum, int pageSize) {
-    return handleRep.getAllHandles(pageNum, pageSize);
+    return pidRepository.getAllHandles(pageNum, pageSize);
   }
 
   private void verifyHandleResolution(List<byte[]> handles, List<HandleAttribute> dbRecords)
@@ -196,7 +196,7 @@ public abstract class PidService {
       PrimaryObjectIdType physicalIdType, String specimenHostPid)
       throws PidResolutionException, InvalidRequestException {
     var physicalIdentifier = setPhysicalId(physicalId, physicalIdType, specimenHostPid);
-    var returnedRows = handleRep.searchByNormalisedPhysicalIdentifierFullRecord(
+    var returnedRows = pidRepository.searchByNormalisedPhysicalIdentifierFullRecord(
         List.of(physicalIdentifier));
     var handleNames = listHandleNamesReturnedFromQuery(returnedRows);
     if (handleNames.size() > 1) {
@@ -267,7 +267,8 @@ public abstract class PidService {
 
   protected void verifyNoRegisteredSpecimens(List<byte[]> physicalIds)
       throws PidCreationException {
-    var registeredSpecimens = handleRep.searchByNormalisedPhysicalIdentifierFullRecord(physicalIds);
+    var registeredSpecimens = pidRepository.searchByNormalisedPhysicalIdentifierFullRecord(
+        physicalIds);
     if (!registeredSpecimens.isEmpty()) {
       var registeredHandles = listHandleNamesReturnedFromQuery(registeredSpecimens);
       throw new PidCreationException(
@@ -304,7 +305,7 @@ public abstract class PidService {
     var recordTimestamp = Instant.now().getEpochSecond();
 
     log.info("Persisting upserts to db.");
-    handleRep.postAndUpdateHandles(recordTimestamp, createAttributes, upsertAttributes);
+    pidRepository.postAndUpdateHandles(recordTimestamp, createAttributes, upsertAttributes);
 
     var concatAttributes = concatHandleAttributes(createAttributes, upsertAttributes);
 
@@ -325,7 +326,7 @@ public abstract class PidService {
   private List<UpsertDigitalSpecimen> getRegisteredSpecimensUpsert(
       List<DigitalSpecimenRequest> requests, List<byte[]> physicalIds) {
     var registeredSpecimensHandleAttributes = new HashSet<>(
-        handleRep.searchByNormalisedPhysicalIdentifier(physicalIds));
+        pidRepository.searchByNormalisedPhysicalIdentifier(physicalIds));
     if (registeredSpecimensHandleAttributes.isEmpty()) {
       return new ArrayList<>();
     }
@@ -430,7 +431,7 @@ public abstract class PidService {
     checkInternalDuplicates(handles);
     checkHandlesWritable(handles);
 
-    handleRep.updateRecordBatch(recordTimestamp, attributesToUpdate, incrementVersion);
+    pidRepository.updateRecordBatch(recordTimestamp, attributesToUpdate, incrementVersion);
     return formatUpdates(attributesToUpdate, recordTypes);
   }
 
@@ -473,7 +474,7 @@ public abstract class PidService {
 
   protected void checkHandlesWritable(List<byte[]> handles) throws PidResolutionException {
     Set<byte[]> handlesToUpdate = new HashSet<>(handles);
-    Set<byte[]> handlesExist = new HashSet<>(handleRep.checkHandlesWritable(handles));
+    Set<byte[]> handlesExist = new HashSet<>(pidRepository.checkHandlesWritable(handles));
     if (handlesExist.size() < handles.size()) {
       handlesToUpdate.removeAll(handlesExist);
       Set<String> handlesDontExist = handlesToUpdate.stream()
@@ -506,23 +507,23 @@ public abstract class PidService {
     checkInternalDuplicates(handles);
     checkHandlesWritable(handles);
 
-    handleRep.archiveRecords(recordTimestamp, archiveAttributesFlat,
+    pidRepository.archiveRecords(recordTimestamp, archiveAttributesFlat,
         handles.stream().map(h -> new String(h, StandardCharsets.UTF_8)).toList());
 
     return formatArchives(archiveAttributes);
   }
 
   public void rollbackHandles(List<String> handles) {
-    handleRep.rollbackHandles(handles);
+    pidRepository.rollbackHandles(handles);
   }
 
   public void rollbackHandlesFromPhysId(List<String> physicalIds) {
     var physicalIdsBytes = physicalIds.stream().map(id -> id.getBytes(StandardCharsets.UTF_8))
         .toList();
-    var handles = handleRep.searchByNormalisedPhysicalIdentifier(physicalIdsBytes).stream()
+    var handles = pidRepository.searchByNormalisedPhysicalIdentifier(physicalIdsBytes).stream()
         .map(HandleAttribute::getHandle).map(handle -> new String(handle, StandardCharsets.UTF_8))
         .toList();
-    handleRep.rollbackHandles(handles);
+    pidRepository.rollbackHandles(handles);
   }
 
 }

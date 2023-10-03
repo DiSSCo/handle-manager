@@ -31,7 +31,7 @@ class DoiServiceTest extends PidServiceTest {
 
   @BeforeEach
   void initService() {
-    service = new DoiService(handleRep, fdoRecordService, hgService, MAPPER, profileProperties);
+    service = new DoiService(pidRepository, fdoRecordService, hgService, MAPPER, profileProperties);
   }
 
   @Test
@@ -49,7 +49,7 @@ class DoiServiceTest extends PidServiceTest {
         ObjectType.DIGITAL_SPECIMEN);
 
     given(hgService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(handleRep.searchByNormalisedPhysicalIdentifierFullRecord(anyList())).willReturn(
+    given(pidRepository.searchByNormalisedPhysicalIdentifierFullRecord(anyList())).willReturn(
         new ArrayList<>());
     given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(any(), any(), any())).willReturn(
         digitalSpecimen);

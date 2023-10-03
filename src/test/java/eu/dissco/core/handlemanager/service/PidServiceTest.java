@@ -7,7 +7,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mockStatic;
 
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
-import eu.dissco.core.handlemanager.repository.HandleRepository;
+import eu.dissco.core.handlemanager.repository.PidRepository;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Instant;
@@ -25,7 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 abstract class PidServiceTest {
 
   @Mock
-  protected HandleRepository handleRep;
+  protected PidRepository pidRepository;
   @Mock
   protected FdoRecordService fdoRecordService;
   @Mock

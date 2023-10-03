@@ -27,7 +27,7 @@ import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
-import eu.dissco.core.handlemanager.repository.HandleRepository;
+import eu.dissco.core.handlemanager.repository.PidRepository;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -43,11 +43,11 @@ import org.springframework.stereotype.Service;
 @Profile(Profiles.HANDLE)
 public class HandleService extends PidService {
 
-  public HandleService(HandleRepository handleRep,
+  public HandleService(PidRepository pidRepository,
       FdoRecordService fdoRecordService, HandleGeneratorService hf,
       ObjectMapper mapper,
       ProfileProperties profileProperties) {
-    super(handleRep, fdoRecordService, hf, mapper, profileProperties);
+    super(pidRepository, fdoRecordService, hf, mapper, profileProperties);
   }
 
   // Pid Record Creation
@@ -142,7 +142,7 @@ public class HandleService extends PidService {
 
     validateDigitalSpecimens(digitalSpecimenList);
     log.info("Persisting new handles to db");
-    handleRep.postAttributesToDb(recordTimestamp, handleAttributes);
+    pidRepository.postAttributesToDb(recordTimestamp, handleAttributes);
 
     return new JsonApiWrapperWrite(formatCreateRecords(handleAttributes, recordTypes));
   }

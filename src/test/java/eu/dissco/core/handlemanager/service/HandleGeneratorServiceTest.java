@@ -8,7 +8,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.lenient;
 
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
-import eu.dissco.core.handlemanager.repository.HandleRepository;
+import eu.dissco.core.handlemanager.repository.PidRepository;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class HandleGeneratorServiceTest {
 
   @Mock
-  private HandleRepository handleRep;
+  private PidRepository pidRepository;
 
   @Mock
   private Random random;
@@ -36,7 +36,7 @@ class HandleGeneratorServiceTest {
 
   @BeforeEach
   void setup() {
-    this.hgService = new HandleGeneratorService(applicationProperties, handleRep, random);
+    this.hgService = new HandleGeneratorService(applicationProperties, pidRepository, random);
     lenient().when(applicationProperties.getMaxHandles()).thenReturn(MAX_HANDLES);
   }
 
@@ -103,7 +103,7 @@ class HandleGeneratorServiceTest {
     handleListInternalDuplicate.add(expectedHandle1);
 
     given(random.nextInt(anyInt())).willReturn(0, 1);
-    given(handleRep.getHandlesExist(anyList()))
+    given(pidRepository.getHandlesExist(anyList()))
         .willReturn(handleListInternalDuplicate)
         .willReturn(new ArrayList<>());
     given(applicationProperties.getPrefix()).willReturn(PREFIX);
