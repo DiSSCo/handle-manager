@@ -22,7 +22,7 @@ import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class PidServiceTest {
+abstract class PidServiceTest {
 
   @Mock
   protected HandleRepository handleRep;
