@@ -188,8 +188,8 @@ public abstract class PidService {
         .map(handle -> new String(handle, StandardCharsets.UTF_8))
         .collect(Collectors.toSet());
     handlesString.removeAll(resolvedHandles);
-    log.error("Unable to resolve the following handles: {}", handlesString);
-    throw new PidResolutionException("Handles not found: " + handlesString);
+    log.error("Unable to resolve the following identifiers: {}", handlesString);
+    throw new PidResolutionException("PIDs not found: " + handlesString);
   }
 
   public JsonApiWrapperWrite searchByPhysicalSpecimenId(String physicalId,
@@ -293,7 +293,7 @@ public abstract class PidService {
     var createRequests = getCreateRequests(upsertRequests, digitalSpecimenRequests);
     var newHandles = hf.genHandleList(createRequests.size());
     if (!newHandles.isEmpty()) {
-      log.info("Successfully minted {} new handle(s)", newHandles.size());
+      log.info("Successfully minted {} new identifiers(s)", newHandles.size());
     }
     var createAttributes = getCreateAttributes(createRequests, newHandles);
 
@@ -348,7 +348,7 @@ public abstract class PidService {
   private void logUpdates(List<UpsertDigitalSpecimen> upsertRequests) {
     var registeredHandles = upsertRequests.stream().map(UpsertDigitalSpecimen::handle).toList();
     if (!registeredHandles.isEmpty()) {
-      log.debug("Some specimens already have handles. Updating the following PID Records {}",
+      log.debug("Some specimens already have identifiers. Updating the following PID Records {}",
           registeredHandles);
     }
   }
@@ -481,7 +481,7 @@ public abstract class PidService {
           .map(h -> new String(h, StandardCharsets.UTF_8)).collect(
               Collectors.toSet());
       throw new PidResolutionException(
-          "INVALID INPUT. One or more handles in request do not exist or are archived. Verify the following handle(s): "
+          "INVALID INPUT. One or more identifiers in request do not exist or are archived. Verify the following handle(s): "
               + handlesDontExist);
     }
   }
