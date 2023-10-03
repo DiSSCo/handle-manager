@@ -11,14 +11,14 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ProfileProperties {
 
-  private final Environment env;
+  private final Environment environment;
 
   @Getter
   private String domain;
 
   @PostConstruct
   void setDomain() {
-    if (env.matchesProfiles(Profiles.DOI)) {
+    if (environment.matchesProfiles(Profiles.DOI)) {
       domain = "https://doi.org/";
     } else {
       domain = "https://hdl.handle.net/";
