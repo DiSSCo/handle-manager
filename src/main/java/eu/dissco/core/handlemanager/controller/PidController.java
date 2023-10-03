@@ -54,6 +54,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class PidController {
 
   private final PidService service;
+
   private final JsonSchemaValidator schemaValidator;
   private final ApplicationProperties applicationProperties;
   private static final int LOG_LIMIT = 4;

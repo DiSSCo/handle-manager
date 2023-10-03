@@ -31,9 +31,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Service;
 
 @Profile(Profiles.DOI)
 @Slf4j
+@Service
 public class DoiService extends PidService {
 
   public DoiService(PidRepository pidRepository,

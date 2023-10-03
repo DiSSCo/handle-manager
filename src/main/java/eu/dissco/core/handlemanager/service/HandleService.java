@@ -51,6 +51,7 @@ public class HandleService extends PidService {
   }
 
   // Pid Record Creation
+  @Override
   public JsonApiWrapperWrite createRecords(
       List<JsonNode> requests)
       throws PidResolutionException, PidServiceInternalError, InvalidRequestException, PidCreationException {
