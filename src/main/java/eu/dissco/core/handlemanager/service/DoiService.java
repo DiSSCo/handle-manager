@@ -90,7 +90,7 @@ public class DoiService extends PidService {
 
     validateDigitalSpecimens(digitalSpecimenList);
 
-    log.info("Persisting new handles to db");
+    log.info("Persisting new DOIs to db");
     handleRep.postAttributesToDb(recordTimestamp, handleAttributes);
 
     return new JsonApiWrapperWrite(formatCreateRecords(handleAttributes, recordTypes));
@@ -102,8 +102,8 @@ public class DoiService extends PidService {
     var types = requests.stream()
         .map(request -> request.get(NODE_DATA).get(NODE_TYPE).asText())
         .filter(type -> !type.equals(ObjectType.DOI.toString())
-            || type.equals(ObjectType.MEDIA_OBJECT.toString())
-            || type.equals(ObjectType.DIGITAL_SPECIMEN.toString()))
+            || !type.equals(ObjectType.MEDIA_OBJECT.toString())
+            || !type.equals(ObjectType.DIGITAL_SPECIMEN.toString()))
         .collect(Collectors.toSet());
 
     if (!types.isEmpty()) {

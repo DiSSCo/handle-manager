@@ -43,11 +43,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public abstract class PidService {
 
   protected final HandleRepository handleRep;
@@ -55,15 +57,6 @@ public abstract class PidService {
   protected final HandleGeneratorService hf;
   protected final ObjectMapper mapper;
   protected final ProfileProperties profileProperties;
-
-  protected PidService(HandleRepository handleRep, FdoRecordService fdoRecordService,
-      HandleGeneratorService hf, ObjectMapper mapper, ProfileProperties profileProperties) {
-    this.handleRep = handleRep;
-    this.fdoRecordService = fdoRecordService;
-    this.hf = hf;
-    this.mapper = mapper;
-    this.profileProperties = profileProperties;
-  }
 
   private List<JsonNode> formatRecords(List<HandleAttribute> dbRecord) {
     var handleMap = mapRecords(dbRecord);
@@ -84,19 +77,9 @@ public abstract class PidService {
     return rootNode;
   }
 
-  private HashMap<String, List<HandleAttribute>> mapRecords(List<HandleAttribute> flatList) {
-    HashMap<String, List<HandleAttribute>> handleMap = new HashMap<>();
-    for (HandleAttribute row : flatList) {
-      String handle = new String(row.getHandle(), StandardCharsets.UTF_8);
-      if (handleMap.containsKey(handle)) {
-        List<HandleAttribute> tmpList = new ArrayList<>(handleMap.get(handle));
-        tmpList.add(row);
-        handleMap.replace(handle, tmpList);
-      } else {
-        handleMap.put(handle, List.of(row));
-      }
-    }
-    return handleMap;
+  private Map<String, List<HandleAttribute>> mapRecords(List<HandleAttribute> flatList) {
+    return flatList.stream()
+        .collect(Collectors.groupingBy(row -> new String(row.getHandle(), StandardCharsets.UTF_8)));
   }
 
   private JsonApiDataLinks wrapData(JsonNode recordAttributes, String recordType) {
