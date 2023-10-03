@@ -101,8 +101,7 @@ public class DoiService extends PidService {
       throws InvalidRequestException, PidResolutionException, PidServiceInternalError, UnprocessableEntityException {
     var types = requests.stream()
         .map(request -> request.get(NODE_DATA).get(NODE_TYPE).asText())
-        .filter(type -> !type.equals(ObjectType.DOI.toString())
-            || !type.equals(ObjectType.MEDIA_OBJECT.toString())
+        .filter(type -> !type.equals(ObjectType.MEDIA_OBJECT.toString())
             || !type.equals(ObjectType.DIGITAL_SPECIMEN.toString()))
         .collect(Collectors.toSet());
 

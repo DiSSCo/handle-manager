@@ -51,7 +51,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @ControllerAdvice
 @Slf4j
-public class HandleController {
+public class PidController {
 
   private final PidService service;
   private final JsonSchemaValidator schemaValidator;
