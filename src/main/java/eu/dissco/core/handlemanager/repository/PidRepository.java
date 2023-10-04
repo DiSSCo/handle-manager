@@ -25,7 +25,7 @@ import org.springframework.stereotype.Repository;
 @Slf4j
 @Repository
 @RequiredArgsConstructor
-public class HandleRepository {
+public class PidRepository {
 
   private static final int TTL = 86400;
   private final DSLContext context;

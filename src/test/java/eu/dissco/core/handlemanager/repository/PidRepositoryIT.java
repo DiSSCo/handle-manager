@@ -40,13 +40,13 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class HandleRepositoryIT extends BaseRepositoryIT {
+class PidRepositoryIT extends BaseRepositoryIT {
 
-  private HandleRepository handleRep;
+  private PidRepository pidRepository;
 
   @BeforeEach
   void setup() {
-    handleRep = new HandleRepository(context);
+    pidRepository = new PidRepository(context);
   }
 
   @AfterEach
@@ -61,9 +61,9 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     List<HandleAttribute> attributesToPost = genHandleRecordAttributes(handle, ObjectType.HANDLE);
 
     // When
-    handleRep.postAttributesToDb(CREATED.getEpochSecond(), attributesToPost);
+    pidRepository.postAttributesToDb(CREATED.getEpochSecond(), attributesToPost);
     var postedRecordContext = context.selectFrom(HANDLES).fetch();
-    var postedRecordAttributes = handleRep.resolveHandleAttributes(handle);
+    var postedRecordAttributes = pidRepository.resolveHandleAttributes(handle);
 
     // Then
     assertThat(attributesToPost).isEqualTo(postedRecordAttributes);
@@ -83,7 +83,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     postAttributes(rows);
 
     // When
-    List<byte[]> collisions = handleRep.getHandlesExist(handles);
+    List<byte[]> collisions = pidRepository.getHandlesExist(handles);
 
     // Then
     assertThat(collisions).hasSize(handles.size());
@@ -97,7 +97,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
     // When
-    List<byte[]> collisions = handleRep.getHandlesExist(handles);
+    List<byte[]> collisions = pidRepository.getHandlesExist(handles);
 
     // Then
     assertThat(collisions).isEmpty();
@@ -116,7 +116,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     postAttributes(rows);
 
     // When
-    List<byte[]> collisions = handleRep.checkHandlesWritable(handles);
+    List<byte[]> collisions = pidRepository.checkHandlesWritable(handles);
 
     // Then
     assertThat(collisions).hasSize(handles.size());
@@ -135,7 +135,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     postAttributes(rows);
 
     // When
-    List<byte[]> collisions = handleRep.checkHandlesWritable(handles);
+    List<byte[]> collisions = pidRepository.checkHandlesWritable(handles);
 
     // Then
     assertThat(collisions).isEmpty();
@@ -150,7 +150,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     postAttributes(responseExpected);
 
     // When
-    var responseReceived = handleRep.resolveHandleAttributes(handle);
+    var responseReceived = pidRepository.resolveHandleAttributes(handle);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -172,7 +172,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
       }
     }
     // When
-    var result = handleRep.getPrimarySpecimenObjectId(List.of(handle, handleAlt));
+    var result = pidRepository.getPrimarySpecimenObjectId(List.of(handle, handleAlt));
 
     // Then
     assertThat(result).hasSameElementsAs(expected);
@@ -192,7 +192,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     postAttributes(responseExpected);
 
     // When
-    var responseReceived = handleRep.resolveHandleAttributes(handles);
+    var responseReceived = pidRepository.resolveHandleAttributes(handles);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -214,7 +214,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     postAttributes(rows);
 
     // When
-    List<String> responseReceived = handleRep.getAllHandles(pageNum, pageSize);
+    List<String> responseReceived = pidRepository.getAllHandles(pageNum, pageSize);
 
     // Then
     assertThat(responseReceived).hasSameElementsAs(handles);
@@ -236,7 +236,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     postAttributes(rows);
 
     // When
-    List<String> responseReceived = handleRep.getAllHandles(pageNum, pageSize);
+    List<String> responseReceived = pidRepository.getAllHandles(pageNum, pageSize);
 
     // Then
     assertThat(responseReceived).hasSize(1);
@@ -265,7 +265,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     postAttributes(rows);
 
     // When
-    List<String> responseReceived = handleRep.getAllHandles(pidStatusTarget, pageNum, pageSize);
+    List<String> responseReceived = pidRepository.getAllHandles(pidStatusTarget, pageNum, pageSize);
 
     // Then
     assertThat(responseReceived).hasSameElementsAs(responseExpected);
@@ -293,7 +293,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     postAttributes(nonTargetAttributes);
 
     // When
-    var responseReceived = handleRep.searchByNormalisedPhysicalIdentifierFullRecord(
+    var responseReceived = pidRepository.searchByNormalisedPhysicalIdentifierFullRecord(
         List.of(targetPhysicalIdentifier));
 
     // Then
@@ -312,7 +312,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     postAttributes(expected);
 
     // When
-    var response = handleRep.searchByNormalisedPhysicalIdentifier(
+    var response = pidRepository.searchByNormalisedPhysicalIdentifier(
         List.of(NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     // Then
@@ -329,7 +329,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     postAttributes(originalRecord);
 
     // When
-    handleRep.updateRecord(CREATED.getEpochSecond(), recordUpdate, true);
+    pidRepository.updateRecord(CREATED.getEpochSecond(), recordUpdate, true);
     var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
             Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
         .where(Handles.HANDLES.HANDLE.eq(handle)).and(Handles.HANDLES.TYPE.notEqual(
@@ -356,7 +356,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     }
 
     // When
-    handleRep.updateRecordBatch(CREATED.getEpochSecond(), updateAttributes, true);
+    pidRepository.updateRecordBatch(CREATED.getEpochSecond(), updateAttributes, true);
     var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
             Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
         .where(Handles.HANDLES.HANDLE.in(handles)).and(Handles.HANDLES.TYPE.notEqual(
@@ -382,7 +382,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     }
 
     // When
-    handleRep.archiveRecords(CREATED.getEpochSecond(), tombstoneAttributes, handlesStr);
+    pidRepository.archiveRecords(CREATED.getEpochSecond(), tombstoneAttributes, handlesStr);
     var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
             Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
         .where(Handles.HANDLES.HANDLE.in(handles)).and(Handles.HANDLES.TYPE.notEqual(
@@ -403,7 +403,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     postAttributes(originalRecord);
 
     // When
-    handleRep.archiveRecords(CREATED.getEpochSecond(), tombstoneAttributes, List.of(HANDLE));
+    pidRepository.archiveRecords(CREATED.getEpochSecond(), tombstoneAttributes, List.of(HANDLE));
     var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
             Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
         .where(Handles.HANDLES.HANDLE.eq(handle)).and(Handles.HANDLES.TYPE.notEqual(
@@ -422,7 +422,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     postAttributes(genHandleRecordAttributes(HANDLE_ALT.getBytes(StandardCharsets.UTF_8)));
 
     // When
-    handleRep.rollbackHandles(List.of(HANDLE_ALT));
+    pidRepository.rollbackHandles(List.of(HANDLE_ALT));
     var response = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
         Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(HANDLES).fetch(this::mapToAttribute);
 
@@ -440,7 +440,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     postAttributes(originalRecord);
 
     // When
-    handleRep.updateRecord(CREATED.getEpochSecond(), recordUpdate, false);
+    pidRepository.updateRecord(CREATED.getEpochSecond(), recordUpdate, false);
     var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
             Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
         .where(Handles.HANDLES.HANDLE.eq(handle)).and(Handles.HANDLES.TYPE.notEqual(
@@ -475,7 +475,7 @@ class HandleRepositoryIT extends BaseRepositoryIT {
     var expected = Stream.concat(updatedRecord.stream(), newRecord.stream()).toList();
 
     // When
-    handleRep.postAndUpdateHandles(CREATED.getEpochSecond(), newRecord, List.of(updatedRecord));
+    pidRepository.postAndUpdateHandles(CREATED.getEpochSecond(), newRecord, List.of(updatedRecord));
     var response = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
         Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(HANDLES).fetch(this::mapToAttribute);
 

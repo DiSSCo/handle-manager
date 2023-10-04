@@ -22,7 +22,7 @@ import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
-import eu.dissco.core.handlemanager.service.HandleService;
+import eu.dissco.core.handlemanager.service.PidService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
@@ -51,9 +51,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @ControllerAdvice
 @Slf4j
-public class HandleController {
+public class PidController {
 
-  private final HandleService service;
+  private final PidService service;
+
   private final JsonSchemaValidator schemaValidator;
   private final ApplicationProperties applicationProperties;
   private static final int LOG_LIMIT = 4;

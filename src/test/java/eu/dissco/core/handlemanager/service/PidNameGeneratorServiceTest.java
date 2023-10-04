@@ -8,7 +8,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.lenient;
 
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
-import eu.dissco.core.handlemanager.repository.HandleRepository;
+import eu.dissco.core.handlemanager.repository.PidRepository;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,10 +20,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class HandleGeneratorServiceTest {
+class PidNameGeneratorServiceTest {
 
   @Mock
-  private HandleRepository handleRep;
+  private PidRepository pidRepository;
 
   @Mock
   private Random random;
@@ -32,11 +32,12 @@ class HandleGeneratorServiceTest {
   ApplicationProperties applicationProperties;
   private static final int MAX_HANDLES = 1000;
 
-  private HandleGeneratorService hgService;
+  private PidNameGeneratorService pidNameGeneratorService;
 
   @BeforeEach
   void setup() {
-    this.hgService = new HandleGeneratorService(applicationProperties, handleRep, random);
+    this.pidNameGeneratorService = new PidNameGeneratorService(applicationProperties, pidRepository,
+        random);
     lenient().when(applicationProperties.getMaxHandles()).thenReturn(MAX_HANDLES);
   }
 
@@ -48,7 +49,8 @@ class HandleGeneratorServiceTest {
     given(applicationProperties.getPrefix()).willReturn(PREFIX);
 
     // When
-    String generatedHandle = new String(hgService.genHandleList(1).get(0), StandardCharsets.UTF_8);
+    String generatedHandle = new String(pidNameGeneratorService.genHandleList(1).get(0),
+        StandardCharsets.UTF_8);
 
     // Then
     assertThat(generatedHandle).isEqualTo(expectedHandle);
@@ -64,7 +66,7 @@ class HandleGeneratorServiceTest {
     given(applicationProperties.getPrefix()).willReturn(PREFIX);
 
     // When
-    List<byte[]> handleList = hgService.genHandleList(2);
+    List<byte[]> handleList = pidNameGeneratorService.genHandleList(2);
     String generatedHandle1 = new String(handleList.get(0));
     String generatedHandle2 = new String(handleList.get(1));
 
@@ -84,7 +86,7 @@ class HandleGeneratorServiceTest {
     given(applicationProperties.getPrefix()).willReturn(PREFIX);
 
     // When
-    List<byte[]> handleList = hgService.genHandleList(2);
+    List<byte[]> handleList = pidNameGeneratorService.genHandleList(2);
     String generatedHandle1 = new String(handleList.get(0));
     String generatedHandle2 = new String(handleList.get(1));
 
@@ -103,13 +105,13 @@ class HandleGeneratorServiceTest {
     handleListInternalDuplicate.add(expectedHandle1);
 
     given(random.nextInt(anyInt())).willReturn(0, 1);
-    given(handleRep.getHandlesExist(anyList()))
+    given(pidRepository.getHandlesExist(anyList()))
         .willReturn(handleListInternalDuplicate)
         .willReturn(new ArrayList<>());
     given(applicationProperties.getPrefix()).willReturn(PREFIX);
 
     // When
-    List<byte[]> generatedHandleList = hgService.genHandleList(2);
+    List<byte[]> generatedHandleList = pidNameGeneratorService.genHandleList(2);
     byte[] generatedHandle1 = generatedHandleList.get(0);
     byte[] generatedHandle2 = generatedHandleList.get(1);
 
@@ -121,7 +123,7 @@ class HandleGeneratorServiceTest {
   @Test
   void testInvalidNumberOfHandles() {
     // When
-    var tooFew = hgService.genHandleList(-1);
+    var tooFew = pidNameGeneratorService.genHandleList(-1);
 
     // Then
     assertThat(tooFew).isEmpty();

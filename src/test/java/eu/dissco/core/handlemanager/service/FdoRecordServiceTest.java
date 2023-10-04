@@ -134,7 +134,7 @@ import eu.dissco.core.handlemanager.domain.requests.vocabulary.media.PrimaryMedi
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
-import eu.dissco.core.handlemanager.repository.HandleRepository;
+import eu.dissco.core.handlemanager.repository.PidRepository;
 import eu.dissco.core.handlemanager.web.PidResolver;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -199,7 +199,7 @@ class FdoRecordServiceTest {
   @Mock
   private PidResolver pidResolver;
   @Mock
-  private HandleRepository handleRepository;
+  private PidRepository pidRepository;
   @Mock
   private ApplicationProperties appProperties;
   @Mock
@@ -216,7 +216,7 @@ class FdoRecordServiceTest {
   @BeforeEach
   void init() {
     fdoRecordService = new FdoRecordService(TRANSFORMER_FACTORY, DOC_BUILDER_FACTORY, pidResolver,
-        MAPPER, handleRepository, appProperties, environment);
+        MAPPER, pidRepository, appProperties, environment);
     given(appProperties.getApiUrl()).willReturn(API_URL);
     given(appProperties.getOrchestrationUrl()).willReturn(ORCHESTRATION_URL);
     given(appProperties.getUiUrl()).willReturn(UI_URL);
@@ -456,7 +456,7 @@ class FdoRecordServiceTest {
   void testPrepareAnnotationAttributes() throws Exception {
     // Given
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
-    given(handleRepository.resolveHandleAttributes(any(byte[].class))).willReturn(
+    given(pidRepository.resolveHandleAttributes(any(byte[].class))).willReturn(
         genHandleRecordAttributes(handle, ObjectType.ANNOTATION));
     var request = givenAnnotationRequestObject();
 
@@ -494,7 +494,7 @@ class FdoRecordServiceTest {
   void testPrepareAnnotationAttributesPidResolution() throws Exception {
     // Given
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
-    given(handleRepository.resolveHandleAttributes(any(byte[].class))).willReturn(
+    given(pidRepository.resolveHandleAttributes(any(byte[].class))).willReturn(
         new ArrayList<>());
     var request = givenAnnotationRequestObject();
 

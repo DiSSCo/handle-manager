@@ -93,7 +93,7 @@ import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
-import eu.dissco.core.handlemanager.repository.HandleRepository;
+import eu.dissco.core.handlemanager.repository.PidRepository;
 import eu.dissco.core.handlemanager.web.PidResolver;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -130,7 +130,7 @@ public class FdoRecordService {
   private final DocumentBuilderFactory dbf;
   private final PidResolver pidResolver;
   private final ObjectMapper mapper;
-  private final HandleRepository handleRep;
+  private final PidRepository pidRepository;
   private final ApplicationProperties appProperties;
   private final Environment environment;
   private static final String HANDLE_DOMAIN = "https://hdl.handle.net/";
@@ -394,7 +394,7 @@ public class FdoRecordService {
   }
 
   private void resolveInternalPid(AnnotationRequest request) throws PidResolutionException {
-    var resolvedSubject = handleRep.resolveHandleAttributes(
+    var resolvedSubject = pidRepository.resolveHandleAttributes(
         request.getSubjectDigitalObjectId()
             .replace(HANDLE_DOMAIN, "")
             .getBytes(StandardCharsets.UTF_8));

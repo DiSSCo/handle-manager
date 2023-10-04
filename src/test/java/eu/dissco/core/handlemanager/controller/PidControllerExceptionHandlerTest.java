@@ -16,7 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
-class HandleControllerExceptionHandlerTest {
+class PidControllerExceptionHandlerTest {
 
   private RestResponseEntityExceptionHandler exceptionHandler;
   private static final String errorMessage = "Error";
@@ -47,7 +47,8 @@ class HandleControllerExceptionHandlerTest {
         "Invalid Request", errorMessage);
 
     // When
-    var result = exceptionHandler.invalidRecordInputException(new InvalidRequestException(errorMessage));
+    var result = exceptionHandler.invalidRecordInputException(
+        new InvalidRequestException(errorMessage));
 
     // Then
     assertThat(result.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -107,7 +108,8 @@ class HandleControllerExceptionHandlerTest {
         "Unprocessable Entity Exception", errorMessage);
 
     // When
-    var result = exceptionHandler.unprocessableEntityException(new UnprocessableEntityException(errorMessage));
+    var result = exceptionHandler.unprocessableEntityException(
+        new UnprocessableEntityException(errorMessage));
 
     // Then
     assertThat(result.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);

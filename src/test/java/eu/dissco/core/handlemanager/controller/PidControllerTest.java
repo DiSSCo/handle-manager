@@ -46,6 +46,7 @@ import static org.mockito.BDDMockito.then;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.requests.RollbackRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
@@ -56,7 +57,7 @@ import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimaryObjectIdTy
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
-import eu.dissco.core.handlemanager.service.HandleService;
+import eu.dissco.core.handlemanager.service.PidService;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -68,12 +69,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.core.Authentication;
+import org.springframework.test.context.ActiveProfiles;
 
 @ExtendWith(MockitoExtension.class)
-class HandleControllerTest {
+@ActiveProfiles(profiles = Profiles.HANDLE)
+class PidControllerTest {
 
   @Mock
-  private HandleService service;
+  private PidService service;
 
   @Mock
   private Authentication authentication;
@@ -81,7 +84,7 @@ class HandleControllerTest {
   @Mock
   private JsonSchemaValidator schemaValidator;
 
-  private HandleController controller;
+  private PidController controller;
 
   private final String SANDBOX_URI = "https://sandbox.dissco.tech";
 
@@ -91,7 +94,7 @@ class HandleControllerTest {
 
   @BeforeEach
   void setup() {
-    controller = new HandleController(service, schemaValidator, applicationProperties);
+    controller = new PidController(service, schemaValidator, applicationProperties);
   }
 
   @Test
