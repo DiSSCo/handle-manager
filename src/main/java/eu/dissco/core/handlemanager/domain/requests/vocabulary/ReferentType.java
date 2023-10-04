@@ -4,9 +4,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public enum ReferentType {
 
-  @JsonProperty("Digital Specimen") DIGITAL_SPECIMEN("Digital Specimen"),
-  @JsonProperty("Media Object") MEDIA_OBJECT("Media Object"),
-  @JsonProperty("Organisation") ORGANISATION("organisation"),
+  @JsonProperty("Digital Specimen") DIGITAL_SPECIMEN("Digital specimen"),
+  @JsonProperty("Media Object") MEDIA_OBJECT("Media object"),
+  @JsonProperty("Organisation") ORGANISATION("Organisation"),
   @JsonProperty("Other") OTHER("Other");
 
   private final String state;
