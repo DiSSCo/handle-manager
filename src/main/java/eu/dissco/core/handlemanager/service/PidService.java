@@ -5,6 +5,7 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_DO_PID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_MEDIA_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.REFERENT_TYPE;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ID;
@@ -141,21 +142,34 @@ public abstract class PidService {
     var dbRecord = pidRepository.resolveHandleAttributes(handle);
     verifyHandleResolution(List.of(handle), dbRecord);
     var recordAttributeList = formatRecords(dbRecord).get(0);
-    var dataNode = wrapData(recordAttributeList, "PID");
+    var dataNode = wrapData(recordAttributeList, getRecordType(dbRecord));
     var linksNode = new JsonApiLinks(path);
     return new JsonApiWrapperReadSingle(linksNode, dataNode);
   }
 
+  private String getRecordType(List<HandleAttribute> dbRecord) {
+    var type = dbRecord.stream().filter(row -> row.getType().equals(REFERENT_TYPE.get()))
+        .map(val -> new String(val.getData(), StandardCharsets.UTF_8))
+        .findFirst();
+    return type.orElse(ObjectType.HANDLE.toString());
+  }
+
   public JsonApiWrapperRead resolveBatchRecord(List<byte[]> handles, String path)
       throws PidResolutionException {
-    List<JsonApiDataLinks> dataList = new ArrayList<>();
     var dbRecords = pidRepository.resolveHandleAttributes(handles);
     verifyHandleResolution(handles, dbRecords);
     var recordAttributeList = formatRecords(dbRecords);
-    for (JsonNode recordAttributes : recordAttributeList) {
-      dataList.add(wrapData(recordAttributes, "PID"));
-    }
+    var dataList = recordAttributeList.stream()
+        .map(recordAttributes -> wrapData(recordAttributes, getObjectType(recordAttributes)))
+        .toList();
     return new JsonApiWrapperRead(new JsonApiLinks(path), dataList);
+  }
+
+  private String getObjectType(JsonNode attributes) {
+    if (attributes.get(REFERENT_TYPE.get()) != null) {
+      return attributes.get(REFERENT_TYPE.get()).asText();
+    }
+    return ObjectType.HANDLE.toString();
   }
 
   // Getters
@@ -196,7 +210,7 @@ public abstract class PidService {
     List<JsonApiDataLinks> dataNode = new ArrayList<>();
 
     var jsonFormattedRecord = jsonFormatSingleRecord(returnedRows);
-    dataNode.add(wrapData(jsonFormattedRecord, "PID"));
+    dataNode.add(wrapData(jsonFormattedRecord, DIGITAL_SPECIMEN.toString()));
     return new JsonApiWrapperWrite(dataNode);
   }
 

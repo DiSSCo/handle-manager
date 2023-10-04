@@ -1,7 +1,7 @@
 package eu.dissco.core.handlemanager.domain.requests.objects;
 
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.ReferentType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.StructuralType;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -32,7 +32,7 @@ public class DoiRecordRequest extends HandleRecordRequest {
       String[] locations,
       // Doi
       String referentName,
-      ReferentType referentType,
+      ObjectType referentType,
       String primaryReferentType) {
     super(fdoProfile, issuedForAgent, digitalObjectType, pidIssuer, structuralType, locations);
     this.referentType = referentType.toString();

@@ -1,8 +1,8 @@
 package eu.dissco.core.handlemanager.domain.requests.objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimarySpecimenObjectIdType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.ReferentType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.StructuralType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.media.LinkedDigitalObjectType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.media.MediaFormat;
@@ -88,7 +88,7 @@ public class MediaObjectRequest extends DoiRecordRequest {
   ) throws InvalidRequestException {
     super(fdoProfile, issuedForAgent, digitalObjectTypePid, pidIssuer, StructuralType.DIGITAL,
         locations,
-        referentName, ReferentType.MEDIA_OBJECT, primaryReferentType);
+        referentName, ObjectType.MEDIA_OBJECT, primaryReferentType);
     this.mediaHost = mediaHost;
     this.mediaHostName = mediaHostName;
     this.mediaFormat = mediaFormat;

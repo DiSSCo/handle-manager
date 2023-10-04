@@ -9,8 +9,8 @@ import eu.dissco.core.handlemanager.domain.requests.vocabulary.InformationArtefa
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.LivingOrPreserved;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialOrDigitalEntity;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialSampleType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimarySpecimenObjectIdType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.ReferentType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.StructuralType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicCategory;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicDiscipline;
@@ -101,7 +101,7 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
       String derivedFromEntity) throws InvalidRequestException {
     super(fdoProfile, issuedForAgent, digitalObjectTypePid, pidIssuer, StructuralType.DIGITAL,
         locations,
-        referentName, ReferentType.DIGITAL_SPECIMEN, primaryReferentType);
+        referentName, ObjectType.DIGITAL_SPECIMEN, primaryReferentType);
     this.specimenHost = specimenHost;
     this.specimenHostName = specimenHostName;
     this.primarySpecimenObjectId = primarySpecimenObjectId;

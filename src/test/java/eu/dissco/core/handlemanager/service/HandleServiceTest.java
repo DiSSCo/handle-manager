@@ -51,7 +51,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordRespon
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWrite;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteArchive;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteGeneric;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteSmallResponse;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemRequestObject;
 import static eu.dissco.core.handlemanager.utils.AdminHandleGenerator.genAdminHandle;
@@ -149,7 +148,7 @@ class HandleServiceTest {
     List<HandleAttribute> recordAttributeList = genHandleRecordAttributes(handle,
         ObjectType.HANDLE);
 
-    var responseExpected = givenRecordResponseReadSingle(HANDLE, path, "PID",
+    var responseExpected = givenRecordResponseReadSingle(HANDLE, path, ObjectType.HANDLE.toString(),
         genObjectNodeAttributeRecord(recordAttributeList));
 
     given(pidRepository.resolveHandleAttributes(any(byte[].class))).willReturn(recordAttributeList);
@@ -174,7 +173,7 @@ class HandleServiceTest {
         ObjectType.HANDLE);
     recordAttributeList.add(adminHandle);
 
-    var responseExpected = givenRecordResponseReadSingle(HANDLE, path, "PID",
+    var responseExpected = givenRecordResponseReadSingle(HANDLE, path, ObjectType.HANDLE.toString(),
         genObjectNodeAttributeRecord(recordAttributeList));
 
     given(pidRepository.resolveHandleAttributes(any(byte[].class))).willReturn(recordAttributeList);
@@ -209,7 +208,7 @@ class HandleServiceTest {
     for (byte[] handle : handles) {
       repositoryResponse.addAll(genHandleRecordAttributes(handle, ObjectType.HANDLE));
     }
-    var responseExpected = givenRecordResponseRead(handles, path, "PID");
+    var responseExpected = givenRecordResponseRead(handles, path, ObjectType.HANDLE.toString());
 
     given(pidRepository.resolveHandleAttributes(anyList())).willReturn(repositoryResponse);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
@@ -225,7 +224,7 @@ class HandleServiceTest {
   void testSearchByPhysicalSpecimenId() throws Exception {
     // Given
     var expectedAttributes = genDigitalSpecimenAttributes(HANDLE.getBytes(StandardCharsets.UTF_8));
-    var responseExpected = givenRecordResponseWriteGeneric(
+    var responseExpected = givenRecordResponseWrite(
         List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), RECORD_TYPE_DS);
 
     given(pidRepository.searchByNormalisedPhysicalIdentifierFullRecord(anyList()))
@@ -264,7 +263,7 @@ class HandleServiceTest {
   void testSearchByPhysicalSpecimenIdCombined() throws Exception {
     // Given
     var expectedAttributes = genDigitalSpecimenAttributes(HANDLE.getBytes(StandardCharsets.UTF_8));
-    var responseExpected = givenRecordResponseWriteGeneric(
+    var responseExpected = givenRecordResponseWrite(
         List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), RECORD_TYPE_DS);
 
     given(pidRepository.searchByNormalisedPhysicalIdentifierFullRecord(anyList()))
