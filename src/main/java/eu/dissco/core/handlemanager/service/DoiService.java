@@ -8,7 +8,6 @@ import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_TYPE;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
@@ -39,10 +38,10 @@ import org.springframework.stereotype.Service;
 public class DoiService extends PidService {
 
   public DoiService(PidRepository pidRepository,
-      FdoRecordService fdoRecordService, PidNameGeneratorService hf,
+      FdoRecordService fdoRecordService, PidNameGeneratorService pidNameGeneratorService,
       ObjectMapper mapper,
       ProfileProperties profileProperties) {
-    super(pidRepository, fdoRecordService, hf, mapper, profileProperties);
+    super(pidRepository, fdoRecordService, pidNameGeneratorService, mapper, profileProperties);
   }
 
   private static final String TYPE_ERROR_MESSAGE = "Error creating DOI for object of Type %s. Only Digital Specimens and Media Objects use DOIs.";
@@ -52,7 +51,6 @@ public class DoiService extends PidService {
       List<JsonNode> requests)
       throws PidResolutionException, PidServiceInternalError, InvalidRequestException, PidCreationException {
 
-    var recordTimestamp = Instant.now().getEpochSecond();
     List<byte[]> handles = hf.genHandleList(requests.size());
     List<DigitalSpecimenRequest> digitalSpecimenList = new ArrayList<>();
 
@@ -60,7 +58,7 @@ public class DoiService extends PidService {
     Map<String, ObjectType> recordTypes = new HashMap<>();
 
     for (var request : requests) {
-      ObjectNode dataNode = (ObjectNode) request.get(NODE_DATA);
+      var dataNode = request.get(NODE_DATA);
       ObjectType type = ObjectType.fromString(dataNode.get(NODE_TYPE).asText());
       recordTypes.put(new String(handles.get(0), StandardCharsets.UTF_8), type);
       try {
@@ -93,6 +91,7 @@ public class DoiService extends PidService {
     validateDigitalSpecimens(digitalSpecimenList);
 
     log.info("Persisting new DOIs to db");
+    var recordTimestamp = Instant.now().getEpochSecond();
     pidRepository.postAttributesToDb(recordTimestamp, handleAttributes);
 
     return new JsonApiWrapperWrite(formatCreateRecords(handleAttributes, recordTypes));

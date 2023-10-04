@@ -58,11 +58,7 @@ public abstract class PidService {
 
   private List<JsonNode> formatRecords(List<HandleAttribute> dbRecord) {
     var handleMap = mapRecords(dbRecord);
-    List<JsonNode> rootNodeList = new ArrayList<>();
-    for (var handleRecord : handleMap.entrySet()) {
-      rootNodeList.add(jsonFormatSingleRecord(handleRecord.getValue()));
-    }
-    return rootNodeList;
+    return handleMap.values().stream().map(this::jsonFormatSingleRecord).toList();
   }
 
   private JsonNode jsonFormatSingleRecord(List<HandleAttribute> dbRecord) {
@@ -276,7 +272,6 @@ public abstract class PidService {
   }
 
   // Upsert
-
   public JsonApiWrapperWrite upsertDigitalSpecimens(List<JsonNode> requests)
       throws JsonProcessingException, UnprocessableEntityException, PidResolutionException,
       InvalidRequestException, PidServiceInternalError {
@@ -408,7 +403,6 @@ public abstract class PidService {
   }
 
   // Update
-
   public JsonApiWrapperWrite updateRecords(List<JsonNode> requests,
       boolean incrementVersion)
       throws InvalidRequestException, PidResolutionException, PidServiceInternalError, UnprocessableEntityException {
