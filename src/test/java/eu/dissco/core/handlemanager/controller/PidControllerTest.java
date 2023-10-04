@@ -16,8 +16,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_HANDL
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MAPPING;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MEDIA;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_SOURCE_SYSTEM;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.SOURCE_SYSTEM_TESTVAL;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SUFFIX;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordRequestObject;
@@ -53,7 +51,6 @@ import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenReque
 import eu.dissco.core.handlemanager.domain.requests.objects.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaValidator;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimaryObjectIdType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
@@ -131,14 +128,12 @@ class PidControllerTest {
     var responseExpected = givenRecordResponseWriteGeneric(
         List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), RECORD_TYPE_DS);
     given(
-        service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-            PrimaryObjectIdType.LOCAL,
-            SOURCE_SYSTEM_TESTVAL)).willReturn(responseExpected);
+        service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL
+        )).willReturn(responseExpected);
 
     // When
     var responseReceived = controller.searchByPrimarySpecimenObjectId(
-        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        PrimaryObjectIdType.LOCAL, SOURCE_SYSTEM_TESTVAL);
+        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -149,17 +144,14 @@ class PidControllerTest {
   void testSearchByPhysicalIdCombined() throws Exception {
     // Given
     String physicalId = PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
-    var physicalIdType = PrimaryObjectIdType.LOCAL;
-    String specimenHostPid = SPECIMEN_HOST_TESTVAL;
     var responseExpected = givenRecordResponseWriteGeneric(
         List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), RECORD_TYPE_DS);
     given(
-        service.searchByPhysicalSpecimenId(physicalId, physicalIdType, specimenHostPid)).willReturn(
+        service.searchByPhysicalSpecimenId(physicalId)).willReturn(
         responseExpected);
 
     // When
-    var responseReceived = controller.searchByPrimarySpecimenObjectId(physicalId, physicalIdType,
-        specimenHostPid);
+    var responseReceived = controller.searchByPrimarySpecimenObjectId(physicalId);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);

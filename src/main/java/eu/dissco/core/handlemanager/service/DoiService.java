@@ -17,7 +17,6 @@ import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
-import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.PidRepository;
@@ -49,7 +48,7 @@ public class DoiService extends PidService {
   @Override
   public JsonApiWrapperWrite createRecords(
       List<JsonNode> requests)
-      throws PidResolutionException, PidServiceInternalError, InvalidRequestException, PidCreationException {
+      throws PidResolutionException, InvalidRequestException, PidCreationException {
 
     List<byte[]> handles = hf.genHandleList(requests.size());
     List<DigitalSpecimenRequest> digitalSpecimenList = new ArrayList<>();
@@ -99,7 +98,7 @@ public class DoiService extends PidService {
 
   @Override
   public JsonApiWrapperWrite updateRecords(List<JsonNode> requests, boolean incrementVersion)
-      throws InvalidRequestException, PidResolutionException, PidServiceInternalError, UnprocessableEntityException {
+      throws InvalidRequestException, PidResolutionException, UnprocessableEntityException {
     var types = requests.stream()
         .map(request -> request.get(NODE_DATA).get(NODE_TYPE).asText())
         .filter(type -> !type.equals(ObjectType.MEDIA_OBJECT.toString())

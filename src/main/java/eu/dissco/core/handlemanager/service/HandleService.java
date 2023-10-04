@@ -24,7 +24,6 @@ import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
-import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.PidRepository;
@@ -54,7 +53,7 @@ public class HandleService extends PidService {
   @Override
   public JsonApiWrapperWrite createRecords(
       List<JsonNode> requests)
-      throws PidResolutionException, PidServiceInternalError, InvalidRequestException, PidCreationException {
+      throws PidResolutionException, InvalidRequestException, PidCreationException {
 
     var recordTimestamp = Instant.now().getEpochSecond();
     List<byte[]> handles = hf.genHandleList(requests.size());

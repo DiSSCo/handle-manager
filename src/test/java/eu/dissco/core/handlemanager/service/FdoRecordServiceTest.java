@@ -66,6 +66,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.DIGITAL_OBJECT_TY
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.DOC_BUILDER_FACTORY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.FDO_PROFILE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_DOMAIN;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.ISSUED_FOR_AGENT_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.LICENSE_NAME_TESTVAL;
@@ -75,13 +76,13 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.LOC_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MEDIA_HOST_NAME_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MEDIA_HOST_TESTVAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.ORCHESTRATION_URL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_ISSUER_TESTVAL_OTHER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_REFERENT_TYPE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.REFERENT_NAME_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.ROR_DOMAIN;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.SOURCE_SYSTEM_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_NAME_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.STRUCTURAL_TYPE_TESTVAL;
@@ -124,7 +125,7 @@ import eu.dissco.core.handlemanager.domain.requests.vocabulary.LivingOrPreserved
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialOrDigitalEntity;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialSampleType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimaryObjectIdType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimarySpecimenObjectIdType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicCategory;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicDiscipline;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicDomain;
@@ -309,10 +310,10 @@ class FdoRecordServiceTest {
         PRIMARY_REFERENT_TYPE_TESTVAL,
         MEDIA_HOST_TESTVAL, MEDIA_HOST_NAME_TESTVAL, MediaFormat.TEXT, Boolean.TRUE,
         LINKED_DO_PID_TESTVAL,
-        LINKED_DIGITAL_OBJECT_TYPE_TESTVAL, "a", "b", PrimaryObjectIdType.GLOBAL, "d",
+        LINKED_DIGITAL_OBJECT_TYPE_TESTVAL, "a", "b", PrimarySpecimenObjectIdType.GLOBAL, "d",
         PrimaryMediaObjectType.IMAGE, "e", "f",
         LICENSE_NAME_TESTVAL,
-        "g", "h", "i", PrimaryObjectIdType.LOCAL, "j"
+        "g", "h", "i", PrimarySpecimenObjectIdType.LOCAL, "j"
     );
 
     // When
@@ -390,8 +391,21 @@ class FdoRecordServiceTest {
         qid,
         null,
         "PhysicalId",
-        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-        SOURCE_SYSTEM_TESTVAL,
+        null,
+        null,
+        NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
         null);
 
     // When
@@ -418,8 +432,21 @@ class FdoRecordServiceTest {
         specimenId,
         null,
         "PhysicalId",
-        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-        SOURCE_SYSTEM_TESTVAL,
+        null,
+        null,
+        NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
         null);
 
     // When
@@ -630,8 +657,22 @@ class FdoRecordServiceTest {
         SPECIMEN_HOST_TESTVAL,
         null,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-        SOURCE_SYSTEM_TESTVAL, null);
+        null,
+        null,
+        NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null);
 
     // When
     var result = fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle,
@@ -655,8 +696,22 @@ class FdoRecordServiceTest {
         SPECIMEN_HOST_TESTVAL,
         null,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-        SOURCE_SYSTEM_TESTVAL, null);
+        null,
+        null,
+        NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null);
 
     var specimenHostRorApi = request.getSpecimenHost().replace(ROR_DOMAIN, ROR_API);
     given(pidResolver.getObjectName(specimenHostRorApi)).willThrow(new PidResolutionException(""));
@@ -797,13 +852,14 @@ class FdoRecordServiceTest {
         SPECIMEN_HOST_TESTVAL,
         SPECIMEN_HOST_NAME_TESTVAL,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        PrimaryObjectIdType.LOCAL, "b", null,
+        PrimarySpecimenObjectIdType.LOCAL, "b", NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
+        null,
         List.of(new OtherSpecimenId("Id", "local identifier", "id for institute")),
         TopicOrigin.NATURAL, TopicDomain.LIFE,
         TopicDiscipline.ZOO, TopicCategory.AMPHIBIANS, LivingOrPreserved.LIVING,
         BaseTypeOfSpecimen.INFO, InformationArtefactType.MOVING_IMG,
-        MaterialSampleType.ORG_PART, MaterialOrDigitalEntity.DIGITAL, false, "p",
-        SOURCE_SYSTEM_TESTVAL, PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL + ":" + SOURCE_SYSTEM_TESTVAL);
+        MaterialSampleType.ORG_PART, MaterialOrDigitalEntity.DIGITAL, false,
+        HANDLE_ALT);
   }
 
   private boolean hasCorrectElements(List<HandleAttribute> fdoRecord,

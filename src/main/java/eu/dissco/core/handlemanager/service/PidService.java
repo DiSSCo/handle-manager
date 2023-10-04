@@ -25,11 +25,9 @@ import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.UpsertDigitalSpecimen;
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimaryObjectIdType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
-import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.PidRepository;
@@ -186,12 +184,10 @@ public abstract class PidService {
     throw new PidResolutionException("PIDs not found: " + handlesString);
   }
 
-  public JsonApiWrapperWrite searchByPhysicalSpecimenId(String physicalId,
-      PrimaryObjectIdType physicalIdType, String specimenHostPid)
-      throws PidResolutionException, InvalidRequestException {
-    var physicalIdentifier = setPhysicalId(physicalId, physicalIdType, specimenHostPid);
+  public JsonApiWrapperWrite searchByPhysicalSpecimenId(String normalisedPhysicalId)
+      throws PidResolutionException {
     var returnedRows = pidRepository.searchByNormalisedPhysicalIdentifierFullRecord(
-        List.of(physicalIdentifier));
+        List.of(normalisedPhysicalId.getBytes(StandardCharsets.UTF_8)));
     var handleNames = listHandleNamesReturnedFromQuery(returnedRows);
     if (handleNames.size() > 1) {
       throw new PidResolutionException(
@@ -204,18 +200,6 @@ public abstract class PidService {
     return new JsonApiWrapperWrite(dataNode);
   }
 
-  private byte[] setPhysicalId(String physicalIdentifier, PrimaryObjectIdType physicalIdType,
-      String sourceSystemId)
-      throws InvalidRequestException {
-    if (physicalIdType.isGlobal()) {
-      return physicalIdentifier.getBytes(StandardCharsets.UTF_8);
-    }
-    if (sourceSystemId == null) {
-      throw new InvalidRequestException("Missing specimen host ID.");
-    }
-    return (physicalIdentifier + ":" + sourceSystemId).getBytes(StandardCharsets.UTF_8);
-  }
-
   private Set<String> listHandleNamesReturnedFromQuery(List<HandleAttribute> rows) {
     Set<String> handles = new HashSet<>();
     rows.forEach(row -> handles.add((new String(row.getHandle(), StandardCharsets.UTF_8))));
@@ -225,7 +209,7 @@ public abstract class PidService {
   // Create
   public abstract JsonApiWrapperWrite createRecords(
       List<JsonNode> requests)
-      throws PidResolutionException, PidServiceInternalError, InvalidRequestException, PidCreationException;
+      throws PidResolutionException, InvalidRequestException, PidCreationException;
 
   protected <T extends DigitalSpecimenRequest> Set<String> getPhysicalIdsFromRequests(
       List<T> digitalSpecimenRequests) {
@@ -274,7 +258,7 @@ public abstract class PidService {
   // Upsert
   public JsonApiWrapperWrite upsertDigitalSpecimens(List<JsonNode> requests)
       throws JsonProcessingException, UnprocessableEntityException, PidResolutionException,
-      InvalidRequestException, PidServiceInternalError {
+      InvalidRequestException {
     var digitalSpecimenRequests = jsonNodeToDigitalSpecimenRequest(requests);
 
     var physicalIds = getPhysicalIdsFromRequests(digitalSpecimenRequests);
@@ -369,7 +353,7 @@ public abstract class PidService {
 
   private List<HandleAttribute> getCreateAttributes(
       List<DigitalSpecimenRequest> digitalSpecimenRequests, List<byte[]> newHandles)
-      throws UnprocessableEntityException, PidResolutionException, InvalidRequestException, PidServiceInternalError {
+      throws UnprocessableEntityException, PidResolutionException, InvalidRequestException {
     var handles = new ArrayList<>(newHandles);
     List<HandleAttribute> handleAttributes = new ArrayList<>();
     for (var digitalSpecimenRequest : digitalSpecimenRequests) {
@@ -391,7 +375,7 @@ public abstract class PidService {
 
   private List<List<HandleAttribute>> prepareUpsertAttributes(
       List<UpsertDigitalSpecimen> upsertDigitalSpecimens)
-      throws InvalidRequestException, PidServiceInternalError, UnprocessableEntityException, PidResolutionException {
+      throws InvalidRequestException, UnprocessableEntityException, PidResolutionException {
     List<List<HandleAttribute>> upsertAttributes = new ArrayList<>();
     for (var upsertRequest : upsertDigitalSpecimens) {
       ArrayList<HandleAttribute> upsertAttributeSingleSpecimen = new ArrayList<>(fdoRecordService
@@ -405,7 +389,7 @@ public abstract class PidService {
   // Update
   public JsonApiWrapperWrite updateRecords(List<JsonNode> requests,
       boolean incrementVersion)
-      throws InvalidRequestException, PidResolutionException, PidServiceInternalError, UnprocessableEntityException {
+      throws InvalidRequestException, PidResolutionException, UnprocessableEntityException {
     var recordTimestamp = Instant.now().getEpochSecond();
     List<byte[]> handles = new ArrayList<>();
     List<List<HandleAttribute>> attributesToUpdate = new ArrayList<>();
@@ -480,7 +464,7 @@ public abstract class PidService {
 
   // Archive
   public JsonApiWrapperWrite archiveRecordBatch(List<JsonNode> requests)
-      throws InvalidRequestException, PidResolutionException, PidServiceInternalError, UnprocessableEntityException {
+      throws InvalidRequestException, PidResolutionException, UnprocessableEntityException {
     var recordTimestamp = Instant.now().getEpochSecond();
     List<byte[]> handles = new ArrayList<>();
     var archiveAttributesFlat = new ArrayList<HandleAttribute>();

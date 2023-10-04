@@ -1,11 +1,11 @@
 package eu.dissco.core.handlemanager.domain;
 
-import static eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimaryObjectIdType.LOCAL;
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimarySpecimenObjectIdType.LOCAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.DIGITAL_OBJECT_TYPE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.FDO_PROFILE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.ISSUED_FOR_AGENT_TESTVAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.SOURCE_SYSTEM_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_NAME_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -14,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.ReferentType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import org.junit.jupiter.api.Test;
 
@@ -45,7 +46,7 @@ class RequestAttributeTest {
         null,
         null,
         null,
-        "Digital Specimen",
+        ReferentType.DIGITAL_SPECIMEN,
         null
     );
 
@@ -68,7 +69,6 @@ class RequestAttributeTest {
         SPECIMEN_HOST_NAME_TESTVAL,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
         null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-        SOURCE_SYSTEM_TESTVAL,
         null);
 
     // Then
@@ -88,9 +88,9 @@ class RequestAttributeTest {
         null,
         SPECIMEN_HOST_TESTVAL,
         SPECIMEN_HOST_NAME_TESTVAL,
-        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        null, null, "haha", null, null, null, null, null, null, null, null, null, null, null, null,
-        SOURCE_SYSTEM_TESTVAL,
+        null,
+        null, null, NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, null, null, null, null, null,
+        null, null, null, null, null, null, null,
         null));
     assertThat(e).hasMessage(
         "Request must contain exactly one of: [primarySpecimenObjectId, primarySpecimenObjectIdAbsenceReason]");

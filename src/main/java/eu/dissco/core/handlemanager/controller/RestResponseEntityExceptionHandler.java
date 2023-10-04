@@ -3,7 +3,6 @@ package eu.dissco.core.handlemanager.controller;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
-import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.responses.ExceptionResponse;
 import org.springframework.http.HttpStatus;
@@ -39,21 +38,6 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
         String.valueOf(HttpStatus.NOT_FOUND), "Unable to Resolve Persistent Identifier",
         e.getMessage());
     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exceptionResponse);
-  }
-
-  @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
-  @ExceptionHandler(PidServiceInternalError.class)
-  public ResponseEntity<ExceptionResponse> pidServiceInternalError(PidServiceInternalError e) {
-    String message;
-    if (e.getCause() != null) {
-      message = e.getMessage() + ". Cause: " + e.getCause().toString() + "\n " + e.getCause()
-          .getLocalizedMessage();
-    } else {
-      message = e.getMessage();
-    }
-    ExceptionResponse exceptionResponse = new ExceptionResponse(
-        String.valueOf(HttpStatus.UNPROCESSABLE_ENTITY), "Unprocessable Entity", message);
-    return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(exceptionResponse);
   }
 
   @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)

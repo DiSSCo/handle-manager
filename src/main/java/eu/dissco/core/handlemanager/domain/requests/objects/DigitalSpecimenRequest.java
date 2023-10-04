@@ -1,6 +1,6 @@
 package eu.dissco.core.handlemanager.domain.requests.objects;
 
-import static eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimaryObjectIdType.LOCAL;
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimarySpecimenObjectIdType.LOCAL;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -9,7 +9,8 @@ import eu.dissco.core.handlemanager.domain.requests.vocabulary.InformationArtefa
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.LivingOrPreserved;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialOrDigitalEntity;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialSampleType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimaryObjectIdType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimarySpecimenObjectIdType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.ReferentType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.StructuralType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicCategory;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicDiscipline;
@@ -36,10 +37,9 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
   @JsonProperty(required = true)
   private final String primarySpecimenObjectId;
   @JsonPropertyDescription("ID Type. Either combined or cetaf. Defaults to combined.")
-  private final PrimaryObjectIdType primarySpecimenObjectIdType;
+  private final PrimarySpecimenObjectIdType primarySpecimenObjectIdType;
   @Nullable
   private final String primarySpecimenObjectIdName;
-  @Nullable
   private final String normalisedPrimarySpecimenObjectId;
   @Nullable
   private final String primarySpecimenObjectIdAbsenceReason;
@@ -67,8 +67,6 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
   private final Boolean markedAsType;
   @Nullable
   private final String derivedFromEntity;
-  @Nullable
-  private final String sourceSystemId;
   private static final String REFERENT_TYPE = "Digital Specimen";
 
   public DigitalSpecimenRequest(
@@ -85,8 +83,9 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
       String specimenHost,
       String specimenHostName,
       String primarySpecimenObjectId,
-      PrimaryObjectIdType primarySpecimenObjectIdType,
+      PrimarySpecimenObjectIdType primarySpecimenObjectIdType,
       String primarySpecimenObjectIdName,
+      String normalisedPrimarySpecimenObjetId,
       String primarySpecimenObjectIdAbsenceReason,
       List<OtherSpecimenId> otherSpecimenIds,
       TopicOrigin topicOrigin,
@@ -99,18 +98,17 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
       MaterialSampleType materialSampleType,
       MaterialOrDigitalEntity materialOrDigitalEntity,
       Boolean markedAsType,
-      String derivedFromEntity,
-      String sourceSystemId,
-      String normalisedPrimarySpecimenObjetId) throws InvalidRequestException {
+      String derivedFromEntity) throws InvalidRequestException {
     super(fdoProfile, issuedForAgent, digitalObjectTypePid, pidIssuer, StructuralType.DIGITAL,
         locations,
-        referentName, REFERENT_TYPE, primaryReferentType);
+        referentName, ReferentType.DIGITAL_SPECIMEN, primaryReferentType);
     this.specimenHost = specimenHost;
     this.specimenHostName = specimenHostName;
     this.primarySpecimenObjectId = primarySpecimenObjectId;
     this.primarySpecimenObjectIdType =
         primarySpecimenObjectIdType == null ? LOCAL : primarySpecimenObjectIdType;
     this.primarySpecimenObjectIdName = primarySpecimenObjectIdName;
+    this.normalisedPrimarySpecimenObjectId = normalisedPrimarySpecimenObjetId;
     this.primarySpecimenObjectIdAbsenceReason = primarySpecimenObjectIdAbsenceReason;
     this.otherSpecimenIds = otherSpecimenIds;
     this.topicOrigin = topicOrigin;
@@ -124,11 +122,7 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
     this.materialOrDigitalEntity = materialOrDigitalEntity;
     this.markedAsType = markedAsType;
     this.derivedFromEntity = derivedFromEntity;
-    this.sourceSystemId = sourceSystemId;
     idXorAbsence();
-    this.normalisedPrimarySpecimenObjectId =
-        normalisedPrimarySpecimenObjetId == null ? normalisePrimarySpecimenObjectId()
-            : normalisedPrimarySpecimenObjetId;
     validateTopicCategory();
     validateMaterialSampleType();
     validateInformationArtefactType();
@@ -140,18 +134,6 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
       throw new InvalidRequestException(
           "Request must contain exactly one of: [primarySpecimenObjectId, primarySpecimenObjectIdAbsenceReason]");
     }
-  }
-
-  private String normalisePrimarySpecimenObjectId() throws InvalidRequestException {
-    if (this.primarySpecimenObjectIdType.isGlobal()) {
-      return this.primarySpecimenObjectId;
-    }
-    if (this.sourceSystemId == null) {
-      throw new InvalidRequestException(
-          "Unable to create globally unique primary physical identifier type. Primary Specimen"
-              + " Object ID Type is not global/resolvable, and no source system ID is provided");
-    }
-    return this.primarySpecimenObjectId + ":" + this.sourceSystemId;
   }
 
   private void validateTopicCategory() throws InvalidRequestException {

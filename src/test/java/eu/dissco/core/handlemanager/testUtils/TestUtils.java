@@ -92,7 +92,8 @@ import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.SourceSystemRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.TombstoneRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimaryObjectIdType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimarySpecimenObjectIdType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.ReferentType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ReplaceOrAppend;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.StructuralType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.media.LinkedDigitalObjectType;
@@ -720,7 +721,7 @@ public class TestUtils {
         STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,
-        "Digital Specimen",
+        ReferentType.MEDIA_OBJECT,
         PRIMARY_REFERENT_TYPE_TESTVAL
     );
   }
@@ -743,10 +744,11 @@ public class TestUtils {
           SPECIMEN_HOST_TESTVAL,
           SPECIMEN_HOST_NAME_TESTVAL,
           primarySpecimenObjectId,
-          PrimaryObjectIdType.LOCAL, null, null, null, null, null, null, null, null, null, null,
+          PrimarySpecimenObjectIdType.GLOBAL, null, primarySpecimenObjectId,
+          null, null, null, null, null, null, null,
+          null,
           null,
           null, null, null,
-          SOURCE_SYSTEM_TESTVAL,
           null);
     } catch (InvalidRequestException e) {
       throw new RuntimeException(e.getMessage());

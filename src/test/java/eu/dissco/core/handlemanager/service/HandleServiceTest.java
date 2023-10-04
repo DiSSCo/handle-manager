@@ -23,8 +23,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MAS;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MEDIA;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_ORGANISATION;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_SOURCE_SYSTEM;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.SOURCE_SYSTEM_TESTVAL;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.UI_URL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genAnnotationAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
@@ -74,7 +72,6 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimaryObjectIdType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -236,9 +233,8 @@ class HandleServiceTest {
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
-    var responseReceived = service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        PrimaryObjectIdType.GLOBAL,
-        SPECIMEN_HOST_TESTVAL);
+    var responseReceived = service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL
+    );
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -256,9 +252,8 @@ class HandleServiceTest {
 
     // When
     Exception e = assertThrows(PidResolutionException.class,
-        () -> service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-            PrimaryObjectIdType.GLOBAL,
-            SOURCE_SYSTEM_TESTVAL));
+        () -> service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL
+        ));
 
     // Then
     assertThat(e).hasMessage(
@@ -277,21 +272,11 @@ class HandleServiceTest {
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
-    var responseReceived = service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        PrimaryObjectIdType.LOCAL,
-        SOURCE_SYSTEM_TESTVAL);
+    var responseReceived = service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL
+    );
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
-  }
-
-  @Test
-  void testSearchByPhysicalSpecimenMissingSourceSystemId() {
-    // Then
-    assertThrows(InvalidRequestException.class,
-        () -> service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-            PrimaryObjectIdType.LOCAL,
-            null));
   }
 
   @Test
@@ -856,7 +841,7 @@ class HandleServiceTest {
     given(pidRepository.searchByNormalisedPhysicalIdentifier(anyList())).willReturn(
         List.of(new HandleAttribute(PRIMARY_SPECIMEN_OBJECT_ID.index(), handles.get(0),
             PRIMARY_SPECIMEN_OBJECT_ID.get(),
-            (PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL + ":" + SOURCE_SYSTEM_TESTVAL).getBytes(
+            (PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL).getBytes(
                 StandardCharsets.UTF_8))));
     given(fdoRecordService.prepareUpdateAttributes(any(), any(), any())).willReturn(
         existingRecord);
