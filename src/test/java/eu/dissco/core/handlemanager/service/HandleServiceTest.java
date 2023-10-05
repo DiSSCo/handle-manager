@@ -221,6 +221,28 @@ class HandleServiceTest {
   }
 
   @Test
+  void testResolveBatchDigitalSpecimenRecord() throws Exception {
+    // Given
+    String path = UI_URL;
+    List<HandleAttribute> repositoryResponse = new ArrayList<>();
+    for (byte[] handle : handles) {
+      repositoryResponse.addAll(genDigitalSpecimenAttributes(handle));
+    }
+    var responseExpected = givenRecordResponseRead(handles, path,
+        ObjectType.DIGITAL_SPECIMEN.toString());
+
+    given(pidRepository.resolveHandleAttributes(anyList())).willReturn(repositoryResponse);
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
+
+    // When
+    var responseReceived = service.resolveBatchRecord(handles, path);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+
+  @Test
   void testSearchByPhysicalSpecimenId() throws Exception {
     // Given
     var expectedAttributes = genDigitalSpecimenAttributes(HANDLE.getBytes(StandardCharsets.UTF_8));

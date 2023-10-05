@@ -154,22 +154,22 @@ public abstract class PidService {
     return type.orElse(ObjectType.HANDLE.toString());
   }
 
+  private String getRecordType(JsonNode attributes) {
+    if (attributes.get(REFERENT_TYPE.get()) != null) {
+      return attributes.get(REFERENT_TYPE.get()).asText();
+    }
+    return ObjectType.HANDLE.toString();
+  }
+
   public JsonApiWrapperRead resolveBatchRecord(List<byte[]> handles, String path)
       throws PidResolutionException {
     var dbRecords = pidRepository.resolveHandleAttributes(handles);
     verifyHandleResolution(handles, dbRecords);
     var recordAttributeList = formatRecords(dbRecords);
     var dataList = recordAttributeList.stream()
-        .map(recordAttributes -> wrapData(recordAttributes, getObjectType(recordAttributes)))
+        .map(recordAttributes -> wrapData(recordAttributes, getRecordType(recordAttributes)))
         .toList();
     return new JsonApiWrapperRead(new JsonApiLinks(path), dataList);
-  }
-
-  private String getObjectType(JsonNode attributes) {
-    if (attributes.get(REFERENT_TYPE.get()) != null) {
-      return attributes.get(REFERENT_TYPE.get()).asText();
-    }
-    return ObjectType.HANDLE.toString();
   }
 
   // Getters

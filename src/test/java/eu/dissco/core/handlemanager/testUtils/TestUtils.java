@@ -341,8 +341,13 @@ public class TestUtils {
 
   public static List<HandleAttribute> genDoiRecordAttributes(byte[] handle, ObjectType type)
       throws Exception {
+    return genDoiRecordAttributes(handle, type, givenDoiRecordRequestObject());
+  }
+
+  public static List<HandleAttribute> genDoiRecordAttributes(byte[] handle, ObjectType type,
+      DoiRecordRequest request)
+      throws Exception {
     List<HandleAttribute> fdoRecord = genHandleRecordAttributes(handle, type);
-    var request = givenDoiRecordRequestObject();
 
     // 40: referentType
     fdoRecord.add(
@@ -369,7 +374,8 @@ public class TestUtils {
 
   public static List<HandleAttribute> genDigitalSpecimenAttributes(byte[] handle,
       DigitalSpecimenRequest request) throws Exception {
-    List<HandleAttribute> fdoRecord = genDoiRecordAttributes(handle, ObjectType.DIGITAL_SPECIMEN);
+    List<HandleAttribute> fdoRecord = genDoiRecordAttributes(handle, ObjectType.DIGITAL_SPECIMEN,
+        request);
     // 200: Specimen Host
     fdoRecord.add(
         new HandleAttribute(SPECIMEN_HOST.index(), handle,

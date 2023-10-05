@@ -67,7 +67,6 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
   private final Boolean markedAsType;
   @Nullable
   private final String derivedFromEntity;
-  private static final String REFERENT_TYPE = "Digital Specimen";
 
   public DigitalSpecimenRequest(
       // Handle
