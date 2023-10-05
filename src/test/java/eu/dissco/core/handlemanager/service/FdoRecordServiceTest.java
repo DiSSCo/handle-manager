@@ -288,7 +288,7 @@ class FdoRecordServiceTest {
         false)).isTrue();
     assertThat(hasNoDuplicateElements(result)).isTrue();
     assertThat(hasCorrectElements(result, MEDIA_FIELDS_MANDATORY)).isTrue();
-    assertThat(hasCorrectElements(result, Set.of(RIGHTSHOLDER_NAME.get())));
+    assertThat(hasCorrectElements(result, Set.of(RIGHTSHOLDER_NAME.get()))).isTrue();
   }
 
   @Test
