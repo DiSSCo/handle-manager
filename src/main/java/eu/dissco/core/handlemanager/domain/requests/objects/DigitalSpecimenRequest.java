@@ -67,6 +67,8 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
   private final Boolean markedAsType;
   @Nullable
   private final String derivedFromEntity;
+  @Nullable
+  private final String catalogIdentifier;
 
   public DigitalSpecimenRequest(
       // Handle
@@ -97,7 +99,7 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
       MaterialSampleType materialSampleType,
       MaterialOrDigitalEntity materialOrDigitalEntity,
       Boolean markedAsType,
-      String derivedFromEntity) throws InvalidRequestException {
+      String derivedFromEntity, String catalogIdentifier) throws InvalidRequestException {
     super(fdoProfile, issuedForAgent, digitalObjectTypePid, pidIssuer, StructuralType.DIGITAL,
         locations,
         referentName, ObjectType.DIGITAL_SPECIMEN, primaryReferentType);
@@ -121,6 +123,7 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
     this.materialOrDigitalEntity = materialOrDigitalEntity;
     this.markedAsType = markedAsType;
     this.derivedFromEntity = derivedFromEntity;
+    this.catalogIdentifier = catalogIdentifier;
     idXorAbsence();
     validateTopicCategory();
     validateMaterialSampleType();

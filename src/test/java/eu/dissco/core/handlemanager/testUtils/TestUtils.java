@@ -3,6 +3,7 @@ package eu.dissco.core.handlemanager.testUtils;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ACCESS_RESTRICTED;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ANNOTATION_TOPIC;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.BASE_TYPE_OF_SPECIMEN;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.CATALOG_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DC_TERMS_CONFORMS;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DERIVED_FROM_ENTITY;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DIGITAL_OBJECT_NAME;
@@ -511,6 +512,10 @@ public class TestUtils {
               WAS_DERIVED_FROM_ENTITY.get(),
               request.getDerivedFromEntity().getBytes(StandardCharsets.UTF_8)));
     }
+    var catId = request.getCatalogIdentifier();
+    if (catId != null) {
+      fdoRecord.add(new HandleAttribute(CATALOG_IDENTIFIER, handle, catId));
+    }
 
     return fdoRecord;
 
@@ -754,7 +759,7 @@ public class TestUtils {
           null,
           null,
           null, null, null,
-          null);
+          null, null);
     } catch (InvalidRequestException e) {
       throw new RuntimeException(e.getMessage());
     }

@@ -44,11 +44,12 @@ public enum FdoProfile {
   TOPIC_CATEGORY("topicCategory", 211),
   LIVING_OR_PRESERVED("livingOrPreserved", 212),
   BASE_TYPE_OF_SPECIMEN("baseTypeOfSpecimen", 213),
-  INFORMATION_ARTEFACT_TYPE("informationArtefactType", 241),
+  INFORMATION_ARTEFACT_TYPE("informationArtefactType", 214),
   MATERIAL_SAMPLE_TYPE("materialSampleType", 215),
   MATERIAL_OR_DIGITAL_ENTITY("materialOrDigitalEntity", 216),
   MARKED_AS_TYPE("markedAsType", 217),
   WAS_DERIVED_FROM_ENTITY("wasDerivedFromEntity", 218),
+  CATALOG_IDENTIFIER("catalogIdentifier", 219),
 
   // Media
   MEDIA_HOST("mediaHost", 400),

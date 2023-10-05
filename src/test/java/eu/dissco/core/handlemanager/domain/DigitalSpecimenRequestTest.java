@@ -62,7 +62,7 @@ class DigitalSpecimenRequestTest {
         null,
         null,
         null,
-        null, null, null, null));
+        null, null, null, null, null));
   }
 
   @ParameterizedTest
@@ -94,7 +94,7 @@ class DigitalSpecimenRequestTest {
         materialSampleType,
         null,
         null,
-        null));
+        null, null));
 
   }
 
@@ -125,7 +125,7 @@ class DigitalSpecimenRequestTest {
         null,
         MaterialSampleType.OTHER_SOLID, null,
         null,
-        null));
+        null, null));
   }
 
   @Test
@@ -156,7 +156,7 @@ class DigitalSpecimenRequestTest {
         null,
         null,
         null,
-        null));
+        null, null));
   }
 
   private static Stream<Arguments> correctMaterialSampleTypes() {

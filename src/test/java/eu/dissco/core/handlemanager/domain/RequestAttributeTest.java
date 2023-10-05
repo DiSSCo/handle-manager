@@ -69,7 +69,7 @@ class RequestAttributeTest {
         SPECIMEN_HOST_NAME_TESTVAL,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
         null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-        null);
+        null, null);
 
     // Then
     assertThat(request.getPrimarySpecimenObjectIdType()).isEqualTo(LOCAL);
@@ -91,7 +91,7 @@ class RequestAttributeTest {
         null,
         null, null, NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, null, null, null, null, null,
         null, null, null, null, null, null, null,
-        null));
+        null, null));
     assertThat(e).hasMessage(
         "Request must contain exactly one of: [primarySpecimenObjectId, primarySpecimenObjectIdAbsenceReason]");
   }

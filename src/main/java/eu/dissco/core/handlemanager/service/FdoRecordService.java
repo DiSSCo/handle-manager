@@ -3,6 +3,7 @@ package eu.dissco.core.handlemanager.service;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ACCESS_RESTRICTED;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ANNOTATION_TOPIC;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.BASE_TYPE_OF_SPECIMEN;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.CATALOG_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DC_TERMS_CONFORMS;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DERIVED_FROM_ENTITY;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DIGITAL_OBJECT_NAME;
@@ -575,6 +576,12 @@ public class FdoRecordService {
     var wasDerivedFrom = request.getDerivedFromEntity();
     if (wasDerivedFrom != null) {
       fdoRecord.add(new HandleAttribute(WAS_DERIVED_FROM_ENTITY, handle, wasDerivedFrom));
+    }
+
+    // 219 catalogId
+    var catId = request.getCatalogIdentifier();
+    if (catId != null) {
+      fdoRecord.add(new HandleAttribute(CATALOG_IDENTIFIER, handle, catId));
     }
 
     return fdoRecord;
