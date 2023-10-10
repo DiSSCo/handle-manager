@@ -166,6 +166,7 @@ class FdoRecordServiceTest {
 
   private static final Set<String> DOI_FIELDS = Set.of(REFERENT_TYPE.get(), REFERENT_DOI_NAME.get(),
       REFERENT_NAME.get(), PRIMARY_REFERENT_TYPE.get());
+
   private static final Set<String> DS_FIELDS_MANDATORY = Set.of(SPECIMEN_HOST.get(),
       SPECIMEN_HOST_NAME.get(), PRIMARY_SPECIMEN_OBJECT_ID.get(),
       PRIMARY_SPECIMEN_OBJECT_ID_TYPE.get(), NORMALISED_SPECIMEN_OBJECT_ID.get());
@@ -208,7 +209,7 @@ class FdoRecordServiceTest {
   private static final int MEDIA_OPTIONAL_QTY = MEDIA_QTY + MEDIA_FIELDS_OPTIONAL.size();
   private static final int DS_MANDATORY_QTY = DOI_QTY + DS_FIELDS_MANDATORY.size();
   private static final int DS_OPTIONAL_QTY = DS_MANDATORY_QTY + DS_FIELDS_OPTIONAL.size();
-  private static final int ANNOTATION_QTY = 21;
+  private static final int ANNOTATION_QTY = HANDLE_QTY + ANNOTATION_FIELDS.size();
   private static final String ROR_API = "https://api.ror.org/organizations/";
 
   @BeforeEach
@@ -273,7 +274,7 @@ class FdoRecordServiceTest {
   }
 
   @Test
-  void testPrepareMediaObjectAttributes() throws Exception {
+  void testPrepareMediaObjectAttributesMandatory() throws Exception {
     // Given
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
     var request = givenMediaRequestObject();
@@ -283,12 +284,11 @@ class FdoRecordServiceTest {
         ObjectType.MEDIA_OBJECT);
 
     // Then
-    assertThat(result).hasSize(MEDIA_QTY + 1);
+    assertThat(result).hasSize(MEDIA_QTY);
     assertThat(hasCorrectLocations(result, request.getLocations(), ObjectType.MEDIA_OBJECT,
         false)).isTrue();
     assertThat(hasNoDuplicateElements(result)).isTrue();
     assertThat(hasCorrectElements(result, MEDIA_FIELDS_MANDATORY)).isTrue();
-    assertThat(hasCorrectElements(result, Set.of(RIGHTSHOLDER_NAME.get()))).isTrue();
   }
 
   @Test
@@ -319,21 +319,15 @@ class FdoRecordServiceTest {
   void testPrepareMediaObjectAttributesNamesDontResolve() throws Exception {
     // Given
     var request = givenMediaRequestObject();
-    var placeholder = "placeholder";
     var mediaHostRor = MEDIA_HOST_TESTVAL.replace(ROR_DOMAIN, ROR_API);
+    var placeholder = "placeholder";
     given(pidResolver.getObjectName(not(eq(mediaHostRor)))).willReturn(placeholder);
-    given(pidResolver.getObjectName(mediaHostRor)).willThrow(new PidResolutionException(""));
-
-    // When
-    var result = fdoRecordService.prepareMediaObjectAttributes(request, handle,
-        ObjectType.MEDIA_OBJECT);
+    given(pidResolver.getObjectName(mediaHostRor)).willThrow(PidResolutionException.class);
 
     // Then
-    assertThat(result).hasSize(MEDIA_QTY);
-    assertThat(hasCorrectLocations(result, request.getLocations(), ObjectType.MEDIA_OBJECT,
-        false)).isTrue();
-    assertThat(hasNoDuplicateElements(result)).isTrue();
-    assertThat(hasCorrectElements(result, MEDIA_FIELDS_MANDATORY)).isTrue();
+    assertThrows(PidResolutionException.class,
+        () -> fdoRecordService.prepareMediaObjectAttributes(request, handle,
+            ObjectType.MEDIA_OBJECT));
   }
 
   @Test
@@ -590,16 +584,13 @@ class FdoRecordServiceTest {
         null, null, null, null, null, null, null);
 
     var specimenHostRorApi = request.getSpecimenHost().replace(ROR_DOMAIN, ROR_API);
-    given(pidResolver.getObjectName(specimenHostRorApi)).willThrow(new PidResolutionException(""));
+    given(pidResolver.getObjectName(specimenHostRorApi)).willThrow(PidResolutionException.class);
     given(pidResolver.getObjectName(not(eq(specimenHostRorApi)))).willReturn("placeholder");
 
-    // When
-    var result = fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle,
-        ObjectType.DIGITAL_SPECIMEN);
-
     // Then
-    assertThat(result).hasSize(DS_MANDATORY_QTY - 1);
-    assertThat(hasNoDuplicateElements(result)).isTrue();
+    assertThrows(PidResolutionException.class,
+        () -> fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle,
+            ObjectType.DIGITAL_SPECIMEN));
   }
 
   @Test
