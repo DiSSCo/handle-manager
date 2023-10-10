@@ -173,21 +173,20 @@ class FdoRecordServiceTest {
 
   private static final Set<String> DS_FIELDS_OPTIONAL = Set.of(
       PRIMARY_SPECIMEN_OBJECT_ID_NAME.get(), OTHER_SPECIMEN_IDS.get(), TOPIC_ORIGIN.get(),
-      TOPIC_DOMAIN.get(),
-      TOPIC_DISCIPLINE.get(), TOPIC_CATEGORY.get(), LIVING_OR_PRESERVED.get(),
+      TOPIC_DOMAIN.get(), TOPIC_DISCIPLINE.get(), TOPIC_CATEGORY.get(), LIVING_OR_PRESERVED.get(),
       BASE_TYPE_OF_SPECIMEN.get(), INFORMATION_ARTEFACT_TYPE.get(), MATERIAL_SAMPLE_TYPE.get(),
-      MATERIAL_OR_DIGITAL_ENTITY.get(),
-      MARKED_AS_TYPE.get(), WAS_DERIVED_FROM_ENTITY.get(), CATALOG_IDENTIFIER.get());
+      MATERIAL_OR_DIGITAL_ENTITY.get(), MARKED_AS_TYPE.get(), WAS_DERIVED_FROM_ENTITY.get(),
+      CATALOG_IDENTIFIER.get());
 
   private static final Set<String> MEDIA_FIELDS_MANDATORY = Set.of(MEDIA_HOST.get(),
-      MEDIA_HOST_NAME.get(), IS_DERIVED_FROM_SPECIMEN.get(),
-      LINKED_DO_PID.get(), LINKED_DO_TYPE.get(), PRIMARY_MEDIA_ID.get(), LICENSE_NAME.get(),
-      RIGHTSHOLDER_PID.get());
+      MEDIA_HOST_NAME.get(), IS_DERIVED_FROM_SPECIMEN.get(), LINKED_DO_PID.get(),
+      LINKED_DO_TYPE.get(), PRIMARY_MEDIA_ID.get(), RIGHTSHOLDER_PID.get(),
+      RIGHTSHOLDER_NAME.get());
 
   private static final Set<String> MEDIA_FIELDS_OPTIONAL = Set.of(MEDIA_FORMAT.get(),
       LINKED_ATTRIBUTE.get(), PRIMARY_MO_ID_TYPE.get(), PRIMARY_MO_ID_NAME.get(),
-      PRIMARY_MO_TYPE.get(), MEDIA_MIME_TYPE.get(), DERIVED_FROM_ENTITY.get(), LICENSE_URL.get(),
-      RIGHTSHOLDER_NAME.get(), RIGHTSHOLDER_PID_TYPE.get(), DC_TERMS_CONFORMS.get());
+      PRIMARY_MO_TYPE.get(), MEDIA_MIME_TYPE.get(), DERIVED_FROM_ENTITY.get(), LICENSE_NAME.get(),
+      LICENSE_URL.get(), RIGHTSHOLDER_PID_TYPE.get(), DC_TERMS_CONFORMS.get());
 
   private static final Set<String> ANNOTATION_FIELDS = Set.of(SUBJECT_DIGITAL_OBJECT_ID.get(),
       ANNOTATION_TOPIC.get(), REPLACE_OR_APPEND.get(), ACCESS_RESTRICTED.get(),
@@ -383,11 +382,9 @@ class FdoRecordServiceTest {
         null, null, null, null, null, null, null);
 
     // When
-    var result = fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle,
-        ObjectType.DIGITAL_SPECIMEN);
-
-    // Then
-    assertThat(result).hasSize(DS_MANDATORY_QTY - 1);
+    assertThrows(PidResolutionException.class,
+        () -> fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle,
+            ObjectType.DIGITAL_SPECIMEN));
   }
 
   @Test
