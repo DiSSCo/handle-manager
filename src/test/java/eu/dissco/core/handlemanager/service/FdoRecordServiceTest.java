@@ -291,6 +291,29 @@ class FdoRecordServiceTest {
   }
 
   @Test
+  void testPrepareMediaObjectAttributesOptional() throws Exception {
+    // Given
+    given(pidResolver.getObjectName(any())).willReturn("placeholder");
+    var request = new MediaObjectRequest(FDO_PROFILE_TESTVAL, ISSUED_FOR_AGENT_TESTVAL,
+        DIGITAL_OBJECT_TYPE_TESTVAL, PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL, REFERENT_NAME_TESTVAL,
+        PRIMARY_REFERENT_TYPE_TESTVAL, MEDIA_HOST_TESTVAL, null, MediaFormat.TEXT, Boolean.TRUE,
+        LINKED_DO_PID_TESTVAL, LINKED_DIGITAL_OBJECT_TYPE_TESTVAL, "a", HANDLE,
+        PrimarySpecimenObjectIdType.RESOLVABLE, "b", PrimaryMediaObjectType.IMAGE, "jpeg", "c", "license",
+        "license", "c", "d", PrimarySpecimenObjectIdType.LOCAL, "e");
+
+    // When
+    var result = fdoRecordService.prepareMediaObjectAttributes(request, handle,
+        ObjectType.MEDIA_OBJECT);
+
+    // Then
+    assertThat(result).hasSize(MEDIA_OPTIONAL_QTY);
+    assertThat(hasCorrectLocations(result, request.getLocations(), ObjectType.MEDIA_OBJECT,
+        false)).isTrue();
+    assertThat(hasNoDuplicateElements(result)).isTrue();
+    assertThat(hasCorrectElements(result, MEDIA_FIELDS_MANDATORY)).isTrue();
+  }
+
+  @Test
   void testPrepareMediaObjectFullAttributes() throws Exception {
     // Given
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
