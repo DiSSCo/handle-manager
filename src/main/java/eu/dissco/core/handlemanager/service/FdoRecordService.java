@@ -582,7 +582,7 @@ public class FdoRecordService {
   }
 
   private HandleAttribute setHostName(String hostName, String hostId, byte[] handle,
-      FdoProfile targetAttribute) {
+      FdoProfile targetAttribute) throws PidResolutionException {
     if (hostName != null) {
       return new HandleAttribute(targetAttribute, handle, hostName);
     } else {
@@ -596,15 +596,14 @@ public class FdoRecordService {
           }
           return new HandleAttribute(targetAttribute, handle, hostNameResolved);
         } else {
-          log.warn("Specimen host ID {} is neither QID nor ROR.", hostId);
-          return null;
+          throw new PidResolutionException("Specimen host ID {} is neither QID nor ROR.");
         }
       } catch (UnprocessableEntityException | InvalidRequestException |
                PidResolutionException e) {
         log.error(
-            "AgentId is not a resolvable ROR and no Name is provided in the request for the field {}. AgentName field left blank",
+            "AgentId is not a resolvable ROR and no Name is provided in the request for the field {}",
             targetAttribute.get(), e);
-        return null;
+        throw new PidResolutionException("Unable to resolve Host Id" + e.getMessage());
       }
     }
   }
