@@ -3,6 +3,7 @@ package eu.dissco.core.handlemanager.testUtils;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ACCESS_RESTRICTED;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ANNOTATION_TOPIC;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.BASE_TYPE_OF_SPECIMEN;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.CATALOG_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DC_TERMS_CONFORMS;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DERIVED_FROM_ENTITY;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DIGITAL_OBJECT_NAME;
@@ -92,7 +93,7 @@ import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.SourceSystemRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.TombstoneRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimaryObjectIdType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimarySpecimenObjectIdType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ReplaceOrAppend;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.StructuralType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.media.LinkedDigitalObjectType;
@@ -341,8 +342,13 @@ public class TestUtils {
 
   public static List<HandleAttribute> genDoiRecordAttributes(byte[] handle, ObjectType type)
       throws Exception {
+    return genDoiRecordAttributes(handle, type, givenDoiRecordRequestObject());
+  }
+
+  public static List<HandleAttribute> genDoiRecordAttributes(byte[] handle, ObjectType type,
+      DoiRecordRequest request)
+      throws Exception {
     List<HandleAttribute> fdoRecord = genHandleRecordAttributes(handle, type);
-    var request = givenDoiRecordRequestObject();
 
     // 40: referentType
     fdoRecord.add(
@@ -369,7 +375,8 @@ public class TestUtils {
 
   public static List<HandleAttribute> genDigitalSpecimenAttributes(byte[] handle,
       DigitalSpecimenRequest request) throws Exception {
-    List<HandleAttribute> fdoRecord = genDoiRecordAttributes(handle, ObjectType.DIGITAL_SPECIMEN);
+    List<HandleAttribute> fdoRecord = genDoiRecordAttributes(handle, ObjectType.DIGITAL_SPECIMEN,
+        request);
     // 200: Specimen Host
     fdoRecord.add(
         new HandleAttribute(SPECIMEN_HOST.index(), handle,
@@ -504,6 +511,10 @@ public class TestUtils {
           new HandleAttribute(WAS_DERIVED_FROM_ENTITY.index(), handle,
               WAS_DERIVED_FROM_ENTITY.get(),
               request.getDerivedFromEntity().getBytes(StandardCharsets.UTF_8)));
+    }
+    var catId = request.getCatalogIdentifier();
+    if (catId != null) {
+      fdoRecord.add(new HandleAttribute(CATALOG_IDENTIFIER, handle, catId));
     }
 
     return fdoRecord;
@@ -720,7 +731,7 @@ public class TestUtils {
         STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,
-        "Digital Specimen",
+        ObjectType.MEDIA_OBJECT,
         PRIMARY_REFERENT_TYPE_TESTVAL
     );
   }
@@ -743,11 +754,12 @@ public class TestUtils {
           SPECIMEN_HOST_TESTVAL,
           SPECIMEN_HOST_NAME_TESTVAL,
           primarySpecimenObjectId,
-          PrimaryObjectIdType.LOCAL, null, null, null, null, null, null, null, null, null, null,
+          PrimarySpecimenObjectIdType.GLOBAL, null, primarySpecimenObjectId,
+          null, null, null, null, null, null, null,
+          null,
           null,
           null, null, null,
-          SOURCE_SYSTEM_TESTVAL,
-          null);
+          null, null);
     } catch (InvalidRequestException e) {
       throw new RuntimeException(e.getMessage());
     }

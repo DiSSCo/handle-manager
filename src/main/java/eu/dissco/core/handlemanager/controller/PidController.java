@@ -15,11 +15,9 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.requests.RollbackRequest;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaValidator;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimaryObjectIdType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
-import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.service.PidService;
@@ -99,20 +97,17 @@ public class PidController {
   @Operation(summary = "Given a physical identifier (i.e. local identifier), resolve PID record")
   @GetMapping("/records/primarySpecimenObjectId")
   public ResponseEntity<JsonApiWrapperWrite> searchByPrimarySpecimenObjectId(
-      @RequestParam String primarySpecimenObjectId,
-      @RequestParam PrimaryObjectIdType physicalIdentifierType,
-      @RequestParam(required = false) String sourceSystemId)
-      throws InvalidRequestException, PidResolutionException {
+      @RequestParam String normalisedPrimarySpecimenObjectId)
+      throws PidResolutionException {
     return ResponseEntity.status(HttpStatus.OK).body(
-        service.searchByPhysicalSpecimenId(primarySpecimenObjectId, physicalIdentifierType,
-            sourceSystemId));
+        service.searchByPhysicalSpecimenId(normalisedPrimarySpecimenObjectId));
   }
 
   @Operation(summary = "Create single PID Record")
   @PostMapping(value = "")
   public ResponseEntity<JsonApiWrapperWrite> createRecord(@RequestBody JsonNode request,
       Authentication authentication)
-      throws PidResolutionException, PidServiceInternalError, InvalidRequestException, PidCreationException {
+      throws PidResolutionException, InvalidRequestException, PidCreationException {
     log.info("Received single POST request from user {}", authentication.getName());
     schemaValidator.validatePostRequest(request);
     return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(List.of(request)
@@ -123,7 +118,7 @@ public class PidController {
   @PostMapping(value = "/batch")
   public ResponseEntity<JsonApiWrapperWrite> createRecords(@RequestBody List<JsonNode> requests,
       Authentication authentication)
-      throws PidResolutionException, PidServiceInternalError, InvalidRequestException, PidCreationException {
+      throws PidResolutionException, InvalidRequestException, PidCreationException {
     log.info("Validating batch POST request from user {}", authentication.getName());
     for (JsonNode request : requests) {
       schemaValidator.validatePostRequest(request);
@@ -137,7 +132,7 @@ public class PidController {
   public ResponseEntity<JsonApiWrapperWrite> updateRecord(@PathVariable("prefix") String prefix,
       @PathVariable("suffix") String suffix, @RequestBody JsonNode request,
       Authentication authentication)
-      throws InvalidRequestException, PidResolutionException, PidServiceInternalError, UnprocessableEntityException {
+      throws InvalidRequestException, PidResolutionException, UnprocessableEntityException {
     log.info("Received single update request for PID {}/{} from user {}", prefix, suffix,
         authentication.getName());
     schemaValidator.validatePatchRequest(request);
@@ -160,7 +155,7 @@ public class PidController {
   @PatchMapping(value = "")
   public ResponseEntity<JsonApiWrapperWrite> updateRecords(@RequestBody List<JsonNode> requests,
       Authentication authentication)
-      throws InvalidRequestException, PidResolutionException, PidServiceInternalError, UnprocessableEntityException {
+      throws InvalidRequestException, PidResolutionException, UnprocessableEntityException {
     log.info("Validating batch update request from user {}", authentication.getName());
     for (JsonNode request : requests) {
       schemaValidator.validatePatchRequest(request);
@@ -176,7 +171,7 @@ public class PidController {
   @PatchMapping(value = "/upsert")
   public ResponseEntity<JsonApiWrapperWrite> upsertRecord(@RequestBody List<JsonNode> requests,
       Authentication authentication)
-      throws InvalidRequestException, UnprocessableEntityException, PidResolutionException, PidServiceInternalError, JsonProcessingException {
+      throws InvalidRequestException, UnprocessableEntityException, PidResolutionException, JsonProcessingException {
     log.info("Validating upsert request from user {}", authentication.getName());
     for (var request : requests) {
       schemaValidator.validatePostRequest(request);
@@ -199,7 +194,7 @@ public class PidController {
   public ResponseEntity<JsonApiWrapperWrite> archiveRecord(@PathVariable("prefix") String prefix,
       @PathVariable("suffix") String suffix, @RequestBody JsonNode request,
       Authentication authentication)
-      throws InvalidRequestException, PidResolutionException, PidServiceInternalError, UnprocessableEntityException {
+      throws InvalidRequestException, PidResolutionException, UnprocessableEntityException {
     log.info("Received archive request for PID {}/{} from user {}", prefix, suffix,
         authentication.getName());
     schemaValidator.validatePutRequest(request);
@@ -238,7 +233,7 @@ public class PidController {
   @DeleteMapping(value = "/rollback/update")
   public ResponseEntity<JsonApiWrapperWrite> rollbackHandleUpdate(
       @RequestBody List<JsonNode> requests, Authentication authentication)
-      throws InvalidRequestException, PidResolutionException, PidServiceInternalError, UnprocessableEntityException {
+      throws InvalidRequestException, PidResolutionException, UnprocessableEntityException {
     log.info("Validating rollback update request from user {}", authentication.getName());
     for (JsonNode request : requests) {
       schemaValidator.validatePatchRequest(request);
@@ -264,7 +259,7 @@ public class PidController {
   @PutMapping(value = "")
   public ResponseEntity<JsonApiWrapperWrite> archiveRecords(@RequestBody List<JsonNode> requests,
       Authentication authentication)
-      throws InvalidRequestException, PidResolutionException, PidServiceInternalError, UnprocessableEntityException {
+      throws InvalidRequestException, PidResolutionException, UnprocessableEntityException {
     log.info("Validating archive request from user {}", authentication.getName());
     for (JsonNode request : requests) {
       schemaValidator.validatePutRequest(request);

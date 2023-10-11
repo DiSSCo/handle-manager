@@ -49,6 +49,7 @@ public enum FdoProfile {
   MATERIAL_OR_DIGITAL_ENTITY("materialOrDigitalEntity", 216),
   MARKED_AS_TYPE("markedAsType", 217),
   WAS_DERIVED_FROM_ENTITY("wasDerivedFromEntity", 218),
+  CATALOG_IDENTIFIER("catalogIdentifier", 219),
 
   // Media
   MEDIA_HOST("mediaHost", 400),

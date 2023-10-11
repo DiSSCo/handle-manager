@@ -4,14 +4,13 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.DIGITAL_OBJECT_TY
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.FDO_PROFILE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.ISSUED_FOR_AGENT_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.LOC_TESTVAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_ISSUER_TESTVAL_OTHER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_REFERENT_TYPE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.REFERENT_NAME_TESTVAL;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.SOURCE_SYSTEM_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_NAME_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -19,7 +18,7 @@ import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenReque
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.BaseTypeOfSpecimen;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.InformationArtefactType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialSampleType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimaryObjectIdType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimarySpecimenObjectIdType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicCategory;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicDiscipline;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicDomain;
@@ -51,78 +50,19 @@ class DigitalSpecimenRequestTest {
         SPECIMEN_HOST_TESTVAL,
         SPECIMEN_HOST_NAME_TESTVAL,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        PrimaryObjectIdType.LOCAL, null, null, null, null, null, discipline, category, null, null,
+        PrimarySpecimenObjectIdType.LOCAL,
         null,
-        null, null, null, null,
-        SOURCE_SYSTEM_TESTVAL,
-        null));
-  }
-
-  @Test
-  void testNormalisePhysIdNoSourceSystem() {
-    assertThrows(InvalidRequestException.class, () -> new DigitalSpecimenRequest(
-        FDO_PROFILE_TESTVAL,
-        ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL,
-        PID_ISSUER_TESTVAL_OTHER,
-        LOC_TESTVAL,
-        REFERENT_NAME_TESTVAL,
-        PRIMARY_REFERENT_TYPE_TESTVAL,
-        SPECIMEN_HOST_TESTVAL,
-        SPECIMEN_HOST_NAME_TESTVAL,
-        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        PrimaryObjectIdType.LOCAL, null, null, null, null, null, null, null, null, null, null,
-        null, null, null, null,
+        NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
         null,
-        null));
-  }
-
-  @Test
-  void testNormaliseLocalPhysId() throws Exception {
-    // Given
-    var expected = PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL + ":" + SOURCE_SYSTEM_TESTVAL;
-    var specimen = new DigitalSpecimenRequest(
-        FDO_PROFILE_TESTVAL,
-        ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL,
-        PID_ISSUER_TESTVAL_OTHER,
-        LOC_TESTVAL,
-        REFERENT_NAME_TESTVAL,
-        PRIMARY_REFERENT_TYPE_TESTVAL,
-        SPECIMEN_HOST_TESTVAL,
-        SPECIMEN_HOST_NAME_TESTVAL,
-        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        PrimaryObjectIdType.LOCAL, null, null, null, null, null, null, null, null, null, null,
-        null, null, null, null,
-        SOURCE_SYSTEM_TESTVAL,
-        null);
-
-    // Then
-    assertThat(specimen.getNormalisedPrimarySpecimenObjectId()).isEqualTo(expected);
-  }
-
-  @Test
-  void testNormaliseResolvablePhysId() throws Exception {
-    // Given
-    var specimen = new DigitalSpecimenRequest(
-        FDO_PROFILE_TESTVAL,
-        ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL,
-        PID_ISSUER_TESTVAL_OTHER,
-        LOC_TESTVAL,
-        REFERENT_NAME_TESTVAL,
-        PRIMARY_REFERENT_TYPE_TESTVAL,
-        SPECIMEN_HOST_TESTVAL,
-        SPECIMEN_HOST_NAME_TESTVAL,
-        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        PrimaryObjectIdType.RESOLVABLE, null, null, null, null, null, null, null, null, null, null,
-        null, null, null, null,
         null,
-        null);
-
-    // Then
-    assertThat(specimen.getNormalisedPrimarySpecimenObjectId()).isEqualTo(
-        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL);
+        null,
+        null,
+        discipline,
+        category,
+        null,
+        null,
+        null,
+        null, null, null, null, null));
   }
 
   @ParameterizedTest
@@ -140,10 +80,21 @@ class DigitalSpecimenRequestTest {
         SPECIMEN_HOST_TESTVAL,
         SPECIMEN_HOST_NAME_TESTVAL,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        PrimaryObjectIdType.LOCAL, null, null, null, topicOrigin, topicDomain, topicDiscipline,
+        PrimarySpecimenObjectIdType.LOCAL, null,
+        NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
         null,
-        null, null, null, materialSampleType, null,
-        null, null, SOURCE_SYSTEM_TESTVAL, null));
+        null,
+        topicOrigin,
+        topicDomain,
+        topicDiscipline,
+        null,
+        null,
+        null,
+        null,
+        materialSampleType,
+        null,
+        null,
+        null, null));
 
   }
 
@@ -160,9 +111,21 @@ class DigitalSpecimenRequestTest {
         SPECIMEN_HOST_TESTVAL,
         SPECIMEN_HOST_NAME_TESTVAL,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        PrimaryObjectIdType.LOCAL, null, null, null, null, null, TopicDiscipline.ZOO, null,
-        null, null, null, MaterialSampleType.OTHER_SOLID, null,
-        null, null, SOURCE_SYSTEM_TESTVAL, null));
+        PrimarySpecimenObjectIdType.LOCAL,
+        null,
+        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL + ":123",
+        null,
+        null,
+        null,
+        null,
+        TopicDiscipline.ZOO,
+        null,
+        null,
+        null,
+        null,
+        MaterialSampleType.OTHER_SOLID, null,
+        null,
+        null, null));
   }
 
   @Test
@@ -178,9 +141,22 @@ class DigitalSpecimenRequestTest {
         SPECIMEN_HOST_TESTVAL,
         SPECIMEN_HOST_NAME_TESTVAL,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
-        PrimaryObjectIdType.LOCAL, null, null, null, null, null, null, null,
-        null, BaseTypeOfSpecimen.MATERIAL, InformationArtefactType.SOUND, null, null,
-        null, null, SOURCE_SYSTEM_TESTVAL, null));
+        PrimarySpecimenObjectIdType.GLOBAL,
+        null,
+        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        BaseTypeOfSpecimen.MATERIAL,
+        InformationArtefactType.SOUND,
+        null,
+        null,
+        null,
+        null, null));
   }
 
   private static Stream<Arguments> correctMaterialSampleTypes() {

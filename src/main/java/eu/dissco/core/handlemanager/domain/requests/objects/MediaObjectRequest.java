@@ -1,7 +1,8 @@
 package eu.dissco.core.handlemanager.domain.requests.objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimaryObjectIdType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimarySpecimenObjectIdType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.StructuralType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.media.LinkedDigitalObjectType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.media.MediaFormat;
@@ -33,7 +34,7 @@ public class MediaObjectRequest extends DoiRecordRequest {
   private final String linkedAttribute;
   private final String primaryMediaId;
   @Nullable
-  private final PrimaryObjectIdType primaryMediaObjectIdType;
+  private final PrimarySpecimenObjectIdType primaryMediaObjectIdType;
   @Nullable
   private final String primaryMediaObjectIdName;
   @Nullable
@@ -51,12 +52,10 @@ public class MediaObjectRequest extends DoiRecordRequest {
   @Nullable
   private final String rightsholderPid;
   @Nullable
-  private final PrimaryObjectIdType rightsholderPidType;
+  private final PrimarySpecimenObjectIdType rightsholderPidType;
   @Nullable
   @JsonProperty(value = "dcterms:conforms")
   private final String dctermsConforms;
-
-  private static final String REFERENT_TYPE = "Digital Media Object";
 
   public MediaObjectRequest(
       String fdoProfile,
@@ -76,7 +75,7 @@ public class MediaObjectRequest extends DoiRecordRequest {
       LinkedDigitalObjectType linkedDigitalObjectType,
       String linkedAttribute,
       String primaryMediaId,
-      PrimaryObjectIdType primaryMediaObjectIdType,
+      PrimarySpecimenObjectIdType primaryMediaObjectIdType,
       String primaryMediaObjectIdName,
       PrimaryMediaObjectType primaryMediaObjectType,
       String mediaMimeType,
@@ -85,12 +84,12 @@ public class MediaObjectRequest extends DoiRecordRequest {
       String license,
       String rightsholderPid,
       String rightsholderName,
-      PrimaryObjectIdType rightsholderPidType,
+      PrimarySpecimenObjectIdType rightsholderPidType,
       String dctermsConforms
   ) throws InvalidRequestException {
     super(fdoProfile, issuedForAgent, digitalObjectTypePid, pidIssuer, StructuralType.DIGITAL,
         locations,
-        referentName, REFERENT_TYPE, primaryReferentType);
+        referentName, ObjectType.MEDIA_OBJECT, primaryReferentType);
     this.mediaHost = mediaHost;
     this.mediaHostName = mediaHostName;
     this.mediaFormat = mediaFormat;

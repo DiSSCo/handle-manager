@@ -1,6 +1,7 @@
 package eu.dissco.core.handlemanager.domain.requests.objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.StructuralType;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -14,7 +15,6 @@ public class OrganisationRequest extends DoiRecordRequest {
   @JsonProperty(required = true)
   private final String organisationIdentifier;
   private final String organisationIdentifierType;
-  private static final String REFERENT_TYPE = "Organisation";
 
   public OrganisationRequest(String fdoProfile, String issuedForAgent, String digitalObjectType,
       String pidIssuer, String[] locations, String referentName,
@@ -22,7 +22,7 @@ public class OrganisationRequest extends DoiRecordRequest {
       String organisationIdentifierType) {
     super(fdoProfile, issuedForAgent, digitalObjectType, pidIssuer, StructuralType.DIGITAL,
         locations,
-        referentName, REFERENT_TYPE, primaryReferentType);
+        referentName, ObjectType.DIGITAL_SPECIMEN, primaryReferentType);
     this.organisationIdentifier = organisationIdentifier;
     this.organisationIdentifierType =
         organisationIdentifierType == null ? "ROR" : organisationIdentifierType;

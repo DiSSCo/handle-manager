@@ -3,13 +3,14 @@ package eu.dissco.core.handlemanager.domain.requests.vocabulary;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.nio.charset.StandardCharsets;
 
-public enum LivingOrPreserved {
-  @JsonProperty("Preserved") PRESERVED("Preserved"),
-  @JsonProperty("Living") LIVING("Living");
+public enum PrimarySpecimenObjectIdType {
+  @JsonProperty("Global") GLOBAL("Global"),
+  @JsonProperty("Resolvable") RESOLVABLE("Resolvable"),
+  @JsonProperty("Local") LOCAL("Local");
 
   private final String state;
 
-  private LivingOrPreserved(@JsonProperty("livingOrPreserved") String state) {
+  private PrimarySpecimenObjectIdType(@JsonProperty("primarySpecimenObjectIdType") String state) {
     this.state = state;
   }
 
@@ -21,6 +22,5 @@ public enum LivingOrPreserved {
   public byte[] getBytes() {
     return state.getBytes(StandardCharsets.UTF_8);
   }
-
 
 }

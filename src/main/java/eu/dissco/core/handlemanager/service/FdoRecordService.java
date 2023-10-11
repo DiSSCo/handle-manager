@@ -3,6 +3,7 @@ package eu.dissco.core.handlemanager.service;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ACCESS_RESTRICTED;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ANNOTATION_TOPIC;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.BASE_TYPE_OF_SPECIMEN;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.CATALOG_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DC_TERMS_CONFORMS;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DERIVED_FROM_ENTITY;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DIGITAL_OBJECT_NAME;
@@ -90,7 +91,6 @@ import eu.dissco.core.handlemanager.domain.requests.objects.SourceSystemRequest;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
-import eu.dissco.core.handlemanager.exceptions.PidServiceInternalError;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.repository.PidRepository;
@@ -161,7 +161,7 @@ public class FdoRecordService {
 
   public List<HandleAttribute> prepareHandleRecordAttributes(HandleRecordRequest request,
       byte[] handle, ObjectType type)
-      throws PidServiceInternalError, InvalidRequestException, PidResolutionException, UnprocessableEntityException {
+      throws InvalidRequestException, PidResolutionException, UnprocessableEntityException {
     List<HandleAttribute> fdoRecord = new ArrayList<>();
 
     // 100: Admin Handle
@@ -250,7 +250,7 @@ public class FdoRecordService {
 
   public List<HandleAttribute> prepareDoiRecordAttributes(DoiRecordRequest request, byte[] handle,
       ObjectType type)
-      throws PidServiceInternalError, UnprocessableEntityException, PidResolutionException, InvalidRequestException {
+      throws UnprocessableEntityException, PidResolutionException, InvalidRequestException {
     var fdoRecord = prepareHandleRecordAttributes(request, handle, type);
 
     // 40: referentType
@@ -274,7 +274,7 @@ public class FdoRecordService {
 
   public List<HandleAttribute> prepareMediaObjectAttributes(MediaObjectRequest request,
       byte[] handle, ObjectType type)
-      throws PidServiceInternalError, UnprocessableEntityException, PidResolutionException, InvalidRequestException {
+      throws UnprocessableEntityException, PidResolutionException, InvalidRequestException {
     var fdoRecord = prepareDoiRecordAttributes(request, handle, type);
 
     fdoRecord.add(new HandleAttribute(MEDIA_HOST, handle, request.getMediaHost()));
@@ -351,7 +351,7 @@ public class FdoRecordService {
 
   public List<HandleAttribute> prepareAnnotationAttributes(AnnotationRequest request, byte[] handle,
       ObjectType type)
-      throws UnprocessableEntityException, PidResolutionException, InvalidRequestException, PidServiceInternalError {
+      throws UnprocessableEntityException, PidResolutionException, InvalidRequestException {
     var fdoRecord = prepareHandleRecordAttributes(request, handle, type);
 
     // 500 subjectDigitalObjectId
@@ -385,7 +385,7 @@ public class FdoRecordService {
 
   public List<HandleAttribute> prepareMasRecordAttributes(MasRequest request, byte[] handle,
       ObjectType type)
-      throws PidServiceInternalError, UnprocessableEntityException, PidResolutionException, InvalidRequestException {
+      throws UnprocessableEntityException, PidResolutionException, InvalidRequestException {
     var fdoRecord = prepareHandleRecordAttributes(request, handle, type);
 
     fdoRecord.add(new HandleAttribute(MAS_NAME, handle, request.getMachineAnnotationServiceName()));
@@ -406,7 +406,7 @@ public class FdoRecordService {
 
   public List<HandleAttribute> prepareSourceSystemAttributes(SourceSystemRequest request,
       byte[] handle, ObjectType type)
-      throws UnprocessableEntityException, PidResolutionException, InvalidRequestException, PidServiceInternalError {
+      throws UnprocessableEntityException, PidResolutionException, InvalidRequestException {
     var fdoRecord = prepareHandleRecordAttributes(request, handle, type);
 
     // 600 sourceSystemName
@@ -417,7 +417,7 @@ public class FdoRecordService {
 
   public List<HandleAttribute> prepareOrganisationAttributes(OrganisationRequest request,
       byte[] handle, ObjectType type)
-      throws UnprocessableEntityException, PidResolutionException, InvalidRequestException, PidServiceInternalError {
+      throws UnprocessableEntityException, PidResolutionException, InvalidRequestException {
     var fdoRecord = prepareDoiRecordAttributes(request, handle, type);
 
     //101 10320/loc -> must contain ROR
@@ -446,7 +446,7 @@ public class FdoRecordService {
 
   public List<HandleAttribute> prepareMappingAttributes(MappingRequest request, byte[] handle,
       ObjectType type)
-      throws UnprocessableEntityException, PidResolutionException, InvalidRequestException, PidServiceInternalError {
+      throws UnprocessableEntityException, PidResolutionException, InvalidRequestException {
     var fdoRecord = prepareHandleRecordAttributes(request, handle, type);
 
     // 700 Source Data Standard
@@ -458,7 +458,7 @@ public class FdoRecordService {
 
   public List<HandleAttribute> prepareDigitalSpecimenRecordAttributes(
       DigitalSpecimenRequest request, byte[] handle, ObjectType type)
-      throws PidServiceInternalError, UnprocessableEntityException, PidResolutionException, InvalidRequestException {
+      throws UnprocessableEntityException, PidResolutionException, InvalidRequestException {
     var fdoRecord = prepareDoiRecordAttributes(request, handle, type);
 
     // 200: Specimen Host
@@ -578,6 +578,12 @@ public class FdoRecordService {
       fdoRecord.add(new HandleAttribute(WAS_DERIVED_FROM_ENTITY, handle, wasDerivedFrom));
     }
 
+    // 219 catalogId
+    var catId = request.getCatalogIdentifier();
+    if (catId != null) {
+      fdoRecord.add(new HandleAttribute(CATALOG_IDENTIFIER, handle, catId));
+    }
+
     return fdoRecord;
   }
 
@@ -614,7 +620,7 @@ public class FdoRecordService {
 
   public List<HandleAttribute> prepareUpdateAttributes(byte[] handle, JsonNode requestAttributes,
       ObjectType type)
-      throws InvalidRequestException, PidServiceInternalError, UnprocessableEntityException, PidResolutionException {
+      throws InvalidRequestException, UnprocessableEntityException, PidResolutionException {
     requestAttributes = setLocationXmlFromJson(requestAttributes,
         new String(handle, StandardCharsets.UTF_8), type);
     Map<String, String> updateRequestMap = mapper.convertValue(requestAttributes,
@@ -623,15 +629,11 @@ public class FdoRecordService {
 
     var updatedAttributeList = new ArrayList<>(updateRequestMap.entrySet().stream()
         .filter(entry -> entry.getValue() != null)
-        .filter(entry -> !entry.getKey().equals("sourceSystemId"))
         .map(entry -> new HandleAttribute(FdoProfile.retrieveIndex(entry.getKey()), handle,
             entry.getKey(),
             entry.getValue().getBytes(StandardCharsets.UTF_8)))
         .toList());
     updatedAttributeList.addAll(addResolvedNames(updateRequestMap, handle));
-    if (updateRequestMap.containsKey("sourceSystemId")) {
-      log.warn("Update request contains Source System Id. Value is being ignored");
-    }
     return updatedAttributeList;
   }
 
@@ -664,7 +666,7 @@ public class FdoRecordService {
   }
 
   public List<HandleAttribute> prepareTombstoneAttributes(byte[] handle, JsonNode requestAttributes)
-      throws InvalidRequestException, PidServiceInternalError, UnprocessableEntityException, PidResolutionException {
+      throws InvalidRequestException, UnprocessableEntityException, PidResolutionException {
     var tombstoneAttributes = new ArrayList<>(
         prepareUpdateAttributes(handle, requestAttributes, ObjectType.TOMBSTONE));
     tombstoneAttributes.add(new HandleAttribute(PID_STATUS, handle, "ARCHIVED"));
@@ -672,7 +674,8 @@ public class FdoRecordService {
     return tombstoneAttributes;
   }
 
-  private HandleAttribute genLandingPage(byte[] handle) throws PidServiceInternalError {
+  private HandleAttribute genLandingPage(byte[] handle)
+      throws UnprocessableEntityException {
     var landingPage = new String[]{"Placeholder landing page"};
     var data = setLocations(landingPage, new String(handle, StandardCharsets.UTF_8),
         ObjectType.TOMBSTONE);
@@ -680,7 +683,7 @@ public class FdoRecordService {
   }
 
   private JsonNode setLocationXmlFromJson(JsonNode request, String handle, ObjectType type)
-      throws InvalidRequestException, PidServiceInternalError {
+      throws InvalidRequestException {
     // Format request so that the given locations array is formatted according to 10320/loc specifications
     if (request.findValue(LOC_REQUEST) == null) {
       return request;
@@ -692,7 +695,7 @@ public class FdoRecordService {
       requestObjectNode.put(LOC.get(),
           new String(setLocations(locArr, handle, type), StandardCharsets.UTF_8));
       requestObjectNode.remove(LOC_REQUEST);
-    } catch (IOException e) {
+    } catch (IOException | UnprocessableEntityException e) {
       throw new InvalidRequestException(
           "An error has occurred parsing \"locations\" array. " + e.getMessage());
     }
@@ -704,13 +707,13 @@ public class FdoRecordService {
   }
 
   public byte[] setLocations(String[] userLocations, String handle, ObjectType type)
-      throws PidServiceInternalError {
+      throws UnprocessableEntityException {
 
     DocumentBuilder documentBuilder;
     try {
       documentBuilder = dbf.newDocumentBuilder();
     } catch (ParserConfigurationException e) {
-      throw new PidServiceInternalError(e.getMessage(), e);
+      throw new UnprocessableEntityException(e.getMessage());
     }
 
     var doc = documentBuilder.newDocument();
@@ -729,7 +732,8 @@ public class FdoRecordService {
     try {
       return documentToString(doc).getBytes(StandardCharsets.UTF_8);
     } catch (TransformerException e) {
-      throw new PidServiceInternalError("An internal error has occurred parsing location data", e);
+      throw new UnprocessableEntityException(
+          "An internal error has occurred parsing location data");
     }
   }
 
