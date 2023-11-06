@@ -3,7 +3,7 @@ package eu.dissco.core.handlemanager.domain.requests.objects;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.StructuralType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.StructuralType;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

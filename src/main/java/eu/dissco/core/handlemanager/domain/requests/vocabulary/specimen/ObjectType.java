@@ -1,4 +1,4 @@
-package eu.dissco.core.handlemanager.domain.requests.vocabulary;
+package eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -24,9 +24,10 @@ public enum ObjectType {
   public String toString() {
     return state;
   }
-  public static ObjectType fromString(String state){
-    for (ObjectType type : ObjectType.values()){
-      if(type.state.equalsIgnoreCase(state)){
+
+  public static ObjectType fromString(String state) {
+    for (ObjectType type : ObjectType.values()) {
+      if (type.state.equalsIgnoreCase(state)) {
         return type;
       }
     }

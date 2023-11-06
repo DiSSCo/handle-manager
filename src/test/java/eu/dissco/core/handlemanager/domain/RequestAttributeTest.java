@@ -1,6 +1,6 @@
 package eu.dissco.core.handlemanager.domain;
 
-import static eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimarySpecimenObjectIdType.LOCAL;
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.PrimarySpecimenObjectIdType.LOCAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.DIGITAL_OBJECT_TYPE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.FDO_PROFILE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.ISSUED_FOR_AGENT_TESTVAL;
@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import org.junit.jupiter.api.Test;
 

@@ -1,7 +1,6 @@
 package eu.dissco.core.handlemanager.testUtils;
 
-import static eu.dissco.core.handlemanager.domain.FdoProfile.ACCESS_RESTRICTED;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.ANNOTATION_TOPIC;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.ANNOTATION_HASH;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.BASE_TYPE_OF_SPECIMEN;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.CATALOG_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DC_TERMS_CONFORMS;
@@ -20,7 +19,6 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.LICENSE_URL;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_ATTRIBUTE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_DO_PID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_DO_TYPE;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_OBJECT_URL;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.LIVING_OR_PRESERVED;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.LOC;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MARKED_AS_TYPE;
@@ -31,6 +29,7 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_FORMAT;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_HOST;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_HOST_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_MIME_TYPE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MOTIVATION;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ORGANISATION_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ORGANISATION_ID_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ORGANISATION_NAME;
@@ -51,7 +50,6 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OB
 import static eu.dissco.core.handlemanager.domain.FdoProfile.REFERENT_DOI_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.REFERENT_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.REFERENT_TYPE;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.REPLACE_OR_APPEND;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.RIGHTSHOLDER_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.RIGHTSHOLDER_PID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.RIGHTSHOLDER_PID_TYPE;
@@ -61,7 +59,8 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.SPECIMEN_HOST_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.SPECIMEN_OBJECT_ID_ABSENCE_REASON;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.STRUCTURAL_TYPE;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_DIGITAL_OBJECT_ID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.TARGET_PID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.TARGET_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.TOMBSTONE_TEXT;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_DISCIPLINE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_DOMAIN;
@@ -92,11 +91,12 @@ import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.SourceSystemRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.TombstoneRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimarySpecimenObjectIdType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.ReplaceOrAppend;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.StructuralType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.annotation.Motivation;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.annotation.TargetType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.media.LinkedDigitalObjectType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.PrimarySpecimenObjectIdType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.StructuralType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -104,6 +104,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -170,10 +171,11 @@ public class TestUtils {
   public static final String SPECIMEN_HOST_TESTVAL = ROR_DOMAIN + ROR_IDENTIFIER;
   public static final String SPECIMEN_HOST_NAME_TESTVAL = "Naturalis";
   // Annotations
-  public static final String SUBJECT_DOI_TESTVAL = HANDLE_URI + PREFIX + "/111";
-  public static final String ANNOTATION_TOPIC_TESTVAL = "note";
-  public static final String LINKED_URL_TESTVAL = "https://";
-
+  public static final String TARGET_DOI_TESTVAL = HANDLE_URI + PREFIX + "/111";
+  public static final TargetType TARGET_TYPE_TESTVAL = TargetType.DIGITAL_SPECIMEN;
+  public static final Motivation MOTIVATION_TESTVAL = Motivation.EDITING;
+  public static final UUID ANNOTATION_HASH_TESTVAL = UUID.fromString(
+      "550e8400-e29b-41d4-a716-446655440000");
 
   // Media Objects
   public static final String MEDIA_HOST_TESTVAL = SPECIMEN_HOST_TESTVAL;
@@ -615,27 +617,19 @@ public class TestUtils {
       throws Exception {
     var fdoRecord = genHandleRecordAttributes(handle, ObjectType.ANNOTATION);
 
-    // 500 subjectDigitalObjectId
-    fdoRecord.add(new HandleAttribute(SUBJECT_DIGITAL_OBJECT_ID.index(), handle,
-        SUBJECT_DIGITAL_OBJECT_ID.get(),
-        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+    // 500 TargetPid
+    fdoRecord.add(new HandleAttribute(TARGET_PID, handle, TARGET_DOI_TESTVAL));
 
-    // 501 AnnotationTopic
-    fdoRecord.add(new HandleAttribute(ANNOTATION_TOPIC.index(), handle,
-        ANNOTATION_TOPIC.get(), ANNOTATION_TOPIC_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+    // 501 TargetType
+    fdoRecord.add(new HandleAttribute(TARGET_TYPE, handle, TARGET_TYPE_TESTVAL.toString()));
 
-    // 502 replaceOrAppend
-    fdoRecord.add(new HandleAttribute(REPLACE_OR_APPEND.index(), handle, REPLACE_OR_APPEND.get(),
-        ReplaceOrAppend.REPLACE.toString().getBytes(StandardCharsets.UTF_8)));
+    // 503 motivation
+    fdoRecord.add(
+        new HandleAttribute(MOTIVATION, handle, MOTIVATION_TESTVAL.toString()));
 
-    // 503 AccessRestricted
-    fdoRecord.add(new HandleAttribute(ACCESS_RESTRICTED.index(), handle, ACCESS_RESTRICTED.get(),
-        String.valueOf(false).getBytes(StandardCharsets.UTF_8)));
-
-    // 504 LinkedObjectUrl
-    fdoRecord.add(new HandleAttribute(LINKED_OBJECT_URL.index(), handle, LINKED_OBJECT_URL.get(),
-        LINKED_URL_TESTVAL.getBytes(StandardCharsets.UTF_8)));
-
+    // 503 AnnotationHash
+    fdoRecord.add(
+        new HandleAttribute(ANNOTATION_HASH, handle, ANNOTATION_HASH_TESTVAL.toString()));
     return fdoRecord;
   }
 
@@ -788,11 +782,10 @@ public class TestUtils {
         DIGITAL_OBJECT_TYPE_TESTVAL,
         PID_ISSUER_TESTVAL_OTHER,
         LOC_TESTVAL,
-        SUBJECT_DOI_TESTVAL,
-        ANNOTATION_TOPIC_TESTVAL,
-        ReplaceOrAppend.REPLACE,
-        false,
-        LINKED_URL_TESTVAL
+        TARGET_DOI_TESTVAL,
+        TARGET_TYPE_TESTVAL,
+        MOTIVATION_TESTVAL,
+        ANNOTATION_HASH_TESTVAL
     );
   }
 

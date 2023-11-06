@@ -1,21 +1,21 @@
 package eu.dissco.core.handlemanager.domain.requests.objects;
 
-import static eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimarySpecimenObjectIdType.LOCAL;
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.PrimarySpecimenObjectIdType.LOCAL;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.BaseTypeOfSpecimen;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.InformationArtefactType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.LivingOrPreserved;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialOrDigitalEntity;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialSampleType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.PrimarySpecimenObjectIdType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.StructuralType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicCategory;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicDiscipline;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicDomain;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicOrigin;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.BaseTypeOfSpecimen;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.InformationArtefactType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.LivingOrPreserved;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.MaterialOrDigitalEntity;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.MaterialSampleType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.PrimarySpecimenObjectIdType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.StructuralType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.TopicCategory;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.TopicDiscipline;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.TopicDomain;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.TopicOrigin;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import java.util.List;
 import lombok.EqualsAndHashCode;

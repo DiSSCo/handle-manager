@@ -1,7 +1,7 @@
 package eu.dissco.core.handlemanager.service;
 
-import static eu.dissco.core.handlemanager.domain.FdoProfile.ACCESS_RESTRICTED;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.ANNOTATION_TOPIC;
+
+import static eu.dissco.core.handlemanager.domain.FdoProfile.ANNOTATION_HASH;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.BASE_TYPE_OF_SPECIMEN;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.CATALOG_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.DC_TERMS_CONFORMS;
@@ -20,8 +20,6 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.LICENSE_URL;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_ATTRIBUTE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_DO_PID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_DO_TYPE;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_OBJECT_IS_PID;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_OBJECT_URL;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.LIVING_OR_PRESERVED;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.LOC;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MARKED_AS_TYPE;
@@ -32,6 +30,7 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_FORMAT;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_HOST;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_HOST_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_MIME_TYPE;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.MOTIVATION;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ORGANISATION_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ORGANISATION_ID_TYPE;
@@ -54,7 +53,6 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OB
 import static eu.dissco.core.handlemanager.domain.FdoProfile.REFERENT_DOI_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.REFERENT_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.REFERENT_TYPE;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.REPLACE_OR_APPEND;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.RIGHTSHOLDER_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.RIGHTSHOLDER_PID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.RIGHTSHOLDER_PID_TYPE;
@@ -64,7 +62,8 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.SPECIMEN_HOST_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.SPECIMEN_OBJECT_ID_ABSENCE_REASON;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.STRUCTURAL_TYPE;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.SUBJECT_DIGITAL_OBJECT_ID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.TARGET_PID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.TARGET_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_CATEGORY;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_DISCIPLINE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_DOMAIN;
@@ -88,7 +87,7 @@ import eu.dissco.core.handlemanager.domain.requests.objects.MasRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.SourceSystemRequest;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
@@ -134,6 +133,7 @@ public class FdoRecordService {
   private final ApplicationProperties appProperties;
   private final Environment environment;
   private static final String HANDLE_DOMAIN = "https://hdl.handle.net/";
+  private static final String DOI_DOMAIN = "https://doi.org/";
   private static final String ROR_API_DOMAIN = "https://api.ror.org/organizations/";
   private static final String ROR_DOMAIN = "https://ror.org/";
   private static final String WIKIDATA_API = "https://wikidata.org/w/rest.php/wikibase/v0/entities/items/";
@@ -354,32 +354,23 @@ public class FdoRecordService {
       throws UnprocessableEntityException, PidResolutionException, InvalidRequestException {
     var fdoRecord = prepareHandleRecordAttributes(request, handle, type);
 
-    // 500 subjectDigitalObjectId
+    // 500 TargetPid
     resolveInternalPid(request);
-    fdoRecord.add(new HandleAttribute(SUBJECT_DIGITAL_OBJECT_ID, handle,
-        request.getSubjectDigitalObjectId()));
+    fdoRecord.add(new HandleAttribute(TARGET_PID, handle, request.getTargetPid()));
 
-    // 501 AnnotationTopic
-    fdoRecord.add(new HandleAttribute(ANNOTATION_TOPIC, handle, request.getAnnotationTopic()));
+    // 501 TargetType
+    fdoRecord.add(new HandleAttribute(TARGET_TYPE, handle, request.getTargetType().toString()));
 
-    // 502 replaceOrAppend
+    // 503 motivation
     fdoRecord.add(
-        new HandleAttribute(REPLACE_OR_APPEND, handle, request.getReplaceOrAppend().toString()));
+        new HandleAttribute(MOTIVATION, handle, request.getMotivation().toString()));
 
-    // 503 AccessRestricted
-    fdoRecord.add(
-        new HandleAttribute(ACCESS_RESTRICTED, handle, request.getAccessRestricted().toString()));
-
-    // 504 LinkedObjectUrl
-    var linkedObjectUrl = request.getLinkedObjectUrl();
-    if (linkedObjectUrl != null) {
-      fdoRecord.add(new HandleAttribute(LINKED_OBJECT_URL, handle, linkedObjectUrl));
-    }
-
-    if (linkedObjectUrl != null) {
+    // 503 AnnotationHash
+    if (request.getAnnotationHash() != null) {
       fdoRecord.add(
-          new HandleAttribute(LINKED_OBJECT_IS_PID, handle, PLACEHOLDER));
+          new HandleAttribute(ANNOTATION_HASH, handle, request.getAnnotationHash().toString()));
     }
+
     return fdoRecord;
   }
 
@@ -395,12 +386,13 @@ public class FdoRecordService {
 
   private void resolveInternalPid(AnnotationRequest request) throws PidResolutionException {
     var resolvedSubject = pidRepository.resolveHandleAttributes(
-        request.getSubjectDigitalObjectId()
+        request.getTargetPid()
             .replace(HANDLE_DOMAIN, "")
+            .replace(DOI_DOMAIN, "")
             .getBytes(StandardCharsets.UTF_8));
     if (resolvedSubject.isEmpty()) {
       throw new PidResolutionException(
-          "Invalid Subject Object ID. Unable to resolve " + request.getSubjectDigitalObjectId());
+          "Invalid Subject Object ID. Unable to resolve " + request.getTargetPid());
     }
   }
 
