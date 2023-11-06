@@ -613,7 +613,7 @@ public class TestUtils {
     return fdoRecord;
   }
 
-  public static List<HandleAttribute> genAnnotationAttributes(byte[] handle)
+  public static List<HandleAttribute> genAnnotationAttributes(byte[] handle, boolean includeHash)
       throws Exception {
     var fdoRecord = genHandleRecordAttributes(handle, ObjectType.ANNOTATION);
 
@@ -628,8 +628,10 @@ public class TestUtils {
         new HandleAttribute(MOTIVATION, handle, MOTIVATION_TESTVAL.toString()));
 
     // 503 AnnotationHash
-    fdoRecord.add(
-        new HandleAttribute(ANNOTATION_HASH, handle, ANNOTATION_HASH_TESTVAL.toString()));
+    if (includeHash) {
+      fdoRecord.add(
+          new HandleAttribute(ANNOTATION_HASH, handle, ANNOTATION_HASH_TESTVAL.toString()));
+    }
     return fdoRecord;
   }
 
@@ -789,6 +791,20 @@ public class TestUtils {
     );
   }
 
+  public static AnnotationRequest givenAnnotationRequestObjectNoHash() {
+    return new AnnotationRequest(
+        FDO_PROFILE_TESTVAL,
+        ISSUED_FOR_AGENT_TESTVAL,
+        DIGITAL_OBJECT_TYPE_TESTVAL,
+        PID_ISSUER_TESTVAL_OTHER,
+        LOC_TESTVAL,
+        TARGET_DOI_TESTVAL,
+        TARGET_TYPE_TESTVAL,
+        MOTIVATION_TESTVAL,
+        null
+    );
+  }
+
   public static MappingRequest givenMappingRequestObject() {
     return new MappingRequest(
         FDO_PROFILE_TESTVAL,
@@ -879,6 +895,23 @@ public class TestUtils {
 
       var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
       dataNodes.add(new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), recordType,
+          recordAttributes, pidLink));
+    }
+    return new JsonApiWrapperWrite(dataNodes);
+  }
+
+  public static JsonApiWrapperWrite givenAnnotationResponseWrite(List<byte[]> handles)
+      throws Exception {
+    List<JsonApiDataLinks> dataNodes = new ArrayList<>();
+
+    for (byte[] handle : handles) {
+      var testDbRecord = List.of(
+          new HandleAttribute(ANNOTATION_HASH, handle, ANNOTATION_HASH_TESTVAL.toString()));
+      JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
+
+      var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
+      dataNodes.add(new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8),
+          ObjectType.ANNOTATION.toString(),
           recordAttributes, pidLink));
     }
     return new JsonApiWrapperWrite(dataNodes);
@@ -982,7 +1015,7 @@ public class TestUtils {
         return genMediaObjectAttributes(handle);
       }
       case RECORD_TYPE_ANNOTATION -> {
-        return genAnnotationAttributes(handle);
+        return genAnnotationAttributes(handle, false);
       }
       case RECORD_TYPE_MAPPING -> {
         return genMappingAttributes(handle);

@@ -40,6 +40,8 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneReque
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRecordAttributesAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestBatch;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObjectNoHash;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationResponseWrite;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecordRequestObject;
@@ -526,11 +528,35 @@ class HandleServiceTest {
       requests.add(genCreateRecordRequest(givenAnnotationRequestObject(), RECORD_TYPE_ANNOTATION));
     }
 
+    var responseExpected = givenAnnotationResponseWrite(handles);
+    given(pidNameGeneratorService.genHandleList(handles.size())).willReturn(handles);
+    given(fdoRecordService.prepareAnnotationAttributes(any(), any(), any()))
+        .willReturn(genAnnotationAttributes(handles.get(0), true))
+        .willReturn(genAnnotationAttributes(handles.get(1), true));
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
+
+    // When
+    var responseReceived = service.createRecords(requests);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testCreateAnnotationsBatchNoHash() throws Exception {
+    // Given
+
+    List<JsonNode> requests = new ArrayList<>();
+    for (byte[] handle : handles) {
+      requests.add(
+          genCreateRecordRequest(givenAnnotationRequestObjectNoHash(), RECORD_TYPE_ANNOTATION));
+    }
+
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_ANNOTATION);
     given(pidNameGeneratorService.genHandleList(handles.size())).willReturn(handles);
     given(fdoRecordService.prepareAnnotationAttributes(any(), any(), any()))
-        .willReturn(genAnnotationAttributes(handles.get(0)))
-        .willReturn(genAnnotationAttributes(handles.get(1)));
+        .willReturn(genAnnotationAttributes(handles.get(0), false))
+        .willReturn(genAnnotationAttributes(handles.get(1), false));
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
