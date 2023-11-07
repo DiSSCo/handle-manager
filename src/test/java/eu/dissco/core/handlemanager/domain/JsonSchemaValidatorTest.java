@@ -52,7 +52,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaValidator;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.annotation.TargetType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.StructuralType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import java.util.List;
@@ -265,7 +264,7 @@ class JsonSchemaValidatorTest {
   void testAnnotationPatchRequest() {
     // Given
     var request = givenUpdateRequest(RECORD_TYPE_ANNOTATION, TARGET_TYPE.get(),
-        TargetType.ANNOTATION.toString());
+        "Annotation");
 
     // Then
     assertDoesNotThrow(() -> {

@@ -359,7 +359,7 @@ public class FdoRecordService {
     fdoRecord.add(new HandleAttribute(TARGET_PID, handle, request.getTargetPid()));
 
     // 501 TargetType
-    fdoRecord.add(new HandleAttribute(TARGET_TYPE, handle, request.getTargetType().toString()));
+    fdoRecord.add(new HandleAttribute(TARGET_TYPE, handle, request.getTargetType()));
 
     // 503 motivation
     fdoRecord.add(

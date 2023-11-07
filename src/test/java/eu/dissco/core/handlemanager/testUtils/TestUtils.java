@@ -92,7 +92,6 @@ import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.SourceSystemRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.TombstoneRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.annotation.Motivation;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.annotation.TargetType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.media.LinkedDigitalObjectType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.PrimarySpecimenObjectIdType;
@@ -172,7 +171,7 @@ public class TestUtils {
   public static final String SPECIMEN_HOST_NAME_TESTVAL = "Naturalis";
   // Annotations
   public static final String TARGET_DOI_TESTVAL = HANDLE_URI + PREFIX + "/111";
-  public static final TargetType TARGET_TYPE_TESTVAL = TargetType.DIGITAL_SPECIMEN;
+  public static final String TARGET_TYPE_TESTVAL = "digitalSpecimen";
   public static final Motivation MOTIVATION_TESTVAL = Motivation.EDITING;
   public static final UUID ANNOTATION_HASH_TESTVAL = UUID.fromString(
       "550e8400-e29b-41d4-a716-446655440000");
@@ -621,7 +620,7 @@ public class TestUtils {
     fdoRecord.add(new HandleAttribute(TARGET_PID, handle, TARGET_DOI_TESTVAL));
 
     // 501 TargetType
-    fdoRecord.add(new HandleAttribute(TARGET_TYPE, handle, TARGET_TYPE_TESTVAL.toString()));
+    fdoRecord.add(new HandleAttribute(TARGET_TYPE, handle, TARGET_TYPE_TESTVAL));
 
     // 503 motivation
     fdoRecord.add(

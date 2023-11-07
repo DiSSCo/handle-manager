@@ -2,7 +2,6 @@ package eu.dissco.core.handlemanager.domain.requests.objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.annotation.Motivation;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.annotation.TargetType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.StructuralType;
 import java.util.UUID;
 import lombok.EqualsAndHashCode;
@@ -17,7 +16,7 @@ public class AnnotationRequest extends HandleRecordRequest {
   @JsonProperty(required = true)
   private final String targetPid;
   @JsonProperty(required = true)
-  private final TargetType targetType;
+  private final String targetType;
   @JsonProperty(required = true)
   private final Motivation motivation;
   private final UUID annotationHash;
@@ -29,7 +28,7 @@ public class AnnotationRequest extends HandleRecordRequest {
       String pidIssuer,
       String[] locations,
       String targetPid,
-      TargetType targetType,
+      String targetType,
       Motivation motivation,
       UUID annotationHash) {
     super(fdoProfile, issuedForAgent, digitalObjectType, pidIssuer, StructuralType.DIGITAL,
