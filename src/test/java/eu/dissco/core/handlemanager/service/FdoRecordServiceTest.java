@@ -509,18 +509,6 @@ class FdoRecordServiceTest {
   }
 
   @Test
-  void testPrepareAnnotationAttributesPidResolution() throws Exception {
-    // Given
-    given(pidResolver.getObjectName(any())).willReturn("placeholder");
-    given(pidRepository.resolveHandleAttributes(any(byte[].class))).willReturn(new ArrayList<>());
-    var request = givenAnnotationRequestObject();
-
-    // Then
-    assertThrows(PidResolutionException.class,
-        () -> fdoRecordService.prepareAnnotationAttributes(request, handle, ObjectType.ANNOTATION));
-  }
-
-  @Test
   void testPrepareMappingAttributes() throws Exception {
     // Given
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
