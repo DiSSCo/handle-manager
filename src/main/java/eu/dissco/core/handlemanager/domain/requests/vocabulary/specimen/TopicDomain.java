@@ -1,9 +1,9 @@
-package eu.dissco.core.handlemanager.domain.requests.vocabulary;
+package eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen;
 
-import static eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialSampleType.ANTHRO_AGGR;
-import static eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialSampleType.ARTEFACT;
-import static eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialSampleType.BUNDLE_BIOME;
-import static eu.dissco.core.handlemanager.domain.requests.vocabulary.MaterialSampleType.SLURRY_BIOME;
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.MaterialSampleType.ANTHRO_AGGR;
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.MaterialSampleType.ARTEFACT;
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.MaterialSampleType.BUNDLE_BIOME;
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.MaterialSampleType.SLURRY_BIOME;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Collections;

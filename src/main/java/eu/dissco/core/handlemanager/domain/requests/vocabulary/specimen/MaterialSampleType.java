@@ -1,4 +1,4 @@
-package eu.dissco.core.handlemanager.domain.requests.vocabulary;
+package eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

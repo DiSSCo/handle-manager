@@ -73,12 +73,10 @@ public enum FdoProfile {
   DC_TERMS_CONFORMS("dcterms:conforms", 419),
 
   // Annotation
-  SUBJECT_DIGITAL_OBJECT_ID("subjectDigitalObjectId", 500),
-  ANNOTATION_TOPIC("annotationTopic", 501),
-  REPLACE_OR_APPEND("replaceOrAppend", 502),
-  ACCESS_RESTRICTED("accessRestricted", 503),
-  LINKED_OBJECT_URL("linkedObjectUrl", 504),
-  LINKED_OBJECT_IS_PID("linkedObjectIsPid", 505),
+  TARGET_PID("targetPid", 500),
+  TARGET_TYPE("targetType", 501),
+  MOTIVATION("motivation", 502),
+  ANNOTATION_HASH("annotationHash", 505),
 
   // Agent
   SOURCE_SYSTEM_NAME("sourceSystemName", 600),

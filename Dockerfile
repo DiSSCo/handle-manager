@@ -1,6 +1,5 @@
 FROM eclipse-temurin:17-alpine AS builder
-RUN apk update
-RUN apk upgrade openssl
+RUN apk update --no-cache && apk upgrade openssl
 WORKDIR application
 ARG JAR_FILE=target/*spring-boot.jar
 COPY ${JAR_FILE} application.jar

@@ -1,6 +1,5 @@
 package eu.dissco.core.handlemanager.domain;
 
-import static eu.dissco.core.handlemanager.domain.FdoProfile.ANNOTATION_TOPIC;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.FDO_PROFILE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MAS_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_HOST;
@@ -10,6 +9,7 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.REFERENT_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.SOURCE_DATA_STANDARD;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.SOURCE_SYSTEM_NAME;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.SPECIMEN_HOST;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.TARGET_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.TOMBSTONE_TEXT;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
@@ -52,7 +52,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaValidator;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.StructuralType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.StructuralType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -263,7 +263,8 @@ class JsonSchemaValidatorTest {
   @Test
   void testAnnotationPatchRequest() {
     // Given
-    var request = givenUpdateRequest(RECORD_TYPE_ANNOTATION, ANNOTATION_TOPIC.get(), "new");
+    var request = givenUpdateRequest(RECORD_TYPE_ANNOTATION, TARGET_TYPE.get(),
+        "Annotation");
 
     // Then
     assertDoesNotThrow(() -> {

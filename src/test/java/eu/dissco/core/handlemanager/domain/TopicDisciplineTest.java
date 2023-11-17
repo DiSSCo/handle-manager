@@ -2,8 +2,8 @@ package eu.dissco.core.handlemanager.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicCategory;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.TopicDiscipline;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.TopicCategory;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.TopicDiscipline;
 import org.junit.jupiter.api.Test;
 
 class TopicDisciplineTest {

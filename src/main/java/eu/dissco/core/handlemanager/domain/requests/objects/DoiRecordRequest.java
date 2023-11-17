@@ -1,8 +1,8 @@
 package eu.dissco.core.handlemanager.domain.requests.objects;
 
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.ObjectType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.StructuralType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.StructuralType;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

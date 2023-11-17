@@ -1,12 +1,12 @@
 package eu.dissco.core.handlemanager.domain.requests.objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.ReplaceOrAppend;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.StructuralType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.annotation.Motivation;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.StructuralType;
+import java.util.UUID;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
-import org.springframework.lang.Nullable;
 
 @Getter
 @ToString
@@ -14,14 +14,12 @@ import org.springframework.lang.Nullable;
 public class AnnotationRequest extends HandleRecordRequest {
 
   @JsonProperty(required = true)
-  private final String subjectDigitalObjectId;
+  private final String targetPid;
   @JsonProperty(required = true)
-  private final String annotationTopic;
+  private final String targetType;
   @JsonProperty(required = true)
-  private final ReplaceOrAppend replaceOrAppend;
-  private final Boolean accessRestricted;
-  @Nullable
-  private final String linkedObjectUrl;
+  private final Motivation motivation;
+  private final UUID annotationHash;
 
   public AnnotationRequest(
       String fdoProfile,
@@ -29,17 +27,15 @@ public class AnnotationRequest extends HandleRecordRequest {
       String digitalObjectType,
       String pidIssuer,
       String[] locations,
-      String subjectDigitalObjectId,
-      String annotationTopic,
-      ReplaceOrAppend replaceOrAppend,
-      Boolean accessRestricted,
-      String linkedObjectUrl) {
+      String targetPid,
+      String targetType,
+      Motivation motivation,
+      UUID annotationHash) {
     super(fdoProfile, issuedForAgent, digitalObjectType, pidIssuer, StructuralType.DIGITAL,
         locations);
-    this.subjectDigitalObjectId = subjectDigitalObjectId;
-    this.annotationTopic = annotationTopic;
-    this.replaceOrAppend = replaceOrAppend;
-    this.accessRestricted = accessRestricted != null && accessRestricted;
-    this.linkedObjectUrl = linkedObjectUrl;
+    this.targetPid = targetPid;
+    this.targetType = targetType;
+    this.motivation = motivation;
+    this.annotationHash = annotationHash;
   }
 }
