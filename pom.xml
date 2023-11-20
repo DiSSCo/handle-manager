@@ -99,9 +99,9 @@
 
     <!--Database Dependencies -->
     <dependency>
-      <artifactId>postgresql</artifactId>
       <groupId>org.postgresql</groupId>
-      <scope>runtime</scope>
+      <artifactId>postgresql</artifactId>
+      <version>${postgresql.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jooq</groupId>
