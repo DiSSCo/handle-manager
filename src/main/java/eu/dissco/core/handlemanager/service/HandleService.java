@@ -21,6 +21,7 @@ import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.SourceSystemRequest;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
+import eu.dissco.core.handlemanager.exceptions.CopyDatabaseException;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -56,7 +57,8 @@ public class HandleService extends PidService {
       throws PidResolutionException, InvalidRequestException, PidCreationException {
 
     var recordTimestamp = Instant.now().getEpochSecond();
-    List<byte[]> handles = hf.genHandleList(requests.size());
+    var handles = hf.genHandleList(requests.size());
+    var handleIterator = handles.iterator();
     List<DigitalSpecimenRequest> digitalSpecimenList = new ArrayList<>();
 
     List<HandleAttribute> handleAttributes = new ArrayList<>();
@@ -65,21 +67,22 @@ public class HandleService extends PidService {
     for (var request : requests) {
       ObjectNode dataNode = (ObjectNode) request.get(NODE_DATA);
       ObjectType type = ObjectType.fromString(dataNode.get(NODE_TYPE).asText());
-      recordTypes.put(new String(handles.get(0), StandardCharsets.UTF_8), type);
+      var thisHandle = handleIterator.next();
+      recordTypes.put(new String(thisHandle, StandardCharsets.UTF_8), type);
       try {
         switch (type) {
           case HANDLE -> {
             var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 HandleRecordRequest.class);
             handleAttributes.addAll(
-                fdoRecordService.prepareHandleRecordAttributes(requestObject, handles.remove(0),
+                fdoRecordService.prepareHandleRecordAttributes(requestObject, thisHandle,
                     type));
           }
           case DOI -> {
             var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 DoiRecordRequest.class);
             handleAttributes.addAll(
-                fdoRecordService.prepareDoiRecordAttributes(requestObject, handles.remove(0),
+                fdoRecordService.prepareDoiRecordAttributes(requestObject, thisHandle,
                     type));
           }
           case DIGITAL_SPECIMEN -> {
@@ -87,47 +90,47 @@ public class HandleService extends PidService {
                 DigitalSpecimenRequest.class);
             handleAttributes.addAll(
                 fdoRecordService.prepareDigitalSpecimenRecordAttributes(requestObject,
-                    handles.remove(0), type));
+                    thisHandle, type));
             digitalSpecimenList.add(requestObject);
           }
           case MEDIA_OBJECT -> {
             var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 MediaObjectRequest.class);
             handleAttributes.addAll(
-                fdoRecordService.prepareMediaObjectAttributes(requestObject, handles.remove(0),
+                fdoRecordService.prepareMediaObjectAttributes(requestObject, thisHandle,
                     type));
           }
           case ANNOTATION -> {
             var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 AnnotationRequest.class);
             handleAttributes.addAll(
-                fdoRecordService.prepareAnnotationAttributes(requestObject, handles.remove(0),
+                fdoRecordService.prepareAnnotationAttributes(requestObject, thisHandle,
                     type));
           }
           case MAPPING -> {
             var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 MappingRequest.class);
             handleAttributes.addAll(
-                fdoRecordService.prepareMappingAttributes(requestObject, handles.remove(0), type));
+                fdoRecordService.prepareMappingAttributes(requestObject, thisHandle, type));
           }
           case SOURCE_SYSTEM -> {
             var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 SourceSystemRequest.class);
             handleAttributes.addAll(
-                fdoRecordService.prepareSourceSystemAttributes(requestObject, handles.remove(0),
+                fdoRecordService.prepareSourceSystemAttributes(requestObject, thisHandle,
                     type));
           }
           case ORGANISATION -> {
             var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 OrganisationRequest.class);
             handleAttributes.addAll(
-                fdoRecordService.prepareOrganisationAttributes(requestObject, handles.remove(0),
+                fdoRecordService.prepareOrganisationAttributes(requestObject, thisHandle,
                     type));
           }
           case MAS -> {
             var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES), MasRequest.class);
             handleAttributes.addAll(
-                fdoRecordService.prepareMasRecordAttributes(requestObject, handles.remove(0),
+                fdoRecordService.prepareMasRecordAttributes(requestObject, thisHandle,
                     type));
           }
           default -> throw new InvalidRequestException(
@@ -142,8 +145,14 @@ public class HandleService extends PidService {
 
     validateDigitalSpecimens(digitalSpecimenList);
     log.info("Persisting new handles to db");
-    pidRepository.postAttributesToDb(recordTimestamp, handleAttributes);
-
+    try {
+      pidRepository.postAttributesToDb(recordTimestamp, handleAttributes);
+    } catch (CopyDatabaseException e) {
+      log.info("Rolling back handles");
+      var handlesString = handles.stream().map(h -> new String(h, StandardCharsets.UTF_8)).toList();
+      rollbackHandles(handlesString);
+      throw new PidCreationException("Unable to insert handles into database");
+    }
     return new JsonApiWrapperWrite(formatCreateRecords(handleAttributes, recordTypes));
   }
 

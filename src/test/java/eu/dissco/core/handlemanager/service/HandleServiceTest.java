@@ -55,7 +55,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordRespon
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteArchive;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteSmallResponse;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemRequestObject;
-import static eu.dissco.core.handlemanager.utils.AdminHandleGenerator.genAdminHandle;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -64,6 +63,7 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mockStatic;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -73,6 +73,7 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
+import eu.dissco.core.handlemanager.exceptions.CopyDatabaseException;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -170,7 +171,8 @@ class HandleServiceTest {
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     String path = UI_URL + HANDLE;
     var adminHandle = new HandleAttribute(HS_ADMIN.index(), handle, HS_ADMIN.get(),
-        genAdminHandle());
+        "\\\\x0FFF000000153330303A302E4E412F32302E353030302E31303235000000C8".getBytes(
+            StandardCharsets.UTF_8));
     var recordAttributeList = genHandleRecordAttributes(handle,
         ObjectType.HANDLE);
     recordAttributeList.add(adminHandle);
@@ -340,6 +342,27 @@ class HandleServiceTest {
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testCreateDoiRecordDbException() throws Exception {
+    // Given
+    byte[] handle = handles.get(0);
+    var request = genCreateRecordRequest(givenDoiRecordRequestObject(), RECORD_TYPE_DOI);
+    List<HandleAttribute> doiRecord = genDoiRecordAttributes(handle, ObjectType.HANDLE);
+
+    given(pidNameGeneratorService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
+    given(fdoRecordService.prepareDoiRecordAttributes(any(), any(), eq(ObjectType.DOI))).willReturn(
+        doiRecord);
+    doThrow(CopyDatabaseException.class).when(pidRepository)
+        .postAttributesToDb(CREATED.getEpochSecond(), doiRecord);
+
+    // When
+    assertThrows(PidCreationException.class, () -> service.createRecords(List.of(request)));
+
+    // Then
+    then(pidRepository).should()
+        .rollbackHandles(List.of(new String(handle, StandardCharsets.UTF_8)));
   }
 
   @Test

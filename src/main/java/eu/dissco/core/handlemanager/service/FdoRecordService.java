@@ -69,7 +69,6 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_DISCIPLINE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_DOMAIN;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_ORIGIN;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.WAS_DERIVED_FROM_ENTITY;
-import static eu.dissco.core.handlemanager.utils.AdminHandleGenerator.genAdminHandle;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -139,7 +138,8 @@ public class FdoRecordService {
   private static final String WIKIDATA_API = "https://wikidata.org/w/rest.php/wikibase/v0/entities/items/";
   private static final String PROXY_ERROR = "Invalid attribute: %s must contain proxy: %s";
   private static final String PID_KERNEL_METADATA_LICENSE = "https://creativecommons.org/publicdomain/zero/1.0/";
-  private static final String PLACEHOLDER = "Needs to be fixed!";
+  private static final byte[] ADMIN_HEX = "\\\\x0FFF000000153330303A302E4E412F32302E353030302E31303235000000C8".getBytes(
+      StandardCharsets.UTF_8);
   private static final String LOC_REQUEST = "locations";
   public static final Map<String, String> RESOLVABLE_KEYS;
 
@@ -156,7 +156,7 @@ public class FdoRecordService {
       .withZone(ZoneId.of("UTC"));
 
   public HandleAttribute genHsAdmin(byte[] handle) {
-    return new HandleAttribute(HS_ADMIN.index(), handle, HS_ADMIN.get(), genAdminHandle());
+    return new HandleAttribute(HS_ADMIN.index(), handle, HS_ADMIN.get(), ADMIN_HEX);
   }
 
   public List<HandleAttribute> prepareHandleRecordAttributes(HandleRecordRequest request,

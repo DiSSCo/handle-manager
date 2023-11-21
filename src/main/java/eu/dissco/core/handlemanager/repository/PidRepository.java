@@ -8,7 +8,7 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
 
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import java.io.IOException;
+import eu.dissco.core.handlemanager.exceptions.CopyDatabaseException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -146,15 +146,9 @@ public class PidRepository {
   }
 
   // Post
-  public void postAttributesToDb(long recordTimestamp, List<HandleAttribute> handleAttributes) {
-    var queryList = prepareBatchPostQuery(recordTimestamp, handleAttributes);
-    try {
-      batchInserter.batchCopy(handleAttributes, recordTimestamp);
-    } catch (IOException e) {
-      log.error("IOE", e);
-    }
-
-    // context.batch(queryList).execute();
+  public void postAttributesToDb(long recordTimestamp, List<HandleAttribute> handleAttributes)
+      throws CopyDatabaseException {
+    batchInserter.batchCopy(recordTimestamp, handleAttributes);
   }
 
   private List<Query> prepareBatchPostQuery(long recordTimestamp,
