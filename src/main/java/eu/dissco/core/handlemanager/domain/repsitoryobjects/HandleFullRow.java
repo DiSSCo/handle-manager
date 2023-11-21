@@ -8,6 +8,7 @@ public class HandleFullRow {
   private final String idx;
   private final String type;
   private final String data;
+  private static final String TTL_TYPE = "0";
   private static final String TTL = "86400";
   private final String recordTimestamp;
   private static final String ADMIN_READ = String.valueOf(true);
@@ -28,10 +29,10 @@ public class HandleFullRow {
         + idx + ","
         + type + ","
         + data + ","
-        + "0," // Skip ttl_type
+        + TTL_TYPE + ","
         + TTL + ","
         + recordTimestamp + ","
-        + "0," // Skip refs
+        + "\\N," // Leave refs null
         + ADMIN_READ + ","
         + ADMIN_WRITE + ","
         + PUB_READ + ","
