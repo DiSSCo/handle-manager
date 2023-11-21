@@ -10,7 +10,7 @@ import static org.junit.Assert.assertThrows;
 import eu.dissco.core.handlemanager.database.jooq.tables.Handles;
 import eu.dissco.core.handlemanager.domain.FdoProfile;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.exceptions.CopyDatabaseException;
+import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import java.nio.charset.StandardCharsets;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -55,7 +55,7 @@ class BatchInserterTest extends BaseRepositoryIT {
     );
 
     // Then
-    assertThrows(CopyDatabaseException.class,
+    assertThrows(PidCreationException.class,
         () -> batchInserter.batchCopy(CREATED.getEpochSecond(), attributes));
   }
 

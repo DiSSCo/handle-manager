@@ -2,7 +2,7 @@ package eu.dissco.core.handlemanager.repository;
 
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleFullRow;
-import eu.dissco.core.handlemanager.exceptions.CopyDatabaseException;
+import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -21,7 +21,7 @@ public class BatchInserter {
   private final CopyManager copyManager;
 
   public void batchCopy(long recordTimestamp, List<HandleAttribute> handleAttributes)
-      throws CopyDatabaseException {
+      throws PidCreationException {
     var rows = handleAttributes.stream()
         .map(attribute -> new HandleFullRow(attribute, recordTimestamp)).toList();
     try (var outputStream = new ByteArrayOutputStream()) {
@@ -29,19 +29,10 @@ public class BatchInserter {
         outputStream.write(row.getCsvRow());
       }
       var inputStream = new ByteArrayInputStream(outputStream.toByteArray());
-      var rowsChanged = copyManager.copyIn("COPY handles FROM stdin DELIMITER ','", inputStream);
-      verifyAllRowsPosted(rowsChanged, handleAttributes.size());
+      copyManager.copyIn("COPY handles FROM stdin DELIMITER ','", inputStream);
     } catch (IOException | SQLException e) {
       log.error("Sql error: ", e);
-      throw new CopyDatabaseException(e.getMessage());
-    }
-  }
-
-  private void verifyAllRowsPosted(long rowsChanged, int rowsToPost)
-      throws CopyDatabaseException {
-    if (rowsChanged != rowsToPost) {
-      log.error("Expected to post {} rows, but only {} rows changed", rowsToPost, rowsChanged);
-      throw new CopyDatabaseException("Failed to post correct rows");
+      throw new PidCreationException("Unable to insert handles into database.");
     }
   }
 }

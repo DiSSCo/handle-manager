@@ -63,7 +63,6 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mockStatic;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -73,7 +72,6 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
-import eu.dissco.core.handlemanager.exceptions.CopyDatabaseException;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -342,27 +340,6 @@ class HandleServiceTest {
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
-  }
-
-  @Test
-  void testCreateDoiRecordDbException() throws Exception {
-    // Given
-    byte[] handle = handles.get(0);
-    var request = genCreateRecordRequest(givenDoiRecordRequestObject(), RECORD_TYPE_DOI);
-    List<HandleAttribute> doiRecord = genDoiRecordAttributes(handle, ObjectType.HANDLE);
-
-    given(pidNameGeneratorService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(fdoRecordService.prepareDoiRecordAttributes(any(), any(), eq(ObjectType.DOI))).willReturn(
-        doiRecord);
-    doThrow(CopyDatabaseException.class).when(pidRepository)
-        .postAttributesToDb(CREATED.getEpochSecond(), doiRecord);
-
-    // When
-    assertThrows(PidCreationException.class, () -> service.createRecords(List.of(request)));
-
-    // Then
-    then(pidRepository).should()
-        .rollbackHandles(List.of(new String(handle, StandardCharsets.UTF_8)));
   }
 
   @Test

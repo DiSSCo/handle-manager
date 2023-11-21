@@ -14,7 +14,6 @@ import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
-import eu.dissco.core.handlemanager.exceptions.CopyDatabaseException;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -94,14 +93,9 @@ public class DoiService extends PidService {
 
     log.info("Persisting new DOIs to db");
     var recordTimestamp = Instant.now().getEpochSecond();
-    try {
-      pidRepository.postAttributesToDb(recordTimestamp, handleAttributes);
-    } catch (CopyDatabaseException e) {
-      log.info("Rolling back handles");
-      var handlesString = handles.stream().map(h -> new String(h, StandardCharsets.UTF_8)).toList();
-      rollbackHandles(handlesString);
-      throw new PidCreationException("Unable to insert handles into database");
-    }
+
+    pidRepository.postAttributesToDb(recordTimestamp, handleAttributes);
+
     return new JsonApiWrapperWrite(formatCreateRecords(handleAttributes, recordTypes));
   }
 
