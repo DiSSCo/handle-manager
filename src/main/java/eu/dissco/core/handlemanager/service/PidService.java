@@ -57,6 +57,9 @@ public abstract class PidService {
   protected final ObjectMapper mapper;
   protected final ProfileProperties profileProperties;
 
+  public abstract JsonApiWrapperWrite createSpecimenRecord(List<JsonNode> requests)
+      throws PidResolutionException, InvalidRequestException, PidCreationException;
+
   private List<JsonNode> formatRecords(List<HandleAttribute> dbRecord) {
     var handleMap = mapRecords(dbRecord);
     return handleMap.values().stream().map(this::jsonFormatSingleRecord).toList();
@@ -252,7 +255,7 @@ public abstract class PidService {
     if (!digitalSpecimenList.isEmpty()) {
       var requestPhysicalIds = getPhysicalIdsFromRequests(digitalSpecimenList);
       verifyNoInternalDuplicatePhysicalSpecimenObjectId(digitalSpecimenList, requestPhysicalIds);
-      verifyNoRegisteredSpecimens(getPhysIdBytes(requestPhysicalIds));
+      //verifyNoRegisteredSpecimens(getPhysIdBytes(requestPhysicalIds));
     }
   }
 

@@ -24,6 +24,8 @@ import eu.dissco.core.handlemanager.service.PidService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -119,11 +121,17 @@ public class PidController {
   public ResponseEntity<JsonApiWrapperWrite> createRecords(@RequestBody List<JsonNode> requests,
       Authentication authentication)
       throws PidResolutionException, InvalidRequestException, PidCreationException {
+    var start = Instant.now();
     log.info("Validating batch POST request from user {}", authentication.getName());
     for (JsonNode request : requests) {
       schemaValidator.validatePostRequest(request);
     }
-    return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(requests));
+    var result = service.createSpecimenRecord(requests);
+    var elapsed = Duration.between(start, Instant.now()).toNanos() / (Math.pow(10, 9));
+    var rate = requests.size() / elapsed;
+    log.info("{} seconds elapsed. Rate: {} specimens / second", elapsed, rate);
+    log.info("****,{},{},{}", requests.size(), elapsed, rate);
+    return ResponseEntity.status(HttpStatus.CREATED).body(result);
   }
 
   // Update
@@ -173,6 +181,7 @@ public class PidController {
       Authentication authentication)
       throws InvalidRequestException, UnprocessableEntityException, PidResolutionException, JsonProcessingException {
     log.info("Validating upsert request from user {}", authentication.getName());
+    var start = Instant.now();
     for (var request : requests) {
       schemaValidator.validatePostRequest(request);
       if (!request.get(NODE_DATA).get(NODE_TYPE).asText()
@@ -186,7 +195,12 @@ public class PidController {
     var ids = getPhysicalSpecimenIds(requests);
     log.info("Received valid upsert request for {} physical specimens: {}... ", requests.size(),
         ids);
-    return ResponseEntity.ok(service.upsertDigitalSpecimens(requests));
+    var result = service.upsertDigitalSpecimens(requests);
+    var elapsed = Duration.between(start, Instant.now()).toNanos() / (Math.pow(10, 9));
+    var rate = requests.size() / elapsed;
+    log.info("{} seconds elapsed. Rate: {} specimens / second", elapsed, rate);
+    log.info("****,{},{},{}", requests.size(), elapsed, rate);
+    return ResponseEntity.ok(result);
   }
 
   @Operation(summary = "Archive given record")

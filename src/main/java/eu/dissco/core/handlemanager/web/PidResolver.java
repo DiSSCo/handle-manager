@@ -40,15 +40,15 @@ public class PidResolver {
     try {
       var qidRecord = resolveExternalPid(qid);
       return qidRecord.get("labels").get("en").asText();
-    } catch (NullPointerException e){
+    } catch (NullPointerException e) {
       log.error("Given Qid {} resolves, but does not include a name attribute. ", qid);
-      throw new PidResolutionException("Given QID "+ qid + "resolves but does not include a name");
+      throw new PidResolutionException("Given QID " + qid + "resolves but does not include a name");
     } catch (UnprocessableEntityException | PidResolutionException e) {
       log.error("An error has occurred in resolving a QID ", e);
-      throw new PidResolutionException("An error has occured in resolving a QID: " + e.getMessage());
+      throw new PidResolutionException(
+          "An error has occured in resolving a QID: " + e.getMessage());
     }
   }
-
 
 
   private JsonNode resolveExternalPid(String url)
