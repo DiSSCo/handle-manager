@@ -3,11 +3,12 @@ package eu.dissco.core.handlemanager.service;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_TYPE;
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType.DOI;
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType.HANDLE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
@@ -24,15 +25,13 @@ import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectTy
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
-import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.PidRepository;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
@@ -42,148 +41,176 @@ import org.springframework.stereotype.Service;
 @Profile(Profiles.HANDLE)
 public class HandleService extends PidService {
 
-  public HandleService(PidRepository pidRepository,
-      FdoRecordService fdoRecordService, PidNameGeneratorService hf,
-      ObjectMapper mapper,
-      ProfileProperties profileProperties) {
+  public HandleService(PidRepository pidRepository, FdoRecordService fdoRecordService,
+      PidNameGeneratorService hf, ObjectMapper mapper, ProfileProperties profileProperties) {
     super(pidRepository, fdoRecordService, hf, mapper, profileProperties);
   }
 
   // Pid Record Creation
   @Override
-  public JsonApiWrapperWrite createRecords(
-      List<JsonNode> requests)
-      throws PidResolutionException, InvalidRequestException, PidCreationException {
-
-    var recordTimestamp = Instant.now().getEpochSecond();
-    var handles = hf.genHandleList(requests.size());
-    var handleIterator = handles.iterator();
-    List<DigitalSpecimenRequest> digitalSpecimenList = new ArrayList<>();
-
-    List<HandleAttribute> handleAttributes = new ArrayList<>();
-    Map<String, ObjectType> recordTypes = new HashMap<>();
-
-    for (var request : requests) {
-      ObjectNode dataNode = (ObjectNode) request.get(NODE_DATA);
-      ObjectType type = ObjectType.fromString(dataNode.get(NODE_TYPE).asText());
-      var thisHandle = handleIterator.next();
-      recordTypes.put(new String(thisHandle, StandardCharsets.UTF_8), type);
-      try {
-        switch (type) {
-          case HANDLE -> {
-            var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
-                HandleRecordRequest.class);
-            handleAttributes.addAll(
-                fdoRecordService.prepareHandleRecordAttributes(requestObject, thisHandle,
-                    type));
-          }
-          case DOI -> {
-            var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
-                DoiRecordRequest.class);
-            handleAttributes.addAll(
-                fdoRecordService.prepareDoiRecordAttributes(requestObject, thisHandle,
-                    type));
-          }
-          case DIGITAL_SPECIMEN -> {
-            var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
-                DigitalSpecimenRequest.class);
-            handleAttributes.addAll(
-                fdoRecordService.prepareDigitalSpecimenRecordAttributes(requestObject,
-                    thisHandle, type));
-            digitalSpecimenList.add(requestObject);
-          }
-          case MEDIA_OBJECT -> {
-            var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
-                MediaObjectRequest.class);
-            handleAttributes.addAll(
-                fdoRecordService.prepareMediaObjectAttributes(requestObject, thisHandle,
-                    type));
-          }
-          case ANNOTATION -> {
-            var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
-                AnnotationRequest.class);
-            handleAttributes.addAll(
-                fdoRecordService.prepareAnnotationAttributes(requestObject, thisHandle,
-                    type));
-          }
-          case MAPPING -> {
-            var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
-                MappingRequest.class);
-            handleAttributes.addAll(
-                fdoRecordService.prepareMappingAttributes(requestObject, thisHandle, type));
-          }
-          case SOURCE_SYSTEM -> {
-            var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
-                SourceSystemRequest.class);
-            handleAttributes.addAll(
-                fdoRecordService.prepareSourceSystemAttributes(requestObject, thisHandle,
-                    type));
-          }
-          case ORGANISATION -> {
-            var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
-                OrganisationRequest.class);
-            handleAttributes.addAll(
-                fdoRecordService.prepareOrganisationAttributes(requestObject, thisHandle,
-                    type));
-          }
-          case MAS -> {
-            var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES), MasRequest.class);
-            handleAttributes.addAll(
-                fdoRecordService.prepareMasRecordAttributes(requestObject, thisHandle,
-                    type));
-          }
-          default -> throw new InvalidRequestException(
-              "Invalid request. Unrecognized object type: " + type);
-        }
-      } catch (JsonProcessingException | UnprocessableEntityException e) {
-        throw new InvalidRequestException(
-            "An error has occurred parsing a record in request. More information: "
-                + e.getMessage());
+  public JsonApiWrapperWrite createRecords(List<JsonNode> requests)
+      throws InvalidRequestException, PidCreationException {
+    var handles = hf.genHandleList(requests.size()).iterator();
+    var requestAttributes = requests.stream()
+        .map(request -> request.get(NODE_DATA).get(NODE_ATTRIBUTES)).toList();
+    var type = getObjectType(requests);
+    List<HandleAttribute> handleAttributes;
+    try {
+      switch (type) {
+        case ANNOTATION -> handleAttributes = createAnnotation(requestAttributes, handles);
+        case DIGITAL_SPECIMEN ->
+            handleAttributes = createDigitalSpecimen(requestAttributes, handles);
+        case DOI -> handleAttributes = createDoi(requestAttributes, handles);
+        case HANDLE -> handleAttributes = createHandle(requestAttributes, handles);
+        case MAPPING -> handleAttributes = createMapping(requestAttributes, handles);
+        case MAS -> handleAttributes = createMas(requestAttributes, handles);
+        case MEDIA_OBJECT -> handleAttributes = createMediaObject(requestAttributes, handles);
+        case ORGANISATION -> handleAttributes = createOrganisation(requestAttributes, handles);
+        case SOURCE_SYSTEM -> handleAttributes = createSourceSystem(requestAttributes, handles);
+        default -> throw new UnsupportedOperationException("Unrecognized type");
       }
+    } catch (JsonProcessingException | PidResolutionException e) {
+      throw new InvalidRequestException(
+          "An error has occurred parsing a record in request. More information: " + e.getMessage());
     }
-
-    validateDigitalSpecimens(digitalSpecimenList);
     log.info("Persisting new handles to db");
-    pidRepository.postAttributesToDb(recordTimestamp, handleAttributes);
-
-    return new JsonApiWrapperWrite(formatCreateRecords(handleAttributes, recordTypes));
+    pidRepository.postAttributesToDb(Instant.now().getEpochSecond(), handleAttributes);
+    return new JsonApiWrapperWrite(formatCreateRecords(handleAttributes, type));
   }
 
-  public JsonApiWrapperWrite createSpecimenRecord(
-      List<JsonNode> requests)
-      throws PidResolutionException, InvalidRequestException, PidCreationException {
-
-    var recordTimestamp = Instant.now().getEpochSecond();
-    List<byte[]> handles = hf.genHandleList(requests.size());
-    var handleItr = handles.iterator();
-    List<DigitalSpecimenRequest> digitalSpecimenList = new ArrayList<>();
-
-    List<HandleAttribute> handleAttributes = new ArrayList<>();
-    Map<String, ObjectType> recordTypes = new HashMap<>();
-
-    for (var request : requests) {
-      ObjectNode dataNode = (ObjectNode) request.get(NODE_DATA);
-      ObjectType type = ObjectType.fromString(dataNode.get(NODE_TYPE).asText());
-      var thisHandle = handleItr.next();
-      recordTypes.put(new String(thisHandle, StandardCharsets.UTF_8), type);
-      try {
-        var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
-            DigitalSpecimenRequest.class);
-        handleAttributes.addAll(
-            fdoRecordService.prepareDigitalSpecimenRecordAttributes(requestObject,
-                thisHandle, type));
-        digitalSpecimenList.add(requestObject);
-      } catch (JsonProcessingException | UnprocessableEntityException e) {
-        throw new InvalidRequestException(
-            "An error has occurred parsing a record in request. More information: "
-                + e.getMessage());
-      }
+  private ObjectType getObjectType(List<JsonNode> requests) {
+    var types = requests.stream()
+        .map(request -> request.get(NODE_DATA).get(NODE_TYPE).asText())
+        .collect(Collectors.toSet());
+    var type = types.stream().findFirst();
+    if (type.isEmpty() || types.size() != 1) {
+      throw new UnsupportedOperationException("Requests must all be of the same type");
     }
+    return ObjectType.fromString(type.get());
+  }
 
+  private List<HandleAttribute> createAnnotation(List<JsonNode> requestAttributes,
+      Iterator<byte[]> handleIterator)
+      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+    List<HandleAttribute> handleAttributes = new ArrayList<>();
+    for (var request : requestAttributes) {
+      var thisHandle = handleIterator.next();
+      var requestObject = mapper.treeToValue(request, AnnotationRequest.class);
+      handleAttributes.addAll(
+          fdoRecordService.prepareAnnotationAttributes(requestObject, thisHandle));
+    }
+    return handleAttributes;
+  }
+
+  private ArrayList<HandleAttribute> createDigitalSpecimen(List<JsonNode> requestAttributes,
+      Iterator<byte[]> handleIterator)
+      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+    List<DigitalSpecimenRequest> digitalSpecimenList = new ArrayList<>();
+    var handleAttributes = new ArrayList<HandleAttribute>();
+
+    for (var request : requestAttributes) {
+      var thisHandle = handleIterator.next();
+      var requestObject = mapper.treeToValue(request, DigitalSpecimenRequest.class);
+      handleAttributes.addAll(
+          fdoRecordService.prepareDigitalSpecimenRecordAttributes(requestObject, thisHandle));
+      digitalSpecimenList.add(requestObject);
+    }
     validateDigitalSpecimens(digitalSpecimenList);
-    log.info("Persisting new handles to db");
-    pidRepository.postAttributesToDb(recordTimestamp, handleAttributes);
-    return new JsonApiWrapperWrite(formatCreateRecords(handleAttributes, recordTypes));
+    return handleAttributes;
+  }
+
+  private List<HandleAttribute> createDoi(List<JsonNode> requestAttributes,
+      Iterator<byte[]> handleIterator)
+      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+    List<HandleAttribute> handleAttributes = new ArrayList<>();
+    for (var request : requestAttributes) {
+      var thisHandle = handleIterator.next();
+      var requestObject = mapper.treeToValue(request, DoiRecordRequest.class);
+      handleAttributes.addAll(
+          fdoRecordService.prepareDoiRecordAttributes(requestObject, thisHandle,
+              DOI));
+    }
+    return handleAttributes;
+  }
+
+  private List<HandleAttribute> createHandle(List<JsonNode> requestAttributes,
+      Iterator<byte[]> handleIterator)
+      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+    List<HandleAttribute> handleAttributes = new ArrayList<>();
+    for (var request : requestAttributes) {
+      var thisHandle = handleIterator.next();
+      var requestObject = mapper.treeToValue(request, HandleRecordRequest.class);
+      handleAttributes.addAll(
+          fdoRecordService.prepareHandleRecordAttributes(requestObject, thisHandle,
+              HANDLE));
+    }
+    return handleAttributes;
+  }
+
+  private List<HandleAttribute> createMapping(List<JsonNode> requestAttributes,
+      Iterator<byte[]> handleIterator)
+      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+    List<HandleAttribute> handleAttributes = new ArrayList<>();
+    for (var request : requestAttributes) {
+      var thisHandle = handleIterator.next();
+      var requestObject = mapper.treeToValue(request, MappingRequest.class);
+      handleAttributes.addAll(
+          fdoRecordService.prepareMappingAttributes(requestObject, thisHandle));
+    }
+    return handleAttributes;
+  }
+
+  private List<HandleAttribute> createMas(List<JsonNode> requestAttributes,
+      Iterator<byte[]> handleIterator)
+      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+    List<HandleAttribute> handleAttributes = new ArrayList<>();
+    for (var request : requestAttributes) {
+      var thisHandle = handleIterator.next();
+      var requestObject = mapper.treeToValue(request, MasRequest.class);
+      handleAttributes.addAll(
+          fdoRecordService.prepareMasRecordAttributes(requestObject, thisHandle
+          ));
+    }
+    return handleAttributes;
+  }
+
+  private List<HandleAttribute> createMediaObject(List<JsonNode> requestAttributes,
+      Iterator<byte[]> handleIterator)
+      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+    List<HandleAttribute> handleAttributes = new ArrayList<>();
+    for (var request : requestAttributes) {
+      var thisHandle = handleIterator.next();
+      var requestObject = mapper.treeToValue(request, MediaObjectRequest.class);
+      handleAttributes.addAll(
+          fdoRecordService.prepareMediaObjectAttributes(requestObject, thisHandle));
+    }
+    return handleAttributes;
+  }
+
+  private List<HandleAttribute> createOrganisation(List<JsonNode> requestAttributes,
+      Iterator<byte[]> handleIterator)
+      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+    List<HandleAttribute> handleAttributes = new ArrayList<>();
+    for (var request : requestAttributes) {
+      var thisHandle = handleIterator.next();
+      var requestObject = mapper.treeToValue(request, OrganisationRequest.class);
+      handleAttributes.addAll(
+          fdoRecordService.prepareOrganisationAttributes(requestObject, thisHandle));
+    }
+    return handleAttributes;
+  }
+
+  private List<HandleAttribute> createSourceSystem(List<JsonNode> requestAttributes,
+      Iterator<byte[]> handleIterator)
+      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+    List<HandleAttribute> handleAttributes = new ArrayList<>();
+    for (var request : requestAttributes) {
+      var thisHandle = handleIterator.next();
+      var requestObject = mapper.treeToValue(request, SourceSystemRequest.class);
+      handleAttributes.addAll(
+          fdoRecordService.prepareSourceSystemAttributes(requestObject, thisHandle));
+    }
+    return handleAttributes;
   }
 
 }

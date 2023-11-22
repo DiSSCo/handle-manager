@@ -13,6 +13,7 @@ import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_TYPE;
 import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType.ANNOTATION;
 import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType.DIGITAL_SPECIMEN;
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType.MEDIA_OBJECT;
 import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType.TOMBSTONE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -57,9 +58,6 @@ public abstract class PidService {
   protected final ObjectMapper mapper;
   protected final ProfileProperties profileProperties;
 
-  public abstract JsonApiWrapperWrite createSpecimenRecord(List<JsonNode> requests)
-      throws PidResolutionException, InvalidRequestException, PidCreationException;
-
   private List<JsonNode> formatRecords(List<HandleAttribute> dbRecord) {
     var handleMap = mapRecords(dbRecord);
     return handleMap.values().stream().map(this::jsonFormatSingleRecord).toList();
@@ -89,6 +87,87 @@ public abstract class PidService {
 
   private String getPidName(String pidLink) {
     return pidLink.substring(profileProperties.getDomain().length());
+  }
+
+  protected List<JsonApiDataLinks> formatCreateRecords(List<HandleAttribute> dbRecord,
+      ObjectType objectType) {
+    var handleMap = mapRecords(dbRecord);
+    switch (objectType) {
+      case ANNOTATION -> {
+        return formatCreateRecordsAnnotation(handleMap);
+      }
+      case DIGITAL_SPECIMEN -> {
+        return formatCreateRecordsSpecimen(handleMap);
+      }
+      case MEDIA_OBJECT -> {
+        return formatCreateRecordsMedia(handleMap);
+      }
+      default -> {
+        return formatCreateRecordsDefault(handleMap, objectType);
+      }
+    }
+  }
+
+  private List<JsonApiDataLinks> formatCreateRecordsAnnotation(
+      Map<String, List<HandleAttribute>> handleMap) {
+    List<JsonApiDataLinks> dataLinksList = new ArrayList<>();
+    for (var handleRecord : handleMap.entrySet()) {
+      var hashRow = handleRecord.getValue().stream()
+          .filter(row -> row.getType().equals(ANNOTATION_HASH.get()))
+          .findFirst();
+      var subRecord = hashRow.map(List::of).orElse(handleRecord.getValue());
+      var rootNode = jsonFormatSingleRecord(subRecord);
+      String pidLink = profileProperties.getDomain() + handleRecord.getKey();
+      dataLinksList.add(
+          new JsonApiDataLinks(handleRecord.getKey(), ANNOTATION.toString(), rootNode,
+              new JsonApiLinks(pidLink)));
+    }
+    return dataLinksList;
+  }
+
+  private List<JsonApiDataLinks> formatCreateRecordsSpecimen(
+      Map<String, List<HandleAttribute>> handleMap) {
+    List<JsonApiDataLinks> dataLinksList = new ArrayList<>();
+    for (var handleRecord : handleMap.entrySet()) {
+      var subRecord = handleRecord.getValue().stream()
+          .filter(row -> row.getType().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())).toList();
+      var rootNode = jsonFormatSingleRecord(subRecord);
+      String pidLink = profileProperties.getDomain() + handleRecord.getKey();
+      dataLinksList.add(
+          new JsonApiDataLinks(handleRecord.getKey(), DIGITAL_SPECIMEN.toString(), rootNode,
+              new JsonApiLinks(pidLink)));
+    }
+    return dataLinksList;
+  }
+
+  private List<JsonApiDataLinks> formatCreateRecordsMedia(
+      Map<String, List<HandleAttribute>> handleMap) {
+    List<JsonApiDataLinks> dataLinksList = new ArrayList<>();
+    for (var handleRecord : handleMap.entrySet()) {
+      var subRecord = handleRecord.getValue().stream().filter(
+              row -> row.getType().equals(PRIMARY_MEDIA_ID.get()) || row.getType()
+                  .equals(LINKED_DO_PID.get()))
+          .toList();
+      var rootNode = jsonFormatSingleRecord(subRecord);
+      String pidLink = profileProperties.getDomain() + handleRecord.getKey();
+      dataLinksList.add(
+          new JsonApiDataLinks(handleRecord.getKey(), MEDIA_OBJECT.toString(), rootNode,
+              new JsonApiLinks(pidLink)));
+    }
+    return dataLinksList;
+  }
+
+  private List<JsonApiDataLinks> formatCreateRecordsDefault(
+      Map<String, List<HandleAttribute>> handleMap, ObjectType objectType) {
+    List<JsonApiDataLinks> dataLinksList = new ArrayList<>();
+    for (var handleRecord : handleMap.entrySet()) {
+      var rootNode = jsonFormatSingleRecord(handleRecord.getValue());
+      String pidLink = profileProperties.getDomain() + handleRecord.getKey();
+      dataLinksList.add(
+          new JsonApiDataLinks(handleRecord.getKey(), objectType.toString(), rootNode,
+              new JsonApiLinks(pidLink)));
+    }
+    return dataLinksList;
   }
 
   protected List<JsonApiDataLinks> formatCreateRecords(List<HandleAttribute> dbRecord,
@@ -251,11 +330,10 @@ public abstract class PidService {
 
   // Digital Specimen Validation
   protected void validateDigitalSpecimens(List<DigitalSpecimenRequest> digitalSpecimenList)
-      throws InvalidRequestException, PidCreationException {
+      throws InvalidRequestException {
     if (!digitalSpecimenList.isEmpty()) {
       var requestPhysicalIds = getPhysicalIdsFromRequests(digitalSpecimenList);
       verifyNoInternalDuplicatePhysicalSpecimenObjectId(digitalSpecimenList, requestPhysicalIds);
-      //verifyNoRegisteredSpecimens(getPhysIdBytes(requestPhysicalIds));
     }
   }
 
@@ -384,7 +462,7 @@ public abstract class PidService {
     for (var digitalSpecimenRequest : digitalSpecimenRequests) {
       handleAttributes.addAll(
           fdoRecordService.prepareDigitalSpecimenRecordAttributes(digitalSpecimenRequest,
-              handles.remove(0), DIGITAL_SPECIMEN));
+              handles.remove(0)));
     }
     return handleAttributes;
   }

@@ -25,7 +25,7 @@ public class PidResolver {
 
   @Cacheable("pidName")
   public String getObjectName(String pid)
-      throws UnprocessableEntityException, PidResolutionException {
+      throws PidResolutionException {
     log.info("getting Pid name for: {}", pid);
     var pidRecord = resolveExternalPid(pid);
     if (pidRecord.get("name") != null) {
@@ -36,14 +36,14 @@ public class PidResolver {
   }
 
   @Cacheable("Qid")
-  public String resolveQid(String qid) throws UnprocessableEntityException, PidResolutionException {
+  public String resolveQid(String qid) throws PidResolutionException {
     try {
       var qidRecord = resolveExternalPid(qid);
       return qidRecord.get("labels").get("en").asText();
     } catch (NullPointerException e) {
       log.error("Given Qid {} resolves, but does not include a name attribute. ", qid);
       throw new PidResolutionException("Given QID " + qid + "resolves but does not include a name");
-    } catch (UnprocessableEntityException | PidResolutionException e) {
+    } catch (PidResolutionException e) {
       log.error("An error has occurred in resolving a QID ", e);
       throw new PidResolutionException(
           "An error has occured in resolving a QID: " + e.getMessage());
@@ -52,7 +52,7 @@ public class PidResolver {
 
 
   private JsonNode resolveExternalPid(String url)
-      throws UnprocessableEntityException, PidResolutionException {
+      throws PidResolutionException {
     var response = webClient.get()
         .uri(url)
         .retrieve()
@@ -74,10 +74,7 @@ public class PidResolver {
     } catch (InterruptedException | ExecutionException e) {
       log.warn("Interrupted connection. Unable to resolve the following: {}", url);
       Thread.currentThread().interrupt();
-      if (e.getCause().getClass().equals(PidResolutionException.class)) {
-        throw new PidResolutionException(e.getMessage());
-      }
-      throw new UnprocessableEntityException(e.getMessage());
+      throw new PidResolutionException(e.getMessage());
     }
   }
 

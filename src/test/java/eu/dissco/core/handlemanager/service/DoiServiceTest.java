@@ -105,7 +105,7 @@ class DoiServiceTest {
     given(pidNameGeneratorService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(pidRepository.searchByNormalisedPhysicalIdentifierFullRecord(anyList())).willReturn(
         new ArrayList<>());
-    given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(any(), any(), any())).willReturn(
+    given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(any(), any())).willReturn(
         digitalSpecimen);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 

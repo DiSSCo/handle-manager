@@ -46,12 +46,6 @@ public class DoiService extends PidService {
   private static final String TYPE_ERROR_MESSAGE = "Error creating DOI for object of Type %s. Only Digital Specimens and Media Objects use DOIs.";
 
   @Override
-  public JsonApiWrapperWrite createSpecimenRecord(List<JsonNode> requests)
-      throws PidResolutionException, InvalidRequestException, PidCreationException {
-    throw new UnsupportedOperationException("");
-  }
-
-  @Override
   public JsonApiWrapperWrite createRecords(
       List<JsonNode> requests)
       throws PidResolutionException, InvalidRequestException, PidCreationException {
@@ -75,15 +69,15 @@ public class DoiService extends PidService {
                 DigitalSpecimenRequest.class);
             handleAttributes.addAll(
                 fdoRecordService.prepareDigitalSpecimenRecordAttributes(requestObject,
-                    thisHandle, type));
+                    thisHandle));
             digitalSpecimenList.add(requestObject);
           }
           case MEDIA_OBJECT -> {
             var requestObject = mapper.treeToValue(dataNode.get(NODE_ATTRIBUTES),
                 MediaObjectRequest.class);
             handleAttributes.addAll(
-                fdoRecordService.prepareMediaObjectAttributes(requestObject, thisHandle,
-                    type));
+                fdoRecordService.prepareMediaObjectAttributes(requestObject, thisHandle
+                ));
           }
           default -> throw new InvalidRequestException(String.format(
               TYPE_ERROR_MESSAGE, type));

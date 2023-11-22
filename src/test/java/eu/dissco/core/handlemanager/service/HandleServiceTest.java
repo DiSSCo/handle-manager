@@ -359,7 +359,7 @@ class HandleServiceTest {
     given(pidNameGeneratorService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(pidRepository.searchByNormalisedPhysicalIdentifierFullRecord(anyList())).willReturn(
         new ArrayList<>());
-    given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(any(), any(), any())).willReturn(
+    given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(any(), any())).willReturn(
         digitalSpecimen);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
@@ -409,7 +409,7 @@ class HandleServiceTest {
         ObjectType.MEDIA_OBJECT);
 
     given(pidNameGeneratorService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(fdoRecordService.prepareMediaObjectAttributes(any(), any(), any())).willReturn(
+    given(fdoRecordService.prepareMediaObjectAttributes(any(), any())).willReturn(
         handleRecordSublist);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
@@ -429,7 +429,7 @@ class HandleServiceTest {
     List<HandleAttribute> handleRecord = genMasAttributes(handle);
 
     given(pidNameGeneratorService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(fdoRecordService.prepareMasRecordAttributes(any(), any(), eq(ObjectType.MAS))).willReturn(
+    given(fdoRecordService.prepareMasRecordAttributes(any(), any())).willReturn(
         handleRecord);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
@@ -507,7 +507,7 @@ class HandleServiceTest {
         sublist, handles, ObjectType.DIGITAL_SPECIMEN);
 
     given(pidNameGeneratorService.genHandleList(handles.size())).willReturn(handles);
-    given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(any(), any(), any()))
+    given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(any(), any()))
         .willReturn(genDigitalSpecimenAttributes(handles.get(0)))
         .willReturn(genDigitalSpecimenAttributes(handles.get(1)));
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
@@ -530,7 +530,7 @@ class HandleServiceTest {
 
     var responseExpected = givenAnnotationResponseWrite(handles);
     given(pidNameGeneratorService.genHandleList(handles.size())).willReturn(handles);
-    given(fdoRecordService.prepareAnnotationAttributes(any(), any(), any()))
+    given(fdoRecordService.prepareAnnotationAttributes(any(), any()))
         .willReturn(genAnnotationAttributes(handles.get(0), true))
         .willReturn(genAnnotationAttributes(handles.get(1), true));
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
@@ -554,7 +554,7 @@ class HandleServiceTest {
 
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_ANNOTATION);
     given(pidNameGeneratorService.genHandleList(handles.size())).willReturn(handles);
-    given(fdoRecordService.prepareAnnotationAttributes(any(), any(), any()))
+    given(fdoRecordService.prepareAnnotationAttributes(any(), any()))
         .willReturn(genAnnotationAttributes(handles.get(0), false))
         .willReturn(genAnnotationAttributes(handles.get(1), false));
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
@@ -576,7 +576,7 @@ class HandleServiceTest {
 
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_MAPPING);
     given(pidNameGeneratorService.genHandleList(handles.size())).willReturn(handles);
-    given(fdoRecordService.prepareMappingAttributes(any(), any(), any()))
+    given(fdoRecordService.prepareMappingAttributes(any(), any()))
         .willReturn(genMappingAttributes(handles.get(0)))
         .willReturn(genMappingAttributes(handles.get(1)));
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
@@ -599,7 +599,7 @@ class HandleServiceTest {
 
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_SOURCE_SYSTEM);
     given(pidNameGeneratorService.genHandleList(handles.size())).willReturn(handles);
-    given(fdoRecordService.prepareSourceSystemAttributes(any(), any(), any()))
+    given(fdoRecordService.prepareSourceSystemAttributes(any(), any()))
         .willReturn(genSourceSystemAttributes(handles.get(0)))
         .willReturn(genSourceSystemAttributes(handles.get(1)));
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
@@ -625,7 +625,7 @@ class HandleServiceTest {
 
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_ORGANISATION);
     given(pidNameGeneratorService.genHandleList(handles.size())).willReturn(handles);
-    given(fdoRecordService.prepareOrganisationAttributes(any(), any(), any())).willReturn(flatList);
+    given(fdoRecordService.prepareOrganisationAttributes(any(), any())).willReturn(flatList);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
@@ -653,7 +653,7 @@ class HandleServiceTest {
     var responseExpected = givenRecordResponseWriteSmallResponse(sublist, handles,
         ObjectType.MEDIA_OBJECT);
     given(pidNameGeneratorService.genHandleList(handles.size())).willReturn(handles);
-    given(fdoRecordService.prepareMediaObjectAttributes(any(), any(), any()))
+    given(fdoRecordService.prepareMediaObjectAttributes(any(), any()))
         .willReturn(genMediaObjectAttributes(handles.get(0)))
         .willReturn(genMediaObjectAttributes(handles.get(1)));
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
@@ -837,8 +837,8 @@ class HandleServiceTest {
             PRIMARY_SPECIMEN_OBJECT_ID_TYPE.get(),
             (existingRecordRequest.getNormalisedPrimarySpecimenObjectId()).getBytes(
                 StandardCharsets.UTF_8))));
-    given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(eq(newRecordRequest), any(),
-        any())).willReturn(newRecordAttributes);
+    given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(eq(newRecordRequest), any()
+    )).willReturn(newRecordAttributes);
     given(fdoRecordService.prepareUpdateAttributes(any(),
         eq(MAPPER.valueToTree(existingRecordRequest)), any())).willReturn(
         existingRecordAttributes);
@@ -917,7 +917,7 @@ class HandleServiceTest {
 
     given(pidRepository.searchByNormalisedPhysicalIdentifier(anyList())).willReturn(
         new ArrayList<>());
-    given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(any(), any(), any())).willReturn(
+    given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(any(), any())).willReturn(
         newRecord);
     given(pidNameGeneratorService.genHandleList(anyInt())).willReturn(List.of(handles.get(0)));
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);

@@ -126,7 +126,7 @@ public class PidController {
     for (JsonNode request : requests) {
       schemaValidator.validatePostRequest(request);
     }
-    var result = service.createSpecimenRecord(requests);
+    var result = service.createRecords(requests);
     var elapsed = Duration.between(start, Instant.now()).toNanos() / (Math.pow(10, 9));
     var rate = requests.size() / elapsed;
     log.info("{} seconds elapsed. Rate: {} specimens / second", elapsed, rate);
