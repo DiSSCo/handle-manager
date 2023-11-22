@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.postgresql.copy.CopyManager;
@@ -30,6 +31,11 @@ class BatchInserterIT extends BaseRepositoryIT {
         dataSource.getPassword());
     var copyManager = new CopyManager((BaseConnection) connection);
     batchInserter = new BatchInserter(copyManager);
+  }
+
+  @AfterEach
+  void destroy() {
+    context.truncate(HANDLES).execute();
   }
 
   @Test
