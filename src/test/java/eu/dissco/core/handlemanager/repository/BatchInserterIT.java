@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
 
-class BatchInserterTest extends BaseRepositoryIT {
+class BatchInserterIT extends BaseRepositoryIT {
 
   private BatchInserter batchInserter;
 
@@ -57,6 +57,21 @@ class BatchInserterTest extends BaseRepositoryIT {
     // Then
     assertThrows(PidCreationException.class,
         () -> batchInserter.batchCopy(CREATED.getEpochSecond(), attributes));
+  }
+
+  @Test
+  void testDelimiterInData() throws Exception {
+    var attributes = List.of(new HandleAttribute(
+        FdoProfile.SPECIMEN_HOST, HANDLE.getBytes(StandardCharsets.UTF_8), "this, has a comma"
+    ));
+
+    // When
+    batchInserter.batchCopy(CREATED.getEpochSecond(), attributes);
+    var response = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
+        Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(HANDLES).fetch(this::mapToAttribute);
+
+    // Then
+    assertThat(response).isEqualTo(attributes);
   }
 
 }

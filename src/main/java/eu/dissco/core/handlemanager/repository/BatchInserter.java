@@ -1,11 +1,11 @@
 package eu.dissco.core.handlemanager.repository;
 
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleFullRow;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -22,11 +22,9 @@ public class BatchInserter {
 
   public void batchCopy(long recordTimestamp, List<HandleAttribute> handleAttributes)
       throws PidCreationException {
-    var rows = handleAttributes.stream()
-        .map(attribute -> new HandleFullRow(attribute, recordTimestamp)).toList();
     try (var outputStream = new ByteArrayOutputStream()) {
-      for (var row : rows) {
-        outputStream.write(row.getCsvRow());
+      for (var row : handleAttributes) {
+        outputStream.write(getCsvRow(recordTimestamp, row));
       }
       var inputStream = new ByteArrayInputStream(outputStream.toByteArray());
       copyManager.copyIn("COPY handles FROM stdin DELIMITER ','", inputStream);
@@ -34,5 +32,20 @@ public class BatchInserter {
       log.error("Sql error: ", e);
       throw new PidCreationException("Unable to insert handles into database.");
     }
+  }
+
+  private static byte[] getCsvRow(Long recordTimestamp, HandleAttribute handleAttribute) {
+    return (new String(handleAttribute.getHandle(), StandardCharsets.UTF_8) + ","
+        + handleAttribute.getIndex() + ","
+        + handleAttribute.getType() + ","
+        + new String(handleAttribute.getData(), StandardCharsets.UTF_8).replace(",", "\\,") + ","
+        + "0,"
+        + "86400,"
+        + recordTimestamp + ","
+        + "\\N," // Leave refs null
+        + true + ","
+        + true + ","
+        + true + ","
+        + false + "\n").getBytes(StandardCharsets.UTF_8);
   }
 }
