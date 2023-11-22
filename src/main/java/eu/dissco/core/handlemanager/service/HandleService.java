@@ -56,8 +56,8 @@ public class HandleService extends PidService {
       throws PidResolutionException, InvalidRequestException, PidCreationException {
 
     var recordTimestamp = Instant.now().getEpochSecond();
-    List<byte[]> handles = hf.genHandleList(requests.size());
-    var handleItr = handles.iterator();
+    var handles = hf.genHandleList(requests.size());
+    var handleIterator = handles.iterator();
     List<DigitalSpecimenRequest> digitalSpecimenList = new ArrayList<>();
 
     List<HandleAttribute> handleAttributes = new ArrayList<>();
@@ -66,7 +66,7 @@ public class HandleService extends PidService {
     for (var request : requests) {
       ObjectNode dataNode = (ObjectNode) request.get(NODE_DATA);
       ObjectType type = ObjectType.fromString(dataNode.get(NODE_TYPE).asText());
-      var thisHandle = handleItr.next();
+      var thisHandle = handleIterator.next();
       recordTypes.put(new String(thisHandle, StandardCharsets.UTF_8), type);
       try {
         switch (type) {
@@ -183,7 +183,6 @@ public class HandleService extends PidService {
     validateDigitalSpecimens(digitalSpecimenList);
     log.info("Persisting new handles to db");
     pidRepository.postAttributesToDb(recordTimestamp, handleAttributes);
-
     return new JsonApiWrapperWrite(formatCreateRecords(handleAttributes, recordTypes));
   }
 
