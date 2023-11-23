@@ -301,15 +301,12 @@ public abstract class PidService {
   protected ArrayList<HandleAttribute> createDigitalSpecimen(List<JsonNode> requestAttributes,
       Iterator<byte[]> handleIterator)
       throws InvalidRequestException, JsonProcessingException, PidResolutionException {
-    List<DigitalSpecimenRequest> digitalSpecimenList = new ArrayList<>();
     var handleAttributes = new ArrayList<HandleAttribute>();
-
     for (var request : requestAttributes) {
       var thisHandle = handleIterator.next();
       var requestObject = mapper.treeToValue(request, DigitalSpecimenRequest.class);
       handleAttributes.addAll(
           fdoRecordService.prepareDigitalSpecimenRecordAttributes(requestObject, thisHandle));
-      digitalSpecimenList.add(requestObject);
     }
     return handleAttributes;
   }

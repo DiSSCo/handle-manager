@@ -121,17 +121,11 @@ public class PidController {
   public ResponseEntity<JsonApiWrapperWrite> createRecords(@RequestBody List<JsonNode> requests,
       Authentication authentication)
       throws PidResolutionException, InvalidRequestException, PidCreationException {
-    var start = Instant.now();
     log.info("Validating batch POST request from user {}", authentication.getName());
     for (JsonNode request : requests) {
       schemaValidator.validatePostRequest(request);
     }
-    var result = service.createRecords(requests);
-    var elapsed = Duration.between(start, Instant.now()).toNanos() / (Math.pow(10, 9));
-    var rate = requests.size() / elapsed;
-    log.info("{} seconds elapsed. Rate: {} specimens / second", elapsed, rate);
-    log.info("****,{},{},{}", requests.size(), elapsed, rate);
-    return ResponseEntity.status(HttpStatus.CREATED).body(result);
+    return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(requests));
   }
 
   // Update
