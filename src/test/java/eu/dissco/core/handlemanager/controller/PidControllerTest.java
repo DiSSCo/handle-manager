@@ -583,31 +583,6 @@ class PidControllerTest {
         () -> controller.rollbackHandleCreation(request, authentication));
   }
 
-
-  @Test
-  void testUpsert() throws Exception {
-    // Given
-    var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(),
-        RECORD_TYPE_DS);
-
-    // When
-    var response = controller.upsertRecord(List.of(request), authentication);
-
-    // Then
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-  }
-
-  @Test
-  void testUpsertBadType() {
-    // Given
-    var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(),
-        RECORD_TYPE_MAPPING);
-
-    // Then
-    assertThrows(InvalidRequestException.class, () -> controller.upsertRecord(List.of(request),
-        authentication));
-  }
-
   @Test
   void testArchiveRecord() throws Exception {
     // Given
