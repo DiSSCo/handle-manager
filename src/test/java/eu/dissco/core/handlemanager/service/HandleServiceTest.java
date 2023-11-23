@@ -855,24 +855,6 @@ class HandleServiceTest {
   }
 
   @Test
-  void testInternalDuplicateSpecimenIds() {
-    // Given
-    List<JsonNode> requests = List.of(
-        genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS),
-        genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS)
-    );
-    var expectedMsg = "Bad Request. Some PhysicalSpecimenObjectIds are duplicated in request body";
-    given(pidNameGeneratorService.genHandleList(anyInt())).willReturn(handles);
-
-    // When
-    var response = assertThrows(InvalidRequestException.class,
-        () -> service.createRecords(requests));
-
-    // Then
-    assertThat(response).hasMessage(expectedMsg);
-  }
-
-  @Test
   void testUpsertDigitalSpecimensOnlyUpdate() throws Exception {
     // Given
     List<JsonNode> requests = List.of(

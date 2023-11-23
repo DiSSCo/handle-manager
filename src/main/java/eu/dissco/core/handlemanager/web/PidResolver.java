@@ -74,6 +74,9 @@ public class PidResolver {
     } catch (InterruptedException | ExecutionException e) {
       log.warn("Interrupted connection. Unable to resolve the following: {}", url);
       Thread.currentThread().interrupt();
+      if (e.getCause().getClass().equals(PidResolutionException.class)) {
+        throw new PidResolutionException(e.getMessage());
+      }
       throw new PidResolutionException(e.getMessage());
     }
   }
