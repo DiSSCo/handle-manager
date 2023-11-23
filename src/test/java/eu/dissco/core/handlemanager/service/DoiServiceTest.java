@@ -14,16 +14,14 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpeci
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteSmallResponse;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mockStatic;
 
 import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
-import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.PidRepository;
 import java.nio.charset.StandardCharsets;
@@ -103,8 +101,6 @@ class DoiServiceTest {
         ObjectType.DIGITAL_SPECIMEN);
 
     given(pidNameGeneratorService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(pidRepository.searchByNormalisedPhysicalIdentifierFullRecord(anyList())).willReturn(
-        new ArrayList<>());
     given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(any(), any())).willReturn(
         digitalSpecimen);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
@@ -124,7 +120,8 @@ class DoiServiceTest {
         new ArrayList<>(List.of(handles.get(0))));
 
     // Then
-    assertThrows(InvalidRequestException.class, () -> service.createRecords(List.of(request)));
+    assertThrowsExactly(UnsupportedOperationException.class,
+        () -> service.createRecords(List.of(request)));
   }
 
 }

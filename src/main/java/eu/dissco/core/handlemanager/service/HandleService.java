@@ -2,7 +2,6 @@ package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
-import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_TYPE;
 import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType.DOI;
 import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType.HANDLE;
 
@@ -13,15 +12,12 @@ import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.objects.AnnotationRequest;
-import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MappingRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MasRequest;
-import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.SourceSystemRequest;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -31,7 +27,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
@@ -78,17 +73,6 @@ public class HandleService extends PidService {
     return new JsonApiWrapperWrite(formatCreateRecords(handleAttributes, type));
   }
 
-  private ObjectType getObjectType(List<JsonNode> requests) {
-    var types = requests.stream()
-        .map(request -> request.get(NODE_DATA).get(NODE_TYPE).asText())
-        .collect(Collectors.toSet());
-    var type = types.stream().findFirst();
-    if (type.isEmpty() || types.size() != 1) {
-      throw new UnsupportedOperationException("Requests must all be of the same type");
-    }
-    return ObjectType.fromString(type.get());
-  }
-
   private List<HandleAttribute> createAnnotation(List<JsonNode> requestAttributes,
       Iterator<byte[]> handleIterator)
       throws InvalidRequestException, JsonProcessingException, PidResolutionException {
@@ -99,23 +83,6 @@ public class HandleService extends PidService {
       handleAttributes.addAll(
           fdoRecordService.prepareAnnotationAttributes(requestObject, thisHandle));
     }
-    return handleAttributes;
-  }
-
-  private ArrayList<HandleAttribute> createDigitalSpecimen(List<JsonNode> requestAttributes,
-      Iterator<byte[]> handleIterator)
-      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
-    List<DigitalSpecimenRequest> digitalSpecimenList = new ArrayList<>();
-    var handleAttributes = new ArrayList<HandleAttribute>();
-
-    for (var request : requestAttributes) {
-      var thisHandle = handleIterator.next();
-      var requestObject = mapper.treeToValue(request, DigitalSpecimenRequest.class);
-      handleAttributes.addAll(
-          fdoRecordService.prepareDigitalSpecimenRecordAttributes(requestObject, thisHandle));
-      digitalSpecimenList.add(requestObject);
-    }
-    validateDigitalSpecimens(digitalSpecimenList);
     return handleAttributes;
   }
 
@@ -170,19 +137,6 @@ public class HandleService extends PidService {
       handleAttributes.addAll(
           fdoRecordService.prepareMasRecordAttributes(requestObject, thisHandle
           ));
-    }
-    return handleAttributes;
-  }
-
-  private List<HandleAttribute> createMediaObject(List<JsonNode> requestAttributes,
-      Iterator<byte[]> handleIterator)
-      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
-    List<HandleAttribute> handleAttributes = new ArrayList<>();
-    for (var request : requestAttributes) {
-      var thisHandle = handleIterator.next();
-      var requestObject = mapper.treeToValue(request, MediaObjectRequest.class);
-      handleAttributes.addAll(
-          fdoRecordService.prepareMediaObjectAttributes(requestObject, thisHandle));
     }
     return handleAttributes;
   }

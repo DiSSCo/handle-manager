@@ -28,6 +28,7 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.UpsertDigitalSpecimen;
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
@@ -40,6 +41,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -170,36 +172,6 @@ public abstract class PidService {
     return dataLinksList;
   }
 
-  protected List<JsonApiDataLinks> formatCreateRecords(List<HandleAttribute> dbRecord,
-      Map<String, ObjectType> recordTypes) {
-    var handleMap = mapRecords(dbRecord);
-    List<JsonApiDataLinks> dataLinksList = new ArrayList<>();
-    for (var handleRecord : handleMap.entrySet()) {
-      var type = recordTypes.get(handleRecord.getKey());
-      var subRecord = handleRecord.getValue();
-      if (type.equals(ObjectType.MEDIA_OBJECT)) {
-        subRecord = subRecord.stream().filter(
-                row -> row.getType().equals(PRIMARY_MEDIA_ID.get()) || row.getType()
-                    .equals(LINKED_DO_PID.get()))
-            .toList();
-      } else if (type.equals(DIGITAL_SPECIMEN)) {
-        subRecord = subRecord.stream()
-            .filter(row -> row.getType().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())).toList();
-      } else if (type.equals(ANNOTATION)) {
-        var hashRow = subRecord.stream().filter(row -> row.getType().equals(ANNOTATION_HASH.get()))
-            .findFirst();
-        if (hashRow.isPresent()) {
-          subRecord = List.of(hashRow.get());
-        }
-      }
-      var rootNode = jsonFormatSingleRecord(subRecord);
-      String pidLink = profileProperties.getDomain() + handleRecord.getKey();
-      dataLinksList.add(new JsonApiDataLinks(handleRecord.getKey(), type.toString(), rootNode,
-          new JsonApiLinks(pidLink)));
-    }
-    return dataLinksList;
-  }
-
   private List<JsonApiDataLinks> formatUpsertResponse(List<HandleAttribute> records) {
     List<JsonApiDataLinks> dataLinksList = new ArrayList<>();
     for (var row : records) {
@@ -315,6 +287,46 @@ public abstract class PidService {
       List<JsonNode> requests)
       throws PidResolutionException, InvalidRequestException, PidCreationException;
 
+  protected ObjectType getObjectType(List<JsonNode> requests) {
+    var types = requests.stream()
+        .map(request -> request.get(NODE_DATA).get(NODE_TYPE).asText())
+        .collect(Collectors.toSet());
+    var type = types.stream().findFirst();
+    if (type.isEmpty() || types.size() != 1) {
+      throw new UnsupportedOperationException("Requests must all be of the same type");
+    }
+    return ObjectType.fromString(type.get());
+  }
+
+  protected ArrayList<HandleAttribute> createDigitalSpecimen(List<JsonNode> requestAttributes,
+      Iterator<byte[]> handleIterator)
+      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+    List<DigitalSpecimenRequest> digitalSpecimenList = new ArrayList<>();
+    var handleAttributes = new ArrayList<HandleAttribute>();
+
+    for (var request : requestAttributes) {
+      var thisHandle = handleIterator.next();
+      var requestObject = mapper.treeToValue(request, DigitalSpecimenRequest.class);
+      handleAttributes.addAll(
+          fdoRecordService.prepareDigitalSpecimenRecordAttributes(requestObject, thisHandle));
+      digitalSpecimenList.add(requestObject);
+    }
+    return handleAttributes;
+  }
+
+  protected List<HandleAttribute> createMediaObject(List<JsonNode> requestAttributes,
+      Iterator<byte[]> handleIterator)
+      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+    List<HandleAttribute> handleAttributes = new ArrayList<>();
+    for (var request : requestAttributes) {
+      var thisHandle = handleIterator.next();
+      var requestObject = mapper.treeToValue(request, MediaObjectRequest.class);
+      handleAttributes.addAll(
+          fdoRecordService.prepareMediaObjectAttributes(requestObject, thisHandle));
+    }
+    return handleAttributes;
+  }
+
   protected <T extends DigitalSpecimenRequest> Set<String> getPhysicalIdsFromRequests(
       List<T> digitalSpecimenRequests) {
     return digitalSpecimenRequests.stream()
@@ -328,33 +340,12 @@ public abstract class PidService {
         .toList();
   }
 
-  // Digital Specimen Validation
-  protected void validateDigitalSpecimens(List<DigitalSpecimenRequest> digitalSpecimenList)
-      throws InvalidRequestException {
-    if (!digitalSpecimenList.isEmpty()) {
-      var requestPhysicalIds = getPhysicalIdsFromRequests(digitalSpecimenList);
-      verifyNoInternalDuplicatePhysicalSpecimenObjectId(digitalSpecimenList, requestPhysicalIds);
-    }
-  }
-
   protected <T extends DigitalSpecimenRequest> void verifyNoInternalDuplicatePhysicalSpecimenObjectId(
       List<T> requests, Set<String> physicalIds)
       throws InvalidRequestException {
     if (physicalIds.size() < requests.size()) {
       throw new InvalidRequestException(
           "Bad Request. Some PhysicalSpecimenObjectIds are duplicated in request body");
-    }
-  }
-
-  protected void verifyNoRegisteredSpecimens(List<byte[]> physicalIds)
-      throws PidCreationException {
-    var registeredSpecimens = pidRepository.searchByNormalisedPhysicalIdentifierFullRecord(
-        physicalIds);
-    if (!registeredSpecimens.isEmpty()) {
-      var registeredHandles = listHandleNamesReturnedFromQuery(registeredSpecimens);
-      throw new PidCreationException(
-          "Unable to create PID records. Some requested records are already registered. Verify the following digital specimens:"
-              + registeredHandles);
     }
   }
 

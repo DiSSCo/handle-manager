@@ -175,8 +175,13 @@ public class PidController {
   }
 
   // Upsert
+
+  /**
+   * @deprecated (Use the POST and PATCH batch endpoints instead)
+   */
   @Operation(summary = "Create a PID Record; if it already exists, update contents. DigitalSpecimens only.")
   @PatchMapping(value = "/upsert")
+  @Deprecated(forRemoval = true)
   public ResponseEntity<JsonApiWrapperWrite> upsertRecord(@RequestBody List<JsonNode> requests,
       Authentication authentication)
       throws InvalidRequestException, UnprocessableEntityException, PidResolutionException, JsonProcessingException {
