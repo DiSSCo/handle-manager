@@ -22,6 +22,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecor
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRecordAttributesAltLoc;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.mockito.BDDMockito.then;
 
 import eu.dissco.core.handlemanager.database.jooq.tables.Handles;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
@@ -35,18 +36,23 @@ import java.util.Random;
 import java.util.Set;
 import java.util.stream.Stream;
 import org.jooq.Query;
-import org.jooq.Record4;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 class PidRepositoryIT extends BaseRepositoryIT {
 
   private PidRepository pidRepository;
+  @Mock
+  BatchInserter batchInserter;
 
   @BeforeEach
   void setup() {
-    pidRepository = new PidRepository(context);
+    pidRepository = new PidRepository(context, batchInserter);
   }
 
   @AfterEach
@@ -62,12 +68,9 @@ class PidRepositoryIT extends BaseRepositoryIT {
 
     // When
     pidRepository.postAttributesToDb(CREATED.getEpochSecond(), attributesToPost);
-    var postedRecordContext = context.selectFrom(HANDLES).fetch();
-    var postedRecordAttributes = pidRepository.resolveHandleAttributes(handle);
 
     // Then
-    assertThat(attributesToPost).isEqualTo(postedRecordAttributes);
-    assertThat(postedRecordContext).hasSize(attributesToPost.size());
+    then(batchInserter).should().batchCopy(CREATED.getEpochSecond(), attributesToPost);
   }
 
   @Test
@@ -549,11 +552,6 @@ class PidRepositoryIT extends BaseRepositoryIT {
       }
     }
     return handleAttributes;
-  }
-
-  private HandleAttribute mapToAttribute(Record4<Integer, byte[], byte[], byte[]> row) {
-    return new HandleAttribute(row.get(Handles.HANDLES.IDX), row.get(Handles.HANDLES.HANDLE),
-        new String(row.get(Handles.HANDLES.TYPE)), row.get(Handles.HANDLES.DATA));
   }
 
 }

@@ -8,6 +8,7 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
 
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
+import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -29,6 +30,7 @@ public class PidRepository {
 
   private static final int TTL = 86400;
   private final DSLContext context;
+  private final BatchInserter batchInserter;
 
   // For Handle Name Generation
   public List<byte[]> getHandlesExist(List<byte[]> handles) {
@@ -144,9 +146,9 @@ public class PidRepository {
   }
 
   // Post
-  public void postAttributesToDb(long recordTimestamp, List<HandleAttribute> handleAttributes) {
-    var queryList = prepareBatchPostQuery(recordTimestamp, handleAttributes);
-    context.batch(queryList).execute();
+  public void postAttributesToDb(long recordTimestamp, List<HandleAttribute> handleAttributes)
+      throws PidCreationException {
+    batchInserter.batchCopy(recordTimestamp, handleAttributes);
   }
 
   private List<Query> prepareBatchPostQuery(long recordTimestamp,

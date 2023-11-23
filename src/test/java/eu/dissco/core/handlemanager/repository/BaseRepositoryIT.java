@@ -3,8 +3,11 @@ package eu.dissco.core.handlemanager.repository;
 import static org.testcontainers.containers.PostgreSQLContainer.IMAGE;
 
 import com.zaxxer.hikari.HikariDataSource;
+import eu.dissco.core.handlemanager.database.jooq.tables.Handles;
+import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import org.flywaydb.core.Flyway;
 import org.jooq.DSLContext;
+import org.jooq.Record4;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DefaultDSLContext;
 import org.junit.jupiter.api.AfterEach;
@@ -23,7 +26,7 @@ public class BaseRepositoryIT {
   @Container
   private static final PostgreSQLContainer<?> CONTAINER = new PostgreSQLContainer<>(POSTGIS);
   protected DSLContext context;
-  private HikariDataSource dataSource;
+  protected HikariDataSource dataSource;
 
   @BeforeEach
   void prepareDatabase() {
@@ -40,5 +43,10 @@ public class BaseRepositoryIT {
   @AfterEach
   void disposeDataSource() {
     dataSource.close();
+  }
+
+  protected HandleAttribute mapToAttribute(Record4<Integer, byte[], byte[], byte[]> row) {
+    return new HandleAttribute(row.get(Handles.HANDLES.IDX), row.get(Handles.HANDLES.HANDLE),
+        new String(row.get(Handles.HANDLES.TYPE)), row.get(Handles.HANDLES.DATA));
   }
 }

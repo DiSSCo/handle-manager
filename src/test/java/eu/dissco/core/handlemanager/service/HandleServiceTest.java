@@ -55,7 +55,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordRespon
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteArchive;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteSmallResponse;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemRequestObject;
-import static eu.dissco.core.handlemanager.utils.AdminHandleGenerator.genAdminHandle;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -170,7 +169,8 @@ class HandleServiceTest {
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     String path = UI_URL + HANDLE;
     var adminHandle = new HandleAttribute(HS_ADMIN.index(), handle, HS_ADMIN.get(),
-        genAdminHandle());
+        "\\\\x0FFF000000153330303A302E4E412F32302E353030302E31303235000000C8".getBytes(
+            StandardCharsets.UTF_8));
     var recordAttributeList = genHandleRecordAttributes(handle,
         ObjectType.HANDLE);
     recordAttributeList.add(adminHandle);
