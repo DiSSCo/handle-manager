@@ -284,13 +284,30 @@ public abstract class PidService {
       Iterator<byte[]> handleIterator)
       throws InvalidRequestException, JsonProcessingException, PidResolutionException {
     var handleAttributes = new ArrayList<HandleAttribute>();
+    var physicalIds = new ArrayList<byte[]>();
     for (var request : requestAttributes) {
       var thisHandle = handleIterator.next();
       var requestObject = mapper.treeToValue(request, DigitalSpecimenRequest.class);
+      physicalIds.add(
+          requestObject.getNormalisedPrimarySpecimenObjectId().getBytes(StandardCharsets.UTF_8));
       handleAttributes.addAll(
           fdoRecordService.prepareDigitalSpecimenRecordAttributes(requestObject, thisHandle));
     }
+    verifyNoRegisteredSpecimens(physicalIds);
     return handleAttributes;
+  }
+
+  protected void verifyNoRegisteredSpecimens(List<byte[]> physicalIds)
+      throws PidResolutionException {
+    var registeredRows = pidRepository.searchByNormalisedPhysicalIdentifier(
+        physicalIds);
+    if (!registeredRows.isEmpty()) {
+      var registeredHandles = registeredRows.stream()
+          .map(row -> new String(row.getHandle(), StandardCharsets.UTF_8)).toList();
+      throw new PidResolutionException(
+          "Unable to create PID records. Some requested records are already registered. Verify the following digital specimens:"
+              + registeredHandles);
+    }
   }
 
   protected List<HandleAttribute> createMediaObject(List<JsonNode> requestAttributes,
@@ -304,28 +321,6 @@ public abstract class PidService {
           fdoRecordService.prepareMediaObjectAttributes(requestObject, thisHandle));
     }
     return handleAttributes;
-  }
-
-  protected <T extends DigitalSpecimenRequest> Set<String> getPhysicalIdsFromRequests(
-      List<T> digitalSpecimenRequests) {
-    return digitalSpecimenRequests.stream()
-        .map(DigitalSpecimenRequest::getNormalisedPrimarySpecimenObjectId)
-        .collect(Collectors.toSet());
-  }
-
-  protected List<byte[]> getPhysIdBytes(Set<String> physIds) {
-    return physIds.stream()
-        .map(physId -> physId.getBytes(StandardCharsets.UTF_8))
-        .toList();
-  }
-
-  protected <T extends DigitalSpecimenRequest> void verifyNoInternalDuplicatePhysicalSpecimenObjectId(
-      List<T> requests, Set<String> physicalIds)
-      throws InvalidRequestException {
-    if (physicalIds.size() < requests.size()) {
-      throw new InvalidRequestException(
-          "Bad Request. Some PhysicalSpecimenObjectIds are duplicated in request body");
-    }
   }
 
   // Update

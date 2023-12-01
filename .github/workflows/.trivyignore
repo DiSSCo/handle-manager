@@ -2,7 +2,3 @@
 # Notes: Issue with openssl. May need to upgrade alpine image.
 CVE-2023-5363
 CVE-2023-5678
-
-# Date: Nov 21, 2023
-# Notes: Issue with netty. Spring boot needs to update
-CVE-2023-34062

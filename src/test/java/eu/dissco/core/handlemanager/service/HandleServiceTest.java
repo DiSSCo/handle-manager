@@ -361,7 +361,7 @@ class HandleServiceTest {
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
-  /*
+
   @Test
   void testCreateDigitalSpecimenSpecimenExists() throws Exception {
     // Given
@@ -371,18 +371,16 @@ class HandleServiceTest {
     List<HandleAttribute> digitalSpecimen = genDigitalSpecimenAttributes(handle);
 
     given(pidNameGeneratorService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(pidRepository.searchByNormalisedPhysicalIdentifierFullRecord(anyList())).willReturn(
+    given(pidRepository.searchByNormalisedPhysicalIdentifier(anyList())).willReturn(
         digitalSpecimen);
 
     // When
-    Exception e = assertThrows(PidCreationException.class,
+    Exception e = assertThrows(InvalidRequestException.class,
         () -> service.createRecords(List.of(request)));
 
     // Then
-    assertThat(e).hasMessage(
-        "Unable to create PID records. Some requested records are already registered. Verify the following digital specimens:"
-            + List.of(new String(handle, StandardCharsets.UTF_8)));
-  } */
+    assertThat(e.getMessage()).contains(new String(handle, StandardCharsets.UTF_8));
+  }
 
   @Test
   void testCreateMediaObjectRecord() throws Exception {

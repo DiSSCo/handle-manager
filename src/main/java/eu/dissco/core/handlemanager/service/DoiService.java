@@ -60,7 +60,7 @@ public class DoiService extends PidService {
       throw new InvalidRequestException(
           "An error has occurred parsing a record in request. More information: " + e.getMessage());
     }
-    log.info("Persisting new handles to db");
+    log.info("Persisting new dois to db");
     pidRepository.postAttributesToDb(Instant.now().getEpochSecond(), handleAttributes);
     return new JsonApiWrapperWrite(formatCreateRecords(handleAttributes, type));
   }
