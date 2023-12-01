@@ -1,8 +1,4 @@
-# Date: Nov 14, 2023
-# Notes: Issue with openssl. May need to upgrade alpine image.
-CVE-2023-5363
-CVE-2023-5678
-
 # Date: Dec 1, 2023
 # Notes: Issue with logback. Spring boot needs to update its version
-CVE-2023-6378
+# Currently forcing logback version
+# CVE-2023-6378

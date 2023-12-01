@@ -22,6 +22,7 @@
     <apache-commons.version>4.3</apache-commons.version>
     <mockito-inline.version>5.2.0</mockito-inline.version>
     <okhttp3.version>4.10.0</okhttp3.version>
+    <logback.version>1.4.12</logback.version>
     <sonar.coverage.jacoco.xmlReportPaths>
       ../app-it/target/site/jacoco-aggregate/jacoco.xml
     </sonar.coverage.jacoco.xmlReportPaths>
