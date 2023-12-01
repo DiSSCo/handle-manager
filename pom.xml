@@ -19,7 +19,6 @@
     <java.version>17</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <testcontainers.version>1.17.6</testcontainers.version>
-    <victools.version>4.28.0</victools.version>
     <apache-commons.version>4.3</apache-commons.version>
     <mockito-inline.version>5.2.0</mockito-inline.version>
     <okhttp3.version>4.10.0</okhttp3.version>
