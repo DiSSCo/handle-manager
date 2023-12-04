@@ -6,7 +6,7 @@
     <artifactId>spring-boot-starter-parent</artifactId>
     <groupId>org.springframework.boot</groupId>
     <relativePath/>
-    <version>3.1.5</version> <!-- lookup parent from repository -->
+    <version>3.2.0</version> <!-- lookup parent from repository -->
   </parent>
   <artifactId>handle-manager</artifactId>
   <version>0.0.1-SNAPSHOT</version>
@@ -19,14 +19,13 @@
     <java.version>17</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <testcontainers.version>1.17.6</testcontainers.version>
-    <victools.version>4.28.0</victools.version>
     <apache-commons.version>4.3</apache-commons.version>
     <mockito-inline.version>5.2.0</mockito-inline.version>
     <okhttp3.version>4.10.0</okhttp3.version>
+    <logback.version>1.4.12</logback.version>
     <sonar.coverage.jacoco.xmlReportPaths>
       ../app-it/target/site/jacoco-aggregate/jacoco.xml
     </sonar.coverage.jacoco.xmlReportPaths>
-    <snakeyaml.version>2.0</snakeyaml.version>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     <sonar.organization>dissco</sonar.organization>
     <version.victools>4.28.0</version.victools>

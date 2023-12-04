@@ -285,8 +285,8 @@ class FdoRecordServiceTest {
     var request = givenMediaRequestObject();
 
     // When
-    var result = fdoRecordService.prepareMediaObjectAttributes(request, handle,
-        ObjectType.MEDIA_OBJECT);
+    var result = fdoRecordService.prepareMediaObjectAttributes(request, handle
+    );
 
     // Then
     assertThat(result).hasSize(MEDIA_QTY);
@@ -309,8 +309,8 @@ class FdoRecordServiceTest {
         "license", "c", "d", PrimarySpecimenObjectIdType.LOCAL, "e");
 
     // When
-    var result = fdoRecordService.prepareMediaObjectAttributes(request, handle,
-        ObjectType.MEDIA_OBJECT);
+    var result = fdoRecordService.prepareMediaObjectAttributes(request, handle
+    );
 
     // Then
     assertThat(result).hasSize(MEDIA_OPTIONAL_QTY);
@@ -332,8 +332,8 @@ class FdoRecordServiceTest {
         LICENSE_NAME_TESTVAL, "g", "h", "i", PrimarySpecimenObjectIdType.LOCAL, "j");
 
     // When
-    var result = fdoRecordService.prepareMediaObjectAttributes(request, handle,
-        ObjectType.MEDIA_OBJECT);
+    var result = fdoRecordService.prepareMediaObjectAttributes(request, handle
+    );
 
     // Then
 
@@ -355,8 +355,8 @@ class FdoRecordServiceTest {
 
     // Then
     assertThrows(PidResolutionException.class,
-        () -> fdoRecordService.prepareMediaObjectAttributes(request, handle,
-            ObjectType.MEDIA_OBJECT));
+        () -> fdoRecordService.prepareMediaObjectAttributes(request, handle
+        ));
   }
 
   @Test
@@ -366,8 +366,8 @@ class FdoRecordServiceTest {
     var request = givenDigitalSpecimenRequestObjectNullOptionals();
 
     // When
-    var result = fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle,
-        ObjectType.DIGITAL_SPECIMEN);
+    var result = fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle
+    );
 
     // Then
     assertThat(result).hasSize(DS_MANDATORY_QTY);
@@ -393,8 +393,8 @@ class FdoRecordServiceTest {
         null, null, null, null, null, null, null);
 
     // When
-    fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle,
-        ObjectType.DIGITAL_SPECIMEN);
+    fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle
+    );
 
     // Then
     then(pidResolver).should().resolveQid(qidUrl);
@@ -413,8 +413,8 @@ class FdoRecordServiceTest {
 
     // When
     assertThrows(PidResolutionException.class,
-        () -> fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle,
-            ObjectType.DIGITAL_SPECIMEN));
+        () -> fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle
+        ));
   }
 
   @Test
@@ -424,8 +424,8 @@ class FdoRecordServiceTest {
     var request = givenDigitalSpecimenRequestObjectOptionalsInit();
 
     // When
-    var result = fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle,
-        ObjectType.DIGITAL_SPECIMEN);
+    var result = fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle
+    );
 
     // Then
     assertThat(result).hasSize(DS_OPTIONAL_QTY);
@@ -447,8 +447,8 @@ class FdoRecordServiceTest {
     var request = givenAnnotationRequestObject();
 
     // When
-    var result = fdoRecordService.prepareAnnotationAttributes(request, handle,
-        ObjectType.ANNOTATION);
+    var result = fdoRecordService.prepareAnnotationAttributes(request, handle
+    );
 
     // Then
     assertThat(result).hasSize(ANNOTATION_OPTIONAL_QTY);
@@ -479,8 +479,8 @@ class FdoRecordServiceTest {
     );
 
     // When
-    var result = fdoRecordService.prepareAnnotationAttributes(request, handle,
-        ObjectType.ANNOTATION);
+    var result = fdoRecordService.prepareAnnotationAttributes(request, handle
+    );
 
     // Then
     assertThat(result).hasSize(ANNOTATION_MANDATORY_QTY);
@@ -498,7 +498,7 @@ class FdoRecordServiceTest {
     var request = givenMasRecordRequestObject();
 
     // When
-    var result = fdoRecordService.prepareMasRecordAttributes(request, handle, ObjectType.MAS);
+    var result = fdoRecordService.prepareMasRecordAttributes(request, handle);
 
     // Then
     assertThat(result).hasSize(HANDLE_QTY + 1);
@@ -515,7 +515,7 @@ class FdoRecordServiceTest {
     var request = givenMappingRequestObject();
 
     // When
-    var result = fdoRecordService.prepareMappingAttributes(request, handle, ObjectType.MAPPING);
+    var result = fdoRecordService.prepareMappingAttributes(request, handle);
 
     // Then
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
@@ -532,8 +532,8 @@ class FdoRecordServiceTest {
     var request = givenSourceSystemRequestObject();
 
     // When
-    var result = fdoRecordService.prepareSourceSystemAttributes(request, handle,
-        ObjectType.SOURCE_SYSTEM);
+    var result = fdoRecordService.prepareSourceSystemAttributes(request, handle
+    );
 
     // Then
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
@@ -550,8 +550,8 @@ class FdoRecordServiceTest {
     var request = givenOrganisationRequestObject();
 
     // When
-    var result = fdoRecordService.prepareOrganisationAttributes(request, handle,
-        ObjectType.ORGANISATION);
+    var result = fdoRecordService.prepareOrganisationAttributes(request, handle
+    );
 
     // Then
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
@@ -613,8 +613,8 @@ class FdoRecordServiceTest {
         null, null, null, null, null, null, null);
 
     // When
-    var result = fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle,
-        ObjectType.DIGITAL_SPECIMEN);
+    var result = fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle
+    );
 
     // Then
     assertThat(result).hasSize(DS_MANDATORY_QTY);
@@ -636,8 +636,8 @@ class FdoRecordServiceTest {
 
     // Then
     assertThrows(PidResolutionException.class,
-        () -> fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle,
-            ObjectType.DIGITAL_SPECIMEN));
+        () -> fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle
+        ));
   }
 
   @Test

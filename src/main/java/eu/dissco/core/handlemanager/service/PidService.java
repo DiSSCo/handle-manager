@@ -13,6 +13,7 @@ import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_TYPE;
 import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType.ANNOTATION;
 import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType.DIGITAL_SPECIMEN;
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType.MEDIA_OBJECT;
 import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType.TOMBSTONE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -25,8 +26,8 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperReadSingle;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.domain.requests.UpsertDigitalSpecimen;
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
+import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
@@ -39,11 +40,11 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -89,47 +90,82 @@ public abstract class PidService {
   }
 
   protected List<JsonApiDataLinks> formatCreateRecords(List<HandleAttribute> dbRecord,
-      Map<String, ObjectType> recordTypes) {
+      ObjectType objectType) {
     var handleMap = mapRecords(dbRecord);
+    switch (objectType) {
+      case ANNOTATION -> {
+        return formatCreateRecordsAnnotation(handleMap);
+      }
+      case DIGITAL_SPECIMEN -> {
+        return formatCreateRecordsSpecimen(handleMap);
+      }
+      case MEDIA_OBJECT -> {
+        return formatCreateRecordsMedia(handleMap);
+      }
+      default -> {
+        return formatCreateRecordsDefault(handleMap, objectType);
+      }
+    }
+  }
+
+  private List<JsonApiDataLinks> formatCreateRecordsAnnotation(
+      Map<String, List<HandleAttribute>> handleMap) {
     List<JsonApiDataLinks> dataLinksList = new ArrayList<>();
     for (var handleRecord : handleMap.entrySet()) {
-      var type = recordTypes.get(handleRecord.getKey());
-      var subRecord = handleRecord.getValue();
-      if (type.equals(ObjectType.MEDIA_OBJECT)) {
-        subRecord = subRecord.stream().filter(
-                row -> row.getType().equals(PRIMARY_MEDIA_ID.get()) || row.getType()
-                    .equals(LINKED_DO_PID.get()))
-            .toList();
-      } else if (type.equals(DIGITAL_SPECIMEN)) {
-        subRecord = subRecord.stream()
-            .filter(row -> row.getType().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())).toList();
-      } else if (type.equals(ANNOTATION)) {
-        var hashRow = subRecord.stream().filter(row -> row.getType().equals(ANNOTATION_HASH.get()))
-            .findFirst();
-        if (hashRow.isPresent()) {
-          subRecord = List.of(hashRow.get());
-        }
-      }
+      var hashRow = handleRecord.getValue().stream()
+          .filter(row -> row.getType().equals(ANNOTATION_HASH.get()))
+          .findFirst();
+      var subRecord = hashRow.map(List::of).orElse(handleRecord.getValue());
       var rootNode = jsonFormatSingleRecord(subRecord);
       String pidLink = profileProperties.getDomain() + handleRecord.getKey();
-      dataLinksList.add(new JsonApiDataLinks(handleRecord.getKey(), type.toString(), rootNode,
-          new JsonApiLinks(pidLink)));
+      dataLinksList.add(
+          new JsonApiDataLinks(handleRecord.getKey(), ANNOTATION.toString(), rootNode,
+              new JsonApiLinks(pidLink)));
     }
     return dataLinksList;
   }
 
-  private List<JsonApiDataLinks> formatUpsertResponse(List<HandleAttribute> records) {
+  private List<JsonApiDataLinks> formatCreateRecordsSpecimen(
+      Map<String, List<HandleAttribute>> handleMap) {
     List<JsonApiDataLinks> dataLinksList = new ArrayList<>();
-    for (var row : records) {
-      if (row.getType().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())) {
-        String h = new String(row.getHandle(), StandardCharsets.UTF_8);
-        String pidLink = profileProperties.getDomain() + h;
-        var node = mapper.createObjectNode();
-        node.put(PRIMARY_SPECIMEN_OBJECT_ID.get(),
-            new String(row.getData(), StandardCharsets.UTF_8));
-        dataLinksList.add(
-            new JsonApiDataLinks(h, DIGITAL_SPECIMEN.toString(), node, new JsonApiLinks(pidLink)));
-      }
+    for (var handleRecord : handleMap.entrySet()) {
+      var subRecord = handleRecord.getValue().stream()
+          .filter(row -> row.getType().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())).toList();
+      var rootNode = jsonFormatSingleRecord(subRecord);
+      String pidLink = profileProperties.getDomain() + handleRecord.getKey();
+      dataLinksList.add(
+          new JsonApiDataLinks(handleRecord.getKey(), DIGITAL_SPECIMEN.toString(), rootNode,
+              new JsonApiLinks(pidLink)));
+    }
+    return dataLinksList;
+  }
+
+  private List<JsonApiDataLinks> formatCreateRecordsMedia(
+      Map<String, List<HandleAttribute>> handleMap) {
+    List<JsonApiDataLinks> dataLinksList = new ArrayList<>();
+    for (var handleRecord : handleMap.entrySet()) {
+      var subRecord = handleRecord.getValue().stream().filter(
+              row -> row.getType().equals(PRIMARY_MEDIA_ID.get()) || row.getType()
+                  .equals(LINKED_DO_PID.get()))
+          .toList();
+      var rootNode = jsonFormatSingleRecord(subRecord);
+      String pidLink = profileProperties.getDomain() + handleRecord.getKey();
+      dataLinksList.add(
+          new JsonApiDataLinks(handleRecord.getKey(), MEDIA_OBJECT.toString(), rootNode,
+              new JsonApiLinks(pidLink)));
+    }
+    return dataLinksList;
+  }
+
+  private List<JsonApiDataLinks> formatCreateRecordsDefault(
+      Map<String, List<HandleAttribute>> handleMap, ObjectType objectType) {
+    List<JsonApiDataLinks> dataLinksList = new ArrayList<>();
+    for (var handleRecord : handleMap.entrySet()) {
+      var rootNode = jsonFormatSingleRecord(handleRecord.getValue());
+      String pidLink = profileProperties.getDomain() + handleRecord.getKey();
+      dataLinksList.add(
+          new JsonApiDataLinks(handleRecord.getKey(), objectType.toString(), rootNode,
+              new JsonApiLinks(pidLink)));
     }
     return dataLinksList;
   }
@@ -233,179 +269,58 @@ public abstract class PidService {
       List<JsonNode> requests)
       throws PidResolutionException, InvalidRequestException, PidCreationException;
 
-  protected <T extends DigitalSpecimenRequest> Set<String> getPhysicalIdsFromRequests(
-      List<T> digitalSpecimenRequests) {
-    return digitalSpecimenRequests.stream()
-        .map(DigitalSpecimenRequest::getNormalisedPrimarySpecimenObjectId)
+  protected ObjectType getObjectType(List<JsonNode> requests) {
+    var types = requests.stream()
+        .map(request -> request.get(NODE_DATA).get(NODE_TYPE).asText())
         .collect(Collectors.toSet());
-  }
-
-  protected List<byte[]> getPhysIdBytes(Set<String> physIds) {
-    return physIds.stream()
-        .map(physId -> physId.getBytes(StandardCharsets.UTF_8))
-        .toList();
-  }
-
-  // Digital Specimen Validation
-  protected void validateDigitalSpecimens(List<DigitalSpecimenRequest> digitalSpecimenList)
-      throws InvalidRequestException, PidCreationException {
-    if (!digitalSpecimenList.isEmpty()) {
-      var requestPhysicalIds = getPhysicalIdsFromRequests(digitalSpecimenList);
-      verifyNoInternalDuplicatePhysicalSpecimenObjectId(digitalSpecimenList, requestPhysicalIds);
-      verifyNoRegisteredSpecimens(getPhysIdBytes(requestPhysicalIds));
+    var type = types.stream().findFirst();
+    if (type.isEmpty() || types.size() != 1) {
+      throw new UnsupportedOperationException("Requests must all be of the same type");
     }
+    return ObjectType.fromString(type.get());
   }
 
-  protected <T extends DigitalSpecimenRequest> void verifyNoInternalDuplicatePhysicalSpecimenObjectId(
-      List<T> requests, Set<String> physicalIds)
-      throws InvalidRequestException {
-    if (physicalIds.size() < requests.size()) {
-      throw new InvalidRequestException(
-          "Bad Request. Some PhysicalSpecimenObjectIds are duplicated in request body");
+  protected ArrayList<HandleAttribute> createDigitalSpecimen(List<JsonNode> requestAttributes,
+      Iterator<byte[]> handleIterator)
+      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+    var handleAttributes = new ArrayList<HandleAttribute>();
+    var physicalIds = new ArrayList<byte[]>();
+    for (var request : requestAttributes) {
+      var thisHandle = handleIterator.next();
+      var requestObject = mapper.treeToValue(request, DigitalSpecimenRequest.class);
+      physicalIds.add(
+          requestObject.getNormalisedPrimarySpecimenObjectId().getBytes(StandardCharsets.UTF_8));
+      handleAttributes.addAll(
+          fdoRecordService.prepareDigitalSpecimenRecordAttributes(requestObject, thisHandle));
     }
+    verifyNoRegisteredSpecimens(physicalIds);
+    return handleAttributes;
   }
 
   protected void verifyNoRegisteredSpecimens(List<byte[]> physicalIds)
-      throws PidCreationException {
-    var registeredSpecimens = pidRepository.searchByNormalisedPhysicalIdentifierFullRecord(
+      throws PidResolutionException {
+    var registeredRows = pidRepository.searchByNormalisedPhysicalIdentifier(
         physicalIds);
-    if (!registeredSpecimens.isEmpty()) {
-      var registeredHandles = listHandleNamesReturnedFromQuery(registeredSpecimens);
-      throw new PidCreationException(
+    if (!registeredRows.isEmpty()) {
+      var registeredHandles = registeredRows.stream()
+          .map(row -> new String(row.getHandle(), StandardCharsets.UTF_8)).toList();
+      throw new PidResolutionException(
           "Unable to create PID records. Some requested records are already registered. Verify the following digital specimens:"
               + registeredHandles);
     }
   }
 
-  // Upsert
-  public JsonApiWrapperWrite upsertDigitalSpecimens(List<JsonNode> requests)
-      throws JsonProcessingException, UnprocessableEntityException, PidResolutionException,
-      InvalidRequestException {
-    var digitalSpecimenRequests = jsonNodeToDigitalSpecimenRequest(requests);
-
-    var physicalIds = getPhysicalIdsFromRequests(digitalSpecimenRequests);
-    var physicalIdsBytes = getPhysIdBytes(physicalIds);
-    var upsertRequests = getRegisteredSpecimensUpsert(digitalSpecimenRequests, physicalIdsBytes);
-    var upsertAttributes = prepareUpsertAttributes(upsertRequests);
-    logUpdates(upsertRequests);
-
-    var createRequests = getCreateRequests(upsertRequests, digitalSpecimenRequests);
-    var newHandles = hf.genHandleList(createRequests.size());
-    if (!newHandles.isEmpty()) {
-      log.info("Successfully minted {} new identifiers(s)", newHandles.size());
-    }
-    var createAttributes = getCreateAttributes(createRequests, newHandles);
-
-    var allRequests = Stream.concat(
-        createRequests.stream(),
-        upsertRequests.stream().map(UpsertDigitalSpecimen::request)).toList();
-    verifyNoInternalDuplicatePhysicalSpecimenObjectId(allRequests, physicalIds);
-
-    var recordTimestamp = Instant.now().getEpochSecond();
-
-    log.info("Persisting upserts to db.");
-    pidRepository.postAndUpdateHandles(recordTimestamp, createAttributes, upsertAttributes);
-
-    var concatAttributes = concatHandleAttributes(createAttributes, upsertAttributes);
-
-    return new JsonApiWrapperWrite(
-        formatUpsertResponse(concatAttributes));
-  }
-
-  private List<DigitalSpecimenRequest> jsonNodeToDigitalSpecimenRequest(List<JsonNode> requests)
-      throws JsonProcessingException {
-    ArrayList<DigitalSpecimenRequest> digitalSpecimenRequests = new ArrayList<>();
-    for (var request : requests) {
-      digitalSpecimenRequests.add(mapper.treeToValue(request.get(NODE_DATA).get(NODE_ATTRIBUTES),
-          DigitalSpecimenRequest.class));
-    }
-    return digitalSpecimenRequests;
-  }
-
-  private List<UpsertDigitalSpecimen> getRegisteredSpecimensUpsert(
-      List<DigitalSpecimenRequest> requests, List<byte[]> physicalIds) {
-    var registeredSpecimensHandleAttributes = new HashSet<>(
-        pidRepository.searchByNormalisedPhysicalIdentifier(physicalIds));
-    if (registeredSpecimensHandleAttributes.isEmpty()) {
-      return new ArrayList<>();
-    }
-
-    ArrayList<UpsertDigitalSpecimen> upsertDigitalSpecimen = new ArrayList<>();
-    for (var row : registeredSpecimensHandleAttributes) {
-      var targetPhysId = new String(row.getData(), StandardCharsets.UTF_8);
-      var targetRequest = getRequestFromPhysicalId(requests, targetPhysId);
-      requests.remove(targetRequest);
-      upsertDigitalSpecimen.add(new UpsertDigitalSpecimen(
-          new String(row.getHandle(), StandardCharsets.UTF_8),
-          targetPhysId,
-          targetRequest
-      ));
-    }
-    return upsertDigitalSpecimen;
-  }
-
-  private void logUpdates(List<UpsertDigitalSpecimen> upsertRequests) {
-    var registeredHandles = upsertRequests.stream().map(UpsertDigitalSpecimen::handle).toList();
-    if (!registeredHandles.isEmpty()) {
-      log.debug("Some specimens already have identifiers. Updating the following PID Records {}",
-          registeredHandles);
-    }
-  }
-
-  private DigitalSpecimenRequest getRequestFromPhysicalId(List<DigitalSpecimenRequest> requests,
-      String physicalId) {
-    for (var request : requests) {
-      if (physicalId.equals(request.getNormalisedPrimarySpecimenObjectId())) {
-        return request;
-      }
-    }
-    throw new IllegalStateException("Physical Identifier not found");
-  }
-
-  private List<DigitalSpecimenRequest> getCreateRequests(List<UpsertDigitalSpecimen> upsertRequests,
-      List<DigitalSpecimenRequest> digitalSpecimenRequests) {
-    var upsertRequestsSet = upsertRequests
-        .stream()
-        .map(UpsertDigitalSpecimen::request).collect(Collectors.toSet());
-    return digitalSpecimenRequests
-        .stream()
-        .filter(r -> (!upsertRequestsSet.contains(r)))
-        .toList();
-  }
-
-  private List<HandleAttribute> getCreateAttributes(
-      List<DigitalSpecimenRequest> digitalSpecimenRequests, List<byte[]> newHandles)
-      throws UnprocessableEntityException, PidResolutionException, InvalidRequestException {
-    var handles = new ArrayList<>(newHandles);
+  protected List<HandleAttribute> createMediaObject(List<JsonNode> requestAttributes,
+      Iterator<byte[]> handleIterator)
+      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
     List<HandleAttribute> handleAttributes = new ArrayList<>();
-    for (var digitalSpecimenRequest : digitalSpecimenRequests) {
+    for (var request : requestAttributes) {
+      var thisHandle = handleIterator.next();
+      var requestObject = mapper.treeToValue(request, MediaObjectRequest.class);
       handleAttributes.addAll(
-          fdoRecordService.prepareDigitalSpecimenRecordAttributes(digitalSpecimenRequest,
-              handles.remove(0), DIGITAL_SPECIMEN));
+          fdoRecordService.prepareMediaObjectAttributes(requestObject, thisHandle));
     }
     return handleAttributes;
-  }
-
-  private List<HandleAttribute> concatHandleAttributes(List<HandleAttribute> createAttributes,
-      List<List<HandleAttribute>> upsertAttributes) {
-    List<HandleAttribute> upsertListFlat = new ArrayList<>();
-    for (var upsertRecord : upsertAttributes) {
-      upsertListFlat.addAll(upsertRecord);
-    }
-    return Stream.concat(createAttributes.stream(), upsertListFlat.stream()).toList();
-  }
-
-  private List<List<HandleAttribute>> prepareUpsertAttributes(
-      List<UpsertDigitalSpecimen> upsertDigitalSpecimens)
-      throws InvalidRequestException, UnprocessableEntityException, PidResolutionException {
-    List<List<HandleAttribute>> upsertAttributes = new ArrayList<>();
-    for (var upsertRequest : upsertDigitalSpecimens) {
-      ArrayList<HandleAttribute> upsertAttributeSingleSpecimen = new ArrayList<>(fdoRecordService
-          .prepareUpdateAttributes(upsertRequest.handle().getBytes(StandardCharsets.UTF_8),
-              mapper.valueToTree(upsertRequest.request()), DIGITAL_SPECIMEN));
-      upsertAttributes.add(upsertAttributeSingleSpecimen);
-    }
-    return upsertAttributes;
   }
 
   // Update

@@ -1,20 +1,15 @@
 package eu.dissco.core.handlemanager.controller;
 
 
-import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
-import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ID;
-import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_TYPE;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperReadSingle;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.requests.RollbackRequest;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaValidator;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -166,28 +161,6 @@ public class PidController {
     return ResponseEntity.status(HttpStatus.OK).body(service.updateRecords(requests, true));
   }
 
-  // Upsert
-  @Operation(summary = "Create a PID Record; if it already exists, update contents. DigitalSpecimens only.")
-  @PatchMapping(value = "/upsert")
-  public ResponseEntity<JsonApiWrapperWrite> upsertRecord(@RequestBody List<JsonNode> requests,
-      Authentication authentication)
-      throws InvalidRequestException, UnprocessableEntityException, PidResolutionException, JsonProcessingException {
-    log.info("Validating upsert request from user {}", authentication.getName());
-    for (var request : requests) {
-      schemaValidator.validatePostRequest(request);
-      if (!request.get(NODE_DATA).get(NODE_TYPE).asText()
-          .equals(ObjectType.DIGITAL_SPECIMEN.toString())) {
-        log.error(
-            "Attempting to upsert invalid type of PID record. Currently only upsert for Digital Specimen is supported.");
-        throw new InvalidRequestException(
-            "Invalid type. Upsert endpoint only available for type DigitalSpecimen");
-      }
-    }
-    var ids = getPhysicalSpecimenIds(requests);
-    log.info("Received valid upsert request for {} physical specimens: {}... ", requests.size(),
-        ids);
-    return ResponseEntity.ok(service.upsertDigitalSpecimens(requests));
-  }
 
   @Operation(summary = "Archive given record")
   @PutMapping(value = "/{prefix}/{suffix}")
@@ -268,8 +241,4 @@ public class PidController {
     return ResponseEntity.status(HttpStatus.OK).body(service.archiveRecordBatch(requests));
   }
 
-  private List<String> getPhysicalSpecimenIds(List<JsonNode> requests) {
-    return requests.stream().map(r -> r.get(NODE_DATA).get(NODE_ATTRIBUTES)
-        .get(PRIMARY_SPECIMEN_OBJECT_ID.get()).asText()).limit(LOG_LIMIT).toList();
-  }
 }

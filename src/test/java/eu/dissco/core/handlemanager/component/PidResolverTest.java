@@ -7,7 +7,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
-import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.web.PidResolver;
 import java.io.IOException;
 import okhttp3.mockwebserver.MockResponse;
@@ -108,7 +107,7 @@ class PidResolverTest {
         .addHeader("Content-Type", "application/json"));
 
     // then
-    assertThrows(PidResolutionException.class, ()->pidResolver.resolveQid("qid"));
+    assertThrows(PidResolutionException.class, () -> pidResolver.resolveQid("qid"));
   }
 
   @Test
@@ -119,7 +118,7 @@ class PidResolverTest {
         .addHeader("Content-Type", "application/json"));
 
     // then
-    assertThrows(PidResolutionException.class, ()->pidResolver.resolveQid("qid"));
+    assertThrows(PidResolutionException.class, () -> pidResolver.resolveQid("qid"));
   }
 
   @Test
@@ -159,7 +158,7 @@ class PidResolverTest {
         .addHeader("Content-Type", "application/json"));
 
     // Then
-    assertThrows(UnprocessableEntityException.class, () -> pidResolver.getObjectName(EXTERNAL_PID
+    assertThrows(PidResolutionException.class, () -> pidResolver.getObjectName(EXTERNAL_PID
     ));
   }
 
@@ -193,7 +192,7 @@ class PidResolverTest {
     mockServer.enqueue(new MockResponse().setResponseCode(HttpStatus.GATEWAY_TIMEOUT.value()));
 
     // Then
-    assertThrows(UnprocessableEntityException.class, () -> pidResolver.getObjectName(EXTERNAL_PID));
+    assertThrows(PidResolutionException.class, () -> pidResolver.getObjectName(EXTERNAL_PID));
     assertThat(mockServer.getRequestCount() - requestCount).isEqualTo(4);
   }
 

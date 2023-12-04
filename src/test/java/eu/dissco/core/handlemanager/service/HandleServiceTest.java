@@ -4,13 +4,11 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_DO_PID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_MEDIA_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID_TYPE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_DOMAIN;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_LIST_STR;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_URI;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_STATUS_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
@@ -58,7 +56,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystem
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -67,13 +64,9 @@ import static org.mockito.Mockito.mockStatic;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.Profiles;
-import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiDataLinks;
-import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
-import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
-import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.PidRepository;
@@ -357,9 +350,7 @@ class HandleServiceTest {
         ObjectType.DIGITAL_SPECIMEN);
 
     given(pidNameGeneratorService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(pidRepository.searchByNormalisedPhysicalIdentifierFullRecord(anyList())).willReturn(
-        new ArrayList<>());
-    given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(any(), any(), any())).willReturn(
+    given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(any(), any())).willReturn(
         digitalSpecimen);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
@@ -370,6 +361,7 @@ class HandleServiceTest {
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
 
+
   @Test
   void testCreateDigitalSpecimenSpecimenExists() throws Exception {
     // Given
@@ -379,17 +371,15 @@ class HandleServiceTest {
     List<HandleAttribute> digitalSpecimen = genDigitalSpecimenAttributes(handle);
 
     given(pidNameGeneratorService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(pidRepository.searchByNormalisedPhysicalIdentifierFullRecord(anyList())).willReturn(
+    given(pidRepository.searchByNormalisedPhysicalIdentifier(anyList())).willReturn(
         digitalSpecimen);
 
     // When
-    Exception e = assertThrows(PidCreationException.class,
+    Exception e = assertThrows(InvalidRequestException.class,
         () -> service.createRecords(List.of(request)));
 
     // Then
-    assertThat(e).hasMessage(
-        "Unable to create PID records. Some requested records are already registered. Verify the following digital specimens:"
-            + List.of(new String(handle, StandardCharsets.UTF_8)));
+    assertThat(e.getMessage()).contains(new String(handle, StandardCharsets.UTF_8));
   }
 
   @Test
@@ -409,7 +399,7 @@ class HandleServiceTest {
         ObjectType.MEDIA_OBJECT);
 
     given(pidNameGeneratorService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(fdoRecordService.prepareMediaObjectAttributes(any(), any(), any())).willReturn(
+    given(fdoRecordService.prepareMediaObjectAttributes(any(), any())).willReturn(
         handleRecordSublist);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
@@ -429,7 +419,7 @@ class HandleServiceTest {
     List<HandleAttribute> handleRecord = genMasAttributes(handle);
 
     given(pidNameGeneratorService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(fdoRecordService.prepareMasRecordAttributes(any(), any(), eq(ObjectType.MAS))).willReturn(
+    given(fdoRecordService.prepareMasRecordAttributes(any(), any())).willReturn(
         handleRecord);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
@@ -507,7 +497,7 @@ class HandleServiceTest {
         sublist, handles, ObjectType.DIGITAL_SPECIMEN);
 
     given(pidNameGeneratorService.genHandleList(handles.size())).willReturn(handles);
-    given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(any(), any(), any()))
+    given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(any(), any()))
         .willReturn(genDigitalSpecimenAttributes(handles.get(0)))
         .willReturn(genDigitalSpecimenAttributes(handles.get(1)));
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
@@ -530,7 +520,7 @@ class HandleServiceTest {
 
     var responseExpected = givenAnnotationResponseWrite(handles);
     given(pidNameGeneratorService.genHandleList(handles.size())).willReturn(handles);
-    given(fdoRecordService.prepareAnnotationAttributes(any(), any(), any()))
+    given(fdoRecordService.prepareAnnotationAttributes(any(), any()))
         .willReturn(genAnnotationAttributes(handles.get(0), true))
         .willReturn(genAnnotationAttributes(handles.get(1), true));
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
@@ -554,7 +544,7 @@ class HandleServiceTest {
 
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_ANNOTATION);
     given(pidNameGeneratorService.genHandleList(handles.size())).willReturn(handles);
-    given(fdoRecordService.prepareAnnotationAttributes(any(), any(), any()))
+    given(fdoRecordService.prepareAnnotationAttributes(any(), any()))
         .willReturn(genAnnotationAttributes(handles.get(0), false))
         .willReturn(genAnnotationAttributes(handles.get(1), false));
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
@@ -576,7 +566,7 @@ class HandleServiceTest {
 
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_MAPPING);
     given(pidNameGeneratorService.genHandleList(handles.size())).willReturn(handles);
-    given(fdoRecordService.prepareMappingAttributes(any(), any(), any()))
+    given(fdoRecordService.prepareMappingAttributes(any(), any()))
         .willReturn(genMappingAttributes(handles.get(0)))
         .willReturn(genMappingAttributes(handles.get(1)));
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
@@ -599,7 +589,7 @@ class HandleServiceTest {
 
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_SOURCE_SYSTEM);
     given(pidNameGeneratorService.genHandleList(handles.size())).willReturn(handles);
-    given(fdoRecordService.prepareSourceSystemAttributes(any(), any(), any()))
+    given(fdoRecordService.prepareSourceSystemAttributes(any(), any()))
         .willReturn(genSourceSystemAttributes(handles.get(0)))
         .willReturn(genSourceSystemAttributes(handles.get(1)));
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
@@ -625,7 +615,7 @@ class HandleServiceTest {
 
     var responseExpected = givenRecordResponseWrite(handles, RECORD_TYPE_ORGANISATION);
     given(pidNameGeneratorService.genHandleList(handles.size())).willReturn(handles);
-    given(fdoRecordService.prepareOrganisationAttributes(any(), any(), any())).willReturn(flatList);
+    given(fdoRecordService.prepareOrganisationAttributes(any(), any())).willReturn(flatList);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
@@ -653,7 +643,7 @@ class HandleServiceTest {
     var responseExpected = givenRecordResponseWriteSmallResponse(sublist, handles,
         ObjectType.MEDIA_OBJECT);
     given(pidNameGeneratorService.genHandleList(handles.size())).willReturn(handles);
-    given(fdoRecordService.prepareMediaObjectAttributes(any(), any(), any()))
+    given(fdoRecordService.prepareMediaObjectAttributes(any(), any()))
         .willReturn(genMediaObjectAttributes(handles.get(0)))
         .willReturn(genMediaObjectAttributes(handles.get(1)));
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
@@ -809,129 +799,6 @@ class HandleServiceTest {
   }
 
   @Test
-  void testUpsertDigitalSpecimens() throws Exception {
-    // Given
-    var existingHandle = handles.get(0);
-    var newHandle = handles.get(1);
-    var existingPhysId = "Alt ID";
-
-    var newRecordRequest = givenDigitalSpecimenRequestObjectNullOptionals(
-        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL);
-    var existingRecordRequest = givenDigitalSpecimenRequestObjectNullOptionals(existingPhysId);
-    List<JsonNode> requests = List.of(
-        genCreateRecordRequest(newRecordRequest, RECORD_TYPE_DS),
-        genCreateRecordRequest(existingRecordRequest, RECORD_TYPE_DS));
-
-    var existingRecordAttributes = genDigitalSpecimenAttributes(existingHandle,
-        existingRecordRequest);
-    var newRecordAttributes = genDigitalSpecimenAttributes(newHandle, newRecordRequest);
-
-    var expected = new JsonApiWrapperWrite(
-        List.of(upsertedResponse(getPrimarySpecimenObjectIds(newRecordAttributes),
-                new String(newHandle)),
-            upsertedResponse(getPrimarySpecimenObjectIds(existingRecordAttributes),
-                new String(existingHandle, StandardCharsets.UTF_8))));
-
-    given(pidRepository.searchByNormalisedPhysicalIdentifier(anyList())).willReturn(
-        List.of(new HandleAttribute(PRIMARY_SPECIMEN_OBJECT_ID.index(), existingHandle,
-            PRIMARY_SPECIMEN_OBJECT_ID_TYPE.get(),
-            (existingRecordRequest.getNormalisedPrimarySpecimenObjectId()).getBytes(
-                StandardCharsets.UTF_8))));
-    given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(eq(newRecordRequest), any(),
-        any())).willReturn(newRecordAttributes);
-    given(fdoRecordService.prepareUpdateAttributes(any(),
-        eq(MAPPER.valueToTree(existingRecordRequest)), any())).willReturn(
-        existingRecordAttributes);
-    given(pidNameGeneratorService.genHandleList(anyInt())).willReturn(
-        new ArrayList<>(List.of(newHandle)));
-    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
-
-    // When
-    var response = service.upsertDigitalSpecimens(requests);
-
-    // Then
-    assertThat(response).isEqualTo(expected);
-    then(pidRepository).should()
-        .postAndUpdateHandles(CREATED.getEpochSecond(), newRecordAttributes,
-            List.of(existingRecordAttributes));
-  }
-
-  @Test
-  void testInternalDuplicateSpecimenIds() {
-    // Given
-    List<JsonNode> requests = List.of(
-        genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS),
-        genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS)
-    );
-    var expectedMsg = "Bad Request. Some PhysicalSpecimenObjectIds are duplicated in request body";
-    given(pidNameGeneratorService.genHandleList(anyInt())).willReturn(handles);
-
-    // When
-    var response = assertThrows(InvalidRequestException.class,
-        () -> service.createRecords(requests));
-
-    // Then
-    assertThat(response).hasMessage(expectedMsg);
-  }
-
-  @Test
-  void testUpsertDigitalSpecimensOnlyUpdate() throws Exception {
-    // Given
-    List<JsonNode> requests = List.of(
-        genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS));
-    var existingRecord = genDigitalSpecimenAttributes(handles.get(0));
-
-    var expected = new JsonApiWrapperWrite(
-        List.of(upsertedResponse(getPrimarySpecimenObjectIds(existingRecord), HANDLE))
-    );
-
-    given(pidRepository.searchByNormalisedPhysicalIdentifier(anyList())).willReturn(
-        List.of(new HandleAttribute(PRIMARY_SPECIMEN_OBJECT_ID.index(), handles.get(0),
-            PRIMARY_SPECIMEN_OBJECT_ID.get(),
-            (PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL).getBytes(
-                StandardCharsets.UTF_8))));
-    given(fdoRecordService.prepareUpdateAttributes(any(), any(), any())).willReturn(
-        existingRecord);
-    given(pidNameGeneratorService.genHandleList(0)).willReturn(new ArrayList<>());
-    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
-
-    // When
-    var response = service.upsertDigitalSpecimens(requests);
-
-    // Then
-    assertThat(response).isEqualTo(expected);
-    then(pidRepository).should()
-        .postAndUpdateHandles(CREATED.getEpochSecond(), new ArrayList<>(),
-            List.of(existingRecord));
-  }
-
-  @Test
-  void testUpsertDigitalSpecimensOnlyCreate() throws Exception {
-    // Given
-    List<JsonNode> requests = List.of(
-        genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(), RECORD_TYPE_DS));
-    var newRecord = genDigitalSpecimenAttributes(handles.get(1));
-    var expected = new JsonApiWrapperWrite(
-        List.of(upsertedResponse(getPrimarySpecimenObjectIds(newRecord), HANDLE_ALT))
-    );
-
-    given(pidRepository.searchByNormalisedPhysicalIdentifier(anyList())).willReturn(
-        new ArrayList<>());
-    given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(any(), any(), any())).willReturn(
-        newRecord);
-    given(pidNameGeneratorService.genHandleList(anyInt())).willReturn(List.of(handles.get(0)));
-    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
-
-    // When
-    var response = service.upsertDigitalSpecimens(requests);
-
-    // Then
-    assertThat(response).isEqualTo(expected);
-    then(pidRepository).should()
-        .postAndUpdateHandles(CREATED.getEpochSecond(), newRecord, new ArrayList<>());
-  }
-
-  @Test
   void testRollbackHandleCreation() {
     // Given
     var handleList = List.of(HANDLE, HANDLE_ALT);
@@ -959,22 +826,4 @@ class HandleServiceTest {
     then(pidRepository).should().rollbackHandles(List.of(HANDLE));
   }
 
-  JsonApiDataLinks upsertedResponse(List<HandleAttribute> handleRecord, String handle)
-      throws Exception {
-    JsonNode recordAttributes = genObjectNodeAttributeRecord(handleRecord);
-    var pidLink = new JsonApiLinks(HANDLE_URI + handle);
-    return new JsonApiDataLinks(handle, ObjectType.DIGITAL_SPECIMEN.toString(),
-        recordAttributes, pidLink);
-  }
-
-  private List<HandleAttribute> getPrimarySpecimenObjectIds(
-      List<HandleAttribute> handleAttributes) {
-    List<HandleAttribute> primaryIdList = new ArrayList<>();
-    for (var row : handleAttributes) {
-      if (row.getType().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())) {
-        primaryIdList.add(row);
-      }
-    }
-    return primaryIdList;
-  }
 }
