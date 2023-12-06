@@ -304,6 +304,8 @@ public abstract class PidService {
     if (!registeredRows.isEmpty()) {
       var registeredHandles = registeredRows.stream()
           .map(row -> new String(row.getHandle(), StandardCharsets.UTF_8)).toList();
+      log.error("Attempting to register identifiers for existing records");
+      log.debug("Handles already registered: {}", registeredHandles);
       throw new PidResolutionException(
           "Unable to create PID records. Some requested records are already registered. Verify the following digital specimens:"
               + registeredHandles);

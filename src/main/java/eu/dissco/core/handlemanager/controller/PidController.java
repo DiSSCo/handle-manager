@@ -99,7 +99,7 @@ public class PidController {
   }
 
   @Operation(summary = "Create single PID Record")
-  @PostMapping(value = "")
+  @PostMapping(value = "/")
   public ResponseEntity<JsonApiWrapperWrite> createRecord(@RequestBody JsonNode request,
       Authentication authentication)
       throws PidResolutionException, InvalidRequestException, PidCreationException {
@@ -147,7 +147,7 @@ public class PidController {
   }
 
   @Operation(summary = "Update multiple PID Records")
-  @PatchMapping(value = "")
+  @PatchMapping(value = "/")
   public ResponseEntity<JsonApiWrapperWrite> updateRecords(@RequestBody List<JsonNode> requests,
       Authentication authentication)
       throws InvalidRequestException, PidResolutionException, UnprocessableEntityException {
@@ -229,7 +229,7 @@ public class PidController {
 
 
   @Operation(summary = "Archive multiple PID records")
-  @PutMapping(value = "")
+  @PutMapping(value = "/")
   public ResponseEntity<JsonApiWrapperWrite> archiveRecords(@RequestBody List<JsonNode> requests,
       Authentication authentication)
       throws InvalidRequestException, PidResolutionException, UnprocessableEntityException {
