@@ -65,6 +65,7 @@ public class HandleService extends PidService {
         default -> throw new UnsupportedOperationException("Unrecognized type");
       }
     } catch (JsonProcessingException | PidResolutionException e) {
+      log.error("An error has occurred in processing request", e);
       throw new InvalidRequestException(
           "An error has occurred parsing a record in request. More information: " + e.getMessage());
     }
