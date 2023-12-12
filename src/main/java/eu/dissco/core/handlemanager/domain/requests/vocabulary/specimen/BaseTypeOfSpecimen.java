@@ -4,12 +4,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public enum BaseTypeOfSpecimen {
   @JsonProperty("Material entity") MATERIAL("Material entity"),
-  @JsonProperty("Information artefact") INFO("informationArtefact");
+  @JsonProperty("Information artefact") INFO("Information Artefact");
 
   private final String state;
 
 
-  private BaseTypeOfSpecimen(String state) {
+  BaseTypeOfSpecimen(String state) {
     this.state = state;
   }
 
