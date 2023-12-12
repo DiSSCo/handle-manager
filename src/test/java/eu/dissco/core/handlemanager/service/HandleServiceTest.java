@@ -64,6 +64,7 @@ import static org.mockito.Mockito.mockStatic;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.Profiles;
+import eu.dissco.core.handlemanager.domain.FdoProfile;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
@@ -358,28 +359,71 @@ class HandleServiceTest {
     var responseReceived = service.createRecords(List.of(request));
 
     // Then
+    then(pidRepository).should().postAttributesToDb(CREATED.getEpochSecond(), digitalSpecimen);
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
-
 
   @Test
   void testCreateDigitalSpecimenSpecimenExists() throws Exception {
     // Given
     byte[] handle = handles.get(0);
-    var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(),
+    var digitalSpecimen = givenDigitalSpecimenRequestObjectNullOptionals();
+    var request = genCreateRecordRequest(digitalSpecimen,
         RECORD_TYPE_DS);
-    List<HandleAttribute> digitalSpecimen = genDigitalSpecimenAttributes(handle);
+    List<HandleAttribute> digitalSpecimenAttributes = genDigitalSpecimenAttributes(handle);
+    var digitalSpecimenSublist = digitalSpecimenAttributes.stream()
+        .filter(row -> row.getType().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())).toList();
+    var responseExpected = givenRecordResponseWriteSmallResponse(digitalSpecimenSublist,
+        List.of(handle),
+        ObjectType.DIGITAL_SPECIMEN);
 
     given(pidNameGeneratorService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(pidRepository.searchByNormalisedPhysicalIdentifier(anyList())).willReturn(
-        digitalSpecimen);
+    given(pidRepository.checkHandlesWritable(anyList())).willReturn(List.of(handle));
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
+    given(pidRepository.searchByNormalisedPhysicalIdentifier(anyList())).willReturn(List.of(
+        new HandleAttribute(FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID, handle,
+            digitalSpecimen.getNormalisedPrimarySpecimenObjectId())));
+    given(fdoRecordService.prepareUpdateAttributes(any(), eq(request.get("data").get("attributes")),
+        eq(ObjectType.DIGITAL_SPECIMEN))).willReturn(digitalSpecimenAttributes);
 
     // When
-    Exception e = assertThrows(InvalidRequestException.class,
-        () -> service.createRecords(List.of(request)));
+    var result = service.createRecords(List.of(request));
 
     // Then
-    assertThat(e.getMessage()).contains(new String(handle, StandardCharsets.UTF_8));
+    then(pidRepository).should()
+        .updateRecordBatch(CREATED.getEpochSecond(), List.of(digitalSpecimenAttributes), true);
+    assertThat(result).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testCreateDigitalSpecimenSpecimenExistsNotWritable() throws Exception {
+    // Given
+    byte[] handle = handles.get(0);
+    var digitalSpecimen = givenDigitalSpecimenRequestObjectNullOptionals();
+    var request = genCreateRecordRequest(digitalSpecimen,
+        RECORD_TYPE_DS);
+    List<HandleAttribute> digitalSpecimenAttributes = genDigitalSpecimenAttributes(handle);
+    var digitalSpecimenSublist = digitalSpecimenAttributes.stream()
+        .filter(row -> row.getType().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())).toList();
+    var responseExpected = givenRecordResponseWriteSmallResponse(digitalSpecimenSublist,
+        List.of(handle),
+        ObjectType.DIGITAL_SPECIMEN);
+
+    given(pidNameGeneratorService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
+    given(pidRepository.searchByNormalisedPhysicalIdentifier(anyList())).willReturn(List.of(
+        new HandleAttribute(FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID, handle,
+            digitalSpecimen.getNormalisedPrimarySpecimenObjectId())));
+    given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(digitalSpecimen,
+        handle)).willReturn(digitalSpecimenAttributes);
+
+    // When
+    var result = service.createRecords(List.of(request));
+
+    // Then
+    then(pidRepository).should()
+        .postAttributesToDb(CREATED.getEpochSecond(), digitalSpecimenAttributes);
+    assertThat(result).isEqualTo(responseExpected);
   }
 
   @Test
@@ -424,6 +468,7 @@ class HandleServiceTest {
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
+
     var responseReceived = service.createRecords(List.of(request));
 
     // Then
