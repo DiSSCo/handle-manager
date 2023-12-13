@@ -6,6 +6,7 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.NORMALISED_SPECIMEN
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_RECORD_ISSUE_NUMBER;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
+import static org.jooq.impl.DSL.select;
 
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
@@ -73,8 +74,18 @@ public class PidRepository {
 
   public List<HandleAttribute> searchByNormalisedPhysicalIdentifier(
       List<byte[]> normalisedPhysicalIdentifiers) {
-
-    return searchByNormalisedPhysicalIdentifierQuery(normalisedPhysicalIdentifiers)
+    return context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA)
+        .from(HANDLES)
+        .where(HANDLES.HANDLE.in(select(HANDLES.HANDLE).from(HANDLES)
+            .where(HANDLES.TYPE.eq(PID_STATUS.get().getBytes(StandardCharsets.UTF_8)))
+            .and(HANDLES.DATA.notEqual("ARCHIVED".getBytes(StandardCharsets.UTF_8)))
+            .and(HANDLES.HANDLE.in(
+                select(HANDLES.HANDLE).from(HANDLES)
+                    .where(HANDLES.TYPE.eq(NORMALISED_SPECIMEN_OBJECT_ID.get().getBytes(
+                        StandardCharsets.UTF_8)))
+                    .and(HANDLES.DATA.in(normalisedPhysicalIdentifiers))
+            ))))
+        .and(HANDLES.TYPE.eq(NORMALISED_SPECIMEN_OBJECT_ID.get().getBytes(StandardCharsets.UTF_8)))
         .fetch(this::mapToAttribute);
   }
 

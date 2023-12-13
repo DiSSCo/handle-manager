@@ -344,13 +344,9 @@ public abstract class PidService {
     var registeredPhysicalIdentiferMap = registeredPhysicalIdentifiers.stream()
         .collect(Collectors.toMap(row -> new String(row.getData(), StandardCharsets.UTF_8),
             row -> new String(row.getHandle(), StandardCharsets.UTF_8)));
-    var writableHandles = pidRepository.checkHandlesWritable(
-            registeredPhysicalIdentiferMap.values().stream().map(s -> s.getBytes(
-                StandardCharsets.UTF_8)).toList()).stream()
-        .map(h -> new String(h, StandardCharsets.UTF_8)).collect(Collectors.toSet());
     var updates = specimenRequests.stream()
-        .filter(request -> requestExistsAndIsWriteable(request, registeredPhysicalIdentiferMap,
-            writableHandles))
+        .filter(request -> registeredPhysicalIdentiferMap.containsKey(
+            request.getNormalisedPrimarySpecimenObjectId()))
         .map(request -> new DigitalSpecimenUpdateWrapper(
             registeredPhysicalIdentiferMap.get(request.getNormalisedPrimarySpecimenObjectId()),
             request
@@ -364,14 +360,6 @@ public abstract class PidService {
         updates.stream().map(DigitalSpecimenUpdateWrapper::digitalSpecimenRequest).toList());
 
     return new ProcessedDigitalSpecimenRequest(specimenRequests, updates);
-  }
-
-  private boolean requestExistsAndIsWriteable(DigitalSpecimenRequest request,
-      Map<String, String> registeredPhysicalIdentifiers, Set<String> writableHandles) {
-    return registeredPhysicalIdentifiers.containsKey(request.getNormalisedPrimarySpecimenObjectId())
-        &&
-        writableHandles.contains(
-            registeredPhysicalIdentifiers.get(request.getNormalisedPrimarySpecimenObjectId()));
   }
 
   protected List<HandleAttribute> createMediaObject(List<JsonNode> requestAttributes,

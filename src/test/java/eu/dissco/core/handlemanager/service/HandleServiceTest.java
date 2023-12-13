@@ -378,7 +378,6 @@ class HandleServiceTest {
         ObjectType.DIGITAL_SPECIMEN);
 
     given(pidNameGeneratorService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(pidRepository.checkHandlesWritable(anyList())).willReturn(List.of(handle));
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
     given(pidRepository.searchByNormalisedPhysicalIdentifier(anyList())).willReturn(List.of(
         new HandleAttribute(FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID, handle,
@@ -392,37 +391,6 @@ class HandleServiceTest {
     // Then
     then(pidRepository).should()
         .updateRecordBatch(CREATED.getEpochSecond(), List.of(digitalSpecimenAttributes), true);
-    assertThat(result).isEqualTo(responseExpected);
-  }
-
-  @Test
-  void testCreateDigitalSpecimenSpecimenExistsNotWritable() throws Exception {
-    // Given
-    byte[] handle = handles.get(0);
-    var digitalSpecimen = givenDigitalSpecimenRequestObjectNullOptionals();
-    var request = genCreateRecordRequest(digitalSpecimen,
-        RECORD_TYPE_DS);
-    List<HandleAttribute> digitalSpecimenAttributes = genDigitalSpecimenAttributes(handle);
-    var digitalSpecimenSublist = digitalSpecimenAttributes.stream()
-        .filter(row -> row.getType().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())).toList();
-    var responseExpected = givenRecordResponseWriteSmallResponse(digitalSpecimenSublist,
-        List.of(handle),
-        ObjectType.DIGITAL_SPECIMEN);
-
-    given(pidNameGeneratorService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
-    given(pidRepository.searchByNormalisedPhysicalIdentifier(anyList())).willReturn(List.of(
-        new HandleAttribute(FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID, handle,
-            digitalSpecimen.getNormalisedPrimarySpecimenObjectId())));
-    given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(digitalSpecimen,
-        handle)).willReturn(digitalSpecimenAttributes);
-
-    // When
-    var result = service.createRecords(List.of(request));
-
-    // Then
-    then(pidRepository).should()
-        .postAttributesToDb(CREATED.getEpochSecond(), digitalSpecimenAttributes);
     assertThat(result).isEqualTo(responseExpected);
   }
 
