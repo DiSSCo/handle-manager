@@ -97,7 +97,7 @@ public enum FdoProfile {
   private final int index;
 
 
-  private FdoProfile(String attribute, int index) {
+  FdoProfile(String attribute, int index) {
     this.attribute = attribute;
     this.index = index;
   }

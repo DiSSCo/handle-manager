@@ -323,6 +323,24 @@ class PidRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
+  void testSearchByPhysicalSpecimenIdIsArchived() {
+    //Given
+    var handle = HANDLE.getBytes(StandardCharsets.UTF_8);
+    var record = List.of(new HandleAttribute(NORMALISED_SPECIMEN_OBJECT_ID, handle,
+            NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL),
+        new HandleAttribute(PID_STATUS, handle, "ARCHIVED"));
+
+    postAttributes(record);
+
+    // When
+    var response = pidRepository.searchByNormalisedPhysicalIdentifier(
+        List.of(NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+
+    // Then
+    assertThat(response).isEmpty();
+  }
+
+  @Test
   void testUpdateRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);

@@ -50,8 +50,9 @@ public class DoiService extends PidService {
     List<HandleAttribute> handleAttributes;
     try {
       switch (type) {
-        case DIGITAL_SPECIMEN ->
-            handleAttributes = createDigitalSpecimen(requestAttributes, handles);
+        case DIGITAL_SPECIMEN -> {
+          return upsertDigitalSpecimen(requestAttributes, handles);
+        }
         case MEDIA_OBJECT -> handleAttributes = createMediaObject(requestAttributes, handles);
         default -> throw new UnsupportedOperationException(
             type + " is not an appropriate Type for DOI endpoint.");
