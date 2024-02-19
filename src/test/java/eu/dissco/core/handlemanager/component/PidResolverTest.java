@@ -40,7 +40,7 @@ class PidResolverTest {
         .clientConnector(new ReactorClientHttpConnector(HttpClient.create().followRedirect(true)))
         .baseUrl(String.format("http://%s:%s", mockServer.getHostName(), mockServer.getPort()))
         .build();
-    pidResolver = new PidResolver(webClient);
+    pidResolver = new PidResolver(webClient, MAPPER);
   }
 
   @AfterAll
@@ -117,8 +117,11 @@ class PidResolverTest {
         .setResponseCode(HttpStatus.NOT_FOUND.value())
         .addHeader("Content-Type", "application/json"));
 
-    // then
-    assertThrows(PidResolutionException.class, () -> pidResolver.resolveQid("qid"));
+    // When
+    var response = pidResolver.resolveQid("Qid");
+
+    // Then
+    assertThat(response).isEqualTo("NOT FOUND");
   }
 
   @Test
@@ -139,15 +142,17 @@ class PidResolverTest {
   }
 
   @Test
-  void testResolveExternalPidNotFound() {
+  void testResolveExternalPidNotFound() throws Exception {
     // Given
     mockServer.enqueue(new MockResponse()
         .setResponseCode(HttpStatus.NOT_FOUND.value())
         .addHeader("Content-Type", "application/json"));
 
+    // When
+    var response = pidResolver.getObjectName(EXTERNAL_PID);
+
     // Then
-    assertThrows(PidResolutionException.class, () -> pidResolver.getObjectName(EXTERNAL_PID
-    ));
+    assertThat(response).isEqualTo("NOT FOUND");
   }
 
   @Test

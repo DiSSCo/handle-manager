@@ -1,6 +1,7 @@
 package eu.dissco.core.handlemanager.web;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import java.time.Duration;
@@ -22,6 +23,7 @@ import reactor.util.retry.Retry;
 public class PidResolver {
 
   private final WebClient webClient;
+  private final ObjectMapper mapper;
 
   @Cacheable("pidName")
   public String getObjectName(String pid)
@@ -75,7 +77,10 @@ public class PidResolver {
       log.warn("Interrupted connection. Unable to resolve the following: {}", url);
       Thread.currentThread().interrupt();
       if (e.getCause().getClass().equals(PidResolutionException.class)) {
-        throw new PidResolutionException(e.getMessage());
+        log.error("Unable to resolve pid. Putting placeholder", e);
+        return mapper.createObjectNode()
+            .put("name", "NOT FOUND")
+            .set("labels", mapper.createObjectNode().put("en", "NOT FOUND"));
       }
       throw new PidResolutionException(e.getMessage());
     }
