@@ -1,4 +1,4 @@
-# Date: Dec 1, 2023
-# Notes: Issue with logback. Spring boot needs to update its version
-# Currently forcing logback version
-# CVE-2023-6378
+# Date: Feb 19, 2024
+# Issue: Libexpat, parsing large tokens can trigger a denial of service
+# Solution: Update docker image
+CVE-2023-52425
