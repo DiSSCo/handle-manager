@@ -1,5 +1,5 @@
 package eu.dissco.core.handlemanager.domain.requests.objects;
 
-public record OtherSpecimenId(String id, String idType, String idName) {
+public record OtherSpecimenId(String identifierValue, String identifierType) {
 
 }
