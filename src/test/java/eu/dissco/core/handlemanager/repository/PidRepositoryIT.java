@@ -561,7 +561,7 @@ class PidRepositoryIT extends BaseRepositoryIT {
       if (handleAttributes.get(i).getType().equals(PID_RECORD_ISSUE_NUMBER.get())) {
         var removedRecord = handleAttributes.remove(i);
         var currentVersion = Integer.parseInt(new String(removedRecord.getData()));
-        var newVersionNum = increaseVersionNum ? currentVersion + 1 : currentVersion - 1;
+        var newVersionNum = increaseVersionNum ? currentVersion + 1 : currentVersion;
         byte[] issueNum = String.valueOf(newVersionNum).getBytes(StandardCharsets.UTF_8);
         handleAttributes.add(i,
             new HandleAttribute(removedRecord.getIndex(), removedRecord.getHandle(),

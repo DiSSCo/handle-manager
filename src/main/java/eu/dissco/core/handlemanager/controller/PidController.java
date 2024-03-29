@@ -47,7 +47,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class PidController {
 
   private final PidService service;
-
   private final JsonSchemaValidator schemaValidator;
   private final ApplicationProperties applicationProperties;
   private static final int LOG_LIMIT = 4;
@@ -151,14 +150,16 @@ public class PidController {
   public ResponseEntity<JsonApiWrapperWrite> updateRecords(@RequestBody List<JsonNode> requests,
       Authentication authentication)
       throws InvalidRequestException, PidResolutionException, UnprocessableEntityException {
+    var start = System.nanoTime();
     log.info("Validating batch update request from user {}", authentication.getName());
     for (JsonNode request : requests) {
       schemaValidator.validatePatchRequest(request);
     }
-    var ids = requests.stream().map(r -> r.get(NODE_DATA).get(NODE_ID).asText()).limit(LOG_LIMIT)
-        .toList();
-    log.info("Received valid batch update request for {} PIDS {} ...", requests.size(), ids);
-    return ResponseEntity.status(HttpStatus.OK).body(service.updateRecords(requests, true));
+    log.info("Received valid batch update request for {} PIDS", requests.size());
+    var result = service.updateRecords(requests, true);
+    var end = System.nanoTime();
+    log.info("** Total elapsed time: {}", (end - start) / 1000000);
+    return ResponseEntity.status(HttpStatus.OK).body(result);
   }
 
 
@@ -207,6 +208,7 @@ public class PidController {
   public ResponseEntity<JsonApiWrapperWrite> rollbackHandleUpdate(
       @RequestBody List<JsonNode> requests, Authentication authentication)
       throws InvalidRequestException, PidResolutionException, UnprocessableEntityException {
+
     log.info("Validating rollback update request from user {}", authentication.getName());
     for (JsonNode request : requests) {
       schemaValidator.validatePatchRequest(request);

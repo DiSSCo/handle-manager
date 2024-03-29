@@ -1,8 +1,3 @@
-# Date: Feb 19, 2024
-# Issue: Libexpat, parsing large tokens can trigger a denial of service
-# Solution: Update docker image
-CVE-2023-52425
-
 # Date: March 21, 2024
 # Issue: Vulnerability in spring-web
 # Solution: Spring boot needs to update its version of spring
