@@ -750,7 +750,7 @@ class FdoRecordServiceTest {
         PRIMARY_REFERENT_TYPE_TESTVAL, SPECIMEN_HOST_TESTVAL, SPECIMEN_HOST_NAME_TESTVAL,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, PrimarySpecimenObjectIdType.LOCAL, "b",
         NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, null,
-        List.of(new OtherSpecimenId("Id", "local identifier", "id for institute")),
+        List.of(new OtherSpecimenId("Id", "local identifier")),
         TopicOrigin.NATURAL, TopicDomain.LIFE, TopicDiscipline.ZOO, TopicCategory.AMPHIBIANS,
         LivingOrPreserved.LIVING, BaseTypeOfSpecimen.INFO, InformationArtefactType.MOVING_IMG,
         MaterialSampleType.ORG_PART, MaterialOrDigitalEntity.DIGITAL, false, HANDLE_ALT,
