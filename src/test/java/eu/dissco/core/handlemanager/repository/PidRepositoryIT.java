@@ -416,37 +416,6 @@ class PidRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
-  void testUpdateRecordBatchLargeVersion() throws Exception {
-    // Given
-    var handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    var record = genHandleRecordAttributes(handle);
-    var remove = new HandleAttribute(PID_RECORD_ISSUE_NUMBER.index(), handle,
-        PID_RECORD_ISSUE_NUMBER.get(),
-        "1".getBytes(StandardCharsets.UTF_8));
-    // These aren't valid integers, but this test is more about validating the byte incrementation
-    byte[] largeVersion = {0, 0, 0, Byte.MAX_VALUE};
-    byte[] nextVersion = {0, 0, 1, 0};
-    var newVersion = new HandleAttribute(PID_RECORD_ISSUE_NUMBER.index(), handle,
-        PID_RECORD_ISSUE_NUMBER.get(), largeVersion);
-    var expected = List.of(new HandleAttribute(PID_RECORD_ISSUE_NUMBER.index(), handle,
-        PID_RECORD_ISSUE_NUMBER.get(), nextVersion));
-    record.remove(remove);
-    record.add(newVersion);
-    var updateAttributes = List.of(genUpdateRecordAttributesAltLoc(handle));
-    postAttributes(record);
-
-    // When
-    pidRepository.updateRecordBatch(CREATED.getEpochSecond(), updateAttributes, true);
-    var response = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE, Handles.HANDLES.TYPE,
-            Handles.HANDLES.DATA).from(Handles.HANDLES)
-        .where(HANDLES.TYPE.eq(PID_RECORD_ISSUE_NUMBER.get().getBytes(StandardCharsets.UTF_8)))
-        .fetch(this::mapToAttribute);
-
-    // Then
-    assertThat(response).isEqualTo(expected);
-  }
-
-  @Test
   void testArchiveRecordBatch() throws Exception {
 
     // Given

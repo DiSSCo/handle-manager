@@ -150,15 +150,12 @@ public class PidController {
   public ResponseEntity<JsonApiWrapperWrite> updateRecords(@RequestBody List<JsonNode> requests,
       Authentication authentication)
       throws InvalidRequestException, PidResolutionException, UnprocessableEntityException {
-    var start = System.nanoTime();
     log.info("Validating batch update request from user {}", authentication.getName());
     for (JsonNode request : requests) {
       schemaValidator.validatePatchRequest(request);
     }
     log.info("Received valid batch update request for {} PIDS", requests.size());
     var result = service.updateRecords(requests, true);
-    var end = System.nanoTime();
-    log.info("** Total elapsed time: {}", (end - start) / 1000000);
     return ResponseEntity.status(HttpStatus.OK).body(result);
   }
 

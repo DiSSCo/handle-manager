@@ -237,22 +237,13 @@ public class PidRepository {
     return versions.entrySet().stream()
         .collect(Collectors.toMap(
             e -> new String(e.getKey(), StandardCharsets.UTF_8),
-            e -> {
-              incrementByteArray(e.getValue());
-              return e.getValue();
-            }
+            e -> incrementByteArray(e.getValue())
         ));
   }
 
-  private static void incrementByteArray(byte[] version) {
-    for (int i = version.length - 1; i >= 0; i--) {
-      if (version[i] == Byte.MAX_VALUE) { // Check for overflow
-        version[i] = 0; // Reset to 0 if overflow occurs
-      } else {
-        version[i]++; // Increment byte by 1
-        return; // Exit loop once increment is done
-      }
-    }
+  private static byte[] incrementByteArray(byte[] version) {
+    var originalVersion = Integer.parseInt(new String(version, StandardCharsets.UTF_8));
+    return String.valueOf(originalVersion + 1).getBytes(StandardCharsets.UTF_8);
   }
 
   public void rollbackHandles(List<String> handles) {
