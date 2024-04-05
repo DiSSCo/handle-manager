@@ -9,7 +9,7 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OB
 import static org.jooq.impl.DSL.select;
 
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.exceptions.PidCreationException;
+import eu.dissco.core.handlemanager.exceptions.DatabaseCopyException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -158,7 +158,7 @@ public class PidRepository {
 
   // Post
   public void postAttributesToDb(long recordTimestamp, List<HandleAttribute> handleAttributes)
-      throws PidCreationException {
+      throws DatabaseCopyException {
     batchInserter.batchCopy(recordTimestamp, handleAttributes);
   }
 

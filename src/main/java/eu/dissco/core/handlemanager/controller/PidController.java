@@ -10,6 +10,7 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperReadSingle;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.requests.RollbackRequest;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaValidator;
+import eu.dissco.core.handlemanager.exceptions.DatabaseCopyException;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -102,7 +103,7 @@ public class PidController {
   @PostMapping(value = "/")
   public ResponseEntity<JsonApiWrapperWrite> createRecord(@RequestBody JsonNode request,
       Authentication authentication)
-      throws PidResolutionException, InvalidRequestException, PidCreationException {
+      throws PidResolutionException, InvalidRequestException, PidCreationException, DatabaseCopyException {
     log.info("Received single POST request from user {}", authentication.getName());
     schemaValidator.validatePostRequest(request);
     return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(List.of(request)
@@ -113,7 +114,7 @@ public class PidController {
   @PostMapping(value = "/batch")
   public ResponseEntity<JsonApiWrapperWrite> createRecords(@RequestBody List<JsonNode> requests,
       Authentication authentication)
-      throws PidResolutionException, InvalidRequestException, PidCreationException {
+      throws PidResolutionException, InvalidRequestException, PidCreationException, DatabaseCopyException {
     log.info("Validating batch POST request from user {}", authentication.getName());
     for (JsonNode request : requests) {
       schemaValidator.validatePostRequest(request);

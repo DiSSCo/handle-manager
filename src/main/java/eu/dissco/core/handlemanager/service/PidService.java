@@ -31,6 +31,7 @@ import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenUpdat
 import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.ProcessedDigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
+import eu.dissco.core.handlemanager.exceptions.DatabaseCopyException;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -269,7 +270,7 @@ public abstract class PidService {
   // Create
   public abstract JsonApiWrapperWrite createRecords(
       List<JsonNode> requests)
-      throws PidResolutionException, InvalidRequestException, PidCreationException;
+      throws PidResolutionException, InvalidRequestException, PidCreationException, DatabaseCopyException;
 
   protected ObjectType getObjectType(List<JsonNode> requests) {
     var types = requests.stream()
@@ -284,7 +285,7 @@ public abstract class PidService {
 
   protected JsonApiWrapperWrite upsertDigitalSpecimen(List<JsonNode> requestAttributes,
       Iterator<byte[]> handleIterator)
-      throws InvalidRequestException, JsonProcessingException, PidResolutionException, PidCreationException {
+      throws InvalidRequestException, JsonProcessingException, PidResolutionException, DatabaseCopyException {
     var specimenRequests = new ArrayList<DigitalSpecimenRequest>();
     for (var request : requestAttributes) {
       specimenRequests.add(mapper.treeToValue(request, DigitalSpecimenRequest.class));
@@ -300,7 +301,7 @@ public abstract class PidService {
   private ArrayList<HandleAttribute> createNewDigitalSpecimenRecords(
       List<DigitalSpecimenRequest> specimenRequests, Iterator<byte[]> handleIterator,
       long recordTimestamp)
-      throws PidResolutionException, InvalidRequestException, PidCreationException {
+      throws PidResolutionException, InvalidRequestException, DatabaseCopyException {
     if (specimenRequests.isEmpty()) {
       return new ArrayList<>();
     }

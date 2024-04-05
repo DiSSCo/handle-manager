@@ -1,7 +1,7 @@
 package eu.dissco.core.handlemanager.repository;
 
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.exceptions.PidCreationException;
+import eu.dissco.core.handlemanager.exceptions.DatabaseCopyException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -21,7 +21,7 @@ public class BatchInserter {
   private final CopyManager copyManager;
 
   public void batchCopy(long recordTimestamp, List<HandleAttribute> handleAttributes)
-      throws PidCreationException {
+      throws DatabaseCopyException {
     try (var outputStream = new ByteArrayOutputStream()) {
       for (var row : handleAttributes) {
         outputStream.write(getCsvRow(recordTimestamp, row));
@@ -30,7 +30,7 @@ public class BatchInserter {
       copyManager.copyIn("COPY handles FROM stdin DELIMITER ','", inputStream);
     } catch (IOException | SQLException e) {
       log.error("Sql error: ", e);
-      throw new PidCreationException("Unable to insert handles into database.");
+      throw new DatabaseCopyException("Unable to insert new handles into database.");
     }
   }
 

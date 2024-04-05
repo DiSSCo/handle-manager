@@ -82,4 +82,18 @@ class PidControllerExceptionHandlerTest {
     assertThat(result.getBody()).isEqualTo(expectedBody);
   }
 
+  @Test
+  void testDatabaseCopyException() {
+    // Given
+    var expectedBody = new ExceptionResponse(HttpStatus.SERVICE_UNAVAILABLE.toString(),
+        "Database Exception", errorMessage);
+
+    // When
+    var result = exceptionHandler.databaseCopyException(
+        new UnprocessableEntityException(errorMessage));
+
+    // Then
+    assertThat(result.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+    assertThat(result.getBody()).isEqualTo(expectedBody);
+  }
 }
