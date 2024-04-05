@@ -46,10 +46,10 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecord
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMappingRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenOrganisationRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseNullAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseRead;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseReadSingle;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWrite;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteArchive;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteSmallResponse;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemRequestObject;
@@ -674,7 +674,7 @@ class HandleServiceTest {
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     var updateRequest = genUpdateRequestBatch(List.of(handle));
     var updatedAttributeRecord = genUpdateRecordAttributesAltLoc(handle);
-    var responseExpected = givenRecordResponseWriteAltLoc(List.of(handle));
+    var responseExpected = givenRecordResponseNullAttributes(List.of(handle));
 
     given(pidRepository.checkHandlesWritable(anyList())).willReturn(List.of(handle));
     given(fdoRecordService.prepareUpdateAttributes(any(), any(), any()))
@@ -686,6 +686,8 @@ class HandleServiceTest {
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
+    then(pidRepository).should()
+        .updateRecordBatch(CREATED.getEpochSecond(), List.of(updatedAttributeRecord), true);
   }
 
   @Test
@@ -694,7 +696,9 @@ class HandleServiceTest {
 
     List<JsonNode> updateRequest = genUpdateRequestBatch(handles);
 
-    var responseExpected = givenRecordResponseWriteAltLoc(handles);
+    var responseExpected = givenRecordResponseNullAttributes(handles);
+    var updatedAttributes = List.of(genUpdateRecordAttributesAltLoc(handles.get(0)),
+        genUpdateRecordAttributesAltLoc(handles.get(1)));
 
     given(pidRepository.checkHandlesWritable(anyList())).willReturn(handles);
     given(fdoRecordService.prepareUpdateAttributes(any(), any(), any()))
@@ -706,6 +710,8 @@ class HandleServiceTest {
     var responseReceived = service.updateRecords(updateRequest, true);
 
     // Then
+    then(pidRepository).should()
+        .updateRecordBatch(CREATED.getEpochSecond(), updatedAttributes, true);
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
 

@@ -389,6 +389,33 @@ class PidRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
+  void testUpdateRecordBatchNoIncrement() throws Exception {
+
+    // Given
+    List<byte[]> handles = List.of(HANDLE.getBytes(StandardCharsets.UTF_8),
+        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
+
+    List<List<HandleAttribute>> updateAttributes = new ArrayList<>();
+    List<HandleAttribute> responseExpected = new ArrayList<>();
+    for (byte[] handle : handles) {
+      postAttributes(genHandleRecordAttributes(handle));
+      updateAttributes.add(genUpdateRecordAttributesAltLoc(handle));
+      responseExpected.addAll(incrementVersion(genHandleRecordAttributesAltLoc(handle), false));
+    }
+
+    // When
+    pidRepository.updateRecordBatch(CREATED.getEpochSecond(), updateAttributes, false);
+    var responseReceived = context.select(Handles.HANDLES.IDX, Handles.HANDLES.HANDLE,
+            Handles.HANDLES.TYPE, Handles.HANDLES.DATA).from(Handles.HANDLES)
+        .where(Handles.HANDLES.HANDLE.in(handles)).and(Handles.HANDLES.TYPE.notEqual(
+            HS_ADMIN.get().getBytes(StandardCharsets.UTF_8))) // Omit HS_ADMIN
+        .fetch(this::mapToAttribute);
+
+    // Then
+    assertThat(responseReceived).hasSameElementsAs(responseExpected);
+  }
+
+  @Test
   void testArchiveRecordBatch() throws Exception {
 
     // Given
@@ -561,7 +588,7 @@ class PidRepositoryIT extends BaseRepositoryIT {
       if (handleAttributes.get(i).getType().equals(PID_RECORD_ISSUE_NUMBER.get())) {
         var removedRecord = handleAttributes.remove(i);
         var currentVersion = Integer.parseInt(new String(removedRecord.getData()));
-        var newVersionNum = increaseVersionNum ? currentVersion + 1 : currentVersion - 1;
+        var newVersionNum = increaseVersionNum ? currentVersion + 1 : currentVersion;
         byte[] issueNum = String.valueOf(newVersionNum).getBytes(StandardCharsets.UTF_8);
         handleAttributes.add(i,
             new HandleAttribute(removedRecord.getIndex(), removedRecord.getHandle(),

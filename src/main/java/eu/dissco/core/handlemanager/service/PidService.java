@@ -116,14 +116,12 @@ public abstract class PidService {
     List<JsonApiDataLinks> dataLinksList = new ArrayList<>();
     for (var handleRecord : handleMap.entrySet()) {
       var hashRow = handleRecord.getValue().stream()
-          .filter(row -> row.getType().equals(ANNOTATION_HASH.get()))
-          .findFirst();
+          .filter(row -> row.getType().equals(ANNOTATION_HASH.get())).findFirst();
       var subRecord = hashRow.map(List::of).orElse(handleRecord.getValue());
       var rootNode = jsonFormatSingleRecord(subRecord);
       String pidLink = profileProperties.getDomain() + handleRecord.getKey();
-      dataLinksList.add(
-          new JsonApiDataLinks(handleRecord.getKey(), ANNOTATION.toString(), rootNode,
-              new JsonApiLinks(pidLink)));
+      dataLinksList.add(new JsonApiDataLinks(handleRecord.getKey(), ANNOTATION.toString(), rootNode,
+          new JsonApiLinks(pidLink)));
     }
     return dataLinksList;
   }
@@ -148,9 +146,8 @@ public abstract class PidService {
     List<JsonApiDataLinks> dataLinksList = new ArrayList<>();
     for (var handleRecord : handleMap.entrySet()) {
       var subRecord = handleRecord.getValue().stream().filter(
-              row -> row.getType().equals(PRIMARY_MEDIA_ID.get()) || row.getType()
-                  .equals(LINKED_DO_PID.get()))
-          .toList();
+          row -> row.getType().equals(PRIMARY_MEDIA_ID.get()) || row.getType()
+              .equals(LINKED_DO_PID.get())).toList();
       var rootNode = jsonFormatSingleRecord(subRecord);
       String pidLink = profileProperties.getDomain() + handleRecord.getKey();
       dataLinksList.add(
@@ -166,9 +163,8 @@ public abstract class PidService {
     for (var handleRecord : handleMap.entrySet()) {
       var rootNode = jsonFormatSingleRecord(handleRecord.getValue());
       String pidLink = profileProperties.getDomain() + handleRecord.getKey();
-      dataLinksList.add(
-          new JsonApiDataLinks(handleRecord.getKey(), objectType.toString(), rootNode,
-              new JsonApiLinks(pidLink)));
+      dataLinksList.add(new JsonApiDataLinks(handleRecord.getKey(), objectType.toString(), rootNode,
+          new JsonApiLinks(pidLink)));
     }
     return dataLinksList;
   }
@@ -196,8 +192,7 @@ public abstract class PidService {
 
   private String getRecordType(List<HandleAttribute> dbRecord) {
     var type = dbRecord.stream().filter(row -> row.getType().equals(REFERENT_TYPE.get()))
-        .map(val -> new String(val.getData(), StandardCharsets.UTF_8))
-        .findFirst();
+        .map(val -> new String(val.getData(), StandardCharsets.UTF_8)).findFirst();
     return type.orElse(ObjectType.HANDLE.toString());
   }
 
@@ -230,15 +225,12 @@ public abstract class PidService {
 
   private void verifyHandleResolution(List<byte[]> handles, List<HandleAttribute> dbRecords)
       throws PidResolutionException {
-    var resolvedHandles = dbRecords.stream()
-        .map(HandleAttribute::getHandle)
-        .map(handle -> new String(handle, StandardCharsets.UTF_8))
-        .collect(Collectors.toSet());
+    var resolvedHandles = dbRecords.stream().map(HandleAttribute::getHandle)
+        .map(handle -> new String(handle, StandardCharsets.UTF_8)).collect(Collectors.toSet());
     if (handles.size() == resolvedHandles.size()) {
       return;
     }
-    var handlesString = handles.stream()
-        .map(handle -> new String(handle, StandardCharsets.UTF_8))
+    var handlesString = handles.stream().map(handle -> new String(handle, StandardCharsets.UTF_8))
         .collect(Collectors.toSet());
     handlesString.removeAll(resolvedHandles);
     log.error("Unable to resolve the following identifiers: {}", handlesString);
@@ -273,8 +265,7 @@ public abstract class PidService {
       throws PidResolutionException, InvalidRequestException, PidCreationException, DatabaseCopyException;
 
   protected ObjectType getObjectType(List<JsonNode> requests) {
-    var types = requests.stream()
-        .map(request -> request.get(NODE_DATA).get(NODE_TYPE).asText())
+    var types = requests.stream().map(request -> request.get(NODE_DATA).get(NODE_TYPE).asText())
         .collect(Collectors.toSet());
     var type = types.stream().findFirst();
     if (type.isEmpty() || types.size() != 1) {
@@ -337,22 +328,20 @@ public abstract class PidService {
 
   private ProcessedDigitalSpecimenRequest processSpecimenRequests(
       ArrayList<DigitalSpecimenRequest> specimenRequests) {
-    var physicalIds = specimenRequests.stream()
-        .map(request -> request.getNormalisedPrimarySpecimenObjectId().getBytes(
-            StandardCharsets.UTF_8)).toList();
+    var physicalIds = specimenRequests.stream().map(
+            request -> request.getNormalisedPrimarySpecimenObjectId().getBytes(StandardCharsets.UTF_8))
+        .toList();
     var registeredPhysicalIdentifiers = pidRepository.searchByNormalisedPhysicalIdentifier(
         physicalIds);
-    var registeredPhysicalIdentiferMap = registeredPhysicalIdentifiers.stream()
-        .collect(Collectors.toMap(row -> new String(row.getData(), StandardCharsets.UTF_8),
+    var registeredPhysicalIdentiferMap = registeredPhysicalIdentifiers.stream().collect(
+        Collectors.toMap(row -> new String(row.getData(), StandardCharsets.UTF_8),
             row -> new String(row.getHandle(), StandardCharsets.UTF_8)));
-    var updates = specimenRequests.stream()
-        .filter(request -> registeredPhysicalIdentiferMap.containsKey(
-            request.getNormalisedPrimarySpecimenObjectId()))
-        .map(request -> new DigitalSpecimenUpdateWrapper(
+    var updates = specimenRequests.stream().filter(
+        request -> registeredPhysicalIdentiferMap.containsKey(
+            request.getNormalisedPrimarySpecimenObjectId())).map(
+        request -> new DigitalSpecimenUpdateWrapper(
             registeredPhysicalIdentiferMap.get(request.getNormalisedPrimarySpecimenObjectId()),
-            request
-        ))
-        .toList();
+            request)).toList();
     if (!updates.isEmpty()) {
       log.debug("Existing records: {}",
           updates.stream().map(DigitalSpecimenUpdateWrapper::handle).toList());
@@ -377,8 +366,7 @@ public abstract class PidService {
   }
 
   // Update
-  public JsonApiWrapperWrite updateRecords(List<JsonNode> requests,
-      boolean incrementVersion)
+  public JsonApiWrapperWrite updateRecords(List<JsonNode> requests, boolean incrementVersion)
       throws InvalidRequestException, PidResolutionException, UnprocessableEntityException {
     var recordTimestamp = Instant.now().getEpochSecond();
     List<byte[]> handles = new ArrayList<>();
@@ -393,19 +381,17 @@ public abstract class PidService {
       var attributes = fdoRecordService.prepareUpdateAttributes(handle, requestAttributes, type);
       attributesToUpdate.add(attributes);
     }
+
     checkInternalDuplicates(handles);
     checkHandlesWritable(handles);
-
     pidRepository.updateRecordBatch(recordTimestamp, attributesToUpdate, incrementVersion);
-    return formatUpdates(attributesToUpdate, recordType);
+    return formatUpdates(handles.stream().map(h -> new String(h, StandardCharsets.UTF_8)).toList(),
+        recordType);
   }
 
   protected void checkInternalDuplicates(List<byte[]> handles) throws InvalidRequestException {
-    Set<String> handlesToUpdateStr = new HashSet<>();
-    for (byte[] handle : handles) {
-      handlesToUpdateStr.add(new String(handle, StandardCharsets.UTF_8));
-    }
-
+    Set<String> handlesToUpdateStr = handles.stream()
+        .map(h -> new String(h, StandardCharsets.UTF_8)).collect(Collectors.toSet());
     if (handlesToUpdateStr.size() < handles.size()) {
       Set<String> duplicateHandles = findDuplicates(handles, handlesToUpdateStr);
       throw new InvalidRequestException(
@@ -424,13 +410,10 @@ public abstract class PidService {
     return duplicateHandles;
   }
 
-  protected JsonApiWrapperWrite formatUpdates(List<List<HandleAttribute>> updatedRecords,
-      ObjectType type) {
+  protected JsonApiWrapperWrite formatUpdates(List<String> handles, ObjectType type) {
     List<JsonApiDataLinks> dataList = new ArrayList<>();
-    for (var updatedRecord : updatedRecords) {
-      String handle = new String(updatedRecord.get(0).getHandle(), StandardCharsets.UTF_8);
-      var attributeNode = jsonFormatSingleRecord(updatedRecord);
-      dataList.add(new JsonApiDataLinks(handle, type.toString(), attributeNode,
+    for (var handle : handles) {
+      dataList.add(new JsonApiDataLinks(handle, type.toString(), null,
           new JsonApiLinks(profileProperties.getDomain() + handle)));
     }
     return new JsonApiWrapperWrite(dataList);
@@ -442,8 +425,7 @@ public abstract class PidService {
     if (handlesExist.size() < handles.size()) {
       handlesToUpdate.removeAll(handlesExist);
       Set<String> handlesDontExist = handlesToUpdate.stream()
-          .map(h -> new String(h, StandardCharsets.UTF_8)).collect(
-              Collectors.toSet());
+          .map(h -> new String(h, StandardCharsets.UTF_8)).collect(Collectors.toSet());
       throw new PidResolutionException(
           "INVALID INPUT. One or more identifiers in request do not exist or are archived. Verify the following handle(s): "
               + handlesDontExist);
