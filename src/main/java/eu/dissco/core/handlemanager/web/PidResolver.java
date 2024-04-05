@@ -37,7 +37,7 @@ public class PidResolver {
     return "";
   }
 
-  @Cacheable("Qid")
+  @Cacheable("qid")
   public String resolveQid(String qid) throws PidResolutionException {
     try {
       var qidRecord = resolveExternalPid(qid);
@@ -51,7 +51,6 @@ public class PidResolver {
           "An error has occured in resolving a QID: " + e.getMessage());
     }
   }
-
 
   private JsonNode resolveExternalPid(String url)
       throws PidResolutionException {
