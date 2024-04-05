@@ -17,9 +17,9 @@ public class BatchInserterConfig {
 
   @Bean
   public CopyManager copyManager() throws SQLException {
-    var connection = DriverManager.getConnection(properties.getUrl(), properties.getUsername(),
-        properties.getPassword());
-    return new CopyManager((BaseConnection) connection);
+    try (var connection = DriverManager.getConnection(properties.getUrl(), properties.getUsername(),
+        properties.getPassword())) {
+      return new CopyManager((BaseConnection) connection);
+    }
   }
-
 }
