@@ -595,21 +595,21 @@ public class FdoRecordService {
       throws InvalidRequestException, UnprocessableEntityException, PidResolutionException {
     requestAttributes = setLocationXmlFromJson(requestAttributes,
         new String(handle, StandardCharsets.UTF_8), type);
-    Map<String, String> updateRequestMap = mapper.convertValue(requestAttributes,
-        new TypeReference<Map<String, String>>() {
+    Map<String, Object> updateRequestMap = mapper.convertValue(requestAttributes,
+        new TypeReference<Map<String, Object>>() {
         });
 
     var updatedAttributeList = new ArrayList<>(updateRequestMap.entrySet().stream()
         .filter(entry -> entry.getValue() != null)
         .map(entry -> new HandleAttribute(FdoProfile.retrieveIndex(entry.getKey()), handle,
             entry.getKey(),
-            entry.getValue().getBytes(StandardCharsets.UTF_8)))
+            entry.getValue().toString().getBytes(StandardCharsets.UTF_8)))
         .toList());
     updatedAttributeList.addAll(addResolvedNames(updateRequestMap, handle));
     return updatedAttributeList;
   }
 
-  private List<HandleAttribute> addResolvedNames(Map<String, String> updateRequestMap,
+  private List<HandleAttribute> addResolvedNames(Map<String, Object> updateRequestMap,
       byte[] handle)
       throws UnprocessableEntityException, PidResolutionException, InvalidRequestException {
     var resolvableKeys = updateRequestMap.entrySet()
@@ -624,14 +624,14 @@ public class FdoRecordService {
     for (var resolvableKey : resolvableKeys.entrySet()) {
       var targetAttribute = RESOLVABLE_KEYS.get(resolvableKey.getKey());
 
-      var resolvedPid = prepareRorOrHandle(resolvableKey.getValue());
+      var resolvedPid = prepareRorOrHandle(resolvableKey.getValue().toString());
       resolvedPidNameAttributes.add(new HandleAttribute(FdoProfile.retrieveIndex(targetAttribute),
           handle, targetAttribute, resolvedPid.getBytes(StandardCharsets.UTF_8)));
     }
     return resolvedPidNameAttributes;
   }
 
-  private boolean hasResolvedPairInRequest(Map<String, String> updateRequestMap,
+  private boolean hasResolvedPairInRequest(Map<String, Object> updateRequestMap,
       String pidToResolve) {
     var targetName = RESOLVABLE_KEYS.get(pidToResolve);
     return updateRequestMap.containsKey(targetName);
