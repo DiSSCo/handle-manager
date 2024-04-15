@@ -281,6 +281,7 @@ public abstract class PidService {
     if (specimenRequests.isEmpty()) {
       return new ArrayList<>();
     }
+    verifySpecimensAreNew(specimenRequests);
     var handleAttributes = new ArrayList<HandleAttribute>();
     for (var request : specimenRequests) {
       var thisHandle = handleIterator.next();
@@ -289,6 +290,27 @@ public abstract class PidService {
     }
     return handleAttributes;
   }
+
+  private void verifySpecimensAreNew(List<DigitalSpecimenRequest> requests)
+      throws InvalidRequestException {
+    var normalisedIds = requests.stream().map(
+            request -> request.getNormalisedPrimarySpecimenObjectId().getBytes(StandardCharsets.UTF_8))
+        .toList();
+    var existingHandles = pidRepository.searchByNormalisedPhysicalIdentifier(normalisedIds);
+    if (!existingHandles.isEmpty()) {
+      log.error("Unable to create new handles, as ");
+      var handleMap = existingHandles.stream()
+          .collect(Collectors.toMap(ha -> new String(ha.getHandle(), StandardCharsets.UTF_8),
+              ha -> new String(ha.getData(), StandardCharsets.UTF_8)));
+      log.error(
+          "Unable to create new handles, as they already exist. Verify the following identifiers: {}",
+          handleMap);
+      throw new InvalidRequestException(
+          "Attempting to create handle records for specimens already in system");
+    }
+
+  }
+
 
   protected List<HandleAttribute> createMediaObject(List<JsonNode> requestAttributes,
       Iterator<byte[]> handleIterator)
@@ -417,7 +439,8 @@ public abstract class PidService {
   public void rollbackHandlesFromPhysId(List<String> physicalIds) {
     var physicalIdsBytes = physicalIds.stream().map(id -> id.getBytes(StandardCharsets.UTF_8))
         .toList();
-    var handles = pidRepository.searchByNormalisedPhysicalIdentifier(physicalIdsBytes);
+    var handles = pidRepository.searchByNormalisedPhysicalIdentifier(physicalIdsBytes)
+        .stream().map(ha -> new String(ha.getHandle(), StandardCharsets.UTF_8)).toList();
     pidRepository.rollbackHandles(handles);
   }
 

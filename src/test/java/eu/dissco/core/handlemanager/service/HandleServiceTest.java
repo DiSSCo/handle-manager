@@ -2,6 +2,7 @@ package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.domain.FdoProfile.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_DO_PID;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_MEDIA_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
@@ -64,6 +65,7 @@ import static org.mockito.Mockito.mockStatic;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.Profiles;
+import eu.dissco.core.handlemanager.domain.FdoProfile;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
@@ -354,6 +356,23 @@ class HandleServiceTest {
     // Then
     then(pidRepository).should().postAttributesToDb(CREATED.getEpochSecond(), digitalSpecimen);
     assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testCreateDigitalSpecimenSpecimenAlreadyExists() {
+    // Given
+    byte[] handle = handles.get(0);
+    var digitalSpecimen = givenDigitalSpecimenRequestObjectNullOptionals();
+    var request = genCreateRecordRequest(digitalSpecimen,
+        RECORD_TYPE_DS);
+
+    given(pidNameGeneratorService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
+    given(pidRepository.searchByNormalisedPhysicalIdentifier(anyList())).willReturn(List.of(
+        new HandleAttribute(FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID, handle,
+            digitalSpecimen.getNormalisedPrimarySpecimenObjectId())));
+
+    // When Then
+    assertThrows(InvalidRequestException.class, () -> service.createRecords(List.of(request)));
   }
 
   @Test
@@ -789,11 +808,12 @@ class HandleServiceTest {
   void testRollbackHandlesFromPhysId() {
     // Given
     given(pidRepository.searchByNormalisedPhysicalIdentifier(anyList())).willReturn(
-        List.of(HANDLE));
+        List.of(new HandleAttribute(NORMALISED_SPECIMEN_OBJECT_ID,
+            HANDLE.getBytes(StandardCharsets.UTF_8), PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL)));
 
     // When
     service.rollbackHandlesFromPhysId(
-        List.of(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, "This phys id is not in the database"));
+        List.of(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL));
 
     // Then
     then(pidRepository).should().rollbackHandles(List.of(HANDLE));

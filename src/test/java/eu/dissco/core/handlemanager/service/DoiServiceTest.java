@@ -38,6 +38,7 @@ import eu.dissco.core.handlemanager.domain.datacite.DataCiteEvent;
 import eu.dissco.core.handlemanager.domain.datacite.EventType;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
+import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.PidRepository;
@@ -109,8 +110,7 @@ class DoiServiceTest {
         .filter(row -> row.getType().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())).toList();
 
     var responseExpected = givenRecordResponseWriteSmallResponse(digitalSpecimenSublist,
-        List.of(handle),
-        ObjectType.DIGITAL_SPECIMEN);
+        List.of(handle), ObjectType.DIGITAL_SPECIMEN);
     var dataCiteEvent = new DataCiteEvent(List.of(genObjectNodeAttributeRecord(digitalSpecimen)),
         EventType.CREATE);
     given(pidNameGeneratorService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
@@ -130,19 +130,17 @@ class DoiServiceTest {
   void testCreateMediaObject() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    var request = genCreateRecordRequest(givenMediaRequestObject(),
-        RECORD_TYPE_MEDIA);
+    var request = genCreateRecordRequest(givenMediaRequestObject(), RECORD_TYPE_MEDIA);
     List<HandleAttribute> mediaObject = genMediaObjectAttributes(handle);
-    var mediaSublist = mediaObject.stream()
-        .filter(row -> row.getType().equals(PRIMARY_MEDIA_ID.get()) || row.getType()
+    var mediaSublist = mediaObject.stream().filter(
+        row -> row.getType().equals(PRIMARY_MEDIA_ID.get()) || row.getType()
             .equals(LINKED_DO_PID.get())).toList();
-    var responseExpected = givenRecordResponseWriteSmallResponse(mediaSublist,
-        List.of(handle), ObjectType.MEDIA_OBJECT);
+    var responseExpected = givenRecordResponseWriteSmallResponse(mediaSublist, List.of(handle),
+        ObjectType.MEDIA_OBJECT);
     var dataCiteEvent = new DataCiteEvent(List.of(genObjectNodeAttributeRecord(mediaObject)),
         EventType.CREATE);
     given(pidNameGeneratorService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(fdoRecordService.prepareMediaObjectAttributes(any(), any())).willReturn(
-        mediaObject);
+    given(fdoRecordService.prepareMediaObjectAttributes(any(), any())).willReturn(mediaObject);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
@@ -199,6 +197,17 @@ class DoiServiceTest {
         .updateRecordBatch(CREATED.getEpochSecond(), List.of(updatedAttributeRecord), true);
     then(dataCiteService).should().publishToDataCite(expectedEvent, ObjectType.DIGITAL_SPECIMEN);
   }
+
+  @Test
+  void testUpdateInvalidType() {
+    // Given
+    var updateRequest = genUpdateRequestBatch(List.of(HANDLE.getBytes(StandardCharsets.UTF_8)),
+        ObjectType.HANDLE);
+
+    // When Then
+    assertThrows(InvalidRequestException.class, () -> service.updateRecords(updateRequest, true));
+  }
+
 
   @Test
   void testUpdateRecordLocationDataCiteFails() throws Exception {
