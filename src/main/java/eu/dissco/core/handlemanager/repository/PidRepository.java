@@ -60,7 +60,7 @@ public class PidRepository {
         .fetch(this::mapToAttribute);
   }
 
-  public List<HandleAttribute> searchByNormalisedPhysicalIdentifier(
+  public List<String> searchByNormalisedPhysicalIdentifier(
       List<byte[]> normalisedPhysicalIdentifiers) {
     return context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA).from(HANDLES)
         .where(HANDLES.HANDLE.in(select(HANDLES.HANDLE).from(HANDLES)
@@ -70,7 +70,7 @@ public class PidRepository {
                         NORMALISED_SPECIMEN_OBJECT_ID.get().getBytes(StandardCharsets.UTF_8)))
                     .and(HANDLES.DATA.in(normalisedPhysicalIdentifiers))))))
         .and(HANDLES.TYPE.eq(NORMALISED_SPECIMEN_OBJECT_ID.get().getBytes(StandardCharsets.UTF_8)))
-        .fetch(this::mapToAttribute);
+        .fetch(this::mapToHandleName);
   }
 
   public List<HandleAttribute> getPrimarySpecimenObjectId(List<byte[]> handles) {
@@ -114,6 +114,10 @@ public class PidRepository {
     int offset = getOffset(pageNum, pageSize);
     return context.selectDistinct(HANDLES.HANDLE).from(HANDLES).limit(pageSize).offset(offset)
         .fetch().getValues(HANDLES.HANDLE, String.class);
+  }
+
+  private String mapToHandleName(Record4<Integer, byte[], byte[], byte[]> row) {
+    return new String(row.get(HANDLES.HANDLE), StandardCharsets.UTF_8);
   }
 
   private HandleAttribute mapToAttribute(Record4<Integer, byte[], byte[], byte[]> row) {
