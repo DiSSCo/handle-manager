@@ -319,7 +319,7 @@ class PidRepositoryIT extends BaseRepositoryIT {
         List.of(NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     // Then
-    assertThat(response).isEqualTo(List.of(HANDLE));
+    assertThat(response).isEqualTo(dbRecord);
   }
 
   @Test
