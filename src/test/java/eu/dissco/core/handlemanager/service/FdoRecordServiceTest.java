@@ -382,8 +382,8 @@ class FdoRecordServiceTest {
   @Test
   void testPrepareDigitalSpecimenRecordMandatoryAttributesQNumber() throws Exception {
     // Given
-    String qid = "https://wikidata.org/Q12345";
-    String qidUrl = "https://wikidata.org/w/rest.php/wikibase/v0/entities/items/" + qid;
+    String qid = "https://www.wikidata.org/wiki/Q12345";
+    String qidUrl = "https://wikidata.org/w/rest.php/wikibase/v0/entities/items/Q12345";
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
     given(pidResolver.resolveQid(any())).willReturn("placeholder");
     var request = new DigitalSpecimenRequest(FDO_PROFILE_TESTVAL, ISSUED_FOR_AGENT_TESTVAL,
@@ -638,17 +638,6 @@ class FdoRecordServiceTest {
     assertThrows(PidResolutionException.class,
         () -> fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle
         ));
-  }
-
-  @Test
-  void testBadHandle() {
-    // Given
-    var request = new HandleRecordRequest(FDO_PROFILE_TESTVAL, ISSUED_FOR_AGENT_TESTVAL, "abc",
-        ISSUED_FOR_AGENT_TESTVAL, STRUCTURAL_TYPE_TESTVAL, null);
-
-    var e = assertThrows(InvalidRequestException.class,
-        () -> fdoRecordService.prepareHandleRecordAttributes(request, handle, ObjectType.HANDLE));
-    assertThat(e.getMessage()).contains(HANDLE_DOMAIN);
   }
 
   @Test

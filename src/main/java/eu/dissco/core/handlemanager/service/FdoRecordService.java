@@ -137,7 +137,7 @@ public class FdoRecordService {
   private static final String DOI_DOMAIN = "https://doi.org/";
   private static final String ROR_API_DOMAIN = "https://api.ror.org/organizations/";
   private static final String ROR_DOMAIN = "https://ror.org/";
-  private static final String WIKIDATA_DOMAIN = "https://wikidata.org";
+  private static final String WIKIDATA_DOMAIN = "https://www.wikidata.org/wiki/";
   private static final String WIKIDATA_API = "https://wikidata.org/w/rest.php/wikibase/v0/entities/items/";
   private static final String PROXY_ERROR = "Invalid attribute: %s must contain proxy: %s";
   private static final String PID_KERNEL_METADATA_LICENSE = "https://creativecommons.org/publicdomain/zero/1.0/";
@@ -187,7 +187,6 @@ public class FdoRecordService {
     fdoRecord.add(new HandleAttribute(DIGITAL_OBJECT_TYPE, handle, request.getDigitalObjectType()));
 
     // 4: DigitalObjectName
-    checkHandle(request.getDigitalObjectType());
     var digitalObjectName = pidResolver.getObjectName(request.getDigitalObjectType());
     fdoRecord.add(new HandleAttribute(DIGITAL_OBJECT_NAME, handle, digitalObjectName));
 
@@ -243,12 +242,6 @@ public class FdoRecordService {
       throw new InvalidRequestException(String.format(PROXY_ERROR, url, ROR_DOMAIN));
     }
     return url.replace(ROR_DOMAIN, ROR_API_DOMAIN);
-  }
-
-  private static void checkHandle(String url) throws InvalidRequestException {
-    if (!url.contains(HANDLE_DOMAIN)) {
-      throw new InvalidRequestException(String.format(PROXY_ERROR, url, HANDLE_DOMAIN));
-    }
   }
 
   public List<HandleAttribute> prepareDoiRecordAttributes(DoiRecordRequest request, byte[] handle,
@@ -566,30 +559,17 @@ public class FdoRecordService {
       return new HandleAttribute(targetAttribute, handle, hostName);
     } else {
       String hostNameResolved;
-      try {
-        if (isAcceptedSpecimenHostId(hostId)) {
-          if (hostId.contains(ROR_DOMAIN)) {
-            hostNameResolved = pidResolver.getObjectName(getRor(hostId));
-          } else {
-            hostNameResolved = pidResolver.resolveQid(WIKIDATA_API + hostId);
-          }
-          return new HandleAttribute(targetAttribute, handle, hostNameResolved);
-        } else {
-          log.error("Specimen host ID {} is neither QID nor ROR.", hostId);
-          throw new PidResolutionException("Invalid host id: " + hostId);
-        }
-      } catch (UnprocessableEntityException | InvalidRequestException |
-               PidResolutionException e) {
-        log.error(
-            "AgentId is not a resolvable ROR and no Name is provided in the request for the field {}",
-            targetAttribute.get(), e);
-        throw new PidResolutionException("Unable to resolve Host Id" + e.getMessage());
+      if (hostId.contains(ROR_DOMAIN)) {
+        hostNameResolved = pidResolver.getObjectName(hostId.replace(ROR_DOMAIN, ROR_API_DOMAIN));
+        return new HandleAttribute(targetAttribute, handle, hostNameResolved);
+      } else if (hostId.contains(WIKIDATA_DOMAIN)) {
+        hostNameResolved = pidResolver.resolveQid(hostId.replace(WIKIDATA_DOMAIN, WIKIDATA_API));
+      } else {
+        log.error("Specimen host ID {} is neither QID nor ROR.", hostId);
+        throw new PidResolutionException("Invalid host id: " + hostId);
       }
+      return new HandleAttribute(targetAttribute, handle, hostNameResolved);
     }
-  }
-
-  private boolean isAcceptedSpecimenHostId(String id) {
-    return (id.contains(ROR_DOMAIN) || id.contains(WIKIDATA_DOMAIN));
   }
 
   public List<HandleAttribute> prepareUpdateAttributes(byte[] handle, JsonNode requestAttributes,
