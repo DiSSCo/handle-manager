@@ -382,7 +382,7 @@ class FdoRecordServiceTest {
   @Test
   void testPrepareDigitalSpecimenRecordMandatoryAttributesQNumber() throws Exception {
     // Given
-    String qid = "Q12345";
+    String qid = "https://wikidata.org/Q12345";
     String qidUrl = "https://wikidata.org/w/rest.php/wikibase/v0/entities/items/" + qid;
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
     given(pidResolver.resolveQid(any())).willReturn("placeholder");
