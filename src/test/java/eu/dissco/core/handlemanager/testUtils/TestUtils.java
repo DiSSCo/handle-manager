@@ -71,6 +71,7 @@ import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_TYPE;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -1116,10 +1117,14 @@ public class TestUtils {
     ObjectNode rootNode = mapper.createObjectNode();
 
     for (HandleAttribute row : dbRecord) {
-      String type = row.getType();
-      String data = new String(row.getData());
       if (row.getIndex() != HS_ADMIN.index()) {
-        rootNode.put(type, data); // We never want HS_ADMIN in our json
+        var rowData = new String(row.getData(), StandardCharsets.UTF_8);
+        try {
+          var nodeData = mapper.readTree(rowData);
+          rootNode.set(row.getType(), nodeData);
+        } catch (JsonProcessingException ignored) {
+          rootNode.put(row.getType(), rowData);
+        }
       }
     }
     return rootNode;
