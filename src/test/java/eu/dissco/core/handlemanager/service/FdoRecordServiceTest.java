@@ -385,8 +385,8 @@ class FdoRecordServiceTest {
   @Test
   void testPrepareDigitalSpecimenRecordMandatoryAttributesQNumber() throws Exception {
     // Given
-    String qid = "https://wikidata.org/Q12345";
-    String qidUrl = "https://wikidata.org/w/rest.php/wikibase/v0/entities/items/" + qid;
+    String qid = "https://www.wikidata.org/wiki/Q12345";
+    String qidUrl = "https://wikidata.org/w/rest.php/wikibase/v0/entities/items/Q12345";
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
     given(pidResolver.resolveQid(any())).willReturn("placeholder");
     var request = new DigitalSpecimenRequest(FDO_PROFILE_TESTVAL, ISSUED_FOR_AGENT_TESTVAL,
