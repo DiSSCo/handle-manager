@@ -73,7 +73,7 @@ public class DoiService extends PidService {
     var types = requests.stream()
         .map(request -> request.get(NODE_DATA).get(NODE_TYPE).asText())
         .filter(type -> !type.equals(MEDIA_OBJECT.toString())
-            || !type.equals(DIGITAL_SPECIMEN.toString()))
+            && !type.equals(DIGITAL_SPECIMEN.toString()))
         .collect(Collectors.toSet());
 
     if (!types.isEmpty()) {

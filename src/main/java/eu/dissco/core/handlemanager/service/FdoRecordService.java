@@ -137,6 +137,7 @@ public class FdoRecordService {
   private static final String DOI_DOMAIN = "https://doi.org/";
   private static final String ROR_API_DOMAIN = "https://api.ror.org/organizations/";
   private static final String ROR_DOMAIN = "https://ror.org/";
+  private static final String WIKIDATA_DOMAIN = "https://wikidata.org";
   private static final String WIKIDATA_API = "https://wikidata.org/w/rest.php/wikibase/v0/entities/items/";
   private static final String PROXY_ERROR = "Invalid attribute: %s must contain proxy: %s";
   private static final String PID_KERNEL_METADATA_LICENSE = "https://creativecommons.org/publicdomain/zero/1.0/";
@@ -574,7 +575,8 @@ public class FdoRecordService {
           }
           return new HandleAttribute(targetAttribute, handle, hostNameResolved);
         } else {
-          throw new PidResolutionException("Specimen host ID {} is neither QID nor ROR.");
+          log.error("Specimen host ID {} is neither QID nor ROR.", hostId);
+          throw new PidResolutionException("Invalid host id: " + hostId);
         }
       } catch (UnprocessableEntityException | InvalidRequestException |
                PidResolutionException e) {
@@ -587,7 +589,7 @@ public class FdoRecordService {
   }
 
   private boolean isAcceptedSpecimenHostId(String id) {
-    return (id.contains(ROR_DOMAIN) || id.toLowerCase().charAt(0) == 'q');
+    return (id.contains(ROR_DOMAIN) || id.contains(WIKIDATA_DOMAIN));
   }
 
   public List<HandleAttribute> prepareUpdateAttributes(byte[] handle, JsonNode requestAttributes,
