@@ -574,7 +574,8 @@ public class FdoRecordService {
           }
           return new HandleAttribute(targetAttribute, handle, hostNameResolved);
         } else {
-          throw new PidResolutionException("Specimen host ID {} is neither QID nor ROR.");
+          log.error("Specimen host ID {} is neither QID nor ROR.", hostId);
+          throw new PidResolutionException("Invalid host id: " + hostId);
         }
       } catch (UnprocessableEntityException | InvalidRequestException |
                PidResolutionException e) {
