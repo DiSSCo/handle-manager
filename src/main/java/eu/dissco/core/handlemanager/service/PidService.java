@@ -67,7 +67,13 @@ public abstract class PidService {
     ObjectNode rootNode = mapper.createObjectNode();
     for (var row : dbRecord) {
       if (row.getIndex() != HS_ADMIN.index()) {
-        rootNode.put(row.getType(), new String(row.getData(), StandardCharsets.UTF_8));
+        var rowData = new String(row.getData(), StandardCharsets.UTF_8);
+        try {
+          var nodeData = mapper.readTree(rowData);
+          rootNode.set(row.getType(), nodeData);
+        } catch (JsonProcessingException ignored) {
+          rootNode.put(row.getType(), rowData);
+        }
       }
     }
     return rootNode;

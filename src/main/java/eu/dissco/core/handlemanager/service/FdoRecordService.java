@@ -72,6 +72,7 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.WAS_DERIVED_FROM_EN
 import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType.DIGITAL_SPECIMEN;
 import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType.MAPPING;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -477,8 +478,12 @@ public class FdoRecordService {
 
     // 207: otherSpecimenIds
     if (request.getOtherSpecimenIds() != null) {
-      var otherSpecimenIds = request.getOtherSpecimenIds().toString();
-      fdoRecord.add(new HandleAttribute(OTHER_SPECIMEN_IDS, handle, otherSpecimenIds));
+      try {
+        var otherSpecimenIds = mapper.writeValueAsString(request.getOtherSpecimenIds());
+        fdoRecord.add(new HandleAttribute(OTHER_SPECIMEN_IDS, handle, otherSpecimenIds));
+      } catch (JsonProcessingException e) {
+        log.warn("Unable to parse otherSpecimenIds {} to string", request.getOtherSpecimenIds(), e);
+      }
     }
 
     // 208: topicOrigin

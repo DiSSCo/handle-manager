@@ -22,7 +22,4 @@ public class KafkaPublisherProperties {
   @NotBlank
   String dcSpecimenTopic = "specimen-doi";
 
-  @NotBlank
-  String dlqDoiTopic = "doi-dlq";
-
 }
