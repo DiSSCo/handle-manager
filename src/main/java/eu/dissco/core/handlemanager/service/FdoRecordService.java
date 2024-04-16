@@ -77,7 +77,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.FdoProfile;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.objects.AnnotationRequest;
@@ -94,7 +93,6 @@ import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
-import eu.dissco.core.handlemanager.repository.PidRepository;
 import eu.dissco.core.handlemanager.web.PidResolver;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -118,7 +116,6 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 
@@ -131,9 +128,7 @@ public class FdoRecordService {
   private final DocumentBuilderFactory dbf;
   private final PidResolver pidResolver;
   private final ObjectMapper mapper;
-  private final PidRepository pidRepository;
   private final ApplicationProperties appProperties;
-  private final Environment environment;
   private static final String HANDLE_DOMAIN = "https://hdl.handle.net/";
   private static final String DOI_DOMAIN = "https://doi.org/";
   private static final String ROR_API_DOMAIN = "https://api.ror.org/organizations/";
@@ -192,6 +187,7 @@ public class FdoRecordService {
     fdoRecord.add(new HandleAttribute(DIGITAL_OBJECT_NAME, handle, digitalObjectName));
 
     // 5: Pid
+    // Todo
     var pid = HANDLE_DOMAIN + new String(handle, StandardCharsets.UTF_8);
     fdoRecord.add(new HandleAttribute(PID, handle, pid));
 
@@ -715,11 +711,7 @@ public class FdoRecordService {
   }
 
   private String[] concatLocations(String[] userLocations, String handle, ObjectType type) {
-    ArrayList<String> objectLocations = new ArrayList<>();
-
-    if (!environment.matchesProfiles(Profiles.DOI)) {
-      objectLocations.addAll(List.of(defaultLocations(handle, type)));
-    }
+    var objectLocations = new ArrayList<>(List.of(defaultLocations(handle, type)));
     if (userLocations != null) {
       objectLocations.addAll(List.of(userLocations));
     }
