@@ -93,6 +93,7 @@ import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
+import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.web.PidResolver;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -129,6 +130,7 @@ public class FdoRecordService {
   private final PidResolver pidResolver;
   private final ObjectMapper mapper;
   private final ApplicationProperties appProperties;
+  private final ProfileProperties profileProperties;
   private static final String HANDLE_DOMAIN = "https://hdl.handle.net/";
   private static final String DOI_DOMAIN = "https://doi.org/";
   private static final String ROR_API_DOMAIN = "https://api.ror.org/organizations/";
@@ -182,20 +184,18 @@ public class FdoRecordService {
     fdoRecord.add(new HandleAttribute(DIGITAL_OBJECT_TYPE, handle, request.getDigitalObjectType()));
 
     // 4: DigitalObjectName
-    checkHandle(request.getDigitalObjectType());
     var digitalObjectName = pidResolver.getObjectName(request.getDigitalObjectType());
     fdoRecord.add(new HandleAttribute(DIGITAL_OBJECT_NAME, handle, digitalObjectName));
 
     // 5: Pid
-    // Todo
-    var pid = HANDLE_DOMAIN + new String(handle, StandardCharsets.UTF_8);
+    var pid = profileProperties.getDomain() + new String(handle, StandardCharsets.UTF_8);
     fdoRecord.add(new HandleAttribute(PID, handle, pid));
 
     // 6: PidIssuer
     fdoRecord.add(new HandleAttribute(PID_ISSUER, handle, request.getPidIssuer()));
 
     // 7: pidIssuerName
-    String pidIssuerName = prepareRorOrHandle(request.getPidIssuer());
+    String pidIssuerName = getObjectName(request.getPidIssuer());
     fdoRecord.add(new HandleAttribute(PID_ISSUER_NAME, handle, pidIssuerName));
 
     // 8: issuedForAgent
@@ -223,15 +223,16 @@ public class FdoRecordService {
     return fdoRecord;
   }
 
-  private String prepareRorOrHandle(String url)
+  private String getObjectName(String url)
       throws InvalidRequestException, UnprocessableEntityException, PidResolutionException {
     if (url.contains(ROR_DOMAIN)) {
       return pidResolver.getObjectName(getRor(url));
-    } else if (url.contains(HANDLE_DOMAIN)) {
+    } else if (url.contains(HANDLE_DOMAIN) || url.contains(DOI_DOMAIN)) {
       return pidResolver.getObjectName(url);
     }
     throw new InvalidRequestException(
-        String.format(PROXY_ERROR, url, (ROR_DOMAIN + " or " + HANDLE_DOMAIN)));
+        String.format(PROXY_ERROR, url,
+            (ROR_DOMAIN + ", " + HANDLE_DOMAIN + ", or " + DOI_DOMAIN)));
   }
 
   private static String getRor(String url) throws InvalidRequestException {
@@ -239,12 +240,6 @@ public class FdoRecordService {
       throw new InvalidRequestException(String.format(PROXY_ERROR, url, ROR_DOMAIN));
     }
     return url.replace(ROR_DOMAIN, ROR_API_DOMAIN);
-  }
-
-  private static void checkHandle(String url) throws InvalidRequestException {
-    if (!url.contains(HANDLE_DOMAIN)) {
-      throw new InvalidRequestException(String.format(PROXY_ERROR, url, HANDLE_DOMAIN));
-    }
   }
 
   public List<HandleAttribute> prepareDoiRecordAttributes(DoiRecordRequest request, byte[] handle,
@@ -625,7 +620,7 @@ public class FdoRecordService {
     for (var resolvableKey : resolvableKeys.entrySet()) {
       var targetAttribute = RESOLVABLE_KEYS.get(resolvableKey.getKey());
 
-      var resolvedPid = prepareRorOrHandle(resolvableKey.getValue().toString());
+      var resolvedPid = getObjectName(resolvableKey.getValue().toString());
       resolvedPidNameAttributes.add(new HandleAttribute(FdoProfile.retrieveIndex(targetAttribute),
           handle, targetAttribute, resolvedPid.getBytes(StandardCharsets.UTF_8)));
     }
