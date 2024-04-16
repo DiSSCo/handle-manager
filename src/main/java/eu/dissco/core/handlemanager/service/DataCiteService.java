@@ -6,7 +6,6 @@ import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.datacite.DataCiteEvent;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
 import eu.dissco.core.handlemanager.properties.KafkaPublisherProperties;
-import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
@@ -29,11 +28,6 @@ public class DataCiteService {
             : kafkaProperties.getDcMediaTopic();
     var message = mapper.writeValueAsString(event);
     kafkaService.sendObjectToQueue(topic, message);
-  }
-
-  public void dlqDois(Set<String> dois) {
-    log.info("DLQing DOIs: {}", dois);
-    kafkaService.sendObjectToQueue(kafkaProperties.getDlqDoiTopic(), dois.toString());
   }
 
 }

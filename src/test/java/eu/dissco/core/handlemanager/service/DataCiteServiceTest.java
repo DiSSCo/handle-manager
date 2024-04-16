@@ -10,7 +10,6 @@ import eu.dissco.core.handlemanager.domain.datacite.DataCiteEvent;
 import eu.dissco.core.handlemanager.domain.datacite.EventType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
 import eu.dissco.core.handlemanager.properties.KafkaPublisherProperties;
-import java.util.Collections;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,7 +37,7 @@ class DataCiteServiceTest {
   void testPublishMediaObject() throws Exception {
     // Given
     given(kafkaProperties.getDcMediaTopic()).willReturn(MEDIA_TOPIC);
-    var event = new DataCiteEvent(Collections.emptyList(), EventType.CREATE);
+    var event = new DataCiteEvent(MAPPER.createObjectNode(), EventType.CREATE);
 
     // When
     dataCiteService.publishToDataCite(event, ObjectType.MEDIA_OBJECT);
@@ -51,7 +50,7 @@ class DataCiteServiceTest {
   void testPublishSpecimen() throws Exception {
     // Given
     given(kafkaProperties.getDcSpecimenTopic()).willReturn(SPECIMEN_TOPIC);
-    var event = new DataCiteEvent(Collections.emptyList(), EventType.CREATE);
+    var event = new DataCiteEvent(MAPPER.createObjectNode(), EventType.CREATE);
 
     // When
     dataCiteService.publishToDataCite(event, ObjectType.DIGITAL_SPECIMEN);

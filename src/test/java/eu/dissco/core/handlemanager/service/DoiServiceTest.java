@@ -48,7 +48,6 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -111,7 +110,7 @@ class DoiServiceTest {
 
     var responseExpected = givenRecordResponseWriteSmallResponse(digitalSpecimenSublist,
         List.of(handle), ObjectType.DIGITAL_SPECIMEN);
-    var dataCiteEvent = new DataCiteEvent(List.of(genObjectNodeAttributeRecord(digitalSpecimen)),
+    var dataCiteEvent = new DataCiteEvent(genObjectNodeAttributeRecord(digitalSpecimen),
         EventType.CREATE);
     given(pidNameGeneratorService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(any(), any())).willReturn(
@@ -137,7 +136,7 @@ class DoiServiceTest {
             .equals(LINKED_DO_PID.get())).toList();
     var responseExpected = givenRecordResponseWriteSmallResponse(mediaSublist, List.of(handle),
         ObjectType.MEDIA_OBJECT);
-    var dataCiteEvent = new DataCiteEvent(List.of(genObjectNodeAttributeRecord(mediaObject)),
+    var dataCiteEvent = new DataCiteEvent(genObjectNodeAttributeRecord(mediaObject),
         EventType.CREATE);
     given(pidNameGeneratorService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(fdoRecordService.prepareMediaObjectAttributes(any(), any())).willReturn(mediaObject);
@@ -168,7 +167,6 @@ class DoiServiceTest {
     assertThrows(UnprocessableEntityException.class, () -> service.createRecords(request));
 
     // Then
-    then(dataCiteService).should().dlqDois(Set.of(HANDLE));
     then(pidRepository).should().rollbackHandles(List.of(HANDLE));
   }
 
@@ -180,8 +178,8 @@ class DoiServiceTest {
     var updatedAttributeRecord = genUpdateRecordAttributesAltLoc(handle);
     var responseExpected = givenRecordResponseNullAttributes(List.of(handle),
         ObjectType.DIGITAL_SPECIMEN);
-    var expectedEvent = new DataCiteEvent(
-        List.of(genObjectNodeAttributeRecord(updatedAttributeRecord)), EventType.UPDATE);
+    var expectedEvent = new DataCiteEvent(genObjectNodeAttributeRecord(updatedAttributeRecord),
+        EventType.UPDATE);
 
     given(pidRepository.checkHandlesWritable(anyList())).willReturn(List.of(handle));
     given(fdoRecordService.prepareUpdateAttributes(any(), any(), any())).willReturn(
@@ -230,7 +228,6 @@ class DoiServiceTest {
     then(pidRepository).should()
         .updateRecordBatch(CREATED.getEpochSecond(), List.of(updatedAttributeRecord), true);
     then(pidRepository).shouldHaveNoMoreInteractions();
-    then(dataCiteService).should().dlqDois(Set.of(HANDLE));
   }
 
   @Test

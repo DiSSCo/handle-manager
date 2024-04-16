@@ -89,19 +89,21 @@ public class DoiService extends PidService {
   private void publishToDataCite(List<HandleAttribute> handleAttributes, EventType eventType,
       ObjectType objectType) throws UnprocessableEntityException {
     var handleMap = mapRecords(handleAttributes);
-    var pidRecords = new ArrayList<JsonNode>();
-    handleMap.forEach((key, value) -> pidRecords.add(jsonFormatSingleRecord(value)));
-    var event = new DataCiteEvent(pidRecords, eventType);
-    try {
-      dataCiteService.publishToDataCite(event, objectType);
-    } catch (JsonProcessingException e) {
-      log.error("Critical error: Unable to publish datacite event to queue", e);
-      dataCiteService.dlqDois(handleMap.keySet());
-      log.info("Rolling back handles");
-      if (eventType.equals(EventType.CREATE)) {
-        rollbackHandles(new ArrayList<>(handleMap.keySet()));
+    var eventList = new ArrayList<DataCiteEvent>();
+    handleMap.forEach(
+        (key, value) -> eventList.add(
+            new DataCiteEvent(jsonFormatSingleRecord(value), eventType)));
+    for (var event : eventList) {
+      try {
+        dataCiteService.publishToDataCite(event, objectType);
+      } catch (JsonProcessingException e) {
+        log.error("Critical error: Unable to publish datacite event to queue", e);
+        log.info("Rolling back handles");
+        if (eventType.equals(EventType.CREATE)) {
+          rollbackHandles(new ArrayList<>(handleMap.keySet()));
+        }
+        throw new UnprocessableEntityException("Unable to publish datacite event to queue");
       }
-      throw new UnprocessableEntityException("Unable to publish PIDs to datacite queue");
     }
   }
 }
