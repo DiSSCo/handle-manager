@@ -20,6 +20,6 @@ public class KafkaPublisherProperties {
   private String dcMediaTopic = "media-doi";
 
   @NotBlank
-  String dcSpecimenTopic = "specimen-doi";
+  private String dcSpecimenTopic = "specimen-doi";
 
 }
