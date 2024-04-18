@@ -68,7 +68,7 @@ public enum FdoProfile {
   LICENSE_NAME("licenseName", 414),
   LICENSE_URL("licenseUrl", 415),
   RIGHTSHOLDER_NAME("rightsholderName", 416),
-  RIGHTSHOLDER_PID("rigthsholderPid", 417),
+  RIGHTSHOLDER_PID("rightsholderPid", 417),
   RIGHTSHOLDER_PID_TYPE("rightsholderPidType", 418),
   DC_TERMS_CONFORMS("dcterms:conforms", 419),
 

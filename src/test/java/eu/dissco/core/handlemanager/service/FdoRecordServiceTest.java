@@ -140,6 +140,7 @@ import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.TopicOri
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
+import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.PidRepository;
 import eu.dissco.core.handlemanager.web.PidResolver;
 import java.nio.charset.StandardCharsets;
@@ -205,6 +206,8 @@ class FdoRecordServiceTest {
   private ApplicationProperties appProperties;
   @Mock
   Environment environment;
+  @Mock
+  ProfileProperties profileProperties;
   private static final int HANDLE_QTY = HANDLE_FIELDS.size();
   private static final int DOI_QTY = HANDLE_QTY + DOI_FIELDS.size();
   private static final int MEDIA_QTY = DOI_QTY + MEDIA_FIELDS_MANDATORY.size();
@@ -220,7 +223,7 @@ class FdoRecordServiceTest {
   @BeforeEach
   void init() {
     fdoRecordService = new FdoRecordService(TRANSFORMER_FACTORY, DOC_BUILDER_FACTORY, pidResolver,
-        MAPPER, pidRepository, appProperties, environment);
+        MAPPER, appProperties, profileProperties);
     given(appProperties.getApiUrl()).willReturn(API_URL);
     given(appProperties.getOrchestrationUrl()).willReturn(ORCHESTRATION_URL);
     given(appProperties.getUiUrl()).willReturn(UI_URL);

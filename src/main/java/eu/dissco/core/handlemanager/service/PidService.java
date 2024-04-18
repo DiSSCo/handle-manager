@@ -27,9 +27,7 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperReadSingle;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
-import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenUpdateWrapper;
 import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
-import eu.dissco.core.handlemanager.domain.requests.objects.ProcessedDigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
 import eu.dissco.core.handlemanager.exceptions.DatabaseCopyException;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
@@ -41,7 +39,6 @@ import eu.dissco.core.handlemanager.repository.PidRepository;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -66,17 +63,23 @@ public abstract class PidService {
     return handleMap.values().stream().map(this::jsonFormatSingleRecord).toList();
   }
 
-  private JsonNode jsonFormatSingleRecord(List<HandleAttribute> dbRecord) {
+  protected JsonNode jsonFormatSingleRecord(List<HandleAttribute> dbRecord) {
     ObjectNode rootNode = mapper.createObjectNode();
     for (var row : dbRecord) {
       if (row.getIndex() != HS_ADMIN.index()) {
-        rootNode.put(row.getType(), new String(row.getData(), StandardCharsets.UTF_8));
+        var rowData = new String(row.getData(), StandardCharsets.UTF_8);
+        try {
+          var nodeData = mapper.readTree(rowData);
+          rootNode.set(row.getType(), nodeData);
+        } catch (JsonProcessingException ignored) {
+          rootNode.put(row.getType(), rowData);
+        }
       }
     }
     return rootNode;
   }
 
-  private Map<String, List<HandleAttribute>> mapRecords(List<HandleAttribute> flatList) {
+  protected Map<String, List<HandleAttribute>> mapRecords(List<HandleAttribute> flatList) {
     return flatList.stream()
         .collect(Collectors.groupingBy(row -> new String(row.getHandle(), StandardCharsets.UTF_8)));
   }
@@ -274,83 +277,46 @@ public abstract class PidService {
     return ObjectType.fromString(type.get());
   }
 
-  protected JsonApiWrapperWrite upsertDigitalSpecimen(List<JsonNode> requestAttributes,
+  protected List<HandleAttribute> createDigitalSpecimen(List<JsonNode> requestAttributes,
       Iterator<byte[]> handleIterator)
-      throws InvalidRequestException, JsonProcessingException, PidResolutionException, DatabaseCopyException {
+      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
     var specimenRequests = new ArrayList<DigitalSpecimenRequest>();
     for (var request : requestAttributes) {
       specimenRequests.add(mapper.treeToValue(request, DigitalSpecimenRequest.class));
     }
-    var processResult = processSpecimenRequests(specimenRequests);
-    var recordTimeStamp = Instant.now().getEpochSecond();
-    var pidAttributes = createNewDigitalSpecimenRecords(processResult.newRequests(), handleIterator,
-        recordTimeStamp);
-    pidAttributes.addAll(updateDigitalSpecimen(processResult.updateRequests(), recordTimeStamp));
-    return new JsonApiWrapperWrite(formatCreateRecordsSpecimen(mapRecords(pidAttributes)));
-  }
-
-  private ArrayList<HandleAttribute> createNewDigitalSpecimenRecords(
-      List<DigitalSpecimenRequest> specimenRequests, Iterator<byte[]> handleIterator,
-      long recordTimestamp)
-      throws PidResolutionException, InvalidRequestException, DatabaseCopyException {
     if (specimenRequests.isEmpty()) {
       return new ArrayList<>();
     }
+    verifySpecimensAreNew(specimenRequests);
     var handleAttributes = new ArrayList<HandleAttribute>();
     for (var request : specimenRequests) {
       var thisHandle = handleIterator.next();
       handleAttributes.addAll(
           fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, thisHandle));
     }
-    log.info("Posting {} new digital specimen fdo records to db", specimenRequests.size());
-    pidRepository.postAttributesToDb(recordTimestamp, handleAttributes);
     return handleAttributes;
   }
 
-  protected List<HandleAttribute> updateDigitalSpecimen(
-      List<DigitalSpecimenUpdateWrapper> updateRequests, long recordTimestamp)
-      throws InvalidRequestException, PidResolutionException {
-    if (updateRequests.isEmpty()) {
-      return Collections.emptyList();
-    }
-    List<List<HandleAttribute>> attributesToUpdate = new ArrayList<>();
-    List<HandleAttribute> flatList = new ArrayList<>();
-    for (var request : updateRequests) {
-      var requestAttributes = mapper.valueToTree(request.digitalSpecimenRequest());
-      flatList.addAll(fdoRecordService.prepareUpdateAttributes(
-          request.handle().getBytes(StandardCharsets.UTF_8), requestAttributes, DIGITAL_SPECIMEN));
-      attributesToUpdate.add(flatList);
-    }
-    log.info("Updating {} digital specimen fdo records to db", updateRequests.size());
-    pidRepository.updateRecordBatch(recordTimestamp, attributesToUpdate, true);
-    return flatList;
-  }
-
-  private ProcessedDigitalSpecimenRequest processSpecimenRequests(
-      ArrayList<DigitalSpecimenRequest> specimenRequests) {
-    var physicalIds = specimenRequests.stream().map(
+  private void verifySpecimensAreNew(List<DigitalSpecimenRequest> requests)
+      throws InvalidRequestException {
+    var normalisedIds = requests.stream().map(
             request -> request.getNormalisedPrimarySpecimenObjectId().getBytes(StandardCharsets.UTF_8))
         .toList();
-    var registeredPhysicalIdentifiers = pidRepository.searchByNormalisedPhysicalIdentifier(
-        physicalIds);
-    var registeredPhysicalIdentiferMap = registeredPhysicalIdentifiers.stream().collect(
-        Collectors.toMap(row -> new String(row.getData(), StandardCharsets.UTF_8),
-            row -> new String(row.getHandle(), StandardCharsets.UTF_8)));
-    var updates = specimenRequests.stream().filter(
-        request -> registeredPhysicalIdentiferMap.containsKey(
-            request.getNormalisedPrimarySpecimenObjectId())).map(
-        request -> new DigitalSpecimenUpdateWrapper(
-            registeredPhysicalIdentiferMap.get(request.getNormalisedPrimarySpecimenObjectId()),
-            request)).toList();
-    if (!updates.isEmpty()) {
-      log.debug("Existing records: {}",
-          updates.stream().map(DigitalSpecimenUpdateWrapper::handle).toList());
+    var existingHandles = pidRepository.searchByNormalisedPhysicalIdentifier(normalisedIds);
+    if (!existingHandles.isEmpty()) {
+      log.error("Unable to create new handles, as ");
+      var handleMap = existingHandles.stream()
+          .collect(Collectors.toMap(ha -> new String(ha.getHandle(), StandardCharsets.UTF_8),
+              ha -> new String(ha.getData(), StandardCharsets.UTF_8)));
+      log.error(
+          "Unable to create new handles, as they already exist. Verify the following identifiers: {}",
+          handleMap);
+      throw new InvalidRequestException(
+          "Attempting to create handle records for specimens already in system");
     }
-    specimenRequests.removeAll(
-        updates.stream().map(DigitalSpecimenUpdateWrapper::digitalSpecimenRequest).toList());
 
-    return new ProcessedDigitalSpecimenRequest(specimenRequests, updates);
   }
+
 
   protected List<HandleAttribute> createMediaObject(List<JsonNode> requestAttributes,
       Iterator<byte[]> handleIterator)
@@ -366,27 +332,40 @@ public abstract class PidService {
   }
 
   // Update
+  public JsonApiWrapperWrite updateRecords(List<List<HandleAttribute>> attributesToUpdate,
+      boolean incrementVersion, ObjectType recordType)
+      throws InvalidRequestException, PidResolutionException {
+    var recordTimestamp = Instant.now().getEpochSecond();
+    var handles = attributesToUpdate.stream().map(pidRecord -> pidRecord.get(0).getHandle())
+        .toList();
+    checkInternalDuplicates(handles);
+    checkHandlesWritable(handles);
+    log.info("Writing updates to db");
+    pidRepository.updateRecordBatch(recordTimestamp, attributesToUpdate, incrementVersion);
+    return formatUpdates(
+        handles.stream().map(h -> new String(h, StandardCharsets.UTF_8)).toList(),
+        recordType);
+  }
+
   public JsonApiWrapperWrite updateRecords(List<JsonNode> requests, boolean incrementVersion)
       throws InvalidRequestException, PidResolutionException, UnprocessableEntityException {
-    var recordTimestamp = Instant.now().getEpochSecond();
-    List<byte[]> handles = new ArrayList<>();
-    List<List<HandleAttribute>> attributesToUpdate = new ArrayList<>();
+    List<List<HandleAttribute>> attributesToUpdate = getAttributesToUpdate(requests);
     var recordType = getObjectType(requests);
+    return updateRecords(attributesToUpdate, incrementVersion, recordType);
+  }
+
+  protected List<List<HandleAttribute>> getAttributesToUpdate(List<JsonNode> requests)
+      throws InvalidRequestException, PidResolutionException {
+    List<List<HandleAttribute>> attributesToUpdate = new ArrayList<>();
     for (JsonNode root : requests) {
       JsonNode data = root.get(NODE_DATA);
       byte[] handle = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
-      handles.add(handle);
       JsonNode requestAttributes = data.get(NODE_ATTRIBUTES);
       ObjectType type = ObjectType.fromString(data.get(NODE_TYPE).asText());
       var attributes = fdoRecordService.prepareUpdateAttributes(handle, requestAttributes, type);
       attributesToUpdate.add(attributes);
     }
-
-    checkInternalDuplicates(handles);
-    checkHandlesWritable(handles);
-    pidRepository.updateRecordBatch(recordTimestamp, attributesToUpdate, incrementVersion);
-    return formatUpdates(handles.stream().map(h -> new String(h, StandardCharsets.UTF_8)).toList(),
-        recordType);
+    return attributesToUpdate;
   }
 
   protected void checkInternalDuplicates(List<byte[]> handles) throws InvalidRequestException {
@@ -466,9 +445,8 @@ public abstract class PidService {
   public void rollbackHandlesFromPhysId(List<String> physicalIds) {
     var physicalIdsBytes = physicalIds.stream().map(id -> id.getBytes(StandardCharsets.UTF_8))
         .toList();
-    var handles = pidRepository.searchByNormalisedPhysicalIdentifier(physicalIdsBytes).stream()
-        .map(HandleAttribute::getHandle).map(handle -> new String(handle, StandardCharsets.UTF_8))
-        .toList();
+    var handles = pidRepository.searchByNormalisedPhysicalIdentifier(physicalIdsBytes)
+        .stream().map(ha -> new String(ha.getHandle(), StandardCharsets.UTF_8)).toList();
     pidRepository.rollbackHandles(handles);
   }
 

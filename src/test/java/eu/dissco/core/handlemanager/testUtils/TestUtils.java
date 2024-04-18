@@ -985,12 +985,17 @@ public class TestUtils {
   }
 
   public static JsonApiWrapperWrite givenRecordResponseNullAttributes(List<byte[]> handles) {
+    return givenRecordResponseNullAttributes(handles, ObjectType.HANDLE);
+  }
+
+  public static JsonApiWrapperWrite givenRecordResponseNullAttributes(List<byte[]> handles,
+      ObjectType type) {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
     for (byte[] handle : handles) {
       var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
       dataNodes.add(
           new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8),
-              ObjectType.HANDLE.toString(), null,
+              type.toString(), null,
               pidLink));
     }
     return new JsonApiWrapperWrite(dataNodes);
@@ -1047,14 +1052,14 @@ public class TestUtils {
     }
   }
 
-  public static List<JsonNode> genUpdateRequestBatch(List<byte[]> handles) {
+  public static List<JsonNode> genUpdateRequestBatch(List<byte[]> handles, ObjectType type) {
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode requestNodeRoot = mapper.createObjectNode();
     ObjectNode requestNodeData = mapper.createObjectNode();
     List<JsonNode> requestNodeList = new ArrayList<>();
 
     for (byte[] handle : handles) {
-      requestNodeData.put("type", RECORD_TYPE_HANDLE);
+      requestNodeData.put("type", type.toString());
       requestNodeData.put("id", new String(handle, StandardCharsets.UTF_8));
       requestNodeData.set("attributes", genUpdateRequestAltLoc());
       requestNodeRoot.set("data", requestNodeData);
@@ -1065,6 +1070,10 @@ public class TestUtils {
       requestNodeRoot.removeAll();
     }
     return requestNodeList;
+  }
+
+  public static List<JsonNode> genUpdateRequestBatch(List<byte[]> handles) {
+    return genUpdateRequestBatch(handles, ObjectType.HANDLE);
   }
 
   public static List<JsonNode> genTombstoneRequestBatch(List<String> handles) {
@@ -1103,16 +1112,19 @@ public class TestUtils {
   }
 
   // Handle Attributes as ObjectNode
-  public static JsonNode genObjectNodeAttributeRecord(List<HandleAttribute> dbRecord)
-      throws JsonProcessingException {
+  public static JsonNode genObjectNodeAttributeRecord(List<HandleAttribute> dbRecord) {
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode rootNode = mapper.createObjectNode();
 
     for (HandleAttribute row : dbRecord) {
-      String type = row.getType();
-      String data = new String(row.getData());
       if (row.getIndex() != HS_ADMIN.index()) {
-        rootNode.put(type, data); // We never want HS_ADMIN in our json
+        var rowData = new String(row.getData(), StandardCharsets.UTF_8);
+        try {
+          var nodeData = mapper.readTree(rowData);
+          rootNode.set(row.getType(), nodeData);
+        } catch (JsonProcessingException ignored) {
+          rootNode.put(row.getType(), rowData);
+        }
       }
     }
     return rootNode;

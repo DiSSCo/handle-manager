@@ -12,7 +12,8 @@ public enum ObjectType {
   @JsonProperty("mapping") MAPPING("mapping"),
   @JsonProperty("organisation") ORGANISATION("organisation"),
   @JsonProperty("tombstone") TOMBSTONE("tombstone"),
-  @JsonProperty("machineAnnotationService") MAS("machineAnnotationService");
+  @JsonProperty("machineAnnotationService") MAS("machineAnnotationService"),
+  OTHER("Undefined");
 
   private final String state;
 

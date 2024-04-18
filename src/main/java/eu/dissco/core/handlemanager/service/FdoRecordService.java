@@ -72,11 +72,11 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.WAS_DERIVED_FROM_EN
 import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType.DIGITAL_SPECIMEN;
 import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType.MAPPING;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.FdoProfile;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.objects.AnnotationRequest;
@@ -93,7 +93,7 @@ import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
-import eu.dissco.core.handlemanager.repository.PidRepository;
+import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.web.PidResolver;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -117,7 +117,6 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 
@@ -130,9 +129,8 @@ public class FdoRecordService {
   private final DocumentBuilderFactory dbf;
   private final PidResolver pidResolver;
   private final ObjectMapper mapper;
-  private final PidRepository pidRepository;
   private final ApplicationProperties appProperties;
-  private final Environment environment;
+  private final ProfileProperties profileProperties;
   private static final String HANDLE_DOMAIN = "https://hdl.handle.net/";
   private static final String DOI_DOMAIN = "https://doi.org/";
   private static final String ROR_API_DOMAIN = "https://api.ror.org/organizations/";
@@ -191,14 +189,14 @@ public class FdoRecordService {
     fdoRecord.add(new HandleAttribute(DIGITAL_OBJECT_NAME, handle, digitalObjectName));
 
     // 5: Pid
-    var pid = HANDLE_DOMAIN + new String(handle, StandardCharsets.UTF_8);
+    var pid = profileProperties.getDomain() + new String(handle, StandardCharsets.UTF_8);
     fdoRecord.add(new HandleAttribute(PID, handle, pid));
 
     // 6: PidIssuer
     fdoRecord.add(new HandleAttribute(PID_ISSUER, handle, request.getPidIssuer()));
 
     // 7: pidIssuerName
-    String pidIssuerName = prepareRorOrHandle(request.getPidIssuer());
+    String pidIssuerName = getObjectName(request.getPidIssuer());
     fdoRecord.add(new HandleAttribute(PID_ISSUER_NAME, handle, pidIssuerName));
 
     // 8: issuedForAgent
@@ -226,15 +224,16 @@ public class FdoRecordService {
     return fdoRecord;
   }
 
-  private String prepareRorOrHandle(String url)
+  private String getObjectName(String url)
       throws InvalidRequestException, UnprocessableEntityException, PidResolutionException {
     if (url.contains(ROR_DOMAIN)) {
       return pidResolver.getObjectName(getRor(url));
-    } else if (url.contains(HANDLE_DOMAIN)) {
+    } else if (url.contains(HANDLE_DOMAIN) || url.contains(DOI_DOMAIN)) {
       return pidResolver.getObjectName(url);
     }
     throw new InvalidRequestException(
-        String.format(PROXY_ERROR, url, (ROR_DOMAIN + " or " + HANDLE_DOMAIN)));
+        String.format(PROXY_ERROR, url,
+            (ROR_DOMAIN + ", " + HANDLE_DOMAIN + ", or " + DOI_DOMAIN)));
   }
 
   private static String getRor(String url) throws InvalidRequestException {
@@ -471,8 +470,12 @@ public class FdoRecordService {
 
     // 207: otherSpecimenIds
     if (request.getOtherSpecimenIds() != null) {
-      var otherSpecimenIds = request.getOtherSpecimenIds().toString();
-      fdoRecord.add(new HandleAttribute(OTHER_SPECIMEN_IDS, handle, otherSpecimenIds));
+      try {
+        var otherSpecimenIds = mapper.writeValueAsString(request.getOtherSpecimenIds());
+        fdoRecord.add(new HandleAttribute(OTHER_SPECIMEN_IDS, handle, otherSpecimenIds));
+      } catch (JsonProcessingException e) {
+        log.warn("Unable to parse otherSpecimenIds {} to string", request.getOtherSpecimenIds(), e);
+      }
     }
 
     // 208: topicOrigin
@@ -606,7 +609,7 @@ public class FdoRecordService {
     for (var resolvableKey : resolvableKeys.entrySet()) {
       var targetAttribute = RESOLVABLE_KEYS.get(resolvableKey.getKey());
 
-      var resolvedPid = prepareRorOrHandle(resolvableKey.getValue().toString());
+      var resolvedPid = getObjectName(resolvableKey.getValue().toString());
       resolvedPidNameAttributes.add(new HandleAttribute(FdoProfile.retrieveIndex(targetAttribute),
           handle, targetAttribute, resolvedPid.getBytes(StandardCharsets.UTF_8)));
     }
@@ -692,11 +695,7 @@ public class FdoRecordService {
   }
 
   private String[] concatLocations(String[] userLocations, String handle, ObjectType type) {
-    ArrayList<String> objectLocations = new ArrayList<>();
-
-    if (!environment.matchesProfiles(Profiles.DOI)) {
-      objectLocations.addAll(List.of(defaultLocations(handle, type)));
-    }
+    var objectLocations = new ArrayList<>(List.of(defaultLocations(handle, type)));
     if (userLocations != null) {
       objectLocations.addAll(List.of(userLocations));
     }

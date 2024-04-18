@@ -307,19 +307,19 @@ class PidRepositoryIT extends BaseRepositoryIT {
   void testSearchByPhysicalSpecimenId() throws Exception {
     //Given
     var handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    var expected = List.of(new HandleAttribute(NORMALISED_SPECIMEN_OBJECT_ID.index(), handle,
+    var dbRecord = List.of(new HandleAttribute(NORMALISED_SPECIMEN_OBJECT_ID.index(), handle,
         NORMALISED_SPECIMEN_OBJECT_ID.get(),
         NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     postAttributes(genDoiRecordAttributes(handle, ObjectType.DOI));
-    postAttributes(expected);
+    postAttributes(dbRecord);
 
     // When
     var response = pidRepository.searchByNormalisedPhysicalIdentifier(
         List.of(NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     // Then
-    assertThat(response).isEqualTo(expected);
+    assertThat(response).isEqualTo(dbRecord);
   }
 
   @Test

@@ -54,9 +54,8 @@ public class HandleService extends PidService {
     try {
       switch (type) {
         case ANNOTATION -> handleAttributes = createAnnotation(requestAttributes, handles);
-        case DIGITAL_SPECIMEN -> {
-          return upsertDigitalSpecimen(requestAttributes, handles);
-        }
+        case DIGITAL_SPECIMEN ->
+            handleAttributes = createDigitalSpecimen(requestAttributes, handles);
         case DOI -> handleAttributes = createDoi(requestAttributes, handles);
         case HANDLE -> handleAttributes = createHandle(requestAttributes, handles);
         case MAPPING -> handleAttributes = createMapping(requestAttributes, handles);
