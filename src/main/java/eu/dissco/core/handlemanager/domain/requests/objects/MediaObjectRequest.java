@@ -1,12 +1,12 @@
 package eu.dissco.core.handlemanager.domain.requests.objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.PrimarySpecimenObjectIdType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.StructuralType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.FdoType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.media.LinkedDigitalObjectType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.media.MediaFormat;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.media.PrimaryMediaObjectType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.PrimarySpecimenObjectIdType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.StructuralType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -60,7 +60,7 @@ public class MediaObjectRequest extends DoiRecordRequest {
   public MediaObjectRequest(
       String fdoProfile,
       String issuedForAgent,
-      String digitalObjectTypePid,
+      FdoType digitalObjectTypePid,
       String pidIssuer,
       String[] locations,
       // Doi
@@ -89,7 +89,7 @@ public class MediaObjectRequest extends DoiRecordRequest {
   ) throws InvalidRequestException {
     super(fdoProfile, issuedForAgent, digitalObjectTypePid, pidIssuer, StructuralType.DIGITAL,
         locations,
-        referentName, ObjectType.MEDIA_OBJECT, primaryReferentType);
+        referentName, FdoType.MEDIA_OBJECT.getDigitalObjectName(), primaryReferentType);
     this.mediaHost = mediaHost;
     this.mediaHostName = mediaHostName;
     this.mediaFormat = mediaFormat;

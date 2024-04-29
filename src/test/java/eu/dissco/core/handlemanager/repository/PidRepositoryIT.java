@@ -26,7 +26,7 @@ import static org.mockito.BDDMockito.then;
 
 import eu.dissco.core.handlemanager.database.jooq.tables.Handles;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.FdoType;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -64,7 +64,7 @@ class PidRepositoryIT extends BaseRepositoryIT {
   void testCreateRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    List<HandleAttribute> attributesToPost = genHandleRecordAttributes(handle, ObjectType.HANDLE);
+    List<HandleAttribute> attributesToPost = genHandleRecordAttributes(handle, FdoType.HANDLE);
 
     // When
     pidRepository.postAttributesToDb(CREATED.getEpochSecond(), attributesToPost);
@@ -149,7 +149,7 @@ class PidRepositoryIT extends BaseRepositoryIT {
   void testResolveSingleRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    List<HandleAttribute> responseExpected = genHandleRecordAttributes(handle, ObjectType.HANDLE);
+    List<HandleAttribute> responseExpected = genHandleRecordAttributes(handle, FdoType.HANDLE);
     postAttributes(responseExpected);
 
     // When
@@ -165,8 +165,8 @@ class PidRepositoryIT extends BaseRepositoryIT {
     var handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     var handleAlt = HANDLE_ALT.getBytes(StandardCharsets.UTF_8);
     var postedAttributes = Stream.concat(
-        genHandleRecordAttributes(handle, ObjectType.DIGITAL_SPECIMEN).stream(),
-        genHandleRecordAttributes(handleAlt, ObjectType.DIGITAL_SPECIMEN).stream()).toList();
+        genHandleRecordAttributes(handle, FdoType.DIGITAL_SPECIMEN).stream(),
+        genHandleRecordAttributes(handleAlt, FdoType.DIGITAL_SPECIMEN).stream()).toList();
     postAttributes(postedAttributes);
     List<HandleAttribute> expected = new ArrayList<>();
     for (var row : postedAttributes) {
@@ -189,7 +189,7 @@ class PidRepositoryIT extends BaseRepositoryIT {
 
     List<HandleAttribute> responseExpected = new ArrayList<>();
     for (byte[] handle : handles) {
-      responseExpected.addAll(genHandleRecordAttributes(handle, ObjectType.HANDLE));
+      responseExpected.addAll(genHandleRecordAttributes(handle, FdoType.HANDLE));
     }
 
     postAttributes(responseExpected);
@@ -311,7 +311,7 @@ class PidRepositoryIT extends BaseRepositoryIT {
         NORMALISED_SPECIMEN_OBJECT_ID.get(),
         NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
-    postAttributes(genDoiRecordAttributes(handle, ObjectType.DOI));
+    postAttributes(genDoiRecordAttributes(handle, FdoType.DOI));
     postAttributes(dbRecord);
 
     // When
@@ -504,7 +504,7 @@ class PidRepositoryIT extends BaseRepositoryIT {
     // Given
     var handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     var handleAlt = HANDLE_ALT.getBytes(StandardCharsets.UTF_8);
-    var existingRecord = genHandleRecordAttributes(handle, ObjectType.HANDLE);
+    var existingRecord = genHandleRecordAttributes(handle, FdoType.HANDLE);
     postAttributes(existingRecord);
     var updatedRecord = new ArrayList<>(existingRecord);
     updatedRecord.add(
@@ -519,7 +519,7 @@ class PidRepositoryIT extends BaseRepositoryIT {
             String.valueOf(1).getBytes(
                 StandardCharsets.UTF_8)));
 
-    var newRecord = genHandleRecordAttributes(handleAlt, ObjectType.HANDLE);
+    var newRecord = genHandleRecordAttributes(handleAlt, FdoType.HANDLE);
     var expected = Stream.concat(updatedRecord.stream(), newRecord.stream()).toList();
 
     // When

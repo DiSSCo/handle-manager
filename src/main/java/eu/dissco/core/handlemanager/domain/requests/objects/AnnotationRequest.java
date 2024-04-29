@@ -1,6 +1,7 @@
 package eu.dissco.core.handlemanager.domain.requests.objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.FdoType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.annotation.Motivation;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.StructuralType;
 import java.util.UUID;
@@ -24,7 +25,7 @@ public class AnnotationRequest extends HandleRecordRequest {
   public AnnotationRequest(
       String fdoProfile,
       String issuedForAgent,
-      String digitalObjectType,
+      FdoType digitalObjectType,
       String pidIssuer,
       String[] locations,
       String targetPid,

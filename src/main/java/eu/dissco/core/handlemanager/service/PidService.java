@@ -1,6 +1,7 @@
 package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.domain.FdoProfile.ANNOTATION_HASH;
+import static eu.dissco.core.handlemanager.domain.FdoProfile.DIGITAL_OBJECT_TYPE;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_DO_PID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PID;
@@ -11,10 +12,9 @@ import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_TYPE;
-import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType.ANNOTATION;
-import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType.DIGITAL_SPECIMEN;
-import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType.MEDIA_OBJECT;
-import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType.TOMBSTONE;
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.FdoType.ANNOTATION;
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.FdoType.DIGITAL_SPECIMEN;
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.FdoType.MEDIA_OBJECT;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -28,10 +28,9 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.FdoType;
 import eu.dissco.core.handlemanager.exceptions.DatabaseCopyException;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
-import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
@@ -96,7 +95,7 @@ public abstract class PidService {
   }
 
   protected List<JsonApiDataLinks> formatCreateRecords(List<HandleAttribute> dbRecord,
-      ObjectType objectType) {
+      FdoType objectType) {
     var handleMap = mapRecords(dbRecord);
     switch (objectType) {
       case ANNOTATION -> {
@@ -161,7 +160,7 @@ public abstract class PidService {
   }
 
   private List<JsonApiDataLinks> formatCreateRecordsDefault(
-      Map<String, List<HandleAttribute>> handleMap, ObjectType objectType) {
+      Map<String, List<HandleAttribute>> handleMap, FdoType objectType) {
     List<JsonApiDataLinks> dataLinksList = new ArrayList<>();
     for (var handleRecord : handleMap.entrySet()) {
       var rootNode = jsonFormatSingleRecord(handleRecord.getValue());
@@ -177,8 +176,9 @@ public abstract class PidService {
     for (var archiveRecord : archiveRecords) {
       String handle = new String(archiveRecord.get(0).getHandle(), StandardCharsets.UTF_8);
       var attributeNode = jsonFormatSingleRecord(archiveRecord);
-      dataList.add(new JsonApiDataLinks(handle, TOMBSTONE.toString(), attributeNode,
-          new JsonApiLinks(profileProperties.getDomain() + handle)));
+      dataList.add(
+          new JsonApiDataLinks(handle, FdoType.TOMBSTONE.getDigitalObjectType(), attributeNode,
+              new JsonApiLinks(profileProperties.getDomain() + handle)));
     }
     return new JsonApiWrapperWrite(dataList);
   }
@@ -196,14 +196,14 @@ public abstract class PidService {
   private String getRecordType(List<HandleAttribute> dbRecord) {
     var type = dbRecord.stream().filter(row -> row.getType().equals(REFERENT_TYPE.get()))
         .map(val -> new String(val.getData(), StandardCharsets.UTF_8)).findFirst();
-    return type.orElse(ObjectType.HANDLE.toString());
+    return type.orElse(FdoType.HANDLE.toString());
   }
 
   private String getRecordType(JsonNode attributes) {
-    if (attributes.get(REFERENT_TYPE.get()) != null) {
-      return attributes.get(REFERENT_TYPE.get()).asText();
+    if (attributes.get(DIGITAL_OBJECT_TYPE.get()) != null) {
+      return attributes.get(DIGITAL_OBJECT_TYPE.get()).asText();
     }
-    return ObjectType.HANDLE.toString();
+    return FdoType.HANDLE.toString();
   }
 
   public JsonApiWrapperRead resolveBatchRecord(List<byte[]> handles, String path)
@@ -265,16 +265,16 @@ public abstract class PidService {
   // Create
   public abstract JsonApiWrapperWrite createRecords(
       List<JsonNode> requests)
-      throws PidResolutionException, InvalidRequestException, PidCreationException, DatabaseCopyException;
+      throws PidResolutionException, InvalidRequestException, DatabaseCopyException;
 
-  protected ObjectType getObjectType(List<JsonNode> requests) {
+  protected FdoType getObjectType(List<JsonNode> requests) {
     var types = requests.stream().map(request -> request.get(NODE_DATA).get(NODE_TYPE).asText())
         .collect(Collectors.toSet());
     var type = types.stream().findFirst();
     if (type.isEmpty() || types.size() != 1) {
       throw new UnsupportedOperationException("Requests must all be of the same type");
     }
-    return ObjectType.fromString(type.get());
+    return FdoType.fromString(type.get());
   }
 
   protected List<HandleAttribute> createDigitalSpecimen(List<JsonNode> requestAttributes,
@@ -333,7 +333,7 @@ public abstract class PidService {
 
   // Update
   public JsonApiWrapperWrite updateRecords(List<List<HandleAttribute>> attributesToUpdate,
-      boolean incrementVersion, ObjectType recordType)
+      boolean incrementVersion, FdoType recordType)
       throws InvalidRequestException, PidResolutionException {
     var recordTimestamp = Instant.now().getEpochSecond();
     var handles = attributesToUpdate.stream().map(pidRecord -> pidRecord.get(0).getHandle())
@@ -361,7 +361,7 @@ public abstract class PidService {
       JsonNode data = root.get(NODE_DATA);
       byte[] handle = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
       JsonNode requestAttributes = data.get(NODE_ATTRIBUTES);
-      ObjectType type = ObjectType.fromString(data.get(NODE_TYPE).asText());
+      FdoType type = FdoType.fromString(data.get(NODE_TYPE).asText());
       var attributes = fdoRecordService.prepareUpdateAttributes(handle, requestAttributes, type);
       attributesToUpdate.add(attributes);
     }
@@ -389,7 +389,7 @@ public abstract class PidService {
     return duplicateHandles;
   }
 
-  protected JsonApiWrapperWrite formatUpdates(List<String> handles, ObjectType type) {
+  protected JsonApiWrapperWrite formatUpdates(List<String> handles, FdoType type) {
     List<JsonApiDataLinks> dataList = new ArrayList<>();
     for (var handle : handles) {
       dataList.add(new JsonApiDataLinks(handle, type.toString(), null,

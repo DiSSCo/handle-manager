@@ -30,7 +30,7 @@ import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.SourceSystemRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.TombstoneRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.FdoType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import jakarta.validation.constraints.NotEmpty;
 import java.util.Arrays;
@@ -172,7 +172,8 @@ public class JsonSchemaValidator {
     SchemaGeneratorConfigBuilder configBuilder = new SchemaGeneratorConfigBuilder(
         SchemaVersion.DRAFT_2020_12, OptionPreset.PLAIN_JSON)
         .with(Option.FORBIDDEN_ADDITIONAL_PROPERTIES_BY_DEFAULT)
-        .with(Option.FLATTENED_ENUMS_FROM_TOSTRING);
+        .with(
+            Option.FLATTENED_ENUMS_FROM_TOSTRING); // Uses the output of toString() as the enum vocabulary
 
     configBuilder.forTypesInGeneral()
         .withEnumResolver(scope -> scope.getType().getErasedType().isEnum()
@@ -258,7 +259,7 @@ public class JsonSchemaValidator {
       throw new InvalidRequestException(setErrorMessage(validationErrors, "POST"));
     }
 
-    ObjectType type = ObjectType.fromString(requestRoot.get(NODE_DATA).get(NODE_TYPE).asText());
+    FdoType type = FdoType.fromString(requestRoot.get(NODE_DATA).get(NODE_TYPE).asText());
     var attributes = requestRoot.get(NODE_DATA).get(NODE_ATTRIBUTES);
     switch (type) {
       case HANDLE -> validateRequestAttributes(attributes, handlePostReqSchema, type);
@@ -282,7 +283,7 @@ public class JsonSchemaValidator {
       throw new InvalidRequestException(
           setErrorMessage(validationErrors, "PATCH (update)"));
     }
-    ObjectType type = ObjectType.fromString(requestRoot.get(NODE_DATA).get(NODE_TYPE).asText());
+    FdoType type = FdoType.fromString(requestRoot.get(NODE_DATA).get(NODE_TYPE).asText());
     var attributes = requestRoot.get(NODE_DATA).get(NODE_ATTRIBUTES);
     switch (type) {
       case HANDLE -> validateRequestAttributes(attributes, handlePatchReqSchema, type);
@@ -316,12 +317,12 @@ public class JsonSchemaValidator {
     var validationErrors = tombstoneReqSchema.validate(requestAttributes);
     if (!validationErrors.isEmpty()) {
       throw new InvalidRequestException(
-          setErrorMessage(validationErrors, ObjectType.TOMBSTONE.toString(), requestAttributes));
+          setErrorMessage(validationErrors, FdoType.TOMBSTONE.toString(), requestAttributes));
     }
   }
 
   private void validateRequestAttributes(JsonNode requestAttributes, JsonSchema schema,
-      ObjectType type) throws InvalidRequestException {
+      FdoType type) throws InvalidRequestException {
     var validationErrors = schema.validate(requestAttributes);
     if (!validationErrors.isEmpty()) {
       throw new InvalidRequestException(

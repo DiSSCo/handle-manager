@@ -1,7 +1,6 @@
 package eu.dissco.core.handlemanager.domain;
 
 import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.PrimarySpecimenObjectIdType.LOCAL;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.DIGITAL_OBJECT_TYPE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.FDO_PROFILE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.ISSUED_FOR_AGENT_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
@@ -14,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.FdoType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import org.junit.jupiter.api.Test;
 
@@ -26,7 +25,7 @@ class RequestAttributeTest {
     var request = new HandleRecordRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL,
+        FdoType.HANDLE,
         null,
         null,
         null
@@ -41,12 +40,12 @@ class RequestAttributeTest {
     var request = new DoiRecordRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL,
+        FdoType.DOI,
         null,
         null,
         null,
         null,
-        ObjectType.DIGITAL_SPECIMEN,
+        FdoType.DIGITAL_SPECIMEN.getDigitalObjectName(),
         null
     );
 
@@ -60,7 +59,7 @@ class RequestAttributeTest {
     var request = new DigitalSpecimenRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL,
+        FdoType.DIGITAL_SPECIMEN,
         null,
         null,
         null,
@@ -81,7 +80,7 @@ class RequestAttributeTest {
     var e = assertThrows(InvalidRequestException.class, () -> new DigitalSpecimenRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL,
+        FdoType.DIGITAL_SPECIMEN,
         null,
         null,
         null,

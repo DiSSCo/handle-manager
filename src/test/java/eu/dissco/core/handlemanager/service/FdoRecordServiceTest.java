@@ -63,7 +63,6 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_DOMAIN;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.TOPIC_ORIGIN;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.WAS_DERIVED_FROM_ENTITY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.API_URL;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.DIGITAL_OBJECT_TYPE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.DOC_BUILDER_FACTORY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.FDO_PROFILE_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
@@ -107,8 +106,8 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequest
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenOrganisationRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.setLocations;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.AdditionalMatchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -124,6 +123,7 @@ import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenReque
 import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.OtherSpecimenId;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.FdoType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.media.MediaFormat;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.media.PrimaryMediaObjectType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.BaseTypeOfSpecimen;
@@ -131,7 +131,6 @@ import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.Informat
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.LivingOrPreserved;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.MaterialOrDigitalEntity;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.MaterialSampleType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.PrimarySpecimenObjectIdType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.TopicCategory;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.TopicDiscipline;
@@ -230,6 +229,7 @@ class FdoRecordServiceTest {
     given(environment.matchesProfiles(Profiles.DOI)).willReturn(false);
   }
 
+
   @Test
   void testPrepareHandleRecordAttributes() throws Exception {
     // Given
@@ -237,7 +237,7 @@ class FdoRecordServiceTest {
     var request = givenHandleRecordRequestObject();
 
     // When
-    var result = fdoRecordService.prepareHandleRecordAttributes(request, handle, ObjectType.HANDLE);
+    var result = fdoRecordService.prepareHandleRecordAttributes(request, handle, FdoType.HANDLE);
 
     // Then
     assertThat(result).hasSize(HANDLE_QTY);
@@ -252,12 +252,12 @@ class FdoRecordServiceTest {
     var request = givenDoiRecordRequestObject();
 
     // When
-    var result = fdoRecordService.prepareDoiRecordAttributes(request, handle, ObjectType.HANDLE);
+    var result = fdoRecordService.prepareDoiRecordAttributes(request, handle, FdoType.HANDLE);
 
     // Then
     assertThat(result).hasSize(DOI_QTY);
     assertThat(
-        hasCorrectLocations(result, request.getLocations(), ObjectType.HANDLE, false)).isTrue();
+        hasCorrectLocations(result, request.getLocations(), FdoType.HANDLE, false)).isTrue();
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, DOI_FIELDS)).isTrue();
     assertThat(hasNoDuplicateElements(result)).isTrue();
@@ -271,14 +271,14 @@ class FdoRecordServiceTest {
     given(environment.matchesProfiles(Profiles.DOI)).willReturn(true);
 
     // When
-    var result = fdoRecordService.prepareDoiRecordAttributes(request, handle, ObjectType.DOI);
+    var result = fdoRecordService.prepareDoiRecordAttributes(request, handle, FdoType.DOI);
 
     // Then
     assertThat(result).hasSize(DOI_QTY);
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, DOI_FIELDS)).isTrue();
     assertThat(hasNoDuplicateElements(result)).isTrue();
-    assertThat(hasCorrectLocations(result, request.getLocations(), ObjectType.DOI, true)).isTrue();
+    assertThat(hasCorrectLocations(result, request.getLocations(), FdoType.DOI, true)).isTrue();
   }
 
   @Test
@@ -293,7 +293,7 @@ class FdoRecordServiceTest {
 
     // Then
     assertThat(result).hasSize(MEDIA_QTY);
-    assertThat(hasCorrectLocations(result, request.getLocations(), ObjectType.MEDIA_OBJECT,
+    assertThat(hasCorrectLocations(result, request.getLocations(), FdoType.MEDIA_OBJECT,
         false)).isTrue();
     assertThat(hasNoDuplicateElements(result)).isTrue();
     assertThat(hasCorrectElements(result, MEDIA_FIELDS_MANDATORY)).isTrue();
@@ -304,7 +304,7 @@ class FdoRecordServiceTest {
     // Given
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
     var request = new MediaObjectRequest(FDO_PROFILE_TESTVAL, ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL, PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL, REFERENT_NAME_TESTVAL,
+        FdoType.MEDIA_OBJECT, PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL, REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL, MEDIA_HOST_TESTVAL, null, MediaFormat.TEXT, Boolean.TRUE,
         LINKED_DO_PID_TESTVAL, LINKED_DIGITAL_OBJECT_TYPE_TESTVAL, "a", HANDLE,
         PrimarySpecimenObjectIdType.RESOLVABLE, "b", PrimaryMediaObjectType.IMAGE, "jpeg", "c",
@@ -317,7 +317,7 @@ class FdoRecordServiceTest {
 
     // Then
     assertThat(result).hasSize(MEDIA_OPTIONAL_QTY);
-    assertThat(hasCorrectLocations(result, request.getLocations(), ObjectType.MEDIA_OBJECT,
+    assertThat(hasCorrectLocations(result, request.getLocations(), FdoType.MEDIA_OBJECT,
         false)).isTrue();
     assertThat(hasNoDuplicateElements(result)).isTrue();
     assertThat(hasCorrectElements(result, MEDIA_FIELDS_MANDATORY)).isTrue();
@@ -328,7 +328,7 @@ class FdoRecordServiceTest {
     // Given
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
     var request = new MediaObjectRequest(FDO_PROFILE_TESTVAL, ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL, PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL, REFERENT_NAME_TESTVAL,
+        FdoType.MEDIA_OBJECT, PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL, REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL, MEDIA_HOST_TESTVAL, MEDIA_HOST_NAME_TESTVAL,
         MediaFormat.TEXT, Boolean.TRUE, LINKED_DO_PID_TESTVAL, LINKED_DIGITAL_OBJECT_TYPE_TESTVAL,
         "a", "b", PrimarySpecimenObjectIdType.GLOBAL, "d", PrimaryMediaObjectType.IMAGE, "e", "f",
@@ -340,7 +340,7 @@ class FdoRecordServiceTest {
 
     // Then
 
-    assertThat(hasCorrectLocations(result, request.getLocations(), ObjectType.MEDIA_OBJECT,
+    assertThat(hasCorrectLocations(result, request.getLocations(), FdoType.MEDIA_OBJECT,
         false)).isTrue();
     assertThat(hasNoDuplicateElements(result)).isTrue();
     assertThat(hasCorrectElements(result, MEDIA_FIELDS_OPTIONAL)).isTrue();
@@ -374,7 +374,7 @@ class FdoRecordServiceTest {
 
     // Then
     assertThat(result).hasSize(DS_MANDATORY_QTY);
-    assertThat(hasCorrectLocations(result, request.getLocations(), ObjectType.DIGITAL_SPECIMEN,
+    assertThat(hasCorrectLocations(result, request.getLocations(), FdoType.DIGITAL_SPECIMEN,
         false)).isTrue();
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, DOI_FIELDS)).isTrue();
@@ -390,7 +390,7 @@ class FdoRecordServiceTest {
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
     given(pidResolver.resolveQid(any())).willReturn("placeholder");
     var request = new DigitalSpecimenRequest(FDO_PROFILE_TESTVAL, ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL, PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL, REFERENT_NAME_TESTVAL,
+        FdoType.DIGITAL_SPECIMEN, PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL, REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL, qid, null, "PhysicalId", null, null,
         NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, null, null, null, null, null, null, null,
         null, null, null, null, null, null, null);
@@ -409,7 +409,7 @@ class FdoRecordServiceTest {
     String specimenId = "12345";
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
     var request = new DigitalSpecimenRequest(FDO_PROFILE_TESTVAL, ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL, PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL, REFERENT_NAME_TESTVAL,
+        FdoType.DIGITAL_SPECIMEN, PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL, REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL, specimenId, null, "PhysicalId", null, null,
         NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, null, null, null, null, null, null, null,
         null, null, null, null, null, null, null);
@@ -432,7 +432,7 @@ class FdoRecordServiceTest {
 
     // Then
     assertThat(result).hasSize(DS_OPTIONAL_QTY);
-    assertThat(hasCorrectLocations(result, request.getLocations(), ObjectType.DIGITAL_SPECIMEN,
+    assertThat(hasCorrectLocations(result, request.getLocations(), FdoType.DIGITAL_SPECIMEN,
         false)).isTrue();
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, DOI_FIELDS)).isTrue();
@@ -446,7 +446,7 @@ class FdoRecordServiceTest {
     // Given
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
     given(pidRepository.resolveHandleAttributes(any(byte[].class))).willReturn(
-        genHandleRecordAttributes(handle, ObjectType.ANNOTATION));
+        genHandleRecordAttributes(handle, FdoType.ANNOTATION));
     var request = givenAnnotationRequestObject();
 
     // When
@@ -456,7 +456,7 @@ class FdoRecordServiceTest {
     // Then
     assertThat(result).hasSize(ANNOTATION_OPTIONAL_QTY);
     assertThat(
-        hasCorrectLocations(result, request.getLocations(), ObjectType.ANNOTATION, false)).isTrue();
+        hasCorrectLocations(result, request.getLocations(), FdoType.ANNOTATION, false)).isTrue();
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, ANNOTATION_FIELDS_MANDATORY)).isTrue();
     assertThat(hasCorrectElements(result, ANNOTATION_FIELDS_OPTIONAL)).isTrue();
@@ -468,11 +468,11 @@ class FdoRecordServiceTest {
     // Given
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
     given(pidRepository.resolveHandleAttributes(any(byte[].class))).willReturn(
-        genHandleRecordAttributes(handle, ObjectType.ANNOTATION));
+        genHandleRecordAttributes(handle, FdoType.ANNOTATION));
     var request = new AnnotationRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL,
+        FdoType.ANNOTATION,
         PID_ISSUER_TESTVAL_OTHER,
         LOC_TESTVAL,
         TARGET_DOI_TESTVAL,
@@ -488,7 +488,7 @@ class FdoRecordServiceTest {
     // Then
     assertThat(result).hasSize(ANNOTATION_MANDATORY_QTY);
     assertThat(
-        hasCorrectLocations(result, request.getLocations(), ObjectType.ANNOTATION, false)).isTrue();
+        hasCorrectLocations(result, request.getLocations(), FdoType.ANNOTATION, false)).isTrue();
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, ANNOTATION_FIELDS_MANDATORY)).isTrue();
     assertThat(hasNoDuplicateElements(result)).isTrue();
@@ -505,7 +505,7 @@ class FdoRecordServiceTest {
 
     // Then
     assertThat(result).hasSize(HANDLE_QTY + 1);
-    assertThat(hasCorrectLocations(result, request.getLocations(), ObjectType.MAS, false)).isTrue();
+    assertThat(hasCorrectLocations(result, request.getLocations(), FdoType.MAS, false)).isTrue();
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
     assertThat(hasCorrectElements(result, Set.of(MAS_NAME.get()))).isTrue();
     assertThat(hasNoDuplicateElements(result)).isTrue();
@@ -540,7 +540,7 @@ class FdoRecordServiceTest {
 
     // Then
     assertThat(hasCorrectElements(result, HANDLE_FIELDS)).isTrue();
-    assertThat(hasCorrectLocations(result, request.getLocations(), ObjectType.SOURCE_SYSTEM,
+    assertThat(hasCorrectLocations(result, request.getLocations(), FdoType.SOURCE_SYSTEM,
         false)).isTrue();
     assertThat(result).hasSize(HANDLE_QTY + 1);
     assertThat(hasNoDuplicateElements(result)).isTrue();
@@ -569,10 +569,10 @@ class FdoRecordServiceTest {
     // Given
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
     var request = new HandleRecordRequest(FDO_PROFILE_TESTVAL, ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL, ISSUED_FOR_AGENT_TESTVAL, STRUCTURAL_TYPE_TESTVAL, null);
+        FdoType.HANDLE, ISSUED_FOR_AGENT_TESTVAL, STRUCTURAL_TYPE_TESTVAL, null);
 
     // When
-    var result = fdoRecordService.prepareHandleRecordAttributes(request, handle, ObjectType.HANDLE);
+    var result = fdoRecordService.prepareHandleRecordAttributes(request, handle, FdoType.HANDLE);
 
     // Then
     assertThat(result).hasSize(HANDLE_QTY);
@@ -585,11 +585,11 @@ class FdoRecordServiceTest {
     // Given
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
     var request = new HandleRecordRequest(FDO_PROFILE_TESTVAL, ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL, "abc", STRUCTURAL_TYPE_TESTVAL, null);
+        FdoType.HANDLE, "abc", STRUCTURAL_TYPE_TESTVAL, null);
 
     // Then
     var e = assertThrows(InvalidRequestException.class,
-        () -> fdoRecordService.prepareHandleRecordAttributes(request, handle, ObjectType.HANDLE));
+        () -> fdoRecordService.prepareHandleRecordAttributes(request, handle, FdoType.HANDLE));
     assertThat(e.getMessage()).contains(ROR_DOMAIN).contains(HANDLE_DOMAIN);
   }
 
@@ -597,11 +597,11 @@ class FdoRecordServiceTest {
   void testBadRor() throws Exception {
     // Given
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
-    var request = new HandleRecordRequest(FDO_PROFILE_TESTVAL, "abc", DIGITAL_OBJECT_TYPE_TESTVAL,
+    var request = new HandleRecordRequest(FDO_PROFILE_TESTVAL, "abc", FdoType.HANDLE,
         ISSUED_FOR_AGENT_TESTVAL, STRUCTURAL_TYPE_TESTVAL, null);
 
     var e = assertThrows(InvalidRequestException.class,
-        () -> fdoRecordService.prepareHandleRecordAttributes(request, handle, ObjectType.HANDLE));
+        () -> fdoRecordService.prepareHandleRecordAttributes(request, handle, FdoType.HANDLE));
     assertThat(e.getMessage()).contains(ROR_DOMAIN);
   }
 
@@ -609,7 +609,7 @@ class FdoRecordServiceTest {
   void testSpecimenHostResolvable() throws Exception {
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
     var request = new DigitalSpecimenRequest(FDO_PROFILE_TESTVAL, ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL, PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL, REFERENT_NAME_TESTVAL,
+        FdoType.DIGITAL_SPECIMEN, PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL, REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL, SPECIMEN_HOST_TESTVAL, null,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, null, null,
         NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, null, null, null, null, null, null, null,
@@ -627,7 +627,7 @@ class FdoRecordServiceTest {
   @Test
   void testSpecimenHostNotResolvable() throws Exception {
     var request = new DigitalSpecimenRequest(FDO_PROFILE_TESTVAL, ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL, PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL, REFERENT_NAME_TESTVAL,
+        FdoType.DIGITAL_SPECIMEN, PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL, REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL, SPECIMEN_HOST_TESTVAL, null,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, null, null,
         NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, null, null, null, null, null, null, null,
@@ -658,7 +658,7 @@ class FdoRecordServiceTest {
 
     // When
     var response = fdoRecordService.prepareUpdateAttributes(HANDLE.getBytes(), request,
-        ObjectType.DIGITAL_SPECIMEN);
+        FdoType.DIGITAL_SPECIMEN);
 
     // Then
     assertThat(response).isEqualTo(expected);
@@ -679,7 +679,7 @@ class FdoRecordServiceTest {
 
     // When
     var response = fdoRecordService.prepareUpdateAttributes(HANDLE.getBytes(), request,
-        ObjectType.DIGITAL_SPECIMEN);
+        FdoType.DIGITAL_SPECIMEN);
 
     // Then
     assertThat(response).isEqualTo(expected);
@@ -695,7 +695,7 @@ class FdoRecordServiceTest {
 
     // When
     var response = fdoRecordService.prepareUpdateAttributes(HANDLE.getBytes(StandardCharsets.UTF_8),
-        updateRequest, ObjectType.HANDLE);
+        updateRequest, FdoType.HANDLE);
 
     // Then
     assertThat(response).isEqualTo(expected);
@@ -714,7 +714,7 @@ class FdoRecordServiceTest {
 
     // When
     var response = fdoRecordService.prepareUpdateAttributes(HANDLE.getBytes(StandardCharsets.UTF_8),
-        updateRequest, ObjectType.DIGITAL_SPECIMEN);
+        updateRequest, FdoType.DIGITAL_SPECIMEN);
 
     // Then
     assertThat(response).isEqualTo(expected);
@@ -738,7 +738,7 @@ class FdoRecordServiceTest {
   private DigitalSpecimenRequest givenDigitalSpecimenRequestObjectOptionalsInit()
       throws InvalidRequestException {
     return new DigitalSpecimenRequest(FDO_PROFILE_TESTVAL, ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL, PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL, REFERENT_NAME_TESTVAL,
+        FdoType.DIGITAL_SPECIMEN, PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL, REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL, SPECIMEN_HOST_TESTVAL, SPECIMEN_HOST_NAME_TESTVAL,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, PrimarySpecimenObjectIdType.LOCAL, "b",
         NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, null,
@@ -777,7 +777,7 @@ class FdoRecordServiceTest {
   }
 
   private boolean hasCorrectLocations(List<HandleAttribute> fdoRecord, String[] userLocations,
-      ObjectType type, boolean isDoiProfileTest) throws Exception {
+      FdoType type, boolean isDoiProfileTest) throws Exception {
     var expectedLocations = new String(setLocations(userLocations, HANDLE, type, isDoiProfileTest));
     for (var row : fdoRecord) {
       if (row.getType().equals(LOC.get())) {
