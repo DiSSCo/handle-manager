@@ -4,12 +4,12 @@ import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.P
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.FdoType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.BaseTypeOfSpecimen;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.InformationArtefactType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.LivingOrPreserved;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.MaterialOrDigitalEntity;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.MaterialSampleType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.PrimarySpecimenObjectIdType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.StructuralType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.TopicCategory;
@@ -74,7 +74,7 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
       // Handle
       String fdoProfile,
       String issuedForAgent,
-      String digitalObjectTypePid,
+      FdoType digitalObjectTypePid,
       String pidIssuer,
       String[] locations,
       // Doi
@@ -102,7 +102,7 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
       String derivedFromEntity, String catalogIdentifier) throws InvalidRequestException {
     super(fdoProfile, issuedForAgent, digitalObjectTypePid, pidIssuer, StructuralType.DIGITAL,
         locations,
-        referentName, ObjectType.DIGITAL_SPECIMEN, primaryReferentType);
+        referentName, FdoType.DIGITAL_SPECIMEN.getDigitalObjectName(), primaryReferentType);
     this.specimenHost = specimenHost;
     this.specimenHostName = specimenHostName;
     this.primarySpecimenObjectId = primarySpecimenObjectId;

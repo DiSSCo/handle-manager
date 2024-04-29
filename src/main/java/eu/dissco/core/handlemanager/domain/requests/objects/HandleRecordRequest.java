@@ -3,6 +3,7 @@ package eu.dissco.core.handlemanager.domain.requests.objects;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.FdoType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.StructuralType;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
@@ -25,7 +26,7 @@ public class HandleRecordRequest {
 
   @JsonProperty(required = true)
   @JsonPropertyDescription("PID for the Type of Digital Object")
-  private final String digitalObjectType;
+  private final FdoType digitalObjectType;
 
   @JsonPropertyDescription("ROR of the Registration Agency. Defaults to DataCite's ROR")
   private final String pidIssuer;
@@ -44,7 +45,7 @@ public class HandleRecordRequest {
   public HandleRecordRequest(
       String fdoProfile,
       String issuedForAgent,
-      String digitalObjectType,
+      FdoType digitalObjectType,
       String pidIssuer,
       StructuralType structuralType,
       String[] locations

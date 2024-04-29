@@ -2,8 +2,8 @@ package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
-import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType.DOI;
-import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType.HANDLE;
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.FdoType.DOI;
+import static eu.dissco.core.handlemanager.domain.requests.vocabulary.FdoType.HANDLE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -20,7 +20,6 @@ import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.SourceSystemRequest;
 import eu.dissco.core.handlemanager.exceptions.DatabaseCopyException;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
-import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.PidRepository;
@@ -45,7 +44,7 @@ public class HandleService extends PidService {
   // Pid Record Creation
   @Override
   public JsonApiWrapperWrite createRecords(List<JsonNode> requests)
-      throws InvalidRequestException, PidCreationException, DatabaseCopyException {
+      throws InvalidRequestException, DatabaseCopyException {
     var handles = hf.genHandleList(requests.size()).iterator();
     var requestAttributes = requests.stream()
         .map(request -> request.get(NODE_DATA).get(NODE_ATTRIBUTES)).toList();

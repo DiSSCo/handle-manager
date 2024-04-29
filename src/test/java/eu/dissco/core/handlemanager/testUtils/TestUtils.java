@@ -91,9 +91,9 @@ import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.SourceSystemRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.TombstoneRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.vocabulary.FdoType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.annotation.Motivation;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.media.LinkedDigitalObjectType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.PrimarySpecimenObjectIdType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.StructuralType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
@@ -129,27 +129,12 @@ public class TestUtils {
   public static final String HANDLE_ALT = PREFIX + "/ABC-123-QRS";
   public static final List<String> HANDLE_LIST_STR;
 
-  // Record types
-  public static final String RECORD_TYPE_HANDLE = "handle";
-  public static final String RECORD_TYPE_DOI = "doi";
-  public static final String RECORD_TYPE_DS = "digitalSpecimen";
-  public static final String RECORD_TYPE_TOMBSTONE = "tombstone";
-  public static final String RECORD_TYPE_MEDIA = "mediaObject";
-  public static final String RECORD_TYPE_SOURCE_SYSTEM = "sourceSystem";
-  public static final String RECORD_TYPE_MAPPING = "mapping";
-  public static final String RECORD_TYPE_ANNOTATION = "annotation";
-  public static final String RECORD_TYPE_ORGANISATION = "organisation";
-  public static final String RECORD_TYPE_MAS = "machineAnnotationService";
-
-  // Request Test Vals
   // Handles
   public static final String HANDLE_DOMAIN = "https://hdl.handle.net/";
   public static final String DOI_DOMAIN = "https://doi.org/";
   public static final String ROR_DOMAIN = "https://ror.org/";
   public static final String FDO_PROFILE_TESTVAL = HANDLE_DOMAIN + "21.T11148/d8de0819e144e4096645";
   public static final String ISSUED_FOR_AGENT_TESTVAL = ROR_DOMAIN + "0566bfb96";
-  public static final String DIGITAL_OBJECT_TYPE_TESTVAL =
-      HANDLE_DOMAIN + "21.T11148/1c699a5d1b4ad3ba4956";
   public static final String PID_ISSUER_TESTVAL_OTHER = HANDLE_DOMAIN + "20.5000.1025/PID-ISSUER";
   public static final StructuralType STRUCTURAL_TYPE_TESTVAL = StructuralType.DIGITAL;
   public static final String[] LOC_TESTVAL = {"https://sandbox.dissco.tech/", "https://dissco.eu"};
@@ -196,7 +181,6 @@ public class TestUtils {
       PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL + ":" + ROR_IDENTIFIER;
   public final static String EXTERNAL_PID = "21.T11148/d8de0819e144e4096645";
   public static final String DIGITAL_OBJECT_NAME_TESTVAL = "digitalSpecimen";
-  public static final String SOURCE_SYSTEM_TESTVAL = "20.5000.1025/D6P-AQE-9RR";
 
   // Tombstone Record vals
   public final static String TOMBSTONE_TEXT_TESTVAL = "pid was deleted";
@@ -217,17 +201,16 @@ public class TestUtils {
   // Single Handle Attribute Lists
 
   public static List<HandleAttribute> genHandleRecordAttributes(byte[] handle) throws Exception {
-    return genHandleRecordAttributes(handle, ObjectType.HANDLE);
+    return genHandleRecordAttributes(handle, FdoType.HANDLE);
   }
 
-  public static List<HandleAttribute> genHandleRecordAttributes(byte[] handle, ObjectType type)
+  public static List<HandleAttribute> genHandleRecordAttributes(byte[] handle, FdoType type)
       throws Exception {
 
     List<HandleAttribute> fdoRecord = new ArrayList<>();
     var request = givenHandleRecordRequestObject();
     byte[] loc = setLocations(request.getLocations(), new String(handle, StandardCharsets.UTF_8),
         type, false);
-    var a = new String(loc, StandardCharsets.UTF_8);
     fdoRecord.add(new HandleAttribute(LOC.index(), handle, LOC.get(), loc));
 
     // 1: FDO Profile
@@ -242,13 +225,12 @@ public class TestUtils {
 
     // 3: DigitalObjectType
     fdoRecord.add(
-        new HandleAttribute(DIGITAL_OBJECT_TYPE.index(), handle, DIGITAL_OBJECT_TYPE.get(),
-            request.getDigitalObjectType().getBytes(StandardCharsets.UTF_8)));
+        new HandleAttribute(DIGITAL_OBJECT_TYPE, handle,
+            type.getDigitalObjectType()));
 
     // 4: DigitalObjectName
     fdoRecord.add(
-        new HandleAttribute(DIGITAL_OBJECT_NAME.index(), handle, DIGITAL_OBJECT_NAME.get(),
-            DIGITAL_OBJECT_NAME_TESTVAL.getBytes(StandardCharsets.UTF_8)));
+        new HandleAttribute(DIGITAL_OBJECT_NAME, handle, type.getDigitalObjectName()));
 
     // 5: Pid
     byte[] pid = ("https://hdl.handle.net/" + new String(handle, StandardCharsets.UTF_8)).getBytes(
@@ -294,14 +276,14 @@ public class TestUtils {
 
   public static List<HandleAttribute> genHandleRecordAttributesAltLoc(byte[] handle)
       throws Exception {
-    List<HandleAttribute> attributes = genHandleRecordAttributes(handle, ObjectType.HANDLE);
+    List<HandleAttribute> attributes = genHandleRecordAttributes(handle, FdoType.HANDLE);
 
     byte[] locOriginal = setLocations(LOC_TESTVAL, new String(handle, StandardCharsets.UTF_8),
-        ObjectType.HANDLE, false);
+        FdoType.HANDLE, false);
     var locOriginalAttr = new HandleAttribute(LOC.index(), handle, LOC.get(), locOriginal);
 
     byte[] locAlt = setLocations(LOC_ALT_TESTVAL, new String(handle, StandardCharsets.UTF_8),
-        ObjectType.HANDLE, false);
+        FdoType.HANDLE, false);
     var locAltAttr = new HandleAttribute(LOC.index(), handle, LOC.get(), locAlt);
 
     attributes.set(attributes.indexOf(locOriginalAttr), locAltAttr);
@@ -311,10 +293,10 @@ public class TestUtils {
 
   public static List<HandleAttribute> genTombstoneRecordFullAttributes(byte[] handle)
       throws Exception {
-    List<HandleAttribute> attributes = genHandleRecordAttributes(handle, ObjectType.HANDLE);
+    List<HandleAttribute> attributes = genHandleRecordAttributes(handle, FdoType.TOMBSTONE);
     HandleAttribute oldPidStatus = new HandleAttribute(PID_STATUS.index(), handle,
         PID_STATUS.get(), PID_STATUS_TESTVAL.getBytes(StandardCharsets.UTF_8));
-    attributes.addAll(genHandleRecordAttributes(handle, ObjectType.TOMBSTONE));
+    attributes.addAll(genHandleRecordAttributes(handle, FdoType.TOMBSTONE));
     attributes.remove(oldPidStatus);
     attributes = new ArrayList<>(
         (attributes.stream().filter(row -> row.getIndex() != LOC.index())).toList());
@@ -325,7 +307,7 @@ public class TestUtils {
   public static List<HandleAttribute> genUpdateRecordAttributesAltLoc(byte[] handle)
       throws ParserConfigurationException, TransformerException {
     byte[] locAlt = setLocations(LOC_ALT_TESTVAL, new String(handle, StandardCharsets.UTF_8),
-        ObjectType.HANDLE, false);
+        FdoType.HANDLE, false);
     return List.of(new HandleAttribute(LOC.index(), handle, LOC.get(), locAlt));
   }
 
@@ -341,12 +323,12 @@ public class TestUtils {
     return tombstoneAttributes;
   }
 
-  public static List<HandleAttribute> genDoiRecordAttributes(byte[] handle, ObjectType type)
+  public static List<HandleAttribute> genDoiRecordAttributes(byte[] handle, FdoType type)
       throws Exception {
     return genDoiRecordAttributes(handle, type, givenDoiRecordRequestObject());
   }
 
-  public static List<HandleAttribute> genDoiRecordAttributes(byte[] handle, ObjectType type,
+  public static List<HandleAttribute> genDoiRecordAttributes(byte[] handle, FdoType type,
       DoiRecordRequest request)
       throws Exception {
     List<HandleAttribute> fdoRecord = genHandleRecordAttributes(handle, type);
@@ -376,7 +358,7 @@ public class TestUtils {
 
   public static List<HandleAttribute> genDigitalSpecimenAttributes(byte[] handle,
       DigitalSpecimenRequest request) throws Exception {
-    List<HandleAttribute> fdoRecord = genDoiRecordAttributes(handle, ObjectType.DIGITAL_SPECIMEN,
+    List<HandleAttribute> fdoRecord = genDoiRecordAttributes(handle, FdoType.DIGITAL_SPECIMEN,
         request);
     // 200: Specimen Host
     fdoRecord.add(
@@ -536,7 +518,7 @@ public class TestUtils {
 
   public static List<HandleAttribute> genMediaObjectAttributes(byte[] handle,
       MediaObjectRequest request) throws Exception {
-    List<HandleAttribute> fdoRecord = genDoiRecordAttributes(handle, ObjectType.MEDIA_OBJECT);
+    List<HandleAttribute> fdoRecord = genDoiRecordAttributes(handle, FdoType.MEDIA_OBJECT);
     fdoRecord.add(new HandleAttribute(MEDIA_HOST, handle, request.getMediaHost()));
     fdoRecord.add(new HandleAttribute(MEDIA_HOST_NAME, handle, request.getMediaHostName()));
     if (request.getMediaFormat() != null) {
@@ -614,7 +596,7 @@ public class TestUtils {
 
   public static List<HandleAttribute> genAnnotationAttributes(byte[] handle, boolean includeHash)
       throws Exception {
-    var fdoRecord = genHandleRecordAttributes(handle, ObjectType.ANNOTATION);
+    var fdoRecord = genHandleRecordAttributes(handle, FdoType.ANNOTATION);
 
     // 500 TargetPid
     fdoRecord.add(new HandleAttribute(TARGET_PID, handle, TARGET_DOI_TESTVAL));
@@ -636,7 +618,7 @@ public class TestUtils {
 
   public static List<HandleAttribute> genMasAttributes(byte[] handle)
       throws Exception {
-    var fdoRecord = genHandleRecordAttributes(handle, ObjectType.MAS);
+    var fdoRecord = genHandleRecordAttributes(handle, FdoType.MAS);
 
     fdoRecord.add(new HandleAttribute(MAS_NAME.index(), handle, MAS_NAME.get(),
         (MAS_NAME_TESTVAL).getBytes(StandardCharsets.UTF_8)));
@@ -646,7 +628,7 @@ public class TestUtils {
 
   public static List<HandleAttribute> genMappingAttributes(byte[] handle)
       throws Exception {
-    var fdoRecord = genHandleRecordAttributes(handle, ObjectType.MAPPING);
+    var fdoRecord = genHandleRecordAttributes(handle, FdoType.MAPPING);
 
     // 500 subjectDigitalObjectId
     fdoRecord.add(new HandleAttribute(SOURCE_DATA_STANDARD.index(), handle,
@@ -657,7 +639,7 @@ public class TestUtils {
 
   public static List<HandleAttribute> genSourceSystemAttributes(byte[] handle)
       throws Exception {
-    var fdoRecord = genHandleRecordAttributes(handle, ObjectType.SOURCE_SYSTEM);
+    var fdoRecord = genHandleRecordAttributes(handle, FdoType.SOURCE_SYSTEM);
 
     // 600 hostInstitution
     fdoRecord.add(new HandleAttribute(SOURCE_SYSTEM_NAME.index(), handle,
@@ -668,7 +650,7 @@ public class TestUtils {
 
   public static List<HandleAttribute> genOrganisationAttributes(byte[] handle)
       throws Exception {
-    var fdoRecord = genDoiRecordAttributes(handle, ObjectType.ORGANISATION);
+    var fdoRecord = genDoiRecordAttributes(handle, FdoType.ORGANISATION);
 
     // 800 OrganisationIdentifier
     fdoRecord.add(new HandleAttribute(ORGANISATION_ID.index(), handle,
@@ -687,7 +669,7 @@ public class TestUtils {
   }
 
   public static <T extends HandleRecordRequest> ObjectNode genCreateRecordRequest(T request,
-      String recordType) {
+      FdoType fdoType) {
     ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
 
     ObjectNode rootNode = mapper.createObjectNode();
@@ -698,7 +680,7 @@ public class TestUtils {
       attributeNode.remove("referent");
     }
 
-    dataNode.put("type", recordType);
+    dataNode.put("type", fdoType.getDigitalObjectType());
     dataNode.set("attributes", attributeNode);
     rootNode.set("data", dataNode);
 
@@ -710,7 +692,7 @@ public class TestUtils {
     return new HandleRecordRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL,
+        FdoType.HANDLE,
         PID_ISSUER_TESTVAL_OTHER,
         STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL
@@ -721,12 +703,12 @@ public class TestUtils {
     return new DoiRecordRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL,
+        FdoType.DOI,
         PID_ISSUER_TESTVAL_OTHER,
         STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,
-        ObjectType.MEDIA_OBJECT,
+        FdoType.MEDIA_OBJECT.getDigitalObjectName(),
         PRIMARY_REFERENT_TYPE_TESTVAL
     );
   }
@@ -741,7 +723,7 @@ public class TestUtils {
       return new DigitalSpecimenRequest(
           FDO_PROFILE_TESTVAL,
           ISSUED_FOR_AGENT_TESTVAL,
-          DIGITAL_OBJECT_TYPE_TESTVAL,
+          FdoType.DIGITAL_SPECIMEN,
           PID_ISSUER_TESTVAL_OTHER,
           LOC_TESTVAL,
           REFERENT_NAME_TESTVAL,
@@ -764,7 +746,7 @@ public class TestUtils {
     return new MediaObjectRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL,
+        FdoType.MEDIA_OBJECT,
         PID_ISSUER_TESTVAL_OTHER,
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,
@@ -780,7 +762,7 @@ public class TestUtils {
     return new AnnotationRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL,
+        FdoType.ANNOTATION,
         PID_ISSUER_TESTVAL_OTHER,
         LOC_TESTVAL,
         TARGET_DOI_TESTVAL,
@@ -794,7 +776,7 @@ public class TestUtils {
     return new AnnotationRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL,
+        FdoType.ANNOTATION,
         PID_ISSUER_TESTVAL_OTHER,
         LOC_TESTVAL,
         TARGET_DOI_TESTVAL,
@@ -808,7 +790,7 @@ public class TestUtils {
     return new MappingRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL,
+        FdoType.MAPPING,
         PID_ISSUER_TESTVAL_OTHER,
         LOC_TESTVAL,
         SOURCE_DATA_STANDARD_TESTVAL
@@ -819,7 +801,7 @@ public class TestUtils {
     return new SourceSystemRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL,
+        FdoType.SOURCE_SYSTEM,
         PID_ISSUER_TESTVAL_OTHER,
         LOC_TESTVAL,
         SPECIMEN_HOST_TESTVAL
@@ -830,7 +812,7 @@ public class TestUtils {
     return new OrganisationRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL,
+        FdoType.ORGANISATION,
         PID_ISSUER_TESTVAL_OTHER,
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,
@@ -844,7 +826,7 @@ public class TestUtils {
     return new MasRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL,
+        FdoType.MAS,
         PID_ISSUER_TESTVAL_OTHER,
         LOC_TESTVAL,
         MAS_NAME_TESTVAL
@@ -859,7 +841,7 @@ public class TestUtils {
   }
 
   public static JsonApiWrapperRead givenRecordResponseRead(List<byte[]> handles, String path,
-      String recordType)
+      FdoType recordType)
       throws Exception {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
 
@@ -867,7 +849,8 @@ public class TestUtils {
       var testDbRecord = genAttributes(recordType, handle);
       JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
       var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
-      dataNodes.add(new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), recordType,
+      dataNodes.add(new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8),
+          recordType.getDigitalObjectType(),
           recordAttributes, pidLink));
     }
 
@@ -876,15 +859,15 @@ public class TestUtils {
   }
 
   public static JsonApiWrapperReadSingle givenRecordResponseReadSingle(String handle, String path,
-      String type, JsonNode attributes) {
+      FdoType type, JsonNode attributes) {
     return new JsonApiWrapperReadSingle(
         new JsonApiLinks(path),
-        new JsonApiDataLinks(handle, type, attributes,
+        new JsonApiDataLinks(handle, type.getDigitalObjectType(), attributes,
             new JsonApiLinks("https://hdl.handle.net/" + handle)));
   }
 
   public static JsonApiWrapperWrite givenRecordResponseWrite(List<byte[]> handles,
-      String recordType)
+      FdoType recordType)
       throws Exception {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
 
@@ -893,14 +876,14 @@ public class TestUtils {
       JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
 
       var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
-      dataNodes.add(new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), recordType,
+      dataNodes.add(new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8),
+          recordType.getDigitalObjectType(),
           recordAttributes, pidLink));
     }
     return new JsonApiWrapperWrite(dataNodes);
   }
 
-  public static JsonApiWrapperWrite givenAnnotationResponseWrite(List<byte[]> handles)
-      throws Exception {
+  public static JsonApiWrapperWrite givenAnnotationResponseWrite(List<byte[]> handles) {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
 
     for (byte[] handle : handles) {
@@ -910,14 +893,14 @@ public class TestUtils {
 
       var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
       dataNodes.add(new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8),
-          ObjectType.ANNOTATION.toString(),
+          FdoType.ANNOTATION.toString(),
           recordAttributes, pidLink));
     }
     return new JsonApiWrapperWrite(dataNodes);
   }
 
   public static JsonApiWrapperWrite givenRecordResponseWriteSmallResponse(
-      List<HandleAttribute> testDbRecord, List<byte[]> handles, ObjectType type) throws Exception {
+      List<HandleAttribute> testDbRecord, List<byte[]> handles, FdoType type) {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
     for (var handle : handles) {
       JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
@@ -931,7 +914,7 @@ public class TestUtils {
 
 
   public static JsonApiWrapperWrite givenRecordResponseWriteGeneric(List<byte[]> handles,
-      String recordType)
+      FdoType recordType)
       throws Exception {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
 
@@ -947,7 +930,7 @@ public class TestUtils {
   }
 
   public static JsonApiWrapperWrite givenRecordResponseWrite(List<byte[]> handles,
-      String attributeType, String recordType)
+      FdoType attributeType, String recordType)
       throws Exception {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
 
@@ -964,11 +947,11 @@ public class TestUtils {
 
   public static JsonApiWrapperWrite givenRecordResponseWriteAltLoc(List<byte[]> handles)
       throws Exception {
-    return givenRecordResponseWriteAltLoc(handles, RECORD_TYPE_HANDLE);
+    return givenRecordResponseWriteAltLoc(handles, FdoType.HANDLE);
   }
 
   public static JsonApiWrapperWrite givenRecordResponseWriteAltLoc(List<byte[]> handles,
-      String recordType)
+      FdoType recordType)
       throws Exception {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
 
@@ -978,18 +961,19 @@ public class TestUtils {
 
       var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
       dataNodes.add(
-          new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), recordType,
+          new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8),
+              recordType.getDigitalObjectType(),
               recordAttributes, pidLink));
     }
     return new JsonApiWrapperWrite(dataNodes);
   }
 
   public static JsonApiWrapperWrite givenRecordResponseNullAttributes(List<byte[]> handles) {
-    return givenRecordResponseNullAttributes(handles, ObjectType.HANDLE);
+    return givenRecordResponseNullAttributes(handles, FdoType.HANDLE);
   }
 
   public static JsonApiWrapperWrite givenRecordResponseNullAttributes(List<byte[]> handles,
-      ObjectType type) {
+      FdoType type) {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
     for (byte[] handle : handles) {
       var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
@@ -1012,47 +996,48 @@ public class TestUtils {
 
       var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
       dataNodes.add(
-          new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), RECORD_TYPE_TOMBSTONE,
+          new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8),
+              FdoType.TOMBSTONE.getDigitalObjectType(),
               recordAttributes, pidLink));
     }
     return new JsonApiWrapperWrite(dataNodes);
   }
 
-  public static List<HandleAttribute> genAttributes(String recordType, byte[] handle)
+  public static List<HandleAttribute> genAttributes(FdoType recordType, byte[] handle)
       throws Exception {
     switch (recordType) {
-      case RECORD_TYPE_DOI -> {
-        return genDoiRecordAttributes(handle, ObjectType.fromString(recordType));
+      case DOI -> {
+        return genDoiRecordAttributes(handle, recordType);
       }
-      case RECORD_TYPE_DS -> {
+      case DIGITAL_SPECIMEN -> {
         return genDigitalSpecimenAttributes(handle);
       }
-      case RECORD_TYPE_MEDIA -> {
+      case MEDIA_OBJECT -> {
         return genMediaObjectAttributes(handle);
       }
-      case RECORD_TYPE_ANNOTATION -> {
+      case ANNOTATION -> {
         return genAnnotationAttributes(handle, false);
       }
-      case RECORD_TYPE_MAPPING -> {
+      case MAPPING -> {
         return genMappingAttributes(handle);
       }
-      case RECORD_TYPE_SOURCE_SYSTEM -> {
+      case SOURCE_SYSTEM -> {
         return genSourceSystemAttributes(handle);
       }
-      case RECORD_TYPE_ORGANISATION -> {
+      case ORGANISATION -> {
         return genOrganisationAttributes(handle);
       }
-      case RECORD_TYPE_MAS -> {
+      case MAS -> {
         return genMasAttributes(handle);
       }
       default -> {
         log.warn("Default type");
-        return genHandleRecordAttributes(handle, ObjectType.HANDLE);
+        return genHandleRecordAttributes(handle, FdoType.HANDLE);
       }
     }
   }
 
-  public static List<JsonNode> genUpdateRequestBatch(List<byte[]> handles, ObjectType type) {
+  public static List<JsonNode> genUpdateRequestBatch(List<byte[]> handles, FdoType type) {
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode requestNodeRoot = mapper.createObjectNode();
     ObjectNode requestNodeData = mapper.createObjectNode();
@@ -1073,7 +1058,7 @@ public class TestUtils {
   }
 
   public static List<JsonNode> genUpdateRequestBatch(List<byte[]> handles) {
-    return genUpdateRequestBatch(handles, ObjectType.HANDLE);
+    return genUpdateRequestBatch(handles, FdoType.HANDLE);
   }
 
   public static List<JsonNode> genTombstoneRequestBatch(List<String> handles) {
@@ -1083,7 +1068,7 @@ public class TestUtils {
     List<JsonNode> requestNodeList = new ArrayList<>();
 
     for (String handle : handles) {
-      requestNodeData.put(NODE_TYPE, RECORD_TYPE_HANDLE);
+      requestNodeData.put(NODE_TYPE, FdoType.HANDLE.getDigitalObjectType());
       requestNodeData.put(NODE_ID, handle);
       requestNodeData.set(NODE_ATTRIBUTES, genTombstoneRequest());
       requestNodeRoot.set(NODE_DATA, requestNodeData);
@@ -1134,7 +1119,7 @@ public class TestUtils {
 
   public static byte[] givenLandingPage(String handle) throws Exception {
     var landingPage = new String[]{"Placeholder landing page"};
-    return setLocations(landingPage, handle, ObjectType.TOMBSTONE, false);
+    return setLocations(landingPage, handle, FdoType.TOMBSTONE, false);
   }
 
   public static HandleAttribute givenLandingPageAttribute(byte[] handle) throws Exception {
@@ -1142,7 +1127,7 @@ public class TestUtils {
     return new HandleAttribute(LOC.index(), handle, LOC.get(), data);
   }
 
-  public static byte[] setLocations(String[] userLocations, String handle, ObjectType type,
+  public static byte[] setLocations(String[] userLocations, String handle, FdoType type,
       boolean isDoiProfileTest)
       throws TransformerException, ParserConfigurationException {
     DOC_BUILDER_FACTORY.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
@@ -1166,14 +1151,14 @@ public class TestUtils {
     return documentToString(doc).getBytes(StandardCharsets.UTF_8);
   }
 
-  private static String[] concatLocations(String[] userLocations, String handle, ObjectType type) {
+  private static String[] concatLocations(String[] userLocations, String handle, FdoType type) {
     ArrayList<String> objectLocations = new ArrayList<>();
     objectLocations.addAll(List.of(defaultLocations(handle, type)));
     objectLocations.addAll(List.of(userLocations));
     return objectLocations.toArray(new String[0]);
   }
 
-  private static String[] defaultLocations(String handle, ObjectType type) {
+  private static String[] defaultLocations(String handle, FdoType type) {
     switch (type) {
       case DIGITAL_SPECIMEN -> {
         String api = API_URL + "/specimens/" + handle;
