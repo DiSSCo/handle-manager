@@ -16,11 +16,11 @@ public class OrganisationRequest extends DoiRecordRequest {
   private final String organisationIdentifier;
   private final String organisationIdentifierType;
 
-  public OrganisationRequest(String fdoProfile, String issuedForAgent, FdoType digitalObjectType,
+  public OrganisationRequest(String fdoProfile, String issuedForAgent,
       String pidIssuer, String[] locations, String referentName,
       String primaryReferentType, String organisationIdentifier,
       String organisationIdentifierType) {
-    super(fdoProfile, issuedForAgent, digitalObjectType, pidIssuer, StructuralType.DIGITAL,
+    super(fdoProfile, issuedForAgent, pidIssuer, StructuralType.DIGITAL,
         locations,
         referentName, FdoType.ORGANISATION.getDigitalObjectName(), primaryReferentType);
     this.organisationIdentifier = organisationIdentifier;

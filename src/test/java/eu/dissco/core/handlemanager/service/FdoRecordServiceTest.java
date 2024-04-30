@@ -304,7 +304,7 @@ class FdoRecordServiceTest {
     // Given
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
     var request = new MediaObjectRequest(FDO_PROFILE_TESTVAL, ISSUED_FOR_AGENT_TESTVAL,
-        FdoType.MEDIA_OBJECT, PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL, REFERENT_NAME_TESTVAL,
+        PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL, REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL, MEDIA_HOST_TESTVAL, null, MediaFormat.TEXT, Boolean.TRUE,
         LINKED_DO_PID_TESTVAL, LINKED_DIGITAL_OBJECT_TYPE_TESTVAL, "a", HANDLE,
         PrimarySpecimenObjectIdType.RESOLVABLE, "b", PrimaryMediaObjectType.IMAGE, "jpeg", "c",
@@ -328,7 +328,7 @@ class FdoRecordServiceTest {
     // Given
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
     var request = new MediaObjectRequest(FDO_PROFILE_TESTVAL, ISSUED_FOR_AGENT_TESTVAL,
-        FdoType.MEDIA_OBJECT, PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL, REFERENT_NAME_TESTVAL,
+        PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL, REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL, MEDIA_HOST_TESTVAL, MEDIA_HOST_NAME_TESTVAL,
         MediaFormat.TEXT, Boolean.TRUE, LINKED_DO_PID_TESTVAL, LINKED_DIGITAL_OBJECT_TYPE_TESTVAL,
         "a", "b", PrimarySpecimenObjectIdType.GLOBAL, "d", PrimaryMediaObjectType.IMAGE, "e", "f",
@@ -390,7 +390,7 @@ class FdoRecordServiceTest {
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
     given(pidResolver.resolveQid(any())).willReturn("placeholder");
     var request = new DigitalSpecimenRequest(FDO_PROFILE_TESTVAL, ISSUED_FOR_AGENT_TESTVAL,
-        FdoType.DIGITAL_SPECIMEN, PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL, REFERENT_NAME_TESTVAL,
+        PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL, REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL, qid, null, "PhysicalId", null, null,
         NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, null, null, null, null, null, null, null,
         null, null, null, null, null, null, null);
@@ -409,7 +409,7 @@ class FdoRecordServiceTest {
     String specimenId = "12345";
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
     var request = new DigitalSpecimenRequest(FDO_PROFILE_TESTVAL, ISSUED_FOR_AGENT_TESTVAL,
-        FdoType.DIGITAL_SPECIMEN, PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL, REFERENT_NAME_TESTVAL,
+        PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL, REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL, specimenId, null, "PhysicalId", null, null,
         NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, null, null, null, null, null, null, null,
         null, null, null, null, null, null, null);
@@ -472,7 +472,6 @@ class FdoRecordServiceTest {
     var request = new AnnotationRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        FdoType.ANNOTATION,
         PID_ISSUER_TESTVAL_OTHER,
         LOC_TESTVAL,
         TARGET_DOI_TESTVAL,
@@ -569,7 +568,7 @@ class FdoRecordServiceTest {
     // Given
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
     var request = new HandleRecordRequest(FDO_PROFILE_TESTVAL, ISSUED_FOR_AGENT_TESTVAL,
-        FdoType.HANDLE, ISSUED_FOR_AGENT_TESTVAL, STRUCTURAL_TYPE_TESTVAL, null);
+        ISSUED_FOR_AGENT_TESTVAL, STRUCTURAL_TYPE_TESTVAL, null);
 
     // When
     var result = fdoRecordService.prepareHandleRecordAttributes(request, handle, FdoType.HANDLE);
@@ -585,7 +584,7 @@ class FdoRecordServiceTest {
     // Given
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
     var request = new HandleRecordRequest(FDO_PROFILE_TESTVAL, ISSUED_FOR_AGENT_TESTVAL,
-        FdoType.HANDLE, "abc", STRUCTURAL_TYPE_TESTVAL, null);
+        "abc", STRUCTURAL_TYPE_TESTVAL, null);
 
     // Then
     var e = assertThrows(InvalidRequestException.class,
@@ -597,7 +596,7 @@ class FdoRecordServiceTest {
   void testBadRor() throws Exception {
     // Given
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
-    var request = new HandleRecordRequest(FDO_PROFILE_TESTVAL, "abc", FdoType.HANDLE,
+    var request = new HandleRecordRequest(FDO_PROFILE_TESTVAL, "abc",
         ISSUED_FOR_AGENT_TESTVAL, STRUCTURAL_TYPE_TESTVAL, null);
 
     var e = assertThrows(InvalidRequestException.class,
@@ -609,7 +608,7 @@ class FdoRecordServiceTest {
   void testSpecimenHostResolvable() throws Exception {
     given(pidResolver.getObjectName(any())).willReturn("placeholder");
     var request = new DigitalSpecimenRequest(FDO_PROFILE_TESTVAL, ISSUED_FOR_AGENT_TESTVAL,
-        FdoType.DIGITAL_SPECIMEN, PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL, REFERENT_NAME_TESTVAL,
+        PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL, REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL, SPECIMEN_HOST_TESTVAL, null,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, null, null,
         NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, null, null, null, null, null, null, null,
@@ -627,7 +626,7 @@ class FdoRecordServiceTest {
   @Test
   void testSpecimenHostNotResolvable() throws Exception {
     var request = new DigitalSpecimenRequest(FDO_PROFILE_TESTVAL, ISSUED_FOR_AGENT_TESTVAL,
-        FdoType.DIGITAL_SPECIMEN, PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL, REFERENT_NAME_TESTVAL,
+        PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL, REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL, SPECIMEN_HOST_TESTVAL, null,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, null, null,
         NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, null, null, null, null, null, null, null,
@@ -738,7 +737,7 @@ class FdoRecordServiceTest {
   private DigitalSpecimenRequest givenDigitalSpecimenRequestObjectOptionalsInit()
       throws InvalidRequestException {
     return new DigitalSpecimenRequest(FDO_PROFILE_TESTVAL, ISSUED_FOR_AGENT_TESTVAL,
-        FdoType.DIGITAL_SPECIMEN, PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL, REFERENT_NAME_TESTVAL,
+        PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL, REFERENT_NAME_TESTVAL,
         PRIMARY_REFERENT_TYPE_TESTVAL, SPECIMEN_HOST_TESTVAL, SPECIMEN_HOST_NAME_TESTVAL,
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, PrimarySpecimenObjectIdType.LOCAL, "b",
         NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, null,

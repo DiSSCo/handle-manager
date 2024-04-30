@@ -74,7 +74,6 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
       // Handle
       String fdoProfile,
       String issuedForAgent,
-      FdoType digitalObjectTypePid,
       String pidIssuer,
       String[] locations,
       // Doi
@@ -100,7 +99,7 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
       MaterialOrDigitalEntity materialOrDigitalEntity,
       Boolean markedAsType,
       String derivedFromEntity, String catalogIdentifier) throws InvalidRequestException {
-    super(fdoProfile, issuedForAgent, digitalObjectTypePid, pidIssuer, StructuralType.DIGITAL,
+    super(fdoProfile, issuedForAgent, pidIssuer, StructuralType.DIGITAL,
         locations,
         referentName, FdoType.DIGITAL_SPECIMEN.getDigitalObjectName(), primaryReferentType);
     this.specimenHost = specimenHost;
