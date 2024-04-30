@@ -50,7 +50,7 @@ public class DoiService extends PidService {
     var handles = hf.genHandleList(requests.size()).iterator();
     var requestAttributes = requests.stream()
         .map(request -> request.get(NODE_DATA).get(NODE_ATTRIBUTES)).toList();
-    var type = getObjectType(requests);
+    var type = getObjectTypeFromJsonNode(requests);
     List<HandleAttribute> handleAttributes;
     try {
       switch (type) {
@@ -74,7 +74,7 @@ public class DoiService extends PidService {
   @Override
   public JsonApiWrapperWrite updateRecords(List<JsonNode> requests, boolean incrementVersion)
       throws InvalidRequestException, PidResolutionException, UnprocessableEntityException {
-    var type = getObjectType(requests);
+    var type = getObjectTypeFromJsonNode(requests);
     if (!DIGITAL_SPECIMEN.equals(type) && !MEDIA_OBJECT.equals(type)) {
       throw new InvalidRequestException(TYPE_ERROR_MESSAGE);
     }
