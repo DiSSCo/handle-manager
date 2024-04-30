@@ -7,7 +7,6 @@ import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_DO_PID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_MEDIA_ID;
 import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.REFERENT_TYPE;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ID;
@@ -83,7 +82,7 @@ public abstract class PidService {
         .collect(Collectors.groupingBy(row -> new String(row.getHandle(), StandardCharsets.UTF_8)));
   }
 
-  private JsonApiDataLinks wrapData(JsonNode recordAttributes, String recordType) {
+  private JsonApiDataLinks wrapResolvedData(JsonNode recordAttributes, String recordType) {
     String pidLink = recordAttributes.get(PID.get()).asText();
     String pidName = getPidName(pidLink);
     var handleLink = new JsonApiLinks(pidLink);
@@ -122,8 +121,9 @@ public abstract class PidService {
       var subRecord = hashRow.map(List::of).orElse(handleRecord.getValue());
       var rootNode = jsonFormatSingleRecord(subRecord);
       String pidLink = profileProperties.getDomain() + handleRecord.getKey();
-      dataLinksList.add(new JsonApiDataLinks(handleRecord.getKey(), ANNOTATION.toString(), rootNode,
-          new JsonApiLinks(pidLink)));
+      dataLinksList.add(
+          new JsonApiDataLinks(handleRecord.getKey(), ANNOTATION.getDigitalObjectType(), rootNode,
+              new JsonApiLinks(pidLink)));
     }
     return dataLinksList;
   }
@@ -137,7 +137,8 @@ public abstract class PidService {
       var rootNode = jsonFormatSingleRecord(subRecord);
       String pidLink = profileProperties.getDomain() + handleRecord.getKey();
       dataLinksList.add(
-          new JsonApiDataLinks(handleRecord.getKey(), DIGITAL_SPECIMEN.toString(), rootNode,
+          new JsonApiDataLinks(handleRecord.getKey(), DIGITAL_SPECIMEN.getDigitalObjectType(),
+              rootNode,
               new JsonApiLinks(pidLink)));
     }
     return dataLinksList;
@@ -153,7 +154,7 @@ public abstract class PidService {
       var rootNode = jsonFormatSingleRecord(subRecord);
       String pidLink = profileProperties.getDomain() + handleRecord.getKey();
       dataLinksList.add(
-          new JsonApiDataLinks(handleRecord.getKey(), MEDIA_OBJECT.toString(), rootNode,
+          new JsonApiDataLinks(handleRecord.getKey(), MEDIA_OBJECT.getDigitalObjectType(), rootNode,
               new JsonApiLinks(pidLink)));
     }
     return dataLinksList;
@@ -165,8 +166,9 @@ public abstract class PidService {
     for (var handleRecord : handleMap.entrySet()) {
       var rootNode = jsonFormatSingleRecord(handleRecord.getValue());
       String pidLink = profileProperties.getDomain() + handleRecord.getKey();
-      dataLinksList.add(new JsonApiDataLinks(handleRecord.getKey(), objectType.toString(), rootNode,
-          new JsonApiLinks(pidLink)));
+      dataLinksList.add(
+          new JsonApiDataLinks(handleRecord.getKey(), objectType.getDigitalObjectType(), rootNode,
+              new JsonApiLinks(pidLink)));
     }
     return dataLinksList;
   }
@@ -188,22 +190,15 @@ public abstract class PidService {
     var dbRecord = pidRepository.resolveHandleAttributes(handle);
     verifyHandleResolution(List.of(handle), dbRecord);
     var recordAttributeList = formatRecords(dbRecord).get(0);
-    var dataNode = wrapData(recordAttributeList, getRecordType(dbRecord));
+    var dataNode = wrapResolvedData(recordAttributeList, getRecordTypeFromResolvedRecord(dbRecord));
     var linksNode = new JsonApiLinks(path);
     return new JsonApiWrapperReadSingle(linksNode, dataNode);
   }
 
-  private String getRecordType(List<HandleAttribute> dbRecord) {
-    var type = dbRecord.stream().filter(row -> row.getType().equals(REFERENT_TYPE.get()))
+  private String getRecordTypeFromResolvedRecord(List<HandleAttribute> dbRecord) {
+    var type = dbRecord.stream().filter(row -> row.getType().equals(DIGITAL_OBJECT_TYPE.get()))
         .map(val -> new String(val.getData(), StandardCharsets.UTF_8)).findFirst();
-    return type.orElse(FdoType.HANDLE.toString());
-  }
-
-  private String getRecordType(JsonNode attributes) {
-    if (attributes.get(DIGITAL_OBJECT_TYPE.get()) != null) {
-      return attributes.get(DIGITAL_OBJECT_TYPE.get()).asText();
-    }
-    return FdoType.HANDLE.toString();
+    return type.orElse(FdoType.HANDLE.getDigitalObjectName());
   }
 
   public JsonApiWrapperRead resolveBatchRecord(List<byte[]> handles, String path)
@@ -212,7 +207,8 @@ public abstract class PidService {
     verifyHandleResolution(handles, dbRecords);
     var recordAttributeList = formatRecords(dbRecords);
     var dataList = recordAttributeList.stream()
-        .map(recordAttributes -> wrapData(recordAttributes, getRecordType(recordAttributes)))
+        .map(recordAttributes -> wrapResolvedData(recordAttributes,
+            getRecordTypeFromResolvedRecord(dbRecords)))
         .toList();
     return new JsonApiWrapperRead(new JsonApiLinks(path), dataList);
   }
@@ -244,7 +240,9 @@ public abstract class PidService {
       throws PidResolutionException {
     var returnedRows = pidRepository.searchByNormalisedPhysicalIdentifierFullRecord(
         List.of(normalisedPhysicalId.getBytes(StandardCharsets.UTF_8)));
-    var handleNames = listHandleNamesReturnedFromQuery(returnedRows);
+    var handleNames = returnedRows.stream()
+        .map(row -> new String(row.getHandle(), StandardCharsets.UTF_8)).collect(
+            Collectors.toSet());
     if (handleNames.size() > 1) {
       throw new PidResolutionException(
           "More than one handle record corresponds to the provided collection facility and physical identifier.");
@@ -252,14 +250,8 @@ public abstract class PidService {
     List<JsonApiDataLinks> dataNode = new ArrayList<>();
 
     var jsonFormattedRecord = jsonFormatSingleRecord(returnedRows);
-    dataNode.add(wrapData(jsonFormattedRecord, DIGITAL_SPECIMEN.toString()));
+    dataNode.add(wrapResolvedData(jsonFormattedRecord, DIGITAL_SPECIMEN.getDigitalObjectType()));
     return new JsonApiWrapperWrite(dataNode);
-  }
-
-  private Set<String> listHandleNamesReturnedFromQuery(List<HandleAttribute> rows) {
-    Set<String> handles = new HashSet<>();
-    rows.forEach(row -> handles.add((new String(row.getHandle(), StandardCharsets.UTF_8))));
-    return handles;
   }
 
   // Create
@@ -267,7 +259,7 @@ public abstract class PidService {
       List<JsonNode> requests)
       throws PidResolutionException, InvalidRequestException, DatabaseCopyException;
 
-  protected FdoType getObjectType(List<JsonNode> requests) {
+  protected FdoType getObjectTypeFromJsonNode(List<JsonNode> requests) {
     var types = requests.stream().map(request -> request.get(NODE_DATA).get(NODE_TYPE).asText())
         .collect(Collectors.toSet());
     var type = types.stream().findFirst();
@@ -314,7 +306,6 @@ public abstract class PidService {
       throw new InvalidRequestException(
           "Attempting to create handle records for specimens already in system");
     }
-
   }
 
 
@@ -350,7 +341,7 @@ public abstract class PidService {
   public JsonApiWrapperWrite updateRecords(List<JsonNode> requests, boolean incrementVersion)
       throws InvalidRequestException, PidResolutionException, UnprocessableEntityException {
     List<List<HandleAttribute>> attributesToUpdate = getAttributesToUpdate(requests);
-    var recordType = getObjectType(requests);
+    var recordType = getObjectTypeFromJsonNode(requests);
     return updateRecords(attributesToUpdate, incrementVersion, recordType);
   }
 
@@ -392,7 +383,7 @@ public abstract class PidService {
   protected JsonApiWrapperWrite formatUpdates(List<String> handles, FdoType type) {
     List<JsonApiDataLinks> dataList = new ArrayList<>();
     for (var handle : handles) {
-      dataList.add(new JsonApiDataLinks(handle, type.toString(), null,
+      dataList.add(new JsonApiDataLinks(handle, type.getDigitalObjectType(), null,
           new JsonApiLinks(profileProperties.getDomain() + handle)));
     }
     return new JsonApiWrapperWrite(dataList);

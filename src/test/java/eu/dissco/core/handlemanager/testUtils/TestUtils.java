@@ -131,7 +131,6 @@ public class TestUtils {
 
   // Handles
   public static final String HANDLE_DOMAIN = "https://hdl.handle.net/";
-  public static final String DOI_DOMAIN = "https://doi.org/";
   public static final String ROR_DOMAIN = "https://ror.org/";
   public static final String FDO_PROFILE_TESTVAL = HANDLE_DOMAIN + "21.T11148/d8de0819e144e4096645";
   public static final String ISSUED_FOR_AGENT_TESTVAL = ROR_DOMAIN + "0566bfb96";
@@ -893,7 +892,7 @@ public class TestUtils {
 
       var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
       dataNodes.add(new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8),
-          FdoType.ANNOTATION.toString(),
+          FdoType.ANNOTATION.getDigitalObjectType(),
           recordAttributes, pidLink));
     }
     return new JsonApiWrapperWrite(dataNodes);
@@ -906,7 +905,8 @@ public class TestUtils {
       JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
       var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
       dataNodes.add(
-          new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8), type.toString(),
+          new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8),
+              type.getDigitalObjectType(),
               recordAttributes, pidLink));
     }
     return new JsonApiWrapperWrite(dataNodes);
@@ -979,7 +979,7 @@ public class TestUtils {
       var pidLink = new JsonApiLinks(HANDLE_URI + new String(handle, StandardCharsets.UTF_8));
       dataNodes.add(
           new JsonApiDataLinks(new String(handle, StandardCharsets.UTF_8),
-              type.toString(), null,
+              type.getDigitalObjectType(), null,
               pidLink));
     }
     return new JsonApiWrapperWrite(dataNodes);
@@ -1044,7 +1044,7 @@ public class TestUtils {
     List<JsonNode> requestNodeList = new ArrayList<>();
 
     for (byte[] handle : handles) {
-      requestNodeData.put("type", type.toString());
+      requestNodeData.put("type", type.getDigitalObjectType());
       requestNodeData.put("id", new String(handle, StandardCharsets.UTF_8));
       requestNodeData.set("attributes", genUpdateRequestAltLoc());
       requestNodeRoot.set("data", requestNodeData);
