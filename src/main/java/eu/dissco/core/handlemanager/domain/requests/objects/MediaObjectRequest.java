@@ -60,7 +60,6 @@ public class MediaObjectRequest extends DoiRecordRequest {
   public MediaObjectRequest(
       String fdoProfile,
       String issuedForAgent,
-      FdoType digitalObjectTypePid,
       String pidIssuer,
       String[] locations,
       // Doi
@@ -87,7 +86,7 @@ public class MediaObjectRequest extends DoiRecordRequest {
       PrimarySpecimenObjectIdType rightsholderPidType,
       String dctermsConforms
   ) throws InvalidRequestException {
-    super(fdoProfile, issuedForAgent, digitalObjectTypePid, pidIssuer, StructuralType.DIGITAL,
+    super(fdoProfile, issuedForAgent, pidIssuer, StructuralType.DIGITAL,
         locations,
         referentName, FdoType.MEDIA_OBJECT.getDigitalObjectName(), primaryReferentType);
     this.mediaHost = mediaHost;

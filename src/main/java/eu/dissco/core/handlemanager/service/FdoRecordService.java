@@ -185,8 +185,7 @@ public class FdoRecordService {
     fdoRecord.add(new HandleAttribute(DIGITAL_OBJECT_TYPE, handle, type.getDigitalObjectType()));
 
     // 4: DigitalObjectName
-    var digitalObjectName = pidResolver.getObjectName(type.getDigitalObjectName());
-    fdoRecord.add(new HandleAttribute(DIGITAL_OBJECT_NAME, handle, digitalObjectName));
+    fdoRecord.add(new HandleAttribute(DIGITAL_OBJECT_NAME, handle, type.getDigitalObjectName()));
 
     // 5: Pid
     var pid = profileProperties.getDomain() + new String(handle, StandardCharsets.UTF_8);
@@ -323,9 +322,7 @@ public class FdoRecordService {
     }
     var rightsholderName = setHostName(request.getRightsholderName(), request.getRightsholderPid(),
         handle, RIGHTSHOLDER_NAME);
-    if (rightsholderName != null) {
-      fdoRecord.add(rightsholderName);
-    }
+    fdoRecord.add(rightsholderName);
     if (request.getRightsholderPid() != null) {
       fdoRecord.add(
           new HandleAttribute(RIGHTSHOLDER_PID, handle, request.getRightsholderPid()));

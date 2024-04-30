@@ -25,7 +25,6 @@ class RequestAttributeTest {
     var request = new HandleRecordRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        FdoType.HANDLE,
         null,
         null,
         null
@@ -40,7 +39,6 @@ class RequestAttributeTest {
     var request = new DoiRecordRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        FdoType.DOI,
         null,
         null,
         null,
@@ -59,7 +57,6 @@ class RequestAttributeTest {
     var request = new DigitalSpecimenRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        FdoType.DIGITAL_SPECIMEN,
         null,
         null,
         null,
@@ -80,7 +77,6 @@ class RequestAttributeTest {
     var e = assertThrows(InvalidRequestException.class, () -> new DigitalSpecimenRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        FdoType.DIGITAL_SPECIMEN,
         null,
         null,
         null,

@@ -1,7 +1,6 @@
 package eu.dissco.core.handlemanager.domain.requests.objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.FdoType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.StructuralType;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -15,9 +14,9 @@ public class SourceSystemRequest extends HandleRecordRequest {
   @JsonProperty(required = true)
   private final String sourceSystemName;
 
-  public SourceSystemRequest(String fdoProfile, String issuedForAgent, FdoType digitalObjectType,
+  public SourceSystemRequest(String fdoProfile, String issuedForAgent,
       String pidIssuer, String[] locations, String sourceSystemName) {
-    super(fdoProfile, issuedForAgent, digitalObjectType, pidIssuer, StructuralType.DIGITAL,
+    super(fdoProfile, issuedForAgent, pidIssuer, StructuralType.DIGITAL,
         locations);
     this.sourceSystemName = sourceSystemName;
   }

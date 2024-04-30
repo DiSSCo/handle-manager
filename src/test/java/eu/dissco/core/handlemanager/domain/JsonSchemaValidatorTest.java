@@ -88,7 +88,6 @@ class JsonSchemaValidatorTest {
     var requestAttributes = new HandleRecordRequest(
         "",
         "",
-        FdoType.HANDLE,
         "",
         StructuralType.DIGITAL,
         null
@@ -152,7 +151,6 @@ class JsonSchemaValidatorTest {
     var orgRequestObject = new OrganisationRequest(
         "FDO_PROFILE_TESTVAL",
         "ISSUED_FOR_AGENT_TESTVAL",
-        FdoType.DIGITAL_SPECIMEN,
         PID_ISSUER_TESTVAL_OTHER,
         LOC_TESTVAL,
         "REFERENT_NAME_TESTVAL",

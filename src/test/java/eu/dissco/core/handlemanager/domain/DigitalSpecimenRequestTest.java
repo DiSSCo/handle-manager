@@ -14,7 +14,6 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.FdoType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.BaseTypeOfSpecimen;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.InformationArtefactType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.MaterialSampleType;
@@ -43,7 +42,6 @@ class DigitalSpecimenRequestTest {
     assertThrows(InvalidRequestException.class, () -> new DigitalSpecimenRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        FdoType.DIGITAL_SPECIMEN,
         PID_ISSUER_TESTVAL_OTHER,
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,
@@ -73,7 +71,6 @@ class DigitalSpecimenRequestTest {
     assertDoesNotThrow(() -> new DigitalSpecimenRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        FdoType.DIGITAL_SPECIMEN,
         PID_ISSUER_TESTVAL_OTHER,
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,
@@ -104,7 +101,6 @@ class DigitalSpecimenRequestTest {
     assertThrows(InvalidRequestException.class, () -> new DigitalSpecimenRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        FdoType.DIGITAL_SPECIMEN,
         PID_ISSUER_TESTVAL_OTHER,
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,
@@ -134,7 +130,6 @@ class DigitalSpecimenRequestTest {
     assertThrows(InvalidRequestException.class, () -> new DigitalSpecimenRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        FdoType.DIGITAL_SPECIMEN,
         PID_ISSUER_TESTVAL_OTHER,
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,

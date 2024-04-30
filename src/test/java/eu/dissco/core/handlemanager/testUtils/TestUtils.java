@@ -691,7 +691,6 @@ public class TestUtils {
     return new HandleRecordRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        FdoType.HANDLE,
         PID_ISSUER_TESTVAL_OTHER,
         STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL
@@ -702,7 +701,6 @@ public class TestUtils {
     return new DoiRecordRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        FdoType.DOI,
         PID_ISSUER_TESTVAL_OTHER,
         STRUCTURAL_TYPE_TESTVAL,
         LOC_TESTVAL,
@@ -722,7 +720,6 @@ public class TestUtils {
       return new DigitalSpecimenRequest(
           FDO_PROFILE_TESTVAL,
           ISSUED_FOR_AGENT_TESTVAL,
-          FdoType.DIGITAL_SPECIMEN,
           PID_ISSUER_TESTVAL_OTHER,
           LOC_TESTVAL,
           REFERENT_NAME_TESTVAL,
@@ -745,7 +742,6 @@ public class TestUtils {
     return new MediaObjectRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        FdoType.MEDIA_OBJECT,
         PID_ISSUER_TESTVAL_OTHER,
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,
@@ -761,7 +757,6 @@ public class TestUtils {
     return new AnnotationRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        FdoType.ANNOTATION,
         PID_ISSUER_TESTVAL_OTHER,
         LOC_TESTVAL,
         TARGET_DOI_TESTVAL,
@@ -775,7 +770,6 @@ public class TestUtils {
     return new AnnotationRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        FdoType.ANNOTATION,
         PID_ISSUER_TESTVAL_OTHER,
         LOC_TESTVAL,
         TARGET_DOI_TESTVAL,
@@ -789,7 +783,6 @@ public class TestUtils {
     return new MappingRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        FdoType.MAPPING,
         PID_ISSUER_TESTVAL_OTHER,
         LOC_TESTVAL,
         SOURCE_DATA_STANDARD_TESTVAL
@@ -800,7 +793,6 @@ public class TestUtils {
     return new SourceSystemRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        FdoType.SOURCE_SYSTEM,
         PID_ISSUER_TESTVAL_OTHER,
         LOC_TESTVAL,
         SPECIMEN_HOST_TESTVAL
@@ -811,7 +803,6 @@ public class TestUtils {
     return new OrganisationRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        FdoType.ORGANISATION,
         PID_ISSUER_TESTVAL_OTHER,
         LOC_TESTVAL,
         REFERENT_NAME_TESTVAL,
@@ -825,7 +816,6 @@ public class TestUtils {
     return new MasRequest(
         FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        FdoType.MAS,
         PID_ISSUER_TESTVAL_OTHER,
         LOC_TESTVAL,
         MAS_NAME_TESTVAL
