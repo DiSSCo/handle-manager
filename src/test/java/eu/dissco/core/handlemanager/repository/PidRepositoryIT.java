@@ -26,7 +26,7 @@ import static org.mockito.BDDMockito.then;
 
 import eu.dissco.core.handlemanager.database.jooq.tables.Handles;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.FdoType;
+import eu.dissco.core.handlemanager.domain.FdoType;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;

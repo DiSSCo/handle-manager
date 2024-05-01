@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.datacite.DataCiteEvent;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.FdoType;
+import eu.dissco.core.handlemanager.domain.FdoType;
 import eu.dissco.core.handlemanager.properties.KafkaPublisherProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

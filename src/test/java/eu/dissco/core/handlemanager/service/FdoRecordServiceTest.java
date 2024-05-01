@@ -123,7 +123,7 @@ import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenReque
 import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.OtherSpecimenId;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.FdoType;
+import eu.dissco.core.handlemanager.domain.FdoType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.media.MediaFormat;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.media.PrimaryMediaObjectType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.BaseTypeOfSpecimen;

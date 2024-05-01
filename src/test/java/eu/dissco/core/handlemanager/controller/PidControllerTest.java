@@ -44,7 +44,7 @@ import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenReque
 import eu.dissco.core.handlemanager.domain.requests.objects.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaValidator;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.FdoType;
+import eu.dissco.core.handlemanager.domain.FdoType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;

@@ -13,7 +13,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.FdoType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import org.junit.jupiter.api.Test;
 

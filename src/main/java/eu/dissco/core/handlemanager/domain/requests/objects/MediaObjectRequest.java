@@ -1,7 +1,7 @@
 package eu.dissco.core.handlemanager.domain.requests.objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.FdoType;
+import eu.dissco.core.handlemanager.domain.FdoType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.media.LinkedDigitalObjectType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.media.MediaFormat;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.media.PrimaryMediaObjectType;
