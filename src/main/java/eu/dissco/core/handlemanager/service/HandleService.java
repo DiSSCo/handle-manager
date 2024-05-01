@@ -1,16 +1,14 @@
 package eu.dissco.core.handlemanager.service;
 
-import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ATTRIBUTES;
-import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DOI;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.HANDLE;
+import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ATTRIBUTES;
+import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_DATA;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.Profiles;
-import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
-import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.fdo.AnnotationRequest;
 import eu.dissco.core.handlemanager.domain.fdo.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.fdo.HandleRecordRequest;
@@ -18,6 +16,9 @@ import eu.dissco.core.handlemanager.domain.fdo.MappingRequest;
 import eu.dissco.core.handlemanager.domain.fdo.MasRequest;
 import eu.dissco.core.handlemanager.domain.fdo.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.fdo.SourceSystemRequest;
+import eu.dissco.core.handlemanager.domain.fdo.TettrisServiceRequest;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
+import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.exceptions.DatabaseCopyException;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -62,6 +63,7 @@ public class HandleService extends PidService {
         case MEDIA_OBJECT -> handleAttributes = createMediaObject(requestAttributes, handles);
         case ORGANISATION -> handleAttributes = createOrganisation(requestAttributes, handles);
         case SOURCE_SYSTEM -> handleAttributes = createSourceSystem(requestAttributes, handles);
+        case TETTRIS_SERVICE -> handleAttributes = createTettrisService(requestAttributes, handles);
         default -> throw new UnsupportedOperationException("Unrecognized type");
       }
     } catch (JsonProcessingException | PidResolutionException e) {
@@ -164,6 +166,19 @@ public class HandleService extends PidService {
       var requestObject = mapper.treeToValue(request, SourceSystemRequest.class);
       handleAttributes.addAll(
           fdoRecordService.prepareSourceSystemAttributes(requestObject, thisHandle));
+    }
+    return handleAttributes;
+  }
+
+  private List<HandleAttribute> createTettrisService(List<JsonNode> requestAttributes,
+      Iterator<byte[]> handleIterator)
+      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+    List<HandleAttribute> handleAttributes = new ArrayList<>();
+    for (var request : requestAttributes) {
+      var thisHandle = handleIterator.next();
+      var requestObject = mapper.treeToValue(request, TettrisServiceRequest.class);
+      handleAttributes.addAll(
+          fdoRecordService.prepareTettrisServiceAttributes(requestObject, thisHandle));
     }
     return handleAttributes;
   }

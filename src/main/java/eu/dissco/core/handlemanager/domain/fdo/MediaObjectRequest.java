@@ -1,9 +1,9 @@
 package eu.dissco.core.handlemanager.domain.fdo;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import eu.dissco.core.handlemanager.domain.fdo.vocabulary.media.DctermsType;
 import eu.dissco.core.handlemanager.domain.fdo.vocabulary.media.LinkedDigitalObjectType;
 import eu.dissco.core.handlemanager.domain.fdo.vocabulary.media.MediaFormat;
-import eu.dissco.core.handlemanager.domain.fdo.vocabulary.media.PrimaryMediaObjectType;
 import eu.dissco.core.handlemanager.domain.fdo.vocabulary.specimen.PrimarySpecimenObjectIdType;
 import eu.dissco.core.handlemanager.domain.fdo.vocabulary.specimen.StructuralType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
@@ -39,7 +39,7 @@ public class MediaObjectRequest extends DoiRecordRequest {
   private final String primaryMediaObjectIdName;
   @Nullable
   @JsonProperty(value = "dcterms:type")
-  private final PrimaryMediaObjectType primaryMediaObjectType;
+  private final DctermsType dctermsType;
   @Nullable
   private final String mediaMimeType;
   @Nullable
@@ -76,7 +76,7 @@ public class MediaObjectRequest extends DoiRecordRequest {
       String primaryMediaId,
       PrimarySpecimenObjectIdType primaryMediaObjectIdType,
       String primaryMediaObjectIdName,
-      PrimaryMediaObjectType primaryMediaObjectType,
+      DctermsType dctermsType,
       String mediaMimeType,
       String derivedFromEntity,
       String licenseName,
@@ -99,7 +99,7 @@ public class MediaObjectRequest extends DoiRecordRequest {
     this.primaryMediaId = primaryMediaId;
     this.primaryMediaObjectIdType = primaryMediaObjectIdType;
     this.primaryMediaObjectIdName = primaryMediaObjectIdName;
-    this.primaryMediaObjectType = primaryMediaObjectType;
+    this.dctermsType = dctermsType;
     this.mediaMimeType = mediaMimeType;
     this.derivedFromEntity = derivedFromEntity;
     this.licenseName = licenseName;

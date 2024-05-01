@@ -51,6 +51,12 @@ public enum FdoProfile {
   WAS_DERIVED_FROM_ENTITY("wasDerivedFromEntity", 218),
   CATALOG_IDENTIFIER("catalogIdentifier", 219),
 
+
+  // TETTRIs
+  RESOURCE_TYPE("resourceType", 350),
+  SERVICE_CATEGORY("serviceCategory", 351),
+  TAXONOMIC_TOPIC("taxonomicTopic", 352),
+
   // Media
   MEDIA_HOST("mediaHost", 400),
   MEDIA_HOST_NAME("mediaHostName", 401),
@@ -59,10 +65,10 @@ public enum FdoProfile {
   LINKED_DO_PID("linkedDigitalObjectPid", 404),
   LINKED_DO_TYPE("linkedDigitalObjectType", 405),
   LINKED_ATTRIBUTE("linkedAttribute", 406),
-  PRIMARY_MEDIA_ID("primaryMediaId", 407),
-  PRIMARY_MO_ID_TYPE("primaryMediaObjectIdType", 408),
-  PRIMARY_MO_ID_NAME("primaryMediaObjectIdName", 409),
-  PRIMARY_MO_TYPE("primaryMediaObjectType", 411),
+  PRIMARY_MEDIA_ID("primaryMediaId", 407),  // String - Pid
+  PRIMARY_MO_ID_TYPE("primaryMediaObjectIdType", 408), // Global local resolvable
+  PRIMARY_MO_ID_NAME("primaryMediaObjectIdName", 409), // String - human readable
+  DCTERMS_TYPE("dcterms:type", 411), // text sound image etc
   MEDIA_MIME_TYPE("mediaMimeType", 412),
   DERIVED_FROM_ENTITY("derivedFromEntity", 413),
   LICENSE_NAME("licenseName", 414),

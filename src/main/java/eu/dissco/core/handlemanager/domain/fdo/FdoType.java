@@ -46,7 +46,12 @@ public enum FdoType {
   @JsonProperty("https://hdl.handle.net/21.T11148/22e71a0015cbcfba8ffa") MAS(
       "Machine Annotation Service",
       "https://hdl.handle.net/21.T11148/22e71a0015cbcfba8ffa",
-      "https://hdl.handle.net/21.T11148/22e71a0015cbcfba8ffa");
+      "https://hdl.handle.net/21.T11148/22e71a0015cbcfba8ffa"),
+  @JsonProperty("https://hdl.handle.net/21.T11148/1a362125050eda3591e1") TETTRIS_SERVICE(
+      "TETTRIs Service",
+      "https://hdl.handle.net/21.T11148/1a362125050eda3591e1",
+      "https://hdl.handle.net/21.T11148/1a362125050eda3591e1"
+  );
 
   private final String digitalObjectName;
   private final String digitalObjectType;

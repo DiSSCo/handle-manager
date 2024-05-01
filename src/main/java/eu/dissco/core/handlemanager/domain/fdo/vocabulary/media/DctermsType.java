@@ -2,7 +2,7 @@ package eu.dissco.core.handlemanager.domain.fdo.vocabulary.media;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public enum PrimaryMediaObjectType {
+public enum DctermsType {
   @JsonProperty("sound") SOUND("sound"),
   @JsonProperty("dataset") DATASET("dataset"),
   @JsonProperty("text") TEXT("text"),
@@ -16,7 +16,7 @@ public enum PrimaryMediaObjectType {
 
   private final String state;
 
-  private PrimaryMediaObjectType(String state) {
+  private DctermsType(String state) {
     this.state = state;
   }
 

@@ -25,6 +25,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaObjectAtt
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genObjectNodeAttributeRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genOrganisationAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genSourceSystemAttributes;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTettrisRequestAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordRequestAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequestBatch;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRecordAttributesAltLoc;
@@ -45,6 +46,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordRespon
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteArchive;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteSmallResponse;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenTettrisServiceRequestObjectFull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -57,8 +59,8 @@ import static org.mockito.Mockito.mockStatic;
 import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
-import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
+import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
@@ -676,6 +678,29 @@ class HandleServiceTest {
     // Then
     then(pidRepository).should()
         .updateRecordBatch(CREATED.getEpochSecond(), updatedAttributes, true);
+    assertThat(responseReceived).isEqualTo(responseExpected);
+  }
+
+  @Test
+  void testCreateTettrisService() throws Exception {
+    // Given
+    List<JsonNode> requests = new ArrayList<>();
+    for (byte[] handle : handles) {
+      requests.add(
+          genCreateRecordRequest(givenTettrisServiceRequestObjectFull(), FdoType.TETTRIS_SERVICE));
+    }
+
+    var responseExpected = givenRecordResponseWrite(handles, FdoType.TETTRIS_SERVICE);
+    given(pidNameGeneratorService.genHandleList(handles.size())).willReturn(handles);
+    given(fdoRecordService.prepareTettrisServiceAttributes(any(), any())).willReturn(
+            genTettrisRequestAttributes(handles.get(0)))
+        .willReturn(genTettrisRequestAttributes(handles.get(1)));
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
+
+    // When
+    var responseReceived = service.createRecords(requests);
+
+    // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
   }
 

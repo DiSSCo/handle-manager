@@ -4,6 +4,7 @@ package eu.dissco.core.handlemanager.service;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.ANNOTATION_HASH;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.BASE_TYPE_OF_SPECIMEN;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.CATALOG_IDENTIFIER;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DCTERMS_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DC_TERMS_CONFORMS;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DERIVED_FROM_ENTITY;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DIGITAL_OBJECT_NAME;
@@ -45,7 +46,6 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_MEDIA_ID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_MO_ID_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_MO_ID_TYPE;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_MO_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_REFERENT_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID_NAME;
@@ -53,9 +53,11 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_SPECIME
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.REFERENT_DOI_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.REFERENT_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.REFERENT_TYPE;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.RESOURCE_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.RIGHTSHOLDER_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.RIGHTSHOLDER_PID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.RIGHTSHOLDER_PID_TYPE;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SERVICE_CATEGORY;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SOURCE_DATA_STANDARD;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SOURCE_SYSTEM_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SPECIMEN_HOST;
@@ -64,6 +66,7 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SPECIMEN_OBJECT
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.STRUCTURAL_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TARGET_PID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TARGET_TYPE;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TAXONOMIC_TOPIC;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOPIC_CATEGORY;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOPIC_DISCIPLINE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOPIC_DOMAIN;
@@ -88,6 +91,7 @@ import eu.dissco.core.handlemanager.domain.fdo.MasRequest;
 import eu.dissco.core.handlemanager.domain.fdo.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.fdo.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.fdo.SourceSystemRequest;
+import eu.dissco.core.handlemanager.domain.fdo.TettrisServiceRequest;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -292,10 +296,10 @@ public class FdoRecordService {
     fdoRecord.add(
         new HandleAttribute(PRIMARY_MEDIA_ID, handle, request.getPrimaryMediaId()));
 
-    if (request.getPrimaryMediaObjectIdType() != null) {
+    if (request.getDctermsType() != null) {
       fdoRecord.add(
-          new HandleAttribute(PRIMARY_MO_TYPE, handle,
-              request.getPrimaryMediaObjectIdType().toString()));
+          new HandleAttribute(DCTERMS_TYPE, handle,
+              request.getDctermsType().toString()));
     }
     if (request.getPrimaryMediaObjectIdName() != null) {
       fdoRecord.add(
@@ -377,6 +381,24 @@ public class FdoRecordService {
     // 600 sourceSystemName
     fdoRecord.add(new HandleAttribute(SOURCE_SYSTEM_NAME, handle, request.getSourceSystemName()));
 
+    return fdoRecord;
+  }
+
+  public List<HandleAttribute> prepareTettrisServiceAttributes(TettrisServiceRequest request,
+      byte[] handle)
+      throws InvalidRequestException, PidResolutionException {
+    var fdoRecord = prepareHandleRecordAttributes(request, handle, FdoType.TETTRIS_SERVICE);
+    if (request.getResourceType() != null) {
+      fdoRecord.add(
+          new HandleAttribute(RESOURCE_TYPE, handle, request.getResourceType().toString()));
+    }
+    if (request.getServiceCategory() != null) {
+      fdoRecord.add(
+          new HandleAttribute(SERVICE_CATEGORY, handle, request.getServiceCategory().toString()));
+    }
+    if (request.getTaxonomicTopic() != null) {
+      fdoRecord.add(new HandleAttribute(TAXONOMIC_TOPIC, handle, request.getTaxonomicTopic()));
+    }
     return fdoRecord;
   }
 
