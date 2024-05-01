@@ -1,9 +1,9 @@
 package eu.dissco.core.handlemanager.service;
 
-import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
-import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
-import static eu.dissco.core.handlemanager.domain.FdoType.DOI;
-import static eu.dissco.core.handlemanager.domain.FdoType.HANDLE;
+import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ATTRIBUTES;
+import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_DATA;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DOI;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoType.HANDLE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -11,13 +11,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.domain.requests.objects.AnnotationRequest;
-import eu.dissco.core.handlemanager.domain.requests.objects.DoiRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.objects.MappingRequest;
-import eu.dissco.core.handlemanager.domain.requests.objects.MasRequest;
-import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
-import eu.dissco.core.handlemanager.domain.requests.objects.SourceSystemRequest;
+import eu.dissco.core.handlemanager.domain.fdo.AnnotationRequest;
+import eu.dissco.core.handlemanager.domain.fdo.DoiRecordRequest;
+import eu.dissco.core.handlemanager.domain.fdo.HandleRecordRequest;
+import eu.dissco.core.handlemanager.domain.fdo.MappingRequest;
+import eu.dissco.core.handlemanager.domain.fdo.MasRequest;
+import eu.dissco.core.handlemanager.domain.fdo.OrganisationRequest;
+import eu.dissco.core.handlemanager.domain.fdo.SourceSystemRequest;
 import eu.dissco.core.handlemanager.exceptions.DatabaseCopyException;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;

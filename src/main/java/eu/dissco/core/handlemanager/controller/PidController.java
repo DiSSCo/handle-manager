@@ -1,15 +1,15 @@
 package eu.dissco.core.handlemanager.controller;
 
 
-import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
-import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ID;
+import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_DATA;
+import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ID;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperReadSingle;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.requests.RollbackRequest;
-import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaValidator;
+import eu.dissco.core.handlemanager.domain.validation.JsonSchemaValidator;
 import eu.dissco.core.handlemanager.exceptions.DatabaseCopyException;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidCreationException;

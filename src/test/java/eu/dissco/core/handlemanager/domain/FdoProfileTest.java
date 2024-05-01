@@ -1,9 +1,10 @@
 package eu.dissco.core.handlemanager.domain;
 
-import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_ISSUER;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID_ISSUER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertThrows;
 
+import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
 import eu.dissco.core.handlemanager.exceptions.UnrecognizedFdoAttributeException;
 import org.junit.jupiter.api.Test;
 

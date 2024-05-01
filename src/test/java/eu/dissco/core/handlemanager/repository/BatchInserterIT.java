@@ -8,7 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import eu.dissco.core.handlemanager.database.jooq.tables.Handles;
-import eu.dissco.core.handlemanager.domain.FdoProfile;
+import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.exceptions.DatabaseCopyException;
 import java.nio.charset.StandardCharsets;
