@@ -22,6 +22,7 @@ public class MediaObjectRequest extends DoiRecordRequest {
   @Nullable
   private final String mediaHostName;
   @Nullable
+  @JsonProperty(value = "dcterms:format")
   private final MediaFormat mediaFormat;
   @JsonProperty(required = true)
   private final Boolean isDerivedFromSpecimen;
@@ -37,6 +38,7 @@ public class MediaObjectRequest extends DoiRecordRequest {
   @Nullable
   private final String primaryMediaObjectIdName;
   @Nullable
+  @JsonProperty(value = "dcterms:type")
   private final PrimaryMediaObjectType primaryMediaObjectType;
   @Nullable
   private final String mediaMimeType;
@@ -53,8 +55,8 @@ public class MediaObjectRequest extends DoiRecordRequest {
   @Nullable
   private final PrimarySpecimenObjectIdType rightsholderPidType;
   @Nullable
-  @JsonProperty(value = "dcterms:conforms")
-  private final String dctermsConforms;
+  @JsonProperty(value = "dcterms:conformsTo")
+  private final String dctermsConformsTo;
 
   public MediaObjectRequest(
       String issuedForAgent,
@@ -82,7 +84,7 @@ public class MediaObjectRequest extends DoiRecordRequest {
       String rightsholderPid,
       String rightsholderName,
       PrimarySpecimenObjectIdType rightsholderPidType,
-      String dctermsConforms
+      String dctermsConformsTo
   ) throws InvalidRequestException {
     super(issuedForAgent, pidIssuer, StructuralType.DIGITAL,
         locations,
@@ -105,7 +107,7 @@ public class MediaObjectRequest extends DoiRecordRequest {
     this.rightsholderPid = rightsholderPid == null ? mediaHost : rightsholderPid;
     this.rightsholderName = rightsholderName;
     this.rightsholderPidType = rightsholderPidType;
-    this.dctermsConforms = dctermsConforms;
+    this.dctermsConformsTo = dctermsConformsTo;
     validateRightsholder(rightsholderName, rightsholderPid);
   }
 

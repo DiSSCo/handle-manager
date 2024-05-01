@@ -332,9 +332,9 @@ public class FdoRecordService {
           new HandleAttribute(RIGHTSHOLDER_PID_TYPE, handle,
               request.getRightsholderPidType().toString()));
     }
-    if (request.getDctermsConforms() != null) {
+    if (request.getDctermsConformsTo() != null) {
       fdoRecord.add(
-          new HandleAttribute(DC_TERMS_CONFORMS, handle, request.getDctermsConforms()));
+          new HandleAttribute(DC_TERMS_CONFORMS, handle, request.getDctermsConformsTo()));
     }
     return fdoRecord;
   }

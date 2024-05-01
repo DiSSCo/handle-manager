@@ -70,7 +70,7 @@ public enum FdoProfile {
   RIGHTSHOLDER_NAME("rightsholderName", 416),
   RIGHTSHOLDER_PID("rightsholderPid", 417),
   RIGHTSHOLDER_PID_TYPE("rightsholderPidType", 418),
-  DC_TERMS_CONFORMS("dcterms:conforms", 419),
+  DC_TERMS_CONFORMS("dcterms:conformsTo", 419),
 
   // Annotation
   TARGET_PID("targetPid", 500),
