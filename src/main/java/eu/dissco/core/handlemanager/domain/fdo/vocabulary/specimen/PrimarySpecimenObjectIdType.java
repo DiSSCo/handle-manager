@@ -10,7 +10,7 @@ public enum PrimarySpecimenObjectIdType {
 
   private final String state;
 
-  private PrimarySpecimenObjectIdType(@JsonProperty("primarySpecimenObjectIdType") String state) {
+  PrimarySpecimenObjectIdType(@JsonProperty("primarySpecimenObjectIdType") String state) {
     this.state = state;
   }
 

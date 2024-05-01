@@ -36,10 +36,11 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
   @JsonPropertyDescription("Local identifier for the given specimen")
   @JsonProperty(required = true)
   private final String primarySpecimenObjectId;
-  @JsonPropertyDescription("ID Type. Either combined or cetaf. Defaults to combined.")
+  @JsonPropertyDescription("ID Type: Global, Local, or Resolvable.")
   private final PrimarySpecimenObjectIdType primarySpecimenObjectIdType;
   @Nullable
   private final String primarySpecimenObjectIdName;
+  @JsonProperty(required = true)
   private final String normalisedPrimarySpecimenObjectId;
   @Nullable
   private final String primarySpecimenObjectIdAbsenceReason;
