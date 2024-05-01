@@ -1,20 +1,19 @@
 package eu.dissco.core.handlemanager.domain;
 
-import static eu.dissco.core.handlemanager.domain.FdoProfile.FDO_PROFILE;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.MAS_NAME;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.MEDIA_HOST;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.ORGANISATION_ID;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_ISSUER;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.REFERENT_NAME;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.SOURCE_DATA_STANDARD;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.SOURCE_SYSTEM_NAME;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.SPECIMEN_HOST;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.TARGET_TYPE;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.TOMBSTONE_TEXT;
-import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
-import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
-import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ID;
-import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_TYPE;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MAS_NAME;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MEDIA_HOST;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.ORGANISATION_ID;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID_ISSUER;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.REFERENT_NAME;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SOURCE_DATA_STANDARD;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SOURCE_SYSTEM_NAME;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SPECIMEN_HOST;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TARGET_TYPE;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOMBSTONE_TEXT;
+import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ATTRIBUTES;
+import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_DATA;
+import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ID;
+import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_TYPE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.LOC_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
@@ -40,10 +39,11 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
-import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaValidator;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.StructuralType;
+import eu.dissco.core.handlemanager.domain.fdo.FdoType;
+import eu.dissco.core.handlemanager.domain.fdo.HandleRecordRequest;
+import eu.dissco.core.handlemanager.domain.fdo.OrganisationRequest;
+import eu.dissco.core.handlemanager.domain.fdo.vocabulary.specimen.StructuralType;
+import eu.dissco.core.handlemanager.domain.validation.JsonSchemaValidator;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import java.util.List;
 import java.util.stream.Stream;
@@ -85,7 +85,6 @@ class JsonSchemaValidatorTest {
   void testPostHandleRequestNoLoc() {
     // Given
     var requestAttributes = new HandleRecordRequest(
-        "",
         "",
         "",
         StructuralType.DIGITAL,
@@ -148,7 +147,6 @@ class JsonSchemaValidatorTest {
   void testPostOrganisationNullTypeRequest() {
     // Given
     var orgRequestObject = new OrganisationRequest(
-        "FDO_PROFILE_TESTVAL",
         "ISSUED_FOR_AGENT_TESTVAL",
         PID_ISSUER_TESTVAL_OTHER,
         LOC_TESTVAL,
@@ -328,20 +326,6 @@ class JsonSchemaValidatorTest {
         () -> schemaValidator.validatePostRequest(request));
 
     assertThat(e.getMessage()).contains(MISSING_MSG).contains(NODE_TYPE);
-  }
-
-  @Test
-  void testBadPostHandleRequestMissingRequiredProperty() {
-    // Given
-    String missingAttribute = FDO_PROFILE.get();
-    var request = genCreateRecordRequest(givenHandleRecordRequestObject(), FdoType.HANDLE);
-    ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(missingAttribute);
-
-    // Then
-    Exception e = assertThrows(InvalidRequestException.class,
-        () -> schemaValidator.validatePostRequest(request));
-
-    assertThat(e.getMessage()).contains(MISSING_MSG).contains(missingAttribute);
   }
 
   @Test
