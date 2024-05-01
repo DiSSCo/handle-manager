@@ -17,6 +17,7 @@ import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion.VersionFlag;
 import com.networknt.schema.ValidationMessage;
+import eu.dissco.core.handlemanager.domain.FdoType;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
 import eu.dissco.core.handlemanager.domain.requests.PutRequest;
@@ -30,7 +31,6 @@ import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.SourceSystemRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.TombstoneRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.FdoType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import jakarta.validation.constraints.NotEmpty;
 import java.util.Arrays;
@@ -317,7 +317,8 @@ public class JsonSchemaValidator {
     var validationErrors = tombstoneReqSchema.validate(requestAttributes);
     if (!validationErrors.isEmpty()) {
       throw new InvalidRequestException(
-          setErrorMessage(validationErrors, FdoType.TOMBSTONE.toString(), requestAttributes));
+          setErrorMessage(validationErrors, FdoType.TOMBSTONE.getDigitalObjectName(),
+              requestAttributes));
     }
   }
 
@@ -326,7 +327,7 @@ public class JsonSchemaValidator {
     var validationErrors = schema.validate(requestAttributes);
     if (!validationErrors.isEmpty()) {
       throw new InvalidRequestException(
-          setErrorMessage(validationErrors, String.valueOf(type), requestAttributes));
+          setErrorMessage(validationErrors, type.getDigitalObjectName(), requestAttributes));
     }
   }
 

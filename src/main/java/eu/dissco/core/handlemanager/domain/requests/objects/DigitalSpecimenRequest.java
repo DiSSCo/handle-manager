@@ -4,7 +4,7 @@ import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.P
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.FdoType;
+import eu.dissco.core.handlemanager.domain.FdoType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.BaseTypeOfSpecimen;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.InformationArtefactType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.LivingOrPreserved;

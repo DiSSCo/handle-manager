@@ -3,8 +3,8 @@ package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
-import static eu.dissco.core.handlemanager.domain.requests.vocabulary.FdoType.DIGITAL_SPECIMEN;
-import static eu.dissco.core.handlemanager.domain.requests.vocabulary.FdoType.MEDIA_OBJECT;
+import static eu.dissco.core.handlemanager.domain.FdoType.DIGITAL_SPECIMEN;
+import static eu.dissco.core.handlemanager.domain.FdoType.MEDIA_OBJECT;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -14,7 +14,7 @@ import eu.dissco.core.handlemanager.domain.datacite.DataCiteEvent;
 import eu.dissco.core.handlemanager.domain.datacite.EventType;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.FdoType;
+import eu.dissco.core.handlemanager.domain.FdoType;
 import eu.dissco.core.handlemanager.exceptions.DatabaseCopyException;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;

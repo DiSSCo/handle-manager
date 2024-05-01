@@ -2,8 +2,8 @@ package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
-import static eu.dissco.core.handlemanager.domain.requests.vocabulary.FdoType.DOI;
-import static eu.dissco.core.handlemanager.domain.requests.vocabulary.FdoType.HANDLE;
+import static eu.dissco.core.handlemanager.domain.FdoType.DOI;
+import static eu.dissco.core.handlemanager.domain.FdoType.HANDLE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;

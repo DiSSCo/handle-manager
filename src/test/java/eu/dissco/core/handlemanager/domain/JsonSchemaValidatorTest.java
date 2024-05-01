@@ -43,7 +43,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.requests.validation.JsonSchemaValidator;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.FdoType;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.StructuralType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import java.util.List;
