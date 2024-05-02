@@ -9,7 +9,6 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_SPECIME
 import static org.jooq.impl.DSL.select;
 
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.exceptions.DatabaseCopyException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +33,7 @@ public class PidRepository {
   private final BatchInserter batchInserter;
 
   // For Handle Name Generation
-  public List<byte[]> getHandlesExist(List<byte[]> handles) {
+  public List<byte[]> getExistingHandles(List<byte[]> handles) {
     return context.selectDistinct(HANDLES.HANDLE).from(HANDLES).where(HANDLES.HANDLE.in(handles))
         .fetch().getValues(HANDLES.HANDLE, byte[].class);
   }
@@ -122,8 +121,7 @@ public class PidRepository {
   }
 
   // Post
-  public void postAttributesToDb(long recordTimestamp, List<HandleAttribute> handleAttributes)
-      throws DatabaseCopyException {
+  public void postAttributesToDb(long recordTimestamp, List<HandleAttribute> handleAttributes) {
     batchInserter.batchCopy(recordTimestamp, handleAttributes);
   }
 

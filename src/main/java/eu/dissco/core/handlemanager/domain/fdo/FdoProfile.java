@@ -1,8 +1,10 @@
 package eu.dissco.core.handlemanager.domain.fdo;
 
-import eu.dissco.core.handlemanager.exceptions.UnrecognizedFdoAttributeException;
+import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import java.util.Arrays;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public enum FdoProfile {
   // Kernel
   FDO_PROFILE("fdoProfile", 1),
@@ -123,8 +125,8 @@ public enum FdoProfile {
     if (fdoProfile.isPresent()) {
       return fdoProfile.get().index;
     }
-    throw new UnrecognizedFdoAttributeException(
-        "Unable to locate index for requested attribute " + searchAttribute);
+    log.error("Unable to locate index for requested attribute {}", searchAttribute);
+    throw new InvalidRequestException(searchAttribute + " not valid fdo attribute");
   }
 
 }

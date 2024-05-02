@@ -19,7 +19,6 @@ import eu.dissco.core.handlemanager.domain.fdo.SourceSystemRequest;
 import eu.dissco.core.handlemanager.domain.fdo.TettrisServiceRequest;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.exceptions.DatabaseCopyException;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
@@ -44,8 +43,7 @@ public class HandleService extends PidService {
 
   // Pid Record Creation
   @Override
-  public JsonApiWrapperWrite createRecords(List<JsonNode> requests)
-      throws InvalidRequestException, DatabaseCopyException {
+  public JsonApiWrapperWrite createRecords(List<JsonNode> requests) {
     var handles = hf.genHandleList(requests.size()).iterator();
     var requestAttributes = requests.stream()
         .map(request -> request.get(NODE_DATA).get(NODE_ATTRIBUTES)).toList();
@@ -64,7 +62,10 @@ public class HandleService extends PidService {
         case ORGANISATION -> handleAttributes = createOrganisation(requestAttributes, handles);
         case SOURCE_SYSTEM -> handleAttributes = createSourceSystem(requestAttributes, handles);
         case TETTRIS_SERVICE -> handleAttributes = createTettrisService(requestAttributes, handles);
-        default -> throw new UnsupportedOperationException("Unrecognized type");
+        default -> {
+          log.error("Unrecognized type: {}", type);
+          throw new UnsupportedOperationException("Unrecognized type: " + type);
+        }
       }
     } catch (JsonProcessingException | PidResolutionException e) {
       log.error("An error has occurred in processing request", e);
@@ -78,7 +79,7 @@ public class HandleService extends PidService {
 
   private List<HandleAttribute> createAnnotation(List<JsonNode> requestAttributes,
       Iterator<byte[]> handleIterator)
-      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+      throws JsonProcessingException {
     List<HandleAttribute> handleAttributes = new ArrayList<>();
     for (var request : requestAttributes) {
       var thisHandle = handleIterator.next();
@@ -91,7 +92,7 @@ public class HandleService extends PidService {
 
   private List<HandleAttribute> createDoi(List<JsonNode> requestAttributes,
       Iterator<byte[]> handleIterator)
-      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+      throws JsonProcessingException {
     List<HandleAttribute> handleAttributes = new ArrayList<>();
     for (var request : requestAttributes) {
       var thisHandle = handleIterator.next();
@@ -105,7 +106,7 @@ public class HandleService extends PidService {
 
   private List<HandleAttribute> createHandle(List<JsonNode> requestAttributes,
       Iterator<byte[]> handleIterator)
-      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+      throws JsonProcessingException {
     List<HandleAttribute> handleAttributes = new ArrayList<>();
     for (var request : requestAttributes) {
       var thisHandle = handleIterator.next();
@@ -118,8 +119,7 @@ public class HandleService extends PidService {
   }
 
   private List<HandleAttribute> createMapping(List<JsonNode> requestAttributes,
-      Iterator<byte[]> handleIterator)
-      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+      Iterator<byte[]> handleIterator) throws JsonProcessingException {
     List<HandleAttribute> handleAttributes = new ArrayList<>();
     for (var request : requestAttributes) {
       var thisHandle = handleIterator.next();
@@ -132,7 +132,7 @@ public class HandleService extends PidService {
 
   private List<HandleAttribute> createMas(List<JsonNode> requestAttributes,
       Iterator<byte[]> handleIterator)
-      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+      throws JsonProcessingException {
     List<HandleAttribute> handleAttributes = new ArrayList<>();
     for (var request : requestAttributes) {
       var thisHandle = handleIterator.next();
@@ -146,7 +146,7 @@ public class HandleService extends PidService {
 
   private List<HandleAttribute> createOrganisation(List<JsonNode> requestAttributes,
       Iterator<byte[]> handleIterator)
-      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+      throws JsonProcessingException {
     List<HandleAttribute> handleAttributes = new ArrayList<>();
     for (var request : requestAttributes) {
       var thisHandle = handleIterator.next();
@@ -159,7 +159,7 @@ public class HandleService extends PidService {
 
   private List<HandleAttribute> createSourceSystem(List<JsonNode> requestAttributes,
       Iterator<byte[]> handleIterator)
-      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+      throws JsonProcessingException {
     List<HandleAttribute> handleAttributes = new ArrayList<>();
     for (var request : requestAttributes) {
       var thisHandle = handleIterator.next();
@@ -172,7 +172,7 @@ public class HandleService extends PidService {
 
   private List<HandleAttribute> createTettrisService(List<JsonNode> requestAttributes,
       Iterator<byte[]> handleIterator)
-      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+      throws JsonProcessingException {
     List<HandleAttribute> handleAttributes = new ArrayList<>();
     for (var request : requestAttributes) {
       var thisHandle = handleIterator.next();

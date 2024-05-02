@@ -85,7 +85,7 @@ public class MediaObjectRequest extends DoiRecordRequest {
       String rightsholderName,
       PrimarySpecimenObjectIdType rightsholderPidType,
       String dctermsConformsTo
-  ) throws InvalidRequestException {
+  ) {
     super(issuedForAgent, pidIssuer, StructuralType.DIGITAL,
         locations,
         referentName, FdoType.MEDIA_OBJECT.getDigitalObjectName(), primaryReferentType);
@@ -111,7 +111,7 @@ public class MediaObjectRequest extends DoiRecordRequest {
     validateRightsholder(rightsholderName, rightsholderPid);
   }
 
-  private void validateRightsholder(String name, String pid) throws InvalidRequestException {
+  private void validateRightsholder(String name, String pid) {
     if (name != null && pid == null) {
       throw new InvalidRequestException(
           "Invalid media request. Rightsholder name provided without an identifier");

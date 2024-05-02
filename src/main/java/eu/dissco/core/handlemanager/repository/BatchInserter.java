@@ -20,8 +20,7 @@ public class BatchInserter {
 
   private final CopyManager copyManager;
 
-  public void batchCopy(long recordTimestamp, List<HandleAttribute> handleAttributes)
-      throws DatabaseCopyException {
+  public void batchCopy(long recordTimestamp, List<HandleAttribute> handleAttributes) {
     try (var outputStream = new ByteArrayOutputStream()) {
       for (var row : handleAttributes) {
         outputStream.write(getCsvRow(recordTimestamp, row));

@@ -2,7 +2,6 @@ package eu.dissco.core.handlemanager.controller;
 
 import eu.dissco.core.handlemanager.exceptions.DatabaseCopyException;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
-import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.responses.ExceptionResponse;
@@ -16,17 +15,9 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @ControllerAdvice
 public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionHandler {
 
-  @ResponseStatus(HttpStatus.CONFLICT)
-  @ExceptionHandler(PidCreationException.class)
-  public ResponseEntity<ExceptionResponse> pidCreationException(PidCreationException e) {
-    ExceptionResponse exceptionResponse = new ExceptionResponse(
-        String.valueOf(HttpStatus.CONFLICT), "Unable to Create PID Record", e.getMessage());
-    return ResponseEntity.status(HttpStatus.CONFLICT).body(exceptionResponse);
-  }
-
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ExceptionHandler(InvalidRequestException.class)
-  public ResponseEntity<ExceptionResponse> invalidRecordInputException(InvalidRequestException e) {
+  public ResponseEntity<ExceptionResponse> invalidRequestException(InvalidRequestException e) {
     ExceptionResponse exceptionResponse = new ExceptionResponse(
         String.valueOf(HttpStatus.BAD_REQUEST), "Invalid Request", e.getMessage());
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exceptionResponse);
@@ -53,7 +44,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
   @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
   @ExceptionHandler(DatabaseCopyException.class)
   public ResponseEntity<ExceptionResponse> databaseCopyException(
-      UnprocessableEntityException e) {
+      DatabaseCopyException e) {
     var exceptionResponse = new ExceptionResponse(String.valueOf(HttpStatus.SERVICE_UNAVAILABLE),
         "Database Exception", e.getMessage());
     return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(exceptionResponse);

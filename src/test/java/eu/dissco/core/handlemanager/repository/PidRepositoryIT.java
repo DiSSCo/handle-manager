@@ -25,8 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.BDDMockito.then;
 
 import eu.dissco.core.handlemanager.database.jooq.tables.Handles;
-import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
+import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -86,7 +86,7 @@ class PidRepositoryIT extends BaseRepositoryIT {
     postAttributes(rows);
 
     // When
-    List<byte[]> collisions = pidRepository.getHandlesExist(handles);
+    List<byte[]> collisions = pidRepository.getExistingHandles(handles);
 
     // Then
     assertThat(collisions).hasSize(handles.size());
@@ -100,7 +100,7 @@ class PidRepositoryIT extends BaseRepositoryIT {
         HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
     // When
-    List<byte[]> collisions = pidRepository.getHandlesExist(handles);
+    List<byte[]> collisions = pidRepository.getExistingHandles(handles);
 
     // Then
     assertThat(collisions).isEmpty();

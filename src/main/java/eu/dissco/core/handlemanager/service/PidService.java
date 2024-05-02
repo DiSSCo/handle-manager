@@ -28,10 +28,8 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperReadSingle;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.exceptions.DatabaseCopyException;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
-import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.PidRepository;
 import java.nio.charset.StandardCharsets;
@@ -185,8 +183,7 @@ public abstract class PidService {
     return new JsonApiWrapperWrite(dataList);
   }
 
-  public JsonApiWrapperReadSingle resolveSingleRecord(byte[] handle, String path)
-      throws PidResolutionException {
+  public JsonApiWrapperReadSingle resolveSingleRecord(byte[] handle, String path) {
     var dbRecord = pidRepository.resolveHandleAttributes(handle);
     verifyHandleResolution(List.of(handle), dbRecord);
     var recordAttributeList = formatRecords(dbRecord).get(0);
@@ -201,8 +198,7 @@ public abstract class PidService {
     return type.orElse(FdoType.HANDLE.getDigitalObjectType());
   }
 
-  public JsonApiWrapperRead resolveBatchRecord(List<byte[]> handles, String path)
-      throws PidResolutionException {
+  public JsonApiWrapperRead resolveBatchRecord(List<byte[]> handles, String path) {
     var dbRecords = pidRepository.resolveHandleAttributes(handles);
     verifyHandleResolution(handles, dbRecords);
     var recordAttributeList = formatRecords(dbRecords);
@@ -222,8 +218,7 @@ public abstract class PidService {
     return pidRepository.getAllHandles(pageNum, pageSize);
   }
 
-  private void verifyHandleResolution(List<byte[]> handles, List<HandleAttribute> dbRecords)
-      throws PidResolutionException {
+  private void verifyHandleResolution(List<byte[]> handles, List<HandleAttribute> dbRecords) {
     var resolvedHandles = dbRecords.stream().map(HandleAttribute::getHandle)
         .map(handle -> new String(handle, StandardCharsets.UTF_8)).collect(Collectors.toSet());
     if (handles.size() == resolvedHandles.size()) {
@@ -236,8 +231,7 @@ public abstract class PidService {
     throw new PidResolutionException("PIDs not found: " + handlesString);
   }
 
-  public JsonApiWrapperWrite searchByPhysicalSpecimenId(String normalisedPhysicalId)
-      throws PidResolutionException {
+  public JsonApiWrapperWrite searchByPhysicalSpecimenId(String normalisedPhysicalId) {
     var returnedRows = pidRepository.searchByNormalisedPhysicalIdentifierFullRecord(
         List.of(normalisedPhysicalId.getBytes(StandardCharsets.UTF_8)));
     var handleNames = returnedRows.stream()
@@ -256,8 +250,7 @@ public abstract class PidService {
 
   // Create
   public abstract JsonApiWrapperWrite createRecords(
-      List<JsonNode> requests)
-      throws PidResolutionException, InvalidRequestException, DatabaseCopyException;
+      List<JsonNode> requests);
 
   protected FdoType getObjectTypeFromJsonNode(List<JsonNode> requests) {
     var types = requests.stream().map(request -> request.get(NODE_DATA).get(NODE_TYPE).asText())
@@ -270,11 +263,15 @@ public abstract class PidService {
   }
 
   protected List<HandleAttribute> createDigitalSpecimen(List<JsonNode> requestAttributes,
-      Iterator<byte[]> handleIterator)
-      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+      Iterator<byte[]> handleIterator) {
     var specimenRequests = new ArrayList<DigitalSpecimenRequest>();
     for (var request : requestAttributes) {
-      specimenRequests.add(mapper.treeToValue(request, DigitalSpecimenRequest.class));
+      try {
+        specimenRequests.add(mapper.treeToValue(request, DigitalSpecimenRequest.class));
+      } catch (JsonProcessingException e) {
+        log.error("Unable to parse request to DigitalSpecimenRequest object", e);
+        throw new InvalidRequestException("Unable to parse request");
+      }
     }
     if (specimenRequests.isEmpty()) {
       return new ArrayList<>();
@@ -289,8 +286,7 @@ public abstract class PidService {
     return handleAttributes;
   }
 
-  private void verifySpecimensAreNew(List<DigitalSpecimenRequest> requests)
-      throws InvalidRequestException {
+  private void verifySpecimensAreNew(List<DigitalSpecimenRequest> requests) {
     var normalisedIds = requests.stream().map(
             request -> request.getNormalisedPrimarySpecimenObjectId().getBytes(StandardCharsets.UTF_8))
         .toList();
@@ -310,12 +306,18 @@ public abstract class PidService {
 
 
   protected List<HandleAttribute> createMediaObject(List<JsonNode> requestAttributes,
-      Iterator<byte[]> handleIterator)
-      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+      Iterator<byte[]> handleIterator) {
     List<HandleAttribute> handleAttributes = new ArrayList<>();
     for (var request : requestAttributes) {
       var thisHandle = handleIterator.next();
-      var requestObject = mapper.treeToValue(request, MediaObjectRequest.class);
+      MediaObjectRequest requestObject;
+      try {
+        requestObject = mapper.treeToValue(request, MediaObjectRequest.class);
+      } catch (JsonProcessingException e) {
+        log.error("Unable to parse request to MediaObject", e);
+        throw new InvalidRequestException("Unable to parse request");
+      }
+
       handleAttributes.addAll(
           fdoRecordService.prepareMediaObjectAttributes(requestObject, thisHandle));
     }
@@ -324,8 +326,7 @@ public abstract class PidService {
 
   // Update
   public JsonApiWrapperWrite updateRecords(List<List<HandleAttribute>> attributesToUpdate,
-      boolean incrementVersion, FdoType recordType)
-      throws InvalidRequestException, PidResolutionException {
+      boolean incrementVersion, FdoType recordType) {
     var recordTimestamp = Instant.now().getEpochSecond();
     var handles = attributesToUpdate.stream().map(pidRecord -> pidRecord.get(0).getHandle())
         .toList();
@@ -338,15 +339,13 @@ public abstract class PidService {
         recordType);
   }
 
-  public JsonApiWrapperWrite updateRecords(List<JsonNode> requests, boolean incrementVersion)
-      throws InvalidRequestException, PidResolutionException, UnprocessableEntityException {
+  public JsonApiWrapperWrite updateRecords(List<JsonNode> requests, boolean incrementVersion) {
     List<List<HandleAttribute>> attributesToUpdate = getAttributesToUpdate(requests);
     var recordType = getObjectTypeFromJsonNode(requests);
     return updateRecords(attributesToUpdate, incrementVersion, recordType);
   }
 
-  protected List<List<HandleAttribute>> getAttributesToUpdate(List<JsonNode> requests)
-      throws InvalidRequestException, PidResolutionException {
+  protected List<List<HandleAttribute>> getAttributesToUpdate(List<JsonNode> requests) {
     List<List<HandleAttribute>> attributesToUpdate = new ArrayList<>();
     for (JsonNode root : requests) {
       JsonNode data = root.get(NODE_DATA);
@@ -359,7 +358,7 @@ public abstract class PidService {
     return attributesToUpdate;
   }
 
-  protected void checkInternalDuplicates(List<byte[]> handles) throws InvalidRequestException {
+  protected void checkInternalDuplicates(List<byte[]> handles) {
     Set<String> handlesToUpdateStr = handles.stream()
         .map(h -> new String(h, StandardCharsets.UTF_8)).collect(Collectors.toSet());
     if (handlesToUpdateStr.size() < handles.size()) {
@@ -389,7 +388,7 @@ public abstract class PidService {
     return new JsonApiWrapperWrite(dataList);
   }
 
-  protected void checkHandlesWritable(List<byte[]> handles) throws PidResolutionException {
+  protected void checkHandlesWritable(List<byte[]> handles) {
     Set<byte[]> handlesToUpdate = new HashSet<>(handles);
     Set<byte[]> handlesExist = new HashSet<>(pidRepository.checkHandlesWritable(handles));
     if (handlesExist.size() < handles.size()) {
@@ -403,8 +402,7 @@ public abstract class PidService {
   }
 
   // Archive
-  public JsonApiWrapperWrite archiveRecordBatch(List<JsonNode> requests)
-      throws InvalidRequestException, PidResolutionException, UnprocessableEntityException {
+  public JsonApiWrapperWrite archiveRecordBatch(List<JsonNode> requests) {
     var recordTimestamp = Instant.now().getEpochSecond();
     List<byte[]> handles = new ArrayList<>();
     var archiveAttributesFlat = new ArrayList<HandleAttribute>();

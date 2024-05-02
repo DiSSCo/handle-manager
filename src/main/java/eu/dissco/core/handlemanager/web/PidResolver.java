@@ -26,8 +26,7 @@ public class PidResolver {
   private final ObjectMapper mapper;
 
   @Cacheable("pidName")
-  public String getObjectName(String pid)
-      throws PidResolutionException {
+  public String getObjectName(String pid) {
     log.info("getting Pid name for: {}", pid);
     var pidRecord = resolveExternalPid(pid);
     if (pidRecord.get("name") != null) {

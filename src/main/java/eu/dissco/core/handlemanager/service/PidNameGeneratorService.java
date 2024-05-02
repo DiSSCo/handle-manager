@@ -1,19 +1,19 @@
 package eu.dissco.core.handlemanager.service;
 
+import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.repository.PidRepository;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-// This class generates new handles
 
 @Service
 @RequiredArgsConstructor
@@ -30,115 +30,78 @@ public class PidNameGeneratorService {
   private final Random random;
 
 
-  public List<byte[]> genHandleList(int h) {
-    return unwrapBytes((HashSet<ByteBuffer>) genHandleHash(h));
+  public List<byte[]> genHandleList(int numberOfHandles) {
+    return unwrapBytes(genNewHandlesRecursive(numberOfHandles));
   }
 
-  private List<byte[]> unwrapBytes(HashSet<ByteBuffer> handleHash) {
-    List<byte[]> handleList = new ArrayList<>();
-    for (ByteBuffer hash : handleHash) {
-      handleList.add(hash.array());
-    }
-    return handleList;
+  private Set<ByteBuffer> wrapBytes(List<byte[]> byteList) {
+    return byteList.stream().map(ByteBuffer::wrap).collect(Collectors.toSet());
   }
 
-  private Set<ByteBuffer> genHandleHash(int h) {
+  private List<byte[]> unwrapBytes(Set<ByteBuffer> handleHash) {
+    return handleHash.stream().map(ByteBuffer::array).toList();
+  }
 
+  private Set<ByteBuffer> genNewHandlesRecursive(int numberOfHandles) {
     /*
-     * Generates a HashSet of minted handles of size h Calls the handlefactory
-     * object for random strings (9 alphanum characters with a dash in the middle)
+     * Generates a HashSet of minted handles of size h
+     * Handles are random strings (9 alphanum characters with a dash in the middle)
      * Checks list of random strings against database, replaces duplicates with new
-     * strings Finally, checks for collisions within the list
+     * strings. Finally, checks for collisions within the list
      */
 
     // Generate h number of bytes and wrap it into a HashSet<ByteBuffer>
-    List<byte[]> handleList = newHandle(h);
+    var handleHashList = genNewHandles(numberOfHandles);
 
-    HashSet<ByteBuffer> handleHash = wrapBytes(handleList);
-
-    // Check for duplicates from repository and wrap the duplicates
-    HashSet<ByteBuffer> duplicates = wrapBytes(pidRepository.getHandlesExist(handleList));
+    // Check for duplicates from repository
+    var existingHandles = wrapBytes(pidRepository.getExistingHandles(unwrapBytes(handleHashList)));
 
     // If a duplicate was found, recursively call this function
     // Generate new handles for every duplicate found and add it to our hash list
-
-    if (!duplicates.isEmpty()) {
-      handleHash.removeAll(duplicates);
-      handleHash.addAll(genHandleHash(duplicates.size()));
+    if (!existingHandles.isEmpty()) {
+      handleHashList.removeAll(existingHandles);
+      handleHashList.addAll(genNewHandlesRecursive(existingHandles.size()));
     }
-
     /*
-     * It's possible we have a collision within our list now i.e. on two different
-     * recursive cal)ls to this function, we generate the same If this occurs, we
+     * It's possible we have a collision within our joined list now. If this occurs, we
      * will not have our expected number of handles
      */
-    while (h > handleHash.size()) {
-      handleHash.addAll(genHandleHash(h - handleHash.size()));
+    while (numberOfHandles > handleHashList.size()) {
+      handleHashList.addAll(genNewHandlesRecursive(numberOfHandles - handleHashList.size()));
+    }
+    return handleHashList;
+  }
+
+  private Set<ByteBuffer> genNewHandles(int numberOfHandles) { // Generates h number of handles
+    if (numberOfHandles < 1) {
+      return Collections.emptySet();
+    }
+    if (numberOfHandles > applicationProperties.getMaxHandles()) {
+      log.error("Max number of handles exceeded : {} requested", numberOfHandles);
+      throw new InvalidRequestException("Max number of handles exceeded");
+    }
+
+    // Use ByteBuffer because it has equality testing
+    HashSet<ByteBuffer> handleHash = new HashSet<>();
+    byte[] hdl;
+    for (int i = 0; i < numberOfHandles; i++) {
+      hdl = newHandle();
+      while (!handleHash.add(ByteBuffer.wrap(hdl))) {
+        hdl = newHandle();
+      }
     }
     return handleHash;
   }
 
-  // Converting between List<Byte[] and HashSet<ByteBuffer>
-  /*
-   * List<byte[]> <----> HashSet<ByteBuffer> HashSets are useful for preventing
-   * collisions within the list List<byte[]> is used to interface with repository
-   * layer
-   */
-
-  // Converts List<byte[]> --> HashSet<ByteBuffer>
-  private HashSet<ByteBuffer> wrapBytes(List<byte[]> byteList) {
-    HashSet<ByteBuffer> byteHash = new HashSet<>();
-    for (byte[] bytes : byteList) {
-      byteHash.add(ByteBuffer.wrap(bytes));
-    }
-    return byteHash;
-  }
-
-  private String newSuffix() {
+  private byte[] newHandle() {
     for (int idx = 0; idx < buf.length; ++idx) {
-      if (idx == 3 || idx == 7) { //
-        buf[idx] = '-'; // Sneak a lil dash in the middle
+      if (idx == 3 || idx == 7) {
+        buf[idx] = '-';
       } else {
         buf[idx] = symbols[random.nextInt(symbols.length)];
       }
     }
-    return new String(buf);
-  }
-
-  private String newHandle() {
-    return applicationProperties.getPrefix() + "/" + newSuffix();
-  }
-
-  private byte[] newHandleBytes() {
-    return newHandle().getBytes(StandardCharsets.UTF_8);
-  }
-
-  private List<byte[]> newHandle(int numberOfHandles) { // Generates h number of handles
-    if (numberOfHandles < 1) {
-      return new ArrayList<>();
-    }
-    if (numberOfHandles > applicationProperties.getMaxHandles()) {
-      log.warn("Max number of handles exceeded. Generating maximum {} handles instead",
-          applicationProperties.getMaxHandles());
-      numberOfHandles = applicationProperties.getMaxHandles();
-    }
-
-    // We'll use this to make sure we're not duplicating results
-    // It's of type ByteBuffer and not byte[] because ByteBuffer has equality testing
-    // byte[] is too primitive for our needs
-    HashSet<ByteBuffer> handleHash = new HashSet<>();
-
-    // This is the object we'll actually return
-    List<byte[]> handleList = new ArrayList<>();
-    byte[] hdl;
-
-    for (int i = 0; i < numberOfHandles; i++) {
-      hdl = newHandleBytes();
-      while (!handleHash.add(ByteBuffer.wrap(hdl))) {
-        hdl = newHandleBytes();
-      }
-      handleList.add(hdl);
-    }
-    return handleList;
+    return (applicationProperties.getPrefix() + "/" + new String(buf)).getBytes(
+        StandardCharsets.UTF_8);
   }
 }

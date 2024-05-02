@@ -17,13 +17,10 @@ import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion.VersionFlag;
 import com.networknt.schema.ValidationMessage;
-import eu.dissco.core.handlemanager.domain.fdo.FdoType;
-import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
-import eu.dissco.core.handlemanager.domain.requests.PostRequest;
-import eu.dissco.core.handlemanager.domain.requests.PutRequest;
 import eu.dissco.core.handlemanager.domain.fdo.AnnotationRequest;
 import eu.dissco.core.handlemanager.domain.fdo.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.fdo.DoiRecordRequest;
+import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 import eu.dissco.core.handlemanager.domain.fdo.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.fdo.MappingRequest;
 import eu.dissco.core.handlemanager.domain.fdo.MasRequest;
@@ -31,6 +28,9 @@ import eu.dissco.core.handlemanager.domain.fdo.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.fdo.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.fdo.SourceSystemRequest;
 import eu.dissco.core.handlemanager.domain.fdo.TombstoneRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
+import eu.dissco.core.handlemanager.domain.requests.PostRequest;
+import eu.dissco.core.handlemanager.domain.requests.PutRequest;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import jakarta.validation.constraints.NotEmpty;
 import java.util.Arrays;
@@ -253,7 +253,7 @@ public class JsonSchemaValidator {
 
   }
 
-  public void validatePostRequest(JsonNode requestRoot) throws InvalidRequestException {
+  public void validatePostRequest(JsonNode requestRoot) {
     var validationErrors = postReqSchema.validate(requestRoot);
     if (!validationErrors.isEmpty()) {
       throw new InvalidRequestException(setErrorMessage(validationErrors, "POST"));
@@ -277,7 +277,7 @@ public class JsonSchemaValidator {
     }
   }
 
-  public void validatePatchRequest(JsonNode requestRoot) throws InvalidRequestException {
+  public void validatePatchRequest(JsonNode requestRoot) {
     var validationErrors = patchReqSchema.validate(requestRoot);
     if (!validationErrors.isEmpty()) {
       throw new InvalidRequestException(
@@ -301,7 +301,7 @@ public class JsonSchemaValidator {
     }
   }
 
-  public void validatePutRequest(JsonNode requestRoot) throws InvalidRequestException {
+  public void validatePutRequest(JsonNode requestRoot) {
     var validationErrors = putReqSchema.validate(requestRoot);
     if (!validationErrors.isEmpty()) {
       throw new InvalidRequestException(
@@ -312,8 +312,7 @@ public class JsonSchemaValidator {
   }
 
 
-  private void validateTombstoneRequestAttributes(JsonNode requestAttributes)
-      throws InvalidRequestException {
+  private void validateTombstoneRequestAttributes(JsonNode requestAttributes) {
     var validationErrors = tombstoneReqSchema.validate(requestAttributes);
     if (!validationErrors.isEmpty()) {
       throw new InvalidRequestException(
@@ -323,7 +322,7 @@ public class JsonSchemaValidator {
   }
 
   private void validateRequestAttributes(JsonNode requestAttributes, JsonSchema schema,
-      FdoType type) throws InvalidRequestException {
+      FdoType type) {
     var validationErrors = schema.validate(requestAttributes);
     if (!validationErrors.isEmpty()) {
       throw new InvalidRequestException(
