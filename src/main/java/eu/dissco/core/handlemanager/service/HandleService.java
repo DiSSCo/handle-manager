@@ -70,7 +70,7 @@ public class HandleService extends PidService {
     } catch (JsonProcessingException | PidResolutionException e) {
       log.error("An error has occurred in processing request", e);
       throw new InvalidRequestException(
-          "An error has occurred parsing a record in request. More information: " + e.getMessage());
+          "An error has occurred parsing a record in request.");
     }
     log.info("Persisting new handles to db");
     pidRepository.postAttributesToDb(Instant.now().getEpochSecond(), handleAttributes);

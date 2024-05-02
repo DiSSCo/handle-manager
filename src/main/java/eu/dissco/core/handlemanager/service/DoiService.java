@@ -49,11 +49,17 @@ public class DoiService extends PidService {
         .map(request -> request.get(NODE_DATA).get(NODE_ATTRIBUTES)).toList();
     var type = getObjectTypeFromJsonNode(requests);
     List<HandleAttribute> handleAttributes;
-    switch (type) {
-      case DIGITAL_SPECIMEN -> handleAttributes = createDigitalSpecimen(requestAttributes, handles);
-      case MEDIA_OBJECT -> handleAttributes = createMediaObject(requestAttributes, handles);
-      default -> throw new UnsupportedOperationException(
-          type + " is not an appropriate Type for DOI endpoint.");
+    try {
+      switch (type) {
+        case DIGITAL_SPECIMEN ->
+            handleAttributes = createDigitalSpecimen(requestAttributes, handles);
+        case MEDIA_OBJECT -> handleAttributes = createMediaObject(requestAttributes, handles);
+        default -> throw new UnsupportedOperationException(
+            type + " is not an appropriate Type for DOI endpoint.");
+      }
+    } catch (JsonProcessingException e) {
+      log.error("An error has occurred in parsing request", e);
+      throw new InvalidRequestException("An error has occurred in parsing request");
     }
     log.info("Persisting new dois to db");
     pidRepository.postAttributesToDb(Instant.now().getEpochSecond(), handleAttributes);

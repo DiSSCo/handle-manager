@@ -263,15 +263,10 @@ public abstract class PidService {
   }
 
   protected List<HandleAttribute> createDigitalSpecimen(List<JsonNode> requestAttributes,
-      Iterator<byte[]> handleIterator) {
+      Iterator<byte[]> handleIterator) throws JsonProcessingException {
     var specimenRequests = new ArrayList<DigitalSpecimenRequest>();
     for (var request : requestAttributes) {
-      try {
-        specimenRequests.add(mapper.treeToValue(request, DigitalSpecimenRequest.class));
-      } catch (JsonProcessingException e) {
-        log.error("Unable to parse request to DigitalSpecimenRequest object", e);
-        throw new InvalidRequestException("Unable to parse request");
-      }
+      specimenRequests.add(mapper.treeToValue(request, DigitalSpecimenRequest.class));
     }
     if (specimenRequests.isEmpty()) {
       return new ArrayList<>();
@@ -304,20 +299,13 @@ public abstract class PidService {
     }
   }
 
-
   protected List<HandleAttribute> createMediaObject(List<JsonNode> requestAttributes,
-      Iterator<byte[]> handleIterator) {
+      Iterator<byte[]> handleIterator) throws JsonProcessingException {
     List<HandleAttribute> handleAttributes = new ArrayList<>();
     for (var request : requestAttributes) {
       var thisHandle = handleIterator.next();
       MediaObjectRequest requestObject;
-      try {
-        requestObject = mapper.treeToValue(request, MediaObjectRequest.class);
-      } catch (JsonProcessingException e) {
-        log.error("Unable to parse request to MediaObject", e);
-        throw new InvalidRequestException("Unable to parse request");
-      }
-
+      requestObject = mapper.treeToValue(request, MediaObjectRequest.class);
       handleAttributes.addAll(
           fdoRecordService.prepareMediaObjectAttributes(requestObject, thisHandle));
     }
