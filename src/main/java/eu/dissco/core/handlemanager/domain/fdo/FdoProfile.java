@@ -1,8 +1,10 @@
 package eu.dissco.core.handlemanager.domain.fdo;
 
-import eu.dissco.core.handlemanager.exceptions.UnrecognizedFdoAttributeException;
+import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import java.util.Arrays;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public enum FdoProfile {
   // Kernel
   FDO_PROFILE("fdoProfile", 1),
@@ -62,7 +64,7 @@ public enum FdoProfile {
   PRIMARY_MEDIA_ID("primaryMediaId", 407),
   PRIMARY_MO_ID_TYPE("primaryMediaObjectIdType", 408),
   PRIMARY_MO_ID_NAME("primaryMediaObjectIdName", 409),
-  PRIMARY_MO_TYPE("primaryMediaObjectType", 411),
+  DCTERMS_TYPE("dcterms:type", 411),
   MEDIA_MIME_TYPE("mediaMimeType", 412),
   DERIVED_FROM_ENTITY("derivedFromEntity", 413),
   LICENSE_NAME("licenseName", 414),
@@ -117,8 +119,8 @@ public enum FdoProfile {
     if (fdoProfile.isPresent()) {
       return fdoProfile.get().index;
     }
-    throw new UnrecognizedFdoAttributeException(
-        "Unable to locate index for requested attribute " + searchAttribute);
+    log.error("Unable to locate index for requested attribute {}", searchAttribute);
+    throw new InvalidRequestException(searchAttribute + " not valid fdo attribute");
   }
 
 }

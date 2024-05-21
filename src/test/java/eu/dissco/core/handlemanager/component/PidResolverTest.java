@@ -111,7 +111,7 @@ class PidResolverTest {
   }
 
   @Test
-  void testResolveQidNotFound() throws Exception {
+  void testResolveQidNotFound() {
     // Given
     mockServer.enqueue(new MockResponse()
         .setResponseCode(HttpStatus.NOT_FOUND.value())

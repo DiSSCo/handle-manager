@@ -1,10 +1,10 @@
 package eu.dissco.core.handlemanager.service;
 
 
-import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ATTRIBUTES;
-import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_SPECIMEN;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.MEDIA_OBJECT;
+import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ATTRIBUTES;
+import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_DATA;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -12,10 +12,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.datacite.DataCiteEvent;
 import eu.dissco.core.handlemanager.domain.datacite.EventType;
+import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.domain.fdo.FdoType;
-import eu.dissco.core.handlemanager.exceptions.DatabaseCopyException;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
@@ -37,7 +36,8 @@ public class DoiService extends PidService {
 
   public DoiService(PidRepository pidRepository,
       FdoRecordService fdoRecordService, PidNameGeneratorService pidNameGeneratorService,
-      ObjectMapper mapper, ProfileProperties profileProperties, DataCiteService dataCiteService) {
+      ObjectMapper mapper, ProfileProperties profileProperties,
+      DataCiteService dataCiteService) {
     super(pidRepository, fdoRecordService, pidNameGeneratorService, mapper, profileProperties);
     this.dataCiteService = dataCiteService;
   }
@@ -45,8 +45,7 @@ public class DoiService extends PidService {
   private static final String TYPE_ERROR_MESSAGE = "Error creating DOI for object of Type %s. Only Digital Specimens and Media Objects use DOIs.";
 
   @Override
-  public JsonApiWrapperWrite createRecords(List<JsonNode> requests)
-      throws InvalidRequestException, DatabaseCopyException {
+  public JsonApiWrapperWrite createRecords(List<JsonNode> requests) {
     var handles = hf.genHandleList(requests.size()).iterator();
     var requestAttributes = requests.stream()
         .map(request -> request.get(NODE_DATA).get(NODE_ATTRIBUTES)).toList();
@@ -62,7 +61,8 @@ public class DoiService extends PidService {
       }
     } catch (JsonProcessingException | PidResolutionException e) {
       throw new InvalidRequestException(
-          "An error has occurred parsing a record in request. More information: " + e.getMessage());
+          "An error has occurred parsing a record in request. More information: "
+              + e.getMessage());
     }
     log.info("Persisting new dois to db");
     pidRepository.postAttributesToDb(Instant.now().getEpochSecond(), handleAttributes);
@@ -72,8 +72,7 @@ public class DoiService extends PidService {
   }
 
   @Override
-  public JsonApiWrapperWrite updateRecords(List<JsonNode> requests, boolean incrementVersion)
-      throws InvalidRequestException, PidResolutionException, UnprocessableEntityException {
+  public JsonApiWrapperWrite updateRecords(List<JsonNode> requests, boolean incrementVersion) {
     var type = getObjectTypeFromJsonNode(requests);
     if (!DIGITAL_SPECIMEN.equals(type) && !MEDIA_OBJECT.equals(type)) {
       throw new InvalidRequestException(TYPE_ERROR_MESSAGE);
@@ -87,7 +86,7 @@ public class DoiService extends PidService {
   }
 
   private void publishToDataCite(List<HandleAttribute> handleAttributes, EventType eventType,
-      FdoType objectType) throws UnprocessableEntityException {
+      FdoType objectType) {
     var handleMap = mapRecords(handleAttributes);
     var eventList = new ArrayList<DataCiteEvent>();
     handleMap.forEach(

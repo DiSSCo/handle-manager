@@ -1,6 +1,6 @@
 package eu.dissco.core.handlemanager.exceptions;
 
-public class InvalidRequestException extends Exception {
+public class InvalidRequestException extends RuntimeException {
 
   // Response code = 400 BAD REQUEST
 
