@@ -1,15 +1,12 @@
 package eu.dissco.core.handlemanager.service;
 
-import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_DO_PID;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_MEDIA_ID;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LINKED_DO_PID;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_MEDIA_ID;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_DOMAIN;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_DS;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_HANDLE;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.RECORD_TYPE_MEDIA;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaObjectAttributes;
@@ -17,13 +14,11 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genObjectNodeAttr
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRecordAttributesAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestBatch;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseNullAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteSmallResponse;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
@@ -37,7 +32,7 @@ import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.datacite.DataCiteEvent;
 import eu.dissco.core.handlemanager.domain.datacite.EventType;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
+import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
@@ -103,13 +98,13 @@ class DoiServiceTest {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(),
-        RECORD_TYPE_DS);
+        FdoType.DIGITAL_SPECIMEN);
     List<HandleAttribute> digitalSpecimen = genDigitalSpecimenAttributes(handle);
     var digitalSpecimenSublist = digitalSpecimen.stream()
         .filter(row -> row.getType().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())).toList();
 
     var responseExpected = givenRecordResponseWriteSmallResponse(digitalSpecimenSublist,
-        List.of(handle), ObjectType.DIGITAL_SPECIMEN);
+        List.of(handle), FdoType.DIGITAL_SPECIMEN);
     var dataCiteEvent = new DataCiteEvent(genObjectNodeAttributeRecord(digitalSpecimen),
         EventType.CREATE);
     given(pidNameGeneratorService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
@@ -122,20 +117,20 @@ class DoiServiceTest {
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
-    then(dataCiteService).should().publishToDataCite(dataCiteEvent, ObjectType.DIGITAL_SPECIMEN);
+    then(dataCiteService).should().publishToDataCite(dataCiteEvent, FdoType.DIGITAL_SPECIMEN);
   }
 
   @Test
   void testCreateMediaObject() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    var request = genCreateRecordRequest(givenMediaRequestObject(), RECORD_TYPE_MEDIA);
+    var request = genCreateRecordRequest(givenMediaRequestObject(), FdoType.MEDIA_OBJECT);
     List<HandleAttribute> mediaObject = genMediaObjectAttributes(handle);
     var mediaSublist = mediaObject.stream().filter(
         row -> row.getType().equals(PRIMARY_MEDIA_ID.get()) || row.getType()
             .equals(LINKED_DO_PID.get())).toList();
     var responseExpected = givenRecordResponseWriteSmallResponse(mediaSublist, List.of(handle),
-        ObjectType.MEDIA_OBJECT);
+        FdoType.MEDIA_OBJECT);
     var dataCiteEvent = new DataCiteEvent(genObjectNodeAttributeRecord(mediaObject),
         EventType.CREATE);
     given(pidNameGeneratorService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
@@ -147,7 +142,7 @@ class DoiServiceTest {
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
-    then(dataCiteService).should().publishToDataCite(dataCiteEvent, ObjectType.MEDIA_OBJECT);
+    then(dataCiteService).should().publishToDataCite(dataCiteEvent, FdoType.MEDIA_OBJECT);
   }
 
   @Test
@@ -156,7 +151,7 @@ class DoiServiceTest {
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     var request = List.of(
         (JsonNode) genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(),
-            RECORD_TYPE_DS));
+            FdoType.DIGITAL_SPECIMEN));
     List<HandleAttribute> digitalSpecimen = genDigitalSpecimenAttributes(handle);
     given(pidNameGeneratorService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
     given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(any(), any())).willReturn(
@@ -174,10 +169,10 @@ class DoiServiceTest {
   void testUpdateRecordLocation() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    var updateRequest = genUpdateRequestBatch(List.of(handle), ObjectType.DIGITAL_SPECIMEN);
+    var updateRequest = genUpdateRequestBatch(List.of(handle), FdoType.DIGITAL_SPECIMEN);
     var updatedAttributeRecord = genUpdateRecordAttributesAltLoc(handle);
     var responseExpected = givenRecordResponseNullAttributes(List.of(handle),
-        ObjectType.DIGITAL_SPECIMEN);
+        FdoType.DIGITAL_SPECIMEN);
     var expectedEvent = new DataCiteEvent(genObjectNodeAttributeRecord(updatedAttributeRecord),
         EventType.UPDATE);
 
@@ -193,14 +188,14 @@ class DoiServiceTest {
     assertThat(responseReceived).isEqualTo(responseExpected);
     then(pidRepository).should()
         .updateRecordBatch(CREATED.getEpochSecond(), List.of(updatedAttributeRecord), true);
-    then(dataCiteService).should().publishToDataCite(expectedEvent, ObjectType.DIGITAL_SPECIMEN);
+    then(dataCiteService).should().publishToDataCite(expectedEvent, FdoType.DIGITAL_SPECIMEN);
   }
 
   @Test
   void testUpdateInvalidType() {
     // Given
     var updateRequest = genUpdateRequestBatch(List.of(HANDLE.getBytes(StandardCharsets.UTF_8)),
-        ObjectType.HANDLE);
+        FdoType.HANDLE);
 
     // When Then
     assertThrows(InvalidRequestException.class, () -> service.updateRecords(updateRequest, true));
@@ -211,7 +206,7 @@ class DoiServiceTest {
   void testUpdateRecordLocationDataCiteFails() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    var updateRequest = genUpdateRequestBatch(List.of(handle), ObjectType.DIGITAL_SPECIMEN);
+    var updateRequest = genUpdateRequestBatch(List.of(handle), FdoType.DIGITAL_SPECIMEN);
     var updatedAttributeRecord = genUpdateRecordAttributesAltLoc(handle);
 
     given(pidRepository.checkHandlesWritable(anyList())).willReturn(List.of(handle));
@@ -228,18 +223,6 @@ class DoiServiceTest {
     then(pidRepository).should()
         .updateRecordBatch(CREATED.getEpochSecond(), List.of(updatedAttributeRecord), true);
     then(pidRepository).shouldHaveNoMoreInteractions();
-  }
-
-  @Test
-  void testCreateInvalidType() {
-    // Given
-    var request = genCreateRecordRequest(givenDoiRecordRequestObject(), RECORD_TYPE_HANDLE);
-    given(pidNameGeneratorService.genHandleList(1)).willReturn(
-        new ArrayList<>(List.of(HANDLE.getBytes())));
-
-    // Then
-    assertThrowsExactly(UnsupportedOperationException.class,
-        () -> service.createRecords(List.of(request)));
   }
 
 }

@@ -1,10 +1,10 @@
 package eu.dissco.core.handlemanager.service;
 
 
-import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
-import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
-import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType.DIGITAL_SPECIMEN;
-import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType.MEDIA_OBJECT;
+import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ATTRIBUTES;
+import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_DATA;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_SPECIMEN;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoType.MEDIA_OBJECT;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -14,7 +14,7 @@ import eu.dissco.core.handlemanager.domain.datacite.DataCiteEvent;
 import eu.dissco.core.handlemanager.domain.datacite.EventType;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
+import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 import eu.dissco.core.handlemanager.exceptions.DatabaseCopyException;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -50,7 +50,7 @@ public class DoiService extends PidService {
     var handles = hf.genHandleList(requests.size()).iterator();
     var requestAttributes = requests.stream()
         .map(request -> request.get(NODE_DATA).get(NODE_ATTRIBUTES)).toList();
-    var type = getObjectType(requests);
+    var type = getObjectTypeFromJsonNode(requests);
     List<HandleAttribute> handleAttributes;
     try {
       switch (type) {
@@ -74,7 +74,7 @@ public class DoiService extends PidService {
   @Override
   public JsonApiWrapperWrite updateRecords(List<JsonNode> requests, boolean incrementVersion)
       throws InvalidRequestException, PidResolutionException, UnprocessableEntityException {
-    var type = getObjectType(requests);
+    var type = getObjectTypeFromJsonNode(requests);
     if (!DIGITAL_SPECIMEN.equals(type) && !MEDIA_OBJECT.equals(type)) {
       throw new InvalidRequestException(TYPE_ERROR_MESSAGE);
     }
@@ -87,7 +87,7 @@ public class DoiService extends PidService {
   }
 
   private void publishToDataCite(List<HandleAttribute> handleAttributes, EventType eventType,
-      ObjectType objectType) throws UnprocessableEntityException {
+      FdoType objectType) throws UnprocessableEntityException {
     var handleMap = mapRecords(handleAttributes);
     var eventList = new ArrayList<DataCiteEvent>();
     handleMap.forEach(

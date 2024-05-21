@@ -25,7 +25,7 @@ class PidControllerExceptionHandlerTest {
   }
 
   @Test
-  void testPidCreationException() throws Exception {
+  void testPidCreationException() {
     // Given
     var expectedBody = new ExceptionResponse(HttpStatus.CONFLICT.toString(),
         "Unable to Create PID Record", errorMessage);
@@ -39,7 +39,7 @@ class PidControllerExceptionHandlerTest {
   }
 
   @Test
-  void testInvalidRecordInput() throws Exception {
+  void testInvalidRecordInput() {
     // Given
     var expectedBody = new ExceptionResponse(HttpStatus.BAD_REQUEST.toString(),
         "Invalid Request", errorMessage);
@@ -54,7 +54,7 @@ class PidControllerExceptionHandlerTest {
   }
 
   @Test
-  void testPidResolutionException() throws Exception {
+  void testPidResolutionException() {
     // Given
     var expectedBody = new ExceptionResponse(HttpStatus.NOT_FOUND.toString(),
         "Unable to Resolve Persistent Identifier", errorMessage);
