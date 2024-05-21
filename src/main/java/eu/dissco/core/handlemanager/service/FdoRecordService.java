@@ -202,8 +202,7 @@ public class FdoRecordService {
     // 9: issuedForAgentName
     var agentNameRor = getRor(request.getIssuedForAgent());
     var issuedForAgentName = pidResolver.getObjectName(agentNameRor);
-    fdoRecord.add(
-        new HandleAttribute(ISSUED_FOR_AGENT_NAME, handle, issuedForAgentName));
+    fdoRecord.add(new HandleAttribute(ISSUED_FOR_AGENT_NAME, handle, issuedForAgentName));
 
     // 10: pidRecordIssueDate
     fdoRecord.add(new HandleAttribute(PID_RECORD_ISSUE_DATE, handle, getDate()));
@@ -227,9 +226,8 @@ public class FdoRecordService {
     } else if (url.contains(HANDLE_DOMAIN) || url.contains(DOI_DOMAIN)) {
       return pidResolver.getObjectName(url);
     }
-    throw new InvalidRequestException(
-        String.format(PROXY_ERROR, url,
-            (ROR_DOMAIN + ", " + HANDLE_DOMAIN + ", or " + DOI_DOMAIN)));
+    throw new InvalidRequestException(String.format(PROXY_ERROR, url,
+        (ROR_DOMAIN + ", " + HANDLE_DOMAIN + ", or " + DOI_DOMAIN)));
   }
 
   private static String getRor(String url) {
@@ -244,8 +242,7 @@ public class FdoRecordService {
     var fdoRecord = prepareHandleRecordAttributes(request, handle, type);
 
     // 40: referentType
-    fdoRecord.add(
-        new HandleAttribute(REFERENT_TYPE, handle, request.getReferentType()));
+    fdoRecord.add(new HandleAttribute(REFERENT_TYPE, handle, request.getReferentType()));
 
     // 41: referentDoiName
     fdoRecord.add(
@@ -275,35 +272,27 @@ public class FdoRecordService {
     }
     fdoRecord.add(new HandleAttribute(IS_DERIVED_FROM_SPECIMEN, handle,
         request.getIsDerivedFromSpecimen().toString()));
-    fdoRecord.add(
-        new HandleAttribute(LINKED_DO_PID, handle, request.getLinkedDigitalObjectPid()));
-    fdoRecord.add(
-        new HandleAttribute(LINKED_DO_TYPE, handle, request.getLinkedDigitalObjectType()
-            .toString()));
+    fdoRecord.add(new HandleAttribute(LINKED_DO_PID, handle, request.getLinkedDigitalObjectPid()));
+    fdoRecord.add(new HandleAttribute(LINKED_DO_TYPE, handle,
+        request.getLinkedDigitalObjectType().toString()));
     if (request.getLinkedAttribute() != null) {
-      fdoRecord.add(
-          new HandleAttribute(LINKED_ATTRIBUTE, handle, request.getLinkedAttribute()));
+      fdoRecord.add(new HandleAttribute(LINKED_ATTRIBUTE, handle, request.getLinkedAttribute()));
     }
-    fdoRecord.add(
-        new HandleAttribute(PRIMARY_MEDIA_ID, handle, request.getPrimaryMediaId()));
+    fdoRecord.add(new HandleAttribute(PRIMARY_MEDIA_ID, handle, request.getPrimaryMediaId()));
 
     if (request.getDcTermsType() != null) {
-      fdoRecord.add(
-          new HandleAttribute(DCTERMS_TYPE, handle,
-              request.getDcTermsType().toString()));
+      fdoRecord.add(new HandleAttribute(DCTERMS_TYPE, handle, request.getDcTermsType().toString()));
     }
     if (request.getPrimaryMediaObjectIdName() != null) {
       fdoRecord.add(
           new HandleAttribute(PRIMARY_MO_ID_NAME, handle, request.getPrimaryMediaObjectIdName()));
     }
     if (request.getPrimaryMediaObjectIdType() != null) {
-      fdoRecord.add(
-          new HandleAttribute(PRIMARY_MO_ID_TYPE, handle,
-              request.getPrimaryMediaObjectIdType().toString()));
+      fdoRecord.add(new HandleAttribute(PRIMARY_MO_ID_TYPE, handle,
+          request.getPrimaryMediaObjectIdType().toString()));
     }
     if (request.getMediaMimeType() != null) {
-      fdoRecord.add(
-          new HandleAttribute(MEDIA_MIME_TYPE, handle, request.getMediaMimeType()));
+      fdoRecord.add(new HandleAttribute(MEDIA_MIME_TYPE, handle, request.getMediaMimeType()));
     }
     if (request.getDerivedFromEntity() != null) {
       fdoRecord.add(
@@ -319,17 +308,14 @@ public class FdoRecordService {
         handle, RIGHTSHOLDER_NAME);
     fdoRecord.add(rightsholderName);
     if (request.getRightsholderPid() != null) {
-      fdoRecord.add(
-          new HandleAttribute(RIGHTSHOLDER_PID, handle, request.getRightsholderPid()));
+      fdoRecord.add(new HandleAttribute(RIGHTSHOLDER_PID, handle, request.getRightsholderPid()));
     }
     if (request.getRightsholderPidType() != null) {
-      fdoRecord.add(
-          new HandleAttribute(RIGHTSHOLDER_PID_TYPE, handle,
-              request.getRightsholderPidType().toString()));
+      fdoRecord.add(new HandleAttribute(RIGHTSHOLDER_PID_TYPE, handle,
+          request.getRightsholderPidType().toString()));
     }
     if (request.getDctermsConformsTo() != null) {
-      fdoRecord.add(
-          new HandleAttribute(DC_TERMS_CONFORMS, handle, request.getDctermsConformsTo()));
+      fdoRecord.add(new HandleAttribute(DC_TERMS_CONFORMS, handle, request.getDctermsConformsTo()));
     }
     return fdoRecord;
   }
@@ -345,8 +331,7 @@ public class FdoRecordService {
     fdoRecord.add(new HandleAttribute(TARGET_TYPE, handle, request.getTargetType()));
 
     // 502 motivation
-    fdoRecord.add(
-        new HandleAttribute(MOTIVATION, handle, request.getMotivation().toString()));
+    fdoRecord.add(new HandleAttribute(MOTIVATION, handle, request.getMotivation().toString()));
 
     // 503 AnnotationHash
     if (request.getAnnotationHash() != null) {
@@ -416,8 +401,7 @@ public class FdoRecordService {
     var fdoRecord = prepareDoiRecordAttributes(request, handle, DIGITAL_SPECIMEN);
 
     // 200: Specimen Host
-    fdoRecord.add(
-        new HandleAttribute(SPECIMEN_HOST, handle, request.getSpecimenHost()));
+    fdoRecord.add(new HandleAttribute(SPECIMEN_HOST, handle, request.getSpecimenHost()));
 
     // 201: Specimen Host name
     var specimenHostName = setHostName(request.getSpecimenHostName(), request.getSpecimenHost(),
@@ -425,34 +409,29 @@ public class FdoRecordService {
     fdoRecord.add(specimenHostName);
 
     // 202: primarySpecimenObjectId
-    fdoRecord.add(
-        new HandleAttribute(PRIMARY_SPECIMEN_OBJECT_ID, handle,
-            request.getPrimarySpecimenObjectId()));
+    fdoRecord.add(new HandleAttribute(PRIMARY_SPECIMEN_OBJECT_ID, handle,
+        request.getPrimarySpecimenObjectId()));
 
     // 203: primarySpecimenObjectIdType
-    fdoRecord.add(
-        new HandleAttribute(PRIMARY_SPECIMEN_OBJECT_ID_TYPE, handle,
-            request.getPrimarySpecimenObjectIdType().toString()));
+    fdoRecord.add(new HandleAttribute(PRIMARY_SPECIMEN_OBJECT_ID_TYPE, handle,
+        request.getPrimarySpecimenObjectIdType().toString()));
 
     // 204-217 are optional
 
     // 204: primarySpecimenObjectIdName
     if (request.getPrimarySpecimenObjectIdName() != null) {
-      fdoRecord.add(
-          new HandleAttribute(PRIMARY_SPECIMEN_OBJECT_ID_NAME, handle,
-              request.getPrimarySpecimenObjectIdName()));
+      fdoRecord.add(new HandleAttribute(PRIMARY_SPECIMEN_OBJECT_ID_NAME, handle,
+          request.getPrimarySpecimenObjectIdName()));
     }
 
     // 205 normalisedSpecimenObjectId
-    fdoRecord.add(
-        new HandleAttribute(NORMALISED_SPECIMEN_OBJECT_ID, handle,
-            request.getNormalisedPrimarySpecimenObjectId()));
+    fdoRecord.add(new HandleAttribute(NORMALISED_SPECIMEN_OBJECT_ID, handle,
+        request.getNormalisedPrimarySpecimenObjectId()));
 
     // 206: specimenObjectIdAbsenceReason
     if (request.getPrimarySpecimenObjectIdAbsenceReason() != null) {
-      fdoRecord.add(
-          new HandleAttribute(SPECIMEN_OBJECT_ID_ABSENCE_REASON, handle,
-              request.getPrimarySpecimenObjectIdAbsenceReason()));
+      fdoRecord.add(new HandleAttribute(SPECIMEN_OBJECT_ID_ABSENCE_REASON, handle,
+          request.getPrimarySpecimenObjectIdAbsenceReason()));
     }
 
     // 207: otherSpecimenIds
@@ -473,8 +452,7 @@ public class FdoRecordService {
     // 209: topicDomain
     var topicDomain = request.getTopicDomain();
     if (topicDomain != null) {
-      fdoRecord.add(
-          new HandleAttribute(TOPIC_DOMAIN, handle, topicDomain.toString()));
+      fdoRecord.add(new HandleAttribute(TOPIC_DOMAIN, handle, topicDomain.toString()));
     }
 
     // 210: topicDiscipline
@@ -515,17 +493,14 @@ public class FdoRecordService {
 
     // 216: materialOrDigitalEntity
     if (request.getMaterialOrDigitalEntity() != null) {
-      fdoRecord.add(
-          new HandleAttribute(MATERIAL_OR_DIGITAL_ENTITY, handle,
-              request.getMaterialOrDigitalEntity().toString()));
+      fdoRecord.add(new HandleAttribute(MATERIAL_OR_DIGITAL_ENTITY, handle,
+          request.getMaterialOrDigitalEntity().toString()));
     }
 
     // 217: markedAsType
     var markedAsType = request.getMarkedAsType();
     if (markedAsType != null) {
-      fdoRecord.add(
-          new HandleAttribute(MARKED_AS_TYPE, handle,
-              markedAsType.toString()));
+      fdoRecord.add(new HandleAttribute(MARKED_AS_TYPE, handle, markedAsType.toString()));
     }
 
     // 218: wasDerivedFromEntity
@@ -570,22 +545,20 @@ public class FdoRecordService {
         new TypeReference<Map<String, Object>>() {
         });
 
-    var updatedAttributeList = new ArrayList<>(updateRequestMap.entrySet().stream()
-        .filter(entry -> entry.getValue() != null)
-        .map(entry -> new HandleAttribute(FdoProfile.retrieveIndex(entry.getKey()), handle,
-            entry.getKey(),
-            entry.getValue().toString().getBytes(StandardCharsets.UTF_8)))
-        .toList());
+    var updatedAttributeList = new ArrayList<>(
+        updateRequestMap.entrySet().stream().filter(entry -> entry.getValue() != null).map(
+                entry -> new HandleAttribute(FdoProfile.retrieveIndex(entry.getKey()), handle,
+                    entry.getKey(), entry.getValue().toString().getBytes(StandardCharsets.UTF_8)))
+            .toList());
     updatedAttributeList.addAll(addResolvedNames(updateRequestMap, handle));
     return updatedAttributeList;
   }
 
   private List<HandleAttribute> addResolvedNames(Map<String, Object> updateRequestMap,
       byte[] handle) {
-    var resolvableKeys = updateRequestMap.entrySet()
-        .stream()
-        .filter(entry -> RESOLVABLE_KEYS.containsKey(entry.getKey())
-            && !hasResolvedPairInRequest(updateRequestMap, entry.getKey()))
+    var resolvableKeys = updateRequestMap.entrySet().stream().filter(
+            entry -> RESOLVABLE_KEYS.containsKey(entry.getKey()) && !hasResolvedPairInRequest(
+                updateRequestMap, entry.getKey()))
         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     if (resolvableKeys.isEmpty()) {
       return new ArrayList<>();
@@ -595,8 +568,9 @@ public class FdoRecordService {
       var targetAttribute = RESOLVABLE_KEYS.get(resolvableKey.getKey());
 
       var resolvedPid = getObjectName(resolvableKey.getValue().toString());
-      resolvedPidNameAttributes.add(new HandleAttribute(FdoProfile.retrieveIndex(targetAttribute),
-          handle, targetAttribute, resolvedPid.getBytes(StandardCharsets.UTF_8)));
+      resolvedPidNameAttributes.add(
+          new HandleAttribute(FdoProfile.retrieveIndex(targetAttribute), handle, targetAttribute,
+              resolvedPid.getBytes(StandardCharsets.UTF_8)));
     }
     return resolvedPidNameAttributes;
   }
@@ -671,8 +645,7 @@ public class FdoRecordService {
     try {
       return documentToString(doc).getBytes(StandardCharsets.UTF_8);
     } catch (TransformerException e) {
-      throw new InvalidRequestException(
-          "An error has occurred parsing location data");
+      throw new InvalidRequestException("An error has occurred parsing location data");
     }
   }
 

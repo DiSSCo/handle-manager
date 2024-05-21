@@ -98,8 +98,7 @@ public class PidRepository {
       List<byte[]> normalisedPhysicalIdentifiers) {
     return context.select(HANDLES.IDX, HANDLES.HANDLE, HANDLES.TYPE, HANDLES.DATA).from(HANDLES)
         .where(
-            HANDLES.TYPE.eq(
-                NORMALISED_SPECIMEN_OBJECT_ID.get().getBytes(StandardCharsets.UTF_8)))
+            HANDLES.TYPE.eq(NORMALISED_SPECIMEN_OBJECT_ID.get().getBytes(StandardCharsets.UTF_8)))
         .and((HANDLES.DATA).in(normalisedPhysicalIdentifiers));
   }
 
