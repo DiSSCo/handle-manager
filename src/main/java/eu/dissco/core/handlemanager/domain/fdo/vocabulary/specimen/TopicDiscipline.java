@@ -1,9 +1,10 @@
 package eu.dissco.core.handlemanager.domain.fdo.vocabulary.specimen;
 
-import com.fasterxml.jackson.annotation.*;
-import lombok.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Set;
 
 import static eu.dissco.core.handlemanager.domain.fdo.vocabulary.specimen.MaterialSampleType.*;
 import static eu.dissco.core.handlemanager.domain.fdo.vocabulary.specimen.TopicCategory.*;
