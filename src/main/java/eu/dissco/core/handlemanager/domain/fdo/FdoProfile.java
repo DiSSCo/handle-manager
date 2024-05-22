@@ -1,6 +1,5 @@
 package eu.dissco.core.handlemanager.domain.fdo;
 
-import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 
@@ -120,7 +119,7 @@ public enum FdoProfile {
       return fdoProfile.get().index;
     }
     log.error("Unable to locate index for requested attribute {}", searchAttribute);
-    throw new InvalidRequestException(searchAttribute + " not valid fdo attribute");
+    throw new IllegalStateException(searchAttribute + " not valid fdo attribute");
   }
 
 }

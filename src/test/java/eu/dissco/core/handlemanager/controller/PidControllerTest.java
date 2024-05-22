@@ -28,7 +28,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordRespon
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteGeneric;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemRequestObject;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -89,7 +89,7 @@ class PidControllerTest {
   }
 
   @Test
-  void testResolveSingleHandle() {
+  void testResolveSingleHandle() throws PidResolutionException {
     // Given
     String path = SANDBOX_URI + PREFIX + "/" + SUFFIX;
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
@@ -112,7 +112,7 @@ class PidControllerTest {
   @Test
   void testResolvePidBadPrefix() {
     var request = new MockHttpServletRequest();
-    assertThrows(PidResolutionException.class, () ->
+    assertThrowsExactly(PidResolutionException.class, () ->
         controller.resolvePid(SUFFIX, SUFFIX, request));
   }
 
@@ -190,7 +190,7 @@ class PidControllerTest {
     given(applicationProperties.getMaxHandles()).willReturn(maxHandles);
 
     // When
-    Exception e = assertThrows(InvalidRequestException.class,
+    Exception e = assertThrowsExactly(InvalidRequestException.class,
         () -> controller.resolvePids(handleString, r));
 
     // Then
@@ -473,7 +473,7 @@ class PidControllerTest {
         givenJsonNode(HANDLE_ALT, FdoType.HANDLE.getDigitalObjectType(), updateAttributes));
 
     // Then
-    assertThrows(InvalidRequestException.class,
+    assertThrowsExactly(InvalidRequestException.class,
         () -> controller.updateRecord(PREFIX, SUFFIX, updateRequestNode, authentication));
   }
 
@@ -531,7 +531,7 @@ class PidControllerTest {
   }
 
   @Test
-  void testRollbackHandles() {
+  void testRollbackHandles() throws InvalidRequestException {
     // Given
     var dataNode1 = MAPPER.createObjectNode();
     dataNode1.put("id", HANDLE);
@@ -568,7 +568,7 @@ class PidControllerTest {
     var request = new RollbackRequest(dataNode);
 
     // Then
-    assertThrows(InvalidRequestException.class,
+    assertThrowsExactly(InvalidRequestException.class,
         () -> controller.rollbackHandleCreation(request, authentication));
   }
 
@@ -597,7 +597,7 @@ class PidControllerTest {
     var archiveRequest = givenArchiveRequest();
 
     // When
-    assertThrows(InvalidRequestException.class,
+    assertThrowsExactly(InvalidRequestException.class,
         () -> controller.archiveRecord(PREFIX, "123", archiveRequest,
             authentication));
   }
@@ -640,7 +640,7 @@ class PidControllerTest {
         givenJsonNode(HANDLE_ALT, FdoType.HANDLE.getDigitalObjectType(), archiveAttributes));
 
     // Then
-    assertThrows(InvalidRequestException.class,
+    assertThrowsExactly(InvalidRequestException.class,
         () -> controller.updateRecord(PREFIX, SUFFIX, archiveRequestNode, authentication));
   }
 
@@ -654,7 +654,7 @@ class PidControllerTest {
         new PidResolutionException(message));
 
     // Then
-    Exception exception = assertThrows(PidResolutionException.class,
+    Exception exception = assertThrowsExactly(PidResolutionException.class,
         () -> controller.createRecord(requestNode, authentication));
     assertThat(exception.getMessage()).isEqualTo(message);
   }

@@ -45,7 +45,8 @@ public class DoiService extends PidService {
   private static final String TYPE_ERROR_MESSAGE = "Error creating DOI for object of Type %s. Only Digital Specimens and Media Objects use DOIs.";
 
   @Override
-  public JsonApiWrapperWrite createRecords(List<JsonNode> requests) {
+  public JsonApiWrapperWrite createRecords(List<JsonNode> requests)
+      throws InvalidRequestException, UnprocessableEntityException {
     var handles = hf.genHandleList(requests.size()).iterator();
     var requestAttributes = requests.stream()
         .map(request -> request.get(NODE_DATA).get(NODE_ATTRIBUTES)).toList();
@@ -72,7 +73,8 @@ public class DoiService extends PidService {
   }
 
   @Override
-  public JsonApiWrapperWrite updateRecords(List<JsonNode> requests, boolean incrementVersion) {
+  public JsonApiWrapperWrite updateRecords(List<JsonNode> requests, boolean incrementVersion)
+      throws InvalidRequestException, UnprocessableEntityException {
     var type = getObjectTypeFromJsonNode(requests);
     if (!DIGITAL_SPECIMEN.equals(type) && !MEDIA_OBJECT.equals(type)) {
       throw new InvalidRequestException(TYPE_ERROR_MESSAGE);
@@ -86,7 +88,7 @@ public class DoiService extends PidService {
   }
 
   private void publishToDataCite(List<HandleAttribute> handleAttributes, EventType eventType,
-      FdoType objectType) {
+      FdoType objectType) throws UnprocessableEntityException {
     var handleMap = mapRecords(handleAttributes);
     var eventList = new ArrayList<DataCiteEvent>();
     handleMap.forEach(

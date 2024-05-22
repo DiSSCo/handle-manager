@@ -46,7 +46,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordRespon
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteSmallResponse;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemRequestObject;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
@@ -180,7 +180,7 @@ class HandleServiceTest {
     given(pidRepository.resolveHandleAttributes(any(byte[].class))).willReturn(new ArrayList<>());
 
     // When
-    var exception = assertThrows(PidResolutionException.class,
+    var exception = assertThrowsExactly(PidResolutionException.class,
         () -> service.resolveSingleRecord(handle, path));
     // Then
     assertThat(exception.getMessage()).contains(HANDLE);
@@ -257,7 +257,7 @@ class HandleServiceTest {
         attributeList);
 
     // When
-    Exception e = assertThrows(PidResolutionException.class,
+    Exception e = assertThrowsExactly(PidResolutionException.class,
         () -> service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL));
 
     // Then
@@ -344,7 +344,7 @@ class HandleServiceTest {
             digitalSpecimen.getNormalisedPrimarySpecimenObjectId())));
 
     // When Then
-    assertThrows(InvalidRequestException.class, () -> service.createRecords(request));
+    assertThrowsExactly(InvalidRequestException.class, () -> service.createRecords(request));
   }
 
   @Test
@@ -668,7 +668,7 @@ class HandleServiceTest {
         genDigitalSpecimenAttributes(HANDLE.getBytes(StandardCharsets.UTF_8)));
 
     // Then
-    assertThrows(InvalidRequestException.class, () -> {
+    assertThrowsExactly(InvalidRequestException.class, () -> {
       service.updateRecords(updateRequest, true);
     });
   }
@@ -683,7 +683,7 @@ class HandleServiceTest {
         .willReturn(genDigitalSpecimenAttributes(HANDLE_ALT.getBytes(StandardCharsets.UTF_8)));
 
     // Then
-    assertThrows(PidResolutionException.class, () -> {
+    assertThrowsExactly(PidResolutionException.class, () -> {
       service.updateRecords(updateRequest, true);
     });
   }

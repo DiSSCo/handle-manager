@@ -42,7 +42,7 @@ public class HandleService extends PidService {
 
   // Pid Record Creation
   @Override
-  public JsonApiWrapperWrite createRecords(List<JsonNode> requests) {
+  public JsonApiWrapperWrite createRecords(List<JsonNode> requests) throws InvalidRequestException {
     var handles = hf.genHandleList(requests.size()).iterator();
     var requestAttributes = requests.stream()
         .map(request -> request.get(NODE_DATA).get(NODE_ATTRIBUTES)).toList();
@@ -73,7 +73,8 @@ public class HandleService extends PidService {
   }
 
   private List<HandleAttribute> createAnnotation(List<JsonNode> requestAttributes,
-      Iterator<byte[]> handleIterator) throws JsonProcessingException {
+      Iterator<byte[]> handleIterator)
+      throws JsonProcessingException, InvalidRequestException {
     List<HandleAttribute> handleAttributes = new ArrayList<>();
     for (var request : requestAttributes) {
       var thisHandle = handleIterator.next();
@@ -85,7 +86,8 @@ public class HandleService extends PidService {
   }
 
   private List<HandleAttribute> createDoi(List<JsonNode> requestAttributes,
-      Iterator<byte[]> handleIterator) throws JsonProcessingException {
+      Iterator<byte[]> handleIterator)
+      throws JsonProcessingException, InvalidRequestException {
     List<HandleAttribute> handleAttributes = new ArrayList<>();
     for (var request : requestAttributes) {
       var thisHandle = handleIterator.next();
@@ -97,7 +99,8 @@ public class HandleService extends PidService {
   }
 
   private List<HandleAttribute> createHandle(List<JsonNode> requestAttributes,
-      Iterator<byte[]> handleIterator) throws JsonProcessingException {
+      Iterator<byte[]> handleIterator)
+      throws JsonProcessingException, InvalidRequestException {
     List<HandleAttribute> handleAttributes = new ArrayList<>();
     for (var request : requestAttributes) {
       var thisHandle = handleIterator.next();
@@ -109,7 +112,7 @@ public class HandleService extends PidService {
   }
 
   private List<HandleAttribute> createMapping(List<JsonNode> requestAttributes,
-      Iterator<byte[]> handleIterator) throws JsonProcessingException {
+      Iterator<byte[]> handleIterator) throws JsonProcessingException, InvalidRequestException {
     List<HandleAttribute> handleAttributes = new ArrayList<>();
     for (var request : requestAttributes) {
       var thisHandle = handleIterator.next();
@@ -120,7 +123,7 @@ public class HandleService extends PidService {
   }
 
   private List<HandleAttribute> createMas(List<JsonNode> requestAttributes,
-      Iterator<byte[]> handleIterator) throws JsonProcessingException {
+      Iterator<byte[]> handleIterator) throws JsonProcessingException, InvalidRequestException {
     List<HandleAttribute> handleAttributes = new ArrayList<>();
     for (var request : requestAttributes) {
       var thisHandle = handleIterator.next();
@@ -132,7 +135,7 @@ public class HandleService extends PidService {
   }
 
   private List<HandleAttribute> createOrganisation(List<JsonNode> requestAttributes,
-      Iterator<byte[]> handleIterator) throws JsonProcessingException {
+      Iterator<byte[]> handleIterator) throws JsonProcessingException, InvalidRequestException {
     List<HandleAttribute> handleAttributes = new ArrayList<>();
     for (var request : requestAttributes) {
       var thisHandle = handleIterator.next();
@@ -144,7 +147,7 @@ public class HandleService extends PidService {
   }
 
   private List<HandleAttribute> createSourceSystem(List<JsonNode> requestAttributes,
-      Iterator<byte[]> handleIterator) throws JsonProcessingException {
+      Iterator<byte[]> handleIterator) throws JsonProcessingException, InvalidRequestException {
     List<HandleAttribute> handleAttributes = new ArrayList<>();
     for (var request : requestAttributes) {
       var thisHandle = handleIterator.next();

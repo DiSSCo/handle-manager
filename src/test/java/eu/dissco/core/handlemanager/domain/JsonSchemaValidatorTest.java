@@ -36,7 +36,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenOrganisation
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemRequestObject;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
@@ -309,7 +309,7 @@ class JsonSchemaValidatorTest {
     ((ObjectNode) request.get("data").get("attributes")).put(targetEnum, UNKNOWN_VAL);
 
     // Then
-    Exception e = assertThrows(InvalidRequestException.class,
+    Exception e = assertThrowsExactly(InvalidRequestException.class,
         () -> schemaValidator.validatePostRequest(request));
 
     assertThat(e.getMessage()).contains(ENUM_MSG).contains(targetEnum).contains(UNKNOWN_VAL);
@@ -322,7 +322,7 @@ class JsonSchemaValidatorTest {
     ((ObjectNode) request.get(NODE_DATA)).remove(NODE_TYPE);
 
     // Then
-    Exception e = assertThrows(InvalidRequestException.class,
+    Exception e = assertThrowsExactly(InvalidRequestException.class,
         () -> schemaValidator.validatePostRequest(request));
 
     assertThat(e.getMessage()).contains(MISSING_MSG).contains(NODE_TYPE);
@@ -335,7 +335,7 @@ class JsonSchemaValidatorTest {
     ((ObjectNode) request.get(NODE_DATA)).put(UNKNOWN_ATTRIBUTE, UNKNOWN_VAL);
 
     // Then
-    Exception e = assertThrows(InvalidRequestException.class,
+    Exception e = assertThrowsExactly(InvalidRequestException.class,
         () -> schemaValidator.validatePostRequest(request));
 
     assertThat(e.getMessage()).contains(UNRECOGNIZED_MSG).contains(UNKNOWN_ATTRIBUTE);
@@ -348,7 +348,7 @@ class JsonSchemaValidatorTest {
     ((ObjectNode) request.get(NODE_DATA)).put(UNKNOWN_ATTRIBUTE, UNKNOWN_VAL);
 
     // Then
-    Exception e = assertThrows(InvalidRequestException.class,
+    Exception e = assertThrowsExactly(InvalidRequestException.class,
         () -> schemaValidator.validatePostRequest(request));
 
     assertThat(e.getMessage()).contains(UNRECOGNIZED_MSG).contains(UNKNOWN_ATTRIBUTE);
@@ -363,7 +363,7 @@ class JsonSchemaValidatorTest {
     ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(missingAttribute);
 
     // Then
-    Exception e = assertThrows(InvalidRequestException.class,
+    Exception e = assertThrowsExactly(InvalidRequestException.class,
         () -> schemaValidator.validatePostRequest(request));
 
     assertThat(e.getMessage()).contains(MISSING_MSG).contains(missingAttribute);
@@ -377,7 +377,7 @@ class JsonSchemaValidatorTest {
     ((ObjectNode) request.get(NODE_DATA)).put(UNKNOWN_ATTRIBUTE, UNKNOWN_VAL);
 
     // Then
-    Exception e = assertThrows(InvalidRequestException.class,
+    Exception e = assertThrowsExactly(InvalidRequestException.class,
         () -> schemaValidator.validatePostRequest(request));
 
     assertThat(e.getMessage()).contains(UNRECOGNIZED_MSG).contains(UNKNOWN_ATTRIBUTE);
@@ -391,7 +391,7 @@ class JsonSchemaValidatorTest {
     ((ObjectNode) request.get(NODE_DATA)).put(UNKNOWN_ATTRIBUTE, UNKNOWN_VAL);
 
     // Then
-    Exception e = assertThrows(InvalidRequestException.class,
+    Exception e = assertThrowsExactly(InvalidRequestException.class,
         () -> schemaValidator.validatePostRequest(request));
 
     assertThat(e.getMessage()).contains(UNRECOGNIZED_MSG).contains(UNKNOWN_ATTRIBUTE);
@@ -406,7 +406,7 @@ class JsonSchemaValidatorTest {
     ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(missingAttribute);
 
     // Then
-    Exception e = assertThrows(InvalidRequestException.class,
+    Exception e = assertThrowsExactly(InvalidRequestException.class,
         () -> schemaValidator.validatePostRequest(request));
 
     assertThat(e.getMessage()).contains(MISSING_MSG).contains(missingAttribute);
@@ -422,7 +422,7 @@ class JsonSchemaValidatorTest {
         .set(NODE_ATTRIBUTES, genUpdateRequestAltLoc()));
 
     // Then
-    Exception e = assertThrows(InvalidRequestException.class,
+    Exception e = assertThrowsExactly(InvalidRequestException.class,
         () -> schemaValidator.validatePatchRequest(request));
     assertThat(e.getMessage()).contains(ENUM_MSG).contains(NODE_TYPE);
   }
@@ -434,7 +434,7 @@ class JsonSchemaValidatorTest {
     var request = givenUpdateRequest(recordType, UNKNOWN_ATTRIBUTE, UNKNOWN_VAL);
 
     // Then
-    Exception e = assertThrows(InvalidRequestException.class,
+    Exception e = assertThrowsExactly(InvalidRequestException.class,
         () -> schemaValidator.validatePatchRequest(request));
 
     assertThat(e.getMessage()).contains(UNRECOGNIZED_MSG).contains(UNKNOWN_ATTRIBUTE);
@@ -458,7 +458,7 @@ class JsonSchemaValidatorTest {
     ((ObjectNode) request.get(NODE_DATA)).remove(NODE_ID);
 
     // When
-    Exception e = assertThrows(InvalidRequestException.class,
+    Exception e = assertThrowsExactly(InvalidRequestException.class,
         () -> schemaValidator.validatePutRequest(request));
 
     // Then
@@ -473,7 +473,7 @@ class JsonSchemaValidatorTest {
     ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(TOMBSTONE_TEXT.get());
 
     // When
-    Exception e = assertThrows(InvalidRequestException.class,
+    Exception e = assertThrowsExactly(InvalidRequestException.class,
         () -> schemaValidator.validatePutRequest(request));
 
     // Then

@@ -38,7 +38,7 @@ public class PidResolver {
   }
 
   @Cacheable("qid")
-  public String resolveQid(String qid) {
+  public String resolveQid(String qid) throws PidResolutionException {
     try {
       var qidRecord = resolveExternalPid(qid);
       return qidRecord.get("labels").get("en").asText();

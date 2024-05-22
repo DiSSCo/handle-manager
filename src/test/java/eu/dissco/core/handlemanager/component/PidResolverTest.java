@@ -4,7 +4,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.EXTERNAL_PID;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.loadResourceFile;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.web.PidResolver;
@@ -107,11 +107,11 @@ class PidResolverTest {
         .addHeader("Content-Type", "application/json"));
 
     // then
-    assertThrows(PidResolutionException.class, () -> pidResolver.resolveQid("qid"));
+    assertThrowsExactly(PidResolutionException.class, () -> pidResolver.resolveQid("qid"));
   }
 
   @Test
-  void testResolveQidNotFound() {
+  void testResolveQidNotFound() throws Exception {
     // Given
     mockServer.enqueue(new MockResponse()
         .setResponseCode(HttpStatus.NOT_FOUND.value())
@@ -163,7 +163,7 @@ class PidResolverTest {
         .addHeader("Content-Type", "application/json"));
 
     // Then
-    assertThrows(PidResolutionException.class, () -> pidResolver.getObjectName(EXTERNAL_PID
+    assertThrowsExactly(PidResolutionException.class, () -> pidResolver.getObjectName(EXTERNAL_PID
     ));
   }
 
@@ -197,7 +197,8 @@ class PidResolverTest {
     mockServer.enqueue(new MockResponse().setResponseCode(HttpStatus.GATEWAY_TIMEOUT.value()));
 
     // Then
-    assertThrows(PidResolutionException.class, () -> pidResolver.getObjectName(EXTERNAL_PID));
+    assertThrowsExactly(PidResolutionException.class,
+        () -> pidResolver.getObjectName(EXTERNAL_PID));
     assertThat(mockServer.getRequestCount() - requestCount).isEqualTo(4);
   }
 

@@ -7,7 +7,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_NAME_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 
 import eu.dissco.core.handlemanager.domain.fdo.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.fdo.DoiRecordRequest;
@@ -70,7 +70,7 @@ class RequestAttributeTest {
   @Test
   void testMutuallyExclusiveElements() {
     // Then
-    var e = assertThrows(InvalidRequestException.class, () -> new DigitalSpecimenRequest(
+    var e = assertThrowsExactly(InvalidRequestException.class, () -> new DigitalSpecimenRequest(
         ISSUED_FOR_AGENT_TESTVAL,
         null,
         null,

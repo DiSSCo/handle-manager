@@ -58,7 +58,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenOrganisation
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.setLocations;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.AdditionalMatchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -332,7 +332,7 @@ class FdoRecordServiceTest {
         null, null, null, null, null, null, null, null, null, null, null);
 
     // When
-    assertThrows(PidResolutionException.class,
+    assertThrowsExactly(PidResolutionException.class,
         () -> fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle));
   }
 
@@ -489,7 +489,7 @@ class FdoRecordServiceTest {
         null);
 
     // Then
-    var e = assertThrows(InvalidRequestException.class,
+    var e = assertThrowsExactly(InvalidRequestException.class,
         () -> fdoRecordService.prepareHandleRecordAttributes(request, handle, FdoType.HANDLE));
     assertThat(e.getMessage()).contains(ROR_DOMAIN).contains(HANDLE_DOMAIN);
   }
@@ -502,7 +502,7 @@ class FdoRecordServiceTest {
         STRUCTURAL_TYPE_TESTVAL,
         null);
 
-    var e = assertThrows(InvalidRequestException.class,
+    var e = assertThrowsExactly(InvalidRequestException.class,
         () -> fdoRecordService.prepareHandleRecordAttributes(request, handle, FdoType.HANDLE));
     assertThat(e.getMessage()).contains(ROR_DOMAIN);
   }
@@ -543,12 +543,12 @@ class FdoRecordServiceTest {
     given(pidResolver.getObjectName(not(eq(specimenHostRorApi)))).willReturn("placeholder");
 
     // Then
-    assertThrows(PidResolutionException.class,
+    assertThrowsExactly(PidResolutionException.class,
         () -> fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, handle));
   }
 
   @Test
-  void testUpdateSpecimenHostResolveName() {
+  void testUpdateSpecimenHostResolveName() throws Exception {
     // Given
     var request = generalUpdateRequest(List.of(SPECIMEN_HOST.get()), SPECIMEN_HOST_TESTVAL);
     var apiLocation = "https://api.ror.org/organizations/0x123";
@@ -569,7 +569,7 @@ class FdoRecordServiceTest {
   }
 
   @Test
-  void testUpdateSpecimenHostNameInRequest() {
+  void testUpdateSpecimenHostNameInRequest() throws Exception {
     // Given
     var request = generalUpdateRequest(List.of(SPECIMEN_HOST.get(), SPECIMEN_HOST_NAME.get()),
         SPECIMEN_HOST_TESTVAL);
@@ -605,7 +605,7 @@ class FdoRecordServiceTest {
   }
 
   @Test
-  void testUpdateAttributesStructuralType() {
+  void testUpdateAttributesStructuralType() throws Exception {
     // Given
     var updateRequest = MAPPER.createObjectNode();
     updateRequest.put(STRUCTURAL_TYPE.get(), STRUCTURAL_TYPE_TESTVAL.toString());
