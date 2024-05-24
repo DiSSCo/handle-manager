@@ -9,8 +9,8 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.REFERENT_NAME_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_NAME_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
-import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 
 import eu.dissco.core.handlemanager.domain.fdo.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.fdo.vocabulary.specimen.BaseTypeOfSpecimen;
@@ -38,7 +38,7 @@ class DigitalSpecimenRequestTest {
     var category = TopicCategory.ANIMAL_GENE;
 
     // Then
-    assertThrows(InvalidRequestException.class, () -> new DigitalSpecimenRequest(
+    assertThrowsExactly(InvalidRequestException.class, () -> new DigitalSpecimenRequest(
         ISSUED_FOR_AGENT_TESTVAL,
         PID_ISSUER_TESTVAL_OTHER,
         LOC_TESTVAL,
@@ -95,7 +95,7 @@ class DigitalSpecimenRequestTest {
 
   @Test
   void testMaterialSampleTypeFails() {
-    assertThrows(InvalidRequestException.class, () -> new DigitalSpecimenRequest(
+    assertThrowsExactly(InvalidRequestException.class, () -> new DigitalSpecimenRequest(
         ISSUED_FOR_AGENT_TESTVAL,
         PID_ISSUER_TESTVAL_OTHER,
         LOC_TESTVAL,
@@ -123,7 +123,7 @@ class DigitalSpecimenRequestTest {
 
   @Test
   void testInformationArtefactTypeFails() {
-    assertThrows(InvalidRequestException.class, () -> new DigitalSpecimenRequest(
+    assertThrowsExactly(InvalidRequestException.class, () -> new DigitalSpecimenRequest(
         ISSUED_FOR_AGENT_TESTVAL,
         PID_ISSUER_TESTVAL_OTHER,
         LOC_TESTVAL,

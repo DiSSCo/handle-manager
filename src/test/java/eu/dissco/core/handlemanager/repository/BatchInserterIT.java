@@ -59,10 +59,11 @@ class BatchInserterIT extends BaseRepositoryIT {
         new HandleAttribute(FdoProfile.SPECIMEN_HOST, HANDLE.getBytes(StandardCharsets.UTF_8),
             "this is \n bad data")
     );
+    var created = CREATED.getEpochSecond();
 
     // Then
     assertThrows(DatabaseCopyException.class,
-        () -> batchInserter.batchCopy(CREATED.getEpochSecond(), attributes));
+        () -> batchInserter.batchCopy(created, attributes));
   }
 
   @Test

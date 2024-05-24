@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
-import eu.dissco.core.handlemanager.exceptions.UnrecognizedFdoAttributeException;
 import org.junit.jupiter.api.Test;
 
 class FdoProfileTest {
@@ -25,7 +24,7 @@ class FdoProfileTest {
 
   @Test
   void testUnrecognizedProperty() {
-    assertThrows(UnrecognizedFdoAttributeException.class,
+    assertThrows(IllegalStateException.class,
         () -> FdoProfile.retrieveIndex("aaa"));
   }
 

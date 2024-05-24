@@ -2,7 +2,6 @@ package eu.dissco.core.handlemanager.controller;
 
 import eu.dissco.core.handlemanager.exceptions.DatabaseCopyException;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
-import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.responses.ExceptionResponse;
@@ -16,13 +15,6 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @ControllerAdvice
 public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionHandler {
 
-  @ResponseStatus(HttpStatus.CONFLICT)
-  @ExceptionHandler(PidCreationException.class)
-  public ResponseEntity<ExceptionResponse> pidCreationException(PidCreationException e) {
-    ExceptionResponse exceptionResponse = new ExceptionResponse(
-        String.valueOf(HttpStatus.CONFLICT), "Unable to Create PID Record", e.getMessage());
-    return ResponseEntity.status(HttpStatus.CONFLICT).body(exceptionResponse);
-  }
 
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ExceptionHandler(InvalidRequestException.class)

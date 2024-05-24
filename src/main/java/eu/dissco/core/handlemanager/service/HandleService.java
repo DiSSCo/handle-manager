@@ -1,16 +1,14 @@
 package eu.dissco.core.handlemanager.service;
 
-import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ATTRIBUTES;
-import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DOI;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.HANDLE;
+import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ATTRIBUTES;
+import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_DATA;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.Profiles;
-import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
-import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.fdo.AnnotationRequest;
 import eu.dissco.core.handlemanager.domain.fdo.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.fdo.HandleRecordRequest;
@@ -18,7 +16,8 @@ import eu.dissco.core.handlemanager.domain.fdo.MappingRequest;
 import eu.dissco.core.handlemanager.domain.fdo.MasRequest;
 import eu.dissco.core.handlemanager.domain.fdo.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.fdo.SourceSystemRequest;
-import eu.dissco.core.handlemanager.exceptions.DatabaseCopyException;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
+import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
@@ -43,8 +42,7 @@ public class HandleService extends PidService {
 
   // Pid Record Creation
   @Override
-  public JsonApiWrapperWrite createRecords(List<JsonNode> requests)
-      throws InvalidRequestException, DatabaseCopyException {
+  public JsonApiWrapperWrite createRecords(List<JsonNode> requests) throws InvalidRequestException {
     var handles = hf.genHandleList(requests.size()).iterator();
     var requestAttributes = requests.stream()
         .map(request -> request.get(NODE_DATA).get(NODE_ATTRIBUTES)).toList();
@@ -76,7 +74,7 @@ public class HandleService extends PidService {
 
   private List<HandleAttribute> createAnnotation(List<JsonNode> requestAttributes,
       Iterator<byte[]> handleIterator)
-      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+      throws JsonProcessingException, InvalidRequestException {
     List<HandleAttribute> handleAttributes = new ArrayList<>();
     for (var request : requestAttributes) {
       var thisHandle = handleIterator.next();
@@ -89,62 +87,55 @@ public class HandleService extends PidService {
 
   private List<HandleAttribute> createDoi(List<JsonNode> requestAttributes,
       Iterator<byte[]> handleIterator)
-      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+      throws JsonProcessingException, InvalidRequestException {
     List<HandleAttribute> handleAttributes = new ArrayList<>();
     for (var request : requestAttributes) {
       var thisHandle = handleIterator.next();
       var requestObject = mapper.treeToValue(request, DoiRecordRequest.class);
       handleAttributes.addAll(
-          fdoRecordService.prepareDoiRecordAttributes(requestObject, thisHandle,
-              DOI));
+          fdoRecordService.prepareDoiRecordAttributes(requestObject, thisHandle, DOI));
     }
     return handleAttributes;
   }
 
   private List<HandleAttribute> createHandle(List<JsonNode> requestAttributes,
       Iterator<byte[]> handleIterator)
-      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+      throws JsonProcessingException, InvalidRequestException {
     List<HandleAttribute> handleAttributes = new ArrayList<>();
     for (var request : requestAttributes) {
       var thisHandle = handleIterator.next();
       var requestObject = mapper.treeToValue(request, HandleRecordRequest.class);
       handleAttributes.addAll(
-          fdoRecordService.prepareHandleRecordAttributes(requestObject, thisHandle,
-              HANDLE));
+          fdoRecordService.prepareHandleRecordAttributes(requestObject, thisHandle, HANDLE));
     }
     return handleAttributes;
   }
 
   private List<HandleAttribute> createMapping(List<JsonNode> requestAttributes,
-      Iterator<byte[]> handleIterator)
-      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+      Iterator<byte[]> handleIterator) throws JsonProcessingException, InvalidRequestException {
     List<HandleAttribute> handleAttributes = new ArrayList<>();
     for (var request : requestAttributes) {
       var thisHandle = handleIterator.next();
       var requestObject = mapper.treeToValue(request, MappingRequest.class);
-      handleAttributes.addAll(
-          fdoRecordService.prepareMappingAttributes(requestObject, thisHandle));
+      handleAttributes.addAll(fdoRecordService.prepareMappingAttributes(requestObject, thisHandle));
     }
     return handleAttributes;
   }
 
   private List<HandleAttribute> createMas(List<JsonNode> requestAttributes,
-      Iterator<byte[]> handleIterator)
-      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+      Iterator<byte[]> handleIterator) throws JsonProcessingException, InvalidRequestException {
     List<HandleAttribute> handleAttributes = new ArrayList<>();
     for (var request : requestAttributes) {
       var thisHandle = handleIterator.next();
       var requestObject = mapper.treeToValue(request, MasRequest.class);
       handleAttributes.addAll(
-          fdoRecordService.prepareMasRecordAttributes(requestObject, thisHandle
-          ));
+          fdoRecordService.prepareMasRecordAttributes(requestObject, thisHandle));
     }
     return handleAttributes;
   }
 
   private List<HandleAttribute> createOrganisation(List<JsonNode> requestAttributes,
-      Iterator<byte[]> handleIterator)
-      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+      Iterator<byte[]> handleIterator) throws JsonProcessingException, InvalidRequestException {
     List<HandleAttribute> handleAttributes = new ArrayList<>();
     for (var request : requestAttributes) {
       var thisHandle = handleIterator.next();
@@ -156,8 +147,7 @@ public class HandleService extends PidService {
   }
 
   private List<HandleAttribute> createSourceSystem(List<JsonNode> requestAttributes,
-      Iterator<byte[]> handleIterator)
-      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+      Iterator<byte[]> handleIterator) throws JsonProcessingException, InvalidRequestException {
     List<HandleAttribute> handleAttributes = new ArrayList<>();
     for (var request : requestAttributes) {
       var thisHandle = handleIterator.next();
