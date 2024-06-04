@@ -659,6 +659,23 @@ class FdoRecordServiceTest {
   }
 
   @Test
+  void testUpdateAttributesNullValue() throws Exception {
+    // Given
+    var updateRequest = MAPPER.readTree("""
+        {
+          "otherSpecimenIds": null
+        }
+        """);
+
+    // When
+    var response = fdoRecordService.prepareUpdateAttributes(HANDLE.getBytes(StandardCharsets.UTF_8),
+        updateRequest, FdoType.DIGITAL_SPECIMEN);
+
+    // Then
+    assertThat(response).isEmpty();
+  }
+
+  @Test
   void testTombstoneAttributes() throws Exception {
     // Given
     var expected = genTombstoneRecordRequestAttributes(HANDLE.getBytes(StandardCharsets.UTF_8));

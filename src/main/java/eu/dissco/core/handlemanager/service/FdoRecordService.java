@@ -553,7 +553,7 @@ public class FdoRecordService {
     try {
       var updatedAttributeList = new ArrayList<>(
           updateRequestMap.entrySet().stream()
-              .filter(entry -> entry.getValue() != null)
+              .filter(entry -> !entry.getValue().isNull())
               .map(entry -> new HandleAttribute(FdoProfile.retrieveIndex(entry.getKey()), handle,
                   entry.getKey(),
                   getUpdateAttributeAsByte(entry.getValue())))
