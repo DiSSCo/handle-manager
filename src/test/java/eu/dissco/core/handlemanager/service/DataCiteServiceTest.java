@@ -8,7 +8,7 @@ import static org.mockito.BDDMockito.then;
 
 import eu.dissco.core.handlemanager.domain.datacite.DataCiteEvent;
 import eu.dissco.core.handlemanager.domain.datacite.EventType;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
+import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 import eu.dissco.core.handlemanager.properties.KafkaPublisherProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,7 +40,7 @@ class DataCiteServiceTest {
     var event = new DataCiteEvent(MAPPER.createObjectNode(), EventType.CREATE);
 
     // When
-    dataCiteService.publishToDataCite(event, ObjectType.MEDIA_OBJECT);
+    dataCiteService.publishToDataCite(event, FdoType.MEDIA_OBJECT);
 
     // Then
     then(kafkaService).should().sendObjectToQueue(eq(MEDIA_TOPIC), any());
@@ -53,7 +53,7 @@ class DataCiteServiceTest {
     var event = new DataCiteEvent(MAPPER.createObjectNode(), EventType.CREATE);
 
     // When
-    dataCiteService.publishToDataCite(event, ObjectType.DIGITAL_SPECIMEN);
+    dataCiteService.publishToDataCite(event, FdoType.DIGITAL_SPECIMEN);
 
     // Then
     then(kafkaService).should().sendObjectToQueue(eq(SPECIMEN_TOPIC), any());

@@ -1,37 +1,34 @@
 package eu.dissco.core.handlemanager.service;
 
-import static eu.dissco.core.handlemanager.domain.FdoProfile.ANNOTATION_HASH;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.HS_ADMIN;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.LINKED_DO_PID;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.PID;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_MEDIA_ID;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.REFERENT_TYPE;
-import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ATTRIBUTES;
-import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_DATA;
-import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_ID;
-import static eu.dissco.core.handlemanager.domain.JsonApiFields.NODE_TYPE;
-import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType.ANNOTATION;
-import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType.DIGITAL_SPECIMEN;
-import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType.MEDIA_OBJECT;
-import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType.TOMBSTONE;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.ANNOTATION_HASH;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DIGITAL_OBJECT_TYPE;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.HS_ADMIN;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LINKED_DO_PID;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_MEDIA_ID;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoType.ANNOTATION;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_SPECIMEN;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoType.MEDIA_OBJECT;
+import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ATTRIBUTES;
+import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_DATA;
+import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ID;
+import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_TYPE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import eu.dissco.core.handlemanager.domain.fdo.DigitalSpecimenRequest;
+import eu.dissco.core.handlemanager.domain.fdo.FdoType;
+import eu.dissco.core.handlemanager.domain.fdo.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiDataLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperReadSingle;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
-import eu.dissco.core.handlemanager.domain.requests.objects.MediaObjectRequest;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
-import eu.dissco.core.handlemanager.exceptions.DatabaseCopyException;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
-import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
@@ -84,7 +81,7 @@ public abstract class PidService {
         .collect(Collectors.groupingBy(row -> new String(row.getHandle(), StandardCharsets.UTF_8)));
   }
 
-  private JsonApiDataLinks wrapData(JsonNode recordAttributes, String recordType) {
+  private JsonApiDataLinks wrapResolvedData(JsonNode recordAttributes, String recordType) {
     String pidLink = recordAttributes.get(PID.get()).asText();
     String pidName = getPidName(pidLink);
     var handleLink = new JsonApiLinks(pidLink);
@@ -96,7 +93,7 @@ public abstract class PidService {
   }
 
   protected List<JsonApiDataLinks> formatCreateRecords(List<HandleAttribute> dbRecord,
-      ObjectType objectType) {
+      FdoType objectType) {
     var handleMap = mapRecords(dbRecord);
     switch (objectType) {
       case ANNOTATION -> {
@@ -123,8 +120,9 @@ public abstract class PidService {
       var subRecord = hashRow.map(List::of).orElse(handleRecord.getValue());
       var rootNode = jsonFormatSingleRecord(subRecord);
       String pidLink = profileProperties.getDomain() + handleRecord.getKey();
-      dataLinksList.add(new JsonApiDataLinks(handleRecord.getKey(), ANNOTATION.toString(), rootNode,
-          new JsonApiLinks(pidLink)));
+      dataLinksList.add(
+          new JsonApiDataLinks(handleRecord.getKey(), ANNOTATION.getDigitalObjectType(), rootNode,
+              new JsonApiLinks(pidLink)));
     }
     return dataLinksList;
   }
@@ -138,8 +136,8 @@ public abstract class PidService {
       var rootNode = jsonFormatSingleRecord(subRecord);
       String pidLink = profileProperties.getDomain() + handleRecord.getKey();
       dataLinksList.add(
-          new JsonApiDataLinks(handleRecord.getKey(), DIGITAL_SPECIMEN.toString(), rootNode,
-              new JsonApiLinks(pidLink)));
+          new JsonApiDataLinks(handleRecord.getKey(), DIGITAL_SPECIMEN.getDigitalObjectType(),
+              rootNode, new JsonApiLinks(pidLink)));
     }
     return dataLinksList;
   }
@@ -154,20 +152,21 @@ public abstract class PidService {
       var rootNode = jsonFormatSingleRecord(subRecord);
       String pidLink = profileProperties.getDomain() + handleRecord.getKey();
       dataLinksList.add(
-          new JsonApiDataLinks(handleRecord.getKey(), MEDIA_OBJECT.toString(), rootNode,
+          new JsonApiDataLinks(handleRecord.getKey(), MEDIA_OBJECT.getDigitalObjectType(), rootNode,
               new JsonApiLinks(pidLink)));
     }
     return dataLinksList;
   }
 
   private List<JsonApiDataLinks> formatCreateRecordsDefault(
-      Map<String, List<HandleAttribute>> handleMap, ObjectType objectType) {
+      Map<String, List<HandleAttribute>> handleMap, FdoType objectType) {
     List<JsonApiDataLinks> dataLinksList = new ArrayList<>();
     for (var handleRecord : handleMap.entrySet()) {
       var rootNode = jsonFormatSingleRecord(handleRecord.getValue());
       String pidLink = profileProperties.getDomain() + handleRecord.getKey();
-      dataLinksList.add(new JsonApiDataLinks(handleRecord.getKey(), objectType.toString(), rootNode,
-          new JsonApiLinks(pidLink)));
+      dataLinksList.add(
+          new JsonApiDataLinks(handleRecord.getKey(), objectType.getDigitalObjectType(), rootNode,
+              new JsonApiLinks(pidLink)));
     }
     return dataLinksList;
   }
@@ -177,8 +176,9 @@ public abstract class PidService {
     for (var archiveRecord : archiveRecords) {
       String handle = new String(archiveRecord.get(0).getHandle(), StandardCharsets.UTF_8);
       var attributeNode = jsonFormatSingleRecord(archiveRecord);
-      dataList.add(new JsonApiDataLinks(handle, TOMBSTONE.toString(), attributeNode,
-          new JsonApiLinks(profileProperties.getDomain() + handle)));
+      dataList.add(
+          new JsonApiDataLinks(handle, FdoType.TOMBSTONE.getDigitalObjectType(), attributeNode,
+              new JsonApiLinks(profileProperties.getDomain() + handle)));
     }
     return new JsonApiWrapperWrite(dataList);
   }
@@ -188,22 +188,15 @@ public abstract class PidService {
     var dbRecord = pidRepository.resolveHandleAttributes(handle);
     verifyHandleResolution(List.of(handle), dbRecord);
     var recordAttributeList = formatRecords(dbRecord).get(0);
-    var dataNode = wrapData(recordAttributeList, getRecordType(dbRecord));
+    var dataNode = wrapResolvedData(recordAttributeList, getRecordTypeFromResolvedRecord(dbRecord));
     var linksNode = new JsonApiLinks(path);
     return new JsonApiWrapperReadSingle(linksNode, dataNode);
   }
 
-  private String getRecordType(List<HandleAttribute> dbRecord) {
-    var type = dbRecord.stream().filter(row -> row.getType().equals(REFERENT_TYPE.get()))
+  private String getRecordTypeFromResolvedRecord(List<HandleAttribute> dbRecord) {
+    var type = dbRecord.stream().filter(row -> row.getType().equals(DIGITAL_OBJECT_TYPE.get()))
         .map(val -> new String(val.getData(), StandardCharsets.UTF_8)).findFirst();
-    return type.orElse(ObjectType.HANDLE.toString());
-  }
-
-  private String getRecordType(JsonNode attributes) {
-    if (attributes.get(REFERENT_TYPE.get()) != null) {
-      return attributes.get(REFERENT_TYPE.get()).asText();
-    }
-    return ObjectType.HANDLE.toString();
+    return type.orElse(FdoType.HANDLE.getDigitalObjectType());
   }
 
   public JsonApiWrapperRead resolveBatchRecord(List<byte[]> handles, String path)
@@ -211,9 +204,9 @@ public abstract class PidService {
     var dbRecords = pidRepository.resolveHandleAttributes(handles);
     verifyHandleResolution(handles, dbRecords);
     var recordAttributeList = formatRecords(dbRecords);
-    var dataList = recordAttributeList.stream()
-        .map(recordAttributes -> wrapData(recordAttributes, getRecordType(recordAttributes)))
-        .toList();
+    var dataList = recordAttributeList.stream().map(
+        recordAttributes -> wrapResolvedData(recordAttributes,
+            getRecordTypeFromResolvedRecord(dbRecords))).toList();
     return new JsonApiWrapperRead(new JsonApiLinks(path), dataList);
   }
 
@@ -244,7 +237,9 @@ public abstract class PidService {
       throws PidResolutionException {
     var returnedRows = pidRepository.searchByNormalisedPhysicalIdentifierFullRecord(
         List.of(normalisedPhysicalId.getBytes(StandardCharsets.UTF_8)));
-    var handleNames = listHandleNamesReturnedFromQuery(returnedRows);
+    var handleNames = returnedRows.stream()
+        .map(row -> new String(row.getHandle(), StandardCharsets.UTF_8))
+        .collect(Collectors.toSet());
     if (handleNames.size() > 1) {
       throw new PidResolutionException(
           "More than one handle record corresponds to the provided collection facility and physical identifier.");
@@ -252,34 +247,26 @@ public abstract class PidService {
     List<JsonApiDataLinks> dataNode = new ArrayList<>();
 
     var jsonFormattedRecord = jsonFormatSingleRecord(returnedRows);
-    dataNode.add(wrapData(jsonFormattedRecord, DIGITAL_SPECIMEN.toString()));
+    dataNode.add(wrapResolvedData(jsonFormattedRecord, DIGITAL_SPECIMEN.getDigitalObjectType()));
     return new JsonApiWrapperWrite(dataNode);
   }
 
-  private Set<String> listHandleNamesReturnedFromQuery(List<HandleAttribute> rows) {
-    Set<String> handles = new HashSet<>();
-    rows.forEach(row -> handles.add((new String(row.getHandle(), StandardCharsets.UTF_8))));
-    return handles;
-  }
-
   // Create
-  public abstract JsonApiWrapperWrite createRecords(
-      List<JsonNode> requests)
-      throws PidResolutionException, InvalidRequestException, PidCreationException, DatabaseCopyException;
+  public abstract JsonApiWrapperWrite createRecords(List<JsonNode> requests)
+      throws InvalidRequestException, UnprocessableEntityException;
 
-  protected ObjectType getObjectType(List<JsonNode> requests) {
+  protected FdoType getObjectTypeFromJsonNode(List<JsonNode> requests) {
     var types = requests.stream().map(request -> request.get(NODE_DATA).get(NODE_TYPE).asText())
         .collect(Collectors.toSet());
     var type = types.stream().findFirst();
     if (type.isEmpty() || types.size() != 1) {
       throw new UnsupportedOperationException("Requests must all be of the same type");
     }
-    return ObjectType.fromString(type.get());
+    return FdoType.fromString(type.get());
   }
 
   protected List<HandleAttribute> createDigitalSpecimen(List<JsonNode> requestAttributes,
-      Iterator<byte[]> handleIterator)
-      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+      Iterator<byte[]> handleIterator) throws JsonProcessingException, InvalidRequestException {
     var specimenRequests = new ArrayList<DigitalSpecimenRequest>();
     for (var request : requestAttributes) {
       specimenRequests.add(mapper.treeToValue(request, DigitalSpecimenRequest.class));
@@ -305,8 +292,8 @@ public abstract class PidService {
     var existingHandles = pidRepository.searchByNormalisedPhysicalIdentifier(normalisedIds);
     if (!existingHandles.isEmpty()) {
       log.error("Unable to create new handles, as ");
-      var handleMap = existingHandles.stream()
-          .collect(Collectors.toMap(ha -> new String(ha.getHandle(), StandardCharsets.UTF_8),
+      var handleMap = existingHandles.stream().collect(
+          Collectors.toMap(ha -> new String(ha.getHandle(), StandardCharsets.UTF_8),
               ha -> new String(ha.getData(), StandardCharsets.UTF_8)));
       log.error(
           "Unable to create new handles, as they already exist. Verify the following identifiers: {}",
@@ -314,13 +301,12 @@ public abstract class PidService {
       throw new InvalidRequestException(
           "Attempting to create handle records for specimens already in system");
     }
-
   }
 
 
   protected List<HandleAttribute> createMediaObject(List<JsonNode> requestAttributes,
       Iterator<byte[]> handleIterator)
-      throws InvalidRequestException, JsonProcessingException, PidResolutionException {
+      throws JsonProcessingException, InvalidRequestException {
     List<HandleAttribute> handleAttributes = new ArrayList<>();
     for (var request : requestAttributes) {
       var thisHandle = handleIterator.next();
@@ -333,8 +319,7 @@ public abstract class PidService {
 
   // Update
   public JsonApiWrapperWrite updateRecords(List<List<HandleAttribute>> attributesToUpdate,
-      boolean incrementVersion, ObjectType recordType)
-      throws InvalidRequestException, PidResolutionException {
+      boolean incrementVersion, FdoType recordType) throws InvalidRequestException {
     var recordTimestamp = Instant.now().getEpochSecond();
     var handles = attributesToUpdate.stream().map(pidRecord -> pidRecord.get(0).getHandle())
         .toList();
@@ -342,26 +327,25 @@ public abstract class PidService {
     checkHandlesWritable(handles);
     log.info("Writing updates to db");
     pidRepository.updateRecordBatch(recordTimestamp, attributesToUpdate, incrementVersion);
-    return formatUpdates(
-        handles.stream().map(h -> new String(h, StandardCharsets.UTF_8)).toList(),
+    return formatUpdates(handles.stream().map(h -> new String(h, StandardCharsets.UTF_8)).toList(),
         recordType);
   }
 
   public JsonApiWrapperWrite updateRecords(List<JsonNode> requests, boolean incrementVersion)
-      throws InvalidRequestException, PidResolutionException, UnprocessableEntityException {
+      throws InvalidRequestException, UnprocessableEntityException {
     List<List<HandleAttribute>> attributesToUpdate = getAttributesToUpdate(requests);
-    var recordType = getObjectType(requests);
+    var recordType = getObjectTypeFromJsonNode(requests);
     return updateRecords(attributesToUpdate, incrementVersion, recordType);
   }
 
   protected List<List<HandleAttribute>> getAttributesToUpdate(List<JsonNode> requests)
-      throws InvalidRequestException, PidResolutionException {
+      throws InvalidRequestException {
     List<List<HandleAttribute>> attributesToUpdate = new ArrayList<>();
     for (JsonNode root : requests) {
       JsonNode data = root.get(NODE_DATA);
       byte[] handle = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
       JsonNode requestAttributes = data.get(NODE_ATTRIBUTES);
-      ObjectType type = ObjectType.fromString(data.get(NODE_TYPE).asText());
+      FdoType type = FdoType.fromString(data.get(NODE_TYPE).asText());
       var attributes = fdoRecordService.prepareUpdateAttributes(handle, requestAttributes, type);
       attributesToUpdate.add(attributes);
     }
@@ -389,10 +373,10 @@ public abstract class PidService {
     return duplicateHandles;
   }
 
-  protected JsonApiWrapperWrite formatUpdates(List<String> handles, ObjectType type) {
+  protected JsonApiWrapperWrite formatUpdates(List<String> handles, FdoType type) {
     List<JsonApiDataLinks> dataList = new ArrayList<>();
     for (var handle : handles) {
-      dataList.add(new JsonApiDataLinks(handle, type.toString(), null,
+      dataList.add(new JsonApiDataLinks(handle, type.getDigitalObjectType(), null,
           new JsonApiLinks(profileProperties.getDomain() + handle)));
     }
     return new JsonApiWrapperWrite(dataList);
@@ -413,7 +397,7 @@ public abstract class PidService {
 
   // Archive
   public JsonApiWrapperWrite archiveRecordBatch(List<JsonNode> requests)
-      throws InvalidRequestException, PidResolutionException, UnprocessableEntityException {
+      throws InvalidRequestException {
     var recordTimestamp = Instant.now().getEpochSecond();
     List<byte[]> handles = new ArrayList<>();
     var archiveAttributesFlat = new ArrayList<HandleAttribute>();
@@ -445,8 +429,8 @@ public abstract class PidService {
   public void rollbackHandlesFromPhysId(List<String> physicalIds) {
     var physicalIdsBytes = physicalIds.stream().map(id -> id.getBytes(StandardCharsets.UTF_8))
         .toList();
-    var handles = pidRepository.searchByNormalisedPhysicalIdentifier(physicalIdsBytes)
-        .stream().map(ha -> new String(ha.getHandle(), StandardCharsets.UTF_8)).toList();
+    var handles = pidRepository.searchByNormalisedPhysicalIdentifier(physicalIdsBytes).stream()
+        .map(ha -> new String(ha.getHandle(), StandardCharsets.UTF_8)).toList();
     pidRepository.rollbackHandles(handles);
   }
 

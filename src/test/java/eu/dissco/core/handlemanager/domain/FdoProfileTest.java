@@ -1,10 +1,10 @@
 package eu.dissco.core.handlemanager.domain;
 
-import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_ISSUER;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID_ISSUER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertThrows;
 
-import eu.dissco.core.handlemanager.exceptions.UnrecognizedFdoAttributeException;
+import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
 import org.junit.jupiter.api.Test;
 
 class FdoProfileTest {
@@ -24,7 +24,7 @@ class FdoProfileTest {
 
   @Test
   void testUnrecognizedProperty() {
-    assertThrows(UnrecognizedFdoAttributeException.class,
+    assertThrows(IllegalStateException.class,
         () -> FdoProfile.retrieveIndex("aaa"));
   }
 

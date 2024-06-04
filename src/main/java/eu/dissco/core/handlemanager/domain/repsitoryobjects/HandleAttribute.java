@@ -1,6 +1,6 @@
 package eu.dissco.core.handlemanager.domain.repsitoryobjects;
 
-import eu.dissco.core.handlemanager.domain.FdoProfile;
+import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Objects;

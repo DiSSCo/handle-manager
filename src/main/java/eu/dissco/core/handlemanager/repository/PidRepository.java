@@ -1,15 +1,14 @@
 package eu.dissco.core.handlemanager.repository;
 
 import static eu.dissco.core.handlemanager.database.jooq.tables.Handles.HANDLES;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.HS_ADMIN;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_RECORD_ISSUE_NUMBER;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.PID_STATUS;
-import static eu.dissco.core.handlemanager.domain.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.HS_ADMIN;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID_RECORD_ISSUE_NUMBER;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID_STATUS;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
 import static org.jooq.impl.DSL.select;
 
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
-import eu.dissco.core.handlemanager.exceptions.DatabaseCopyException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -66,10 +65,13 @@ public class PidRepository {
         .where(HANDLES.HANDLE.in(select(HANDLES.HANDLE).from(HANDLES)
             .where(HANDLES.TYPE.eq(PID_STATUS.get().getBytes(StandardCharsets.UTF_8)))
             .and(HANDLES.DATA.notEqual("ARCHIVED".getBytes(StandardCharsets.UTF_8))).and(
-                HANDLES.HANDLE.in(select(HANDLES.HANDLE).from(HANDLES).where(HANDLES.TYPE.eq(
-                        NORMALISED_SPECIMEN_OBJECT_ID.get().getBytes(StandardCharsets.UTF_8)))
-                    .and(HANDLES.DATA.in(normalisedPhysicalIdentifiers))))))
-        .and(HANDLES.TYPE.eq(NORMALISED_SPECIMEN_OBJECT_ID.get().getBytes(StandardCharsets.UTF_8)))
+                HANDLES.HANDLE.in(
+                    select(HANDLES.HANDLE).from(HANDLES).where(HANDLES.TYPE.eq(
+                            NORMALISED_SPECIMEN_OBJECT_ID.get()
+                                .getBytes(StandardCharsets.UTF_8)))
+                        .and(HANDLES.DATA.in(normalisedPhysicalIdentifiers))))))
+        .and(HANDLES.TYPE.eq(
+            NORMALISED_SPECIMEN_OBJECT_ID.get().getBytes(StandardCharsets.UTF_8)))
         .fetch(this::mapToAttribute);
   }
 
@@ -122,8 +124,7 @@ public class PidRepository {
   }
 
   // Post
-  public void postAttributesToDb(long recordTimestamp, List<HandleAttribute> handleAttributes)
-      throws DatabaseCopyException {
+  public void postAttributesToDb(long recordTimestamp, List<HandleAttribute> handleAttributes) {
     batchInserter.batchCopy(recordTimestamp, handleAttributes);
   }
 
@@ -137,7 +138,8 @@ public class PidRepository {
           .set(HANDLES.TYPE, handleAttribute.getType().getBytes(StandardCharsets.UTF_8))
           .set(HANDLES.DATA, handleAttribute.getData()).set(HANDLES.TTL, TTL)
           .set(HANDLES.TIMESTAMP, recordTimestamp).set(HANDLES.ADMIN_READ, true)
-          .set(HANDLES.ADMIN_WRITE, true).set(HANDLES.PUB_READ, true).set(HANDLES.PUB_WRITE, false);
+          .set(HANDLES.ADMIN_WRITE, true).set(HANDLES.PUB_READ, true)
+          .set(HANDLES.PUB_WRITE, false);
       queryList.add(query);
     }
     return queryList;
@@ -168,7 +170,8 @@ public class PidRepository {
     var queryList = prepareUpdateQuery(recordTimestamp, handleAttributes);
     if (incrementVersion) {
       queryList.addAll(
-          getVersionIncrementQuery(Set.of(handleAttributes.get(0).getHandle()), recordTimestamp));
+          getVersionIncrementQuery(Set.of(handleAttributes.get(0).getHandle()),
+              recordTimestamp));
     }
     context.batch(queryList).execute();
   }
@@ -202,13 +205,15 @@ public class PidRepository {
           .set(HANDLES.TYPE, handleAttribute.getType().getBytes(StandardCharsets.UTF_8))
           .set(HANDLES.DATA, handleAttribute.getData()).set(HANDLES.TTL, TTL)
           .set(HANDLES.TIMESTAMP, recordTimestamp).set(HANDLES.ADMIN_READ, true)
-          .set(HANDLES.ADMIN_WRITE, true).set(HANDLES.PUB_READ, true).set(HANDLES.PUB_WRITE, false)
+          .set(HANDLES.ADMIN_WRITE, true).set(HANDLES.PUB_READ, true)
+          .set(HANDLES.PUB_WRITE, false)
           .onDuplicateKeyUpdate().set(HANDLES.HANDLE, handleAttribute.getHandle())
           .set(HANDLES.IDX, handleAttribute.getIndex())
           .set(HANDLES.TYPE, handleAttribute.getType().getBytes(StandardCharsets.UTF_8))
           .set(HANDLES.DATA, handleAttribute.getData()).set(HANDLES.TTL, TTL)
           .set(HANDLES.TIMESTAMP, recordTimestamp).set(HANDLES.ADMIN_READ, true)
-          .set(HANDLES.ADMIN_WRITE, true).set(HANDLES.PUB_READ, true).set(HANDLES.PUB_WRITE, false);
+          .set(HANDLES.ADMIN_WRITE, true).set(HANDLES.PUB_READ, true)
+          .set(HANDLES.PUB_WRITE, false);
       queryList.add(query);
     }
     return queryList;
@@ -223,7 +228,8 @@ public class PidRepository {
           .set(HANDLES.DATA, versions.get(handle))
           .set(HANDLES.TIMESTAMP, recordTimestamp)
           .where(HANDLES.HANDLE.eq(handle.getBytes(StandardCharsets.UTF_8)))
-          .and(HANDLES.TYPE.eq(PID_RECORD_ISSUE_NUMBER.get().getBytes(StandardCharsets.UTF_8))));
+          .and(HANDLES.TYPE.eq(
+              PID_RECORD_ISSUE_NUMBER.get().getBytes(StandardCharsets.UTF_8))));
     }
     return queryList;
   }
@@ -232,7 +238,8 @@ public class PidRepository {
     var versions = context.select(HANDLES.HANDLE, HANDLES.DATA)
         .from(HANDLES)
         .where(HANDLES.HANDLE.in(handles)
-            .and(HANDLES.TYPE.eq(PID_RECORD_ISSUE_NUMBER.get().getBytes(StandardCharsets.UTF_8))))
+            .and(HANDLES.TYPE.eq(
+                PID_RECORD_ISSUE_NUMBER.get().getBytes(StandardCharsets.UTF_8))))
         .fetchMap(HANDLES.HANDLE, HANDLES.DATA);
     return versions.entrySet().stream()
         .collect(Collectors.toMap(

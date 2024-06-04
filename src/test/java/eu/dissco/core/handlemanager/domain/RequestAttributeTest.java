@@ -1,20 +1,18 @@
 package eu.dissco.core.handlemanager.domain;
 
-import static eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.PrimarySpecimenObjectIdType.LOCAL;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.DIGITAL_OBJECT_TYPE_TESTVAL;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.FDO_PROFILE_TESTVAL;
+import static eu.dissco.core.handlemanager.domain.fdo.vocabulary.specimen.PrimarySpecimenObjectIdType.LOCAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.ISSUED_FOR_AGENT_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_NAME_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_TESTVAL;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 
-import eu.dissco.core.handlemanager.domain.requests.objects.DigitalSpecimenRequest;
-import eu.dissco.core.handlemanager.domain.requests.objects.DoiRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.objects.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
+import eu.dissco.core.handlemanager.domain.fdo.DigitalSpecimenRequest;
+import eu.dissco.core.handlemanager.domain.fdo.DoiRecordRequest;
+import eu.dissco.core.handlemanager.domain.fdo.FdoType;
+import eu.dissco.core.handlemanager.domain.fdo.HandleRecordRequest;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import org.junit.jupiter.api.Test;
 
@@ -24,9 +22,7 @@ class RequestAttributeTest {
   void testHandleRecordRequestDefaults() {
     // Given
     var request = new HandleRecordRequest(
-        FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL,
         null,
         null,
         null
@@ -39,14 +35,12 @@ class RequestAttributeTest {
   void testDoiRecordRequestDefaults() {
     // Given
     var request = new DoiRecordRequest(
-        FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL,
         null,
         null,
         null,
         null,
-        ObjectType.DIGITAL_SPECIMEN,
+        FdoType.DIGITAL_SPECIMEN.getDigitalObjectName(),
         null
     );
 
@@ -58,9 +52,7 @@ class RequestAttributeTest {
   void testDigitalSpecimenRequestDefaults() throws Exception {
     // Given
     var request = new DigitalSpecimenRequest(
-        FDO_PROFILE_TESTVAL,
         ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL,
         null,
         null,
         null,
@@ -78,10 +70,8 @@ class RequestAttributeTest {
   @Test
   void testMutuallyExclusiveElements() {
     // Then
-    var e = assertThrows(InvalidRequestException.class, () -> new DigitalSpecimenRequest(
-        FDO_PROFILE_TESTVAL,
+    var e = assertThrowsExactly(InvalidRequestException.class, () -> new DigitalSpecimenRequest(
         ISSUED_FOR_AGENT_TESTVAL,
-        DIGITAL_OBJECT_TYPE_TESTVAL,
         null,
         null,
         null,

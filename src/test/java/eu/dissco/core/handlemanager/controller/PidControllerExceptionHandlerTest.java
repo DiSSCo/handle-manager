@@ -3,7 +3,6 @@ package eu.dissco.core.handlemanager.controller;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
-import eu.dissco.core.handlemanager.exceptions.PidCreationException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.responses.ExceptionResponse;
@@ -25,21 +24,7 @@ class PidControllerExceptionHandlerTest {
   }
 
   @Test
-  void testPidCreationException() throws Exception {
-    // Given
-    var expectedBody = new ExceptionResponse(HttpStatus.CONFLICT.toString(),
-        "Unable to Create PID Record", errorMessage);
-
-    // When
-    var result = exceptionHandler.pidCreationException(new PidCreationException(errorMessage));
-
-    // Then
-    assertThat(result.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-    assertThat(result.getBody()).isEqualTo(expectedBody);
-  }
-
-  @Test
-  void testInvalidRecordInput() throws Exception {
+  void testInvalidRecordInput() {
     // Given
     var expectedBody = new ExceptionResponse(HttpStatus.BAD_REQUEST.toString(),
         "Invalid Request", errorMessage);
@@ -54,7 +39,7 @@ class PidControllerExceptionHandlerTest {
   }
 
   @Test
-  void testPidResolutionException() throws Exception {
+  void testPidResolutionException() {
     // Given
     var expectedBody = new ExceptionResponse(HttpStatus.NOT_FOUND.toString(),
         "Unable to Resolve Persistent Identifier", errorMessage);
