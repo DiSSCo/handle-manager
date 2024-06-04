@@ -79,7 +79,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.BaseJsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
-import eu.dissco.core.handlemanager.domain.FdoProfile;
 import eu.dissco.core.handlemanager.domain.fdo.AnnotationRequest;
 import eu.dissco.core.handlemanager.domain.fdo.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.fdo.DoiRecordRequest;
@@ -552,19 +551,15 @@ public class FdoRecordService {
         new TypeReference<Map<String, BaseJsonNode>>() {
         });
     try {
-      var updatedAttributeList = new ArrayList<>(updateRequestMap.entrySet().stream()
-          .filter(entry -> entry.getValue() != null)
-          .map(entry -> new HandleAttribute(FdoProfile.retrieveIndex(entry.getKey()), handle,
-              entry.getKey(),
-              getUpdateAttributeAsByte(entry.getValue())))
-/*
-    var updatedAttributeList = new ArrayList<>(
-        updateRequestMap.entrySet().stream().filter(entry -> entry.getValue() != null).map(
-                entry -> new HandleAttribute(FdoProfile.retrieveIndex(entry.getKey()), handle,
-                    entry.getKey(), entry.getValue().toString().getBytes(StandardCharsets.UTF_8)))
-            .toList());*/
-    updatedAttributeList.addAll(addResolvedNames(updateRequestMap, handle));
-    return updatedAttributeList;
+      var updatedAttributeList = new ArrayList<>(
+          updateRequestMap.entrySet().stream()
+              .filter(entry -> entry.getValue() != null)
+              .map(entry -> new HandleAttribute(FdoProfile.retrieveIndex(entry.getKey()), handle,
+                  entry.getKey(),
+                  getUpdateAttributeAsByte(entry.getValue())))
+              .toList());
+      updatedAttributeList.addAll(addResolvedNames(updateRequestMap, handle));
+      return updatedAttributeList;
     } catch (InvalidRequestRuntimeException e) {
       throw new InvalidRequestException("Unable to parse update request");
     }

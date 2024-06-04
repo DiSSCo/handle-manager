@@ -178,7 +178,7 @@ class DoiServiceTest {
     var expectedEvent = new DataCiteEvent(
         ((ObjectNode) genObjectNodeAttributeRecord(updatedAttributeRecord))
             .put("pid", HANDLE),
-
+        EventType.UPDATE);
     given(pidRepository.checkHandlesWritable(anyList())).willReturn(List.of(handle));
     given(fdoRecordService.prepareUpdateAttributes(any(), any(), any())).willReturn(
         updatedAttributeRecord);

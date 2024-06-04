@@ -71,6 +71,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.fdo.AnnotationRequest;
 import eu.dissco.core.handlemanager.domain.fdo.DigitalSpecimenRequest;
+import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 import eu.dissco.core.handlemanager.domain.fdo.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.fdo.MediaObjectRequest;
@@ -646,12 +647,12 @@ class FdoRecordServiceTest {
         ]
         """));
     var expected = List.of(
-        new HandleAttribute(OTHER_SPECIMEN_IDS, HANDLE.getBytes(StandardCharsets.UTF_8),
+        new HandleAttribute(FdoProfile.OTHER_SPECIMEN_IDS, HANDLE.getBytes(StandardCharsets.UTF_8),
             expectedStr));
 
     // When
     var response = fdoRecordService.prepareUpdateAttributes(HANDLE.getBytes(StandardCharsets.UTF_8),
-        updateRequest, ObjectType.DIGITAL_SPECIMEN);
+        updateRequest, FdoType.DIGITAL_SPECIMEN);
 
     // Then
     assertThat(response).isEqualTo(expected);
