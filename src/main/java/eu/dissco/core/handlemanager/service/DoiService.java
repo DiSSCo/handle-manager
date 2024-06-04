@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.Profiles;
+import eu.dissco.core.handlemanager.domain.FdoProfile;
 import eu.dissco.core.handlemanager.domain.datacite.DataCiteEvent;
 import eu.dissco.core.handlemanager.domain.datacite.EventType;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
@@ -21,6 +22,7 @@ import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.PidRepository;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -91,8 +93,15 @@ public class DoiService extends PidService {
     var handleMap = mapRecords(handleAttributes);
     var eventList = new ArrayList<DataCiteEvent>();
     handleMap.forEach(
-        (key, value) -> eventList.add(
-            new DataCiteEvent(jsonFormatSingleRecord(value), eventType)));
+        (key, value) -> {
+          if (eventType.equals(EventType.UPDATE)) {
+            value.add(
+                new HandleAttribute(FdoProfile.PID, key.getBytes(StandardCharsets.UTF_8), key));
+          }
+          eventList.add(
+              new DataCiteEvent(jsonFormatSingleRecord(value), eventType));
+        });
+
     for (var event : eventList) {
       try {
         dataCiteService.publishToDataCite(event, objectType);

@@ -76,6 +76,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.BaseJsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.FdoProfile;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
@@ -90,6 +91,7 @@ import eu.dissco.core.handlemanager.domain.requests.objects.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.requests.objects.SourceSystemRequest;
 import eu.dissco.core.handlemanager.domain.requests.vocabulary.specimen.ObjectType;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
+import eu.dissco.core.handlemanager.exceptions.InvalidRequestRuntimeException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
@@ -580,21 +582,30 @@ public class FdoRecordService {
       throws InvalidRequestException, UnprocessableEntityException, PidResolutionException {
     requestAttributes = setLocationXmlFromJson(requestAttributes,
         new String(handle, StandardCharsets.UTF_8), type);
-    Map<String, Object> updateRequestMap = mapper.convertValue(requestAttributes,
-        new TypeReference<Map<String, Object>>() {
+    Map<String, BaseJsonNode> updateRequestMap = mapper.convertValue(requestAttributes,
+        new TypeReference<Map<String, BaseJsonNode>>() {
         });
 
     var updatedAttributeList = new ArrayList<>(updateRequestMap.entrySet().stream()
         .filter(entry -> entry.getValue() != null)
         .map(entry -> new HandleAttribute(FdoProfile.retrieveIndex(entry.getKey()), handle,
             entry.getKey(),
-            entry.getValue().toString().getBytes(StandardCharsets.UTF_8)))
+            getUpdateAttributeAsByte(entry.getValue())))
         .toList());
     updatedAttributeList.addAll(addResolvedNames(updateRequestMap, handle));
     return updatedAttributeList;
   }
 
-  private List<HandleAttribute> addResolvedNames(Map<String, Object> updateRequestMap,
+  private byte[] getUpdateAttributeAsByte(BaseJsonNode attribute) {
+    try {
+      return mapper.writeValueAsString(attribute).getBytes(StandardCharsets.UTF_8);
+    } catch (JsonProcessingException e) {
+      log.error("Unable to parse update request", e);
+      throw new InvalidRequestRuntimeException();
+    }
+  }
+
+  private List<HandleAttribute> addResolvedNames(Map<String, BaseJsonNode> updateRequestMap,
       byte[] handle)
       throws UnprocessableEntityException, PidResolutionException, InvalidRequestException {
     var resolvableKeys = updateRequestMap.entrySet()
@@ -608,15 +619,14 @@ public class FdoRecordService {
     ArrayList<HandleAttribute> resolvedPidNameAttributes = new ArrayList<>();
     for (var resolvableKey : resolvableKeys.entrySet()) {
       var targetAttribute = RESOLVABLE_KEYS.get(resolvableKey.getKey());
-
-      var resolvedPid = getObjectName(resolvableKey.getValue().toString());
+      var resolvedPid = getObjectName(resolvableKey.getValue().asText());
       resolvedPidNameAttributes.add(new HandleAttribute(FdoProfile.retrieveIndex(targetAttribute),
           handle, targetAttribute, resolvedPid.getBytes(StandardCharsets.UTF_8)));
     }
     return resolvedPidNameAttributes;
   }
 
-  private boolean hasResolvedPairInRequest(Map<String, Object> updateRequestMap,
+  private boolean hasResolvedPairInRequest(Map<String, BaseJsonNode> updateRequestMap,
       String pidToResolve) {
     var targetName = RESOLVABLE_KEYS.get(pidToResolve);
     return updateRequestMap.containsKey(targetName);
