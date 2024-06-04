@@ -33,6 +33,7 @@ import static org.mockito.Mockito.mockStatic;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.datacite.DataCiteEvent;
 import eu.dissco.core.handlemanager.domain.datacite.EventType;
@@ -178,7 +179,9 @@ class DoiServiceTest {
     var updatedAttributeRecord = genUpdateRecordAttributesAltLoc(handle);
     var responseExpected = givenRecordResponseNullAttributes(List.of(handle),
         ObjectType.DIGITAL_SPECIMEN);
-    var expectedEvent = new DataCiteEvent(genObjectNodeAttributeRecord(updatedAttributeRecord),
+    var expectedEvent = new DataCiteEvent(
+        ((ObjectNode) genObjectNodeAttributeRecord(updatedAttributeRecord))
+            .put("pid", HANDLE),
         EventType.UPDATE);
 
     given(pidRepository.checkHandlesWritable(anyList())).willReturn(List.of(handle));

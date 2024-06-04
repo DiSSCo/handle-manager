@@ -78,6 +78,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.BaseJsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import eu.dissco.core.handlemanager.domain.FdoProfile;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.domain.requests.objects.AnnotationRequest;
@@ -585,20 +586,27 @@ public class FdoRecordService {
     Map<String, BaseJsonNode> updateRequestMap = mapper.convertValue(requestAttributes,
         new TypeReference<Map<String, BaseJsonNode>>() {
         });
-
-    var updatedAttributeList = new ArrayList<>(updateRequestMap.entrySet().stream()
-        .filter(entry -> entry.getValue() != null)
-        .map(entry -> new HandleAttribute(FdoProfile.retrieveIndex(entry.getKey()), handle,
-            entry.getKey(),
-            getUpdateAttributeAsByte(entry.getValue())))
-        .toList());
-    updatedAttributeList.addAll(addResolvedNames(updateRequestMap, handle));
-    return updatedAttributeList;
+    try {
+      var updatedAttributeList = new ArrayList<>(updateRequestMap.entrySet().stream()
+          .filter(entry -> entry.getValue() != null)
+          .map(entry -> new HandleAttribute(FdoProfile.retrieveIndex(entry.getKey()), handle,
+              entry.getKey(),
+              getUpdateAttributeAsByte(entry.getValue())))
+          .toList());
+      updatedAttributeList.addAll(addResolvedNames(updateRequestMap, handle));
+      return updatedAttributeList;
+    } catch (InvalidRequestRuntimeException e) {
+      throw new InvalidRequestException("Unable to parse update request");
+    }
   }
 
   private byte[] getUpdateAttributeAsByte(BaseJsonNode attribute) {
     try {
-      return mapper.writeValueAsString(attribute).getBytes(StandardCharsets.UTF_8);
+      if (attribute instanceof TextNode) {
+        return attribute.asText().getBytes(StandardCharsets.UTF_8);
+      } else {
+        return mapper.writeValueAsString(attribute).getBytes(StandardCharsets.UTF_8);
+      }
     } catch (JsonProcessingException e) {
       log.error("Unable to parse update request", e);
       throw new InvalidRequestRuntimeException();

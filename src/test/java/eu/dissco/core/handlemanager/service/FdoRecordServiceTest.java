@@ -668,13 +668,13 @@ class FdoRecordServiceTest {
   @Test
   void testUpdateSpecimenHostNameInRequest() throws Exception {
     // Given
-    var handle = HANDLE.getBytes(StandardCharsets.UTF_8);
+    var pid = HANDLE.getBytes(StandardCharsets.UTF_8);
     var request = generalUpdateRequest(List.of(SPECIMEN_HOST.get(), SPECIMEN_HOST_NAME.get()),
         SPECIMEN_HOST_TESTVAL);
     ArrayList<HandleAttribute> expected = new ArrayList<>();
-    expected.add(new HandleAttribute(SPECIMEN_HOST.index(), handle, SPECIMEN_HOST.get(),
+    expected.add(new HandleAttribute(SPECIMEN_HOST.index(), pid, SPECIMEN_HOST.get(),
         SPECIMEN_HOST_TESTVAL.getBytes(StandardCharsets.UTF_8)));
-    expected.add(new HandleAttribute(SPECIMEN_HOST_NAME.index(), handle, SPECIMEN_HOST_NAME.get(),
+    expected.add(new HandleAttribute(SPECIMEN_HOST_NAME.index(), pid, SPECIMEN_HOST_NAME.get(),
         SPECIMEN_HOST_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     // When
@@ -719,6 +719,39 @@ class FdoRecordServiceTest {
     // Then
     assertThat(response).isEqualTo(expected);
     assertThat(hasNoDuplicateElements(response)).isTrue();
+  }
+
+  @Test
+  void testUpdateAttributesOtherSpecimenIds() throws Exception {
+    // Given
+    var updateRequest = MAPPER.readTree("""
+        {
+          "otherSpecimenIds": [
+            {
+              "identifierValue":"a",
+              "identifierType":"localId"
+            }
+          ]
+        }
+        """);
+    var expectedStr = MAPPER.writeValueAsString(MAPPER.readTree("""
+        [
+          {
+            "identifierValue":"a",
+            "identifierType":"localId"
+          }
+        ]
+        """));
+    var expected = List.of(
+        new HandleAttribute(OTHER_SPECIMEN_IDS, HANDLE.getBytes(StandardCharsets.UTF_8),
+            expectedStr));
+
+    // When
+    var response = fdoRecordService.prepareUpdateAttributes(HANDLE.getBytes(StandardCharsets.UTF_8),
+        updateRequest, ObjectType.DIGITAL_SPECIMEN);
+
+    // Then
+    assertThat(response).isEqualTo(expected);
   }
 
   @Test
