@@ -71,6 +71,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.fdo.AnnotationRequest;
 import eu.dissco.core.handlemanager.domain.fdo.DigitalSpecimenRequest;
+import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 import eu.dissco.core.handlemanager.domain.fdo.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.fdo.MediaObjectRequest;
@@ -571,12 +572,13 @@ class FdoRecordServiceTest {
   @Test
   void testUpdateSpecimenHostNameInRequest() throws Exception {
     // Given
+    var pid = HANDLE.getBytes(StandardCharsets.UTF_8);
     var request = generalUpdateRequest(List.of(SPECIMEN_HOST.get(), SPECIMEN_HOST_NAME.get()),
         SPECIMEN_HOST_TESTVAL);
     ArrayList<HandleAttribute> expected = new ArrayList<>();
-    expected.add(new HandleAttribute(SPECIMEN_HOST.index(), handle, SPECIMEN_HOST.get(),
+    expected.add(new HandleAttribute(SPECIMEN_HOST.index(), pid, SPECIMEN_HOST.get(),
         SPECIMEN_HOST_TESTVAL.getBytes(StandardCharsets.UTF_8)));
-    expected.add(new HandleAttribute(SPECIMEN_HOST_NAME.index(), handle, SPECIMEN_HOST_NAME.get(),
+    expected.add(new HandleAttribute(SPECIMEN_HOST_NAME.index(), pid, SPECIMEN_HOST_NAME.get(),
         SPECIMEN_HOST_TESTVAL.getBytes(StandardCharsets.UTF_8)));
 
     // When
@@ -621,6 +623,56 @@ class FdoRecordServiceTest {
     // Then
     assertThat(response).isEqualTo(expected);
     assertThat(hasNoDuplicateElements(response)).isTrue();
+  }
+
+  @Test
+  void testUpdateAttributesOtherSpecimenIds() throws Exception {
+    // Given
+    var updateRequest = MAPPER.readTree("""
+        {
+          "otherSpecimenIds": [
+            {
+              "identifierValue":"a",
+              "identifierType":"localId"
+            }
+          ]
+        }
+        """);
+    var expectedStr = MAPPER.writeValueAsString(MAPPER.readTree("""
+        [
+          {
+            "identifierValue":"a",
+            "identifierType":"localId"
+          }
+        ]
+        """));
+    var expected = List.of(
+        new HandleAttribute(FdoProfile.OTHER_SPECIMEN_IDS, HANDLE.getBytes(StandardCharsets.UTF_8),
+            expectedStr));
+
+    // When
+    var response = fdoRecordService.prepareUpdateAttributes(HANDLE.getBytes(StandardCharsets.UTF_8),
+        updateRequest, FdoType.DIGITAL_SPECIMEN);
+
+    // Then
+    assertThat(response).isEqualTo(expected);
+  }
+
+  @Test
+  void testUpdateAttributesNullValue() throws Exception {
+    // Given
+    var updateRequest = MAPPER.readTree("""
+        {
+          "otherSpecimenIds": null
+        }
+        """);
+
+    // When
+    var response = fdoRecordService.prepareUpdateAttributes(HANDLE.getBytes(StandardCharsets.UTF_8),
+        updateRequest, FdoType.DIGITAL_SPECIMEN);
+
+    // Then
+    assertThat(response).isEmpty();
   }
 
   @Test
