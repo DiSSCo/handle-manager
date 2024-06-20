@@ -79,12 +79,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.fdo.AnnotationRequest;
+import eu.dissco.core.handlemanager.domain.fdo.DataMappingRequest;
 import eu.dissco.core.handlemanager.domain.fdo.DigitalMediaRequest;
 import eu.dissco.core.handlemanager.domain.fdo.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.fdo.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 import eu.dissco.core.handlemanager.domain.fdo.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.fdo.MappingRequest;
 import eu.dissco.core.handlemanager.domain.fdo.MasRequest;
 import eu.dissco.core.handlemanager.domain.fdo.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.fdo.SourceSystemRequest;
@@ -650,9 +650,9 @@ public class TestUtils {
     return fdoRecord;
   }
 
-  public static List<HandleAttribute> genMappingAttributes(byte[] handle)
+  public static List<HandleAttribute> genDataMappingAttributes(byte[] handle)
       throws Exception {
-    var fdoRecord = genHandleRecordAttributes(handle, FdoType.MAPPING);
+    var fdoRecord = genHandleRecordAttributes(handle, FdoType.DATA_MAPPING);
 
     // 500 subjectDigitalObjectId
     fdoRecord.add(new HandleAttribute(SOURCE_DATA_STANDARD.index(), handle,
@@ -807,8 +807,8 @@ public class TestUtils {
     );
   }
 
-  public static MappingRequest givenMappingRequestObject() {
-    return new MappingRequest(
+  public static DataMappingRequest givenDataMappingRequestObject() {
+    return new DataMappingRequest(
         ISSUED_FOR_AGENT_TESTVAL,
         PID_ISSUER_TESTVAL_OTHER,
         LOC_TESTVAL,
@@ -1034,8 +1034,8 @@ public class TestUtils {
       case ANNOTATION -> {
         return genAnnotationAttributes(handle, false);
       }
-      case MAPPING -> {
-        return genMappingAttributes(handle);
+      case DATA_MAPPING -> {
+        return genDataMappingAttributes(handle);
       }
       case SOURCE_SYSTEM -> {
         return genSourceSystemAttributes(handle);
@@ -1182,7 +1182,7 @@ public class TestUtils {
         String ui = UI_URL + "/ds/" + handle;
         return new String[]{ui, api};
       }
-      case MAPPING -> {
+      case DATA_MAPPING -> {
         return new String[]{ORCHESTRATION_URL + "/mapping/" + handle};
       }
       case SOURCE_SYSTEM -> {

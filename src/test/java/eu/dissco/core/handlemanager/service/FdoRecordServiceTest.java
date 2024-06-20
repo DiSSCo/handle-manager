@@ -35,11 +35,11 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.TARGET_TYPE_TESTV
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.TRANSFORMER_FACTORY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.UI_URL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genAnnotationAttributes;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDataMappingAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalMediaAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDoiRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributes;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMappingAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMasAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genOrganisationAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genSourceSystemAttributes;
@@ -48,10 +48,10 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneReque
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRecordAttributesAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDataMappingRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecordRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMappingRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMasRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenOrganisationRequestObject;
@@ -414,17 +414,17 @@ class FdoRecordServiceTest {
   }
 
   @Test
-  void testPrepareMappingAttributes() throws Exception {
+  void testPrepareDataMappingAttributes() throws Exception {
     // Given
     given(pidResolver.getObjectName(any())).willReturn(PID_ISSUER_TESTVAL_OTHER)
         .willReturn(ISSUED_FOR_AGENT_TESTVAL);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
-    var request = givenMappingRequestObject();
-    var expected = genMappingAttributes(handle);
+    var request = givenDataMappingRequestObject();
+    var expected = genDataMappingAttributes(handle);
     expected.add(ADMIN_HANDLE);
 
     // When
-    var result = fdoRecordService.prepareMappingAttributes(request, handle);
+    var result = fdoRecordService.prepareDataMappingAttributes(request, handle);
 
     // Then
     assertThat(result).hasSameElementsAs(expected).hasSameSizeAs(expected);

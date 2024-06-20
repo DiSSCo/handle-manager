@@ -16,10 +16,10 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.UI_URL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genAnnotationAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDataMappingAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDoiRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributes;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMappingAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMasAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genObjectNodeAttributeRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genOrganisationAttributes;
@@ -31,10 +31,10 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestB
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObjectNoHash;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationResponseWrite;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDataMappingRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecordRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMappingRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenOrganisationRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseNullAttributes;
@@ -522,13 +522,14 @@ class HandleServiceTest {
     // Given
     List<JsonNode> requests = new ArrayList<>();
     for (int i = 0; i < handles.size(); i++) {
-      requests.add(genCreateRecordRequest(givenMappingRequestObject(), FdoType.MAPPING));
+      requests.add(genCreateRecordRequest(givenDataMappingRequestObject(), FdoType.DATA_MAPPING));
     }
 
-    var responseExpected = givenRecordResponseWrite(handles, FdoType.MAPPING);
+    var responseExpected = givenRecordResponseWrite(handles, FdoType.DATA_MAPPING);
     given(pidNameGeneratorService.genHandleList(handles.size())).willReturn(handles);
-    given(fdoRecordService.prepareMappingAttributes(any(), any())).willReturn(
-        genMappingAttributes(handles.get(0))).willReturn(genMappingAttributes(handles.get(1)));
+    given(fdoRecordService.prepareDataMappingAttributes(any(), any())).willReturn(
+            genDataMappingAttributes(handles.get(0)))
+        .willReturn(genDataMappingAttributes(handles.get(1)));
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When

@@ -31,8 +31,8 @@ public enum FdoType {
       "sourceSystem",
       "https://hdl.handle.net/21.T11148/417a4f472f60f7974c12",
       "https://hdl.handle.net/21.T11148/417a4f472f60f7974c12"),
-  @JsonProperty("https://hdl.handle.net/21.T11148/ce794a6f4df42eb7e77e") MAPPING(
-      "Mapping",
+  @JsonProperty("https://hdl.handle.net/21.T11148/ce794a6f4df42eb7e77e") DATA_MAPPING(
+      "Data Mapping",
       "https://hdl.handle.net/21.T11148/ce794a6f4df42eb7e77e",
       "https://hdl.handle.net/21.T11148/ce794a6f4df42eb7e77e"),
   @JsonProperty("https://hdl.handle.net/21.T11148/413c00cbd83ae33d1ac0") ORGANISATION(

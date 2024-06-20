@@ -15,10 +15,10 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecor
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDataMappingRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecordRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMappingRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseRead;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseReadSingle;
@@ -420,9 +420,9 @@ class PidControllerTest {
 
     List<JsonNode> requests = new ArrayList<>();
     handles.forEach(handle -> requests.add(
-        genCreateRecordRequest(givenMappingRequestObject(), FdoType.MAPPING)));
+        genCreateRecordRequest(givenDataMappingRequestObject(), FdoType.DATA_MAPPING)));
 
-    var responseExpected = givenRecordResponseWrite(handles, FdoType.MAPPING);
+    var responseExpected = givenRecordResponseWrite(handles, FdoType.DATA_MAPPING);
     given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When

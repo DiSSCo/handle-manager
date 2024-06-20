@@ -26,10 +26,10 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneReque
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequestBatch;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDataMappingRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecordRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMappingRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMasRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenOrganisationRequestObject;
@@ -162,9 +162,9 @@ class JsonSchemaValidatorTest {
   }
 
   @Test
-  void testPostMappingRequest() {
+  void testPostDataMappingRequest() {
     // Given
-    var request = genCreateRecordRequest(givenMappingRequestObject(), FdoType.MAPPING);
+    var request = genCreateRecordRequest(givenDataMappingRequestObject(), FdoType.DATA_MAPPING);
 
     // Then
     assertDoesNotThrow(() -> schemaValidator.validatePostRequest(request));
@@ -248,9 +248,9 @@ class JsonSchemaValidatorTest {
   }
 
   @Test
-  void testMappingPatchRequest() {
+  void testDataMappingPatchRequest() {
     // Given
-    var request = givenUpdateRequest(FdoType.MAPPING, SOURCE_DATA_STANDARD.get(), "new");
+    var request = givenUpdateRequest(FdoType.DATA_MAPPING, SOURCE_DATA_STANDARD.get(), "new");
 
     // Then
     assertDoesNotThrow(() -> schemaValidator.validatePatchRequest(request));
