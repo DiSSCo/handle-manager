@@ -19,8 +19,8 @@ public enum FdoType {
       "DigitalSpecimen",
       "https://hdl.handle.net/21.T11148/894b1e6cad57e921764e",
       "https://hdl.handle.net/21.T11148/894b1e6cad57e921764e"),
-  @JsonProperty("https://hdl.handle.net/21.T11148/bbad8c4e101e8af01115") MEDIA_OBJECT(
-      "MediaObject",
+  @JsonProperty("https://hdl.handle.net/21.T11148/bbad8c4e101e8af01115") DIGITAL_MEDIA(
+      "DigitalMedia",
       "https://hdl.handle.net/21.T11148/bbad8c4e101e8af01115",
       "https://hdl.handle.net/21.T11148/bbad8c4e101e8af01115"),
   @JsonProperty("https://hdl.handle.net/21.T11148/cf458ca9ee1d44a5608f") ANNOTATION(

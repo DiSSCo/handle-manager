@@ -57,7 +57,7 @@ public class HandleService extends PidService {
         case HANDLE -> handleAttributes = createHandle(requestAttributes, handles);
         case MAPPING -> handleAttributes = createMapping(requestAttributes, handles);
         case MAS -> handleAttributes = createMas(requestAttributes, handles);
-        case MEDIA_OBJECT -> handleAttributes = createMediaObject(requestAttributes, handles);
+        case DIGITAL_MEDIA -> handleAttributes = createDigitalMedia(requestAttributes, handles);
         case ORGANISATION -> handleAttributes = createOrganisation(requestAttributes, handles);
         case SOURCE_SYSTEM -> handleAttributes = createSourceSystem(requestAttributes, handles);
         default -> throw new UnsupportedOperationException("Unrecognized type");

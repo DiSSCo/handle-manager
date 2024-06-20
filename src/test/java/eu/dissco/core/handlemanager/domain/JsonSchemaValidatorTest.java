@@ -116,9 +116,9 @@ class JsonSchemaValidatorTest {
   }
 
   @Test
-  void testPostMediaObjectRequest() throws Exception {
+  void testPostDigitalMediaRequest() throws Exception {
     // Given
-    var request = genCreateRecordRequest(givenMediaRequestObject(), FdoType.MEDIA_OBJECT);
+    var request = genCreateRecordRequest(givenMediaRequestObject(), FdoType.DIGITAL_MEDIA);
 
     // Then
     assertDoesNotThrow(() -> schemaValidator.validatePostRequest(request));
@@ -220,9 +220,9 @@ class JsonSchemaValidatorTest {
   }
 
   @Test
-  void testMediaObjectPatchRequest() {
+  void testDigitalMediaPatchRequest() {
     // Given
-    var request = givenUpdateRequest(FdoType.MEDIA_OBJECT, MEDIA_HOST.get(), MEDIA_HOST_TESTVAL);
+    var request = givenUpdateRequest(FdoType.DIGITAL_MEDIA, MEDIA_HOST.get(), MEDIA_HOST_TESTVAL);
 
     // Then
     assertDoesNotThrow(() -> schemaValidator.validatePatchRequest(request));
@@ -384,10 +384,10 @@ class JsonSchemaValidatorTest {
   }
 
   @Test
-  void testBadPostMediaObjectRequestUnknownProperty() {
+  void testBadPostDigitalMediaRequestUnknownProperty() {
     // Given
     var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(),
-        FdoType.MEDIA_OBJECT);
+        FdoType.DIGITAL_MEDIA);
     ((ObjectNode) request.get(NODE_DATA)).put(UNKNOWN_ATTRIBUTE, UNKNOWN_VAL);
 
     // Then
@@ -398,11 +398,11 @@ class JsonSchemaValidatorTest {
   }
 
   @Test
-  void testBadPostMediaObjectRequestMissingProperty() {
+  void testBadPostDigitalMediaRequestMissingProperty() {
     // Given
     String missingAttribute = MEDIA_HOST.get();
     var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(),
-        FdoType.MEDIA_OBJECT);
+        FdoType.DIGITAL_MEDIA);
     ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(missingAttribute);
 
     // Then
@@ -445,7 +445,7 @@ class JsonSchemaValidatorTest {
         Arguments.of(FdoType.HANDLE),
         Arguments.of(FdoType.DOI),
         Arguments.of(FdoType.DIGITAL_SPECIMEN),
-        Arguments.of(FdoType.MEDIA_OBJECT)
+        Arguments.of(FdoType.DIGITAL_MEDIA)
     );
 
   }

@@ -35,12 +35,12 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.TARGET_TYPE_TESTV
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.TRANSFORMER_FACTORY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.UI_URL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genAnnotationAttributes;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalMediaAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDoiRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMappingAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMasAttributes;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaObjectAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genOrganisationAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genSourceSystemAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordRequestAttributes;
@@ -70,11 +70,11 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.fdo.AnnotationRequest;
+import eu.dissco.core.handlemanager.domain.fdo.DigitalMediaRequest;
 import eu.dissco.core.handlemanager.domain.fdo.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 import eu.dissco.core.handlemanager.domain.fdo.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.fdo.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.fdo.vocabulary.media.DcTermsType;
 import eu.dissco.core.handlemanager.domain.fdo.vocabulary.media.MediaFormat;
 import eu.dissco.core.handlemanager.domain.fdo.vocabulary.specimen.BaseTypeOfSpecimen;
@@ -94,6 +94,7 @@ import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.PidRepository;
+import eu.dissco.core.handlemanager.testUtils.TestUtils;
 import eu.dissco.core.handlemanager.web.PidResolver;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
@@ -219,29 +220,29 @@ class FdoRecordServiceTest {
   }
 
   @Test
-  void testPrepareMediaObjectAttributesMandatory() throws Exception {
+  void testPrepareDigitalMediaAttributesMandatory() throws Exception {
     // Given
     given(pidResolver.getObjectName(any())).willReturn(PID_ISSUER_TESTVAL_OTHER)
         .willReturn(ISSUED_FOR_AGENT_TESTVAL);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
     var request = givenMediaRequestObject();
-    var expected = genMediaObjectAttributes(handle);
+    var expected = TestUtils.genDigitalMediaAttributes(handle);
     expected.add(ADMIN_HANDLE);
 
     // When
-    var result = fdoRecordService.prepareMediaObjectAttributes(request, handle);
+    var result = fdoRecordService.prepareDigitalMediaAttributes(request, handle);
 
     // Then
     assertThat(result).hasSameElementsAs(expected).hasSameSizeAs(expected);
   }
 
   @Test
-  void testPrepareMediaObjectAttributesOptional() throws Exception {
+  void testPrepareDigitalMediaAttributesOptional() throws Exception {
     // Given
     given(pidResolver.getObjectName(any())).willReturn(PID_ISSUER_TESTVAL_OTHER)
         .willReturn(ISSUED_FOR_AGENT_TESTVAL).willReturn(MEDIA_HOST_NAME_TESTVAL);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
-    var request = new MediaObjectRequest(ISSUED_FOR_AGENT_TESTVAL, PID_ISSUER_TESTVAL_OTHER,
+    var request = new DigitalMediaRequest(ISSUED_FOR_AGENT_TESTVAL, PID_ISSUER_TESTVAL_OTHER,
         LOC_TESTVAL, REFERENT_NAME_TESTVAL, PRIMARY_REFERENT_TYPE_TESTVAL,
         MEDIA_HOST_TESTVAL, null,
         MediaFormat.TEXT, Boolean.TRUE, LINKED_DO_PID_TESTVAL,
@@ -249,23 +250,23 @@ class FdoRecordServiceTest {
         "a", HANDLE, PrimarySpecimenObjectIdType.RESOLVABLE, "b", DcTermsType.IMAGE, "jpeg",
         "c",
         "license", "license", "c", "d", null, "e");
-    var expected = genMediaObjectAttributes(handle, request);
+    var expected = genDigitalMediaAttributes(handle, request);
     expected.add(ADMIN_HANDLE);
 
     // When
-    var result = fdoRecordService.prepareMediaObjectAttributes(request, handle);
+    var result = fdoRecordService.prepareDigitalMediaAttributes(request, handle);
 
     // Then
     assertThat(result).hasSameElementsAs(expected).hasSameSizeAs(expected);
   }
 
   @Test
-  void testPrepareMediaObjectFullAttributes() throws Exception {
+  void testPrepareDigitalMediaFullAttributes() throws Exception {
     // Given
     given(pidResolver.getObjectName(any())).willReturn(PID_ISSUER_TESTVAL_OTHER)
         .willReturn(ISSUED_FOR_AGENT_TESTVAL).willReturn(MEDIA_HOST_NAME_TESTVAL);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
-    var request = new MediaObjectRequest(ISSUED_FOR_AGENT_TESTVAL, PID_ISSUER_TESTVAL_OTHER,
+    var request = new DigitalMediaRequest(ISSUED_FOR_AGENT_TESTVAL, PID_ISSUER_TESTVAL_OTHER,
         LOC_TESTVAL, REFERENT_NAME_TESTVAL, PRIMARY_REFERENT_TYPE_TESTVAL,
         MEDIA_HOST_TESTVAL,
         MEDIA_HOST_NAME_TESTVAL, MediaFormat.TEXT, Boolean.TRUE, LINKED_DO_PID_TESTVAL,
@@ -273,11 +274,11 @@ class FdoRecordServiceTest {
         "d",
         DcTermsType.IMAGE, "e", "f", LICENSE_NAME_TESTVAL, "g", "h", "i",
         PrimarySpecimenObjectIdType.LOCAL, "j");
-    var expected = genMediaObjectAttributes(handle, request);
+    var expected = genDigitalMediaAttributes(handle, request);
     expected.add(ADMIN_HANDLE);
 
     // When
-    var result = fdoRecordService.prepareMediaObjectAttributes(request, handle);
+    var result = fdoRecordService.prepareDigitalMediaAttributes(request, handle);
 
     // Then
     assertThat(result).hasSameElementsAs(expected).hasSameSizeAs(expected);

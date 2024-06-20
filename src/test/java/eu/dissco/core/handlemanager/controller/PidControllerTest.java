@@ -256,13 +256,13 @@ class PidControllerTest {
   }
 
   @Test
-  void testCreateMediaObjectRecord() throws Exception {
+  void testCreateDigitalMediaRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     HandleRecordRequest requestObject = givenMediaRequestObject();
-    ObjectNode requestNode = genCreateRecordRequest(requestObject, FdoType.MEDIA_OBJECT);
+    ObjectNode requestNode = genCreateRecordRequest(requestObject, FdoType.DIGITAL_MEDIA);
     JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(handle),
-        FdoType.MEDIA_OBJECT);
+        FdoType.DIGITAL_MEDIA);
 
     given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
 
@@ -353,7 +353,7 @@ class PidControllerTest {
 
     List<JsonNode> requests = new ArrayList<>();
     for (int i = 0; i < handles.size(); i++) {
-      requests.add(genCreateRecordRequest(givenMediaRequestObject(), FdoType.MEDIA_OBJECT));
+      requests.add(genCreateRecordRequest(givenMediaRequestObject(), FdoType.DIGITAL_MEDIA));
     }
 
     var responseExpected = givenRecordResponseWrite(handles, FdoType.DOI);

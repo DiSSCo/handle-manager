@@ -34,13 +34,13 @@ class DataCiteServiceTest {
   }
 
   @Test
-  void testPublishMediaObject() throws Exception {
+  void testPublishDigitalMedia() throws Exception {
     // Given
     given(kafkaProperties.getDcMediaTopic()).willReturn(MEDIA_TOPIC);
     var event = new DataCiteEvent(MAPPER.createObjectNode(), EventType.CREATE);
 
     // When
-    dataCiteService.publishToDataCite(event, FdoType.MEDIA_OBJECT);
+    dataCiteService.publishToDataCite(event, FdoType.DIGITAL_MEDIA);
 
     // Then
     then(kafkaService).should().sendObjectToQueue(eq(MEDIA_TOPIC), any());
