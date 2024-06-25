@@ -8,8 +8,8 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_MEDIA_ID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.ANNOTATION;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_MEDIA;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_SPECIMEN;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoType.MEDIA_OBJECT;
 import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ID;
@@ -19,9 +19,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import eu.dissco.core.handlemanager.domain.fdo.DigitalMediaRequest;
 import eu.dissco.core.handlemanager.domain.fdo.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
-import eu.dissco.core.handlemanager.domain.fdo.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiDataLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
@@ -102,7 +102,7 @@ public abstract class PidService {
       case DIGITAL_SPECIMEN -> {
         return formatCreateRecordsSpecimen(handleMap);
       }
-      case MEDIA_OBJECT -> {
+      case DIGITAL_MEDIA -> {
         return formatCreateRecordsMedia(handleMap);
       }
       default -> {
@@ -152,7 +152,8 @@ public abstract class PidService {
       var rootNode = jsonFormatSingleRecord(subRecord);
       String pidLink = profileProperties.getDomain() + handleRecord.getKey();
       dataLinksList.add(
-          new JsonApiDataLinks(handleRecord.getKey(), MEDIA_OBJECT.getDigitalObjectType(), rootNode,
+          new JsonApiDataLinks(handleRecord.getKey(), DIGITAL_MEDIA.getDigitalObjectType(),
+              rootNode,
               new JsonApiLinks(pidLink)));
     }
     return dataLinksList;
@@ -304,15 +305,15 @@ public abstract class PidService {
   }
 
 
-  protected List<HandleAttribute> createMediaObject(List<JsonNode> requestAttributes,
+  protected List<HandleAttribute> createDigitalMedia(List<JsonNode> requestAttributes,
       Iterator<byte[]> handleIterator)
       throws JsonProcessingException, InvalidRequestException {
     List<HandleAttribute> handleAttributes = new ArrayList<>();
     for (var request : requestAttributes) {
       var thisHandle = handleIterator.next();
-      var requestObject = mapper.treeToValue(request, MediaObjectRequest.class);
+      var requestObject = mapper.treeToValue(request, DigitalMediaRequest.class);
       handleAttributes.addAll(
-          fdoRecordService.prepareMediaObjectAttributes(requestObject, thisHandle));
+          fdoRecordService.prepareDigitalMediaAttributes(requestObject, thisHandle));
     }
     return handleAttributes;
   }

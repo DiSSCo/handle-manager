@@ -69,8 +69,8 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOPIC_DISCIPLIN
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOPIC_DOMAIN;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOPIC_ORIGIN;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.WAS_DERIVED_FROM_ENTITY;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DATA_MAPPING;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_SPECIMEN;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoType.MAPPING;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -80,14 +80,14 @@ import com.fasterxml.jackson.databind.node.BaseJsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import eu.dissco.core.handlemanager.domain.fdo.AnnotationRequest;
+import eu.dissco.core.handlemanager.domain.fdo.DataMappingRequest;
+import eu.dissco.core.handlemanager.domain.fdo.DigitalMediaRequest;
 import eu.dissco.core.handlemanager.domain.fdo.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.fdo.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 import eu.dissco.core.handlemanager.domain.fdo.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.fdo.MappingRequest;
 import eu.dissco.core.handlemanager.domain.fdo.MasRequest;
-import eu.dissco.core.handlemanager.domain.fdo.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.fdo.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.fdo.SourceSystemRequest;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
@@ -262,9 +262,9 @@ public class FdoRecordService {
     return fdoRecord;
   }
 
-  public List<HandleAttribute> prepareMediaObjectAttributes(MediaObjectRequest request,
+  public List<HandleAttribute> prepareDigitalMediaAttributes(DigitalMediaRequest request,
       byte[] handle) throws InvalidRequestException {
-    var fdoRecord = prepareDoiRecordAttributes(request, handle, FdoType.MEDIA_OBJECT);
+    var fdoRecord = prepareDoiRecordAttributes(request, handle, FdoType.DIGITAL_MEDIA);
 
     fdoRecord.add(new HandleAttribute(MEDIA_HOST, handle, request.getMediaHost()));
     var mediaHostName = setHostName(request.getMediaHostName(), request.getMediaHost(), handle,
@@ -390,9 +390,10 @@ public class FdoRecordService {
     return fdoRecord;
   }
 
-  public List<HandleAttribute> prepareMappingAttributes(MappingRequest request, byte[] handle)
+  public List<HandleAttribute> prepareDataMappingAttributes(DataMappingRequest request,
+      byte[] handle)
       throws InvalidRequestException {
-    var fdoRecord = prepareHandleRecordAttributes(request, handle, MAPPING);
+    var fdoRecord = prepareHandleRecordAttributes(request, handle, DATA_MAPPING);
 
     // 700 Source Data Standard
     fdoRecord.add(
@@ -688,13 +689,13 @@ public class FdoRecordService {
         String ui = appProperties.getUiUrl() + "/ds/" + handle;
         return new String[]{ui, api};
       }
-      case MAPPING -> {
+      case DATA_MAPPING -> {
         return new String[]{appProperties.getOrchestrationUrl() + "/mapping/" + handle};
       }
       case SOURCE_SYSTEM -> {
         return new String[]{appProperties.getOrchestrationUrl() + "/source-system/" + handle};
       }
-      case MEDIA_OBJECT -> {
+      case DIGITAL_MEDIA -> {
         String api = appProperties.getApiUrl() + "/digitalMedia/" + handle;
         String ui = appProperties.getUiUrl() + "/dm/" + handle;
         return new String[]{ui, api};

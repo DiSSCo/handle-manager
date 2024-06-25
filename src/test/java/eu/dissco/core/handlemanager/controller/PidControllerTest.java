@@ -15,10 +15,10 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecor
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDataMappingRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecordRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMappingRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseRead;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseReadSingle;
@@ -256,13 +256,13 @@ class PidControllerTest {
   }
 
   @Test
-  void testCreateMediaObjectRecord() throws Exception {
+  void testCreateDigitalMediaRecord() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     HandleRecordRequest requestObject = givenMediaRequestObject();
-    ObjectNode requestNode = genCreateRecordRequest(requestObject, FdoType.MEDIA_OBJECT);
+    ObjectNode requestNode = genCreateRecordRequest(requestObject, FdoType.DIGITAL_MEDIA);
     JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(handle),
-        FdoType.MEDIA_OBJECT);
+        FdoType.DIGITAL_MEDIA);
 
     given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
 
@@ -353,7 +353,7 @@ class PidControllerTest {
 
     List<JsonNode> requests = new ArrayList<>();
     for (int i = 0; i < handles.size(); i++) {
-      requests.add(genCreateRecordRequest(givenMediaRequestObject(), FdoType.MEDIA_OBJECT));
+      requests.add(genCreateRecordRequest(givenMediaRequestObject(), FdoType.DIGITAL_MEDIA));
     }
 
     var responseExpected = givenRecordResponseWrite(handles, FdoType.DOI);
@@ -420,9 +420,9 @@ class PidControllerTest {
 
     List<JsonNode> requests = new ArrayList<>();
     handles.forEach(handle -> requests.add(
-        genCreateRecordRequest(givenMappingRequestObject(), FdoType.MAPPING)));
+        genCreateRecordRequest(givenDataMappingRequestObject(), FdoType.DATA_MAPPING)));
 
-    var responseExpected = givenRecordResponseWrite(handles, FdoType.MAPPING);
+    var responseExpected = givenRecordResponseWrite(handles, FdoType.DATA_MAPPING);
     given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When

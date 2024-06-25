@@ -9,7 +9,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_DOMAIN;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenAttributes;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaObjectAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genObjectNodeAttributeRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRecordAttributesAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestBatch;
@@ -39,6 +38,7 @@ import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.PidRepository;
+import eu.dissco.core.handlemanager.testUtils.TestUtils;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Instant;
@@ -123,20 +123,20 @@ class DoiServiceTest {
   }
 
   @Test
-  void testCreateMediaObject() throws Exception {
+  void testCreateDigitalMedia() throws Exception {
     // Given
     byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    var request = genCreateRecordRequest(givenMediaRequestObject(), FdoType.MEDIA_OBJECT);
-    List<HandleAttribute> mediaObject = genMediaObjectAttributes(handle);
-    var mediaSublist = mediaObject.stream().filter(
+    var request = genCreateRecordRequest(givenMediaRequestObject(), FdoType.DIGITAL_MEDIA);
+    List<HandleAttribute> digitalMedia = TestUtils.genDigitalMediaAttributes(handle);
+    var mediaSublist = digitalMedia.stream().filter(
         row -> row.getType().equals(PRIMARY_MEDIA_ID.get()) || row.getType()
             .equals(LINKED_DO_PID.get())).toList();
     var responseExpected = givenRecordResponseWriteSmallResponse(mediaSublist, List.of(handle),
-        FdoType.MEDIA_OBJECT);
-    var dataCiteEvent = new DataCiteEvent(genObjectNodeAttributeRecord(mediaObject),
+        FdoType.DIGITAL_MEDIA);
+    var dataCiteEvent = new DataCiteEvent(genObjectNodeAttributeRecord(digitalMedia),
         EventType.CREATE);
     given(pidNameGeneratorService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(fdoRecordService.prepareMediaObjectAttributes(any(), any())).willReturn(mediaObject);
+    given(fdoRecordService.prepareDigitalMediaAttributes(any(), any())).willReturn(digitalMedia);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
@@ -144,7 +144,7 @@ class DoiServiceTest {
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
-    then(dataCiteService).should().publishToDataCite(dataCiteEvent, FdoType.MEDIA_OBJECT);
+    then(dataCiteService).should().publishToDataCite(dataCiteEvent, FdoType.DIGITAL_MEDIA);
   }
 
   @Test

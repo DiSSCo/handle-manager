@@ -19,8 +19,8 @@ public enum FdoType {
       "DigitalSpecimen",
       "https://hdl.handle.net/21.T11148/894b1e6cad57e921764e",
       "https://hdl.handle.net/21.T11148/894b1e6cad57e921764e"),
-  @JsonProperty("https://hdl.handle.net/21.T11148/bbad8c4e101e8af01115") MEDIA_OBJECT(
-      "MediaObject",
+  @JsonProperty("https://hdl.handle.net/21.T11148/bbad8c4e101e8af01115") DIGITAL_MEDIA(
+      "DigitalMedia",
       "https://hdl.handle.net/21.T11148/bbad8c4e101e8af01115",
       "https://hdl.handle.net/21.T11148/bbad8c4e101e8af01115"),
   @JsonProperty("https://hdl.handle.net/21.T11148/cf458ca9ee1d44a5608f") ANNOTATION(
@@ -31,8 +31,8 @@ public enum FdoType {
       "sourceSystem",
       "https://hdl.handle.net/21.T11148/417a4f472f60f7974c12",
       "https://hdl.handle.net/21.T11148/417a4f472f60f7974c12"),
-  @JsonProperty("https://hdl.handle.net/21.T11148/ce794a6f4df42eb7e77e") MAPPING(
-      "Mapping",
+  @JsonProperty("https://hdl.handle.net/21.T11148/ce794a6f4df42eb7e77e") DATA_MAPPING(
+      "Data Mapping",
       "https://hdl.handle.net/21.T11148/ce794a6f4df42eb7e77e",
       "https://hdl.handle.net/21.T11148/ce794a6f4df42eb7e77e"),
   @JsonProperty("https://hdl.handle.net/21.T11148/413c00cbd83ae33d1ac0") ORGANISATION(

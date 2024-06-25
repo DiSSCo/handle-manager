@@ -16,12 +16,11 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.UI_URL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genAnnotationAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDataMappingAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDoiRecordAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributes;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMappingAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMasAttributes;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genMediaObjectAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genObjectNodeAttributeRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genOrganisationAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genSourceSystemAttributes;
@@ -32,10 +31,10 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestB
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObjectNoHash;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationResponseWrite;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDataMappingRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecordRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMappingRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenOrganisationRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseNullAttributes;
@@ -63,6 +62,7 @@ import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.PidRepository;
+import eu.dissco.core.handlemanager.testUtils.TestUtils;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Instant;
@@ -348,20 +348,20 @@ class HandleServiceTest {
   }
 
   @Test
-  void testCreateMediaObjectRecord() throws Exception {
+  void testCreateDigitalMediaRecord() throws Exception {
     // Given
     byte[] handle = handles.get(0);
-    var request = genCreateRecordRequest(givenMediaRequestObject(), FdoType.MEDIA_OBJECT);
-    var handleRecord = genMediaObjectAttributes(handle);
+    var request = genCreateRecordRequest(givenMediaRequestObject(), FdoType.DIGITAL_MEDIA);
+    var handleRecord = TestUtils.genDigitalMediaAttributes(handle);
     var handleRecordSublist = handleRecord.stream().filter(
         row -> row.getType().equals(PRIMARY_MEDIA_ID.get()) || row.getType()
             .equals(LINKED_DO_PID.get())).toList();
 
     var responseExpected = givenRecordResponseWriteSmallResponse(handleRecordSublist,
-        List.of(handle), FdoType.MEDIA_OBJECT);
+        List.of(handle), FdoType.DIGITAL_MEDIA);
 
     given(pidNameGeneratorService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(fdoRecordService.prepareMediaObjectAttributes(any(), any())).willReturn(
+    given(fdoRecordService.prepareDigitalMediaAttributes(any(), any())).willReturn(
         handleRecordSublist);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
@@ -522,13 +522,14 @@ class HandleServiceTest {
     // Given
     List<JsonNode> requests = new ArrayList<>();
     for (int i = 0; i < handles.size(); i++) {
-      requests.add(genCreateRecordRequest(givenMappingRequestObject(), FdoType.MAPPING));
+      requests.add(genCreateRecordRequest(givenDataMappingRequestObject(), FdoType.DATA_MAPPING));
     }
 
-    var responseExpected = givenRecordResponseWrite(handles, FdoType.MAPPING);
+    var responseExpected = givenRecordResponseWrite(handles, FdoType.DATA_MAPPING);
     given(pidNameGeneratorService.genHandleList(handles.size())).willReturn(handles);
-    given(fdoRecordService.prepareMappingAttributes(any(), any())).willReturn(
-        genMappingAttributes(handles.get(0))).willReturn(genMappingAttributes(handles.get(1)));
+    given(fdoRecordService.prepareDataMappingAttributes(any(), any())).willReturn(
+            genDataMappingAttributes(handles.get(0)))
+        .willReturn(genDataMappingAttributes(handles.get(1)));
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
@@ -586,24 +587,25 @@ class HandleServiceTest {
   }
 
   @Test
-  void testCreateMediaObjectBatch() throws Exception {
+  void testCreateDigitalMediaBatch() throws Exception {
     // Given
     List<JsonNode> requests = new ArrayList<>();
     for (int i = 0; i < handles.size(); i++) {
-      requests.add(genCreateRecordRequest(givenMediaRequestObject(), FdoType.MEDIA_OBJECT));
+      requests.add(genCreateRecordRequest(givenMediaRequestObject(), FdoType.DIGITAL_MEDIA));
     }
-    var sublist = Stream.concat(genMediaObjectAttributes(handles.get(0)).stream().filter(
-        row -> row.getType().equals(PRIMARY_MEDIA_ID.get()) || row.getType()
-            .equals(LINKED_DO_PID.get())), genMediaObjectAttributes(handles.get(1)).stream().filter(
-        row -> row.getType().equals(PRIMARY_MEDIA_ID.get()) || row.getType()
-            .equals(LINKED_DO_PID.get()))).toList();
+    var sublist = Stream.concat(TestUtils.genDigitalMediaAttributes(handles.get(0)).stream().filter(
+            row -> row.getType().equals(PRIMARY_MEDIA_ID.get()) || row.getType()
+                .equals(LINKED_DO_PID.get())),
+        TestUtils.genDigitalMediaAttributes(handles.get(1)).stream().filter(
+            row -> row.getType().equals(PRIMARY_MEDIA_ID.get()) || row.getType()
+                .equals(LINKED_DO_PID.get()))).toList();
 
     var responseExpected = givenRecordResponseWriteSmallResponse(sublist, handles,
-        FdoType.MEDIA_OBJECT);
+        FdoType.DIGITAL_MEDIA);
     given(pidNameGeneratorService.genHandleList(handles.size())).willReturn(handles);
-    given(fdoRecordService.prepareMediaObjectAttributes(any(), any())).willReturn(
-            genMediaObjectAttributes(handles.get(0)))
-        .willReturn(genMediaObjectAttributes(handles.get(1)));
+    given(fdoRecordService.prepareDigitalMediaAttributes(any(), any())).willReturn(
+            TestUtils.genDigitalMediaAttributes(handles.get(0)))
+        .willReturn(TestUtils.genDigitalMediaAttributes(handles.get(1)));
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When

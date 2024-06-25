@@ -10,9 +10,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.fdo.AnnotationRequest;
+import eu.dissco.core.handlemanager.domain.fdo.DataMappingRequest;
 import eu.dissco.core.handlemanager.domain.fdo.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.fdo.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.fdo.MappingRequest;
 import eu.dissco.core.handlemanager.domain.fdo.MasRequest;
 import eu.dissco.core.handlemanager.domain.fdo.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.fdo.SourceSystemRequest;
@@ -55,9 +55,9 @@ public class HandleService extends PidService {
             handleAttributes = createDigitalSpecimen(requestAttributes, handles);
         case DOI -> handleAttributes = createDoi(requestAttributes, handles);
         case HANDLE -> handleAttributes = createHandle(requestAttributes, handles);
-        case MAPPING -> handleAttributes = createMapping(requestAttributes, handles);
+        case DATA_MAPPING -> handleAttributes = createMapping(requestAttributes, handles);
         case MAS -> handleAttributes = createMas(requestAttributes, handles);
-        case MEDIA_OBJECT -> handleAttributes = createMediaObject(requestAttributes, handles);
+        case DIGITAL_MEDIA -> handleAttributes = createDigitalMedia(requestAttributes, handles);
         case ORGANISATION -> handleAttributes = createOrganisation(requestAttributes, handles);
         case SOURCE_SYSTEM -> handleAttributes = createSourceSystem(requestAttributes, handles);
         default -> throw new UnsupportedOperationException("Unrecognized type");
@@ -116,8 +116,9 @@ public class HandleService extends PidService {
     List<HandleAttribute> handleAttributes = new ArrayList<>();
     for (var request : requestAttributes) {
       var thisHandle = handleIterator.next();
-      var requestObject = mapper.treeToValue(request, MappingRequest.class);
-      handleAttributes.addAll(fdoRecordService.prepareMappingAttributes(requestObject, thisHandle));
+      var requestObject = mapper.treeToValue(request, DataMappingRequest.class);
+      handleAttributes.addAll(
+          fdoRecordService.prepareDataMappingAttributes(requestObject, thisHandle));
     }
     return handleAttributes;
   }

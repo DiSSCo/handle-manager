@@ -1,8 +1,8 @@
 package eu.dissco.core.handlemanager.service;
 
 
+import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_MEDIA;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_SPECIMEN;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoType.MEDIA_OBJECT;
 import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_DATA;
 
@@ -58,7 +58,7 @@ public class DoiService extends PidService {
       switch (type) {
         case DIGITAL_SPECIMEN ->
             handleAttributes = createDigitalSpecimen(requestAttributes, handles);
-        case MEDIA_OBJECT -> handleAttributes = createMediaObject(requestAttributes, handles);
+        case DIGITAL_MEDIA -> handleAttributes = createDigitalMedia(requestAttributes, handles);
         default -> throw new UnsupportedOperationException(
             type + " is not an appropriate Type for DOI endpoint.");
       }
@@ -78,7 +78,7 @@ public class DoiService extends PidService {
   public JsonApiWrapperWrite updateRecords(List<JsonNode> requests, boolean incrementVersion)
       throws InvalidRequestException, UnprocessableEntityException {
     var type = getObjectTypeFromJsonNode(requests);
-    if (!DIGITAL_SPECIMEN.equals(type) && !MEDIA_OBJECT.equals(type)) {
+    if (!DIGITAL_SPECIMEN.equals(type) && !DIGITAL_MEDIA.equals(type)) {
       throw new InvalidRequestException(TYPE_ERROR_MESSAGE);
     }
     var attributesToUpdate = getAttributesToUpdate(requests);
