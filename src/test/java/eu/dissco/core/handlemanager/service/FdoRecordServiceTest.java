@@ -647,7 +647,8 @@ class FdoRecordServiceTest {
         ]
         """));
     var expected = List.of(
-        new HandleAttribute(FdoProfile.OTHER_SPECIMEN_IDS, HANDLE.getBytes(StandardCharsets.UTF_8),
+        new HandleAttribute(FdoProfile.OTHER_SPECIMEN_IDS,
+            HANDLE.getBytes(StandardCharsets.UTF_8),
             expectedStr));
 
     // When

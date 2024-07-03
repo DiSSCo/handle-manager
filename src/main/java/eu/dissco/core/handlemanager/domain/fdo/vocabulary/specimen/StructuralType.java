@@ -11,7 +11,7 @@ public enum StructuralType {
 
   private final String state;
 
-  private StructuralType(String state) {
+  StructuralType(String state) {
     this.state = state;
   }
 

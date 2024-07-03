@@ -3,6 +3,8 @@ package eu.dissco.core.handlemanager.testUtils;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.ANNOTATION_HASH;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.BASE_TYPE_OF_SPECIMEN;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.CATALOG_IDENTIFIER;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DCTERMS_FORMAT;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DCTERMS_SUBJECT;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DCTERMS_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DC_TERMS_CONFORMS;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DERIVED_FROM_ENTITY;
@@ -26,10 +28,8 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MARKED_AS_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MAS_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MATERIAL_OR_DIGITAL_ENTITY;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MATERIAL_SAMPLE_TYPE;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MEDIA_FORMAT;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MEDIA_HOST;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MEDIA_HOST_NAME;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MEDIA_MIME_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MOTIVATION;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.ORGANISATION_ID;
@@ -407,11 +407,11 @@ public class TestUtils {
             request.getNormalisedPrimarySpecimenObjectId()));
 
     // 206: specimenObjectIdAbsenceReason
-    if (request.getPrimarySpecimenObjectIdAbsenceReason() != null) {
+    if (request.getSpecimenObjectIdAbsenceReason() != null) {
       fdoRecord.add(
           new HandleAttribute(SPECIMEN_OBJECT_ID_ABSENCE_REASON.index(), handle,
               SPECIMEN_OBJECT_ID_ABSENCE_REASON.get(),
-              request.getPrimarySpecimenObjectIdAbsenceReason()
+              request.getSpecimenObjectIdAbsenceReason()
                   .getBytes(StandardCharsets.UTF_8)));
     }
 
@@ -540,9 +540,9 @@ public class TestUtils {
     } else {
       fdoRecord.add(new HandleAttribute(MEDIA_HOST_NAME, handle, request.getMediaHostName()));
     }
-    if (request.getMediaFormat() != null) {
+    if (request.getDctermsFormat() != null) {
       fdoRecord.add(
-          new HandleAttribute(MEDIA_FORMAT, handle, request.getMediaFormat().toString()));
+          new HandleAttribute(DCTERMS_FORMAT, handle, request.getDctermsFormat().toString()));
     }
     fdoRecord.add(new HandleAttribute(IS_DERIVED_FROM_SPECIMEN, handle,
         request.getIsDerivedFromSpecimen().toString()));
@@ -579,9 +579,9 @@ public class TestUtils {
           new HandleAttribute(DCTERMS_TYPE, handle,
               request.getDcTermsType().toString()));
     }
-    if (request.getMediaMimeType() != null) {
+    if (request.getDctermsSubject() != null) {
       fdoRecord.add(
-          new HandleAttribute(MEDIA_MIME_TYPE, handle, request.getMediaMimeType()));
+          new HandleAttribute(DCTERMS_SUBJECT, handle, request.getDctermsSubject()));
     }
     if (request.getDerivedFromEntity() != null) {
       fdoRecord.add(
@@ -592,9 +592,9 @@ public class TestUtils {
       fdoRecord.add(
           new HandleAttribute(LICENSE_NAME, handle, request.getLicenseName()));
     }
-    if (request.getLicense() != null) {
+    if (request.getLicenseUrl() != null) {
       fdoRecord.add(
-          new HandleAttribute(LICENSE_URL, handle, request.getLicense()));
+          new HandleAttribute(LICENSE_URL, handle, request.getLicenseUrl()));
     }
     if (request.getRightsholderName() != null) {
       fdoRecord.add(

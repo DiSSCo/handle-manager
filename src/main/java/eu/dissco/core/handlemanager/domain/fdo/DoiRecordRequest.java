@@ -11,8 +11,6 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 public class DoiRecordRequest extends HandleRecordRequest {
 
-  private static final String PLACEHOLDER = "{This value is a placeholder}";
-
   private final String referentType;
 
   @JsonPropertyDescription("Local name of the object (human-readable)")

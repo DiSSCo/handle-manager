@@ -1,6 +1,8 @@
 package eu.dissco.core.handlemanager.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import java.time.Instant;
 import java.util.Random;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -12,6 +14,8 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class AppConfig {
+
+  public static final String DATE_STRING = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
 
   @Bean
   public DocumentBuilderFactory documentBuilderFactory() throws ParserConfigurationException {
@@ -31,7 +35,13 @@ public class AppConfig {
 
   @Bean
   public ObjectMapper objectMapper() {
-    return new ObjectMapper().findAndRegisterModules();
+    var mapper = new ObjectMapper()
+        .findAndRegisterModules();
+    SimpleModule dateModule = new SimpleModule();
+    dateModule.addSerializer(Instant.class, new InstantSerializer());
+    dateModule.addDeserializer(Instant.class, new InstantDeserializer());
+    mapper.registerModule(dateModule);
+    return mapper;
   }
 
   @Bean

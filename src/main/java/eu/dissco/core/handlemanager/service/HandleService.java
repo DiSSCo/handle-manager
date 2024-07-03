@@ -16,17 +16,21 @@ import eu.dissco.core.handlemanager.domain.fdo.MappingRequest;
 import eu.dissco.core.handlemanager.domain.fdo.MasRequest;
 import eu.dissco.core.handlemanager.domain.fdo.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.fdo.SourceSystemRequest;
+import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiDataLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
+import eu.dissco.core.handlemanager.repository.PidMongoRepository;
 import eu.dissco.core.handlemanager.repository.PidRepository;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
@@ -35,15 +39,22 @@ import org.springframework.stereotype.Service;
 @Profile(Profiles.HANDLE)
 public class HandleService extends PidService {
 
+  private final PidMongoRepository mongoRepository;
+
   public HandleService(PidRepository pidRepository, FdoRecordService fdoRecordService,
-      PidNameGeneratorService hf, ObjectMapper mapper, ProfileProperties profileProperties) {
+      PidNameGeneratorService hf, ObjectMapper mapper, ProfileProperties profileProperties,
+      PidMongoRepository mongoRepository) {
     super(pidRepository, fdoRecordService, hf, mapper, profileProperties);
+    this.mongoRepository = mongoRepository;
   }
 
   // Pid Record Creation
   @Override
   public JsonApiWrapperWrite createRecords(List<JsonNode> requests) throws InvalidRequestException {
-    var handles = hf.genHandleList(requests.size()).iterator();
+    var handlesBytes = hf.genHandleList(requests.size());
+    var handles = handlesBytes.iterator();
+    var handleStr = handlesBytes.stream().map(b -> new String(b, StandardCharsets.UTF_8)).toList()
+        .iterator();
     var requestAttributes = requests.stream()
         .map(request -> request.get(NODE_DATA).get(NODE_ATTRIBUTES)).toList();
     var type = getObjectTypeFromJsonNode(requests);
@@ -54,7 +65,15 @@ public class HandleService extends PidService {
         case DIGITAL_SPECIMEN ->
             handleAttributes = createDigitalSpecimen(requestAttributes, handles);
         case DOI -> handleAttributes = createDoi(requestAttributes, handles);
-        case HANDLE -> handleAttributes = createHandle(requestAttributes, handles);
+        case HANDLE -> {
+          var documents = createHandleDocument(requestAttributes, handleStr);
+          mongoRepository.postBatchHandleRecord(documents);
+          return new JsonApiWrapperWrite(List.of(new JsonApiDataLinks(
+              new String(handlesBytes.get(0), StandardCharsets.UTF_8),
+              HANDLE.getDigitalObjectType(),
+              null,
+              null)));
+        }
         case MAPPING -> handleAttributes = createMapping(requestAttributes, handles);
         case MAS -> handleAttributes = createMas(requestAttributes, handles);
         case MEDIA_OBJECT -> handleAttributes = createMediaObject(requestAttributes, handles);
@@ -96,6 +115,19 @@ public class HandleService extends PidService {
           fdoRecordService.prepareDoiRecordAttributes(requestObject, thisHandle, DOI));
     }
     return handleAttributes;
+  }
+
+  private List<Document> createHandleDocument(List<JsonNode> requestAttributes,
+      Iterator<String> handleIterator)
+      throws JsonProcessingException, InvalidRequestException {
+    List<Document> fdoRecords = new ArrayList<>();
+    var timestamp = Instant.now();
+    for (var request : requestAttributes) {
+      var requestObject = mapper.treeToValue(request, HandleRecordRequest.class);
+      fdoRecords.add(fdoRecordService.prepareNewHandleDocument(requestObject, handleIterator.next(),
+          HANDLE, timestamp));
+    }
+    return fdoRecords;
   }
 
   private List<HandleAttribute> createHandle(List<JsonNode> requestAttributes,

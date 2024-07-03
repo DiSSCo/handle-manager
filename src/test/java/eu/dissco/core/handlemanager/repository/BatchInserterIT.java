@@ -56,7 +56,8 @@ class BatchInserterIT extends BaseRepositoryIT {
   void testBatchInsertIllegalChar() {
     // Given
     var attributes = List.of(
-        new HandleAttribute(FdoProfile.SPECIMEN_HOST, HANDLE.getBytes(StandardCharsets.UTF_8),
+        new HandleAttribute(FdoProfile.SPECIMEN_HOST,
+            HANDLE.getBytes(StandardCharsets.UTF_8),
             "this is \n bad data")
     );
     var created = CREATED.getEpochSecond();
@@ -69,7 +70,8 @@ class BatchInserterIT extends BaseRepositoryIT {
   @Test
   void testDelimiterInData() throws Exception {
     var attributes = List.of(new HandleAttribute(
-        FdoProfile.SPECIMEN_HOST, HANDLE.getBytes(StandardCharsets.UTF_8), "this, has a comma"
+        FdoProfile.SPECIMEN_HOST, HANDLE.getBytes(StandardCharsets.UTF_8),
+        "this, has a comma"
     ));
 
     // When

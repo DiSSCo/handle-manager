@@ -97,7 +97,8 @@ public class DoiService extends PidService {
         (key, value) -> {
           if (eventType.equals(EventType.UPDATE)) {
             value.add(
-                new HandleAttribute(FdoProfile.PID, key.getBytes(StandardCharsets.UTF_8), key));
+                new HandleAttribute(FdoProfile.PID, key.getBytes(StandardCharsets.UTF_8),
+                    key));
           }
           eventList.add(
               new DataCiteEvent(jsonFormatSingleRecord(value), eventType));
