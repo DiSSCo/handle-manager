@@ -33,9 +33,10 @@ public class PidRepository {
   private final BatchInserter batchInserter;
 
   // For Handle Name Generation
-  public List<byte[]> getHandlesExist(List<byte[]> handles) {
+  public List<String> getHandlesExist(List<String> handles) {
+    // todo this won't work
     return context.selectDistinct(HANDLES.HANDLE).from(HANDLES).where(HANDLES.HANDLE.in(handles))
-        .fetch().getValues(HANDLES.HANDLE, byte[].class);
+        .fetch().getValues(HANDLES.HANDLE, String.class);
   }
 
   public List<byte[]> checkHandlesWritable(List<byte[]> handles) {

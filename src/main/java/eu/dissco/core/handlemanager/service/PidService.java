@@ -32,10 +32,12 @@ import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
+import eu.dissco.core.handlemanager.repository.PidMongoRepository;
 import eu.dissco.core.handlemanager.repository.PidRepository;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -44,6 +46,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -54,6 +57,7 @@ public abstract class PidService {
   protected final PidNameGeneratorService hf;
   protected final ObjectMapper mapper;
   protected final ProfileProperties profileProperties;
+  protected final PidMongoRepository mongoRepository;
 
   private List<JsonNode> formatRecords(List<HandleAttribute> dbRecord) {
     var handleMap = mapRecords(dbRecord);
@@ -109,6 +113,16 @@ public abstract class PidService {
         return formatCreateRecordsDefault(handleMap, objectType);
       }
     }
+  }
+
+  protected List<JsonApiDataLinks> formatCreateDocuments(List<Document> fdoRecords, FdoType type) {
+    var dataList = new ArrayList<JsonApiDataLinks>();
+    for (var fdoRecord : fdoRecords) {
+      dataList.add(
+          new JsonApiDataLinks(fdoRecord.get("_id").toString(), type.getDigitalObjectName(), null,
+              null));
+    }
+    return dataList;
   }
 
   private List<JsonApiDataLinks> formatCreateRecordsAnnotation(
@@ -265,23 +279,24 @@ public abstract class PidService {
     return FdoType.fromString(type.get());
   }
 
-  protected List<HandleAttribute> createDigitalSpecimen(List<JsonNode> requestAttributes,
-      Iterator<byte[]> handleIterator) throws JsonProcessingException, InvalidRequestException {
+  protected List<Document> createDigitalSpecimen(List<JsonNode> requestAttributes,
+      Iterator<String> handleIterator) throws JsonProcessingException, InvalidRequestException {
     var specimenRequests = new ArrayList<DigitalSpecimenRequest>();
     for (var request : requestAttributes) {
       specimenRequests.add(mapper.treeToValue(request, DigitalSpecimenRequest.class));
     }
     if (specimenRequests.isEmpty()) {
-      return new ArrayList<>();
+      return Collections.emptyList();
     }
     verifySpecimensAreNew(specimenRequests);
-    var handleAttributes = new ArrayList<HandleAttribute>();
+    var fdoRecords = new ArrayList<Document>();
+    var timestamp = Instant.now();
     for (var request : specimenRequests) {
-      var thisHandle = handleIterator.next();
-      handleAttributes.addAll(
-          fdoRecordService.prepareDigitalSpecimenRecordAttributes(request, thisHandle));
+      fdoRecords.add(
+          fdoRecordService.prepareNewDigitalSpecimenRecord(request, handleIterator.next(),
+              timestamp));
     }
-    return handleAttributes;
+    return fdoRecords;
   }
 
   private void verifySpecimensAreNew(List<DigitalSpecimenRequest> requests)
@@ -303,18 +318,18 @@ public abstract class PidService {
     }
   }
 
-
-  protected List<HandleAttribute> createMediaObject(List<JsonNode> requestAttributes,
-      Iterator<byte[]> handleIterator)
+  protected List<Document> createMediaObject(List<JsonNode> requestAttributes,
+      Iterator<String> handleIterator)
       throws JsonProcessingException, InvalidRequestException {
-    List<HandleAttribute> handleAttributes = new ArrayList<>();
+    List<Document> fdoRecords = new ArrayList<>();
+    var timestamp = Instant.now();
     for (var request : requestAttributes) {
-      var thisHandle = handleIterator.next();
       var requestObject = mapper.treeToValue(request, MediaObjectRequest.class);
-      handleAttributes.addAll(
-          fdoRecordService.prepareMediaObjectAttributes(requestObject, thisHandle));
+      fdoRecords.add(
+          fdoRecordService.prepareNewDigitalMediaRecord(requestObject, handleIterator.next(),
+              timestamp));
     }
-    return handleAttributes;
+    return fdoRecords;
   }
 
   // Update

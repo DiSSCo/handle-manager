@@ -16,15 +16,12 @@ import eu.dissco.core.handlemanager.domain.fdo.MappingRequest;
 import eu.dissco.core.handlemanager.domain.fdo.MasRequest;
 import eu.dissco.core.handlemanager.domain.fdo.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.fdo.SourceSystemRequest;
-import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiDataLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
-import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.PidMongoRepository;
 import eu.dissco.core.handlemanager.repository.PidRepository;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -39,46 +36,32 @@ import org.springframework.stereotype.Service;
 @Profile(Profiles.HANDLE)
 public class HandleService extends PidService {
 
-  private final PidMongoRepository mongoRepository;
-
   public HandleService(PidRepository pidRepository, FdoRecordService fdoRecordService,
       PidNameGeneratorService hf, ObjectMapper mapper, ProfileProperties profileProperties,
       PidMongoRepository mongoRepository) {
-    super(pidRepository, fdoRecordService, hf, mapper, profileProperties);
-    this.mongoRepository = mongoRepository;
+    super(pidRepository, fdoRecordService, hf, mapper, profileProperties, mongoRepository);
   }
 
   // Pid Record Creation
   @Override
   public JsonApiWrapperWrite createRecords(List<JsonNode> requests) throws InvalidRequestException {
-    var handlesBytes = hf.genHandleList(requests.size());
-    var handles = handlesBytes.iterator();
-    var handleStr = handlesBytes.stream().map(b -> new String(b, StandardCharsets.UTF_8)).toList()
-        .iterator();
+    var handles = hf.genHandleListString(requests.size()).iterator();
     var requestAttributes = requests.stream()
         .map(request -> request.get(NODE_DATA).get(NODE_ATTRIBUTES)).toList();
     var type = getObjectTypeFromJsonNode(requests);
-    List<HandleAttribute> handleAttributes;
+    List<Document> fdoRecords;
     try {
       switch (type) {
-        case ANNOTATION -> handleAttributes = createAnnotation(requestAttributes, handles);
-        case DIGITAL_SPECIMEN ->
-            handleAttributes = createDigitalSpecimen(requestAttributes, handles);
-        case DOI -> handleAttributes = createDoi(requestAttributes, handles);
-        case HANDLE -> {
-          var documents = createHandleDocument(requestAttributes, handleStr);
-          mongoRepository.postBatchHandleRecord(documents);
-          return new JsonApiWrapperWrite(List.of(new JsonApiDataLinks(
-              new String(handlesBytes.get(0), StandardCharsets.UTF_8),
-              HANDLE.getDigitalObjectType(),
-              null,
-              null)));
-        }
-        case MAPPING -> handleAttributes = createMapping(requestAttributes, handles);
-        case MAS -> handleAttributes = createMas(requestAttributes, handles);
-        case MEDIA_OBJECT -> handleAttributes = createMediaObject(requestAttributes, handles);
-        case ORGANISATION -> handleAttributes = createOrganisation(requestAttributes, handles);
-        case SOURCE_SYSTEM -> handleAttributes = createSourceSystem(requestAttributes, handles);
+        case ANNOTATION -> fdoRecords = createAnnotation(requestAttributes, handles);
+        case DIGITAL_SPECIMEN -> fdoRecords = createDigitalSpecimen(requestAttributes, handles);
+        case DOI -> fdoRecords = createDoi(requestAttributes, handles);
+        case HANDLE -> fdoRecords = createHandle(requestAttributes, handles);
+
+        case MAPPING -> fdoRecords = createMapping(requestAttributes, handles);
+        case MAS -> fdoRecords = createMas(requestAttributes, handles);
+        case MEDIA_OBJECT -> fdoRecords = createMediaObject(requestAttributes, handles);
+        case ORGANISATION -> fdoRecords = createOrganisation(requestAttributes, handles);
+        case SOURCE_SYSTEM -> fdoRecords = createSourceSystem(requestAttributes, handles);
         default -> throw new UnsupportedOperationException("Unrecognized type");
       }
     } catch (JsonProcessingException | PidResolutionException e) {
@@ -86,38 +69,39 @@ public class HandleService extends PidService {
       throw new InvalidRequestException(
           "An error has occurred parsing a record in request. More information: " + e.getMessage());
     }
-    log.info("Persisting new handles to db");
-    pidRepository.postAttributesToDb(Instant.now().getEpochSecond(), handleAttributes);
-    return new JsonApiWrapperWrite(formatCreateRecords(handleAttributes, type));
+    log.info("Persisting new handles to Document Store");
+    mongoRepository.postBatchHandleRecord(fdoRecords);
+    return new JsonApiWrapperWrite(formatCreateDocuments(fdoRecords, type));
   }
 
-  private List<HandleAttribute> createAnnotation(List<JsonNode> requestAttributes,
-      Iterator<byte[]> handleIterator)
+  private List<Document> createAnnotation(List<JsonNode> requestAttributes,
+      Iterator<String> handleIterator)
       throws JsonProcessingException, InvalidRequestException {
-    List<HandleAttribute> handleAttributes = new ArrayList<>();
+    List<Document> fdoRecords = new ArrayList<>();
+    var timestamp = Instant.now();
     for (var request : requestAttributes) {
-      var thisHandle = handleIterator.next();
       var requestObject = mapper.treeToValue(request, AnnotationRequest.class);
-      handleAttributes.addAll(
-          fdoRecordService.prepareAnnotationAttributes(requestObject, thisHandle));
+      fdoRecords.add(
+          fdoRecordService.prepareNewAnnotationDocument(requestObject, handleIterator.next(),
+              timestamp));
     }
-    return handleAttributes;
+    return fdoRecords;
   }
 
-  private List<HandleAttribute> createDoi(List<JsonNode> requestAttributes,
-      Iterator<byte[]> handleIterator)
+  private List<Document> createDoi(List<JsonNode> requestAttributes,
+      Iterator<String> handleIterator)
       throws JsonProcessingException, InvalidRequestException {
-    List<HandleAttribute> handleAttributes = new ArrayList<>();
+    List<Document> fdoRecords = new ArrayList<>();
+    var timestamp = Instant.now();
     for (var request : requestAttributes) {
-      var thisHandle = handleIterator.next();
       var requestObject = mapper.treeToValue(request, DoiRecordRequest.class);
-      handleAttributes.addAll(
-          fdoRecordService.prepareDoiRecordAttributes(requestObject, thisHandle, DOI));
+      fdoRecords.add(fdoRecordService.prepareNewDoiDocument(requestObject, handleIterator.next(),
+          DOI, timestamp));
     }
-    return handleAttributes;
+    return fdoRecords;
   }
 
-  private List<Document> createHandleDocument(List<JsonNode> requestAttributes,
+  private List<Document> createHandle(List<JsonNode> requestAttributes,
       Iterator<String> handleIterator)
       throws JsonProcessingException, InvalidRequestException {
     List<Document> fdoRecords = new ArrayList<>();
@@ -130,64 +114,56 @@ public class HandleService extends PidService {
     return fdoRecords;
   }
 
-  private List<HandleAttribute> createHandle(List<JsonNode> requestAttributes,
-      Iterator<byte[]> handleIterator)
-      throws JsonProcessingException, InvalidRequestException {
-    List<HandleAttribute> handleAttributes = new ArrayList<>();
+  private List<Document> createMapping(List<JsonNode> requestAttributes,
+      Iterator<String> handleIterator) throws JsonProcessingException, InvalidRequestException {
+    List<Document> fdoRecords = new ArrayList<>();
+    var timestamp = Instant.now();
     for (var request : requestAttributes) {
-      var thisHandle = handleIterator.next();
-      var requestObject = mapper.treeToValue(request, HandleRecordRequest.class);
-      handleAttributes.addAll(
-          fdoRecordService.prepareHandleRecordAttributes(requestObject, thisHandle, HANDLE));
-    }
-    return handleAttributes;
-  }
-
-  private List<HandleAttribute> createMapping(List<JsonNode> requestAttributes,
-      Iterator<byte[]> handleIterator) throws JsonProcessingException, InvalidRequestException {
-    List<HandleAttribute> handleAttributes = new ArrayList<>();
-    for (var request : requestAttributes) {
-      var thisHandle = handleIterator.next();
       var requestObject = mapper.treeToValue(request, MappingRequest.class);
-      handleAttributes.addAll(fdoRecordService.prepareMappingAttributes(requestObject, thisHandle));
+      fdoRecords.add(
+          fdoRecordService.prepareNewDataMappingDocument(requestObject, handleIterator.next(),
+              timestamp));
     }
-    return handleAttributes;
+    return fdoRecords;
   }
 
-  private List<HandleAttribute> createMas(List<JsonNode> requestAttributes,
-      Iterator<byte[]> handleIterator) throws JsonProcessingException, InvalidRequestException {
-    List<HandleAttribute> handleAttributes = new ArrayList<>();
+  private List<Document> createMas(List<JsonNode> requestAttributes,
+      Iterator<String> handleIterator) throws JsonProcessingException, InvalidRequestException {
+    List<Document> fdoRecords = new ArrayList<>();
+    var timestamp = Instant.now();
     for (var request : requestAttributes) {
-      var thisHandle = handleIterator.next();
       var requestObject = mapper.treeToValue(request, MasRequest.class);
-      handleAttributes.addAll(
-          fdoRecordService.prepareMasRecordAttributes(requestObject, thisHandle));
+      fdoRecords.add(fdoRecordService.prepareNewMasDocument(requestObject, handleIterator.next(),
+          timestamp));
     }
-    return handleAttributes;
+    return fdoRecords;
   }
 
-  private List<HandleAttribute> createOrganisation(List<JsonNode> requestAttributes,
-      Iterator<byte[]> handleIterator) throws JsonProcessingException, InvalidRequestException {
-    List<HandleAttribute> handleAttributes = new ArrayList<>();
+  private List<Document> createOrganisation(List<JsonNode> requestAttributes,
+      Iterator<String> handleIterator) throws JsonProcessingException, InvalidRequestException {
+    List<Document> fdoRecords = new ArrayList<>();
+    var timestamp = Instant.now();
     for (var request : requestAttributes) {
-      var thisHandle = handleIterator.next();
       var requestObject = mapper.treeToValue(request, OrganisationRequest.class);
-      handleAttributes.addAll(
-          fdoRecordService.prepareOrganisationAttributes(requestObject, thisHandle));
+      fdoRecords.add(
+          fdoRecordService.prepareNewOrganisationDocument(requestObject, handleIterator.next(),
+              timestamp));
     }
-    return handleAttributes;
+    return fdoRecords;
   }
 
-  private List<HandleAttribute> createSourceSystem(List<JsonNode> requestAttributes,
-      Iterator<byte[]> handleIterator) throws JsonProcessingException, InvalidRequestException {
-    List<HandleAttribute> handleAttributes = new ArrayList<>();
+  private List<Document> createSourceSystem(List<JsonNode> requestAttributes,
+      Iterator<String> handleIterator) throws JsonProcessingException, InvalidRequestException {
+    List<Document> fdoRecords = new ArrayList<>();
+    var timestamp = Instant.now();
     for (var request : requestAttributes) {
-      var thisHandle = handleIterator.next();
       var requestObject = mapper.treeToValue(request, SourceSystemRequest.class);
-      handleAttributes.addAll(
-          fdoRecordService.prepareSourceSystemAttributes(requestObject, thisHandle));
+      fdoRecords.add(
+          fdoRecordService.prepareNewSourceSystemDocument(requestObject, handleIterator.next(),
+              timestamp));
     }
-    return handleAttributes;
+    return fdoRecords;
+
   }
 
 }

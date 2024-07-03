@@ -38,6 +38,7 @@ import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
+import eu.dissco.core.handlemanager.repository.PidMongoRepository;
 import eu.dissco.core.handlemanager.repository.PidRepository;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
@@ -68,6 +69,8 @@ class DoiServiceTest {
   private ProfileProperties profileProperties;
   @Mock
   private DataCiteService dataCiteService;
+  @Mock
+  private PidMongoRepository mongoRepository;
   private PidService service;
   private MockedStatic<Instant> mockedStatic;
   private MockedStatic<Clock> mockedClock;
@@ -76,7 +79,7 @@ class DoiServiceTest {
   void setup() {
     initTime();
     service = new DoiService(pidRepository, fdoRecordService, pidNameGeneratorService, MAPPER,
-        profileProperties, dataCiteService);
+        profileProperties, dataCiteService, mongoRepository);
   }
 
   private void initTime() {

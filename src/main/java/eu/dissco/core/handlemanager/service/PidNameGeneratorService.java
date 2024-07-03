@@ -2,9 +2,9 @@ package eu.dissco.core.handlemanager.service;
 
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.repository.PidRepository;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -30,19 +30,16 @@ public class PidNameGeneratorService {
   private final Random random;
 
 
+  public List<String> genHandleListString(int h) {
+    return new ArrayList<>(genHandleHashSet(h));
+  }
+
   public List<byte[]> genHandleList(int h) {
-    return unwrapBytes((HashSet<ByteBuffer>) genHandleHash(h));
+    var list = genHandleListString(h);
+    return list.stream().map(s -> s.getBytes(StandardCharsets.UTF_8)).toList();
   }
 
-  private List<byte[]> unwrapBytes(HashSet<ByteBuffer> handleHash) {
-    List<byte[]> handleList = new ArrayList<>();
-    for (ByteBuffer hash : handleHash) {
-      handleList.add(hash.array());
-    }
-    return handleList;
-  }
-
-  private Set<ByteBuffer> genHandleHash(int h) {
+  private Set<String> genHandleHashSet(int h) {
 
     /*
      * Generates a HashSet of minted handles of size h Calls the handlefactory
@@ -52,19 +49,18 @@ public class PidNameGeneratorService {
      */
 
     // Generate h number of bytes and wrap it into a HashSet<ByteBuffer>
-    List<byte[]> handleList = newHandle(h);
-
-    HashSet<ByteBuffer> handleHash = wrapBytes(handleList);
+    var handleList = newHandles(h);
+    var handleSet = new HashSet<>(handleList);
 
     // Check for duplicates from repository and wrap the duplicates
-    HashSet<ByteBuffer> duplicates = wrapBytes(pidRepository.getHandlesExist(handleList));
+    var duplicates = new HashSet<>(pidRepository.getHandlesExist(handleList));
 
     // If a duplicate was found, recursively call this function
     // Generate new handles for every duplicate found and add it to our hash list
 
     if (!duplicates.isEmpty()) {
-      handleHash.removeAll(duplicates);
-      handleHash.addAll(genHandleHash(duplicates.size()));
+      handleSet.removeAll(duplicates);
+      handleSet.addAll(genHandleHashSet(duplicates.size()));
     }
 
     /*
@@ -72,50 +68,15 @@ public class PidNameGeneratorService {
      * recursive cal)ls to this function, we generate the same If this occurs, we
      * will not have our expected number of handles
      */
-    while (h > handleHash.size()) {
-      handleHash.addAll(genHandleHash(h - handleHash.size()));
+    while (h > handleSet.size()) {
+      handleSet.addAll(genHandleHashSet(h - handleSet.size()));
     }
-    return handleHash;
+    return handleSet;
   }
 
-  // Converting between List<Byte[] and HashSet<ByteBuffer>
-  /*
-   * List<byte[]> <----> HashSet<ByteBuffer> HashSets are useful for preventing
-   * collisions within the list List<byte[]> is used to interface with repository
-   * layer
-   */
-
-  // Converts List<byte[]> --> HashSet<ByteBuffer>
-  private HashSet<ByteBuffer> wrapBytes(List<byte[]> byteList) {
-    HashSet<ByteBuffer> byteHash = new HashSet<>();
-    for (byte[] bytes : byteList) {
-      byteHash.add(ByteBuffer.wrap(bytes));
-    }
-    return byteHash;
-  }
-
-  private String newSuffix() {
-    for (int idx = 0; idx < buf.length; ++idx) {
-      if (idx == 3 || idx == 7) { //
-        buf[idx] = '-'; // Sneak a lil dash in the middle
-      } else {
-        buf[idx] = symbols[random.nextInt(symbols.length)];
-      }
-    }
-    return new String(buf);
-  }
-
-  private String newHandle() {
-    return applicationProperties.getPrefix() + "/" + newSuffix();
-  }
-
-  private byte[] newHandleBytes() {
-    return newHandle().getBytes(StandardCharsets.UTF_8);
-  }
-
-  private List<byte[]> newHandle(int numberOfHandles) { // Generates h number of handles
+  private List<String> newHandles(int numberOfHandles) { // Generates h number of handles
     if (numberOfHandles < 1) {
-      return new ArrayList<>();
+      return Collections.emptyList();
     }
     if (numberOfHandles > applicationProperties.getMaxHandles()) {
       log.warn("Max number of handles exceeded. Generating maximum {} handles instead",
@@ -126,19 +87,35 @@ public class PidNameGeneratorService {
     // We'll use this to make sure we're not duplicating results
     // It's of type ByteBuffer and not byte[] because ByteBuffer has equality testing
     // byte[] is too primitive for our needs
-    HashSet<ByteBuffer> handleHash = new HashSet<>();
+    HashSet<String> handleHash = new HashSet<>();
 
     // This is the object we'll actually return
-    List<byte[]> handleList = new ArrayList<>();
-    byte[] hdl;
+    var handleList = new ArrayList<String>();
+    String hdl;
 
     for (int i = 0; i < numberOfHandles; i++) {
-      hdl = newHandleBytes();
-      while (!handleHash.add(ByteBuffer.wrap(hdl))) {
-        hdl = newHandleBytes();
+      hdl = newHandle();
+      while (!handleHash.add(hdl)) {
+        hdl = newHandle();
       }
       handleList.add(hdl);
     }
     return handleList;
+  }
+
+  private String newHandle() {
+    return applicationProperties.getPrefix() + "/" + newSuffix();
+  }
+
+
+  private String newSuffix() {
+    for (int idx = 0; idx < buf.length; ++idx) {
+      if (idx == 3 || idx == 7) { //
+        buf[idx] = '-'; // Sneak a lil dash in the middle
+      } else {
+        buf[idx] = symbols[random.nextInt(symbols.length)];
+      }
+    }
+    return new String(buf);
   }
 }

@@ -20,12 +20,13 @@ import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
+import eu.dissco.core.handlemanager.repository.PidMongoRepository;
 import eu.dissco.core.handlemanager.repository.PidRepository;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
@@ -39,8 +40,9 @@ public class DoiService extends PidService {
   public DoiService(PidRepository pidRepository,
       FdoRecordService fdoRecordService, PidNameGeneratorService pidNameGeneratorService,
       ObjectMapper mapper, ProfileProperties profileProperties,
-      DataCiteService dataCiteService) {
-    super(pidRepository, fdoRecordService, pidNameGeneratorService, mapper, profileProperties);
+      DataCiteService dataCiteService, PidMongoRepository mongoRepository) {
+    super(pidRepository, fdoRecordService, pidNameGeneratorService, mapper, profileProperties,
+        mongoRepository);
     this.dataCiteService = dataCiteService;
   }
 
@@ -49,16 +51,15 @@ public class DoiService extends PidService {
   @Override
   public JsonApiWrapperWrite createRecords(List<JsonNode> requests)
       throws InvalidRequestException, UnprocessableEntityException {
-    var handles = hf.genHandleList(requests.size()).iterator();
+    var handles = hf.genHandleListString(requests.size()).iterator();
     var requestAttributes = requests.stream()
         .map(request -> request.get(NODE_DATA).get(NODE_ATTRIBUTES)).toList();
     var type = getObjectTypeFromJsonNode(requests);
-    List<HandleAttribute> handleAttributes;
+    List<Document> fdoRecords;
     try {
       switch (type) {
-        case DIGITAL_SPECIMEN ->
-            handleAttributes = createDigitalSpecimen(requestAttributes, handles);
-        case MEDIA_OBJECT -> handleAttributes = createMediaObject(requestAttributes, handles);
+        case DIGITAL_SPECIMEN -> fdoRecords = createDigitalSpecimen(requestAttributes, handles);
+        case MEDIA_OBJECT -> fdoRecords = createMediaObject(requestAttributes, handles);
         default -> throw new UnsupportedOperationException(
             type + " is not an appropriate Type for DOI endpoint.");
       }
@@ -67,11 +68,11 @@ public class DoiService extends PidService {
           "An error has occurred parsing a record in request. More information: "
               + e.getMessage());
     }
-    log.info("Persisting new dois to db");
-    pidRepository.postAttributesToDb(Instant.now().getEpochSecond(), handleAttributes);
+    log.info("Persisting new DOIs to Document Store");
+    mongoRepository.postBatchHandleRecord(fdoRecords);
     log.info("Publishing to DataCite");
-    publishToDataCite(handleAttributes, EventType.CREATE, type);
-    return new JsonApiWrapperWrite(formatCreateRecords(handleAttributes, type));
+    //todo publishToDataCite(fdoRecords, EventType.CREATE, type);
+    return new JsonApiWrapperWrite(formatCreateDocuments(fdoRecords, type));
   }
 
   @Override
