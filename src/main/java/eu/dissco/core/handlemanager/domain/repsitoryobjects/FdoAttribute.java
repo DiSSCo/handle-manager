@@ -8,7 +8,7 @@ import java.time.Instant;
 import lombok.Value;
 
 @Value
-public class HandleAttributeJson {
+public class FdoAttribute {
 
   int index;
   String type;
@@ -16,14 +16,14 @@ public class HandleAttributeJson {
   int ttl = 86400;
   Instant timestamp;
 
-  public HandleAttributeJson(FdoProfile fdoAttribute, Instant timestamp, String value) {
+  public FdoAttribute(FdoProfile fdoAttribute, Instant timestamp, String value) {
     this.index = fdoAttribute.index();
     this.type = fdoAttribute.get();
     this.timestamp = timestamp;
     this.data = new StringHandleData(value);
   }
 
-  public HandleAttributeJson(Instant timestamp, String prefix) {
+  public FdoAttribute(Instant timestamp, String prefix) {
     this.index = HS_ADMIN.index();
     this.type = HS_ADMIN.get();
     this.data = new AdminHandleData(prefix);

@@ -62,6 +62,7 @@ import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
+import eu.dissco.core.handlemanager.repository.PidMongoRepository;
 import eu.dissco.core.handlemanager.repository.PidRepository;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
@@ -91,6 +92,8 @@ class HandleServiceTest {
   private PidNameGeneratorService pidNameGeneratorService;
   @Mock
   private ProfileProperties profileProperties;
+  @Mock
+  PidMongoRepository mongoRepository;
   private PidService service;
   private List<byte[]> handles;
   private MockedStatic<Instant> mockedStatic;
@@ -101,7 +104,7 @@ class HandleServiceTest {
     initTime();
     initHandleList();
     service = new HandleService(pidRepository, fdoRecordService, pidNameGeneratorService, MAPPER,
-        profileProperties);
+        profileProperties, mongoRepository);
   }
 
   private void initTime() {

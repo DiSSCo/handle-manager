@@ -41,7 +41,7 @@ class BatchInserterIT extends BaseRepositoryIT {
   @Test
   void testBatchInsert() throws Exception {
     // Given
-    var attributes = genDigitalSpecimenAttributes(HANDLE.getBytes(StandardCharsets.UTF_8));
+    var attributes = genDigitalSpecimenAttributes(HANDLE);
 
     // When
     batchInserter.batchCopy(CREATED.getEpochSecond(), attributes);

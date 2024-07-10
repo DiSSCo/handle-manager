@@ -2,7 +2,6 @@ package eu.dissco.core.handlemanager.service;
 
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.repository.PidRepository;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -30,13 +29,8 @@ public class PidNameGeneratorService {
   private final Random random;
 
 
-  public List<String> genHandleListString(int h) {
+  public List<String> genHandleList(int h) {
     return new ArrayList<>(genHandleHashSet(h));
-  }
-
-  public List<byte[]> genHandleList(int h) {
-    var list = genHandleListString(h);
-    return list.stream().map(s -> s.getBytes(StandardCharsets.UTF_8)).toList();
   }
 
   private Set<String> genHandleHashSet(int h) {

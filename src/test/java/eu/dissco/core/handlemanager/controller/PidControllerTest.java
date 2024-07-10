@@ -121,7 +121,7 @@ class PidControllerTest {
     // Given
 
     var responseExpected = givenRecordResponseWriteGeneric(
-        List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), FdoType.DIGITAL_SPECIMEN);
+        List.of(HANDLE), FdoType.DIGITAL_SPECIMEN);
     given(
         service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL
         )).willReturn(responseExpected);
@@ -140,7 +140,7 @@ class PidControllerTest {
     // Given
     String physicalId = PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
     var responseExpected = givenRecordResponseWriteGeneric(
-        List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), FdoType.DIGITAL_SPECIMEN);
+        List.of(HANDLE), FdoType.DIGITAL_SPECIMEN);
     given(
         service.searchByPhysicalSpecimenId(physicalId)).willReturn(
         responseExpected);
@@ -161,10 +161,8 @@ class PidControllerTest {
     r.setRequestURI("view");
 
     List<String> handleString = List.of(HANDLE, HANDLE_ALT);
-    List<byte[]> handles = List.of(HANDLE.getBytes(StandardCharsets.UTF_8),
-        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
-    var responseExpected = givenRecordResponseRead(handles, path, FdoType.HANDLE);
+    var responseExpected = givenRecordResponseRead(handleString, path, FdoType.HANDLE);
     given(applicationProperties.getUiUrl()).willReturn(SANDBOX_URI);
     given(applicationProperties.getMaxHandles()).willReturn(1000);
     given(service.resolveBatchRecord(anyList(), eq(path))).willReturn(responseExpected);
@@ -201,10 +199,9 @@ class PidControllerTest {
   @Test
   void testCreateHandleRecord() throws Exception {
     // Given
-    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     HandleRecordRequest requestObject = givenHandleRecordRequestObject();
     ObjectNode requestNode = genCreateRecordRequest(requestObject, FdoType.HANDLE);
-    JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(handle),
+    JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(HANDLE),
         FdoType.HANDLE);
 
     given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
@@ -220,10 +217,9 @@ class PidControllerTest {
   @Test
   void testCreateDoiRecord() throws Exception {
     // Given
-    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     HandleRecordRequest requestObject = givenDoiRecordRequestObject();
     ObjectNode requestNode = genCreateRecordRequest(requestObject, FdoType.DOI);
-    JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(handle),
+    JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(HANDLE),
         FdoType.DOI);
 
     given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
@@ -239,10 +235,9 @@ class PidControllerTest {
   @Test
   void testCreateDigitalSpecimenRecord() throws Exception {
     // Given
-    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     DigitalSpecimenRequest requestObject = givenDigitalSpecimenRequestObjectNullOptionals();
     ObjectNode requestNode = genCreateRecordRequest(requestObject, FdoType.DIGITAL_SPECIMEN);
-    JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(handle),
+    JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(HANDLE),
         FdoType.DIGITAL_SPECIMEN);
 
     given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
@@ -258,10 +253,9 @@ class PidControllerTest {
   @Test
   void testCreateMediaObjectRecord() throws Exception {
     // Given
-    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     HandleRecordRequest requestObject = givenMediaRequestObject();
     ObjectNode requestNode = genCreateRecordRequest(requestObject, FdoType.MEDIA_OBJECT);
-    JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(handle),
+    JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(HANDLE),
         FdoType.MEDIA_OBJECT);
 
     given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
@@ -277,9 +271,7 @@ class PidControllerTest {
   @Test
   void testCreateHandleRecordBatch() throws Exception {
     // Given
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
-        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
+    var handles = List.of(HANDLE, HANDLE_ALT);
 
     List<JsonNode> requests = new ArrayList<>();
 
@@ -300,9 +292,7 @@ class PidControllerTest {
   @Test
   void testCreateDoiRecordBatch() throws Exception {
     // Given
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
-        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
+    var handles = List.of(HANDLE, HANDLE_ALT);
 
     List<JsonNode> requests = new ArrayList<>();
     handles.forEach(
@@ -322,12 +312,8 @@ class PidControllerTest {
   @Test
   void testCreateDigitalSpecimenBatch() throws Exception {
     // Given
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
-        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-
+    var handles = List.of(HANDLE, HANDLE_ALT);
     List<JsonNode> requests = new ArrayList<>();
-
     handles.forEach(handle ->
         requests.add(
             genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(),
@@ -347,15 +333,11 @@ class PidControllerTest {
   @Test
   void testCreateMediaRecordBatch() throws Exception {
     // Given
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
-        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-
+    var handles = List.of(HANDLE, HANDLE_ALT);
     List<JsonNode> requests = new ArrayList<>();
     for (int i = 0; i < handles.size(); i++) {
       requests.add(genCreateRecordRequest(givenMediaRequestObject(), FdoType.MEDIA_OBJECT));
     }
-
     var responseExpected = givenRecordResponseWrite(handles, FdoType.DOI);
     given(service.createRecords(requests)).willReturn(responseExpected);
 
@@ -370,10 +352,7 @@ class PidControllerTest {
   @Test
   void testCreateSourceSystemsBatch() throws Exception {
     // Given
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
-        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-
+    var handles = List.of(HANDLE, HANDLE_ALT);
     List<JsonNode> requests = new ArrayList<>();
     handles.forEach(handle -> requests.add(
         genCreateRecordRequest(givenSourceSystemRequestObject(), FdoType.SOURCE_SYSTEM)));
@@ -392,14 +371,10 @@ class PidControllerTest {
   @Test
   void testCreateAnnotationsBatch() throws Exception {
     // Given
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
-        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-
+    var handles = List.of(HANDLE, HANDLE_ALT);
     List<JsonNode> requests = new ArrayList<>();
     handles.forEach(handle -> requests.add(
         genCreateRecordRequest(givenAnnotationRequestObject(), FdoType.ANNOTATION)));
-
     var responseExpected = givenRecordResponseWrite(handles, FdoType.ANNOTATION);
     given(service.createRecords(requests)).willReturn(responseExpected);
 
@@ -414,10 +389,7 @@ class PidControllerTest {
   @Test
   void testCreateMappingBatch() throws Exception {
     // Given
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
-        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-
+    var handles = List.of(HANDLE, HANDLE_ALT);
     List<JsonNode> requests = new ArrayList<>();
     handles.forEach(handle -> requests.add(
         genCreateRecordRequest(givenMappingRequestObject(), FdoType.MAPPING)));
@@ -444,13 +416,12 @@ class PidControllerTest {
   @Test
   void testUpdateRecord() throws Exception {
     // Given
-    byte[] handle = HANDLE.getBytes();
     var updateAttributes = genUpdateRequestAltLoc();
     ObjectNode updateRequestNode = mapper.createObjectNode();
     updateRequestNode.set(NODE_DATA,
         givenJsonNode(HANDLE, FdoType.HANDLE.getDigitalObjectType(), updateAttributes));
 
-    var responseExpected = givenRecordResponseWriteAltLoc(List.of(handle));
+    var responseExpected = givenRecordResponseWriteAltLoc(List.of(HANDLE));
     given(service.updateRecords(List.of(updateRequestNode), true)).willReturn(
         responseExpected);
 
@@ -480,10 +451,7 @@ class PidControllerTest {
   @Test
   void testUpdateRecordBatch() throws Exception {
     // Given
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
-        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-
+    var handles = List.of(HANDLE, HANDLE_ALT);
     List<JsonNode> updateRequestList = new ArrayList<>();
     var responseExpected = givenRecordResponseWriteAltLoc(handles);
     handles.forEach(h -> {
@@ -506,10 +474,7 @@ class PidControllerTest {
   @Test
   void testRollbackUpdate() throws Exception {
     // Given
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
-        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-
+    var handles = List.of(HANDLE, HANDLE_ALT);
     List<JsonNode> updateRequestList = new ArrayList<>();
     var responseExpected = givenRecordResponseWriteAltLoc(handles);
     handles.forEach(h -> {
@@ -575,10 +540,7 @@ class PidControllerTest {
   @Test
   void testArchiveRecord() throws Exception {
     // Given
-
-    byte[] handle = HANDLE.getBytes();
-
-    var responseExpected = givenRecordResponseWriteArchive(List.of(handle));
+    var responseExpected = givenRecordResponseWriteArchive(List.of(HANDLE));
     var archiveRequest = givenArchiveRequest();
     given(service.archiveRecordBatch(List.of(archiveRequest))).willReturn(
         responseExpected);
@@ -605,9 +567,7 @@ class PidControllerTest {
   @Test
   void testArchiveRecordBatch() throws Exception {
     // Given
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
-        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
+    var handles = List.of(HANDLE, HANDLE_ALT);
     List<JsonNode> archiveRequestList = new ArrayList<>();
     handles.forEach(h -> archiveRequestList.add(givenArchiveRequest()));
     var responseExpected = givenRecordResponseWriteArchive(handles);
