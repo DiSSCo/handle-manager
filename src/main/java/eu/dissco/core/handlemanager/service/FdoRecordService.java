@@ -14,6 +14,7 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DIGITAL_OBJECT_
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DIGITAL_OBJECT_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.FDO_PROFILE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.FDO_RECORD_LICENSE;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.HAS_RELATED_PID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.INFORMATION_ARTEFACT_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.ISSUED_FOR_AGENT;
@@ -58,53 +59,50 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.RIGHTSHOLDER_NA
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.RIGHTSHOLDER_PID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.RIGHTSHOLDER_PID_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SOURCE_DATA_STANDARD;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SOURCE_SYSTEM_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SPECIMEN_HOST_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SPECIMEN_OBJECT_ID_ABSENCE_REASON;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.STRUCTURAL_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TARGET_PID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TARGET_TYPE;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOMBSTONED_DATE;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOMBSTONED_TEXT;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOPIC_CATEGORY;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOPIC_DISCIPLINE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOPIC_DOMAIN;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOPIC_ORIGIN;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.WAS_DERIVED_FROM_ENTITY;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.ANNOTATION;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DATA_MAPPING;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_MEDIA;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_SPECIMEN;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoType.MAPPING;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.MAS;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoType.MEDIA_OBJECT;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.ORGANISATION;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.SOURCE_SYSTEM;
+import static eu.dissco.core.handlemanager.service.ServiceUtils.getField;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.BaseJsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
 import eu.dissco.core.handlemanager.domain.fdo.AnnotationRequest;
+import eu.dissco.core.handlemanager.domain.fdo.DataMappingRequest;
+import eu.dissco.core.handlemanager.domain.fdo.DigitalMediaRequest;
 import eu.dissco.core.handlemanager.domain.fdo.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.fdo.DoiRecordRequest;
-import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 import eu.dissco.core.handlemanager.domain.fdo.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.fdo.MappingRequest;
 import eu.dissco.core.handlemanager.domain.fdo.MasRequest;
-import eu.dissco.core.handlemanager.domain.fdo.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.fdo.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.fdo.SourceSystemRequest;
+import eu.dissco.core.handlemanager.domain.fdo.TombstoneRecordRequest;
+import eu.dissco.core.handlemanager.domain.fdo.vocabulary.PidStatus;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
-import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
-import eu.dissco.core.handlemanager.exceptions.InvalidRequestRuntimeException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.web.PidResolver;
 import jakarta.annotation.Nullable;
-import java.io.IOException;
 import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -113,7 +111,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -149,10 +146,17 @@ public class FdoRecordService {
   private static final String LOC_REQUEST = "locations";
   public static final Map<String, String> RESOLVABLE_KEYS;
   public static final List<Integer> GENERATED_KEYS;
+  public static final List<Integer> TOMBSTONE_KEYS;
 
   static {
     GENERATED_KEYS = List.of(FDO_RECORD_LICENSE.index(), PID.index(), PID_RECORD_ISSUE_DATE.index(),
         PID_STATUS.index(), HS_ADMIN.index());
+  }
+
+  static {
+    TOMBSTONE_KEYS = List.of(FDO_RECORD_LICENSE.index(), PID.index(), PID_RECORD_ISSUE_DATE.index(),
+        PID_ISSUER.index(), PID_ISSUER_NAME.index(), ISSUED_FOR_AGENT.index(),
+        ISSUED_FOR_AGENT_NAME.index(), STRUCTURAL_TYPE.index(), HS_ADMIN.index());
   }
 
   static {
@@ -171,43 +175,43 @@ public class FdoRecordService {
       throws JsonProcessingException {
     var documentList = new ArrayList<Document>();
     for (var fdoRecord : fdoRecords) {
-      var arrayNode = mapper.createArrayNode();
-      for (var attribute : fdoRecord.attributes()) {
-        arrayNode.add(mapper.valueToTree(attribute));
-      }
-      var vals = mapper.createObjectNode()
-          .set("values", arrayNode);
-      var doc = Document.parse(mapper.writeValueAsString(vals))
-          .append("_id", fdoRecord.handle());
-      if (DIGITAL_SPECIMEN.equals(fdoRecord.fdoType())) {
-        doc.append(NORMALISED_SPECIMEN_OBJECT_ID.get(), fdoRecord.primaryLocalId());
-      } else if (MEDIA_OBJECT.equals(fdoRecord.fdoType())) {
-        doc.append(PRIMARY_MEDIA_ID.get(), fdoRecord.primaryLocalId());
-      } else if (ANNOTATION.equals(fdoRecord.fdoType())) {
-        doc.append(ANNOTATION_HASH.get(), fdoRecord.primaryLocalId());
-      }
+      var doc = Document.parse(mapper.writeValueAsString(fdoRecord));
+      addLocalId(fdoRecord, doc);
       documentList.add(doc);
     }
     return documentList;
   }
 
+  private void addLocalId(FdoRecord fdoRecord, Document doc) {
+    if (fdoRecord.primaryLocalId() == null) {
+      return;
+    }
+    if (DIGITAL_SPECIMEN.equals(fdoRecord.fdoType())) {
+      doc.append(NORMALISED_SPECIMEN_OBJECT_ID.get(), fdoRecord.primaryLocalId());
+    } else if (DIGITAL_MEDIA.equals(fdoRecord.fdoType())) {
+      doc.append(PRIMARY_MEDIA_ID.get(), fdoRecord.primaryLocalId());
+    } else if (ANNOTATION.equals(fdoRecord.fdoType())) {
+      doc.append(ANNOTATION_HASH.get(), fdoRecord.primaryLocalId());
+    }
+  }
+
   /* Handle Record Creation */
   public FdoRecord prepareNewHandleRecord(HandleRecordRequest request, String handle,
       FdoType fdoType, Instant timestamp) throws InvalidRequestException {
-    var fdoAttributes = prepareNewHandleAttributeList(request, handle, fdoType, timestamp);
+    var fdoAttributes = prepareNewHandleAttributes(request, handle, fdoType, timestamp);
     return new FdoRecord(handle, fdoType, fdoAttributes, null);
   }
 
   public FdoRecord prepareUpdatedHandleRecord(HandleRecordRequest recordRequest,
       FdoType fdoType, Instant timestamp, FdoRecord previousVersion, boolean incrementVersion)
       throws InvalidRequestException {
-    var fdoAttributes = prepareUpdatedHandleAttributesRecord(recordRequest,
+    var fdoAttributes = prepareUpdatedHandleAttributes(recordRequest,
         previousVersion.handle(), fdoType,
         timestamp, previousVersion, incrementVersion);
     return new FdoRecord(previousVersion.handle(), fdoType, fdoAttributes, null);
   }
 
-  private List<FdoAttribute> prepareNewHandleAttributeList(HandleRecordRequest request,
+  private List<FdoAttribute> prepareNewHandleAttributes(HandleRecordRequest request,
       String handle,
       FdoType fdoType, Instant timestamp) throws InvalidRequestException {
     var handleAttributes = prepareHandleAttributesFromRequest(request, handle, fdoType, timestamp);
@@ -215,27 +219,29 @@ public class FdoRecordService {
     return handleAttributes;
   }
 
-  private List<FdoAttribute> prepareUpdatedHandleAttributesRecord(HandleRecordRequest request,
+  private List<FdoAttribute> prepareUpdatedHandleAttributes(HandleRecordRequest request,
       String handle, FdoType fdoType, Instant timestamp, FdoRecord previousVersion,
       boolean incrementVersion)
       throws InvalidRequestException {
     var previousAttributes = new ArrayList<>(previousVersion.attributes());
-    var newAttributes = prepareHandleAttributesFromRequest(request, handle, fdoType, timestamp);
-    var generatedAttributes = new ArrayList<FdoAttribute>();
-    for (var prevAttribute : previousAttributes) {
-      if (GENERATED_KEYS.contains(prevAttribute.getIndex())) {
-        generatedAttributes.add(prevAttribute);
-      } else if (PID_RECORD_ISSUE_NUMBER.index() == prevAttribute.getIndex()) {
-        var prevIssueNumber = Integer.parseInt(prevAttribute.getValue());
-        var issueNumber = incrementVersion ? prevIssueNumber + 1 : prevIssueNumber;
-        generatedAttributes.add(
-            new FdoAttribute(PID_RECORD_ISSUE_NUMBER, timestamp, String.valueOf(issueNumber)));
-      }
+    var updatedAttributes = prepareHandleAttributesFromRequest(request, handle, fdoType, timestamp);
+    updatedAttributes.addAll(previousAttributes.stream()
+        .filter(previousAttribute -> GENERATED_KEYS.contains(previousAttribute.getIndex()))
+        .toList());
+    var previousIssueNumber = getField(previousVersion.attributes(), PID_RECORD_ISSUE_NUMBER);
+    if (incrementVersion) {
+      updatedAttributes.add(incrementIssueNumber(previousIssueNumber, timestamp));
+    } else {
+      updatedAttributes.add(previousIssueNumber);
     }
-    newAttributes.addAll(generatedAttributes);
-    return newAttributes;
+    return updatedAttributes;
   }
 
+  private FdoAttribute incrementIssueNumber(FdoAttribute previousVersion, Instant timestamp) {
+    var previousIssueNumber = previousVersion.getValue();
+    var incrementedIssueNumber = String.valueOf(Integer.parseInt(previousIssueNumber) + 1);
+    return new FdoAttribute(PID_RECORD_ISSUE_NUMBER, timestamp, incrementedIssueNumber);
+  }
 
   // These attributes may change on an update
   private ArrayList<FdoAttribute> prepareHandleAttributesFromRequest(
@@ -257,7 +263,7 @@ public class FdoRecordService {
         new FdoAttribute(DIGITAL_OBJECT_TYPE, timestamp, fdoType.getDigitalObjectType()));
     // 4: Digital ObjectName
     handleAttributeList.add(
-        new FdoAttribute(DIGITAL_OBJECT_NAME, timestamp, fdoType.getDigitalObjectType()));
+        new FdoAttribute(DIGITAL_OBJECT_NAME, timestamp, fdoType.getDigitalObjectName()));
     // 6: PID Issuer
     handleAttributeList.add(new FdoAttribute(PID_ISSUER, timestamp, request.getPidIssuer()));
     // 7: PID Issuer Name
@@ -293,41 +299,41 @@ public class FdoRecordService {
         new FdoAttribute(PID_RECORD_ISSUE_NUMBER, timestamp,
             "1")); // This gets replaced on an update
     // 13: Pid Status
-    handleAttributeList.add(new FdoAttribute(PID_STATUS, timestamp, "TEST"));
+    handleAttributeList.add(new FdoAttribute(PID_STATUS, timestamp, PidStatus.ACTIVE.name()));
     // 100 HS Admin
     handleAttributeList.add(new FdoAttribute(timestamp, applicationProperties.getPrefix()));
     return handleAttributeList;
   }
 
   /* DOI Record Creation */
-  public FdoRecord prepareNewDoiDocument(DoiRecordRequest request, String handle,
-      FdoType fdoType, Instant timestamp) throws InvalidRequestException, JsonProcessingException {
-    var fdoAttributes = prepareNewDoiFdoAttributes(request, handle, fdoType, timestamp);
+  public FdoRecord prepareNewDoiRecord(DoiRecordRequest request, String handle,
+      FdoType fdoType, Instant timestamp) throws InvalidRequestException {
+    var fdoAttributes = prepareNewDoiAttributes(request, handle, fdoType, timestamp);
     return new FdoRecord(handle, fdoType, fdoAttributes, null);
   }
 
-  public FdoRecord prepareUpdatedDoiFdoRecord(DoiRecordRequest request,
+  public FdoRecord prepareUpdatedDoiRecord(DoiRecordRequest request,
       FdoType fdoType, Instant timestamp, FdoRecord previousVersion, boolean incrementVersion)
       throws InvalidRequestException {
-    var fdoAttributes = prepareUpdatedDoiFdoAttributes(request, previousVersion.handle(), fdoType,
+    var fdoAttributes = prepareUpdatedDoiAttributes(request, previousVersion.handle(), fdoType,
         timestamp,
         previousVersion, incrementVersion);
     return new FdoRecord(previousVersion.handle(), fdoType, fdoAttributes, null);
   }
 
-  private List<FdoAttribute> prepareNewDoiFdoAttributes(DoiRecordRequest request,
+  private List<FdoAttribute> prepareNewDoiAttributes(DoiRecordRequest request,
       String handle,
       FdoType fdoType, Instant timestamp) throws InvalidRequestException {
-    var fdoAttributes = prepareNewHandleAttributeList(request, handle, fdoType, timestamp);
+    var fdoAttributes = prepareNewHandleAttributes(request, handle, fdoType, timestamp);
     fdoAttributes.addAll(prepareDoiAttributesFromRequest(request, handle, timestamp));
     return fdoAttributes;
   }
 
-  private List<FdoAttribute> prepareUpdatedDoiFdoAttributes(DoiRecordRequest request,
+  private List<FdoAttribute> prepareUpdatedDoiAttributes(DoiRecordRequest request,
       String handle,
       FdoType fdoType, Instant timestamp, FdoRecord previousVersion, boolean incrementVersion)
       throws InvalidRequestException {
-    var fdoAttributes = prepareUpdatedHandleAttributesRecord(request, handle, fdoType, timestamp,
+    var fdoAttributes = prepareUpdatedHandleAttributes(request, handle, fdoType, timestamp,
         previousVersion,
         incrementVersion);
     fdoAttributes.addAll(prepareDoiAttributesFromRequest(request, handle, timestamp));
@@ -355,21 +361,24 @@ public class FdoRecordService {
   /* Annotation Record Creation */
   public FdoRecord prepareNewAnnotationRecord(AnnotationRequest request, String handle,
       Instant timestamp) throws InvalidRequestException {
-    var fdoAttributes = prepareNewHandleAttributeList(request, handle, ANNOTATION,
+    var fdoAttributes = prepareNewHandleAttributes(request, handle, ANNOTATION,
         timestamp);
     fdoAttributes.addAll(prepareAnnotationAttributesFromRequest(request, timestamp));
-    return new FdoRecord(handle, ANNOTATION, fdoAttributes, request.getAnnotationHash().toString());
+    var localId =
+        request.getAnnotationHash() != null ? request.getAnnotationHash().toString() : null;
+    return new FdoRecord(handle, ANNOTATION, fdoAttributes, localId);
   }
 
-  public FdoRecord prepareUpdatedAnnotationFdoRecord(AnnotationRequest request,
+  public FdoRecord prepareUpdatedAnnotationRecord(AnnotationRequest request,
       Instant timestamp, FdoRecord previousVersion, boolean incrementVersion)
       throws InvalidRequestException {
-    var fdoAttributes = prepareUpdatedHandleAttributesRecord(request, previousVersion.handle(),
+    var fdoAttributes = prepareUpdatedHandleAttributes(request, previousVersion.handle(),
         ANNOTATION,
         timestamp, previousVersion, incrementVersion);
     fdoAttributes.addAll(prepareAnnotationAttributesFromRequest(request, timestamp));
-    return new FdoRecord(previousVersion.handle(), ANNOTATION, fdoAttributes,
-        request.getAnnotationHash().toString());
+    var localId =
+        request.getAnnotationHash() == null ? null : request.getAnnotationHash().toString();
+    return new FdoRecord(previousVersion.handle(), ANNOTATION, fdoAttributes, localId);
   }
 
   private List<FdoAttribute> prepareAnnotationAttributesFromRequest(
@@ -385,30 +394,36 @@ public class FdoRecordService {
     handleAttributeList.add(new FdoAttribute(MOTIVATION, timestamp,
         request.getMotivation().toString()));
     // 503 Annotation Hash
-    handleAttributeList.add(new FdoAttribute(PRIMARY_REFERENT_TYPE, timestamp,
-        request.getMotivation().toString()));
+    if (request.getAnnotationHash() != null) {
+      handleAttributeList.add(new FdoAttribute(ANNOTATION_HASH, timestamp,
+          request.getAnnotationHash().toString()));
+    } else {
+      handleAttributeList.add(new FdoAttribute(ANNOTATION_HASH, timestamp,
+          null));
+    }
+
     return handleAttributeList;
   }
 
   /* Data Mapping Record Creation */
-  public FdoRecord prepareNewDataMappingRecord(MappingRequest request, String handle,
+  public FdoRecord prepareNewDataMappingRecord(DataMappingRequest request, String handle,
       Instant timestamp) throws InvalidRequestException {
-    var fdoAttributes = prepareNewHandleAttributeList(request, handle, MAPPING, timestamp);
+    var fdoAttributes = prepareNewHandleAttributes(request, handle, DATA_MAPPING, timestamp);
     fdoAttributes.addAll(prepareDataMappingAttributesFromRequest(request, timestamp));
-    return new FdoRecord(handle, MAPPING, fdoAttributes, null);
+    return new FdoRecord(handle, DATA_MAPPING, fdoAttributes, null);
   }
 
-  public FdoRecord prepareUpdatedDataMappingRecord(MappingRequest request,
+  public FdoRecord prepareUpdatedDataMappingRecord(DataMappingRequest request,
       Instant timestamp, FdoRecord previousVersion, boolean incrementVersion)
       throws InvalidRequestException {
-    var fdoAttributes = prepareUpdatedHandleAttributesRecord(request, previousVersion.handle(),
-        MAPPING, timestamp,
+    var fdoAttributes = prepareUpdatedHandleAttributes(request, previousVersion.handle(),
+        DATA_MAPPING, timestamp,
         previousVersion, incrementVersion);
     fdoAttributes.addAll(prepareDataMappingAttributesFromRequest(request, timestamp));
-    return new FdoRecord(previousVersion.handle(), MAPPING, fdoAttributes, null);
+    return new FdoRecord(previousVersion.handle(), DATA_MAPPING, fdoAttributes, null);
   }
 
-  private List<FdoAttribute> prepareDataMappingAttributesFromRequest(MappingRequest request,
+  private List<FdoAttribute> prepareDataMappingAttributesFromRequest(DataMappingRequest request,
       Instant timestamp) {
     return List.of(
         new FdoAttribute(SOURCE_DATA_STANDARD, timestamp, request.getSourceDataStandard()));
@@ -418,8 +433,8 @@ public class FdoRecordService {
   public FdoRecord prepareNewDigitalSpecimenRecord(DigitalSpecimenRequest request,
       String handle, Instant timestamp)
       throws InvalidRequestException, JsonProcessingException {
-    var fdoAttributes = prepareNewDoiFdoAttributes(request, handle, DIGITAL_SPECIMEN, timestamp);
-    fdoAttributes.addAll(prepareDigitalSpecimenRecordAttributesFromRequest(request, timestamp));
+    var fdoAttributes = prepareNewDoiAttributes(request, handle, DIGITAL_SPECIMEN, timestamp);
+    fdoAttributes.addAll(prepareDigitalSpecimenAttributesFromRequest(request, timestamp));
     return new FdoRecord(handle, DIGITAL_SPECIMEN, fdoAttributes,
         request.getNormalisedPrimarySpecimenObjectId());
   }
@@ -428,14 +443,14 @@ public class FdoRecordService {
       DigitalSpecimenRequest request, Instant timestamp, FdoRecord previousVersion,
       boolean incrementVersion)
       throws InvalidRequestException, JsonProcessingException {
-    var fdoAttributes = prepareUpdatedDoiFdoAttributes(request, previousVersion.handle(),
+    var fdoAttributes = prepareUpdatedDoiAttributes(request, previousVersion.handle(),
         DIGITAL_SPECIMEN, timestamp, previousVersion, incrementVersion);
-    fdoAttributes.addAll(prepareDigitalSpecimenRecordAttributesFromRequest(request, timestamp));
+    fdoAttributes.addAll(prepareDigitalSpecimenAttributesFromRequest(request, timestamp));
     return new FdoRecord(previousVersion.handle(), DIGITAL_SPECIMEN, fdoAttributes,
         request.getNormalisedPrimarySpecimenObjectId());
   }
 
-  private List<FdoAttribute> prepareDigitalSpecimenRecordAttributesFromRequest(
+  private List<FdoAttribute> prepareDigitalSpecimenAttributesFromRequest(
       DigitalSpecimenRequest request, Instant timestamp)
       throws InvalidRequestException, JsonProcessingException {
     var handleAttributeList = new ArrayList<FdoAttribute>();
@@ -454,7 +469,7 @@ public class FdoRecordService {
             request.getPrimarySpecimenObjectIdType().toString())));
     // 204 Primary Specimen Object ID Name
     handleAttributeList.add(new FdoAttribute(PRIMARY_SPECIMEN_OBJECT_ID_NAME, timestamp,
-        getObjectName(request.getSpecimenHost(), request.getPrimarySpecimenObjectIdName())));
+        request.getPrimarySpecimenObjectIdName()));
     // 205 Normalised Specimen Object Id
     handleAttributeList.add(new FdoAttribute(NORMALISED_SPECIMEN_OBJECT_ID, timestamp,
         request.getNormalisedPrimarySpecimenObjectId()));
@@ -465,8 +480,13 @@ public class FdoRecordService {
     handleAttributeList.add(new FdoAttribute(SPECIMEN_OBJECT_ID_ABSENCE_REASON, timestamp,
         request.getSpecimenObjectIdAbsenceReason()));
     // 207 Other Specimen Ids
-    handleAttributeList.add(new FdoAttribute(OTHER_SPECIMEN_IDS, timestamp,
-        mapper.writeValueAsString(request.getOtherSpecimenIds())));
+    if (request.getOtherSpecimenIds() != null && !request.getOtherSpecimenIds().isEmpty()) {
+      handleAttributeList.add(new FdoAttribute(OTHER_SPECIMEN_IDS, timestamp,
+          mapper.writeValueAsString(request.getOtherSpecimenIds())));
+    } else {
+      handleAttributeList.add(new FdoAttribute(OTHER_SPECIMEN_IDS, timestamp,
+          null));
+    }
     // 208 Topic Origin
     if (request.getTopicOrigin() != null) {
       handleAttributeList.add(
@@ -489,9 +509,9 @@ public class FdoRecordService {
       handleAttributeList.add(new FdoAttribute(TOPIC_DISCIPLINE, timestamp, null));
     }
     // 211 Topic Category
-    if (request.getTopicDiscipline() != null) {
+    if (request.getTopicCategory() != null) {
       handleAttributeList.add(new FdoAttribute(TOPIC_CATEGORY, timestamp,
-          request.getTopicDiscipline().toString()));
+          request.getTopicCategory().toString()));
     } else {
       handleAttributeList.add(new FdoAttribute(TOPIC_CATEGORY, timestamp, null));
     }
@@ -537,9 +557,10 @@ public class FdoRecordService {
     } else {
       handleAttributeList.add(new FdoAttribute(MARKED_AS_TYPE, timestamp, null));
     }
-    // 218 Derived From Entity
+    // 218 Was Derived From Entity
     handleAttributeList.add(
-        new FdoAttribute(DERIVED_FROM_ENTITY, timestamp, request.getDerivedFromEntity()));
+        new FdoAttribute(WAS_DERIVED_FROM_ENTITY, timestamp,
+            String.valueOf(request.getDerivedFromEntity() != null)));
     // 219 Catalog ID
     handleAttributeList.add(
         new FdoAttribute(CATALOG_IDENTIFIER, timestamp, request.getCatalogIdentifier()));
@@ -550,7 +571,7 @@ public class FdoRecordService {
   public FdoRecord prepareNewMasRecord(MasRequest request, String handle,
       Instant timestamp)
       throws InvalidRequestException {
-    var fdoAttributes = prepareNewHandleAttributeList(request, handle, MAS, timestamp);
+    var fdoAttributes = prepareNewHandleAttributes(request, handle, MAS, timestamp);
     fdoAttributes.addAll(prepareMasAttributesFromRequest(request, timestamp));
     return new FdoRecord(handle, MAS, fdoAttributes, null);
   }
@@ -558,7 +579,7 @@ public class FdoRecordService {
   public FdoRecord prepareUpdatedMasRecord(MasRequest request,
       Instant timestamp, FdoRecord previousVersion, boolean incrementVersion)
       throws InvalidRequestException {
-    var fdoAttributes = prepareUpdatedHandleAttributesRecord(request, previousVersion.handle(), MAS,
+    var fdoAttributes = prepareUpdatedHandleAttributes(request, previousVersion.handle(), MAS,
         timestamp,
         previousVersion, incrementVersion);
     fdoAttributes.addAll(prepareMasAttributesFromRequest(request, timestamp));
@@ -572,28 +593,26 @@ public class FdoRecordService {
   }
 
   /* Media Object Record Creation */
-  public FdoRecord prepareNewDigitalMediaRecord(MediaObjectRequest request,
-      String handle, Instant timestamp)
-      throws InvalidRequestException, JsonProcessingException {
-    var fdoAttributes = prepareNewDoiFdoAttributes(request, handle, MEDIA_OBJECT, timestamp);
+  public FdoRecord prepareNewDigitalMediaRecord(DigitalMediaRequest request,
+      String handle, Instant timestamp) throws InvalidRequestException {
+    var fdoAttributes = prepareNewDoiAttributes(request, handle, DIGITAL_MEDIA, timestamp);
     fdoAttributes.addAll(prepareDigitalMediaAttributesFromRequest(request, timestamp));
-    return new FdoRecord(handle, MEDIA_OBJECT, fdoAttributes, request.getPrimaryMediaId());
-
+    return new FdoRecord(handle, DIGITAL_MEDIA, fdoAttributes, request.getPrimaryMediaId());
   }
 
-  public FdoRecord prepareUpdatedDigitalMediaRecord(MediaObjectRequest request,
+  public FdoRecord prepareUpdatedDigitalMediaRecord(DigitalMediaRequest request,
       Instant timestamp, FdoRecord previousVersion, boolean incrementVersion)
       throws InvalidRequestException {
-    var fdoAttributes = prepareUpdatedDoiFdoAttributes(request, previousVersion.handle(),
-        MEDIA_OBJECT, timestamp,
+    var fdoAttributes = prepareUpdatedDoiAttributes(request, previousVersion.handle(),
+        DIGITAL_MEDIA, timestamp,
         previousVersion, incrementVersion);
     fdoAttributes.addAll(prepareDigitalMediaAttributesFromRequest(request, timestamp));
-    return new FdoRecord(previousVersion.handle(), MEDIA_OBJECT, fdoAttributes,
+    return new FdoRecord(previousVersion.handle(), DIGITAL_MEDIA, fdoAttributes,
         request.getPrimaryMediaId());
   }
 
   private List<FdoAttribute> prepareDigitalMediaAttributesFromRequest(
-      MediaObjectRequest request, Instant timestamp)
+      DigitalMediaRequest request, Instant timestamp)
       throws InvalidRequestException {
     var handleAttributeList = new ArrayList<FdoAttribute>();
     // 400 Media Host
@@ -660,27 +679,30 @@ public class FdoRecordService {
     handleAttributeList.add(
         new FdoAttribute(LICENSE_NAME, timestamp, request.getLicenseName()));
     // 415 License URL
-    new FdoAttribute(LICENSE_URL, timestamp, request.getLicenseName());
+    handleAttributeList.add(new FdoAttribute(LICENSE_URL, timestamp, request.getLicenseName()));
     // 416 RightsholderName
-    new FdoAttribute(RIGHTSHOLDER_NAME, timestamp, request.getRightsholderName());
+    handleAttributeList.add(
+        new FdoAttribute(RIGHTSHOLDER_NAME, timestamp, request.getRightsholderName()));
     // 417 Rightsholder PID
-    new FdoAttribute(RIGHTSHOLDER_PID, timestamp, request.getRightsholderPid());
+    handleAttributeList.add(
+        new FdoAttribute(RIGHTSHOLDER_PID, timestamp, request.getRightsholderPid()));
     // 418 RightsholderPidType
     if (request.getRightsholderPidType() != null) {
-      new FdoAttribute(RIGHTSHOLDER_PID_TYPE, timestamp,
-          request.getRightsholderPidType().toString());
+      handleAttributeList.add(new FdoAttribute(RIGHTSHOLDER_PID_TYPE, timestamp,
+          request.getRightsholderPidType().toString()));
     } else {
-      new FdoAttribute(RIGHTSHOLDER_PID_TYPE, timestamp, null);
+      handleAttributeList.add(new FdoAttribute(RIGHTSHOLDER_PID_TYPE, timestamp, null));
     }
     // 419 dcterms:conformsTo
-    new FdoAttribute(DC_TERMS_CONFORMS, timestamp, request.getDctermsConformsTo());
+    handleAttributeList.add(
+        new FdoAttribute(DC_TERMS_CONFORMS, timestamp, request.getDctermsConformsTo()));
     return handleAttributeList;
   }
 
   /* Organisation Record Creation */
   public FdoRecord prepareNewOrganisationRecord(OrganisationRequest request, String handle,
       Instant timestamp) throws InvalidRequestException {
-    var fdoAttributes = prepareNewDoiFdoAttributes(request, handle, ORGANISATION, timestamp);
+    var fdoAttributes = prepareNewDoiAttributes(request, handle, ORGANISATION, timestamp);
     fdoAttributes.addAll(prepareOrganisationAttributesFromRequest(request, handle, timestamp));
     return new FdoRecord(handle, ORGANISATION, fdoAttributes, null);
   }
@@ -688,7 +710,7 @@ public class FdoRecordService {
   public FdoRecord prepareUpdatedOrganisationRecord(OrganisationRequest request,
       Instant timestamp, FdoRecord previousVersion, boolean incrementVersion)
       throws InvalidRequestException {
-    var fdoAttributes = prepareUpdatedDoiFdoAttributes(request, previousVersion.handle(),
+    var fdoAttributes = prepareUpdatedDoiAttributes(request, previousVersion.handle(),
         ORGANISATION, timestamp, previousVersion, incrementVersion);
     fdoAttributes.addAll(
         prepareOrganisationAttributesFromRequest(request, previousVersion.handle(), timestamp));
@@ -720,25 +742,54 @@ public class FdoRecordService {
   /* Source System Record Creation */
   public FdoRecord prepareNewSourceSystemRecord(SourceSystemRequest request, String handle,
       Instant timestamp) throws InvalidRequestException {
-    var fdoAttributes = prepareNewHandleAttributeList(request, handle, SOURCE_SYSTEM, timestamp);
+    var fdoAttributes = prepareNewHandleAttributes(request, handle, SOURCE_SYSTEM, timestamp);
     fdoAttributes.addAll(prepareSourceSystemAttributesFromRequest(request, timestamp));
     return new FdoRecord(handle, SOURCE_SYSTEM, fdoAttributes, null);
   }
 
   public FdoRecord prepareUpdatedSourceSystemRecord(SourceSystemRequest request, Instant timestamp,
       FdoRecord previousVersion, boolean incrementVersion) throws InvalidRequestException {
-    var fdoAttributes = prepareUpdatedHandleAttributesRecord(request, previousVersion.handle(),
+    var fdoAttributes = prepareUpdatedHandleAttributes(request, previousVersion.handle(),
         SOURCE_SYSTEM,
         timestamp, previousVersion, incrementVersion);
     fdoAttributes.addAll(prepareSourceSystemAttributesFromRequest(request, timestamp));
-    return new FdoRecord(previousVersion.handle(), ORGANISATION, fdoAttributes, null);
+    return new FdoRecord(previousVersion.handle(), SOURCE_SYSTEM, fdoAttributes, null);
+  }
+
+  /* Tombstone Record Creation */
+  public FdoRecord prepareTombstoneRecord(TombstoneRecordRequest recordRequest, Instant timestamp,
+      FdoRecord previousVersion) throws JsonProcessingException {
+    var fdoAttributes = prepareTombstoneAttributes(recordRequest, timestamp, previousVersion);
+    return new FdoRecord(previousVersion.handle(), previousVersion.fdoType(), fdoAttributes, null);
+  }
+
+  private List<FdoAttribute> prepareTombstoneAttributes(TombstoneRecordRequest request,
+      Instant timestamp, FdoRecord previousVersion) throws JsonProcessingException {
+    var handleAttributeList = new ArrayList<>(previousVersion.attributes());
+    var previousIssueNum = getField(previousVersion.attributes(), PID_RECORD_ISSUE_NUMBER);
+    var newIssueNum = incrementIssueNumber(previousIssueNum, timestamp);
+    handleAttributeList.set(handleAttributeList.indexOf(previousIssueNum), newIssueNum);
+    // 30: Tombstoned Text
+    handleAttributeList.add(
+        new FdoAttribute(TOMBSTONED_TEXT, timestamp, request.getTombstonedText()));
+    // 31: hasRelatedPID
+    if (request.getHasRelatedPID() != null && !request.getHasRelatedPID().isEmpty()) {
+      handleAttributeList.add(new FdoAttribute(HAS_RELATED_PID, timestamp,
+          mapper.writeValueAsString(request.getHasRelatedPID())));
+    } else {
+      handleAttributeList.add(new FdoAttribute(HAS_RELATED_PID, timestamp,
+          mapper.writeValueAsString(Collections.emptyList())));
+    }
+    // 32: tombstonedDate
+    handleAttributeList.add(new FdoAttribute(TOMBSTONED_DATE, timestamp, getDate(timestamp)));
+    return handleAttributeList;
   }
 
   private List<FdoAttribute> prepareSourceSystemAttributesFromRequest(
       SourceSystemRequest request,
       Instant timestamp) {
     return List.of(
-        new FdoAttribute(MAS_NAME, timestamp, request.getSourceSystemName()));
+        new FdoAttribute(SOURCE_SYSTEM_NAME, timestamp, request.getSourceSystemName()));
   }
 
   private String getObjectName(String url, String name) throws InvalidRequestException {
@@ -763,102 +814,6 @@ public class FdoRecordService {
     return url.replace(ROR_DOMAIN, ROR_API_DOMAIN);
   }
 
-  public List<HandleAttribute> prepareUpdateAttributes(byte[] handle, JsonNode requestAttributes,
-      FdoType type) throws InvalidRequestException {
-    requestAttributes = setLocationXmlFromJson(requestAttributes,
-        new String(handle, StandardCharsets.UTF_8), type);
-    Map<String, BaseJsonNode> updateRequestMap = mapper.convertValue(requestAttributes,
-        new TypeReference<Map<String, BaseJsonNode>>() {
-        });
-    try {
-      var updatedAttributeList = new ArrayList<>(
-          updateRequestMap.entrySet().stream()
-              .filter(entry -> !entry.getValue().isNull())
-              .map(entry -> new HandleAttribute(FdoProfile.retrieveIndex(entry.getKey()), handle,
-                  entry.getKey(),
-                  getUpdateAttributeAsByte(entry.getValue())))
-              .toList());
-      updatedAttributeList.addAll(addResolvedNames(updateRequestMap, handle));
-      return updatedAttributeList;
-    } catch (InvalidRequestRuntimeException e) {
-      throw new InvalidRequestException("Unable to parse update request");
-    }
-  }
-
-  private byte[] getUpdateAttributeAsByte(BaseJsonNode attribute) {
-    try {
-      if (attribute instanceof TextNode) {
-        return attribute.asText().getBytes(StandardCharsets.UTF_8);
-      } else {
-        return mapper.writeValueAsString(attribute).getBytes(StandardCharsets.UTF_8);
-      }
-    } catch (JsonProcessingException e) {
-      log.error("Unable to parse update request", e);
-      throw new InvalidRequestRuntimeException();
-    }
-  }
-
-  private List<HandleAttribute> addResolvedNames(Map<String, BaseJsonNode> updateRequestMap,
-      byte[] handle) throws InvalidRequestException {
-    var resolvableKeys = updateRequestMap.entrySet().stream().filter(
-            entry -> RESOLVABLE_KEYS.containsKey(entry.getKey()) && !hasResolvedPairInRequest(
-                updateRequestMap, entry.getKey()))
-        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-    if (resolvableKeys.isEmpty()) {
-      return new ArrayList<>();
-    }
-    ArrayList<HandleAttribute> resolvedPidNameAttributes = new ArrayList<>();
-    for (var resolvableKey : resolvableKeys.entrySet()) {
-      var targetAttribute = RESOLVABLE_KEYS.get(resolvableKey.getKey());
-      var resolvedPid = getObjectName(resolvableKey.getValue().asText(), null);
-      resolvedPidNameAttributes.add(new HandleAttribute(FdoProfile.retrieveIndex(targetAttribute),
-          handle, targetAttribute, resolvedPid.getBytes(StandardCharsets.UTF_8)));
-    }
-    return resolvedPidNameAttributes;
-  }
-
-  private boolean hasResolvedPairInRequest(Map<String, BaseJsonNode> updateRequestMap,
-      String pidToResolve) {
-    var targetName = RESOLVABLE_KEYS.get(pidToResolve);
-    return updateRequestMap.containsKey(targetName);
-  }
-
-  public List<HandleAttribute> prepareTombstoneAttributes(byte[] handle,
-      JsonNode requestAttributes) throws InvalidRequestException {
-    var tombstoneAttributes = new ArrayList<>(
-        prepareUpdateAttributes(handle, requestAttributes, FdoType.TOMBSTONE));
-    tombstoneAttributes.add(new HandleAttribute(PID_STATUS, handle, "ARCHIVED"));
-    tombstoneAttributes.add(genLandingPage(handle));
-    return tombstoneAttributes;
-  }
-
-  private HandleAttribute genLandingPage(byte[] handle) throws InvalidRequestException {
-    var landingPage = new String[]{"Placeholder landing page"};
-    var data = setLocationsByte(landingPage, new String(handle, StandardCharsets.UTF_8),
-        FdoType.TOMBSTONE);
-    return new HandleAttribute(LOC.index(), handle, LOC.get(), data);
-  }
-
-  private JsonNode setLocationXmlFromJson(JsonNode request, String handle, FdoType type)
-      throws InvalidRequestException {
-    // Format request so that the given locations array is formatted according to 10320/loc specifications
-    if (request.findValue(LOC_REQUEST) == null) {
-      return request;
-    }
-    JsonNode locNode = request.get(LOC_REQUEST);
-    ObjectNode requestObjectNode = request.deepCopy();
-    try {
-      String[] locArr = mapper.treeToValue(locNode, String[].class);
-      requestObjectNode.put(LOC.get(),
-          new String(setLocationsByte(locArr, handle, type), StandardCharsets.UTF_8));
-      requestObjectNode.remove(LOC_REQUEST);
-    } catch (IOException e) {
-      throw new InvalidRequestException(
-          "An error has occurred parsing \"locations\" array. " + e.getMessage());
-    }
-    return requestObjectNode;
-  }
-
   private String getDate(Instant timestamp) {
     return dt.format(timestamp);
   }
@@ -870,13 +825,13 @@ public class FdoRecordService {
         String ui = applicationProperties.getUiUrl() + "/ds/" + handle;
         return List.of(api, ui);
       }
-      case MAPPING -> {
+      case DATA_MAPPING -> {
         return List.of(applicationProperties.getOrchestrationUrl() + "/mapping/" + handle);
       }
       case SOURCE_SYSTEM -> {
         return List.of(applicationProperties.getOrchestrationUrl() + "/source-system/" + handle);
       }
-      case MEDIA_OBJECT -> {
+      case DIGITAL_MEDIA -> {
         String api = applicationProperties.getApiUrl() + "/digitalMedia/" + handle;
         String ui = applicationProperties.getUiUrl() + "/dm/" + handle;
         return List.of(api, ui);
@@ -928,37 +883,6 @@ public class FdoRecordService {
     }
     try {
       return documentToString(doc);
-    } catch (TransformerException e) {
-      throw new InvalidRequestException("An error has occurred parsing location data");
-    }
-  }
-
-  // Todo delete
-  public byte[] setLocationsByte(@Nullable String[] userLocations, String handle, FdoType type)
-      throws InvalidRequestException {
-
-    DocumentBuilder documentBuilder;
-    try {
-      documentBuilder = dbf.newDocumentBuilder();
-    } catch (ParserConfigurationException e) {
-      throw new InvalidRequestException(e.getMessage());
-    }
-
-    var doc = documentBuilder.newDocument();
-    var locations = doc.createElement(LOC_REQUEST);
-    doc.appendChild(locations);
-    String[] objectLocations = concatLocations(userLocations, defaultLocations(handle, type));
-
-    for (int i = 0; i < objectLocations.length; i++) {
-      var locs = doc.createElement("location");
-      locs.setAttribute("id", String.valueOf(i));
-      locs.setAttribute("href", objectLocations[i]);
-      String weight = i < 1 ? "1" : "0";
-      locs.setAttribute("weight", weight);
-      locations.appendChild(locs);
-    }
-    try {
-      return documentToString(doc).getBytes(StandardCharsets.UTF_8);
     } catch (TransformerException e) {
       throw new InvalidRequestException("An error has occurred parsing location data");
     }

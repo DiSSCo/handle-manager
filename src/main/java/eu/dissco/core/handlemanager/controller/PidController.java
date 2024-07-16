@@ -6,7 +6,6 @@ import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ID;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
-import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperReadSingle;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.requests.RollbackRequest;
 import eu.dissco.core.handlemanager.domain.validation.JsonSchemaValidator;
@@ -18,7 +17,6 @@ import eu.dissco.core.handlemanager.service.PidService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -54,13 +52,13 @@ public class PidController {
   // Getters
   @Operation(summary = "Resolve single PID record")
   @GetMapping("/{prefix}/{suffix}")
-  public ResponseEntity<JsonApiWrapperReadSingle> resolvePid(@PathVariable("prefix") String prefix,
+  public ResponseEntity<JsonApiWrapperRead> resolvePid(@PathVariable("prefix") String prefix,
       @PathVariable("suffix") String suffix, HttpServletRequest r) throws PidResolutionException {
     String path = applicationProperties.getUiUrl() + r.getRequestURI();
     String handle = prefix + "/" + suffix;
 
     if (prefix.equals(applicationProperties.getPrefix())) {
-      var node = service.resolveSingleRecord(handle.getBytes(StandardCharsets.UTF_8), path);
+      var node = service.resolveSingleRecord(handle, path);
       return ResponseEntity.status(HttpStatus.OK).body(node);
     }
     throw new PidResolutionException(
@@ -80,10 +78,8 @@ public class PidController {
           "Attempting to resolve more than maximum permitted PIDs in a single request. Maximum handles: "
               + applicationProperties.getMaxHandles());
     }
-    List<byte[]> handleBytes = new ArrayList<>();
-    handles.forEach(h -> handleBytes.add(h.getBytes(StandardCharsets.UTF_8)));
 
-    return ResponseEntity.status(HttpStatus.OK).body(service.resolveBatchRecord(handleBytes, path));
+    return ResponseEntity.status(HttpStatus.OK).body(service.resolveBatchRecord(handles, path));
   }
 
   @Operation(summary = "Given a physical identifier (i.e. local identifier), resolve PID record")
@@ -171,7 +167,8 @@ public class PidController {
               + new String(handle, StandardCharsets.UTF_8)
               + ". Body: " + new String(handleRequest, StandardCharsets.UTF_8));
     }
-    return ResponseEntity.status(HttpStatus.OK).body(service.archiveRecordBatch(List.of(request)));
+    return ResponseEntity.status(HttpStatus.OK)
+        .body(service.tombstoneRecordBatch(List.of(request)));
   }
 
   @Operation(summary = "rollback handle creation")
@@ -227,7 +224,7 @@ public class PidController {
       schemaValidator.validatePutRequest(request);
     }
     log.info("Received valid archive request");
-    return ResponseEntity.status(HttpStatus.OK).body(service.archiveRecordBatch(requests));
+    return ResponseEntity.status(HttpStatus.OK).body(service.tombstoneRecordBatch(requests));
   }
 
 }

@@ -12,6 +12,7 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DIGITAL_OBJECT_
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DIGITAL_OBJECT_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.FDO_PROFILE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.FDO_RECORD_LICENSE;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.HAS_RELATED_PID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.INFORMATION_ARTEFACT_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.ISSUED_FOR_AGENT;
@@ -63,12 +64,16 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SPECIMEN_OBJECT
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.STRUCTURAL_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TARGET_PID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TARGET_TYPE;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOMBSTONE_TEXT;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOMBSTONED_DATE;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOMBSTONED_TEXT;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOPIC_CATEGORY;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOPIC_DISCIPLINE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOPIC_DOMAIN;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOPIC_ORIGIN;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.WAS_DERIVED_FROM_ENTITY;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoType.ANNOTATION;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_MEDIA;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_SPECIMEN;
 import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ID;
@@ -79,34 +84,45 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.fdo.AnnotationRequest;
+import eu.dissco.core.handlemanager.domain.fdo.DataMappingRequest;
+import eu.dissco.core.handlemanager.domain.fdo.DigitalMediaRequest;
 import eu.dissco.core.handlemanager.domain.fdo.DigitalSpecimenRequest;
 import eu.dissco.core.handlemanager.domain.fdo.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 import eu.dissco.core.handlemanager.domain.fdo.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.fdo.MappingRequest;
 import eu.dissco.core.handlemanager.domain.fdo.MasRequest;
-import eu.dissco.core.handlemanager.domain.fdo.MediaObjectRequest;
 import eu.dissco.core.handlemanager.domain.fdo.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.fdo.SourceSystemRequest;
 import eu.dissco.core.handlemanager.domain.fdo.TombstoneRecordRequest;
 import eu.dissco.core.handlemanager.domain.fdo.vocabulary.annotation.Motivation;
 import eu.dissco.core.handlemanager.domain.fdo.vocabulary.media.LinkedDigitalObjectType;
+import eu.dissco.core.handlemanager.domain.fdo.vocabulary.specimen.BaseTypeOfSpecimen;
+import eu.dissco.core.handlemanager.domain.fdo.vocabulary.specimen.LivingOrPreserved;
+import eu.dissco.core.handlemanager.domain.fdo.vocabulary.specimen.MaterialOrDigitalEntity;
+import eu.dissco.core.handlemanager.domain.fdo.vocabulary.specimen.MaterialSampleType;
+import eu.dissco.core.handlemanager.domain.fdo.vocabulary.specimen.OtherSpecimenId;
 import eu.dissco.core.handlemanager.domain.fdo.vocabulary.specimen.PrimarySpecimenObjectIdType;
 import eu.dissco.core.handlemanager.domain.fdo.vocabulary.specimen.StructuralType;
+import eu.dissco.core.handlemanager.domain.fdo.vocabulary.specimen.TopicCategory;
+import eu.dissco.core.handlemanager.domain.fdo.vocabulary.specimen.TopicDiscipline;
+import eu.dissco.core.handlemanager.domain.fdo.vocabulary.specimen.TopicDomain;
+import eu.dissco.core.handlemanager.domain.fdo.vocabulary.specimen.TopicOrigin;
+import eu.dissco.core.handlemanager.domain.fdo.vocabulary.tombstone.HasRelatedPid;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiDataLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
-import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperReadSingle;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
+import eu.dissco.core.handlemanager.schema.Mas.PidStatus;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import javax.xml.XMLConstants;
@@ -119,22 +135,24 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 import org.springframework.core.io.ClassPathResource;
-import org.w3c.dom.Document;
 
 @Slf4j
 public class TestUtils {
 
   public static final String ISSUE_DATE_TESTVAL = "2022-11-01T09:59:24.000Z";
+  public static final String UPDATE_DATE_TESTVAL = "2023-11-01T09:59:24.000Z";
   public static final Instant CREATED = Instant.parse(ISSUE_DATE_TESTVAL);
+  public static final Instant UPDATED = Instant.parse(UPDATE_DATE_TESTVAL);
   public static final String PREFIX = "20.5000.1025";
   public static final String HANDLE = PREFIX + "/QRS-321-ABC";
   public static final String SUFFIX = "QRS-321-ABC";
   public static final String HANDLE_ALT = PREFIX + "/ABC-123-QRS";
-  public static final List<String> HANDLE_LIST_STR;
 
   // Handles
   public static final String HANDLE_DOMAIN = "https://hdl.handle.net/";
+  public static final String DOI_DOMAIN = "https://doi.org/";
   public static final String ROR_DOMAIN = "https://ror.org/";
   public static final String ISSUED_FOR_AGENT_TESTVAL = ROR_DOMAIN + "0566bfb96";
   public static final String PID_ISSUER_TESTVAL_OTHER = HANDLE_DOMAIN + "20.5000.1025/PID-ISSUER";
@@ -148,7 +166,7 @@ public class TestUtils {
 
 
   // Generated Attributes
-  public static final String PID_STATUS_TESTVAL = "TEST";
+  public static final String PID_STATUS_TESTVAL = PidStatus.ACTIVE.name();
   public static final String REFERENT_DOI_NAME_TESTVAL = PREFIX + "/" + SUFFIX;
   //DOIs
 
@@ -176,7 +194,8 @@ public class TestUtils {
   public static final String MAS_NAME_TESTVAL = "Plant Organ detection";
 
   public static final String API_URL = "https://sandbox.dissco.tech/api/v1";
-  public static final String UI_URL = "https://sandbox.dissco.tech/";
+  public static final String UI_URL = "https://sandbox.dissco.tech";
+  public static final String PATH = UI_URL + HANDLE;
   public static final String ORCHESTRATION_URL = "https://orchestration.dissco.tech/api/v1";
   public static final String PTR_TYPE_DOI = "doi";
   public final static String PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL = "BOTANICAL.QRS.123";
@@ -189,10 +208,6 @@ public class TestUtils {
   // Pid Type Record vals
   public static ObjectMapper MAPPER = new ObjectMapper().findAndRegisterModules();
 
-  static {
-    HANDLE_LIST_STR = List.of(HANDLE, HANDLE_ALT);
-  }
-
   public static TransformerFactory TRANSFORMER_FACTORY = TransformerFactory.newInstance();
   public static DocumentBuilderFactory DOC_BUILDER_FACTORY = DocumentBuilderFactory.newInstance();
 
@@ -200,7 +215,7 @@ public class TestUtils {
     throw new IllegalStateException("Utility class");
   }
 
-  // Single Handle Attribute Lists
+  // Handle Attribute Lists
   public static FdoRecord givenHandleFdoRecord(String handle) throws Exception {
     return new FdoRecord(handle, FdoType.HANDLE, genHandleRecordAttributes(handle), null);
   }
@@ -209,95 +224,103 @@ public class TestUtils {
     return genHandleRecordAttributes(handle, FdoType.HANDLE);
   }
 
-
   public static List<FdoAttribute> genHandleRecordAttributes(String handle, FdoType fdoType)
       throws Exception {
+    return genHandleRecordAttributes(handle, CREATED, fdoType);
+  }
+
+
+  public static List<FdoAttribute> genHandleRecordAttributes(String handle, Instant timestamp,
+      FdoType fdoType) throws Exception {
     List<FdoAttribute> fdoAttributes = new ArrayList<>();
     var request = givenHandleRecordRequestObject();
-    var loc = setLocations(request.getLocations(), handle, fdoType, false);
+    var loc = setLocations(request.getLocations(), handle, fdoType);
     fdoAttributes.add(new FdoAttribute(LOC, CREATED, loc));
 
     // 1: FDO Profile
-    fdoAttributes.add(new FdoAttribute(FDO_PROFILE, CREATED, fdoType.getFdoProfile()));
+    fdoAttributes.add(new FdoAttribute(FDO_PROFILE, timestamp, fdoType.getFdoProfile()));
 
     // 2: FDO Record License
-    fdoAttributes.add(new FdoAttribute(FDO_RECORD_LICENSE, CREATED,
+    fdoAttributes.add(new FdoAttribute(FDO_RECORD_LICENSE, timestamp,
         "https://creativecommons.org/publicdomain/zero/1.0/"));
 
     // 3: DigitalObjectType
     fdoAttributes.add(
-        new FdoAttribute(DIGITAL_OBJECT_TYPE, CREATED, fdoType.getDigitalObjectType()));
+        new FdoAttribute(DIGITAL_OBJECT_TYPE, timestamp, fdoType.getDigitalObjectType()));
 
     // 4: DigitalObjectName
     fdoAttributes.add(
-        new FdoAttribute(DIGITAL_OBJECT_NAME, CREATED, fdoType.getDigitalObjectName()));
+        new FdoAttribute(DIGITAL_OBJECT_NAME, timestamp, fdoType.getDigitalObjectName()));
 
     // 5: Pid
-    fdoAttributes.add(new FdoAttribute(PID, CREATED, HANDLE_DOMAIN + handle));
+    fdoAttributes.add(new FdoAttribute(PID, timestamp, fdoType.getDomain() + handle));
 
     // 6: PidIssuer
-    fdoAttributes.add(new FdoAttribute(PID_ISSUER, CREATED, request.getPidIssuer()));
+    fdoAttributes.add(new FdoAttribute(PID_ISSUER, timestamp, request.getPidIssuer()));
 
     // 7: pidIssuerName
-    fdoAttributes.add(new FdoAttribute(PID_ISSUER_NAME, CREATED, PID_ISSUER_TESTVAL_OTHER));
+    fdoAttributes.add(new FdoAttribute(PID_ISSUER_NAME, timestamp, PID_ISSUER_TESTVAL_OTHER));
 
     // 8: issuedForAgent
-    fdoAttributes.add(new FdoAttribute(ISSUED_FOR_AGENT, CREATED, request.getIssuedForAgent()));
+    fdoAttributes.add(new FdoAttribute(ISSUED_FOR_AGENT, timestamp, request.getIssuedForAgent()));
 
     // 9: issuedForAgentName
-    fdoAttributes.add(new FdoAttribute(ISSUED_FOR_AGENT_NAME, CREATED, ISSUED_FOR_AGENT_TESTVAL));
+    fdoAttributes.add(new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp, ISSUED_FOR_AGENT_TESTVAL));
 
     // 10: pidRecordIssueDate
-    fdoAttributes.add(new FdoAttribute(PID_RECORD_ISSUE_DATE, CREATED, ISSUE_DATE_TESTVAL));
+    fdoAttributes.add(new FdoAttribute(PID_RECORD_ISSUE_DATE, timestamp, ISSUE_DATE_TESTVAL));
 
     // 11: pidRecordIssueNumber
-    fdoAttributes.add(new FdoAttribute(PID_RECORD_ISSUE_NUMBER, CREATED, "1"));
+    fdoAttributes.add(new FdoAttribute(PID_RECORD_ISSUE_NUMBER, timestamp, "1"));
 
     // 12: structuralType
     fdoAttributes.add(
-        new FdoAttribute(STRUCTURAL_TYPE, CREATED, STRUCTURAL_TYPE_TESTVAL.toString()));
+        new FdoAttribute(STRUCTURAL_TYPE, timestamp, STRUCTURAL_TYPE_TESTVAL.toString()));
 
     // 13: PidStatus
-    fdoAttributes.add(new FdoAttribute(PID_STATUS, CREATED, PID_STATUS_TESTVAL));
+    fdoAttributes.add(new FdoAttribute(PID_STATUS, timestamp, PID_STATUS_TESTVAL));
+
+    // 100 ADMIN
+    fdoAttributes.add(new FdoAttribute(timestamp, PREFIX));
 
     return fdoAttributes;
   }
 
-  public static List<FdoAttribute> genHandleRecordAttributesAltLoc(String handle) throws Exception {
-    var attributes = genHandleRecordAttributes(handle, FdoType.HANDLE);
-    var locOriginal = setLocations(LOC_TESTVAL, handle, FdoType.HANDLE, false);
-    var locOriginalAttr = new FdoAttribute(LOC, CREATED, locOriginal);
-    var locAlt = setLocations(LOC_ALT_TESTVAL, handle, FdoType.HANDLE, false);
-    var locAltAttr = new FdoAttribute(LOC, CREATED, locAlt);
-    attributes.set(attributes.indexOf(locOriginalAttr), locAltAttr);
-    return attributes;
-  }
-
-  public static List<FdoAttribute> genTombstoneRecordFullAttributes(String handle)
+  public static FdoRecord givenUpdatedFdoRecord(FdoType fdoType, String primaryLocalId)
       throws Exception {
-    var fdoAttributes = genHandleRecordAttributes(handle, FdoType.TOMBSTONE);
-    var oldPidStatus = new FdoAttribute(PID_STATUS, CREATED, PID_STATUS_TESTVAL);
-    fdoAttributes.addAll(genHandleRecordAttributes(handle, FdoType.TOMBSTONE));
-    fdoAttributes.remove(oldPidStatus);
-    fdoAttributes = new ArrayList<>(
-        (fdoAttributes.stream().filter(row -> row.getIndex() != LOC.index())).toList());
-    fdoAttributes.add(givenLandingPageAttribute(handle));
-    return fdoAttributes;
+    var attributes = new ArrayList<>(genAttributes(fdoType, HANDLE, UPDATED));
+    var locUpdated = setLocations(LOC_ALT_TESTVAL, HANDLE, fdoType);
+    var attributesWithUpdatedTimeStamp = attributes.stream().map(attribute -> {
+      if (attribute.getIndex() == LOC.index()) {
+        return new FdoAttribute(LOC, UPDATED, locUpdated);
+      }
+      if (attribute.getIndex() == FDO_RECORD_LICENSE.index()) {
+        return new FdoAttribute(FDO_RECORD_LICENSE, CREATED, attribute.getValue());
+      }
+      if (attribute.getIndex() == PID.index()) {
+        return new FdoAttribute(PID, CREATED, attribute.getValue());
+      }
+      if (attribute.getIndex() == PID_RECORD_ISSUE_DATE.index()) {
+        return new FdoAttribute(PID_RECORD_ISSUE_DATE, CREATED, attribute.getValue());
+      }
+      if (attribute.getIndex() == PID_RECORD_ISSUE_NUMBER.index()) {
+        return new FdoAttribute(PID_RECORD_ISSUE_NUMBER, UPDATED, "2");
+      }
+      if (attribute.getIndex() == PID_STATUS.index()) {
+        return new FdoAttribute(PID_STATUS, CREATED, attribute.getValue());
+      }
+      if (attribute.getIndex() == HS_ADMIN.index()) {
+        return new FdoAttribute(CREATED, PREFIX);
+      }
+      return attribute;
+    }).toList();
+    return new FdoRecord(HANDLE, fdoType, attributesWithUpdatedTimeStamp, primaryLocalId);
   }
 
   public static List<FdoAttribute> genUpdateRecordAttributesAltLoc(String handle)
       throws ParserConfigurationException, TransformerException {
-    var locAlt = setLocations(LOC_ALT_TESTVAL, handle, FdoType.HANDLE, false);
+    var locAlt = setLocations(LOC_ALT_TESTVAL, handle, FdoType.HANDLE);
     return List.of(new FdoAttribute(LOC, CREATED, locAlt));
-  }
-
-  public static List<FdoAttribute> genTombstoneRecordRequestAttributes(String handle)
-      throws Exception {
-    var tombstoneAttributes = new ArrayList<FdoAttribute>();
-    tombstoneAttributes.add(new FdoAttribute(TOMBSTONE_TEXT, CREATED, TOMBSTONE_TEXT_TESTVAL));
-    tombstoneAttributes.add(new FdoAttribute(PID_STATUS, CREATED, "ARCHIVED"));
-    tombstoneAttributes.add(givenLandingPageAttribute(handle));
-    return tombstoneAttributes;
   }
 
   public static FdoRecord givenDoiFdoRecord(String handle) throws Exception {
@@ -311,302 +334,308 @@ public class TestUtils {
 
   public static List<FdoAttribute> genDoiRecordAttributes(String handle, FdoType type,
       DoiRecordRequest request) throws Exception {
-    var fdoRecord = genHandleRecordAttributes(handle, type);
+    return genDoiRecordAttributes(handle, CREATED, type, request);
+  }
+
+  public static List<FdoAttribute> genDoiRecordAttributes(String handle, Instant timestamp,
+      FdoType type, DoiRecordRequest request) throws Exception {
+    var fdoRecord = genHandleRecordAttributes(handle, timestamp, type);
 
     // 40: referentType
-    fdoRecord.add(new FdoAttribute(REFERENT_TYPE, CREATED, request.getReferentType()));
+    fdoRecord.add(new FdoAttribute(REFERENT_TYPE, timestamp, request.getReferentType()));
 
     // 41: referentDoiName
-    fdoRecord.add(new FdoAttribute(REFERENT_DOI_NAME, CREATED, REFERENT_DOI_NAME_TESTVAL));
+    fdoRecord.add(new FdoAttribute(REFERENT_DOI_NAME, timestamp, REFERENT_DOI_NAME_TESTVAL));
 
     // 42: referentName
-    fdoRecord.add(new FdoAttribute(REFERENT_NAME, CREATED, request.getReferentName()));
+    fdoRecord.add(new FdoAttribute(REFERENT_NAME, timestamp, request.getReferentName()));
 
     // 43: primaryReferentType
     fdoRecord.add(
-        new FdoAttribute(PRIMARY_REFERENT_TYPE, CREATED, request.getPrimaryReferentType()));
+        new FdoAttribute(PRIMARY_REFERENT_TYPE, timestamp, request.getPrimaryReferentType()));
     return fdoRecord;
   }
 
   public static FdoRecord givenDigitalSpecimenFdoRecord(String handle) throws Exception {
-    return new FdoRecord(handle, FdoType.DIGITAL_SPECIMEN, genDigitalSpecimenAttributes(handle),
+    return new FdoRecord(handle, FdoType.DIGITAL_SPECIMEN,
+        genDigitalSpecimenAttributes(handle, givenDigitalSpecimenRequestObjectNullOptionals()),
         NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL);
   }
 
   public static List<FdoAttribute> genDigitalSpecimenAttributes(String handle,
       DigitalSpecimenRequest request) throws Exception {
-    List<FdoAttribute> fdoRecord = genDoiRecordAttributes(handle, FdoType.DIGITAL_SPECIMEN,
-        request);
+    return genDigitalSpecimenAttributes(handle, request, CREATED);
+
+  }
+
+  public static List<FdoAttribute> genDigitalSpecimenAttributes(String handle,
+      DigitalSpecimenRequest request, Instant timestamp) throws Exception {
+    List<FdoAttribute> fdoRecord = genDoiRecordAttributes(handle, timestamp,
+        FdoType.DIGITAL_SPECIMEN, request);
     // 200: Specimen Host
-    fdoRecord.add(new FdoAttribute(SPECIMEN_HOST, CREATED, request.getSpecimenHost()));
-
+    fdoRecord.add(new FdoAttribute(SPECIMEN_HOST, timestamp, request.getSpecimenHost()));
     // 201: Specimen Host name
-    fdoRecord.add(new FdoAttribute(SPECIMEN_HOST_NAME, CREATED, SPECIMEN_HOST_NAME_TESTVAL));
-
+    fdoRecord.add(new FdoAttribute(SPECIMEN_HOST_NAME, timestamp, SPECIMEN_HOST_NAME_TESTVAL));
     // 202: primarySpecimenObjectId
-    fdoRecord.add(new FdoAttribute(PRIMARY_SPECIMEN_OBJECT_ID, CREATED,
+    fdoRecord.add(new FdoAttribute(PRIMARY_SPECIMEN_OBJECT_ID, timestamp,
         request.getPrimarySpecimenObjectId()));
-
     // 203: primarySpecimenObjectIdType
-    fdoRecord.add(new FdoAttribute(PRIMARY_SPECIMEN_OBJECT_ID_TYPE, CREATED,
+    fdoRecord.add(new FdoAttribute(PRIMARY_SPECIMEN_OBJECT_ID_TYPE, timestamp,
         request.getPrimarySpecimenObjectIdType().toString()));
-
-    // 204-217 are optional
-
     // 204: primarySpecimenObjectIdName
-    if (request.getPrimarySpecimenObjectIdName() != null) {
-      fdoRecord.add(new FdoAttribute(PRIMARY_SPECIMEN_OBJECT_ID_NAME, CREATED,
-          request.getPrimarySpecimenObjectIdName()));
-    }
-
+    fdoRecord.add(new FdoAttribute(PRIMARY_SPECIMEN_OBJECT_ID_NAME, timestamp,
+        request.getPrimarySpecimenObjectIdName()));
     // 205: normalisedSpecimenObjectId
-    fdoRecord.add(new FdoAttribute(NORMALISED_SPECIMEN_OBJECT_ID, CREATED,
+    fdoRecord.add(new FdoAttribute(NORMALISED_SPECIMEN_OBJECT_ID, timestamp,
         request.getNormalisedPrimarySpecimenObjectId()));
-
     // 206: specimenObjectIdAbsenceReason
-    if (request.getSpecimenObjectIdAbsenceReason() != null) {
-      fdoRecord.add(new FdoAttribute(SPECIMEN_OBJECT_ID_ABSENCE_REASON, CREATED,
-          request.getSpecimenObjectIdAbsenceReason()));
-    }
-
+    fdoRecord.add(new FdoAttribute(SPECIMEN_OBJECT_ID_ABSENCE_REASON, timestamp,
+        request.getSpecimenObjectIdAbsenceReason()));
     // 207: otherSpecimenIds
     if (request.getOtherSpecimenIds() != null && !request.getOtherSpecimenIds().isEmpty()) {
       var otherSpecimenIds = MAPPER.writeValueAsString(request.getOtherSpecimenIds());
-      fdoRecord.add(new FdoAttribute(OTHER_SPECIMEN_IDS, CREATED, otherSpecimenIds));
+      fdoRecord.add(new FdoAttribute(OTHER_SPECIMEN_IDS, timestamp, otherSpecimenIds));
+    } else {
+      fdoRecord.add(new FdoAttribute(OTHER_SPECIMEN_IDS, timestamp, null));
     }
-
     // 208: topicOrigin
     if (request.getTopicOrigin() != null) {
-      fdoRecord.add(new FdoAttribute(TOPIC_ORIGIN, CREATED, request.getTopicOrigin().toString()));
+      fdoRecord.add(new FdoAttribute(TOPIC_ORIGIN, timestamp, request.getTopicOrigin().toString()));
+    } else {
+      fdoRecord.add(new FdoAttribute(TOPIC_ORIGIN, timestamp, null));
     }
-
     // 209: topicDomain
     if (request.getTopicDomain() != null) {
-      fdoRecord.add(new FdoAttribute(TOPIC_DOMAIN, CREATED, request.getTopicDomain().toString()));
+      fdoRecord.add(new FdoAttribute(TOPIC_DOMAIN, timestamp, request.getTopicDomain().toString()));
+    } else {
+      fdoRecord.add(new FdoAttribute(TOPIC_DOMAIN, timestamp, null));
     }
-
     // 210: topicDiscipline
     if (request.getTopicDiscipline() != null) {
       fdoRecord.add(
-          new FdoAttribute(TOPIC_DISCIPLINE, CREATED, request.getTopicDiscipline().toString()));
+          new FdoAttribute(TOPIC_DISCIPLINE, timestamp, request.getTopicDiscipline().toString()));
+    } else {
+      fdoRecord.add(new FdoAttribute(TOPIC_DISCIPLINE, timestamp, null));
     }
-
     // 211: topicCategory
     if (request.getTopicCategory() != null) {
       fdoRecord.add(
-          new FdoAttribute(TOPIC_CATEGORY, CREATED, request.getTopicCategory().toString()));
+          new FdoAttribute(TOPIC_CATEGORY, timestamp, request.getTopicCategory().toString()));
+    } else {
+      fdoRecord.add(new FdoAttribute(TOPIC_CATEGORY, timestamp, null));
     }
-
     // 212: livingOrPreserved
     if (request.getLivingOrPreserved() != null) {
-      fdoRecord.add(new FdoAttribute(LIVING_OR_PRESERVED, CREATED,
+      fdoRecord.add(new FdoAttribute(LIVING_OR_PRESERVED, timestamp,
           request.getLivingOrPreserved().toString()));
+    } else {
+      fdoRecord.add(new FdoAttribute(LIVING_OR_PRESERVED, timestamp, null));
     }
-
     // 213: baseTypeOfSpecimen
     if (request.getBaseTypeOfSpecimen() != null) {
-      fdoRecord.add(new FdoAttribute(BASE_TYPE_OF_SPECIMEN, CREATED,
+      fdoRecord.add(new FdoAttribute(BASE_TYPE_OF_SPECIMEN, timestamp,
           request.getBaseTypeOfSpecimen().toString()));
+    } else {
+      fdoRecord.add(new FdoAttribute(BASE_TYPE_OF_SPECIMEN, timestamp, null));
     }
-
     // 214: informationArtefactType
     if (request.getInformationArtefactType() != null) {
-      fdoRecord.add(new FdoAttribute(INFORMATION_ARTEFACT_TYPE, CREATED,
+      fdoRecord.add(new FdoAttribute(INFORMATION_ARTEFACT_TYPE, timestamp,
           request.getInformationArtefactType().toString()));
+    } else {
+      fdoRecord.add(new FdoAttribute(INFORMATION_ARTEFACT_TYPE, timestamp, null));
     }
-
     // 215: materialSampleType
     if (request.getMaterialSampleType() != null) {
-      fdoRecord.add(new FdoAttribute(MATERIAL_SAMPLE_TYPE, CREATED,
+      fdoRecord.add(new FdoAttribute(MATERIAL_SAMPLE_TYPE, timestamp,
           request.getMaterialSampleType().toString()));
+    } else {
+      fdoRecord.add(new FdoAttribute(MATERIAL_SAMPLE_TYPE, timestamp, null));
     }
-
     // 216: materialOrDigitalEntity
-    if (request.getMaterialSampleType() != null) {
-      fdoRecord.add(new FdoAttribute(MATERIAL_OR_DIGITAL_ENTITY, CREATED,
+    if (request.getMaterialOrDigitalEntity() != null) {
+      fdoRecord.add(new FdoAttribute(MATERIAL_OR_DIGITAL_ENTITY, timestamp,
           request.getMaterialOrDigitalEntity().toString()));
+    } else {
+      fdoRecord.add(new FdoAttribute(MATERIAL_OR_DIGITAL_ENTITY, timestamp, null));
     }
-
     // 217: markedAsType
     if (request.getMarkedAsType() != null) {
       fdoRecord.add(
-          new FdoAttribute(MARKED_AS_TYPE, CREATED, request.getMarkedAsType().toString()));
+          new FdoAttribute(MARKED_AS_TYPE, timestamp, request.getMarkedAsType().toString()));
+    } else {
+      fdoRecord.add(new FdoAttribute(MARKED_AS_TYPE, timestamp, null));
     }
-
     // 218: wasDerivedFromEntity
-    if (request.getDerivedFromEntity() != null) {
-      fdoRecord.add(
-          new FdoAttribute(WAS_DERIVED_FROM_ENTITY, CREATED, request.getDerivedFromEntity()));
-    }
-    var catId = request.getCatalogIdentifier();
-    if (catId != null) {
-      fdoRecord.add(new FdoAttribute(CATALOG_IDENTIFIER, CREATED, catId));
-    }
-
+    fdoRecord.add(new FdoAttribute(WAS_DERIVED_FROM_ENTITY, timestamp,
+        String.valueOf(request.getDerivedFromEntity() != null)));
+    fdoRecord.add(new FdoAttribute(CATALOG_IDENTIFIER, timestamp, request.getCatalogIdentifier()));
     return fdoRecord;
-
-  }
-
-  public static List<FdoAttribute> genDigitalSpecimenAttributes(String handle) throws Exception {
-    var request = givenDigitalSpecimenRequestObjectNullOptionals();
-    return genDigitalSpecimenAttributes(handle, request);
   }
 
   public static FdoRecord givenDigitalMediaFdoRecord(String handle) throws Exception {
-    return new FdoRecord(handle, FdoType.DIGITAL_SPECIMEN, genMediaObjectAttributes(handle),
+    return new FdoRecord(handle, DIGITAL_MEDIA,
+        genDigitalMediaAttributes(handle, givenDigitalMediaRequestObject(), CREATED),
         PRIMARY_MEDIA_ID_TESTVAL);
   }
 
-  public static List<FdoAttribute> genMediaObjectAttributes(String handle) throws Exception {
-    var request = givenMediaRequestObject();
-    return genMediaObjectAttributes(handle, request);
-  }
-
-  public static List<FdoAttribute> genMediaObjectAttributes(String handle,
-      MediaObjectRequest request) throws Exception {
-    var fdoRecord = genDoiRecordAttributes(handle, FdoType.MEDIA_OBJECT);
-    fdoRecord.add(new FdoAttribute(MEDIA_HOST, CREATED, request.getMediaHost()));
+  public static List<FdoAttribute> genDigitalMediaAttributes(String handle,
+      DigitalMediaRequest request, Instant timestamp) throws Exception {
+    var fdoRecord = genDoiRecordAttributes(handle, timestamp, FdoType.DIGITAL_MEDIA, request);
+    fdoRecord.add(new FdoAttribute(MEDIA_HOST, timestamp, request.getMediaHost()));
     if (request.getMediaHostName() == null) {
-      fdoRecord.add(new FdoAttribute(MEDIA_HOST_NAME, CREATED, MEDIA_HOST_NAME_TESTVAL));
+      fdoRecord.add(new FdoAttribute(MEDIA_HOST_NAME, timestamp, MEDIA_HOST_NAME_TESTVAL));
     } else {
-      fdoRecord.add(new FdoAttribute(MEDIA_HOST_NAME, CREATED, request.getMediaHostName()));
+      fdoRecord.add(new FdoAttribute(MEDIA_HOST_NAME, timestamp, request.getMediaHostName()));
     }
     if (request.getDctermsFormat() != null) {
       fdoRecord.add(
-          new FdoAttribute(DCTERMS_FORMAT, CREATED, request.getDctermsFormat().toString()));
+          new FdoAttribute(DCTERMS_FORMAT, timestamp, request.getDctermsFormat().toString()));
+    } else {
+      fdoRecord.add(new FdoAttribute(DCTERMS_FORMAT, timestamp, null));
     }
-    fdoRecord.add(new FdoAttribute(IS_DERIVED_FROM_SPECIMEN, CREATED,
+    fdoRecord.add(new FdoAttribute(IS_DERIVED_FROM_SPECIMEN, timestamp,
         request.getIsDerivedFromSpecimen().toString()));
-    if (request.getLinkedDigitalObjectPid() != null) {
-      fdoRecord.add(
-          new FdoAttribute(LINKED_DO_PID, CREATED, request.getLinkedDigitalObjectPid()));
-    }
+    fdoRecord.add(new FdoAttribute(LINKED_DO_PID, timestamp, request.getLinkedDigitalObjectPid()));
     if (request.getLinkedDigitalObjectType() != null) {
-      fdoRecord.add(new FdoAttribute(LINKED_DO_TYPE, CREATED,
+      fdoRecord.add(new FdoAttribute(LINKED_DO_TYPE, timestamp,
           request.getLinkedDigitalObjectType().toString()));
+    } else {
+      fdoRecord.add(new FdoAttribute(LINKED_DO_TYPE, timestamp, null));
     }
-    if (request.getLinkedAttribute() != null) {
-      fdoRecord.add(new FdoAttribute(LINKED_ATTRIBUTE, CREATED, request.getLinkedAttribute()));
-    }
-    if (request.getPrimaryMediaId() != null) {
-      fdoRecord.add(new FdoAttribute(PRIMARY_MEDIA_ID, CREATED, request.getPrimaryMediaId()));
-    }
+    fdoRecord.add(new FdoAttribute(LINKED_ATTRIBUTE, timestamp, request.getLinkedAttribute()));
+    fdoRecord.add(new FdoAttribute(PRIMARY_MEDIA_ID, timestamp, request.getPrimaryMediaId()));
     if (request.getPrimaryMediaObjectIdType() != null) {
-      fdoRecord.add(new FdoAttribute(PRIMARY_MO_ID_TYPE, CREATED,
+      fdoRecord.add(new FdoAttribute(PRIMARY_MO_ID_TYPE, timestamp,
           request.getPrimaryMediaObjectIdType().toString()));
+    } else {
+      fdoRecord.add(new FdoAttribute(PRIMARY_MO_ID_TYPE, timestamp, null));
     }
-    if (request.getPrimaryMediaObjectIdName() != null) {
-      fdoRecord.add(
-          new FdoAttribute(PRIMARY_MO_ID_NAME, CREATED, request.getPrimaryMediaObjectIdName()));
-    }
+    fdoRecord.add(
+        new FdoAttribute(PRIMARY_MO_ID_NAME, timestamp, request.getPrimaryMediaObjectIdName()));
     if (request.getDcTermsType() != null) {
-      fdoRecord.add(new FdoAttribute(DCTERMS_TYPE, CREATED, request.getDcTermsType().toString()));
+      fdoRecord.add(new FdoAttribute(DCTERMS_TYPE, timestamp, request.getDcTermsType().toString()));
+    } else {
+      fdoRecord.add(new FdoAttribute(DCTERMS_TYPE, timestamp, null));
     }
-    if (request.getDctermsSubject() != null) {
-      fdoRecord.add(new FdoAttribute(DCTERMS_SUBJECT, CREATED, request.getDctermsSubject()));
-    }
-    if (request.getDerivedFromEntity() != null) {
-      fdoRecord.add(
-          new FdoAttribute(DERIVED_FROM_ENTITY, CREATED, request.getDerivedFromEntity()));
-    }
-    if (request.getLicenseName() != null) {
-      fdoRecord.add(new FdoAttribute(LICENSE_NAME, CREATED, request.getLicenseName()));
-    }
-    if (request.getLicenseUrl() != null) {
-      fdoRecord.add(new FdoAttribute(LICENSE_URL, CREATED, request.getLicenseUrl()));
-    }
-    if (request.getRightsholderName() != null) {
-      fdoRecord.add(new FdoAttribute(RIGHTSHOLDER_NAME, CREATED, request.getRightsholderName()));
-    }
-    if (request.getRightsholderPid() != null) {
-      fdoRecord.add(new FdoAttribute(RIGHTSHOLDER_PID, CREATED, request.getRightsholderPid()));
-    }
+    fdoRecord.add(new FdoAttribute(DCTERMS_SUBJECT, timestamp, request.getDctermsSubject()));
+    fdoRecord.add(new FdoAttribute(DERIVED_FROM_ENTITY, timestamp, request.getDerivedFromEntity()));
+    fdoRecord.add(new FdoAttribute(LICENSE_NAME, timestamp, request.getLicenseName()));
+    fdoRecord.add(new FdoAttribute(LICENSE_URL, timestamp, request.getLicenseUrl()));
+    fdoRecord.add(new FdoAttribute(RIGHTSHOLDER_NAME, timestamp, request.getRightsholderName()));
+    fdoRecord.add(new FdoAttribute(RIGHTSHOLDER_PID, timestamp, request.getRightsholderPid()));
     if (request.getRightsholderPidType() != null) {
-      fdoRecord.add(new FdoAttribute(RIGHTSHOLDER_PID_TYPE, CREATED,
+      fdoRecord.add(new FdoAttribute(RIGHTSHOLDER_PID_TYPE, timestamp,
           request.getRightsholderPidType().toString()));
+    } else {
+      fdoRecord.add(new FdoAttribute(RIGHTSHOLDER_PID_TYPE, timestamp, null));
     }
-    if (request.getDctermsConformsTo() != null) {
-      fdoRecord.add(new FdoAttribute(DC_TERMS_CONFORMS, CREATED, request.getDctermsConformsTo()));
-    }
+    fdoRecord.add(new FdoAttribute(DC_TERMS_CONFORMS, timestamp, request.getDctermsConformsTo()));
     return fdoRecord;
   }
 
   public static FdoRecord givenAnnotationFdoRecord(String handle, boolean includeHash)
       throws Exception {
+    var localId = includeHash ? ANNOTATION_HASH_TESTVAL.toString() : null;
     return new FdoRecord(handle, FdoType.ANNOTATION, genAnnotationAttributes(handle, includeHash),
+        localId);
+  }
+
+  public static FdoRecord givenMasFdoRecord(String handle) throws Exception {
+    return new FdoRecord(handle, FdoType.MAS, genMasAttributes(handle, CREATED), null);
+  }
+
+  public static FdoRecord givenSourceSystemFdoRecord(String handle) throws Exception {
+    return new FdoRecord(handle, FdoType.SOURCE_SYSTEM, genSourceSystemAttributes(handle, CREATED),
         null);
+  }
+
+  public static FdoRecord givenOrganisationFdoRecord(String handle) throws Exception {
+    return new FdoRecord(handle, FdoType.ORGANISATION,
+        genOrganisationAttributes(handle, CREATED, givenOrganisationRequestObject()), null);
+  }
+
+  public static FdoRecord givenDataMappingFdoRecord(String handle) throws Exception {
+    return new FdoRecord(handle, FdoType.DATA_MAPPING, genMappingAttributes(handle, CREATED), null);
   }
 
   public static List<FdoAttribute> genAnnotationAttributes(String handle, boolean includeHash)
       throws Exception {
-    var fdoRecord = genHandleRecordAttributes(handle, FdoType.ANNOTATION);
+    return genAnnotationAttributes(handle, CREATED, includeHash);
+  }
 
+  public static List<FdoAttribute> genAnnotationAttributes(String handle, Instant timestamp,
+      boolean includeHash) throws Exception {
+    var fdoRecord = genHandleRecordAttributes(handle, timestamp, FdoType.ANNOTATION);
     // 500 TargetPid
-    fdoRecord.add(new FdoAttribute(TARGET_PID, CREATED, TARGET_DOI_TESTVAL));
-
+    fdoRecord.add(new FdoAttribute(TARGET_PID, timestamp, TARGET_DOI_TESTVAL));
     // 501 TargetType
-    fdoRecord.add(new FdoAttribute(TARGET_TYPE, CREATED, TARGET_TYPE_TESTVAL));
-
+    fdoRecord.add(new FdoAttribute(TARGET_TYPE, timestamp, TARGET_TYPE_TESTVAL));
     // 502 motivation
-    fdoRecord.add(new FdoAttribute(MOTIVATION, CREATED, MOTIVATION_TESTVAL.toString()));
-
+    fdoRecord.add(new FdoAttribute(MOTIVATION, timestamp, MOTIVATION_TESTVAL.toString()));
     // 503 AnnotationHash
     if (includeHash) {
       fdoRecord.add(
-          new FdoAttribute(ANNOTATION_HASH, CREATED, ANNOTATION_HASH_TESTVAL.toString()));
+          new FdoAttribute(ANNOTATION_HASH, timestamp, ANNOTATION_HASH_TESTVAL.toString()));
+    } else {
+      fdoRecord.add(new FdoAttribute(ANNOTATION_HASH, timestamp, null));
     }
     return fdoRecord;
   }
 
-  public static List<FdoAttribute> genMasAttributes(String handle) throws Exception {
-    var fdoRecord = genHandleRecordAttributes(handle, FdoType.MAS);
-    fdoRecord.add(new FdoAttribute(MAS_NAME, CREATED, (MAS_NAME_TESTVAL)));
+  public static List<FdoAttribute> genMasAttributes(String handle, Instant timestamp)
+      throws Exception {
+    var fdoRecord = genHandleRecordAttributes(handle, timestamp, FdoType.MAS);
+    fdoRecord.add(new FdoAttribute(MAS_NAME, timestamp, MAS_NAME_TESTVAL));
     return fdoRecord;
   }
 
-  public static List<FdoAttribute> genMappingAttributes(String handle) throws Exception {
-    var fdoRecord = genHandleRecordAttributes(handle, FdoType.MAPPING);
-
+  public static List<FdoAttribute> genMappingAttributes(String handle, Instant timestamp)
+      throws Exception {
+    var fdoRecord = genHandleRecordAttributes(handle, timestamp, FdoType.DATA_MAPPING);
     // 500 subjectDigitalObjectId
-    fdoRecord.add(
-        new FdoAttribute(SOURCE_DATA_STANDARD, CREATED,
-            SOURCE_DATA_STANDARD_TESTVAL));
-
+    fdoRecord.add(new FdoAttribute(SOURCE_DATA_STANDARD, timestamp, SOURCE_DATA_STANDARD_TESTVAL));
     return fdoRecord;
   }
 
-  public static List<FdoAttribute> genSourceSystemAttributes(String handle) throws Exception {
-    var fdoRecord = genHandleRecordAttributes(handle, FdoType.SOURCE_SYSTEM);
-
+  public static List<FdoAttribute> genSourceSystemAttributes(String handle, Instant timestamp)
+      throws Exception {
+    var fdoRecord = genHandleRecordAttributes(handle, timestamp, FdoType.SOURCE_SYSTEM);
     // 600 hostInstitution
-    fdoRecord.add(new FdoAttribute(SOURCE_SYSTEM_NAME, CREATED,
-        SPECIMEN_HOST_TESTVAL));
-
+    fdoRecord.add(new FdoAttribute(SOURCE_SYSTEM_NAME, timestamp, SPECIMEN_HOST_TESTVAL));
     return fdoRecord;
   }
 
-  public static List<FdoAttribute> genOrganisationAttributes(String handle,
+  public static List<FdoAttribute> genOrganisationAttributes(String handle, Instant timestamp,
       OrganisationRequest request) throws Exception {
-    var fdoRecord = genDoiRecordAttributes(handle, FdoType.ORGANISATION, request);
-
+    var fdoRecord = genDoiRecordAttributes(handle, timestamp, FdoType.ORGANISATION, request);
     // 800 OrganisationIdentifier
-    fdoRecord.add(new FdoAttribute(ORGANISATION_ID, CREATED,
-        SPECIMEN_HOST_TESTVAL));
-
+    fdoRecord.add(new FdoAttribute(ORGANISATION_ID, timestamp, SPECIMEN_HOST_TESTVAL));
     // 801 OrganisationIdentifier
-    fdoRecord.add(
-        new FdoAttribute(ORGANISATION_ID_TYPE, CREATED,
-            PTR_TYPE_DOI));
-
+    fdoRecord.add(new FdoAttribute(ORGANISATION_ID_TYPE, timestamp, PTR_TYPE_DOI));
     // 802 OrganisationName
-    fdoRecord.add(new FdoAttribute(ORGANISATION_NAME, CREATED,
-        SPECIMEN_HOST_NAME_TESTVAL));
-
+    fdoRecord.add(new FdoAttribute(ORGANISATION_NAME, timestamp, ISSUED_FOR_AGENT_TESTVAL));
     return fdoRecord;
   }
 
-  public static List<FdoAttribute> genOrganisationAttributes(String handle) throws Exception {
-    return genOrganisationAttributes(handle, givenOrganisationRequestObject());
+  public static List<FdoAttribute> genTombstoneAttributes(TombstoneRecordRequest request)
+      throws Exception {
+    var fdoRecord = genHandleRecordAttributes(HANDLE, CREATED, FdoType.HANDLE);
+    fdoRecord.add(new FdoAttribute(TOMBSTONED_TEXT, UPDATED, request.getTombstonedText()));
+    fdoRecord.set(fdoRecord.indexOf(new FdoAttribute(PID_RECORD_ISSUE_NUMBER, CREATED, "1")),
+        new FdoAttribute(PID_RECORD_ISSUE_NUMBER, UPDATED, "2"));
+
+    // 31: hasRelatedPID
+    if (request.getHasRelatedPID() != null && !request.getHasRelatedPID().isEmpty()) {
+      fdoRecord.add(new FdoAttribute(HAS_RELATED_PID, UPDATED,
+          MAPPER.writeValueAsString(request.getHasRelatedPID())));
+    } else {
+      fdoRecord.add(new FdoAttribute(HAS_RELATED_PID, UPDATED,
+          MAPPER.writeValueAsString(Collections.emptyList())));
+    }
+    // 32: tombstonedDate
+    fdoRecord.add(new FdoAttribute(TOMBSTONED_DATE, UPDATED, UPDATE_DATE_TESTVAL));
+    return fdoRecord;
   }
 
   public static <T extends HandleRecordRequest> ObjectNode genCreateRecordRequest(T request,
@@ -634,10 +663,21 @@ public class TestUtils {
         STRUCTURAL_TYPE_TESTVAL, LOC_TESTVAL);
   }
 
+  public static HandleRecordRequest givenHandleRecordRequestObjectUpdate() {
+    return new HandleRecordRequest(ISSUED_FOR_AGENT_TESTVAL, PID_ISSUER_TESTVAL_OTHER,
+        STRUCTURAL_TYPE_TESTVAL, LOC_ALT_TESTVAL);
+  }
+
   public static DoiRecordRequest givenDoiRecordRequestObject() {
     return new DoiRecordRequest(ISSUED_FOR_AGENT_TESTVAL, PID_ISSUER_TESTVAL_OTHER,
         STRUCTURAL_TYPE_TESTVAL, LOC_TESTVAL, REFERENT_NAME_TESTVAL,
-        FdoType.MEDIA_OBJECT.getDigitalObjectName(), PRIMARY_REFERENT_TYPE_TESTVAL);
+        FdoType.DIGITAL_MEDIA.getDigitalObjectName(), PRIMARY_REFERENT_TYPE_TESTVAL);
+  }
+
+  public static DoiRecordRequest givenDoiRecordRequestObjectUpdate() {
+    return new DoiRecordRequest(ISSUED_FOR_AGENT_TESTVAL, PID_ISSUER_TESTVAL_OTHER,
+        STRUCTURAL_TYPE_TESTVAL, LOC_ALT_TESTVAL, REFERENT_NAME_TESTVAL,
+        FdoType.DIGITAL_MEDIA.getDigitalObjectName(), PRIMARY_REFERENT_TYPE_TESTVAL);
   }
 
   public static DigitalSpecimenRequest givenDigitalSpecimenRequestObjectNullOptionals() {
@@ -650,20 +690,49 @@ public class TestUtils {
       return new DigitalSpecimenRequest(ISSUED_FOR_AGENT_TESTVAL, PID_ISSUER_TESTVAL_OTHER,
           LOC_TESTVAL, REFERENT_NAME_TESTVAL, PRIMARY_REFERENT_TYPE_TESTVAL, SPECIMEN_HOST_TESTVAL,
           SPECIMEN_HOST_NAME_TESTVAL, primarySpecimenObjectId, PrimarySpecimenObjectIdType.GLOBAL,
-          null, primarySpecimenObjectId, null, null, null, null, null, null, null, null, null, null,
-          null, null, null, null);
+          null, NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, null, null, null, null, null, null,
+          null, null, null, null, null, null, null, null);
     } catch (InvalidRequestException e) {
       throw new RuntimeException(e.getMessage());
     }
   }
 
-  public static MediaObjectRequest givenMediaRequestObject() throws InvalidRequestException {
-    return new MediaObjectRequest(ISSUED_FOR_AGENT_TESTVAL, PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL,
+  public static DigitalSpecimenRequest givenDigitalSpecimenRequestObject() throws Exception {
+    var otherSpecimenIds = new OtherSpecimenId("Catalog Id", "Catalog Id");
+    return new DigitalSpecimenRequest(ISSUED_FOR_AGENT_TESTVAL, PID_ISSUER_TESTVAL_OTHER,
+        LOC_TESTVAL, REFERENT_NAME_TESTVAL, PRIMARY_REFERENT_TYPE_TESTVAL, SPECIMEN_HOST_TESTVAL,
+        SPECIMEN_HOST_NAME_TESTVAL, PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
+        PrimarySpecimenObjectIdType.GLOBAL, null, NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
+        null, List.of(otherSpecimenIds), TopicOrigin.HUMAN_MADE, TopicDomain.ARCHIVE,
+        TopicDiscipline.ANTHRO, TopicCategory.HUMAN, LivingOrPreserved.PRESERVED,
+        BaseTypeOfSpecimen.MATERIAL, null, MaterialSampleType.ORG_PART,
+        MaterialOrDigitalEntity.DIGITAL, true, "Entity this was derived from", "Catalog id");
+  }
+
+  public static DigitalSpecimenRequest givenDigitalSpecimenRequestObjectUpdate() throws Exception {
+    return new DigitalSpecimenRequest(ISSUED_FOR_AGENT_TESTVAL, PID_ISSUER_TESTVAL_OTHER,
+        LOC_ALT_TESTVAL, REFERENT_NAME_TESTVAL, PRIMARY_REFERENT_TYPE_TESTVAL,
+        SPECIMEN_HOST_TESTVAL, SPECIMEN_HOST_NAME_TESTVAL, PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
+        PrimarySpecimenObjectIdType.GLOBAL, null, NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+  }
+
+  public static DigitalMediaRequest givenDigitalMediaRequestObject()
+      throws InvalidRequestException {
+    return new DigitalMediaRequest(ISSUED_FOR_AGENT_TESTVAL, PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL,
         REFERENT_NAME_TESTVAL, PRIMARY_REFERENT_TYPE_TESTVAL, MEDIA_HOST_TESTVAL,
         MEDIA_HOST_NAME_TESTVAL, null, Boolean.TRUE, LINKED_DO_PID_TESTVAL,
         LINKED_DIGITAL_OBJECT_TYPE_TESTVAL, null, PRIMARY_MEDIA_ID_TESTVAL, null, null, null, null,
-        null, null, null,
-        SPECIMEN_HOST_TESTVAL, SPECIMEN_HOST_NAME_TESTVAL, null, null);
+        null, null, null, SPECIMEN_HOST_TESTVAL, SPECIMEN_HOST_NAME_TESTVAL, null, null);
+  }
+
+  public static DigitalMediaRequest givenDigitalMediaRequestObjectUpdate()
+      throws InvalidRequestException {
+    return new DigitalMediaRequest(ISSUED_FOR_AGENT_TESTVAL, PID_ISSUER_TESTVAL_OTHER,
+        LOC_ALT_TESTVAL, REFERENT_NAME_TESTVAL, PRIMARY_REFERENT_TYPE_TESTVAL, MEDIA_HOST_TESTVAL,
+        MEDIA_HOST_NAME_TESTVAL, null, Boolean.TRUE, LINKED_DO_PID_TESTVAL,
+        LINKED_DIGITAL_OBJECT_TYPE_TESTVAL, null, PRIMARY_MEDIA_ID_TESTVAL, null, null, null, null,
+        null, null, null, SPECIMEN_HOST_TESTVAL, SPECIMEN_HOST_NAME_TESTVAL, null, null);
   }
 
   public static AnnotationRequest givenAnnotationRequestObject() {
@@ -671,14 +740,25 @@ public class TestUtils {
         TARGET_DOI_TESTVAL, TARGET_TYPE_TESTVAL, MOTIVATION_TESTVAL, ANNOTATION_HASH_TESTVAL);
   }
 
+  public static AnnotationRequest givenAnnotationRequestObjectUpdate() {
+    return new AnnotationRequest(ISSUED_FOR_AGENT_TESTVAL, PID_ISSUER_TESTVAL_OTHER,
+        LOC_ALT_TESTVAL, TARGET_DOI_TESTVAL, TARGET_TYPE_TESTVAL, MOTIVATION_TESTVAL, null);
+  }
+
+
   public static AnnotationRequest givenAnnotationRequestObjectNoHash() {
     return new AnnotationRequest(ISSUED_FOR_AGENT_TESTVAL, PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL,
         TARGET_DOI_TESTVAL, TARGET_TYPE_TESTVAL, MOTIVATION_TESTVAL, null);
   }
 
-  public static MappingRequest givenMappingRequestObject() {
-    return new MappingRequest(ISSUED_FOR_AGENT_TESTVAL, PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL,
+  public static DataMappingRequest givenDataMappingRequestObject() {
+    return new DataMappingRequest(ISSUED_FOR_AGENT_TESTVAL, PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL,
         SOURCE_DATA_STANDARD_TESTVAL);
+  }
+
+  public static DataMappingRequest givenDataMappingRequestObjectUpdate() {
+    return new DataMappingRequest(ISSUED_FOR_AGENT_TESTVAL, PID_ISSUER_TESTVAL_OTHER,
+        LOC_ALT_TESTVAL, SOURCE_DATA_STANDARD_TESTVAL);
   }
 
   public static SourceSystemRequest givenSourceSystemRequestObject() {
@@ -686,9 +766,20 @@ public class TestUtils {
         SPECIMEN_HOST_TESTVAL);
   }
 
+  public static SourceSystemRequest givenSourceSystemRequestObjectUpdate() {
+    return new SourceSystemRequest(ISSUED_FOR_AGENT_TESTVAL, PID_ISSUER_TESTVAL_OTHER,
+        LOC_ALT_TESTVAL, SPECIMEN_HOST_TESTVAL);
+  }
+
   public static OrganisationRequest givenOrganisationRequestObject() {
     return new OrganisationRequest(ISSUED_FOR_AGENT_TESTVAL, PID_ISSUER_TESTVAL_OTHER, LOC_TESTVAL,
         REFERENT_NAME_TESTVAL, PRIMARY_REFERENT_TYPE_TESTVAL, SPECIMEN_HOST_TESTVAL, PTR_TYPE_DOI);
+  }
+
+  public static OrganisationRequest givenOrganisationRequestObjectUpdate() {
+    return new OrganisationRequest(ISSUED_FOR_AGENT_TESTVAL, PID_ISSUER_TESTVAL_OTHER,
+        LOC_ALT_TESTVAL, REFERENT_NAME_TESTVAL, PRIMARY_REFERENT_TYPE_TESTVAL,
+        SPECIMEN_HOST_TESTVAL, PTR_TYPE_DOI);
   }
 
   public static MasRequest givenMasRecordRequestObject() {
@@ -696,38 +787,34 @@ public class TestUtils {
         MAS_NAME_TESTVAL);
   }
 
+  public static MasRequest givenMasRecordRequestObjectUpdate() {
+    return new MasRequest(ISSUED_FOR_AGENT_TESTVAL, PID_ISSUER_TESTVAL_OTHER,
+        LOC_ALT_TESTVAL, MAS_NAME_TESTVAL);
+  }
 
-  public static TombstoneRecordRequest genTombstoneRecordRequestObject() {
-    return new TombstoneRecordRequest(TOMBSTONE_TEXT_TESTVAL);
+  public static TombstoneRecordRequest givenTombstoneRecordRequestObject() {
+    return new TombstoneRecordRequest(TOMBSTONE_TEXT_TESTVAL,
+        List.of(new HasRelatedPid(HANDLE_ALT, "Media ID")));
   }
 
   public static JsonApiWrapperRead givenRecordResponseRead(List<String> handles, String path,
-      FdoType recordType) throws Exception {
+      FdoType recordType, String domain) throws Exception {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
-
     for (String handle : handles) {
       var testDbRecord = genAttributes(recordType, handle);
       JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
-      var pidLink = new JsonApiLinks(HANDLE_DOMAIN + handle);
-      dataNodes.add(new JsonApiDataLinks(handle,
-          recordType.getDigitalObjectType(), recordAttributes, pidLink));
+      var pidLink = new JsonApiLinks(domain + handle);
+      dataNodes.add(
+          new JsonApiDataLinks(handle, recordType.getDigitalObjectType(), recordAttributes,
+              pidLink));
     }
-
     var responseLink = new JsonApiLinks(path);
     return new JsonApiWrapperRead(responseLink, dataNodes);
   }
 
-  public static JsonApiWrapperReadSingle givenRecordResponseReadSingle(String handle, String path,
-      FdoType type, JsonNode attributes) {
-    return new JsonApiWrapperReadSingle(new JsonApiLinks(path),
-        new JsonApiDataLinks(handle, type.getDigitalObjectType(), attributes,
-            new JsonApiLinks("https://hdl.handle.net/" + handle)));
-  }
-
-  public static JsonApiWrapperWrite givenRecordResponseWrite(List<String> handles,
+  public static JsonApiWrapperWrite givenRecordResponseWriteFullResponse(List<String> handles,
       FdoType recordType) throws Exception {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
-
     for (var handle : handles) {
       var testDbRecord = genAttributes(recordType, handle);
       JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
@@ -740,35 +827,33 @@ public class TestUtils {
     return new JsonApiWrapperWrite(dataNodes);
   }
 
-  public static JsonApiWrapperWrite givenAnnotationResponseWrite(List<String> handles) {
-    List<JsonApiDataLinks> dataNodes = new ArrayList<>();
-
-    for (var handle : handles) {
-      var testDbRecord = List.of(
-          new FdoAttribute(ANNOTATION_HASH, CREATED, ANNOTATION_HASH_TESTVAL.toString()));
-      JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
-
-      var pidLink = new JsonApiLinks(HANDLE_DOMAIN + handle);
-      dataNodes.add(
-          new JsonApiDataLinks(handle, FdoType.ANNOTATION.getDigitalObjectType(), recordAttributes,
-              pidLink));
-    }
+  public static JsonApiWrapperWrite givenRecordResponseWriteFullResponse(
+      FdoRecord fdoRecord) {
+    JsonNode recordAttributes = genObjectNodeAttributeRecord(fdoRecord.attributes());
+    var pidLink = new JsonApiLinks(HANDLE_DOMAIN + HANDLE);
+    var dataNodes = List.of(
+        new JsonApiDataLinks(HANDLE, fdoRecord.fdoType().getDigitalObjectType(), recordAttributes,
+            pidLink));
     return new JsonApiWrapperWrite(dataNodes);
   }
 
   public static JsonApiWrapperWrite givenRecordResponseWriteSmallResponse(
-      List<FdoRecord> fdoRecords, FdoType fdoType) {
+      List<FdoRecord> fdoRecords, FdoType fdoType, String domain) {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
     List<FdoAttribute> fdoSublist;
     for (var fdoRecord : fdoRecords) {
       switch (fdoType) {
         case ANNOTATION -> {
-          fdoSublist = List.of(getField(fdoRecord.attributes(), ANNOTATION_HASH));
+          if (fdoRecord.primaryLocalId() == null) {
+            fdoSublist = fdoRecord.attributes();
+          } else {
+            fdoSublist = List.of(getField(fdoRecord.attributes(), ANNOTATION_HASH));
+          }
         }
         case DIGITAL_SPECIMEN -> {
           fdoSublist = List.of(getField(fdoRecord.attributes(), NORMALISED_SPECIMEN_OBJECT_ID));
         }
-        case MEDIA_OBJECT -> {
+        case DIGITAL_MEDIA -> {
           fdoSublist = List.of(getField(fdoRecord.attributes(), PRIMARY_MEDIA_ID),
               getField(fdoRecord.attributes(), LINKED_DO_PID));
         }
@@ -777,7 +862,7 @@ public class TestUtils {
         }
       }
       var recordAttributes = genObjectNodeAttributeRecord(fdoSublist);
-      var pidLink = new JsonApiLinks(HANDLE_DOMAIN + fdoRecord.handle());
+      var pidLink = new JsonApiLinks(domain + fdoRecord.handle());
       dataNodes.add(
           new JsonApiDataLinks(fdoRecord.handle(), fdoType.getDigitalObjectType(), recordAttributes,
               pidLink));
@@ -805,9 +890,7 @@ public class TestUtils {
       JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
 
       var pidLink = new JsonApiLinks(HANDLE_DOMAIN + handle);
-      dataNodes.add(
-          new JsonApiDataLinks(handle, "PID", recordAttributes,
-              pidLink));
+      dataNodes.add(new JsonApiDataLinks(handle, "PID", recordAttributes, pidLink));
     }
     return new JsonApiWrapperWrite(dataNodes);
   }
@@ -815,14 +898,11 @@ public class TestUtils {
   public static JsonApiWrapperWrite givenRecordResponseWrite(List<String> handles,
       FdoType attributeType, String recordType) throws Exception {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
-
     for (var handle : handles) {
       var testDbRecord = genAttributes(attributeType, handle);
       JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
-
       var pidLink = new JsonApiLinks(HANDLE_DOMAIN + handle);
-      dataNodes.add(new JsonApiDataLinks(handle, recordType,
-          recordAttributes, pidLink));
+      dataNodes.add(new JsonApiDataLinks(handle, recordType, recordAttributes, pidLink));
     }
     return new JsonApiWrapperWrite(dataNodes);
   }
@@ -841,14 +921,11 @@ public class TestUtils {
       JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
 
       var pidLink = new JsonApiLinks(HANDLE_DOMAIN + handle);
-      dataNodes.add(new JsonApiDataLinks(handle,
-          recordType.getDigitalObjectType(), recordAttributes, pidLink));
+      dataNodes.add(
+          new JsonApiDataLinks(handle, recordType.getDigitalObjectType(), recordAttributes,
+              pidLink));
     }
     return new JsonApiWrapperWrite(dataNodes);
-  }
-
-  public static JsonApiWrapperWrite givenRecordResponseNullAttributes(List<String> handles) {
-    return givenRecordResponseNullAttributes(handles, FdoType.HANDLE);
   }
 
   public static JsonApiWrapperWrite givenRecordResponseNullAttributes(List<String> handles,
@@ -856,8 +933,7 @@ public class TestUtils {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
     for (var handle : handles) {
       var pidLink = new JsonApiLinks(HANDLE_DOMAIN + handle);
-      dataNodes.add(new JsonApiDataLinks(handle,
-          type.getDigitalObjectType(), null, pidLink));
+      dataNodes.add(new JsonApiDataLinks(handle, type.getDigitalObjectType(), null, pidLink));
     }
     return new JsonApiWrapperWrite(dataNodes);
   }
@@ -868,51 +944,59 @@ public class TestUtils {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
 
     for (var handle : handles) {
-      var testDbRecord = genTombstoneRecordRequestAttributes(handle);
+      List<FdoAttribute> testDbRecord = Collections.emptyList(); // todo
       JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
 
       var pidLink = new JsonApiLinks(HANDLE_DOMAIN + handle);
-      dataNodes.add(new JsonApiDataLinks(handle,
-          FdoType.TOMBSTONE.getDigitalObjectType(), recordAttributes, pidLink));
+      dataNodes.add(
+          new JsonApiDataLinks(handle, FdoType.TOMBSTONE.getDigitalObjectType(), recordAttributes,
+              pidLink));
     }
     return new JsonApiWrapperWrite(dataNodes);
   }
 
-  public static List<FdoAttribute> genAttributes(FdoType recordType, String handle)
+  public static List<FdoAttribute> genAttributes(FdoType fdoType, String handle) throws Exception {
+    return genAttributes(fdoType, handle, CREATED);
+  }
+
+
+  public static List<FdoAttribute> genAttributes(FdoType fdoType, String handle, Instant timestamp)
       throws Exception {
-    switch (recordType) {
+    switch (fdoType) {
       case DOI -> {
-        return genDoiRecordAttributes(handle, recordType);
+        return genDoiRecordAttributes(handle, timestamp, fdoType, givenDoiRecordRequestObject());
       }
       case DIGITAL_SPECIMEN -> {
-        return genDigitalSpecimenAttributes(handle);
+        return genDigitalSpecimenAttributes(handle,
+            givenDigitalSpecimenRequestObjectNullOptionals(), timestamp);
       }
-      case MEDIA_OBJECT -> {
-        return genMediaObjectAttributes(handle);
+      case DIGITAL_MEDIA -> {
+        return genDigitalMediaAttributes(handle, givenDigitalMediaRequestObject(), timestamp);
       }
       case ANNOTATION -> {
-        return genAnnotationAttributes(handle, false);
+        return genAnnotationAttributes(handle, timestamp, false);
       }
-      case MAPPING -> {
-        return genMappingAttributes(handle);
+      case DATA_MAPPING -> {
+        return genMappingAttributes(handle, timestamp);
       }
       case SOURCE_SYSTEM -> {
-        return genSourceSystemAttributes(handle);
+        return genSourceSystemAttributes(handle, timestamp);
       }
       case ORGANISATION -> {
-        return genOrganisationAttributes(handle);
+        return genOrganisationAttributes(handle, timestamp, givenOrganisationRequestObject());
       }
       case MAS -> {
-        return genMasAttributes(handle);
+        return genMasAttributes(handle, timestamp);
       }
       default -> {
         log.warn("Default type");
-        return genHandleRecordAttributes(handle, FdoType.HANDLE);
+        return genHandleRecordAttributes(handle, timestamp, FdoType.HANDLE);
       }
     }
   }
 
-  public static List<JsonNode> genUpdateRequestBatch(List<String> handles, FdoType type) {
+  public static List<JsonNode> genUpdateRequestBatch(List<String> handles, FdoType type,
+      JsonNode requestAttributes) {
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode requestNodeRoot = mapper.createObjectNode();
     ObjectNode requestNodeData = mapper.createObjectNode();
@@ -921,7 +1005,7 @@ public class TestUtils {
     for (var handle : handles) {
       requestNodeData.put("type", type.getDigitalObjectType());
       requestNodeData.put("id", handle);
-      requestNodeData.set("attributes", genUpdateRequestAltLoc());
+      requestNodeData.set("attributes", requestAttributes);
       requestNodeRoot.set("data", requestNodeData);
 
       requestNodeList.add(requestNodeRoot.deepCopy());
@@ -930,10 +1014,6 @@ public class TestUtils {
       requestNodeRoot.removeAll();
     }
     return requestNodeList;
-  }
-
-  public static List<JsonNode> genUpdateRequestBatch(List<String> handles) {
-    return genUpdateRequestBatch(handles, FdoType.HANDLE);
   }
 
   public static List<JsonNode> genTombstoneRequestBatch(List<String> handles) {
@@ -967,7 +1047,7 @@ public class TestUtils {
   public static JsonNode genTombstoneRequest() {
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode rootNode = mapper.createObjectNode();
-    rootNode.put(TOMBSTONE_TEXT.get(), TOMBSTONE_TEXT_TESTVAL);
+    rootNode.put(TOMBSTONED_TEXT.get(), TOMBSTONE_TEXT_TESTVAL);
     return rootNode;
   }
 
@@ -978,11 +1058,15 @@ public class TestUtils {
     for (var row : dbRecord) {
       if (row.getIndex() != HS_ADMIN.index()) {
         var rowData = row.getValue();
-        try {
-          var nodeData = mapper.readTree(rowData);
-          rootNode.set(row.getType(), nodeData);
-        } catch (JsonProcessingException ignored) {
-          rootNode.put(row.getType(), rowData);
+        if (row.getValue() == null) {
+          rootNode.set(row.getType(), mapper.nullNode());
+        } else {
+          try {
+            var nodeData = mapper.readTree(rowData);
+            rootNode.set(row.getType(), nodeData);
+          } catch (JsonProcessingException ignored) {
+            rootNode.put(row.getType(), rowData);
+          }
         }
       }
     }
@@ -990,14 +1074,21 @@ public class TestUtils {
   }
 
   // Other Functions
-  public static FdoAttribute givenLandingPageAttribute(String handle) throws Exception {
-    var landingPage = new String[]{"Placeholder landing page"};
-    var locations = setLocations(landingPage, handle, FdoType.TOMBSTONE, false);
-    return new FdoAttribute(LOC, CREATED, locations);
+  public static Document givenMongoDocument(FdoRecord fdoRecord) throws Exception {
+    var doc = org.bson.Document.parse(MAPPER.writeValueAsString(fdoRecord))
+        .append("_id", fdoRecord.handle());
+    if (DIGITAL_SPECIMEN.equals(fdoRecord.fdoType())) {
+      doc.append(NORMALISED_SPECIMEN_OBJECT_ID.get(), fdoRecord.primaryLocalId());
+    } else if (DIGITAL_MEDIA.equals(fdoRecord.fdoType())) {
+      doc.append(PRIMARY_MEDIA_ID.get(), fdoRecord.primaryLocalId());
+    } else if (ANNOTATION.equals(fdoRecord.fdoType()) && fdoRecord.primaryLocalId() != null) {
+      doc.append(ANNOTATION_HASH.get(), fdoRecord.primaryLocalId());
+    }
+    return doc;
   }
 
-  public static String setLocations(String[] userLocations, String handle, FdoType type,
-      boolean isDoiProfileTest) throws TransformerException, ParserConfigurationException {
+  public static String setLocations(String[] userLocations, String handle, FdoType type)
+      throws TransformerException, ParserConfigurationException {
     DOC_BUILDER_FACTORY.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
 
     DocumentBuilder documentBuilder = DOC_BUILDER_FACTORY.newDocumentBuilder();
@@ -1005,8 +1096,7 @@ public class TestUtils {
     var doc = documentBuilder.newDocument();
     var locations = doc.createElement("locations");
     doc.appendChild(locations);
-    String[] objectLocations =
-        isDoiProfileTest ? userLocations : concatLocations(userLocations, handle, type);
+    String[] objectLocations = concatLocations(userLocations, handle, type);
 
     for (int i = 0; i < objectLocations.length; i++) {
       var locs = doc.createElement("location");
@@ -1031,18 +1121,18 @@ public class TestUtils {
       case DIGITAL_SPECIMEN -> {
         String api = API_URL + "/specimens/" + handle;
         String ui = UI_URL + "/ds/" + handle;
-        return new String[]{ui, api};
+        return new String[]{api, ui};
       }
-      case MAPPING -> {
+      case DATA_MAPPING -> {
         return new String[]{ORCHESTRATION_URL + "/mapping/" + handle};
       }
       case SOURCE_SYSTEM -> {
         return new String[]{ORCHESTRATION_URL + "/source-system/" + handle};
       }
-      case MEDIA_OBJECT -> {
+      case DIGITAL_MEDIA -> {
         String api = API_URL + "/digitalMedia/" + handle;
         String ui = UI_URL + "/dm/" + handle;
-        return new String[]{ui, api};
+        return new String[]{api, ui};
       }
       case ANNOTATION -> {
         return new String[]{API_URL + "/annotations/" + handle};
@@ -1060,7 +1150,8 @@ public class TestUtils {
     }
   }
 
-  private static String documentToString(Document document) throws TransformerException {
+  private static String documentToString(org.w3c.dom.Document document)
+      throws TransformerException {
     TRANSFORMER_FACTORY.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
     TRANSFORMER_FACTORY.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
     TRANSFORMER_FACTORY.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");

@@ -25,7 +25,7 @@ public enum FdoType {
       "https://hdl.handle.net/21.T11148/894b1e6cad57e921764e",
       "https://hdl.handle.net/21.T11148/894b1e6cad57e921764e",
       DOI_DOMAIN),
-  @JsonProperty("https://hdl.handle.net/21.T11148/bbad8c4e101e8af01115") MEDIA_OBJECT(
+  @JsonProperty("https://hdl.handle.net/21.T11148/bbad8c4e101e8af01115") DIGITAL_MEDIA(
       "MediaObject",
       "https://hdl.handle.net/21.T11148/bbad8c4e101e8af01115",
       "https://hdl.handle.net/21.T11148/bbad8c4e101e8af01115",
@@ -40,7 +40,7 @@ public enum FdoType {
       "https://hdl.handle.net/21.T11148/417a4f472f60f7974c12",
       "https://hdl.handle.net/21.T11148/417a4f472f60f7974c12",
       HANDLE_DOMAIN),
-  @JsonProperty("https://hdl.handle.net/21.T11148/ce794a6f4df42eb7e77e") MAPPING(
+  @JsonProperty("https://hdl.handle.net/21.T11148/ce794a6f4df42eb7e77e") DATA_MAPPING(
       "Mapping",
       "https://hdl.handle.net/21.T11148/ce794a6f4df42eb7e77e",
       "https://hdl.handle.net/21.T11148/ce794a6f4df42eb7e77e",

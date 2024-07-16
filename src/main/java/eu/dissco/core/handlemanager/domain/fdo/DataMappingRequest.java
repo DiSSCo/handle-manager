@@ -9,12 +9,12 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public class MappingRequest extends HandleRecordRequest {
+public class DataMappingRequest extends HandleRecordRequest {
 
   @JsonProperty(required = true)
   private final String sourceDataStandard;
 
-  public MappingRequest(String issuedForAgent,
+  public DataMappingRequest(String issuedForAgent,
       String pidIssuer, String[] locations, String sourceDataStandard) {
     super(issuedForAgent, pidIssuer, StructuralType.DIGITAL,
         locations);

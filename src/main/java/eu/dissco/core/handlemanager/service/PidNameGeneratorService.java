@@ -22,14 +22,18 @@ public class PidNameGeneratorService {
   private final ApplicationProperties applicationProperties;
 
   private static final int LENGTH = 11;
-  private static final String ALPHA_NUM = "ABCDEFGHJKLMNPQRSTVWXYZ1234567890";
-  private final char[] symbols = ALPHA_NUM.toCharArray();
+  private static final char[] SYMBOLS = "ABCDEFGHJKLMNPQRSTVWXYZ1234567890".toCharArray();
   private final char[] buf = new char[LENGTH];
   private final PidRepository pidRepository;
   private final Random random;
 
 
   public List<String> genHandleList(int h) {
+    if (h > applicationProperties.getMaxHandles()) {
+      log.warn("Max number of handles exceeded. Generating maximum {} handles instead",
+          applicationProperties.getMaxHandles());
+      h = applicationProperties.getMaxHandles();
+    }
     return new ArrayList<>(genHandleHashSet(h));
   }
 
@@ -47,7 +51,7 @@ public class PidNameGeneratorService {
     var handleSet = new HashSet<>(handleList);
 
     // Check for duplicates from repository and wrap the duplicates
-    var duplicates = new HashSet<>(pidRepository.getHandlesExist(handleList));
+    var duplicates = new HashSet<>(pidRepository.getExistingHandles(handleList));
 
     // If a duplicate was found, recursively call this function
     // Generate new handles for every duplicate found and add it to our hash list
@@ -56,7 +60,6 @@ public class PidNameGeneratorService {
       handleSet.removeAll(duplicates);
       handleSet.addAll(genHandleHashSet(duplicates.size()));
     }
-
     /*
      * It's possible we have a collision within our list now i.e. on two different
      * recursive cal)ls to this function, we generate the same If this occurs, we
@@ -72,21 +75,11 @@ public class PidNameGeneratorService {
     if (numberOfHandles < 1) {
       return Collections.emptyList();
     }
-    if (numberOfHandles > applicationProperties.getMaxHandles()) {
-      log.warn("Max number of handles exceeded. Generating maximum {} handles instead",
-          applicationProperties.getMaxHandles());
-      numberOfHandles = applicationProperties.getMaxHandles();
-    }
-
     // We'll use this to make sure we're not duplicating results
-    // It's of type ByteBuffer and not byte[] because ByteBuffer has equality testing
-    // byte[] is too primitive for our needs
     HashSet<String> handleHash = new HashSet<>();
-
     // This is the object we'll actually return
     var handleList = new ArrayList<String>();
     String hdl;
-
     for (int i = 0; i < numberOfHandles; i++) {
       hdl = newHandle();
       while (!handleHash.add(hdl)) {
@@ -101,13 +94,12 @@ public class PidNameGeneratorService {
     return applicationProperties.getPrefix() + "/" + newSuffix();
   }
 
-
   private String newSuffix() {
     for (int idx = 0; idx < buf.length; ++idx) {
       if (idx == 3 || idx == 7) { //
         buf[idx] = '-'; // Sneak a lil dash in the middle
       } else {
-        buf[idx] = symbols[random.nextInt(symbols.length)];
+        buf[idx] = SYMBOLS[random.nextInt(SYMBOLS.length)];
       }
     }
     return new String(buf);

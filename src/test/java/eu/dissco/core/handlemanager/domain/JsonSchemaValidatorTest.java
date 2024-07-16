@@ -9,7 +9,7 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SOURCE_DATA_STA
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SOURCE_SYSTEM_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TARGET_TYPE;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOMBSTONE_TEXT;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOMBSTONED_TEXT;
 import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ID;
@@ -26,12 +26,12 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneReque
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequestBatch;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDataMappingRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecordRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMappingRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMasRecordRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenOrganisationRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemRequestObject;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -116,9 +116,9 @@ class JsonSchemaValidatorTest {
   }
 
   @Test
-  void testPostMediaObjectRequest() throws Exception {
+  void testPostDigitalMediaRequest() throws Exception {
     // Given
-    var request = genCreateRecordRequest(givenMediaRequestObject(), FdoType.MEDIA_OBJECT);
+    var request = genCreateRecordRequest(givenDigitalMediaRequestObject(), FdoType.DIGITAL_MEDIA);
 
     // Then
     assertDoesNotThrow(() -> schemaValidator.validatePostRequest(request));
@@ -164,7 +164,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testPostMappingRequest() {
     // Given
-    var request = genCreateRecordRequest(givenMappingRequestObject(), FdoType.MAPPING);
+    var request = genCreateRecordRequest(givenDataMappingRequestObject(), FdoType.DATA_MAPPING);
 
     // Then
     assertDoesNotThrow(() -> schemaValidator.validatePostRequest(request));
@@ -220,9 +220,9 @@ class JsonSchemaValidatorTest {
   }
 
   @Test
-  void testMediaObjectPatchRequest() {
+  void testDigitalMediaPatchRequest() {
     // Given
-    var request = givenUpdateRequest(FdoType.MEDIA_OBJECT, MEDIA_HOST.get(), MEDIA_HOST_TESTVAL);
+    var request = givenUpdateRequest(FdoType.DIGITAL_MEDIA, MEDIA_HOST.get(), MEDIA_HOST_TESTVAL);
 
     // Then
     assertDoesNotThrow(() -> schemaValidator.validatePatchRequest(request));
@@ -250,7 +250,7 @@ class JsonSchemaValidatorTest {
   @Test
   void testMappingPatchRequest() {
     // Given
-    var request = givenUpdateRequest(FdoType.MAPPING, SOURCE_DATA_STANDARD.get(), "new");
+    var request = givenUpdateRequest(FdoType.DATA_MAPPING, SOURCE_DATA_STANDARD.get(), "new");
 
     // Then
     assertDoesNotThrow(() -> schemaValidator.validatePatchRequest(request));
@@ -384,10 +384,10 @@ class JsonSchemaValidatorTest {
   }
 
   @Test
-  void testBadPostMediaObjectRequestUnknownProperty() {
+  void testBadPostDigitalMediaRequestUnknownProperty() {
     // Given
     var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(),
-        FdoType.MEDIA_OBJECT);
+        FdoType.DIGITAL_MEDIA);
     ((ObjectNode) request.get(NODE_DATA)).put(UNKNOWN_ATTRIBUTE, UNKNOWN_VAL);
 
     // Then
@@ -398,11 +398,11 @@ class JsonSchemaValidatorTest {
   }
 
   @Test
-  void testBadPostMediaObjectRequestMissingProperty() {
+  void testBadPostDigitalMediaRequestMissingProperty() {
     // Given
     String missingAttribute = MEDIA_HOST.get();
     var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(),
-        FdoType.MEDIA_OBJECT);
+        FdoType.DIGITAL_MEDIA);
     ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(missingAttribute);
 
     // Then
@@ -445,7 +445,7 @@ class JsonSchemaValidatorTest {
         Arguments.of(FdoType.HANDLE),
         Arguments.of(FdoType.DOI),
         Arguments.of(FdoType.DIGITAL_SPECIMEN),
-        Arguments.of(FdoType.MEDIA_OBJECT)
+        Arguments.of(FdoType.DIGITAL_MEDIA)
     );
 
   }
@@ -470,14 +470,14 @@ class JsonSchemaValidatorTest {
     // Given
     var request = genTombstoneRequestBatch(List.of(HANDLE)).get(0);
     ((ObjectNode) request.get(NODE_DATA)).remove(NODE_TYPE);
-    ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(TOMBSTONE_TEXT.get());
+    ((ObjectNode) request.get(NODE_DATA).get(NODE_ATTRIBUTES)).remove(TOMBSTONED_TEXT.get());
 
     // When
     Exception e = assertThrowsExactly(InvalidRequestException.class,
         () -> schemaValidator.validatePutRequest(request));
 
     // Then
-    assertThat(e.getMessage()).contains(MISSING_MSG).contains(TOMBSTONE_TEXT.get());
+    assertThat(e.getMessage()).contains(MISSING_MSG).contains(TOMBSTONED_TEXT.get());
   }
 
 }

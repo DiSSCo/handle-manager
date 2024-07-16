@@ -15,7 +15,7 @@ import org.springframework.lang.Nullable;
 @Getter
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public class MediaObjectRequest extends DoiRecordRequest {
+public class DigitalMediaRequest extends DoiRecordRequest {
 
   @JsonProperty(required = true)
   private final String mediaHost;
@@ -60,7 +60,7 @@ public class MediaObjectRequest extends DoiRecordRequest {
   @JsonProperty(value = "dcterms:conformsTo")
   private final String dctermsConformsTo;
 
-  public MediaObjectRequest(
+  public DigitalMediaRequest(
       String issuedForAgent,
       String pidIssuer,
       String[] locations,
@@ -90,7 +90,7 @@ public class MediaObjectRequest extends DoiRecordRequest {
   ) throws InvalidRequestException {
     super(issuedForAgent, pidIssuer, StructuralType.DIGITAL,
         locations,
-        referentName, FdoType.MEDIA_OBJECT.getDigitalObjectName(), primaryReferentType);
+        referentName, FdoType.DIGITAL_MEDIA.getDigitalObjectName(), primaryReferentType);
     this.mediaHost = mediaHost;
     this.mediaHostName = mediaHostName;
     this.dctermsFormat = dctermsFormat;

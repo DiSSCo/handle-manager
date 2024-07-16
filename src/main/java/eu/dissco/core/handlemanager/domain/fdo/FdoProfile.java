@@ -1,6 +1,5 @@
 package eu.dissco.core.handlemanager.domain.fdo;
 
-import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -21,8 +20,9 @@ public enum FdoProfile {
   PID_STATUS("pidStatus", 13),
 
   // Tombstone
-  TOMBSTONE_TEXT("tombstoneText", 30),
-  TOMBSTONE_PIDS("tombstonePids", 31),
+  TOMBSTONED_TEXT("ods:tombstonedText", 30),
+  HAS_RELATED_PID("hasRelatedPID", 31),
+  TOMBSTONED_DATE("tombstonedDate", 32),
 
   // DOI
   REFERENT_TYPE("referentType", 40),
@@ -109,17 +109,6 @@ public enum FdoProfile {
 
   public int index() {
     return this.index;
-  }
-
-  public static int retrieveIndex(String searchAttribute) {
-    var fdoProfile = Arrays.stream(FdoProfile.values())
-        .filter(fdoRow -> fdoRow.attribute.equals(searchAttribute))
-        .findFirst();
-    if (fdoProfile.isPresent()) {
-      return fdoProfile.get().index;
-    }
-    log.error("Unable to locate index for requested attribute {}", searchAttribute);
-    throw new IllegalStateException(searchAttribute + " not valid fdo attribute");
   }
 
 }
