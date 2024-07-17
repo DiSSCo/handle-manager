@@ -11,6 +11,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PREFIX;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SUFFIX;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.UI_URL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDataMappingRequestObject;
@@ -72,7 +73,6 @@ class PidControllerTest {
 
   private PidController controller;
 
-  private final String SANDBOX_URI = "https://sandbox.dissco.tech";
   @Mock
   private ApplicationProperties applicationProperties;
 
@@ -84,13 +84,13 @@ class PidControllerTest {
   @Test
   void testResolveSingleHandle() throws Exception {
     // Given
-    String path = SANDBOX_URI + PREFIX + "/" + SUFFIX;
+    String path = UI_URL + "/" + PREFIX + "/" + SUFFIX;
     MockHttpServletRequest r = new MockHttpServletRequest();
     r.setRequestURI(PREFIX + "/" + SUFFIX);
     var responseExpected = givenReadResponse(List.of(HANDLE), path, FdoType.HANDLE,
         HANDLE_DOMAIN);
 
-    given(applicationProperties.getUiUrl()).willReturn(SANDBOX_URI);
+    given(applicationProperties.getUiUrl()).willReturn(UI_URL);
     given(service.resolveSingleRecord(HANDLE, path)).willReturn(responseExpected);
     given(applicationProperties.getPrefix()).willReturn(PREFIX);
 
@@ -149,7 +149,7 @@ class PidControllerTest {
   @Test
   void testResolveBatchHandle() throws Exception {
     // Given
-    String path = SANDBOX_URI + "view";
+    String path = UI_URL + "/view";
     MockHttpServletRequest r = new MockHttpServletRequest();
     r.setRequestURI("view");
 
@@ -157,7 +157,7 @@ class PidControllerTest {
 
     var responseExpected = givenReadResponse(handleString, path, FdoType.HANDLE,
         HANDLE_DOMAIN);
-    given(applicationProperties.getUiUrl()).willReturn(SANDBOX_URI);
+    given(applicationProperties.getUiUrl()).willReturn(UI_URL);
     given(applicationProperties.getMaxHandles()).willReturn(1000);
     given(service.resolveBatchRecord(anyList(), eq(path))).willReturn(responseExpected);
 

@@ -54,7 +54,7 @@ public class PidController {
   @GetMapping("/{prefix}/{suffix}")
   public ResponseEntity<JsonApiWrapperRead> resolvePid(@PathVariable("prefix") String prefix,
       @PathVariable("suffix") String suffix, HttpServletRequest r) throws PidResolutionException {
-    String path = applicationProperties.getUiUrl() + r.getRequestURI();
+    String path = applicationProperties.getUiUrl() + "/" + r.getRequestURI();
     String handle = prefix + "/" + suffix;
 
     if (prefix.equals(applicationProperties.getPrefix())) {
@@ -71,7 +71,7 @@ public class PidController {
   public ResponseEntity<JsonApiWrapperRead> resolvePids(
       @RequestParam List<String> handles,
       HttpServletRequest r) throws InvalidRequestException {
-    String path = applicationProperties.getUiUrl() + r.getRequestURI();
+    String path = applicationProperties.getUiUrl() + "/" + r.getRequestURI();
 
     if (handles.size() > applicationProperties.getMaxHandles()) {
       throw new InvalidRequestException(

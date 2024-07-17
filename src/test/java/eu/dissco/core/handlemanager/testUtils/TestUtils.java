@@ -83,7 +83,10 @@ import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_TYP
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import eu.dissco.core.handlemanager.configuration.InstantDeserializer;
+import eu.dissco.core.handlemanager.configuration.InstantSerializer;
 import eu.dissco.core.handlemanager.domain.fdo.AnnotationRequest;
 import eu.dissco.core.handlemanager.domain.fdo.DataMappingRequest;
 import eu.dissco.core.handlemanager.domain.fdo.DigitalMediaRequest;
@@ -165,7 +168,6 @@ public class TestUtils {
   public static final String REFERENT_NAME_TESTVAL = "Bird nest";
   public static final String PRIMARY_REFERENT_TYPE_TESTVAL = "materialSample";
 
-
   // Generated Attributes
   public static final String PID_STATUS_TESTVAL = PidStatus.ACTIVE.name();
   public static final String REFERENT_DOI_NAME_TESTVAL = PREFIX + "/" + SUFFIX;
@@ -180,36 +182,40 @@ public class TestUtils {
   public static final Motivation MOTIVATION_TESTVAL = Motivation.EDITING;
   public static final UUID ANNOTATION_HASH_TESTVAL = UUID.fromString(
       "550e8400-e29b-41d4-a716-446655440000");
-
   // Media Objects
   public static final String MEDIA_HOST_TESTVAL = SPECIMEN_HOST_TESTVAL;
   public static final String MEDIA_HOST_NAME_TESTVAL = SPECIMEN_HOST_NAME_TESTVAL;
   public static final LinkedDigitalObjectType LINKED_DIGITAL_OBJECT_TYPE_TESTVAL = LinkedDigitalObjectType.SPECIMEN;
   public static final String LINKED_DO_PID_TESTVAL = HANDLE;
-  public static final String LICENSE_NAME_TESTVAL = "CC0 1.0 Universal (CC0 1.0) Public Domain Dedication";
   public static final String PRIMARY_MEDIA_ID_TESTVAL = "https://images.com/ABC";
   // Mappings
   public static final String SOURCE_DATA_STANDARD_TESTVAL = "dwc";
   // MAS
   public static final String MAS_NAME_TESTVAL = "Plant Organ detection";
-
+  // Tombstone Record vals
+  public static final String TOMBSTONE_TEXT_TESTVAL = "pid was deleted";
+  // Misc
   public static final String API_URL = "https://sandbox.dissco.tech/api/v1";
   public static final String UI_URL = "https://sandbox.dissco.tech";
   public static final String PATH = UI_URL + HANDLE;
   public static final String ORCHESTRATION_URL = "https://orchestration.dissco.tech/api/v1";
   public static final String PTR_TYPE_DOI = "doi";
-  public final static String PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL = "BOTANICAL.QRS.123";
-  public final static String NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL =
+  public static final String PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL = "BOTANICAL.QRS.123";
+  public static final String NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL =
       PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL + ":" + ROR_IDENTIFIER;
-  public final static String EXTERNAL_PID = "21.T11148/d8de0819e144e4096645";
+  public static final String EXTERNAL_PID = "21.T11148/d8de0819e144e4096645";
+  public static final TransformerFactory TRANSFORMER_FACTORY = TransformerFactory.newInstance();
+  public static final DocumentBuilderFactory DOC_BUILDER_FACTORY = DocumentBuilderFactory.newInstance();
+  public static final ObjectMapper MAPPER;
 
-  // Tombstone Record vals
-  public final static String TOMBSTONE_TEXT_TESTVAL = "pid was deleted";
-  // Pid Type Record vals
-  public static ObjectMapper MAPPER = new ObjectMapper().findAndRegisterModules();
-
-  public static TransformerFactory TRANSFORMER_FACTORY = TransformerFactory.newInstance();
-  public static DocumentBuilderFactory DOC_BUILDER_FACTORY = DocumentBuilderFactory.newInstance();
+  static {
+    var mapper = new ObjectMapper().findAndRegisterModules();
+    SimpleModule dateModule = new SimpleModule();
+    dateModule.addSerializer(Instant.class, new InstantSerializer());
+    dateModule.addDeserializer(Instant.class, new InstantDeserializer());
+    mapper.registerModule(dateModule);
+    MAPPER = mapper;
+  }
 
   private TestUtils() {
     throw new IllegalStateException("Utility class");

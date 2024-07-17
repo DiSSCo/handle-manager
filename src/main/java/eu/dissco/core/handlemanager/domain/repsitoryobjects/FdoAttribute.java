@@ -36,7 +36,7 @@ public class FdoAttribute {
   }
 
   @JsonCreator
-  public FdoAttribute(Integer index, String type, Integer ttl, Double timestamp, Document data) {
+  public FdoAttribute(Integer index, String type, Integer ttl, Instant timestamp, Document data) {
     this.index = index;
     this.type = type;
     var value = data.get("value", Object.class);
@@ -50,7 +50,7 @@ public class FdoAttribute {
       this.data = new AdminHandleData(prefix);
     }
     this.ttl = ttl;
-    this.timestamp = Instant.ofEpochSecond(timestamp.longValue());
+    this.timestamp = timestamp;
   }
 
   @JsonIgnore

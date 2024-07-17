@@ -6,7 +6,7 @@
     <artifactId>spring-boot-starter-parent</artifactId>
     <groupId>org.springframework.boot</groupId>
     <relativePath/>
-    <version>3.3.1</version>
+    <version>3.3.1</version> <!-- lookup parent from repository -->
   </parent>
   <artifactId>handle-manager</artifactId>
   <version>0.0.1-SNAPSHOT</version>
@@ -18,10 +18,10 @@
   <properties>
     <java.version>17</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <testcontainers.version>1.17.6</testcontainers.version>
+    <testcontainers.version>1.19.8</testcontainers.version>
     <apache-commons.version>4.3</apache-commons.version>
     <mockito-inline.version>5.2.0</mockito-inline.version>
-    <mongodb-driver.version>4.11.1</mongodb-driver.version>
+    <mongodb-driver.version>5.1.1</mongodb-driver.version>
     <okhttp3.version>4.10.0</okhttp3.version>
     <sonar.coverage.jacoco.xmlReportPaths>
       ../app-it/target/site/jacoco-aggregate/jacoco.xml

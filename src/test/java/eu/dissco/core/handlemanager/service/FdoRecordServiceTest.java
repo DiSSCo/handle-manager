@@ -74,15 +74,12 @@ import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.web.PidResolver;
-import java.time.Clock;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
@@ -99,8 +96,6 @@ class FdoRecordServiceTest {
   private ApplicationProperties applicationProperties;
   @Mock
   Environment environment;
-  private MockedStatic<Instant> mockedStatic;
-  private MockedStatic<Clock> mockedClock;
 
   @BeforeEach
   void init() throws PidResolutionException {
