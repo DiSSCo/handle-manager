@@ -6,7 +6,7 @@
     <artifactId>spring-boot-starter-parent</artifactId>
     <groupId>org.springframework.boot</groupId>
     <relativePath/>
-    <version>3.2.4</version> <!-- lookup parent from repository -->
+    <version>3.3.1</version>
   </parent>
   <artifactId>handle-manager</artifactId>
   <version>0.0.1-SNAPSHOT</version>
@@ -28,7 +28,6 @@
     </sonar.coverage.jacoco.xmlReportPaths>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     <sonar.organization>dissco</sonar.organization>
-    <spring-security.version>6.2.3</spring-security.version> <!-- 21/03/24: CVE-2024-22257-->
     <version.victools>4.28.0</version.victools>
   </properties>
 
