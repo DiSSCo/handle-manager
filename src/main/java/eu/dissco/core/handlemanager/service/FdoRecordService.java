@@ -121,7 +121,6 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.Document;
 import org.springframework.stereotype.Service;
 
 
@@ -170,30 +169,6 @@ public class FdoRecordService {
 
   private final DateTimeFormatter dt = DateTimeFormatter.ofPattern(DATE_STRING)
       .withZone(ZoneId.of("UTC"));
-
-  public List<Document> toMongoDbDocument(List<FdoRecord> fdoRecords)
-      throws JsonProcessingException {
-    var documentList = new ArrayList<Document>();
-    for (var fdoRecord : fdoRecords) {
-      var doc = Document.parse(mapper.writeValueAsString(fdoRecord));
-      addLocalId(fdoRecord, doc);
-      documentList.add(doc);
-    }
-    return documentList;
-  }
-
-  private void addLocalId(FdoRecord fdoRecord, Document doc) {
-    if (fdoRecord.primaryLocalId() == null) {
-      return;
-    }
-    if (DIGITAL_SPECIMEN.equals(fdoRecord.fdoType())) {
-      doc.append(NORMALISED_SPECIMEN_OBJECT_ID.get(), fdoRecord.primaryLocalId());
-    } else if (DIGITAL_MEDIA.equals(fdoRecord.fdoType())) {
-      doc.append(PRIMARY_MEDIA_ID.get(), fdoRecord.primaryLocalId());
-    } else if (ANNOTATION.equals(fdoRecord.fdoType())) {
-      doc.append(ANNOTATION_HASH.get(), fdoRecord.primaryLocalId());
-    }
-  }
 
   /* Handle Record Creation */
   public FdoRecord prepareNewHandleRecord(HandleRecordRequest request, String handle,

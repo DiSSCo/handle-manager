@@ -16,7 +16,7 @@ import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
-import eu.dissco.core.handlemanager.repository.PidRepository;
+import eu.dissco.core.handlemanager.repository.MongoRepository;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
@@ -33,7 +33,7 @@ public class DoiService extends PidService {
   public DoiService(FdoRecordService fdoRecordService,
       PidNameGeneratorService pidNameGeneratorService,
       ObjectMapper mapper, ProfileProperties profileProperties,
-      DataCiteService dataCiteService, PidRepository mongoRepository) {
+      DataCiteService dataCiteService, MongoRepository mongoRepository) {
     super(fdoRecordService, pidNameGeneratorService, mapper, profileProperties,
         mongoRepository);
     this.dataCiteService = dataCiteService;
@@ -57,14 +57,14 @@ public class DoiService extends PidService {
         default -> throw new UnsupportedOperationException(
             String.format(TYPE_ERROR_MESSAGE, type.getDigitalObjectName()));
       }
-      fdoDocuments = fdoRecordService.toMongoDbDocument(fdoRecords);
+      fdoDocuments = toMongoDbDocument(fdoRecords);
     } catch (JsonProcessingException | PidResolutionException e) {
       throw new InvalidRequestException(
           "An error has occurred parsing a record in request. More information: "
               + e.getMessage());
     }
     log.info("Persisting new DOIs to Document Store");
-    mongoRepository.postBatchHandleRecord(fdoDocuments);
+    mongoRepository.postHandleRecords(fdoDocuments);
     log.info("Publishing to DataCite");
     publishToDataCite(fdoRecords, EventType.CREATE);
     return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, type));
@@ -88,8 +88,8 @@ public class DoiService extends PidService {
         default -> throw new UnsupportedOperationException(
             String.format(TYPE_ERROR_MESSAGE, fdoType.getDigitalObjectName()));
       }
-      fdoDocuments = fdoRecordService.toMongoDbDocument(fdoRecords);
-      mongoRepository.updateHandleRecord(fdoDocuments);
+      fdoDocuments = toMongoDbDocument(fdoRecords);
+      mongoRepository.updateHandleRecords(fdoDocuments);
       publishToDataCite(fdoRecords, EventType.UPDATE);
       return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, fdoType));
     } catch (JsonProcessingException e) {

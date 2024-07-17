@@ -119,19 +119,15 @@ public class PidController {
       Authentication authentication) throws InvalidRequestException, UnprocessableEntityException {
     log.info("Received single update request for PID {}/{} from user {}", prefix, suffix,
         authentication.getName());
-    schemaValidator.validatePatchRequest(request);
-
-    JsonNode data = request.get(NODE_DATA);
-    byte[] handle = (prefix + "/" + suffix).getBytes(StandardCharsets.UTF_8);
-    byte[] handleData = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
-
-    if (!Arrays.equals(handle, handleData)) {
+    schemaValidator.validatePutRequest(request);
+    var handle = (prefix + "/" + suffix);
+    var handleData = request.get(NODE_DATA).get(NODE_ID).asText();
+    if (!handle.equals(handleData)) {
       throw new InvalidRequestException(String.format(
           "Handle in request path does not match id in request body. Path: %s, Body: %s",
-          new String(handle, StandardCharsets.UTF_8),
-          new String(handleData, StandardCharsets.UTF_8)));
+          handle,
+          handleData));
     }
-
     return ResponseEntity.status(HttpStatus.OK).body(service.updateRecords(List.of(request), true));
   }
 
@@ -141,7 +137,7 @@ public class PidController {
       Authentication authentication) throws InvalidRequestException, UnprocessableEntityException {
     log.info("Validating batch update request from user {}", authentication.getName());
     for (JsonNode request : requests) {
-      schemaValidator.validatePatchRequest(request);
+      schemaValidator.validatePutRequest(request);
     }
     log.info("Received valid batch update request for {} PIDS", requests.size());
     var result = service.updateRecords(requests, true);
@@ -168,7 +164,7 @@ public class PidController {
               + ". Body: " + new String(handleRequest, StandardCharsets.UTF_8));
     }
     return ResponseEntity.status(HttpStatus.OK)
-        .body(service.tombstoneRecordBatch(List.of(request)));
+        .body(service.tombstoneRecords(List.of(request)));
   }
 
   @Operation(summary = "rollback handle creation")
@@ -196,7 +192,7 @@ public class PidController {
 
     log.info("Validating rollback update request from user {}", authentication.getName());
     for (JsonNode request : requests) {
-      schemaValidator.validatePatchRequest(request);
+      schemaValidator.validatePutRequest(request);
     }
     var handles = requests.stream().map(r -> r.get(NODE_DATA).get(NODE_ID).asText())
         .limit(LOG_LIMIT).toList();
@@ -224,7 +220,7 @@ public class PidController {
       schemaValidator.validatePutRequest(request);
     }
     log.info("Received valid archive request");
-    return ResponseEntity.status(HttpStatus.OK).body(service.tombstoneRecordBatch(requests));
+    return ResponseEntity.status(HttpStatus.OK).body(service.tombstoneRecords(requests));
   }
 
 }

@@ -1,7 +1,7 @@
 package eu.dissco.core.handlemanager.service;
 
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
-import eu.dissco.core.handlemanager.repository.PidRepository;
+import eu.dissco.core.handlemanager.repository.MongoRepository;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -24,7 +24,7 @@ public class PidNameGeneratorService {
   private static final int LENGTH = 11;
   private static final char[] SYMBOLS = "ABCDEFGHJKLMNPQRSTVWXYZ1234567890".toCharArray();
   private final char[] buf = new char[LENGTH];
-  private final PidRepository pidRepository;
+  private final MongoRepository mongoRepository;
   private final Random random;
 
 
@@ -51,7 +51,7 @@ public class PidNameGeneratorService {
     var handleSet = new HashSet<>(handleList);
 
     // Check for duplicates from repository and wrap the duplicates
-    var duplicates = new HashSet<>(pidRepository.getExistingHandles(handleList));
+    var duplicates = new HashSet<>(mongoRepository.getExistingHandles(handleList));
 
     // If a duplicate was found, recursively call this function
     // Generate new handles for every duplicate found and add it to our hash list

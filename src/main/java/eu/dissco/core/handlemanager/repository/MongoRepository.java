@@ -1,5 +1,6 @@
 package eu.dissco.core.handlemanager.repository;
 
+import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.in;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DIGITAL_OBJECT_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID;
@@ -26,7 +27,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 @RequiredArgsConstructor
 @Slf4j
-public class PidRepository {
+public class MongoRepository {
 
   private final MongoCollection<Document> collection;
   private final ObjectMapper mapper;
@@ -47,13 +48,13 @@ public class PidRepository {
     return existingHandles;
   }
 
-  public void postBatchHandleRecord(List<Document> handleRecords) {
+  public void postHandleRecords(List<Document> handleRecords) {
     collection.insertMany(handleRecords);
   }
 
-  public void updateHandleRecord(List<Document> handleRecords) {
+  public void updateHandleRecords(List<Document> handleRecords) {
     var queryList = handleRecords.stream().map(doc -> {
-      var filter = in(doc.get(ID).toString());
+      var filter = eq(doc.get(ID));
       return new ReplaceOneModel<>(filter, doc);
     }).toList();
     collection.bulkWrite(queryList);
@@ -85,7 +86,7 @@ public class PidRepository {
             mapper.writeValueAsString(jsonRecord));
       } else {
         var attributes = mapper.convertValue(jsonRecord.get("values"),
-            new TypeReference<List<FdoAttribute>>() {
+            new TypeReference<ArrayList<FdoAttribute>>() {
             });
         var fdoType = getFdoType(attributes, jsonRecord.get("_id").asText());
         handleRecords.add(new FdoRecord(jsonRecord.get("_id").asText(),

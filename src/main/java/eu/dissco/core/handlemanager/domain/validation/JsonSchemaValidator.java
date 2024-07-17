@@ -28,7 +28,6 @@ import eu.dissco.core.handlemanager.domain.fdo.MasRequest;
 import eu.dissco.core.handlemanager.domain.fdo.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.fdo.SourceSystemRequest;
 import eu.dissco.core.handlemanager.domain.fdo.TombstoneRecordRequest;
-import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
 import eu.dissco.core.handlemanager.domain.requests.PutRequest;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
@@ -47,55 +46,34 @@ public class JsonSchemaValidator {
 
   // JsonNodes
   private JsonNode postReqJsonNode;
-  private JsonNode patchReqJsonNode;
   private JsonNode putReqJsonNode;
   private JsonNode handlePostReqJsonNode;
-  private JsonNode handlePatchReqJsonNode;
   private JsonNode doiPostReqJsonNode;
-  private JsonNode doiPatchReqJsonNode;
   private JsonNode digitalSpecimenPostReqJsonNode;
-  private JsonNode digitalSpecimenPatchReqJsonNode;
   private JsonNode digitalMediaPostReqJsonNode;
-  private JsonNode digitalMediaPatchReqJsonNode;
   private JsonNode tombstoneReqJsonNode;
   private JsonNode annotationPostReqJsonNode;
-  private JsonNode annotationPatchReqJsonNode;
   private JsonNode mappingPostReqJsonNode;
-  private JsonNode mappingPatchReqJsonNode;
   private JsonNode sourceSystemPostReqJsonNode;
-  private JsonNode sourceSystemPatchReqJsonNode;
   private JsonNode organisationPostReqJsonNode;
-  private JsonNode organisationPatchReqJsonNode;
   private JsonNode masPostReqJsonNode;
-  private JsonNode masPatchReqJsonNode;
 
   // Schemas
   private JsonSchema postReqSchema;
-  private JsonSchema patchReqSchema;
   private JsonSchema putReqSchema;
   private JsonSchema handlePostReqSchema;
-  private JsonSchema handlePatchReqSchema;
   private JsonSchema doiPostReqSchema;
-  private JsonSchema doiPatchReqSchema;
   private JsonSchema digitalSpecimenPostReqSchema;
-  private JsonSchema digitalSpecimenPatchReqSchema;
   private JsonSchema digitalMediaPostReqSchema;
-  private JsonSchema digitalMediaPatchReqSchema;
   private JsonSchema tombstoneReqSchema;
   private JsonSchema annotationPostReqSchema;
-  private JsonSchema annotationPatchReqSchema;
   private JsonSchema mappingPostReqSchema;
-  private JsonSchema mappingPatchReqSchema;
   private JsonSchema sourceSystemPostReqSchema;
-  private JsonSchema sourceSystemPatchReqSchema;
   private JsonSchema organisationPostReqSchema;
-  private JsonSchema organisationPatchReqSchema;
   private JsonSchema masPostReqSchema;
-  private JsonSchema masPatchReqSchema;
 
   public JsonSchemaValidator() {
     setPostRequestAttributesJsonNodes();
-    setPatchRequestAttributesJsonNodes();
     setRequestJsonNodes();
     setJsonSchemas();
   }
@@ -151,48 +129,9 @@ public class JsonSchemaValidator {
     return configBuilder.build();
   }
 
-  private void setPatchRequestAttributesJsonNodes() {
-    var schemaGenerator = new SchemaGenerator(attributesSchemaConfig());
-    handlePatchReqJsonNode = schemaGenerator.generateSchema(HandleRecordRequest.class);
-    doiPatchReqJsonNode = schemaGenerator.generateSchema(DoiRecordRequest.class);
-    digitalSpecimenPatchReqJsonNode = schemaGenerator.generateSchema(DigitalSpecimenRequest.class);
-    digitalMediaPatchReqJsonNode = schemaGenerator.generateSchema(DigitalMediaRequest.class);
-    annotationPatchReqJsonNode = schemaGenerator.generateSchema(AnnotationRequest.class);
-    mappingPatchReqJsonNode = schemaGenerator.generateSchema(DataMappingRequest.class);
-    sourceSystemPatchReqJsonNode = schemaGenerator.generateSchema(SourceSystemRequest.class);
-    organisationPatchReqJsonNode = schemaGenerator.generateSchema(OrganisationRequest.class);
-    masPatchReqJsonNode = schemaGenerator.generateSchema(MasRequest.class);
-  }
-
-  private SchemaGeneratorConfig attributesSchemaConfig() {
-    // Secondary Configuration for schemas of Request Objects
-    // In these schemas not every field is required, but no unknown properties are allowed
-    // e.g. PATCH update attributes
-
-    SchemaGeneratorConfigBuilder configBuilder = new SchemaGeneratorConfigBuilder(
-        SchemaVersion.DRAFT_2020_12, OptionPreset.PLAIN_JSON)
-        .with(Option.FORBIDDEN_ADDITIONAL_PROPERTIES_BY_DEFAULT)
-        .with(
-            Option.FLATTENED_ENUMS_FROM_TOSTRING); // Uses the output of toString() as the enum vocabulary
-
-    configBuilder.forTypesInGeneral()
-        .withEnumResolver(scope -> scope.getType().getErasedType().isEnum()
-            ? Stream.of(scope.getType().getErasedType().getEnumConstants())
-            .map(v -> ((Enum) v).name()).toList()
-            : null);
-
-    // Min
-    configBuilder.forFields()
-        .withArrayMinItemsResolver(field -> field
-            .getAnnotationConsideringFieldAndGetterIfSupported(NotEmpty.class) == null ? null : 1);
-
-    return configBuilder.build();
-  }
-
   private void setRequestJsonNodes() {
     var schemaGenerator = new SchemaGenerator(requestSchemaConfig());
     postReqJsonNode = schemaGenerator.generateSchema(PostRequest.class);
-    patchReqJsonNode = schemaGenerator.generateSchema(PatchRequest.class);
     putReqJsonNode = schemaGenerator.generateSchema(PutRequest.class);
   }
 
@@ -226,7 +165,6 @@ public class JsonSchemaValidator {
     JsonSchemaFactory factory = JsonSchemaFactory.getInstance(VersionFlag.V202012);
 
     postReqSchema = factory.getSchema(postReqJsonNode);
-    patchReqSchema = factory.getSchema(patchReqJsonNode);
     putReqSchema = factory.getSchema(putReqJsonNode);
 
     handlePostReqSchema = factory.getSchema(handlePostReqJsonNode);
@@ -238,17 +176,6 @@ public class JsonSchemaValidator {
     sourceSystemPostReqSchema = factory.getSchema(sourceSystemPostReqJsonNode);
     organisationPostReqSchema = factory.getSchema(organisationPostReqJsonNode);
     masPostReqSchema = factory.getSchema(masPostReqJsonNode);
-
-    handlePatchReqSchema = factory.getSchema(handlePatchReqJsonNode);
-    doiPatchReqSchema = factory.getSchema(doiPatchReqJsonNode);
-    digitalSpecimenPatchReqSchema = factory.getSchema(digitalSpecimenPatchReqJsonNode);
-    digitalMediaPatchReqSchema = factory.getSchema(digitalMediaPatchReqJsonNode);
-    annotationPatchReqSchema = factory.getSchema(annotationPatchReqJsonNode);
-    mappingPatchReqSchema = factory.getSchema(mappingPatchReqJsonNode);
-    sourceSystemPatchReqSchema = factory.getSchema(sourceSystemPatchReqJsonNode);
-    organisationPatchReqSchema = factory.getSchema(organisationPatchReqJsonNode);
-    masPatchReqSchema = factory.getSchema(masPatchReqJsonNode);
-
     tombstoneReqSchema = factory.getSchema(tombstoneReqJsonNode);
 
   }
@@ -272,30 +199,6 @@ public class JsonSchemaValidator {
       case SOURCE_SYSTEM -> validateRequestAttributes(attributes, sourceSystemPostReqSchema, type);
       case ORGANISATION -> validateRequestAttributes(attributes, organisationPostReqSchema, type);
       case MAS -> validateRequestAttributes(attributes, masPostReqSchema, type);
-      default ->
-          throw new InvalidRequestException("Invalid Request. Reason: Invalid type: " + type);
-    }
-  }
-
-  public void validatePatchRequest(JsonNode requestRoot) throws InvalidRequestException {
-    var validationErrors = patchReqSchema.validate(requestRoot);
-    if (!validationErrors.isEmpty()) {
-      throw new InvalidRequestException(
-          setErrorMessage(validationErrors, "PATCH (update)"));
-    }
-    FdoType type = FdoType.fromString(requestRoot.get(NODE_DATA).get(NODE_TYPE).asText());
-    var attributes = requestRoot.get(NODE_DATA).get(NODE_ATTRIBUTES);
-    switch (type) {
-      case HANDLE -> validateRequestAttributes(attributes, handlePatchReqSchema, type);
-      case DOI -> validateRequestAttributes(attributes, doiPatchReqSchema, type);
-      case DIGITAL_SPECIMEN ->
-          validateRequestAttributes(attributes, digitalSpecimenPatchReqSchema, type);
-      case DIGITAL_MEDIA -> validateRequestAttributes(attributes, digitalMediaPatchReqSchema, type);
-      case ANNOTATION -> validateRequestAttributes(attributes, annotationPatchReqSchema, type);
-      case DATA_MAPPING -> validateRequestAttributes(attributes, mappingPatchReqSchema, type);
-      case SOURCE_SYSTEM -> validateRequestAttributes(attributes, sourceSystemPatchReqSchema, type);
-      case ORGANISATION -> validateRequestAttributes(attributes, organisationPatchReqSchema, type);
-      case MAS -> validateRequestAttributes(attributes, masPatchReqSchema, type);
       default ->
           throw new InvalidRequestException("Invalid Request. Reason: Invalid type: " + type);
     }

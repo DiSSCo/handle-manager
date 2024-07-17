@@ -74,6 +74,7 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.WAS_DERIVED_FRO
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.ANNOTATION;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_MEDIA;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_SPECIMEN;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoType.TOMBSTONE;
 import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ID;
@@ -168,7 +169,6 @@ public class TestUtils {
   // Generated Attributes
   public static final String PID_STATUS_TESTVAL = PidStatus.ACTIVE.name();
   public static final String REFERENT_DOI_NAME_TESTVAL = PREFIX + "/" + SUFFIX;
-  //DOIs
 
   //Digital Specimens
   public static final String ROR_IDENTIFIER = "0x123";
@@ -217,18 +217,9 @@ public class TestUtils {
 
   // Handle Attribute Lists
   public static FdoRecord givenHandleFdoRecord(String handle) throws Exception {
-    return new FdoRecord(handle, FdoType.HANDLE, genHandleRecordAttributes(handle), null);
+    return new FdoRecord(handle, FdoType.HANDLE,
+        genHandleRecordAttributes(handle, CREATED, FdoType.HANDLE), null);
   }
-
-  public static List<FdoAttribute> genHandleRecordAttributes(String handle) throws Exception {
-    return genHandleRecordAttributes(handle, FdoType.HANDLE);
-  }
-
-  public static List<FdoAttribute> genHandleRecordAttributes(String handle, FdoType fdoType)
-      throws Exception {
-    return genHandleRecordAttributes(handle, CREATED, fdoType);
-  }
-
 
   public static List<FdoAttribute> genHandleRecordAttributes(String handle, Instant timestamp,
       FdoType fdoType) throws Exception {
@@ -236,50 +227,36 @@ public class TestUtils {
     var request = givenHandleRecordRequestObject();
     var loc = setLocations(request.getLocations(), handle, fdoType);
     fdoAttributes.add(new FdoAttribute(LOC, CREATED, loc));
-
     // 1: FDO Profile
     fdoAttributes.add(new FdoAttribute(FDO_PROFILE, timestamp, fdoType.getFdoProfile()));
-
     // 2: FDO Record License
     fdoAttributes.add(new FdoAttribute(FDO_RECORD_LICENSE, timestamp,
         "https://creativecommons.org/publicdomain/zero/1.0/"));
-
     // 3: DigitalObjectType
     fdoAttributes.add(
         new FdoAttribute(DIGITAL_OBJECT_TYPE, timestamp, fdoType.getDigitalObjectType()));
-
     // 4: DigitalObjectName
     fdoAttributes.add(
         new FdoAttribute(DIGITAL_OBJECT_NAME, timestamp, fdoType.getDigitalObjectName()));
-
     // 5: Pid
     fdoAttributes.add(new FdoAttribute(PID, timestamp, fdoType.getDomain() + handle));
-
     // 6: PidIssuer
     fdoAttributes.add(new FdoAttribute(PID_ISSUER, timestamp, request.getPidIssuer()));
-
     // 7: pidIssuerName
     fdoAttributes.add(new FdoAttribute(PID_ISSUER_NAME, timestamp, PID_ISSUER_TESTVAL_OTHER));
-
     // 8: issuedForAgent
     fdoAttributes.add(new FdoAttribute(ISSUED_FOR_AGENT, timestamp, request.getIssuedForAgent()));
-
     // 9: issuedForAgentName
     fdoAttributes.add(new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp, ISSUED_FOR_AGENT_TESTVAL));
-
     // 10: pidRecordIssueDate
     fdoAttributes.add(new FdoAttribute(PID_RECORD_ISSUE_DATE, timestamp, ISSUE_DATE_TESTVAL));
-
     // 11: pidRecordIssueNumber
     fdoAttributes.add(new FdoAttribute(PID_RECORD_ISSUE_NUMBER, timestamp, "1"));
-
     // 12: structuralType
     fdoAttributes.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, STRUCTURAL_TYPE_TESTVAL.toString()));
-
     // 13: PidStatus
     fdoAttributes.add(new FdoAttribute(PID_STATUS, timestamp, PID_STATUS_TESTVAL));
-
     // 100 ADMIN
     fdoAttributes.add(new FdoAttribute(timestamp, PREFIX));
 
@@ -317,39 +294,20 @@ public class TestUtils {
     return new FdoRecord(HANDLE, fdoType, attributesWithUpdatedTimeStamp, primaryLocalId);
   }
 
-  public static List<FdoAttribute> genUpdateRecordAttributesAltLoc(String handle)
-      throws ParserConfigurationException, TransformerException {
-    var locAlt = setLocations(LOC_ALT_TESTVAL, handle, FdoType.HANDLE);
-    return List.of(new FdoAttribute(LOC, CREATED, locAlt));
-  }
-
   public static FdoRecord givenDoiFdoRecord(String handle) throws Exception {
-    return new FdoRecord(handle, FdoType.DOI, genDoiRecordAttributes(handle, FdoType.DOI), null);
-  }
-
-  public static List<FdoAttribute> genDoiRecordAttributes(String handle, FdoType type)
-      throws Exception {
-    return genDoiRecordAttributes(handle, type, givenDoiRecordRequestObject());
-  }
-
-  public static List<FdoAttribute> genDoiRecordAttributes(String handle, FdoType type,
-      DoiRecordRequest request) throws Exception {
-    return genDoiRecordAttributes(handle, CREATED, type, request);
+    return new FdoRecord(handle, FdoType.DOI,
+        genDoiRecordAttributes(handle, CREATED, FdoType.DOI, givenDoiRecordRequestObject()), null);
   }
 
   public static List<FdoAttribute> genDoiRecordAttributes(String handle, Instant timestamp,
       FdoType type, DoiRecordRequest request) throws Exception {
     var fdoRecord = genHandleRecordAttributes(handle, timestamp, type);
-
     // 40: referentType
     fdoRecord.add(new FdoAttribute(REFERENT_TYPE, timestamp, request.getReferentType()));
-
     // 41: referentDoiName
     fdoRecord.add(new FdoAttribute(REFERENT_DOI_NAME, timestamp, REFERENT_DOI_NAME_TESTVAL));
-
     // 42: referentName
     fdoRecord.add(new FdoAttribute(REFERENT_NAME, timestamp, request.getReferentName()));
-
     // 43: primaryReferentType
     fdoRecord.add(
         new FdoAttribute(PRIMARY_REFERENT_TYPE, timestamp, request.getPrimaryReferentType()));
@@ -358,14 +316,9 @@ public class TestUtils {
 
   public static FdoRecord givenDigitalSpecimenFdoRecord(String handle) throws Exception {
     return new FdoRecord(handle, FdoType.DIGITAL_SPECIMEN,
-        genDigitalSpecimenAttributes(handle, givenDigitalSpecimenRequestObjectNullOptionals()),
+        genDigitalSpecimenAttributes(handle, givenDigitalSpecimenRequestObjectNullOptionals(),
+            CREATED),
         NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL);
-  }
-
-  public static List<FdoAttribute> genDigitalSpecimenAttributes(String handle,
-      DigitalSpecimenRequest request) throws Exception {
-    return genDigitalSpecimenAttributes(handle, request, CREATED);
-
   }
 
   public static List<FdoAttribute> genDigitalSpecimenAttributes(String handle,
@@ -557,6 +510,11 @@ public class TestUtils {
 
   public static FdoRecord givenDataMappingFdoRecord(String handle) throws Exception {
     return new FdoRecord(handle, FdoType.DATA_MAPPING, genMappingAttributes(handle, CREATED), null);
+  }
+
+  public static FdoRecord givenTombstoneFdoRecord() throws Exception {
+    return new FdoRecord(HANDLE, FdoType.HANDLE,
+        genTombstoneAttributes(givenTombstoneRecordRequestObject()), null);
   }
 
   public static List<FdoAttribute> genAnnotationAttributes(String handle, boolean includeHash)
@@ -797,12 +755,26 @@ public class TestUtils {
         List.of(new HasRelatedPid(HANDLE_ALT, "Media ID")));
   }
 
-  public static JsonApiWrapperRead givenRecordResponseRead(List<String> handles, String path,
+  // Misc
+
+  public static FdoAttribute getField(List<FdoAttribute> fdoAttributes, FdoProfile targetField) {
+    for (var attribute : fdoAttributes) {
+      if (attribute.getIndex() == targetField.index()) {
+        return attribute;
+      }
+    }
+    log.error("Unable to find field {} in record {}", targetField, fdoAttributes);
+    throw new IllegalStateException();
+  }
+
+  // Json api Responses
+
+  public static JsonApiWrapperRead givenReadResponse(List<String> handles, String path,
       FdoType recordType, String domain) throws Exception {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
     for (String handle : handles) {
       var testDbRecord = genAttributes(recordType, handle);
-      JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
+      JsonNode recordAttributes = jsonFormatFdoRecord(testDbRecord);
       var pidLink = new JsonApiLinks(domain + handle);
       dataNodes.add(
           new JsonApiDataLinks(handle, recordType.getDigitalObjectType(), recordAttributes,
@@ -812,24 +784,24 @@ public class TestUtils {
     return new JsonApiWrapperRead(responseLink, dataNodes);
   }
 
-  public static JsonApiWrapperWrite givenRecordResponseWriteFullResponse(List<String> handles,
-      FdoType recordType) throws Exception {
+  public static JsonApiWrapperWrite givenWriteResponseFull(List<String> handles,
+      FdoType fdoType) throws Exception {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
     for (var handle : handles) {
-      var testDbRecord = genAttributes(recordType, handle);
-      JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
-
+      var testDbRecord = genAttributes(fdoType, handle);
+      JsonNode recordAttributes = jsonFormatFdoRecord(testDbRecord);
       var pidLink = new JsonApiLinks(HANDLE_DOMAIN + handle);
+      fdoType = fdoType == TOMBSTONE ? FdoType.HANDLE : fdoType;
       dataNodes.add(
-          new JsonApiDataLinks(handle, recordType.getDigitalObjectType(), recordAttributes,
+          new JsonApiDataLinks(handle, fdoType.getDigitalObjectType(), recordAttributes,
               pidLink));
     }
     return new JsonApiWrapperWrite(dataNodes);
   }
 
-  public static JsonApiWrapperWrite givenRecordResponseWriteFullResponse(
+  public static JsonApiWrapperWrite givenWriteResponseFull(
       FdoRecord fdoRecord) {
-    JsonNode recordAttributes = genObjectNodeAttributeRecord(fdoRecord.attributes());
+    JsonNode recordAttributes = jsonFormatFdoRecord(fdoRecord.attributes());
     var pidLink = new JsonApiLinks(HANDLE_DOMAIN + HANDLE);
     var dataNodes = List.of(
         new JsonApiDataLinks(HANDLE, fdoRecord.fdoType().getDigitalObjectType(), recordAttributes,
@@ -837,7 +809,7 @@ public class TestUtils {
     return new JsonApiWrapperWrite(dataNodes);
   }
 
-  public static JsonApiWrapperWrite givenRecordResponseWriteSmallResponse(
+  public static JsonApiWrapperWrite givenWriteResponseIdsOnly(
       List<FdoRecord> fdoRecords, FdoType fdoType, String domain) {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
     List<FdoAttribute> fdoSublist;
@@ -850,18 +822,14 @@ public class TestUtils {
             fdoSublist = List.of(getField(fdoRecord.attributes(), ANNOTATION_HASH));
           }
         }
-        case DIGITAL_SPECIMEN -> {
-          fdoSublist = List.of(getField(fdoRecord.attributes(), NORMALISED_SPECIMEN_OBJECT_ID));
-        }
-        case DIGITAL_MEDIA -> {
-          fdoSublist = List.of(getField(fdoRecord.attributes(), PRIMARY_MEDIA_ID),
-              getField(fdoRecord.attributes(), LINKED_DO_PID));
-        }
-        default -> {
-          fdoSublist = fdoRecord.attributes();
-        }
+        case DIGITAL_SPECIMEN ->
+            fdoSublist = List.of(getField(fdoRecord.attributes(), NORMALISED_SPECIMEN_OBJECT_ID));
+        case DIGITAL_MEDIA ->
+            fdoSublist = List.of(getField(fdoRecord.attributes(), PRIMARY_MEDIA_ID),
+                getField(fdoRecord.attributes(), LINKED_DO_PID));
+        default -> fdoSublist = fdoRecord.attributes();
       }
-      var recordAttributes = genObjectNodeAttributeRecord(fdoSublist);
+      var recordAttributes = jsonFormatFdoRecord(fdoSublist);
       var pidLink = new JsonApiLinks(domain + fdoRecord.handle());
       dataNodes.add(
           new JsonApiDataLinks(fdoRecord.handle(), fdoType.getDigitalObjectType(), recordAttributes,
@@ -870,95 +838,9 @@ public class TestUtils {
     return new JsonApiWrapperWrite(dataNodes);
   }
 
-  public static FdoAttribute getField(List<FdoAttribute> fdoAttributes, FdoProfile targetField) {
-    for (var attribute : fdoAttributes) {
-      if (attribute.getIndex() == targetField.index()) {
-        return attribute;
-      }
-    }
-    log.error("Unable to find field {} in record {}", targetField, fdoAttributes);
-    throw new IllegalStateException();
-  }
-
-
-  public static JsonApiWrapperWrite givenRecordResponseWriteGeneric(List<String> handles,
-      FdoType fdoType) throws Exception {
-    List<JsonApiDataLinks> dataNodes = new ArrayList<>();
-
-    for (var handle : handles) {
-      var testDbRecord = genAttributes(fdoType, handle);
-      JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
-
-      var pidLink = new JsonApiLinks(HANDLE_DOMAIN + handle);
-      dataNodes.add(new JsonApiDataLinks(handle, "PID", recordAttributes, pidLink));
-    }
-    return new JsonApiWrapperWrite(dataNodes);
-  }
-
-  public static JsonApiWrapperWrite givenRecordResponseWrite(List<String> handles,
-      FdoType attributeType, String recordType) throws Exception {
-    List<JsonApiDataLinks> dataNodes = new ArrayList<>();
-    for (var handle : handles) {
-      var testDbRecord = genAttributes(attributeType, handle);
-      JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
-      var pidLink = new JsonApiLinks(HANDLE_DOMAIN + handle);
-      dataNodes.add(new JsonApiDataLinks(handle, recordType, recordAttributes, pidLink));
-    }
-    return new JsonApiWrapperWrite(dataNodes);
-  }
-
-  public static JsonApiWrapperWrite givenRecordResponseWriteAltLoc(List<String> handles)
-      throws Exception {
-    return givenRecordResponseWriteAltLoc(handles, FdoType.HANDLE);
-  }
-
-  public static JsonApiWrapperWrite givenRecordResponseWriteAltLoc(List<String> handles,
-      FdoType recordType) throws Exception {
-    List<JsonApiDataLinks> dataNodes = new ArrayList<>();
-
-    for (var handle : handles) {
-      var testDbRecord = genUpdateRecordAttributesAltLoc(handle);
-      JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
-
-      var pidLink = new JsonApiLinks(HANDLE_DOMAIN + handle);
-      dataNodes.add(
-          new JsonApiDataLinks(handle, recordType.getDigitalObjectType(), recordAttributes,
-              pidLink));
-    }
-    return new JsonApiWrapperWrite(dataNodes);
-  }
-
-  public static JsonApiWrapperWrite givenRecordResponseNullAttributes(List<String> handles,
-      FdoType type) {
-    List<JsonApiDataLinks> dataNodes = new ArrayList<>();
-    for (var handle : handles) {
-      var pidLink = new JsonApiLinks(HANDLE_DOMAIN + handle);
-      dataNodes.add(new JsonApiDataLinks(handle, type.getDigitalObjectType(), null, pidLink));
-    }
-    return new JsonApiWrapperWrite(dataNodes);
-  }
-
-
-  public static JsonApiWrapperWrite givenRecordResponseWriteArchive(List<String> handles)
-      throws Exception {
-    List<JsonApiDataLinks> dataNodes = new ArrayList<>();
-
-    for (var handle : handles) {
-      List<FdoAttribute> testDbRecord = Collections.emptyList(); // todo
-      JsonNode recordAttributes = genObjectNodeAttributeRecord(testDbRecord);
-
-      var pidLink = new JsonApiLinks(HANDLE_DOMAIN + handle);
-      dataNodes.add(
-          new JsonApiDataLinks(handle, FdoType.TOMBSTONE.getDigitalObjectType(), recordAttributes,
-              pidLink));
-    }
-    return new JsonApiWrapperWrite(dataNodes);
-  }
-
   public static List<FdoAttribute> genAttributes(FdoType fdoType, String handle) throws Exception {
     return genAttributes(fdoType, handle, CREATED);
   }
-
 
   public static List<FdoAttribute> genAttributes(FdoType fdoType, String handle, Instant timestamp)
       throws Exception {
@@ -988,6 +870,9 @@ public class TestUtils {
       case MAS -> {
         return genMasAttributes(handle, timestamp);
       }
+      case TOMBSTONE -> {
+        return genTombstoneAttributes(givenTombstoneRecordRequestObject());
+      }
       default -> {
         log.warn("Default type");
         return genHandleRecordAttributes(handle, timestamp, FdoType.HANDLE);
@@ -995,64 +880,38 @@ public class TestUtils {
     }
   }
 
-  public static List<JsonNode> genUpdateRequestBatch(List<String> handles, FdoType type,
+  public static List<JsonNode> givenUpdateRequest() {
+    return givenUpdateRequest(List.of(HANDLE), FdoType.HANDLE,
+        MAPPER.valueToTree(givenHandleRecordRequestObjectUpdate()));
+  }
+
+  public static JsonNode givenUpdateRequestSingle(FdoType fdoType, Object request) {
+    return givenUpdateRequest(List.of(HANDLE), fdoType, MAPPER.valueToTree(request)).get(0);
+  }
+
+  public static List<JsonNode> givenUpdateRequest(List<String> handles, FdoType type,
       JsonNode requestAttributes) {
-    ObjectMapper mapper = new ObjectMapper();
-    ObjectNode requestNodeRoot = mapper.createObjectNode();
-    ObjectNode requestNodeData = mapper.createObjectNode();
-    List<JsonNode> requestNodeList = new ArrayList<>();
-
+    var requestNodeList = new ArrayList<JsonNode>();
     for (var handle : handles) {
-      requestNodeData.put("type", type.getDigitalObjectType());
-      requestNodeData.put("id", handle);
-      requestNodeData.set("attributes", requestAttributes);
-      requestNodeRoot.set("data", requestNodeData);
-
-      requestNodeList.add(requestNodeRoot.deepCopy());
-
-      requestNodeData.removeAll();
-      requestNodeRoot.removeAll();
+      requestNodeList.add(MAPPER.createObjectNode()
+          .set(NODE_DATA, MAPPER.createObjectNode()
+              .put(NODE_TYPE, type.getDigitalObjectType())
+              .put(NODE_ID, handle)
+              .set(NODE_ATTRIBUTES, requestAttributes)));
     }
     return requestNodeList;
   }
 
-  public static List<JsonNode> genTombstoneRequestBatch(List<String> handles) {
-    ObjectMapper mapper = new ObjectMapper();
-    ObjectNode requestNodeRoot = mapper.createObjectNode();
-    ObjectNode requestNodeData = mapper.createObjectNode();
-    List<JsonNode> requestNodeList = new ArrayList<>();
-
-    for (String handle : handles) {
-      requestNodeData.put(NODE_TYPE, FdoType.HANDLE.getDigitalObjectType());
-      requestNodeData.put(NODE_ID, handle);
-      requestNodeData.set(NODE_ATTRIBUTES, genTombstoneRequest());
-      requestNodeRoot.set(NODE_DATA, requestNodeData);
-
-      requestNodeList.add(requestNodeRoot.deepCopy());
-
-      requestNodeData.removeAll();
-      requestNodeRoot.removeAll();
-    }
-
-    return requestNodeList;
-  }
-
-  public static JsonNode genUpdateRequestAltLoc() {
-    ObjectMapper mapper = new ObjectMapper();
-    ObjectNode rootNode = mapper.createObjectNode();
-    rootNode.putArray("locations").add(LOC_ALT_TESTVAL[0]);
-    return rootNode;
-  }
-
-  public static JsonNode genTombstoneRequest() {
-    ObjectMapper mapper = new ObjectMapper();
-    ObjectNode rootNode = mapper.createObjectNode();
-    rootNode.put(TOMBSTONED_TEXT.get(), TOMBSTONE_TEXT_TESTVAL);
-    return rootNode;
+  public static List<JsonNode> givenTombstoneRequest() {
+    var request = MAPPER.createObjectNode()
+        .set(NODE_DATA, MAPPER.createObjectNode()
+            .put(NODE_ID, HANDLE)
+            .set(NODE_ATTRIBUTES, MAPPER.valueToTree(givenTombstoneRecordRequestObject())));
+    return List.of(request);
   }
 
   // Handle Attributes as ObjectNode
-  public static JsonNode genObjectNodeAttributeRecord(List<FdoAttribute> dbRecord) {
+  public static JsonNode jsonFormatFdoRecord(List<FdoAttribute> dbRecord) {
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode rootNode = mapper.createObjectNode();
     for (var row : dbRecord) {

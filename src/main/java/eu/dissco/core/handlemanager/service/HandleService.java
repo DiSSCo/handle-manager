@@ -23,7 +23,7 @@ import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
-import eu.dissco.core.handlemanager.repository.PidRepository;
+import eu.dissco.core.handlemanager.repository.MongoRepository;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -41,7 +41,7 @@ public class HandleService extends PidService {
 
   public HandleService(FdoRecordService fdoRecordService,
       PidNameGeneratorService hf, ObjectMapper mapper, ProfileProperties profileProperties,
-      PidRepository mongoRepository) {
+      MongoRepository mongoRepository) {
     super(fdoRecordService, hf, mapper, profileProperties, mongoRepository);
   }
 
@@ -67,14 +67,14 @@ public class HandleService extends PidService {
         case SOURCE_SYSTEM -> fdoRecords = createSourceSystem(requestAttributes, handles);
         default -> throw new UnsupportedOperationException("Unrecognized type");
       }
-      fdoDocuments = fdoRecordService.toMongoDbDocument(fdoRecords);
+      fdoDocuments = toMongoDbDocument(fdoRecords);
     } catch (JsonProcessingException | PidResolutionException e) {
       log.error("An error has occurred in processing request", e);
       throw new InvalidRequestException(
           "An error has occurred parsing a record in request. More information: " + e.getMessage());
     }
     log.info("Persisting new handles to Document Store");
-    mongoRepository.postBatchHandleRecord(fdoDocuments);
+    mongoRepository.postHandleRecords(fdoDocuments);
     return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, fdoType));
   }
 
@@ -106,8 +106,8 @@ public class HandleService extends PidService {
             fdoRecords = updateSourceSystem(updateRequests, fdoRecordMap, incrementVersion);
         default -> throw new UnsupportedOperationException("Unrecognized type");
       }
-      fdoDocuments = fdoRecordService.toMongoDbDocument(fdoRecords);
-      mongoRepository.updateHandleRecord(fdoDocuments);
+      fdoDocuments = toMongoDbDocument(fdoRecords);
+      mongoRepository.updateHandleRecords(fdoDocuments);
       return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, fdoType));
     } catch (JsonProcessingException e) {
       log.error("An error has occurred processing JSON data", e);

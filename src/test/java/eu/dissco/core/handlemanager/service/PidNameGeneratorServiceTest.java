@@ -8,7 +8,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.lenient;
 
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
-import eu.dissco.core.handlemanager.repository.PidRepository;
+import eu.dissco.core.handlemanager.repository.MongoRepository;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -22,7 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class PidNameGeneratorServiceTest {
 
   @Mock
-  private PidRepository pidRepository;
+  private MongoRepository mongoRepository;
 
   @Mock
   private Random random;
@@ -35,7 +35,8 @@ class PidNameGeneratorServiceTest {
 
   @BeforeEach
   void setup() {
-    this.pidNameGeneratorService = new PidNameGeneratorService(applicationProperties, pidRepository,
+    this.pidNameGeneratorService = new PidNameGeneratorService(applicationProperties,
+        mongoRepository,
         random);
     lenient().when(applicationProperties.getMaxHandles()).thenReturn(MAX_HANDLES);
   }
@@ -91,7 +92,7 @@ class PidNameGeneratorServiceTest {
     var expectedHandle1 = PREFIX + "/BBB-BBB-BBB";
     var expectedHandle2 = PREFIX + "/ABB-BBB-BBB";
     given(random.nextInt(anyInt())).willReturn(0, 1);
-    given(pidRepository.getExistingHandles(anyList()))
+    given(mongoRepository.getExistingHandles(anyList()))
         .willReturn(List.of(expectedHandle1))
         .willReturn(new ArrayList<>());
     given(applicationProperties.getPrefix()).willReturn(PREFIX);

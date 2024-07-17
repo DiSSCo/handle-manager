@@ -36,7 +36,7 @@ import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
-import eu.dissco.core.handlemanager.repository.PidRepository;
+import eu.dissco.core.handlemanager.repository.MongoRepository;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -58,7 +58,7 @@ public abstract class PidService {
   protected final PidNameGeneratorService hf;
   protected final ObjectMapper mapper;
   protected final ProfileProperties profileProperties;
-  protected final PidRepository mongoRepository;
+  protected final MongoRepository mongoRepository;
 
   protected JsonNode jsonFormatSingleRecord(List<FdoAttribute> fdoAttributes) {
     ObjectNode rootNode = mapper.createObjectNode();
@@ -179,8 +179,8 @@ public abstract class PidService {
     try {
       fdoRecords = mongoRepository.getHandleRecords(handles);
     } catch (JsonProcessingException e) {
-      log.error("JsonProcessingException", e);
-      throw new PidResolutionException("");
+      log.error("JsonProcessingException when resolving handles {}", handles, e);
+      throw new PidResolutionException("Unable to resolve handle records for handles: " + handles);
     }
     if (fdoRecords.size() < handles.size()) {
       var hdl = new ArrayList<>(handles);
@@ -207,7 +207,9 @@ public abstract class PidService {
             "Unable to resolve specimen with id" + normalisedPhysicalId);
       }
     } catch (JsonProcessingException e) {
-      log.error("JsonProcessingException", e);
+      log.error(
+          "JsonProcessingException while reading record for specimen with normalised object id {}",
+          normalisedPhysicalId, e);
       throw new PidResolutionException(
           "Unable to resolve specimen with with id " + normalisedPhysicalId);
     }
@@ -252,8 +254,8 @@ public abstract class PidService {
       throws InvalidRequestException {
     var handles = updateRequests.stream()
         .map(request -> request.get(NODE_ID).asText()).toList();
-    var previousVersions = getPreviousVersions(handles);
     checkInternalDuplicates(handles);
+    var previousVersions = getPreviousVersions(handles);
     checkHandlesWritable(previousVersions);
     return previousVersions.stream()
         .collect(Collectors.toMap(FdoRecord::handle, f -> f));
@@ -367,25 +369,17 @@ public abstract class PidService {
   protected void checkInternalDuplicates(List<String> handles) throws InvalidRequestException {
     Set<String> handlesToUpdate = new HashSet<>(handles);
     if (handlesToUpdate.size() < handles.size()) {
-      Set<String> duplicateHandles = findDuplicates(handles, handlesToUpdate);
+      Set<String> duplicateHandles = handles.stream()
+          .filter(i -> Collections.frequency(handles, i) > 1)
+          .collect(Collectors.toSet());
       throw new InvalidRequestException(
           "INVALID INPUT. Attempting to update the same record multiple times in one request. "
               + "The following handles are duplicated in the request: " + duplicateHandles);
     }
   }
 
-  private Set<String> findDuplicates(List<String> handles, Set<String> handlesToUpdate) {
-    Set<String> duplicateHandles = new HashSet<>();
-    for (var handle : handles) {
-      if (!handlesToUpdate.add(handle)) {
-        duplicateHandles.add(handle);
-      }
-    }
-    return duplicateHandles;
-  }
-
   // Tombstone
-  public JsonApiWrapperWrite tombstoneRecordBatch(List<JsonNode> requests)
+  public JsonApiWrapperWrite tombstoneRecords(List<JsonNode> requests)
       throws InvalidRequestException {
     var tombstoneRequestData = requests.stream()
         .map(request -> request.get(NODE_DATA)).toList();
@@ -400,12 +394,12 @@ public abstract class PidService {
         fdoRecords.add(fdoRecordService.prepareTombstoneRecord(tombstoneRequest, timestamp,
             fdoRecordMap.get(requestData.get(NODE_ID).asText())));
       }
-      fdoDocuments = fdoRecordService.toMongoDbDocument(fdoRecords);
+      fdoDocuments = toMongoDbDocument(fdoRecords);
     } catch (JsonProcessingException e) {
-      log.error("JsonProcessingException", e);
+      log.error("JsonProcessingException while tombstoning records", e);
       throw new InvalidRequestException("Unable to read request");
     }
-    mongoRepository.updateHandleRecord(fdoDocuments);
+    mongoRepository.updateHandleRecords(fdoDocuments);
     return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, TOMBSTONE));
   }
 
@@ -416,5 +410,31 @@ public abstract class PidService {
   public void rollbackHandlesFromPhysId(List<String> physicalIds) {
     mongoRepository.rollbackHandles(NORMALISED_SPECIMEN_OBJECT_ID.get(), physicalIds);
   }
+
+
+  protected List<Document> toMongoDbDocument(List<FdoRecord> fdoRecords)
+      throws JsonProcessingException {
+    var documentList = new ArrayList<Document>();
+    for (var fdoRecord : fdoRecords) {
+      var doc = Document.parse(mapper.writeValueAsString(fdoRecord));
+      addLocalId(fdoRecord, doc);
+      documentList.add(doc);
+    }
+    return documentList;
+  }
+
+  private void addLocalId(FdoRecord fdoRecord, Document doc) {
+    if (fdoRecord.primaryLocalId() == null) {
+      return;
+    }
+    if (DIGITAL_SPECIMEN.equals(fdoRecord.fdoType())) {
+      doc.append(NORMALISED_SPECIMEN_OBJECT_ID.get(), fdoRecord.primaryLocalId());
+    } else if (DIGITAL_MEDIA.equals(fdoRecord.fdoType())) {
+      doc.append(PRIMARY_MEDIA_ID.get(), fdoRecord.primaryLocalId());
+    } else if (ANNOTATION.equals(fdoRecord.fdoType())) {
+      doc.append(ANNOTATION_HASH.get(), fdoRecord.primaryLocalId());
+    }
+  }
+
 
 }

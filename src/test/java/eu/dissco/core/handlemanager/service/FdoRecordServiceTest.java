@@ -48,13 +48,13 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecord
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMasFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMasRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMasRecordRequestObjectUpdate;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMongoDocument;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenOrganisationFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenOrganisationRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenOrganisationRequestObjectUpdate;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemRequestObjectUpdate;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenTombstoneFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenTombstoneRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenUpdatedFdoRecord;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
@@ -78,14 +78,9 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -284,7 +279,7 @@ class FdoRecordServiceTest {
   void testPrepareNewSpecimenRecordFull() throws Exception {
     var request = givenDigitalSpecimenRequestObject();
     var expected = new FdoRecord(HANDLE, FdoType.DIGITAL_SPECIMEN,
-        genDigitalSpecimenAttributes(HANDLE, request),
+        genDigitalSpecimenAttributes(HANDLE, request, CREATED),
         NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL);
 
     // When
@@ -505,7 +500,8 @@ class FdoRecordServiceTest {
   void testPrepareTombstoneRecordNoRelatedIds() throws Exception {
     var previousVersion = givenHandleFdoRecord(HANDLE);
     var request = new TombstoneRecordRequest(TOMBSTONE_TEXT_TESTVAL, null);
-    var expected = new FdoRecord(HANDLE, FdoType.HANDLE, genTombstoneAttributes(request), null);
+    var expected = new FdoRecord(HANDLE, FdoType.HANDLE.HANDLE, genTombstoneAttributes(request),
+        null);
 
     // When
     var result = fdoRecordService.prepareTombstoneRecord(request, UPDATED, previousVersion);
@@ -521,7 +517,8 @@ class FdoRecordServiceTest {
   void testPrepareTombstoneRecordEmptyRelatedIds() throws Exception {
     var previousVersion = givenHandleFdoRecord(HANDLE);
     var request = new TombstoneRecordRequest(TOMBSTONE_TEXT_TESTVAL, Collections.emptyList());
-    var expected = new FdoRecord(HANDLE, FdoType.HANDLE, genTombstoneAttributes(request), null);
+    var expected = new FdoRecord(HANDLE, FdoType.HANDLE.HANDLE, genTombstoneAttributes(request),
+        null);
 
     // When
     var result = fdoRecordService.prepareTombstoneRecord(request, UPDATED, previousVersion);
@@ -537,7 +534,7 @@ class FdoRecordServiceTest {
   void testPrepareTombstoneRecordFull() throws Exception {
     var previousVersion = givenHandleFdoRecord(HANDLE);
     var request = givenTombstoneRecordRequestObject();
-    var expected = new FdoRecord(HANDLE, FdoType.HANDLE, genTombstoneAttributes(request), null);
+    var expected = givenTombstoneFdoRecord();
 
     // When
     var result = fdoRecordService.prepareTombstoneRecord(request, UPDATED, previousVersion);
@@ -547,27 +544,6 @@ class FdoRecordServiceTest {
     assertThat(result.primaryLocalId()).isNull();
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
-  }
-
-  @ParameterizedTest
-  @MethodSource("fdoRecords")
-  void testToMongoDbDocumentHandle(FdoRecord fdoRecord) throws Exception {
-    // Given
-    var expected = List.of(givenMongoDocument(fdoRecord));
-
-    // When
-    var result = fdoRecordService.toMongoDbDocument(List.of(fdoRecord));
-
-    // Then
-    assertThat(result).isEqualTo(expected);
-  }
-
-  private static Stream<Arguments> fdoRecords() throws Exception {
-    return Stream.of(Arguments.of(givenHandleFdoRecord(HANDLE)),
-        Arguments.of(givenDigitalSpecimenFdoRecord(HANDLE)),
-        Arguments.of(givenDigitalMediaFdoRecord(HANDLE)),
-        Arguments.of(givenAnnotationFdoRecord(HANDLE, true)),
-        Arguments.of(givenAnnotationFdoRecord(HANDLE, false)));
   }
 
 }
