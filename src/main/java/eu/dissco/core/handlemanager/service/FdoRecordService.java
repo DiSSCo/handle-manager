@@ -673,7 +673,10 @@ public class FdoRecordService {
     var handleAttributeList = new ArrayList<>(previousVersion.attributes());
     var previousIssueNum = getField(previousVersion.attributes(), PID_RECORD_ISSUE_NUMBER);
     var newIssueNum = incrementIssueNumber(previousIssueNum, timestamp);
+    var previousStatus = getField(previousVersion.attributes(), PID_STATUS);
+    var newStatus = new FdoAttribute(PID_STATUS, timestamp, PidStatus.TOMBSTONED);
     handleAttributeList.set(handleAttributeList.indexOf(previousIssueNum), newIssueNum);
+    handleAttributeList.set(handleAttributeList.indexOf(previousStatus), newStatus);
     // 30: Tombstoned Text
     handleAttributeList.add(
         new FdoAttribute(TOMBSTONED_TEXT, timestamp, request.getTombstonedText()));

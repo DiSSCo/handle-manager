@@ -245,7 +245,7 @@ public abstract class PidService {
       var pidStatus = getField(fdoRecord.attributes(), PID_STATUS).getValue();
       if (PidStatus.TOMBSTONED.name().equals(pidStatus)) {
         log.error("Attempting to update a FDO record that has been archived");
-        throw new InvalidRequestException();
+        throw new InvalidRequestException("This PID has already been archived. It is read-only");
       }
     }
   }

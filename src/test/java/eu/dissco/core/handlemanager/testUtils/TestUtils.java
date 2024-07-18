@@ -529,7 +529,8 @@ public class TestUtils {
     fdoRecord.add(new FdoAttribute(TOMBSTONED_TEXT, UPDATED, request.getTombstonedText()));
     fdoRecord.set(fdoRecord.indexOf(new FdoAttribute(PID_RECORD_ISSUE_NUMBER, CREATED, "1")),
         new FdoAttribute(PID_RECORD_ISSUE_NUMBER, UPDATED, "2"));
-
+    fdoRecord.set(fdoRecord.indexOf(new FdoAttribute(PID_STATUS, CREATED, PidStatus.ACTIVE)),
+        new FdoAttribute(PID_STATUS, UPDATED, PidStatus.TOMBSTONED));
     // 31: hasRelatedPID
     if (request.getHasRelatedPID() != null && !request.getHasRelatedPID().isEmpty()) {
       fdoRecord.add(new FdoAttribute(HAS_RELATED_PID, UPDATED,

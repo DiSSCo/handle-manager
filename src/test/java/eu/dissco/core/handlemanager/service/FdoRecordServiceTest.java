@@ -495,7 +495,7 @@ class FdoRecordServiceTest {
   void testPrepareTombstoneRecordNoRelatedIds() throws Exception {
     var previousVersion = givenHandleFdoRecord(HANDLE);
     var request = new TombstoneRecordRequest(TOMBSTONE_TEXT_TESTVAL, null);
-    var expected = new FdoRecord(HANDLE, FdoType.HANDLE.HANDLE, genTombstoneAttributes(request),
+    var expected = new FdoRecord(HANDLE, FdoType.HANDLE, genTombstoneAttributes(request),
         null);
 
     // When
@@ -512,7 +512,7 @@ class FdoRecordServiceTest {
   void testPrepareTombstoneRecordEmptyRelatedIds() throws Exception {
     var previousVersion = givenHandleFdoRecord(HANDLE);
     var request = new TombstoneRecordRequest(TOMBSTONE_TEXT_TESTVAL, Collections.emptyList());
-    var expected = new FdoRecord(HANDLE, FdoType.HANDLE.HANDLE, genTombstoneAttributes(request),
+    var expected = new FdoRecord(HANDLE, FdoType.HANDLE, genTombstoneAttributes(request),
         null);
 
     // When
