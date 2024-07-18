@@ -111,7 +111,7 @@ public class HandleService extends PidService {
       return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, fdoType));
     } catch (JsonProcessingException e) {
       log.error("An error has occurred processing JSON data", e);
-      throw new InvalidRequestException();
+      throw new InvalidRequestException("Unable to parse FDO Record");
     }
   }
 
