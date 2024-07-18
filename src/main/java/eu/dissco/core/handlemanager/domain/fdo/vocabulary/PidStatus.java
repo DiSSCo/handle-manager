@@ -4,5 +4,6 @@ public enum PidStatus {
   TOMBSTONED,
   ACTIVE,
   DRAFT,
+  FAILED,
   TEST
 }
