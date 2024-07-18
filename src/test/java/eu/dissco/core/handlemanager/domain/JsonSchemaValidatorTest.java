@@ -304,7 +304,7 @@ class JsonSchemaValidatorTest {
 
     // When
     Exception e = assertThrowsExactly(InvalidRequestException.class,
-        () -> schemaValidator.validatePutRequest(request));
+        () -> schemaValidator.validatePatchRequest(request));
 
     // Then
     assertThat(e.getMessage()).contains(MISSING_MSG).contains(NODE_ID);

@@ -19,11 +19,12 @@ public class FdoAttribute {
   int ttl;
   Instant timestamp;
 
-  public FdoAttribute(FdoProfile fdoAttribute, Instant timestamp, String value) {
+  public FdoAttribute(FdoProfile fdoAttribute, Instant timestamp, Object value) {
     this.index = fdoAttribute.index();
     this.type = fdoAttribute.get();
     this.timestamp = timestamp;
-    this.data = new StringHandleData(value);
+    value = value == null ? "" : value;
+    this.data = new StringHandleData(value.toString());
     this.ttl = 86400;
   }
 

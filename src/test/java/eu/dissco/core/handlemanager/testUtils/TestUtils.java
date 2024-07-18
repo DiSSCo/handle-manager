@@ -260,7 +260,7 @@ public class TestUtils {
     fdoAttributes.add(new FdoAttribute(PID_RECORD_ISSUE_NUMBER, timestamp, "1"));
     // 12: structuralType
     fdoAttributes.add(
-        new FdoAttribute(STRUCTURAL_TYPE, timestamp, STRUCTURAL_TYPE_TESTVAL.toString()));
+        new FdoAttribute(STRUCTURAL_TYPE, timestamp, STRUCTURAL_TYPE_TESTVAL));
     // 13: PidStatus
     fdoAttributes.add(new FdoAttribute(PID_STATUS, timestamp, PID_STATUS_TESTVAL));
     // 100 ADMIN
@@ -340,7 +340,7 @@ public class TestUtils {
         request.getPrimarySpecimenObjectId()));
     // 203: primarySpecimenObjectIdType
     fdoRecord.add(new FdoAttribute(PRIMARY_SPECIMEN_OBJECT_ID_TYPE, timestamp,
-        request.getPrimarySpecimenObjectIdType().toString()));
+        request.getPrimarySpecimenObjectIdType()));
     // 204: primarySpecimenObjectIdName
     fdoRecord.add(new FdoAttribute(PRIMARY_SPECIMEN_OBJECT_ID_NAME, timestamp,
         request.getPrimarySpecimenObjectIdName()));
@@ -358,73 +358,33 @@ public class TestUtils {
       fdoRecord.add(new FdoAttribute(OTHER_SPECIMEN_IDS, timestamp, null));
     }
     // 208: topicOrigin
-    if (request.getTopicOrigin() != null) {
-      fdoRecord.add(new FdoAttribute(TOPIC_ORIGIN, timestamp, request.getTopicOrigin().toString()));
-    } else {
-      fdoRecord.add(new FdoAttribute(TOPIC_ORIGIN, timestamp, null));
-    }
+    fdoRecord.add(new FdoAttribute(TOPIC_ORIGIN, timestamp, request.getTopicOrigin()));
     // 209: topicDomain
-    if (request.getTopicDomain() != null) {
-      fdoRecord.add(new FdoAttribute(TOPIC_DOMAIN, timestamp, request.getTopicDomain().toString()));
-    } else {
-      fdoRecord.add(new FdoAttribute(TOPIC_DOMAIN, timestamp, null));
-    }
+    fdoRecord.add(new FdoAttribute(TOPIC_DOMAIN, timestamp, request.getTopicDomain()));
     // 210: topicDiscipline
-    if (request.getTopicDiscipline() != null) {
-      fdoRecord.add(
-          new FdoAttribute(TOPIC_DISCIPLINE, timestamp, request.getTopicDiscipline().toString()));
-    } else {
-      fdoRecord.add(new FdoAttribute(TOPIC_DISCIPLINE, timestamp, null));
-    }
+    fdoRecord.add(
+        new FdoAttribute(TOPIC_DISCIPLINE, timestamp, request.getTopicDiscipline()));
     // 211: topicCategory
-    if (request.getTopicCategory() != null) {
-      fdoRecord.add(
-          new FdoAttribute(TOPIC_CATEGORY, timestamp, request.getTopicCategory().toString()));
-    } else {
-      fdoRecord.add(new FdoAttribute(TOPIC_CATEGORY, timestamp, null));
-    }
+    fdoRecord.add(
+        new FdoAttribute(TOPIC_CATEGORY, timestamp, request.getTopicCategory()));
     // 212: livingOrPreserved
-    if (request.getLivingOrPreserved() != null) {
-      fdoRecord.add(new FdoAttribute(LIVING_OR_PRESERVED, timestamp,
-          request.getLivingOrPreserved().toString()));
-    } else {
-      fdoRecord.add(new FdoAttribute(LIVING_OR_PRESERVED, timestamp, null));
-    }
+    fdoRecord.add(new FdoAttribute(LIVING_OR_PRESERVED, timestamp,
+        request.getLivingOrPreserved()));
     // 213: baseTypeOfSpecimen
-    if (request.getBaseTypeOfSpecimen() != null) {
-      fdoRecord.add(new FdoAttribute(BASE_TYPE_OF_SPECIMEN, timestamp,
-          request.getBaseTypeOfSpecimen().toString()));
-    } else {
-      fdoRecord.add(new FdoAttribute(BASE_TYPE_OF_SPECIMEN, timestamp, null));
-    }
+    fdoRecord.add(new FdoAttribute(BASE_TYPE_OF_SPECIMEN, timestamp,
+        request.getBaseTypeOfSpecimen()));
     // 214: informationArtefactType
-    if (request.getInformationArtefactType() != null) {
-      fdoRecord.add(new FdoAttribute(INFORMATION_ARTEFACT_TYPE, timestamp,
-          request.getInformationArtefactType().toString()));
-    } else {
-      fdoRecord.add(new FdoAttribute(INFORMATION_ARTEFACT_TYPE, timestamp, null));
-    }
+    fdoRecord.add(new FdoAttribute(INFORMATION_ARTEFACT_TYPE, timestamp,
+        request.getInformationArtefactType()));
     // 215: materialSampleType
-    if (request.getMaterialSampleType() != null) {
-      fdoRecord.add(new FdoAttribute(MATERIAL_SAMPLE_TYPE, timestamp,
-          request.getMaterialSampleType().toString()));
-    } else {
-      fdoRecord.add(new FdoAttribute(MATERIAL_SAMPLE_TYPE, timestamp, null));
-    }
+    fdoRecord.add(new FdoAttribute(MATERIAL_SAMPLE_TYPE, timestamp,
+        request.getMaterialSampleType()));
     // 216: materialOrDigitalEntity
-    if (request.getMaterialOrDigitalEntity() != null) {
-      fdoRecord.add(new FdoAttribute(MATERIAL_OR_DIGITAL_ENTITY, timestamp,
-          request.getMaterialOrDigitalEntity().toString()));
-    } else {
-      fdoRecord.add(new FdoAttribute(MATERIAL_OR_DIGITAL_ENTITY, timestamp, null));
-    }
+    fdoRecord.add(new FdoAttribute(MATERIAL_OR_DIGITAL_ENTITY, timestamp,
+        request.getMaterialOrDigitalEntity()));
     // 217: markedAsType
-    if (request.getMarkedAsType() != null) {
-      fdoRecord.add(
-          new FdoAttribute(MARKED_AS_TYPE, timestamp, request.getMarkedAsType().toString()));
-    } else {
-      fdoRecord.add(new FdoAttribute(MARKED_AS_TYPE, timestamp, null));
-    }
+    fdoRecord.add(
+        new FdoAttribute(MARKED_AS_TYPE, timestamp, request.getMarkedAsType()));
     // 218: wasDerivedFromEntity
     fdoRecord.add(new FdoAttribute(WAS_DERIVED_FROM_ENTITY, timestamp,
         String.valueOf(request.getDerivedFromEntity() != null)));
@@ -447,48 +407,29 @@ public class TestUtils {
     } else {
       fdoRecord.add(new FdoAttribute(MEDIA_HOST_NAME, timestamp, request.getMediaHostName()));
     }
-    if (request.getDctermsFormat() != null) {
-      fdoRecord.add(
-          new FdoAttribute(DCTERMS_FORMAT, timestamp, request.getDctermsFormat().toString()));
-    } else {
-      fdoRecord.add(new FdoAttribute(DCTERMS_FORMAT, timestamp, null));
-    }
+    fdoRecord.add(
+        new FdoAttribute(DCTERMS_FORMAT, timestamp, request.getDctermsFormat()));
     fdoRecord.add(new FdoAttribute(IS_DERIVED_FROM_SPECIMEN, timestamp,
-        request.getIsDerivedFromSpecimen().toString()));
+        request.getIsDerivedFromSpecimen()));
     fdoRecord.add(new FdoAttribute(LINKED_DO_PID, timestamp, request.getLinkedDigitalObjectPid()));
-    if (request.getLinkedDigitalObjectType() != null) {
-      fdoRecord.add(new FdoAttribute(LINKED_DO_TYPE, timestamp,
-          request.getLinkedDigitalObjectType().toString()));
-    } else {
-      fdoRecord.add(new FdoAttribute(LINKED_DO_TYPE, timestamp, null));
-    }
+    fdoRecord.add(new FdoAttribute(LINKED_DO_TYPE, timestamp,
+        request.getLinkedDigitalObjectType()));
+
     fdoRecord.add(new FdoAttribute(LINKED_ATTRIBUTE, timestamp, request.getLinkedAttribute()));
     fdoRecord.add(new FdoAttribute(PRIMARY_MEDIA_ID, timestamp, request.getPrimaryMediaId()));
-    if (request.getPrimaryMediaObjectIdType() != null) {
-      fdoRecord.add(new FdoAttribute(PRIMARY_MO_ID_TYPE, timestamp,
-          request.getPrimaryMediaObjectIdType().toString()));
-    } else {
-      fdoRecord.add(new FdoAttribute(PRIMARY_MO_ID_TYPE, timestamp, null));
-    }
+    fdoRecord.add(
+        new FdoAttribute(PRIMARY_MO_ID_TYPE, timestamp, request.getPrimaryMediaObjectIdType()));
     fdoRecord.add(
         new FdoAttribute(PRIMARY_MO_ID_NAME, timestamp, request.getPrimaryMediaObjectIdName()));
-    if (request.getDcTermsType() != null) {
-      fdoRecord.add(new FdoAttribute(DCTERMS_TYPE, timestamp, request.getDcTermsType().toString()));
-    } else {
-      fdoRecord.add(new FdoAttribute(DCTERMS_TYPE, timestamp, null));
-    }
+    fdoRecord.add(new FdoAttribute(DCTERMS_TYPE, timestamp, request.getDcTermsType()));
     fdoRecord.add(new FdoAttribute(DCTERMS_SUBJECT, timestamp, request.getDctermsSubject()));
     fdoRecord.add(new FdoAttribute(DERIVED_FROM_ENTITY, timestamp, request.getDerivedFromEntity()));
     fdoRecord.add(new FdoAttribute(LICENSE_NAME, timestamp, request.getLicenseName()));
     fdoRecord.add(new FdoAttribute(LICENSE_URL, timestamp, request.getLicenseUrl()));
     fdoRecord.add(new FdoAttribute(RIGHTSHOLDER_NAME, timestamp, request.getRightsholderName()));
     fdoRecord.add(new FdoAttribute(RIGHTSHOLDER_PID, timestamp, request.getRightsholderPid()));
-    if (request.getRightsholderPidType() != null) {
-      fdoRecord.add(new FdoAttribute(RIGHTSHOLDER_PID_TYPE, timestamp,
-          request.getRightsholderPidType().toString()));
-    } else {
-      fdoRecord.add(new FdoAttribute(RIGHTSHOLDER_PID_TYPE, timestamp, null));
-    }
+    fdoRecord.add(new FdoAttribute(RIGHTSHOLDER_PID_TYPE, timestamp,
+        request.getRightsholderPidType()));
     fdoRecord.add(new FdoAttribute(DC_TERMS_CONFORMS, timestamp, request.getDctermsConformsTo()));
     return fdoRecord;
   }
@@ -536,11 +477,11 @@ public class TestUtils {
     // 501 TargetType
     fdoRecord.add(new FdoAttribute(TARGET_TYPE, timestamp, TARGET_TYPE_TESTVAL));
     // 502 motivation
-    fdoRecord.add(new FdoAttribute(MOTIVATION, timestamp, MOTIVATION_TESTVAL.toString()));
+    fdoRecord.add(new FdoAttribute(MOTIVATION, timestamp, MOTIVATION_TESTVAL));
     // 503 AnnotationHash
     if (includeHash) {
       fdoRecord.add(
-          new FdoAttribute(ANNOTATION_HASH, timestamp, ANNOTATION_HASH_TESTVAL.toString()));
+          new FdoAttribute(ANNOTATION_HASH, timestamp, ANNOTATION_HASH_TESTVAL));
     } else {
       fdoRecord.add(new FdoAttribute(ANNOTATION_HASH, timestamp, null));
     }

@@ -1,5 +1,6 @@
 package eu.dissco.core.handlemanager.domain.validation;
 
+import static eu.dissco.core.handlemanager.domain.fdo.FdoType.TOMBSTONE;
 import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_TYPE;
@@ -28,8 +29,9 @@ import eu.dissco.core.handlemanager.domain.fdo.MasRequest;
 import eu.dissco.core.handlemanager.domain.fdo.OrganisationRequest;
 import eu.dissco.core.handlemanager.domain.fdo.SourceSystemRequest;
 import eu.dissco.core.handlemanager.domain.fdo.TombstoneRecordRequest;
+import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
-import eu.dissco.core.handlemanager.domain.requests.PutRequest;
+import eu.dissco.core.handlemanager.domain.requests.TombstoneRequest;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import jakarta.validation.constraints.NotEmpty;
 import java.util.Arrays;
@@ -46,31 +48,33 @@ public class JsonSchemaValidator {
 
   // JsonNodes
   private JsonNode postReqJsonNode;
+  private JsonNode patchReqJsonNode;
   private JsonNode putReqJsonNode;
-  private JsonNode handlePostReqJsonNode;
-  private JsonNode doiPostReqJsonNode;
-  private JsonNode digitalSpecimenPostReqJsonNode;
-  private JsonNode digitalMediaPostReqJsonNode;
+  private JsonNode handleJsonNode;
+  private JsonNode doiJsonNode;
+  private JsonNode digitalSpecimenJsonNode;
+  private JsonNode digitalMediaJsonNode;
   private JsonNode tombstoneReqJsonNode;
-  private JsonNode annotationPostReqJsonNode;
-  private JsonNode mappingPostReqJsonNode;
-  private JsonNode sourceSystemPostReqJsonNode;
-  private JsonNode organisationPostReqJsonNode;
-  private JsonNode masPostReqJsonNode;
+  private JsonNode annotationJsonNode;
+  private JsonNode mappingJsonNode;
+  private JsonNode sourceSystemJsonNode;
+  private JsonNode organisationJsonNode;
+  private JsonNode masJsonNode;
 
   // Schemas
   private JsonSchema postReqSchema;
+  private JsonSchema patchReqSchema;
   private JsonSchema putReqSchema;
-  private JsonSchema handlePostReqSchema;
-  private JsonSchema doiPostReqSchema;
-  private JsonSchema digitalSpecimenPostReqSchema;
-  private JsonSchema digitalMediaPostReqSchema;
+  private JsonSchema handleSchema;
+  private JsonSchema doiSchema;
+  private JsonSchema digitalSpecimenSchema;
+  private JsonSchema digitalMediaSchema;
   private JsonSchema tombstoneReqSchema;
-  private JsonSchema annotationPostReqSchema;
-  private JsonSchema mappingPostReqSchema;
-  private JsonSchema sourceSystemPostReqSchema;
-  private JsonSchema organisationPostReqSchema;
-  private JsonSchema masPostReqSchema;
+  private JsonSchema annotationSchema;
+  private JsonSchema dataMappingSchema;
+  private JsonSchema sourceSystemSchema;
+  private JsonSchema organisationSchema;
+  private JsonSchema masSchema;
 
   public JsonSchemaValidator() {
     setPostRequestAttributesJsonNodes();
@@ -80,16 +84,16 @@ public class JsonSchemaValidator {
 
   private void setPostRequestAttributesJsonNodes() {
     var schemaGenerator = new SchemaGenerator(jacksonModuleSchemaConfig());
-    handlePostReqJsonNode = schemaGenerator.generateSchema(HandleRecordRequest.class);
-    doiPostReqJsonNode = schemaGenerator.generateSchema(DoiRecordRequest.class);
-    digitalSpecimenPostReqJsonNode = schemaGenerator.generateSchema(DigitalSpecimenRequest.class);
-    digitalMediaPostReqJsonNode = schemaGenerator.generateSchema(DigitalMediaRequest.class);
+    handleJsonNode = schemaGenerator.generateSchema(HandleRecordRequest.class);
+    doiJsonNode = schemaGenerator.generateSchema(DoiRecordRequest.class);
+    digitalSpecimenJsonNode = schemaGenerator.generateSchema(DigitalSpecimenRequest.class);
+    digitalMediaJsonNode = schemaGenerator.generateSchema(DigitalMediaRequest.class);
     tombstoneReqJsonNode = schemaGenerator.generateSchema(TombstoneRecordRequest.class);
-    annotationPostReqJsonNode = schemaGenerator.generateSchema(AnnotationRequest.class);
-    mappingPostReqJsonNode = schemaGenerator.generateSchema(DataMappingRequest.class);
-    sourceSystemPostReqJsonNode = schemaGenerator.generateSchema(SourceSystemRequest.class);
-    organisationPostReqJsonNode = schemaGenerator.generateSchema(OrganisationRequest.class);
-    masPostReqJsonNode = schemaGenerator.generateSchema(MasRequest.class);
+    annotationJsonNode = schemaGenerator.generateSchema(AnnotationRequest.class);
+    mappingJsonNode = schemaGenerator.generateSchema(DataMappingRequest.class);
+    sourceSystemJsonNode = schemaGenerator.generateSchema(SourceSystemRequest.class);
+    organisationJsonNode = schemaGenerator.generateSchema(OrganisationRequest.class);
+    masJsonNode = schemaGenerator.generateSchema(MasRequest.class);
   }
 
   private SchemaGeneratorConfig jacksonModuleSchemaConfig() {
@@ -132,7 +136,8 @@ public class JsonSchemaValidator {
   private void setRequestJsonNodes() {
     var schemaGenerator = new SchemaGenerator(requestSchemaConfig());
     postReqJsonNode = schemaGenerator.generateSchema(PostRequest.class);
-    putReqJsonNode = schemaGenerator.generateSchema(PutRequest.class);
+    patchReqJsonNode = schemaGenerator.generateSchema(PatchRequest.class);
+    putReqJsonNode = schemaGenerator.generateSchema(TombstoneRequest.class);
   }
 
   public SchemaGeneratorConfig requestSchemaConfig() {
@@ -163,74 +168,72 @@ public class JsonSchemaValidator {
 
   private void setJsonSchemas() {
     JsonSchemaFactory factory = JsonSchemaFactory.getInstance(VersionFlag.V202012);
-
     postReqSchema = factory.getSchema(postReqJsonNode);
+    patchReqSchema = factory.getSchema(patchReqJsonNode);
     putReqSchema = factory.getSchema(putReqJsonNode);
-
-    handlePostReqSchema = factory.getSchema(handlePostReqJsonNode);
-    doiPostReqSchema = factory.getSchema(doiPostReqJsonNode);
-    digitalSpecimenPostReqSchema = factory.getSchema(digitalSpecimenPostReqJsonNode);
-    digitalMediaPostReqSchema = factory.getSchema(digitalMediaPostReqJsonNode);
-    annotationPostReqSchema = factory.getSchema(annotationPostReqJsonNode);
-    mappingPostReqSchema = factory.getSchema(mappingPostReqJsonNode);
-    sourceSystemPostReqSchema = factory.getSchema(sourceSystemPostReqJsonNode);
-    organisationPostReqSchema = factory.getSchema(organisationPostReqJsonNode);
-    masPostReqSchema = factory.getSchema(masPostReqJsonNode);
+    handleSchema = factory.getSchema(handleJsonNode);
+    doiSchema = factory.getSchema(doiJsonNode);
+    digitalSpecimenSchema = factory.getSchema(digitalSpecimenJsonNode);
+    digitalMediaSchema = factory.getSchema(digitalMediaJsonNode);
+    annotationSchema = factory.getSchema(annotationJsonNode);
+    dataMappingSchema = factory.getSchema(mappingJsonNode);
+    sourceSystemSchema = factory.getSchema(sourceSystemJsonNode);
+    organisationSchema = factory.getSchema(organisationJsonNode);
+    masSchema = factory.getSchema(masJsonNode);
     tombstoneReqSchema = factory.getSchema(tombstoneReqJsonNode);
-
   }
 
   public void validatePostRequest(JsonNode requestRoot) throws InvalidRequestException {
     var validationErrors = postReqSchema.validate(requestRoot);
     if (!validationErrors.isEmpty()) {
-      throw new InvalidRequestException(setErrorMessage(validationErrors, "POST"));
+      throw new InvalidRequestException(setErrorMessage(validationErrors, "CREATE"));
     }
+    var fdoType = FdoType.fromString(requestRoot.get(NODE_DATA).get(NODE_TYPE).asText());
+    validateAttributes(requestRoot, fdoType);
+  }
 
-    FdoType type = FdoType.fromString(requestRoot.get(NODE_DATA).get(NODE_TYPE).asText());
-    var attributes = requestRoot.get(NODE_DATA).get(NODE_ATTRIBUTES);
-    switch (type) {
-      case HANDLE -> validateRequestAttributes(attributes, handlePostReqSchema, type);
-      case DOI -> validateRequestAttributes(attributes, doiPostReqSchema, type);
-      case DIGITAL_SPECIMEN ->
-          validateRequestAttributes(attributes, digitalSpecimenPostReqSchema, type);
-      case DIGITAL_MEDIA -> validateRequestAttributes(attributes, digitalMediaPostReqSchema, type);
-      case ANNOTATION -> validateRequestAttributes(attributes, annotationPostReqSchema, type);
-      case DATA_MAPPING -> validateRequestAttributes(attributes, mappingPostReqSchema, type);
-      case SOURCE_SYSTEM -> validateRequestAttributes(attributes, sourceSystemPostReqSchema, type);
-      case ORGANISATION -> validateRequestAttributes(attributes, organisationPostReqSchema, type);
-      case MAS -> validateRequestAttributes(attributes, masPostReqSchema, type);
-      default ->
-          throw new InvalidRequestException("Invalid Request. Reason: Invalid type: " + type);
+  public void validatePatchRequest(JsonNode requestRoot) throws InvalidRequestException {
+    var validationErrors = patchReqSchema.validate(requestRoot);
+    if (!validationErrors.isEmpty()) {
+      throw new InvalidRequestException(
+          setErrorMessage(validationErrors, "UPDATE"));
     }
+    var fdoType = FdoType.fromString(requestRoot.get(NODE_DATA).get(NODE_TYPE).asText());
+    validateAttributes(requestRoot, fdoType);
   }
 
   public void validatePutRequest(JsonNode requestRoot) throws InvalidRequestException {
     var validationErrors = putReqSchema.validate(requestRoot);
     if (!validationErrors.isEmpty()) {
       throw new InvalidRequestException(
-          setErrorMessage(validationErrors, "PUT (tombstone)"));
+          setErrorMessage(validationErrors, "TOMBSTONE"));
     }
-    var attributes = requestRoot.get(NODE_DATA).get(NODE_ATTRIBUTES);
-    validateTombstoneRequestAttributes(attributes);
+    validateAttributes(requestRoot, TOMBSTONE);
   }
 
-
-  private void validateTombstoneRequestAttributes(JsonNode requestAttributes)
+  private void validateAttributes(JsonNode requestRoot, FdoType fdoType)
       throws InvalidRequestException {
-    var validationErrors = tombstoneReqSchema.validate(requestAttributes);
-    if (!validationErrors.isEmpty()) {
-      throw new InvalidRequestException(
-          setErrorMessage(validationErrors, FdoType.TOMBSTONE.getDigitalObjectName(),
-              requestAttributes));
+    var requestAttributes = requestRoot.get(NODE_DATA).get(NODE_ATTRIBUTES);
+    JsonSchema schema;
+    switch (fdoType) {
+      case HANDLE -> schema = handleSchema;
+      case DOI -> schema = doiSchema;
+      case DIGITAL_SPECIMEN -> schema = digitalSpecimenSchema;
+      case DIGITAL_MEDIA -> schema = digitalMediaSchema;
+      case ANNOTATION -> schema = annotationSchema;
+      case DATA_MAPPING -> schema = dataMappingSchema;
+      case SOURCE_SYSTEM -> schema = sourceSystemSchema;
+      case ORGANISATION -> schema = organisationSchema;
+      case MAS -> schema = masSchema;
+      case TOMBSTONE -> schema = tombstoneReqSchema;
+      default ->
+          throw new InvalidRequestException("Invalid Request. Reason: Invalid type: " + fdoType);
     }
-  }
-
-  private void validateRequestAttributes(JsonNode requestAttributes, JsonSchema schema,
-      FdoType type) throws InvalidRequestException {
     var validationErrors = schema.validate(requestAttributes);
     if (!validationErrors.isEmpty()) {
       throw new InvalidRequestException(
-          setErrorMessage(validationErrors, type.getDigitalObjectName(), requestAttributes));
+          setErrorMessage(validationErrors, fdoType.getDigitalObjectName(),
+              requestAttributes));
     }
   }
 

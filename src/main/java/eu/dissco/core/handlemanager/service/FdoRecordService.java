@@ -252,8 +252,7 @@ public class FdoRecordService {
         getObjectName(request.getIssuedForAgent(), null)));
     // 12: Structural Type
     handleAttributeList.add(
-        new FdoAttribute(STRUCTURAL_TYPE, timestamp,
-            request.getStructuralType().toString()));
+        new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType()));
     return handleAttributeList;
   }
 
@@ -366,17 +365,10 @@ public class FdoRecordService {
     handleAttributeList.add(
         new FdoAttribute(TARGET_TYPE, timestamp, request.getTargetType()));
     // 502 Motivation
-    handleAttributeList.add(new FdoAttribute(MOTIVATION, timestamp,
-        request.getMotivation().toString()));
+    handleAttributeList.add(new FdoAttribute(MOTIVATION, timestamp, request.getMotivation()));
     // 503 Annotation Hash
-    if (request.getAnnotationHash() != null) {
-      handleAttributeList.add(new FdoAttribute(ANNOTATION_HASH, timestamp,
-          request.getAnnotationHash().toString()));
-    } else {
-      handleAttributeList.add(new FdoAttribute(ANNOTATION_HASH, timestamp,
-          null));
-    }
-
+    handleAttributeList.add(
+        new FdoAttribute(ANNOTATION_HASH, timestamp, request.getAnnotationHash()));
     return handleAttributeList;
   }
 
@@ -463,75 +455,33 @@ public class FdoRecordService {
           null));
     }
     // 208 Topic Origin
-    if (request.getTopicOrigin() != null) {
-      handleAttributeList.add(
-          new FdoAttribute(TOPIC_ORIGIN, timestamp, request.getTopicOrigin().toString()));
-    } else {
-      handleAttributeList.add(new FdoAttribute(TOPIC_ORIGIN, timestamp, null));
-    }
+    handleAttributeList.add(new FdoAttribute(TOPIC_ORIGIN, timestamp, request.getTopicOrigin()));
     // 209 Topic Domain
-    if (request.getTopicDomain() != null) {
-      handleAttributeList.add(
-          new FdoAttribute(TOPIC_DOMAIN, timestamp, request.getTopicDomain().toString()));
-    } else {
-      handleAttributeList.add(new FdoAttribute(TOPIC_DOMAIN, timestamp, null));
-    }
+    handleAttributeList.add(
+        new FdoAttribute(TOPIC_DOMAIN, timestamp, request.getTopicDomain()));
     // 210 Topic Discipline
-    if (request.getTopicDiscipline() != null) {
-      handleAttributeList.add(new FdoAttribute(TOPIC_DISCIPLINE, timestamp,
-          request.getTopicDiscipline().toString()));
-    } else {
-      handleAttributeList.add(new FdoAttribute(TOPIC_DISCIPLINE, timestamp, null));
-    }
+    handleAttributeList.add(new FdoAttribute(TOPIC_DISCIPLINE, timestamp,
+        request.getTopicDiscipline()));
     // 211 Topic Category
-    if (request.getTopicCategory() != null) {
-      handleAttributeList.add(new FdoAttribute(TOPIC_CATEGORY, timestamp,
-          request.getTopicCategory().toString()));
-    } else {
-      handleAttributeList.add(new FdoAttribute(TOPIC_CATEGORY, timestamp, null));
-    }
+    handleAttributeList.add(new FdoAttribute(TOPIC_CATEGORY, timestamp,
+        request.getTopicCategory()));
     // 212 Living or Preserved
-    if (request.getLivingOrPreserved() != null) {
-      handleAttributeList.add(new FdoAttribute(LIVING_OR_PRESERVED, timestamp,
-          request.getLivingOrPreserved().toString()));
-    } else {
-      handleAttributeList.add(new FdoAttribute(LIVING_OR_PRESERVED, timestamp, null));
-    }
+    handleAttributeList.add(new FdoAttribute(LIVING_OR_PRESERVED, timestamp,
+        request.getLivingOrPreserved()));
     // 213 Base Type of Specimen
-    if (request.getBaseTypeOfSpecimen() != null) {
-      handleAttributeList.add(new FdoAttribute(BASE_TYPE_OF_SPECIMEN, timestamp,
-          request.getBaseTypeOfSpecimen().toString()));
-    } else {
-      handleAttributeList.add(new FdoAttribute(BASE_TYPE_OF_SPECIMEN, timestamp, null));
-    }
+    handleAttributeList.add(new FdoAttribute(BASE_TYPE_OF_SPECIMEN, timestamp,
+        request.getBaseTypeOfSpecimen()));
     // 214 Information Artefact Type
-    if (request.getInformationArtefactType() != null) {
-      handleAttributeList.add(new FdoAttribute(INFORMATION_ARTEFACT_TYPE, timestamp,
-          request.getInformationArtefactType().toString()));
-    } else {
-      handleAttributeList.add(new FdoAttribute(INFORMATION_ARTEFACT_TYPE, timestamp, null));
-    }
+    handleAttributeList.add(new FdoAttribute(INFORMATION_ARTEFACT_TYPE, timestamp,
+        request.getInformationArtefactType()));
     // 215 Material Sample Type
-    if (request.getMaterialSampleType() != null) {
-      handleAttributeList.add(new FdoAttribute(MATERIAL_SAMPLE_TYPE, timestamp,
-          request.getMaterialSampleType().toString()));
-    } else {
-      handleAttributeList.add(new FdoAttribute(MATERIAL_SAMPLE_TYPE, timestamp, null));
-    }
+    handleAttributeList.add(new FdoAttribute(MATERIAL_SAMPLE_TYPE, timestamp,
+        request.getMaterialSampleType()));
     // 216 Material or Digital Entity
-    if (request.getMaterialOrDigitalEntity() != null) {
-      handleAttributeList.add(new FdoAttribute(MATERIAL_OR_DIGITAL_ENTITY, timestamp,
-          request.getMaterialOrDigitalEntity().toString()));
-    } else {
-      handleAttributeList.add(new FdoAttribute(MATERIAL_OR_DIGITAL_ENTITY, timestamp, null));
-    }
+    handleAttributeList.add(new FdoAttribute(MATERIAL_OR_DIGITAL_ENTITY, timestamp,
+        request.getMaterialOrDigitalEntity()));
     // 217 Marked as Type
-    if (request.getMarkedAsType() != null) {
-      handleAttributeList.add(new FdoAttribute(MARKED_AS_TYPE, timestamp,
-          String.valueOf(request.getMarkedAsType())));
-    } else {
-      handleAttributeList.add(new FdoAttribute(MARKED_AS_TYPE, timestamp, null));
-    }
+    handleAttributeList.add(new FdoAttribute(MARKED_AS_TYPE, timestamp, request.getMarkedAsType()));
     // 218 Was Derived From Entity
     handleAttributeList.add(
         new FdoAttribute(WAS_DERIVED_FROM_ENTITY, timestamp,
@@ -606,8 +556,7 @@ public class FdoRecordService {
         new FdoAttribute(LINKED_DO_PID, timestamp, request.getLinkedDigitalObjectPid()));
     // 405 Linked Digital Object Type
     handleAttributeList.add(
-        new FdoAttribute(LINKED_DO_TYPE, timestamp,
-            request.getLinkedDigitalObjectType().toString()));
+        new FdoAttribute(LINKED_DO_TYPE, timestamp, request.getLinkedDigitalObjectType()));
     // 406 Linked Attribute
     handleAttributeList.add(
         new FdoAttribute(LINKED_ATTRIBUTE, timestamp, request.getLinkedAttribute()));
@@ -615,38 +564,23 @@ public class FdoRecordService {
     handleAttributeList.add(
         new FdoAttribute(PRIMARY_MEDIA_ID, timestamp, request.getPrimaryMediaId()));
     // 408 Primary Media Object Id Type
-    if (request.getPrimaryMediaObjectIdType() != null) {
-      handleAttributeList.add(
-          new FdoAttribute(PRIMARY_MO_ID_TYPE, timestamp,
-              request.getPrimaryMediaObjectIdType().toString()));
-    } else {
-      handleAttributeList.add(
-          new FdoAttribute(PRIMARY_MO_ID_TYPE, timestamp, null));
-    }
+    handleAttributeList.add(
+        new FdoAttribute(PRIMARY_MO_ID_TYPE, timestamp,
+            request.getPrimaryMediaObjectIdType()));
     // 409 Primary Media Object Id Name
     handleAttributeList.add(
         new FdoAttribute(PRIMARY_MO_ID_NAME, timestamp,
             request.getPrimaryMediaObjectIdName()));
     // 410 dcterms:type
-    if (request.getDcTermsType() != null) {
-      handleAttributeList.add(
-          new FdoAttribute(DCTERMS_TYPE, timestamp, request.getDcTermsType().toString()));
-    } else {
-      handleAttributeList.add(
-          new FdoAttribute(DCTERMS_TYPE, timestamp, null));
-    }
+    handleAttributeList.add(
+        new FdoAttribute(DCTERMS_TYPE, timestamp, request.getDcTermsType()));
     // 411 dcterms:subject
     handleAttributeList.add(
         new FdoAttribute(DCTERMS_SUBJECT, timestamp, request.getDctermsSubject()));
     // 412 dcterms:format
-    if (request.getDctermsFormat() != null) {
-      handleAttributeList.add(
-          new FdoAttribute(DCTERMS_FORMAT, timestamp,
-              request.getDctermsFormat().toString()));
-    } else {
-      handleAttributeList.add(
-          new FdoAttribute(DCTERMS_FORMAT, timestamp, null));
-    }
+    handleAttributeList.add(
+        new FdoAttribute(DCTERMS_FORMAT, timestamp,
+            request.getDctermsFormat()));
     // 413 Derived from Entity
     handleAttributeList.add(
         new FdoAttribute(DERIVED_FROM_ENTITY, timestamp, request.getDerivedFromEntity()));
@@ -662,12 +596,8 @@ public class FdoRecordService {
     handleAttributeList.add(
         new FdoAttribute(RIGHTSHOLDER_PID, timestamp, request.getRightsholderPid()));
     // 418 RightsholderPidType
-    if (request.getRightsholderPidType() != null) {
-      handleAttributeList.add(new FdoAttribute(RIGHTSHOLDER_PID_TYPE, timestamp,
-          request.getRightsholderPidType().toString()));
-    } else {
-      handleAttributeList.add(new FdoAttribute(RIGHTSHOLDER_PID_TYPE, timestamp, null));
-    }
+    handleAttributeList.add(new FdoAttribute(RIGHTSHOLDER_PID_TYPE, timestamp,
+        request.getRightsholderPidType()));
     // 419 dcterms:conformsTo
     handleAttributeList.add(
         new FdoAttribute(DC_TERMS_CONFORMS, timestamp, request.getDctermsConformsTo()));

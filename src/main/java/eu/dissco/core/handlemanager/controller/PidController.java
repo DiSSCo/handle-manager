@@ -54,11 +54,11 @@ public class PidController {
   @GetMapping("/{prefix}/{suffix}")
   public ResponseEntity<JsonApiWrapperRead> resolvePid(@PathVariable("prefix") String prefix,
       @PathVariable("suffix") String suffix, HttpServletRequest r) throws PidResolutionException {
-    String path = applicationProperties.getUiUrl() + "/" + r.getRequestURI();
+    String link = applicationProperties.getUiUrl() + "/" + r.getRequestURI();
     String handle = prefix + "/" + suffix;
 
     if (prefix.equals(applicationProperties.getPrefix())) {
-      var node = service.resolveSingleRecord(handle, path);
+      var node = service.resolveSingleRecord(handle, link);
       return ResponseEntity.status(HttpStatus.OK).body(node);
     }
     throw new PidResolutionException(
@@ -71,7 +71,7 @@ public class PidController {
   public ResponseEntity<JsonApiWrapperRead> resolvePids(
       @RequestParam List<String> handles,
       HttpServletRequest r) throws InvalidRequestException {
-    String path = applicationProperties.getUiUrl() + "/" + r.getRequestURI();
+    String link = applicationProperties.getUiUrl() + "/" + r.getRequestURI();
 
     if (handles.size() > applicationProperties.getMaxHandles()) {
       throw new InvalidRequestException(
@@ -79,7 +79,7 @@ public class PidController {
               + applicationProperties.getMaxHandles());
     }
 
-    return ResponseEntity.status(HttpStatus.OK).body(service.resolveBatchRecord(handles, path));
+    return ResponseEntity.status(HttpStatus.OK).body(service.resolveBatchRecord(handles, link));
   }
 
   @Operation(summary = "Given a physical identifier (i.e. local identifier), resolve PID record")
@@ -119,7 +119,7 @@ public class PidController {
       Authentication authentication) throws InvalidRequestException, UnprocessableEntityException {
     log.info("Received single update request for PID {}/{} from user {}", prefix, suffix,
         authentication.getName());
-    schemaValidator.validatePutRequest(request);
+    schemaValidator.validatePatchRequest(request);
     var handle = (prefix + "/" + suffix);
     var handleData = request.get(NODE_DATA).get(NODE_ID).asText();
     if (!handle.equals(handleData)) {
@@ -137,7 +137,7 @@ public class PidController {
       Authentication authentication) throws InvalidRequestException, UnprocessableEntityException {
     log.info("Validating batch update request from user {}", authentication.getName());
     for (JsonNode request : requests) {
-      schemaValidator.validatePutRequest(request);
+      schemaValidator.validatePatchRequest(request);
     }
     log.info("Received valid batch update request for {} PIDS", requests.size());
     var result = service.updateRecords(requests, true);
@@ -192,7 +192,7 @@ public class PidController {
 
     log.info("Validating rollback update request from user {}", authentication.getName());
     for (JsonNode request : requests) {
-      schemaValidator.validatePutRequest(request);
+      schemaValidator.validatePatchRequest(request);
     }
     var handles = requests.stream().map(r -> r.get(NODE_DATA).get(NODE_ID).asText())
         .limit(LOG_LIMIT).toList();
