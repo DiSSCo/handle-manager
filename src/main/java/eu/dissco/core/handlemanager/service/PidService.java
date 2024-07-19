@@ -20,8 +20,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import eu.dissco.core.handlemanager.domain.fdo.DigitalMediaRequest;
-import eu.dissco.core.handlemanager.domain.fdo.DigitalSpecimenRequest;
+import eu.dissco.core.digitalmediaprocessor.schema.DigitalMedia;
+import eu.dissco.core.digitalmediaprocessor.schema.DigitalSpecimen;
 import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 import eu.dissco.core.handlemanager.domain.fdo.TombstoneRecordRequest;
@@ -32,6 +32,7 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
+import eu.dissco.core.handlemanager.domain.requests.PostRequest;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
@@ -217,7 +218,7 @@ public abstract class PidService {
   }
 
   // Create
-  public abstract JsonApiWrapperWrite createRecords(List<JsonNode> requests)
+  public abstract JsonApiWrapperWrite createRecords(List<PostRequest> requests)
       throws InvalidRequestException, UnprocessableEntityException;
 
   protected List<FdoRecord> getPreviousVersions(List<String> handles)
@@ -271,18 +272,26 @@ public abstract class PidService {
     return FdoType.fromString(type.get());
   }
 
+  protected FdoType getFdoTypeFromRequest(List<FdoType> fdoTypes) {
+    var uniqueTypes = new HashSet<>(fdoTypes);
+    if (uniqueTypes.size() != 1) {
+      throw new UnsupportedOperationException("Requests must all be of the same type");
+    }
+    return uniqueTypes.iterator().next();
+  }
+
   protected List<FdoRecord> createDigitalSpecimen(List<JsonNode> requestAttributes,
       Iterator<String> handleIterator) throws JsonProcessingException, InvalidRequestException {
-    var specimenRequests = new ArrayList<DigitalSpecimenRequest>();
+    var specimenRequests = new ArrayList<DigitalSpecimen>();
     for (var request : requestAttributes) {
-      specimenRequests.add(mapper.treeToValue(request, DigitalSpecimenRequest.class));
+      specimenRequests.add(mapper.treeToValue(request, DigitalSpecimen.class));
     }
     if (specimenRequests.isEmpty()) {
       return Collections.emptyList();
     }
     verifyObjectsAreNew(specimenRequests
         .stream()
-        .map(DigitalSpecimenRequest::getNormalisedPrimarySpecimenObjectId)
+        .map(DigitalSpecimen::getNormalisedPrimarySpecimenObjectId)
         .toList());
     var fdoRecords = new ArrayList<FdoRecord>();
     var timestamp = Instant.now();
@@ -301,7 +310,7 @@ public abstract class PidService {
     var timestamp = Instant.now();
     for (var request : updateRequests) {
       var requestObject = mapper.treeToValue(request.get(NODE_ATTRIBUTES),
-          DigitalSpecimenRequest.class);
+          DigitalSpecimen.class);
       fdoRecords.add(
           fdoRecordService.prepareUpdatedDigitalSpecimenRecord(requestObject, timestamp,
               previousVersionMap.get(request.get(NODE_ID).asText()), incrementVersion));
@@ -313,17 +322,17 @@ public abstract class PidService {
       Iterator<String> handleIterator)
       throws JsonProcessingException, InvalidRequestException {
     List<FdoRecord> fdoRecords = new ArrayList<>();
-    List<DigitalMediaRequest> mediaRequests = new ArrayList<>();
+    List<DigitalMedia> mediaRequests = new ArrayList<>();
     var timestamp = Instant.now();
     for (var request : requestAttributes) {
-      mediaRequests.add(mapper.treeToValue(request, DigitalMediaRequest.class));
+      mediaRequests.add(mapper.treeToValue(request, DigitalMedia.class));
     }
     if (mediaRequests.isEmpty()) {
       return Collections.emptyList();
     }
     verifyObjectsAreNew(mediaRequests
         .stream()
-        .map(DigitalMediaRequest::getPrimaryMediaId)
+        .map(DigitalMedia::getPrimaryMediaId)
         .toList());
     for (var mediaRequest : mediaRequests) {
       fdoRecords.add(
@@ -340,7 +349,7 @@ public abstract class PidService {
     var timestamp = Instant.now();
     for (var request : updateRequests) {
       var requestObject = mapper.treeToValue(request.get(NODE_ATTRIBUTES),
-          DigitalMediaRequest.class);
+          DigitalMedia.class);
       fdoRecords.add(
           fdoRecordService.prepareUpdatedDigitalMediaRecord(requestObject, timestamp,
               previousVersionMap.get(request.get(NODE_ID).asText()), incrementVersion));

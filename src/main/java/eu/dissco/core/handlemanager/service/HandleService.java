@@ -1,6 +1,5 @@
 package eu.dissco.core.handlemanager.service;
 
-import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DOI;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.HANDLE;
 import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_DATA;
@@ -9,16 +8,17 @@ import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ID;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import eu.dissco.core.digitalmediaprocessor.schema.Annotation;
+import eu.dissco.core.digitalmediaprocessor.schema.DataMapping;
+import eu.dissco.core.digitalmediaprocessor.schema.DoiKernel;
+import eu.dissco.core.digitalmediaprocessor.schema.HandleKernel;
+import eu.dissco.core.digitalmediaprocessor.schema.Mas;
+import eu.dissco.core.digitalmediaprocessor.schema.Organisation;
+import eu.dissco.core.digitalmediaprocessor.schema.SourceSystem;
 import eu.dissco.core.handlemanager.Profiles;
-import eu.dissco.core.handlemanager.domain.fdo.AnnotationRequest;
-import eu.dissco.core.handlemanager.domain.fdo.DataMappingRequest;
-import eu.dissco.core.handlemanager.domain.fdo.DoiRecordRequest;
-import eu.dissco.core.handlemanager.domain.fdo.HandleRecordRequest;
-import eu.dissco.core.handlemanager.domain.fdo.MasRequest;
-import eu.dissco.core.handlemanager.domain.fdo.OrganisationRequest;
-import eu.dissco.core.handlemanager.domain.fdo.SourceSystemRequest;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
+import eu.dissco.core.handlemanager.domain.requests.PostRequest;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
@@ -47,11 +47,15 @@ public class HandleService extends PidService {
 
   // Pid Record Creation
   @Override
-  public JsonApiWrapperWrite createRecords(List<JsonNode> requests) throws InvalidRequestException {
+  public JsonApiWrapperWrite createRecords(List<PostRequest> requests)
+      throws InvalidRequestException {
     var handles = hf.genHandleList(requests.size()).iterator();
     var requestAttributes = requests.stream()
-        .map(request -> request.get(NODE_DATA).get(NODE_ATTRIBUTES)).toList();
-    var fdoType = getObjectTypeFromJsonNode(requests);
+        .map(request -> request.data().attributes())
+        .toList();
+    var fdoType = getFdoTypeFromRequest(requests.stream()
+        .map(request -> request.data().type())
+        .toList());
     List<FdoRecord> fdoRecords;
     List<Document> fdoDocuments;
     try {
@@ -121,7 +125,7 @@ public class HandleService extends PidService {
     List<FdoRecord> fdoRecords = new ArrayList<>();
     var timestamp = Instant.now();
     for (var request : requestAttributes) {
-      var requestObject = mapper.treeToValue(request, AnnotationRequest.class);
+      var requestObject = mapper.treeToValue(request, Annotation.class);
       fdoRecords.add(
           fdoRecordService.prepareNewAnnotationRecord(requestObject, handleIterator.next(),
               timestamp));
@@ -135,7 +139,7 @@ public class HandleService extends PidService {
     List<FdoRecord> fdoRecords = new ArrayList<>();
     var timestamp = Instant.now();
     for (var request : updateRequests) {
-      var requestObject = mapper.treeToValue(request.get(NODE_ATTRIBUTES), AnnotationRequest.class);
+      var requestObject = mapper.treeToValue(request.get(NODE_ATTRIBUTES), Annotation.class);
       fdoRecords.add(
           fdoRecordService.prepareUpdatedAnnotationRecord(requestObject, timestamp,
               previousVersionMap.get(request.get(NODE_ID).asText()), incrementVersion));
@@ -149,9 +153,9 @@ public class HandleService extends PidService {
     List<FdoRecord> fdoRecords = new ArrayList<>();
     var timestamp = Instant.now();
     for (var request : requestAttributes) {
-      var requestObject = mapper.treeToValue(request, DoiRecordRequest.class);
-      fdoRecords.add(fdoRecordService.prepareNewDoiRecord(requestObject, handleIterator.next(),
-          DOI, timestamp));
+      var requestObject = mapper.treeToValue(request, DoiKernel.class);
+      fdoRecords.add(
+          fdoRecordService.prepareNewDoiRecord(requestObject, handleIterator.next(), timestamp));
     }
     return fdoRecords;
   }
@@ -162,9 +166,9 @@ public class HandleService extends PidService {
     List<FdoRecord> fdoRecords = new ArrayList<>();
     var timestamp = Instant.now();
     for (var request : updateRequests) {
-      var requestObject = mapper.treeToValue(request.get(NODE_ATTRIBUTES), DoiRecordRequest.class);
+      var requestObject = mapper.treeToValue(request.get(NODE_ATTRIBUTES), DoiKernel.class);
       fdoRecords.add(
-          fdoRecordService.prepareUpdatedDoiRecord(requestObject, DOI, timestamp,
+          fdoRecordService.prepareUpdatedDoiRecord(requestObject, timestamp,
               previousVersionMap.get(request.get(NODE_ID).asText()), incrementVersion));
     }
     return fdoRecords;
@@ -176,9 +180,9 @@ public class HandleService extends PidService {
     List<FdoRecord> fdoRecords = new ArrayList<>();
     var timestamp = Instant.now();
     for (var request : requestAttributes) {
-      var requestObject = mapper.treeToValue(request, HandleRecordRequest.class);
-      fdoRecords.add(fdoRecordService.prepareNewHandleRecord(requestObject, handleIterator.next(),
-          HANDLE, timestamp));
+      var requestObject = mapper.treeToValue(request, HandleKernel.class);
+      fdoRecords.add(
+          fdoRecordService.prepareNewHandleRecord(requestObject, handleIterator.next(), timestamp));
     }
     return fdoRecords;
   }
@@ -190,7 +194,7 @@ public class HandleService extends PidService {
     var timestamp = Instant.now();
     for (var request : updateRequests) {
       var requestObject = mapper.treeToValue(request.get(NODE_ATTRIBUTES),
-          HandleRecordRequest.class);
+          HandleKernel.class);
       fdoRecords.add(
           fdoRecordService.prepareUpdatedHandleRecord(requestObject, HANDLE, timestamp,
               previousVersionMap.get(request.get(NODE_ID).asText()), incrementVersion));
@@ -203,7 +207,7 @@ public class HandleService extends PidService {
     List<FdoRecord> fdoRecords = new ArrayList<>();
     var timestamp = Instant.now();
     for (var request : requestAttributes) {
-      var requestObject = mapper.treeToValue(request, DataMappingRequest.class);
+      var requestObject = mapper.treeToValue(request, DataMapping.class);
       fdoRecords.add(
           fdoRecordService.prepareNewDataMappingRecord(requestObject, handleIterator.next(),
               timestamp));
@@ -218,7 +222,7 @@ public class HandleService extends PidService {
     var timestamp = Instant.now();
     for (var request : updateRequests) {
       var requestObject = mapper.treeToValue(request.get(NODE_ATTRIBUTES),
-          DataMappingRequest.class);
+          DataMapping.class);
       fdoRecords.add(
           fdoRecordService.prepareUpdatedDataMappingRecord(requestObject, timestamp,
               previousVersionMap.get(request.get(NODE_ID).asText()), incrementVersion));
@@ -231,7 +235,7 @@ public class HandleService extends PidService {
     List<FdoRecord> fdoRecords = new ArrayList<>();
     var timestamp = Instant.now();
     for (var request : requestAttributes) {
-      var requestObject = mapper.treeToValue(request, MasRequest.class);
+      var requestObject = mapper.treeToValue(request, Mas.class);
       fdoRecords.add(fdoRecordService.prepareNewMasRecord(requestObject, handleIterator.next(),
           timestamp));
     }
@@ -244,7 +248,7 @@ public class HandleService extends PidService {
     List<FdoRecord> fdoRecords = new ArrayList<>();
     var timestamp = Instant.now();
     for (var request : updateRequests) {
-      var requestObject = mapper.treeToValue(request.get(NODE_ATTRIBUTES), MasRequest.class);
+      var requestObject = mapper.treeToValue(request.get(NODE_ATTRIBUTES), Mas.class);
       fdoRecords.add(
           fdoRecordService.prepareUpdatedMasRecord(requestObject, timestamp,
               previousVersionMap.get(request.get(NODE_ID).asText()), incrementVersion));
@@ -257,7 +261,7 @@ public class HandleService extends PidService {
     List<FdoRecord> fdoRecords = new ArrayList<>();
     var timestamp = Instant.now();
     for (var request : requestAttributes) {
-      var requestObject = mapper.treeToValue(request, OrganisationRequest.class);
+      var requestObject = mapper.treeToValue(request, Organisation.class);
       fdoRecords.add(
           fdoRecordService.prepareNewOrganisationRecord(requestObject, handleIterator.next(),
               timestamp));
@@ -272,7 +276,7 @@ public class HandleService extends PidService {
     var timestamp = Instant.now();
     for (var request : updateRequests) {
       var requestObject = mapper.treeToValue(request.get(NODE_ATTRIBUTES),
-          OrganisationRequest.class);
+          Organisation.class);
       fdoRecords.add(
           fdoRecordService.prepareUpdatedOrganisationRecord(requestObject, timestamp,
               previousVersionMap.get(request.get(NODE_ID).asText()), incrementVersion));
@@ -285,7 +289,7 @@ public class HandleService extends PidService {
     List<FdoRecord> fdoRecords = new ArrayList<>();
     var timestamp = Instant.now();
     for (var request : requestAttributes) {
-      var requestObject = mapper.treeToValue(request, SourceSystemRequest.class);
+      var requestObject = mapper.treeToValue(request, SourceSystem.class);
       fdoRecords.add(
           fdoRecordService.prepareNewSourceSystemRecord(requestObject, handleIterator.next(),
               timestamp));
@@ -300,7 +304,7 @@ public class HandleService extends PidService {
     var timestamp = Instant.now();
     for (var request : updateRequests) {
       var requestObject = mapper.treeToValue(request.get(NODE_ATTRIBUTES),
-          SourceSystemRequest.class);
+          SourceSystem.class);
       fdoRecords.add(
           fdoRecordService.prepareUpdatedSourceSystemRecord(requestObject, timestamp,
               previousVersionMap.get(request.get(NODE_ID).asText()), incrementVersion));

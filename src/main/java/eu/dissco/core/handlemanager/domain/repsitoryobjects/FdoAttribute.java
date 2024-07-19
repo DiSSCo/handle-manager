@@ -28,6 +28,16 @@ public class FdoAttribute {
     this.ttl = 86400;
   }
 
+  public FdoAttribute(FdoProfile fdoAttribute, Instant timestamp, Object value,
+      String defaultValue) {
+    this.index = fdoAttribute.index();
+    this.type = fdoAttribute.get();
+    this.timestamp = timestamp;
+    value = value == null ? defaultValue : value;
+    this.data = new StringHandleData(value.toString());
+    this.ttl = 86400;
+  }
+
   public FdoAttribute(Instant timestamp, String prefix) {
     this.index = HS_ADMIN.index();
     this.type = HS_ADMIN.get();

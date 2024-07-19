@@ -7,7 +7,7 @@ import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 
 public record PostRequestData(
     //@JsonProperty(required = true)
-    @JsonPropertyDescription("type of object")
+    @JsonPropertyDescription("Fdo Type of object")
     FdoType type,
     @JsonProperty(required = true)
     JsonNode attributes

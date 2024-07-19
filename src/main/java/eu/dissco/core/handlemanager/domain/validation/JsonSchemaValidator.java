@@ -34,6 +34,7 @@ import eu.dissco.core.handlemanager.domain.requests.PostRequest;
 import eu.dissco.core.handlemanager.domain.requests.TombstoneRequest;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import jakarta.validation.constraints.NotEmpty;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -171,7 +172,12 @@ public class JsonSchemaValidator {
     postReqSchema = factory.getSchema(postReqJsonNode);
     patchReqSchema = factory.getSchema(patchReqJsonNode);
     putReqSchema = factory.getSchema(putReqJsonNode);
-    handleSchema = factory.getSchema(handleJsonNode);
+    try {
+      handleSchema = factory.getSchema(new URI(
+          "https://schemas.dissco.tech/schemas/fdo-profile/handle-kernel/latest/handle-request.json"));
+    } catch (Exception e) {
+      log.error("!", e);
+    }
     doiSchema = factory.getSchema(doiJsonNode);
     digitalSpecimenSchema = factory.getSchema(digitalSpecimenJsonNode);
     digitalMediaSchema = factory.getSchema(digitalMediaJsonNode);
@@ -189,6 +195,10 @@ public class JsonSchemaValidator {
       throw new InvalidRequestException(setErrorMessage(validationErrors, "CREATE"));
     }
     var fdoType = FdoType.fromString(requestRoot.get(NODE_DATA).get(NODE_TYPE).asText());
+    if (fdoType.equals(FdoType.HANDLE)) {
+      var errors = handleSchema.validate(requestRoot);
+      log.info("Errors: {}", errors);
+    }
     validateAttributes(requestRoot, fdoType);
   }
 
@@ -216,7 +226,9 @@ public class JsonSchemaValidator {
     var requestAttributes = requestRoot.get(NODE_DATA).get(NODE_ATTRIBUTES);
     JsonSchema schema;
     switch (fdoType) {
-      case HANDLE -> schema = handleSchema;
+      case HANDLE -> {
+        return;
+      }
       case DOI -> schema = doiSchema;
       case DIGITAL_SPECIMEN -> schema = digitalSpecimenSchema;
       case DIGITAL_MEDIA -> schema = digitalMediaSchema;

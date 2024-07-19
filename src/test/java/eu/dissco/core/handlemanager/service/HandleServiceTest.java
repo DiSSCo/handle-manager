@@ -267,7 +267,7 @@ class HandleServiceTest {
     var expectedDocument = givenMongoDocument(updatedAttributeRecord);
     var expected = givenWriteResponseFull(updatedAttributeRecord);
     given(mongoRepository.getHandleRecords(List.of(HANDLE))).willReturn(List.of(previousVersion));
-    given(fdoRecordService.prepareUpdatedDoiRecord(any(), any(), any(), any(),
+    given(fdoRecordService.prepareUpdatedDoiRecord(any(), any(), any(),
         anyBoolean())).willReturn(updatedAttributeRecord);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 

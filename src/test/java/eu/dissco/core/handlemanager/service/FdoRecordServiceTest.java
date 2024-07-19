@@ -192,7 +192,7 @@ class FdoRecordServiceTest {
     var request = givenDoiRecordRequestObjectUpdate();
 
     // When
-    var result = fdoRecordService.prepareUpdatedDoiRecord(request, FdoType.DOI, UPDATED,
+    var result = fdoRecordService.prepareUpdatedDoiRecord(request, UPDATED,
         previousVersion, true);
 
     // Then

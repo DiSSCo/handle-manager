@@ -5,8 +5,10 @@ import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_DAT
 import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ID;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
+import eu.dissco.core.handlemanager.domain.requests.PostRequest;
 import eu.dissco.core.handlemanager.domain.requests.RollbackRequest;
 import eu.dissco.core.handlemanager.domain.validation.JsonSchemaValidator;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
@@ -46,6 +48,7 @@ public class PidController {
   private final PidService service;
   private final JsonSchemaValidator schemaValidator;
   private final ApplicationProperties applicationProperties;
+  private final ObjectMapper mapper;
   private static final int LOG_LIMIT = 4;
 
 
@@ -56,7 +59,6 @@ public class PidController {
       @PathVariable("suffix") String suffix, HttpServletRequest r) throws PidResolutionException {
     String link = applicationProperties.getUiUrl() + "/" + r.getRequestURI();
     String handle = prefix + "/" + suffix;
-
     if (prefix.equals(applicationProperties.getPrefix())) {
       var node = service.resolveSingleRecord(handle, link);
       return ResponseEntity.status(HttpStatus.OK).body(node);
@@ -92,22 +94,21 @@ public class PidController {
 
   @Operation(summary = "Create single PID Record")
   @PostMapping(value = "/")
-  public ResponseEntity<JsonApiWrapperWrite> createRecord(@RequestBody JsonNode request,
+  public ResponseEntity<JsonApiWrapperWrite> createRecord(@RequestBody PostRequest request,
       Authentication authentication) throws InvalidRequestException, UnprocessableEntityException {
     log.info("Received single POST request from user {}", authentication.getName());
-    schemaValidator.validatePostRequest(request);
+    // Todo schemaValidator.validatePostRequest(request);
+
     return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(List.of(request)
     ));
   }
 
   @Operation(summary = "Create multiple PID Records at a time.")
   @PostMapping(value = "/batch")
-  public ResponseEntity<JsonApiWrapperWrite> createRecords(@RequestBody List<JsonNode> requests,
+  public ResponseEntity<JsonApiWrapperWrite> createRecords(@RequestBody List<PostRequest> requests,
       Authentication authentication) throws InvalidRequestException, UnprocessableEntityException {
     log.info("Validating batch POST request from user {}", authentication.getName());
-    for (JsonNode request : requests) {
-      schemaValidator.validatePostRequest(request);
-    }
+    // Todo validate
     return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(requests));
   }
 
