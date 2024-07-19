@@ -28,13 +28,13 @@ public class PidNameGeneratorService {
   private final Random random;
 
 
-  public List<String> genHandleList(int h) {
+  public Set<String> generateNewHandles(int h) {
     if (h > applicationProperties.getMaxHandles()) {
       log.warn("Max number of handles exceeded. Generating maximum {} handles instead",
           applicationProperties.getMaxHandles());
       h = applicationProperties.getMaxHandles();
     }
-    return new ArrayList<>(genHandleHashSet(h));
+    return genHandleHashSet(h);
   }
 
   private Set<String> genHandleHashSet(int h) {

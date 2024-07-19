@@ -43,6 +43,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -103,7 +104,7 @@ class DoiServiceTest {
         FdoType.DIGITAL_SPECIMEN, DOI_DOMAIN);
     var dataCiteEvent = new DataCiteEvent(jsonFormatFdoRecord(fdoRecord.attributes()),
         EventType.CREATE);
-    given(pidNameGeneratorService.genHandleList(1)).willReturn(List.of(HANDLE));
+    given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
     given(fdoRecordService.prepareNewDigitalSpecimenRecord(any(), any(), any())).willReturn(
         fdoRecord);
     given(profileProperties.getDomain()).willReturn(DOI_DOMAIN);
@@ -125,7 +126,7 @@ class DoiServiceTest {
         FdoType.DIGITAL_MEDIA, DOI_DOMAIN);
     var dataCiteEvent = new DataCiteEvent(jsonFormatFdoRecord(digitalMedia.attributes()),
         EventType.CREATE);
-    given(pidNameGeneratorService.genHandleList(1)).willReturn(List.of(HANDLE));
+    given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
     given(fdoRecordService.prepareNewDigitalMediaRecord(any(), any(), any())).willReturn(
         digitalMedia);
     given(profileProperties.getDomain()).willReturn(DOI_DOMAIN);
@@ -145,7 +146,7 @@ class DoiServiceTest {
         (JsonNode) genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(),
             FdoType.DIGITAL_SPECIMEN));
     var digitalSpecimen = givenDigitalSpecimenFdoRecord(HANDLE);
-    given(pidNameGeneratorService.genHandleList(1)).willReturn(List.of(HANDLE));
+    given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
     given(fdoRecordService.prepareNewDigitalSpecimenRecord(any(), any(), any())).willReturn(
         digitalSpecimen);
     doThrow(JsonProcessingException.class).when(dataCiteService).publishToDataCite(any(), any());

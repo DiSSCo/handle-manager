@@ -48,7 +48,7 @@ public class HandleService extends PidService {
   // Pid Record Creation
   @Override
   public JsonApiWrapperWrite createRecords(List<JsonNode> requests) throws InvalidRequestException {
-    var handles = hf.genHandleList(requests.size()).iterator();
+    var handles = hf.generateNewHandles(requests.size()).iterator();
     var requestAttributes = requests.stream()
         .map(request -> request.get(NODE_DATA).get(NODE_ATTRIBUTES)).toList();
     var fdoType = getObjectTypeFromJsonNode(requests);
