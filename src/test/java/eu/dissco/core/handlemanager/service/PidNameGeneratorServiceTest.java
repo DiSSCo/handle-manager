@@ -12,6 +12,7 @@ import eu.dissco.core.handlemanager.repository.MongoRepository;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,27 +45,27 @@ class PidNameGeneratorServiceTest {
   @Test
   void testSingleBatchGen() {
     // Given
-    String expectedHandle = PREFIX + "/AAA-AAA-AAA";
+    var expected = Set.of(PREFIX + "/AAA-AAA-AAA");
     given(random.nextInt(anyInt())).willReturn(0);
     given(applicationProperties.getPrefix()).willReturn(PREFIX);
 
     // When
-    String generatedHandle = pidNameGeneratorService.genHandleList(1).get(0);
+    var result = pidNameGeneratorService.generateNewHandles(1);
 
     // Then
-    assertThat(generatedHandle).isEqualTo(expectedHandle);
+    assertThat(result).isEqualTo(expected);
   }
 
   @Test
   void testBatchGen() {
     // Given
-    var expected = List.of(PREFIX + "/ABB-BBB-BBB", PREFIX + "/BBB-BBB-BBB");
+    var expected = Set.of(PREFIX + "/ABB-BBB-BBB", PREFIX + "/BBB-BBB-BBB");
 
     given(random.nextInt(anyInt())).willReturn(0, 1);
     given(applicationProperties.getPrefix()).willReturn(PREFIX);
 
     // When
-    var handleList = pidNameGeneratorService.genHandleList(2);
+    var handleList = pidNameGeneratorService.generateNewHandles(2);
 
     // Then
     assertThat(handleList).isEqualTo(expected);
@@ -72,7 +73,7 @@ class PidNameGeneratorServiceTest {
 
   @Test
   void testInternalCollision() {
-    var expected = List.of(PREFIX + "/AAA-AAA-AAA", PREFIX + "/BBB-BBB-BBB");
+    var expected = Set.of(PREFIX + "/AAA-AAA-AAA", PREFIX + "/BBB-BBB-BBB");
 
     given(random.nextInt(anyInt())).willReturn(0, 0, 0, 0, 0, 0, 0, 0, 0)// First
         .willReturn(0, 0, 0, 0, 0, 0, 0, 0, 0) // Collision
@@ -80,7 +81,7 @@ class PidNameGeneratorServiceTest {
     given(applicationProperties.getPrefix()).willReturn(PREFIX);
 
     // When
-    var result = pidNameGeneratorService.genHandleList(2);
+    var result = pidNameGeneratorService.generateNewHandles(2);
 
     // Then
     assertThat(expected).isEqualTo(result);
@@ -98,7 +99,7 @@ class PidNameGeneratorServiceTest {
     given(applicationProperties.getPrefix()).willReturn(PREFIX);
 
     // When
-    var result = pidNameGeneratorService.genHandleList(2);
+    var result = pidNameGeneratorService.generateNewHandles(2);
 
     // Then
     assertThat(result).hasSameElementsAs(List.of(expectedHandle1, expectedHandle2));
@@ -107,7 +108,7 @@ class PidNameGeneratorServiceTest {
   @Test
   void testInvalidNumberOfHandles() {
     // When
-    var tooFew = pidNameGeneratorService.genHandleList(-1);
+    var tooFew = pidNameGeneratorService.generateNewHandles(-1);
 
     // Then
     assertThat(tooFew).isEmpty();

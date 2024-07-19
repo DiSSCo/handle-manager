@@ -72,6 +72,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -133,7 +134,7 @@ class HandleServiceTest {
     var request = genCreateRecordRequest(givenAnnotationRequestObject(), FdoType.ANNOTATION);
     var fdoRecord = givenAnnotationFdoRecord(HANDLE, false);
     var expected = TestUtils.givenWriteResponseFull(List.of(HANDLE), FdoType.ANNOTATION);
-    given(pidNameGeneratorService.genHandleList(1)).willReturn(List.of(HANDLE));
+    given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
     given(fdoRecordService.prepareNewAnnotationRecord(any(), any(), any())).willReturn(fdoRecord);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
@@ -150,7 +151,7 @@ class HandleServiceTest {
     var fdoRecord = givenAnnotationFdoRecord(HANDLE, true);
     var expected = givenWriteResponseIdsOnly(List.of(fdoRecord), FdoType.ANNOTATION,
         HANDLE_DOMAIN);
-    given(pidNameGeneratorService.genHandleList(1)).willReturn(List.of(HANDLE));
+    given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
     given(fdoRecordService.prepareNewAnnotationRecord(any(), any(), any())).willReturn(fdoRecord);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
@@ -192,7 +193,7 @@ class HandleServiceTest {
     var fdoRecord = givenDigitalSpecimenFdoRecord(HANDLE);
     var expected = givenWriteResponseIdsOnly(List.of(fdoRecord),
         FdoType.DIGITAL_SPECIMEN, HANDLE_DOMAIN);
-    given(pidNameGeneratorService.genHandleList(1)).willReturn(List.of(HANDLE));
+    given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
     given(fdoRecordService.prepareNewDigitalSpecimenRecord(any(), any(), any())).willReturn(
         fdoRecord);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
@@ -246,7 +247,7 @@ class HandleServiceTest {
     var request = genCreateRecordRequest(givenDoiRecordRequestObject(), FdoType.DOI);
     var fdoRecord = givenDoiFdoRecord(HANDLE);
     var expected = TestUtils.givenWriteResponseFull(List.of(HANDLE), FdoType.DOI);
-    given(pidNameGeneratorService.genHandleList(1)).willReturn(List.of(HANDLE));
+    given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
     given(fdoRecordService.prepareNewDoiRecord(any(), any(), any(), any())).willReturn(fdoRecord);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
@@ -284,7 +285,7 @@ class HandleServiceTest {
     var request = genCreateRecordRequest(givenHandleRecordRequestObject(), FdoType.HANDLE);
     var fdoRecord = givenHandleFdoRecord(HANDLE);
     var expected = TestUtils.givenWriteResponseFull(List.of(HANDLE), FdoType.HANDLE);
-    given(pidNameGeneratorService.genHandleList(1)).willReturn(List.of(HANDLE));
+    given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
     given(fdoRecordService.prepareNewHandleRecord(any(), any(), any(), any())).willReturn(
         fdoRecord);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
@@ -360,7 +361,7 @@ class HandleServiceTest {
     var request = genCreateRecordRequest(givenDataMappingRequestObject(), FdoType.DATA_MAPPING);
     var fdoRecord = givenDataMappingFdoRecord(HANDLE);
     var expected = TestUtils.givenWriteResponseFull(List.of(HANDLE), FdoType.DATA_MAPPING);
-    given(pidNameGeneratorService.genHandleList(1)).willReturn(List.of(HANDLE));
+    given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
     given(fdoRecordService.prepareNewDataMappingRecord(any(), any(), any())).willReturn(fdoRecord);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
@@ -398,7 +399,7 @@ class HandleServiceTest {
     var request = genCreateRecordRequest(givenMasRecordRequestObject(), FdoType.MAS);
     var fdoRecord = givenMasFdoRecord(HANDLE);
     var expected = TestUtils.givenWriteResponseFull(List.of(HANDLE), FdoType.MAS);
-    given(pidNameGeneratorService.genHandleList(1)).willReturn(List.of(HANDLE));
+    given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
     given(fdoRecordService.prepareNewMasRecord(any(), any(), any())).willReturn(fdoRecord);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
@@ -437,7 +438,7 @@ class HandleServiceTest {
     var fdoRecord = givenDigitalMediaFdoRecord(HANDLE);
     var expected = givenWriteResponseIdsOnly(List.of(fdoRecord), FdoType.DIGITAL_MEDIA,
         HANDLE_DOMAIN);
-    given(pidNameGeneratorService.genHandleList(1)).willReturn(List.of(HANDLE));
+    given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
     given(fdoRecordService.prepareNewDigitalMediaRecord(any(), any(), any())).willReturn(fdoRecord);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
@@ -476,7 +477,7 @@ class HandleServiceTest {
     var request = genCreateRecordRequest(givenSourceSystemRequestObject(), FdoType.SOURCE_SYSTEM);
     var fdoRecord = givenSourceSystemFdoRecord(HANDLE);
     var expected = TestUtils.givenWriteResponseFull(List.of(HANDLE), FdoType.SOURCE_SYSTEM);
-    given(pidNameGeneratorService.genHandleList(1)).willReturn(List.of(HANDLE));
+    given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
     given(fdoRecordService.prepareNewSourceSystemRecord(any(), any(), any())).willReturn(fdoRecord);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
@@ -514,7 +515,7 @@ class HandleServiceTest {
     var request = genCreateRecordRequest(givenOrganisationRequestObject(), FdoType.ORGANISATION);
     var fdoRecord = givenOrganisationFdoRecord(HANDLE);
     var expected = TestUtils.givenWriteResponseFull(List.of(HANDLE), FdoType.ORGANISATION);
-    given(pidNameGeneratorService.genHandleList(1)).willReturn(List.of(HANDLE));
+    given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
     given(fdoRecordService.prepareNewOrganisationRecord(any(), any(), any())).willReturn(fdoRecord);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 

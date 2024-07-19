@@ -362,7 +362,6 @@ public abstract class PidService {
     var existingHandles = mongoRepository
         .searchByPrimaryLocalId(NORMALISED_SPECIMEN_OBJECT_ID.get(), normalisedIds);
     if (!existingHandles.isEmpty()) {
-      log.error("Unable to create new handles, as ");
       var handleMap = existingHandles.stream()
           .collect(Collectors.toMap(
               FdoRecord::handle,

@@ -42,7 +42,7 @@ class MongoRepositoryIT {
   private static final String MEDIA_ID = PREFIX + "/MEDIA";
 
   private static final DockerImageName MONGODB =
-      DockerImageName.parse("mongo:6.0.4");
+      DockerImageName.parse("mongo:7.0.12");
 
   @Container
   private static final MongoDBContainer CONTAINER = new MongoDBContainer(MONGODB);
