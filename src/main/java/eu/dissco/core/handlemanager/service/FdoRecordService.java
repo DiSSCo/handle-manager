@@ -86,19 +86,19 @@ import static eu.dissco.core.handlemanager.service.ServiceUtils.getField;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import eu.dissco.core.digitalmediaprocessor.schema.Annotation;
-import eu.dissco.core.digitalmediaprocessor.schema.DataMapping;
-import eu.dissco.core.digitalmediaprocessor.schema.DigitalMedia;
-import eu.dissco.core.digitalmediaprocessor.schema.DigitalSpecimen;
-import eu.dissco.core.digitalmediaprocessor.schema.DoiKernel;
-import eu.dissco.core.digitalmediaprocessor.schema.DoiKernel.StructuralType;
-import eu.dissco.core.digitalmediaprocessor.schema.HandleKernel;
-import eu.dissco.core.digitalmediaprocessor.schema.Mas;
-import eu.dissco.core.digitalmediaprocessor.schema.Organisation;
-import eu.dissco.core.digitalmediaprocessor.schema.SourceSystem;
+import eu.dissco.core.digitalmediaprocessor.schema.AnnotationRequestAttributes;
+import eu.dissco.core.digitalmediaprocessor.schema.DataMappingRequestAttributes;
+import eu.dissco.core.digitalmediaprocessor.schema.DigitalMediaRequestAttributes;
+import eu.dissco.core.digitalmediaprocessor.schema.DigitalSpecimenRequestAttributes;
+import eu.dissco.core.digitalmediaprocessor.schema.DoiKernelRequestAttributes;
+import eu.dissco.core.digitalmediaprocessor.schema.HandleRequestAttributes;
+import eu.dissco.core.digitalmediaprocessor.schema.MasRequestAttributes;
+import eu.dissco.core.digitalmediaprocessor.schema.OrganisationRequestAttributes;
+import eu.dissco.core.digitalmediaprocessor.schema.SourceSystemRequestAttributes;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 import eu.dissco.core.handlemanager.domain.fdo.TombstoneRecordRequest;
 import eu.dissco.core.handlemanager.domain.fdo.vocabulary.PidStatus;
+import eu.dissco.core.handlemanager.domain.fdo.vocabulary.specimen.StructuralType;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
@@ -141,6 +141,7 @@ public class FdoRecordService {
   private static final String WIKIDATA_DOMAIN = "https://www.wikidata.org/wiki/";
   private static final String WIKIDATA_API = "https://wikidata.org/w/rest.php/wikibase/v0/entities/items/";
   private static final String PROXY_ERROR = "Invalid attribute: %s must contain proxy: %s";
+  private static final String JSON_ERROR_MSG = "Unable to parse json request";
   private static final String PID_KERNEL_METADATA_LICENSE = "https://creativecommons.org/publicdomain/zero/1.0/";
   private static final String DATACITE_ROR = "https://ror.org/04wxnsj81";
   private static final String DATACITE_NAME = "DataCite";
@@ -149,9 +150,9 @@ public class FdoRecordService {
   public static final List<Integer> TOMBSTONE_KEYS;
 
   static {
-    GENERATED_KEYS = List.of(FDO_PROFILE.index(), FDO_RECORD_LICENSE.index(),
-        DIGITAL_OBJECT_TYPE.index(), DIGITAL_OBJECT_NAME.index(), PID.index(),
-        PID_RECORD_ISSUE_DATE.index(), PID_STATUS.index(), HS_ADMIN.index());
+    GENERATED_KEYS = List.of(FDO_PROFILE.index(), FDO_RECORD_LICENSE.index(), PID_ISSUER.index(),
+        PID_ISSUER_NAME.index(), DIGITAL_OBJECT_TYPE.index(), DIGITAL_OBJECT_NAME.index(),
+        PID.index(), PID_RECORD_ISSUE_DATE.index(), PID_STATUS.index(), HS_ADMIN.index());
   }
 
   static {
@@ -165,14 +166,15 @@ public class FdoRecordService {
 
 
   /* Handle Record Creation */
-  public FdoRecord prepareNewHandleRecord(HandleKernel request, String handle, Instant timestamp)
+  public FdoRecord prepareNewHandleRecord(HandleRequestAttributes request, String handle,
+      Instant timestamp)
       throws InvalidRequestException {
     var fdoAttributes = prepareHandleAttributes(request, handle, timestamp);
     fdoAttributes.addAll(prepareGeneratedAttributes(handle, HANDLE, timestamp));
-    return new FdoRecord(handle, DOI, fdoAttributes, null);
+    return new FdoRecord(handle, HANDLE, fdoAttributes, null);
   }
 
-  public FdoRecord prepareUpdatedHandleRecord(HandleKernel request,
+  public FdoRecord prepareUpdatedHandleRecord(HandleRequestAttributes request,
       FdoType fdoType, Instant timestamp, FdoRecord previousVersion, boolean incrementVersion)
       throws InvalidRequestException {
     var fdoAttributes = prepareUpdatedHandleAttributes(request,
@@ -180,13 +182,13 @@ public class FdoRecordService {
     return new FdoRecord(previousVersion.handle(), fdoType, fdoAttributes, null);
   }
 
-  public List<FdoAttribute> prepareHandleAttributes(HandleKernel request, String handle,
+  public List<FdoAttribute> prepareHandleAttributes(HandleRequestAttributes request, String handle,
       Instant timestamp)
       throws InvalidRequestException {
     var handleAttributeList = new ArrayList<FdoAttribute>();
     // 101: 10320/Loc
     handleAttributeList.add(
-        new FdoAttribute(LOC, timestamp, setLocations(handle, HANDLE, null)));
+        new FdoAttribute(LOC, timestamp, setLocations(handle, HANDLE, request.getLocations())));
     // 8: Issued For Agent
     handleAttributeList.add(
         new FdoAttribute(ISSUED_FOR_AGENT, timestamp, request.getIssuedForAgent()));
@@ -196,15 +198,15 @@ public class FdoRecordService {
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
-            StructuralType.DIGITAL.value()));
+            StructuralType.DIGITAL.toString()));
     return handleAttributeList;
   }
 
-  private List<FdoAttribute> prepareUpdatedHandleAttributes(HandleKernel request,
+  private List<FdoAttribute> prepareUpdatedHandleAttributes(HandleRequestAttributes request,
       String handle, Instant timestamp, FdoRecord previousVersion,
       boolean incrementVersion)
       throws InvalidRequestException {
-    var updatedAttributes = prepareHandleAttributes(request, handle, timestamp);
+    var updatedAttributes = new ArrayList<>(prepareHandleAttributes(request, handle, timestamp));
     prepareUpdateAttributes(updatedAttributes, previousVersion.attributes(), timestamp,
         incrementVersion);
     return updatedAttributes;
@@ -212,14 +214,15 @@ public class FdoRecordService {
 
 
   /* DOI Record Creation */
-  public FdoRecord prepareNewDoiRecord(DoiKernel request, String handle, Instant timestamp)
+  public FdoRecord prepareNewDoiRecord(DoiKernelRequestAttributes request, String handle,
+      Instant timestamp)
       throws InvalidRequestException {
     var fdoAttributes = prepareDoiAttributes(request, handle, timestamp);
     fdoAttributes.addAll(prepareGeneratedAttributes(handle, FdoType.DOI, timestamp));
     return new FdoRecord(handle, FdoType.DOI, fdoAttributes, null);
   }
 
-  public FdoRecord prepareUpdatedDoiRecord(DoiKernel request, Instant timestamp,
+  public FdoRecord prepareUpdatedDoiRecord(DoiKernelRequestAttributes request, Instant timestamp,
       FdoRecord previousVersion, boolean incrementVersion)
       throws InvalidRequestException {
     var fdoAttributes = prepareUpdatedDoiAttributes(request,
@@ -227,13 +230,13 @@ public class FdoRecordService {
     return new FdoRecord(previousVersion.handle(), FdoType.DOI, fdoAttributes, null);
   }
 
-  public List<FdoAttribute> prepareDoiAttributes(DoiKernel request, String handle,
+  public List<FdoAttribute> prepareDoiAttributes(DoiKernelRequestAttributes request, String handle,
       Instant timestamp)
       throws InvalidRequestException {
     var handleAttributeList = new ArrayList<FdoAttribute>();
     // 101: 10320/Loc
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
-        setLocations(handle, DOI, null)));
+        setLocations(handle, DOI, request.getLocations())));
     // 8: Issued For Agent
     handleAttributeList.add(
         new FdoAttribute(ISSUED_FOR_AGENT, timestamp, request.getIssuedForAgent()));
@@ -243,7 +246,7 @@ public class FdoRecordService {
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
-            StructuralType.DIGITAL.value()));
+            StructuralType.DIGITAL.toString()));
     // 40: Referent Type
     handleAttributeList.add(
         new FdoAttribute(REFERENT_TYPE, timestamp, request.getReferentType()));
@@ -259,7 +262,7 @@ public class FdoRecordService {
     return handleAttributeList;
   }
 
-  private List<FdoAttribute> prepareUpdatedDoiAttributes(DoiKernel request,
+  private List<FdoAttribute> prepareUpdatedDoiAttributes(DoiKernelRequestAttributes request,
       String handle, Instant timestamp, FdoRecord previousVersion,
       boolean incrementVersion)
       throws InvalidRequestException {
@@ -270,14 +273,16 @@ public class FdoRecordService {
   }
 
   /* Annotation Record Creation */
-  public FdoRecord prepareNewAnnotationRecord(Annotation request, String handle, Instant timestamp)
+  public FdoRecord prepareNewAnnotationRecord(AnnotationRequestAttributes request, String handle,
+      Instant timestamp)
       throws InvalidRequestException {
     var fdoAttributes = prepareAnnotationAttributes(request, handle, timestamp);
     fdoAttributes.addAll(prepareGeneratedAttributes(handle, FdoType.ANNOTATION, timestamp));
     return new FdoRecord(handle, FdoType.ANNOTATION, fdoAttributes, request.getAnnotationHash());
   }
 
-  public FdoRecord prepareUpdatedAnnotationRecord(Annotation request, Instant timestamp,
+  public FdoRecord prepareUpdatedAnnotationRecord(AnnotationRequestAttributes request,
+      Instant timestamp,
       FdoRecord previousVersion, boolean incrementVersion)
       throws InvalidRequestException {
     var fdoAttributes = prepareUpdatedAnnotationAttributes(request,
@@ -286,13 +291,14 @@ public class FdoRecordService {
         request.getAnnotationHash());
   }
 
-  public List<FdoAttribute> prepareAnnotationAttributes(Annotation request, String handle,
+  public List<FdoAttribute> prepareAnnotationAttributes(AnnotationRequestAttributes request,
+      String handle,
       Instant timestamp)
       throws InvalidRequestException {
     var handleAttributeList = new ArrayList<FdoAttribute>();
     // 101: 10320/Loc
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
-        setLocations(handle, ANNOTATION, null)));
+        setLocations(handle, ANNOTATION, request.getLocations())));
     // 8: Issued For Agent
     handleAttributeList.add(
         new FdoAttribute(ISSUED_FOR_AGENT, timestamp, request.getIssuedForAgent()));
@@ -302,7 +308,7 @@ public class FdoRecordService {
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
-            StructuralType.DIGITAL.value()));
+            StructuralType.DIGITAL.toString()));
     handleAttributeList.add(new FdoAttribute(TARGET_PID, timestamp, request.getTargetPid()));
     // 501 Target Type
     handleAttributeList.add(
@@ -315,7 +321,7 @@ public class FdoRecordService {
     return handleAttributeList;
   }
 
-  private List<FdoAttribute> prepareUpdatedAnnotationAttributes(Annotation request,
+  private List<FdoAttribute> prepareUpdatedAnnotationAttributes(AnnotationRequestAttributes request,
       String handle, Instant timestamp, FdoRecord previousVersion,
       boolean incrementVersion)
       throws InvalidRequestException {
@@ -327,7 +333,7 @@ public class FdoRecordService {
   }
 
   /* Data Mapping Record Creation */
-  public FdoRecord prepareNewDataMappingRecord(DataMapping request, String handle,
+  public FdoRecord prepareNewDataMappingRecord(DataMappingRequestAttributes request, String handle,
       Instant timestamp)
       throws InvalidRequestException {
     var fdoAttributes = prepareDataMappingAttributes(request, handle, timestamp);
@@ -335,7 +341,8 @@ public class FdoRecordService {
     return new FdoRecord(handle, FdoType.DATA_MAPPING, fdoAttributes, null);
   }
 
-  public FdoRecord prepareUpdatedDataMappingRecord(DataMapping request, Instant timestamp,
+  public FdoRecord prepareUpdatedDataMappingRecord(DataMappingRequestAttributes request,
+      Instant timestamp,
       FdoRecord previousVersion, boolean incrementVersion)
       throws InvalidRequestException {
     var fdoAttributes = prepareUpdatedDataMappingAttributes(request,
@@ -344,13 +351,14 @@ public class FdoRecordService {
         null);
   }
 
-  public List<FdoAttribute> prepareDataMappingAttributes(DataMapping request, String handle,
+  public List<FdoAttribute> prepareDataMappingAttributes(DataMappingRequestAttributes request,
+      String handle,
       Instant timestamp)
       throws InvalidRequestException {
     var handleAttributeList = new ArrayList<FdoAttribute>();
     // 101: 10320/Loc
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
-        setLocations(handle, DATA_MAPPING, null)));
+        setLocations(handle, DATA_MAPPING, request.getLocations())));
     // 8: Issued For Agent
     handleAttributeList.add(
         new FdoAttribute(ISSUED_FOR_AGENT, timestamp, request.getIssuedForAgent()));
@@ -360,14 +368,15 @@ public class FdoRecordService {
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
-            StructuralType.DIGITAL.value()));
+            StructuralType.DIGITAL.toString()));
     // 700 Source Data Standard
     handleAttributeList.add(
         new FdoAttribute(SOURCE_DATA_STANDARD, timestamp, request.getSourceDataStandard()));
     return handleAttributeList;
   }
 
-  private List<FdoAttribute> prepareUpdatedDataMappingAttributes(DataMapping request,
+  private List<FdoAttribute> prepareUpdatedDataMappingAttributes(
+      DataMappingRequestAttributes request,
       String handle, Instant timestamp, FdoRecord previousVersion,
       boolean incrementVersion)
       throws InvalidRequestException {
@@ -379,22 +388,24 @@ public class FdoRecordService {
   }
 
   /* Digital Specimen Record Creation */
-  public FdoRecord prepareNewDigitalSpecimenRecord(DigitalSpecimen request, String handle,
+  public FdoRecord prepareNewDigitalSpecimenRecord(DigitalSpecimenRequestAttributes request,
+      String handle,
       Instant timestamp)
       throws InvalidRequestException {
     List<FdoAttribute> fdoAttributes;
     try {
       fdoAttributes = prepareDigitalSpecimenAttributes(request, handle, timestamp);
     } catch (JsonProcessingException e) {
-      log.error("JsonProcessingException", e);
-      throw new InvalidRequestException("Unable to build fdo record");
+      log.error(JSON_ERROR_MSG, e);
+      throw new InvalidRequestException(JSON_ERROR_MSG);
     }
     fdoAttributes.addAll(prepareGeneratedAttributes(handle, FdoType.DIGITAL_SPECIMEN, timestamp));
     return new FdoRecord(handle, FdoType.DIGITAL_SPECIMEN, fdoAttributes,
         request.getNormalisedPrimarySpecimenObjectId());
   }
 
-  public FdoRecord prepareUpdatedDigitalSpecimenRecord(DigitalSpecimen request, Instant timestamp,
+  public FdoRecord prepareUpdatedDigitalSpecimenRecord(DigitalSpecimenRequestAttributes request,
+      Instant timestamp,
       FdoRecord previousVersion, boolean incrementVersion)
       throws InvalidRequestException {
     List<FdoAttribute> fdoAttributes;
@@ -402,21 +413,22 @@ public class FdoRecordService {
       fdoAttributes = prepareUpdatedDigitalSpecimenAttributes(request,
           previousVersion.handle(), timestamp, previousVersion, incrementVersion);
     } catch (JsonProcessingException e) {
-      log.error("JsonProcessingException", e);
-      throw new InvalidRequestException("Unable to build fdo record");
+      log.error(JSON_ERROR_MSG, e);
+      throw new InvalidRequestException(JSON_ERROR_MSG);
     }
     return new FdoRecord(previousVersion.handle(), FdoType.DIGITAL_SPECIMEN, fdoAttributes,
         request.getNormalisedPrimarySpecimenObjectId());
   }
 
-  public List<FdoAttribute> prepareDigitalSpecimenAttributes(DigitalSpecimen request, String handle,
+  public List<FdoAttribute> prepareDigitalSpecimenAttributes(
+      DigitalSpecimenRequestAttributes request, String handle,
       Instant timestamp)
       throws InvalidRequestException, JsonProcessingException {
     idXorAbsence(request);
     var handleAttributeList = new ArrayList<FdoAttribute>();
     // 101: 10320/Loc
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
-        setLocations(handle, DIGITAL_SPECIMEN, null)));
+        setLocations(handle, DIGITAL_SPECIMEN, request.getLocations())));
     // 8: Issued For Agent
     handleAttributeList.add(
         new FdoAttribute(ISSUED_FOR_AGENT, timestamp, request.getIssuedForAgent()));
@@ -426,7 +438,7 @@ public class FdoRecordService {
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
-            StructuralType.DIGITAL.value()));
+            StructuralType.DIGITAL.toString()));
     // 40: Referent Type
     handleAttributeList.add(
         new FdoAttribute(REFERENT_TYPE, timestamp, request.getReferentType()));
@@ -500,16 +512,18 @@ public class FdoRecordService {
     // 217 Marked as Type
     handleAttributeList.add(new FdoAttribute(MARKED_AS_TYPE, timestamp, request.getMarkedAsType()));
     // 218 Was Derived From Entity
+    var wasDerived =
+        request.getDerivedFromEntity() != null ? false : request.getDerivedFromEntity();
     handleAttributeList.add(
-        new FdoAttribute(WAS_DERIVED_FROM_ENTITY, timestamp,
-            String.valueOf(request.getDerivedFromEntity() != null)));
+        new FdoAttribute(WAS_DERIVED_FROM_ENTITY, timestamp, wasDerived));
     // 219 Catalog ID
     handleAttributeList.add(
         new FdoAttribute(CATALOG_IDENTIFIER, timestamp, request.getCatalogIdentifier()));
     return handleAttributeList;
   }
 
-  private List<FdoAttribute> prepareUpdatedDigitalSpecimenAttributes(DigitalSpecimen request,
+  private List<FdoAttribute> prepareUpdatedDigitalSpecimenAttributes(
+      DigitalSpecimenRequestAttributes request,
       String handle, Instant timestamp, FdoRecord previousVersion,
       boolean incrementVersion)
       throws InvalidRequestException, JsonProcessingException {
@@ -521,42 +535,32 @@ public class FdoRecordService {
   }
 
   /* MAS Record Creation */
-  public FdoRecord prepareNewMasRecord(Mas request, String handle,
+  public FdoRecord prepareNewMasRecord(MasRequestAttributes request, String handle,
       Instant timestamp)
       throws InvalidRequestException {
     List<FdoAttribute> fdoAttributes;
-    try {
-      fdoAttributes = prepareMasAttributes(request, handle, timestamp);
-    } catch (JsonProcessingException e) {
-      log.error("JsonProcessingException", e);
-      throw new InvalidRequestException("Unable to build fdo record");
-    }
+    fdoAttributes = prepareMasAttributes(request, handle, timestamp);
     fdoAttributes.addAll(prepareGeneratedAttributes(handle, MAS, timestamp));
     return new FdoRecord(handle, MAS, fdoAttributes, null);
   }
 
-  public FdoRecord prepareUpdatedMasRecord(Mas request, Instant timestamp,
+  public FdoRecord prepareUpdatedMasRecord(MasRequestAttributes request, Instant timestamp,
       FdoRecord previousVersion, boolean incrementVersion)
       throws InvalidRequestException {
     List<FdoAttribute> fdoAttributes;
-    try {
-      fdoAttributes = prepareUpdatedMasAttributes(request,
-          previousVersion.handle(), timestamp, previousVersion, incrementVersion);
-    } catch (JsonProcessingException e) {
-      log.error("JsonProcessingException", e);
-      throw new InvalidRequestException("Unable to build fdo record");
-    }
+    fdoAttributes = prepareUpdatedMasAttributes(request,
+        previousVersion.handle(), timestamp, previousVersion, incrementVersion);
     return new FdoRecord(previousVersion.handle(), MAS, fdoAttributes,
         null);
   }
 
-  public List<FdoAttribute> prepareMasAttributes(Mas request, String handle,
+  public List<FdoAttribute> prepareMasAttributes(MasRequestAttributes request, String handle,
       Instant timestamp)
-      throws InvalidRequestException, JsonProcessingException {
+      throws InvalidRequestException {
     var handleAttributeList = new ArrayList<FdoAttribute>();
     // 101: 10320/Loc
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
-        setLocations(handle, MAS, null)));
+        setLocations(handle, MAS, request.getLocations())));
     // 8: Issued For Agent
     handleAttributeList.add(
         new FdoAttribute(ISSUED_FOR_AGENT, timestamp, request.getIssuedForAgent()));
@@ -566,16 +570,16 @@ public class FdoRecordService {
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
-            StructuralType.DIGITAL.value()));
+            StructuralType.DIGITAL.toString()));
     // 604: MAS
     handleAttributeList.add(new FdoAttribute(MAS_NAME, timestamp, request.getMasName()));
     return handleAttributeList;
   }
 
-  private List<FdoAttribute> prepareUpdatedMasAttributes(Mas request,
+  private List<FdoAttribute> prepareUpdatedMasAttributes(MasRequestAttributes request,
       String handle, Instant timestamp, FdoRecord previousVersion,
       boolean incrementVersion)
-      throws InvalidRequestException, JsonProcessingException {
+      throws InvalidRequestException {
     var updatedAttributes = new ArrayList<>(
         prepareMasAttributes(request, handle, timestamp));
     prepareUpdateAttributes(updatedAttributes, previousVersion.attributes(), timestamp,
@@ -584,43 +588,36 @@ public class FdoRecordService {
   }
 
   /* Media Object Record Creation */
-  public FdoRecord prepareNewDigitalMediaRecord(DigitalMedia request, String handle,
+  public FdoRecord prepareNewDigitalMediaRecord(DigitalMediaRequestAttributes request,
+      String handle,
       Instant timestamp)
       throws InvalidRequestException {
     List<FdoAttribute> fdoAttributes;
-    try {
-      fdoAttributes = prepareDigitalMediaAttributes(request, handle, timestamp);
-    } catch (JsonProcessingException e) {
-      log.error("JsonProcessingException", e);
-      throw new InvalidRequestException("Unable to build fdo record");
-    }
+    fdoAttributes = prepareDigitalMediaAttributes(request, handle, timestamp);
     fdoAttributes.addAll(prepareGeneratedAttributes(handle, FdoType.DIGITAL_MEDIA, timestamp));
     return new FdoRecord(handle, FdoType.DIGITAL_MEDIA, fdoAttributes, request.getPrimaryMediaId());
   }
 
-  public FdoRecord prepareUpdatedDigitalMediaRecord(DigitalMedia request, Instant timestamp,
+  public FdoRecord prepareUpdatedDigitalMediaRecord(DigitalMediaRequestAttributes request,
+      Instant timestamp,
       FdoRecord previousVersion, boolean incrementVersion)
       throws InvalidRequestException {
     List<FdoAttribute> fdoAttributes;
-    try {
-      fdoAttributes = prepareUpdatedDigitalMediaAttributes(request,
-          previousVersion.handle(), timestamp, previousVersion, incrementVersion);
-    } catch (JsonProcessingException e) {
-      log.error("JsonProcessingException", e);
-      throw new InvalidRequestException("Unable to build fdo record");
-    }
+    fdoAttributes = prepareUpdatedDigitalMediaAttributes(request,
+        previousVersion.handle(), timestamp, previousVersion, incrementVersion);
     return new FdoRecord(previousVersion.handle(), FdoType.DIGITAL_MEDIA, fdoAttributes,
         request.getPrimaryMediaId());
   }
 
-  public List<FdoAttribute> prepareDigitalMediaAttributes(DigitalMedia request, String handle,
+  public List<FdoAttribute> prepareDigitalMediaAttributes(DigitalMediaRequestAttributes request,
+      String handle,
       Instant timestamp)
-      throws InvalidRequestException, JsonProcessingException {
+      throws InvalidRequestException {
     validateRightsholder(request);
     var handleAttributeList = new ArrayList<FdoAttribute>();
     // 101: 10320/Loc
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
-        setLocations(handle, DIGITAL_MEDIA, null)));
+        setLocations(handle, DIGITAL_MEDIA, request.getLocations())));
     // 8: Issued For Agent
     handleAttributeList.add(
         new FdoAttribute(ISSUED_FOR_AGENT, timestamp, request.getIssuedForAgent()));
@@ -630,7 +627,7 @@ public class FdoRecordService {
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
-            StructuralType.DIGITAL.value()));
+            StructuralType.DIGITAL.toString()));
     // 40: Referent Type
     handleAttributeList.add(
         new FdoAttribute(REFERENT_TYPE, timestamp, request.getReferentType()));
@@ -707,10 +704,11 @@ public class FdoRecordService {
     return handleAttributeList;
   }
 
-  private List<FdoAttribute> prepareUpdatedDigitalMediaAttributes(DigitalMedia request,
+  private List<FdoAttribute> prepareUpdatedDigitalMediaAttributes(
+      DigitalMediaRequestAttributes request,
       String handle, Instant timestamp, FdoRecord previousVersion,
       boolean incrementVersion)
-      throws InvalidRequestException, JsonProcessingException {
+      throws InvalidRequestException {
     var updatedAttributes = new ArrayList<>(
         prepareDigitalMediaAttributes(request, handle, timestamp));
     prepareUpdateAttributes(updatedAttributes, previousVersion.attributes(), timestamp,
@@ -719,42 +717,37 @@ public class FdoRecordService {
   }
 
   /* Organisation Record Creation */
-  public FdoRecord prepareNewOrganisationRecord(Organisation request, String handle,
+  public FdoRecord prepareNewOrganisationRecord(OrganisationRequestAttributes request,
+      String handle,
       Instant timestamp)
       throws InvalidRequestException {
     List<FdoAttribute> fdoAttributes;
-    try {
-      fdoAttributes = prepareOrganisationAttributes(request, handle, timestamp);
-    } catch (JsonProcessingException e) {
-      log.error("JsonProcessingException", e);
-      throw new InvalidRequestException("Unable to build fdo record");
-    }
+    fdoAttributes = prepareOrganisationAttributes(request, handle, timestamp);
     fdoAttributes.addAll(prepareGeneratedAttributes(handle, FdoType.ORGANISATION, timestamp));
     return new FdoRecord(handle, FdoType.ORGANISATION, fdoAttributes, null);
   }
 
-  public FdoRecord prepareUpdatedOrganisationRecord(Organisation request, Instant timestamp,
+  public FdoRecord prepareUpdatedOrganisationRecord(OrganisationRequestAttributes request,
+      Instant timestamp,
       FdoRecord previousVersion, boolean incrementVersion)
       throws InvalidRequestException {
     List<FdoAttribute> fdoAttributes;
-    try {
-      fdoAttributes = prepareUpdatedOrganisationAttributes(request,
-          previousVersion.handle(), timestamp, previousVersion, incrementVersion);
-    } catch (JsonProcessingException e) {
-      log.error("JsonProcessingException", e);
-      throw new InvalidRequestException("Unable to build fdo record");
-    }
+    fdoAttributes = prepareUpdatedOrganisationAttributes(request,
+        previousVersion.handle(), timestamp, previousVersion, incrementVersion);
     return new FdoRecord(previousVersion.handle(), FdoType.ORGANISATION, fdoAttributes,
         null);
   }
 
-  public List<FdoAttribute> prepareOrganisationAttributes(Organisation request, String handle,
+  public List<FdoAttribute> prepareOrganisationAttributes(OrganisationRequestAttributes request,
+      String handle,
       Instant timestamp)
-      throws InvalidRequestException, JsonProcessingException {
+      throws InvalidRequestException {
     var handleAttributeList = new ArrayList<FdoAttribute>();
     // 101: 10320/Loc
+    var locList = request.getLocations();
+    locList.add(request.getOrganisationIdentifier());
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
-        setLocations(handle, ORGANISATION, request.getOrganisationIdentifier())));
+        setLocations(handle, ORGANISATION, locList)));
     // 8: Issued For Agent
     handleAttributeList.add(
         new FdoAttribute(ISSUED_FOR_AGENT, timestamp, request.getIssuedForAgent()));
@@ -764,7 +757,7 @@ public class FdoRecordService {
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
-            StructuralType.DIGITAL.value()));
+            StructuralType.DIGITAL.toString()));
     // 40: Referent Type
     handleAttributeList.add(
         new FdoAttribute(REFERENT_TYPE, timestamp, request.getReferentType()));
@@ -788,10 +781,11 @@ public class FdoRecordService {
     return handleAttributeList;
   }
 
-  private List<FdoAttribute> prepareUpdatedOrganisationAttributes(Organisation request,
+  private List<FdoAttribute> prepareUpdatedOrganisationAttributes(
+      OrganisationRequestAttributes request,
       String handle, Instant timestamp, FdoRecord previousVersion,
       boolean incrementVersion)
-      throws InvalidRequestException, JsonProcessingException {
+      throws InvalidRequestException {
     var updatedAttributes = new ArrayList<>(
         prepareOrganisationAttributes(request, handle, timestamp));
     prepareUpdateAttributes(updatedAttributes, previousVersion.attributes(), timestamp,
@@ -800,42 +794,35 @@ public class FdoRecordService {
   }
 
   /* Source System Record Creation */
-  public FdoRecord prepareNewSourceSystemRecord(SourceSystem request, String handle,
+  public FdoRecord prepareNewSourceSystemRecord(SourceSystemRequestAttributes request,
+      String handle,
       Instant timestamp)
       throws InvalidRequestException {
     List<FdoAttribute> fdoAttributes;
-    try {
-      fdoAttributes = prepareSourceSystemAttributes(request, handle, timestamp);
-    } catch (JsonProcessingException e) {
-      log.error("JsonProcessingException", e);
-      throw new InvalidRequestException("Unable to build fdo record");
-    }
+    fdoAttributes = prepareSourceSystemAttributes(request, handle, timestamp);
     fdoAttributes.addAll(prepareGeneratedAttributes(handle, SOURCE_SYSTEM, timestamp));
     return new FdoRecord(handle, SOURCE_SYSTEM, fdoAttributes, null);
   }
 
-  public FdoRecord prepareUpdatedSourceSystemRecord(SourceSystem request, Instant timestamp,
+  public FdoRecord prepareUpdatedSourceSystemRecord(SourceSystemRequestAttributes request,
+      Instant timestamp,
       FdoRecord previousVersion, boolean incrementVersion)
       throws InvalidRequestException {
     List<FdoAttribute> fdoAttributes;
-    try {
-      fdoAttributes = prepareUpdatedSourceSystemAttributes(request,
-          previousVersion.handle(), timestamp, previousVersion, incrementVersion);
-    } catch (JsonProcessingException e) {
-      log.error("JsonProcessingException", e);
-      throw new InvalidRequestException("Unable to build fdo record");
-    }
+    fdoAttributes = prepareUpdatedSourceSystemAttributes(request,
+        previousVersion.handle(), timestamp, previousVersion, incrementVersion);
     return new FdoRecord(previousVersion.handle(), SOURCE_SYSTEM, fdoAttributes,
         null);
   }
 
-  public List<FdoAttribute> prepareSourceSystemAttributes(SourceSystem request, String handle,
+  public List<FdoAttribute> prepareSourceSystemAttributes(SourceSystemRequestAttributes request,
+      String handle,
       Instant timestamp)
-      throws InvalidRequestException, JsonProcessingException {
+      throws InvalidRequestException {
     var handleAttributeList = new ArrayList<FdoAttribute>();
     // 101: 10320/Loc
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
-        setLocations(handle, SOURCE_SYSTEM, null)));
+        setLocations(handle, SOURCE_SYSTEM, request.getLocations())));
     // 8: Issued For Agent
     handleAttributeList.add(
         new FdoAttribute(ISSUED_FOR_AGENT, timestamp, request.getIssuedForAgent()));
@@ -845,17 +832,18 @@ public class FdoRecordService {
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
-            StructuralType.DIGITAL.value()));
+            StructuralType.DIGITAL.toString()));
     handleAttributeList.add(
         new FdoAttribute(SOURCE_SYSTEM_NAME, timestamp, request.getSourceSystemName()));
 
     return handleAttributeList;
   }
 
-  private List<FdoAttribute> prepareUpdatedSourceSystemAttributes(SourceSystem request,
+  private List<FdoAttribute> prepareUpdatedSourceSystemAttributes(
+      SourceSystemRequestAttributes request,
       String handle, Instant timestamp, FdoRecord previousVersion,
       boolean incrementVersion)
-      throws InvalidRequestException, JsonProcessingException {
+      throws InvalidRequestException {
     var updatedAttributes = new ArrayList<>(
         prepareSourceSystemAttributes(request, handle, timestamp));
     prepareUpdateAttributes(updatedAttributes, previousVersion.attributes(), timestamp,
@@ -897,7 +885,8 @@ public class FdoRecordService {
 
   /* Validation Functions */
 
-  private static void idXorAbsence(DigitalSpecimen request) throws InvalidRequestException {
+  private static void idXorAbsence(DigitalSpecimenRequestAttributes request)
+      throws InvalidRequestException {
     if ((request.getPrimarySpecimenObjectId() == null) == (
         request.getSpecimenObjectIdAbsenceReason()
             == null)) {
@@ -906,7 +895,8 @@ public class FdoRecordService {
     }
   }
 
-  private static void validateRightsholder(DigitalMedia request) throws InvalidRequestException {
+  private static void validateRightsholder(DigitalMediaRequestAttributes request)
+      throws InvalidRequestException {
     if (request.getRightsholderName() != null && request.getRightsholderPid() == null) {
       throw new InvalidRequestException(
           "Invalid media request. Rightsholder name provided without an identifier");
@@ -954,6 +944,7 @@ public class FdoRecordService {
     handleAttributeList.add(new FdoAttribute(PID_STATUS, timestamp, PidStatus.ACTIVE.name()));
     // 100 HS Admin
     handleAttributeList.add(new FdoAttribute(timestamp, applicationProperties.getPrefix()));
+    // 101 10320/Loc
     return handleAttributeList;
   }
 
@@ -998,38 +989,30 @@ public class FdoRecordService {
     return dt.format(timestamp);
   }
 
-  private List<String> defaultLocations(String handle, FdoType fdoType, String ror) {
+  private List<String> getURIs(String handle, FdoType fdoType, List<String> userLocations) {
+    var locations = new ArrayList<String>();
     switch (fdoType) {
       case DIGITAL_SPECIMEN -> {
-        String api = applicationProperties.getApiUrl() + "/specimens/" + handle;
-        String ui = applicationProperties.getUiUrl() + "/ds/" + handle;
-        return List.of(api, ui);
+        locations.add(applicationProperties.getApiUrl() + "/specimens/" + handle);
+        locations.add(applicationProperties.getUiUrl() + "/ds/" + handle);
       }
-      case DATA_MAPPING -> {
-        return List.of(applicationProperties.getOrchestrationUrl() + "/mapping/" + handle);
-      }
-      case SOURCE_SYSTEM -> {
-        return List.of(applicationProperties.getOrchestrationUrl() + "/source-system/" + handle);
-      }
+      case DATA_MAPPING ->
+          locations.add(applicationProperties.getOrchestrationUrl() + "/mapping/" + handle);
+      case SOURCE_SYSTEM ->
+          locations.add(applicationProperties.getOrchestrationUrl() + "/source-system/" + handle);
       case DIGITAL_MEDIA -> {
-        String api = applicationProperties.getApiUrl() + "/digitalMedia/" + handle;
-        String ui = applicationProperties.getUiUrl() + "/dm/" + handle;
-        return List.of(api, ui);
+        locations.add(applicationProperties.getApiUrl() + "/digitalMedia/" + handle);
+        locations.add(applicationProperties.getUiUrl() + "/dm/" + handle);
       }
-      case ANNOTATION -> {
-        return List.of(applicationProperties.getApiUrl() + "/annotations/" + handle);
-      }
-      case MAS -> {
-        return List.of(applicationProperties.getOrchestrationUrl() + "/mas/" + handle);
-      }
-      case ORGANISATION -> {
-        return List.of(ror);
-      }
+      case ANNOTATION ->
+          locations.add(applicationProperties.getApiUrl() + "/annotations/" + handle);
+      case MAS -> locations.add(applicationProperties.getOrchestrationUrl() + "/mas/" + handle);
       default -> {
         // Handle, DOI, Organisation (Org locations are all in userLocations)
-        return Collections.emptyList();
       }
     }
+    locations.addAll(userLocations);
+    return locations;
   }
 
   private String documentToString(org.w3c.dom.Document document) throws TransformerException {
@@ -1040,10 +1023,9 @@ public class FdoRecordService {
     return writer.getBuffer().toString();
   }
 
-
-  private String setLocations(String handle, FdoType fdoType, String ror)
+  private String setLocations(String handle, FdoType fdoType, List<String> userLocations)
       throws InvalidRequestException {
-    var objectLocations = defaultLocations(handle, fdoType, ror);
+    var objectLocations = getURIs(handle, fdoType, userLocations);
     if (objectLocations.isEmpty()) {
       return "<locations></locations>";
     }

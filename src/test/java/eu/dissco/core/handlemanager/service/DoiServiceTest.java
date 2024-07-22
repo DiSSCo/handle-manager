@@ -6,14 +6,15 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_MEDIA_ID_TESTVAL;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalMedia;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalMediaFdoRecord;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalMediaRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalMediaRequestObjectUpdate;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalMediaUpdated;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimen;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenFdoRecord;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectUpdate;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenUpdated;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleKernel;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMongoDocument;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenPostRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenUpdateRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenUpdatedFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenWriteResponseIdsOnly;
@@ -30,7 +31,6 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mockStatic;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.datacite.DataCiteEvent;
 import eu.dissco.core.handlemanager.domain.datacite.EventType;
@@ -52,6 +52,8 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ActiveProfiles;
+
+;
 
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles(profiles = Profiles.DOI)
@@ -97,7 +99,7 @@ class DoiServiceTest {
   @Test
   void testCreateDigitalSpecimen() throws Exception {
     // Given
-    var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(),
+    var request = givenPostRequest(givenDigitalSpecimen(),
         FdoType.DIGITAL_SPECIMEN);
     var fdoRecord = givenDigitalSpecimenFdoRecord(HANDLE);
     var responseExpected = givenWriteResponseIdsOnly(List.of(fdoRecord),
@@ -120,7 +122,7 @@ class DoiServiceTest {
   @Test
   void testCreateDigitalMedia() throws Exception {
     // Given
-    var request = genCreateRecordRequest(givenDigitalMediaRequestObject(), FdoType.DIGITAL_MEDIA);
+    var request = givenPostRequest(givenDigitalMedia(), FdoType.DIGITAL_MEDIA);
     var digitalMedia = givenDigitalMediaFdoRecord(HANDLE);
     var responseExpected = givenWriteResponseIdsOnly(List.of(digitalMedia),
         FdoType.DIGITAL_MEDIA, DOI_DOMAIN);
@@ -142,9 +144,8 @@ class DoiServiceTest {
   @Test
   void testCreateDigitalSpecimenDataCiteFails() throws Exception {
     // Given
-    var request = List.of(
-        (JsonNode) genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(),
-            FdoType.DIGITAL_SPECIMEN));
+    var request = List.of(givenPostRequest(givenDigitalSpecimen(),
+        FdoType.DIGITAL_SPECIMEN));
     var digitalSpecimen = givenDigitalSpecimenFdoRecord(HANDLE);
     given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
     given(fdoRecordService.prepareNewDigitalSpecimenRecord(any(), any(), any())).willReturn(
@@ -162,7 +163,7 @@ class DoiServiceTest {
   void testUpdateDigitalSpecimen() throws Exception {
     // Given
     var previousVersion = givenDigitalSpecimenFdoRecord(HANDLE);
-    var request = MAPPER.valueToTree(givenDigitalSpecimenRequestObjectUpdate());
+    var request = MAPPER.valueToTree(givenDigitalSpecimenUpdated());
     var updateRequest = givenUpdateRequest(List.of(HANDLE), FdoType.DIGITAL_SPECIMEN, request);
     var updatedAttributeRecord = givenUpdatedFdoRecord(FdoType.DIGITAL_SPECIMEN,
         NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL);
@@ -190,7 +191,7 @@ class DoiServiceTest {
   void testUpdateDigitalMedia() throws Exception {
     // Given
     var previousVersion = givenDigitalMediaFdoRecord(HANDLE);
-    var request = MAPPER.valueToTree(givenDigitalMediaRequestObjectUpdate());
+    var request = MAPPER.valueToTree(givenDigitalMediaUpdated());
     var updateRequest = givenUpdateRequest(List.of(HANDLE), FdoType.DIGITAL_MEDIA, request);
     var updatedAttributeRecord = givenUpdatedFdoRecord(FdoType.DIGITAL_MEDIA,
         PRIMARY_MEDIA_ID_TESTVAL);
@@ -218,7 +219,7 @@ class DoiServiceTest {
   void testUpdateInvalidType() throws Exception {
     // Given
     var updateRequest = givenUpdateRequest(List.of(HANDLE), FdoType.HANDLE,
-        MAPPER.valueToTree(givenDigitalSpecimenRequestObjectUpdate()));
+        MAPPER.valueToTree(givenDigitalSpecimenUpdated()));
 
     // When Then
     assertThrowsExactly(InvalidRequestException.class,
@@ -228,7 +229,7 @@ class DoiServiceTest {
   @Test
   void testUpdateRecordLocationDataCiteFails() throws Exception {
     // Given
-    var requestAttributes = MAPPER.valueToTree(givenDigitalSpecimenRequestObjectUpdate());
+    var requestAttributes = MAPPER.valueToTree(givenDigitalSpecimenUpdated());
     var updateRequest = givenUpdateRequest(List.of(HANDLE), FdoType.DIGITAL_SPECIMEN,
         requestAttributes);
     var updatedAttributeRecord = givenUpdatedFdoRecord(FdoType.DIGITAL_SPECIMEN,
@@ -252,12 +253,7 @@ class DoiServiceTest {
   @Test
   void testCreateInvalidType() {
     // Given
-    var requestJson =
-        MAPPER.createObjectNode()
-            .set("data", MAPPER.createObjectNode()
-                .put("type", FdoType.HANDLE.getFdoProfile())
-                .set("attributes", MAPPER.createObjectNode()));
-    var request = List.of(requestJson);
+    var request = List.of(givenPostRequest(givenHandleKernel(), FdoType.HANDLE));
 
     // When Then
     assertThrows(UnsupportedOperationException.class, () ->

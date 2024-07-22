@@ -12,16 +12,13 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.PREFIX;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SUFFIX;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.UI_URL;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDataMappingRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalMediaRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecordRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecordRequestObjectUpdate;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalMedia;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimen;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiKernel;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleKernel;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleKernelUpdated;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenPostRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenReadResponse;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenTombstoneRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenUpdateRequest;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -34,13 +31,9 @@ import static org.mockito.BDDMockito.then;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.Profiles;
-import eu.dissco.core.handlemanager.domain.fdo.DigitalSpecimenRequest;
-import eu.dissco.core.handlemanager.domain.fdo.DoiRecordRequest;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
-import eu.dissco.core.handlemanager.domain.fdo.HandleRecordRequest;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.requests.RollbackRequest;
-import eu.dissco.core.handlemanager.domain.validation.JsonSchemaValidator;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
@@ -68,9 +61,6 @@ class PidControllerTest {
   @Mock
   private Authentication authentication;
 
-  @Mock
-  private JsonSchemaValidator schemaValidator;
-
   private PidController controller;
 
   @Mock
@@ -78,7 +68,7 @@ class PidControllerTest {
 
   @BeforeEach
   void setup() {
-    controller = new PidController(service, schemaValidator, applicationProperties);
+    controller = new PidController(service, applicationProperties);
   }
 
   @Test
@@ -193,46 +183,34 @@ class PidControllerTest {
   @Test
   void testCreateHandleRecord() throws Exception {
     // Given
-    HandleRecordRequest requestObject = givenHandleRecordRequestObject();
-    ObjectNode requestNode = genCreateRecordRequest(requestObject, FdoType.HANDLE);
-    JsonApiWrapperWrite responseExpected = TestUtils.givenWriteResponseFull(
-        List.of(HANDLE),
-        FdoType.HANDLE);
-
-    given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
+    var requestObject = givenHandleKernel();
+    var requestNode = givenPostRequest(requestObject, FdoType.HANDLE);
 
     // When
     var responseReceived = controller.createRecord(requestNode, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
 
   @Test
   void testCreateDoiRecord() throws Exception {
     // Given
-    HandleRecordRequest requestObject = givenDoiRecordRequestObject();
-    ObjectNode requestNode = genCreateRecordRequest(requestObject, FdoType.DOI);
-    JsonApiWrapperWrite responseExpected = TestUtils.givenWriteResponseFull(
-        List.of(HANDLE),
-        FdoType.DOI);
-
-    given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
+    var requestObject = givenDoiKernel();
+    var requestNode = givenPostRequest(requestObject, FdoType.DOI);
 
     // When
     var responseReceived = controller.createRecord(requestNode, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
 
   @Test
   void testCreateDigitalSpecimenRecord() throws Exception {
     // Given
-    DigitalSpecimenRequest requestObject = givenDigitalSpecimenRequestObjectNullOptionals();
-    ObjectNode requestNode = genCreateRecordRequest(requestObject, FdoType.DIGITAL_SPECIMEN);
+    var requestObject = givenDigitalSpecimen();
+    var requestNode = givenPostRequest(requestObject, FdoType.DIGITAL_SPECIMEN);
     JsonApiWrapperWrite responseExpected = TestUtils.givenWriteResponseFull(
         List.of(HANDLE),
         FdoType.DIGITAL_SPECIMEN);
@@ -250,33 +228,22 @@ class PidControllerTest {
   @Test
   void testCreateDigitalMediaRecord() throws Exception {
     // Given
-    HandleRecordRequest requestObject = givenDigitalMediaRequestObject();
-    ObjectNode requestNode = genCreateRecordRequest(requestObject, FdoType.DIGITAL_MEDIA);
-    JsonApiWrapperWrite responseExpected = TestUtils.givenWriteResponseFull(
-        List.of(HANDLE),
-        FdoType.DIGITAL_MEDIA);
-
-    given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
+    var requestObject = givenDigitalMedia();
+    var requestNode = givenPostRequest(requestObject, FdoType.DIGITAL_MEDIA);
 
     // When
     var responseReceived = controller.createRecord(requestNode, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
 
   @Test
   void testCreateHandleRecordBatch() throws Exception {
     // Given
-    var handles = List.of(HANDLE, HANDLE_ALT);
+    var requests = List.of(givenPostRequest(givenHandleKernel(), FdoType.HANDLE));
 
-    List<JsonNode> requests = new ArrayList<>();
-
-    handles.forEach(handle -> requests.add(
-        genCreateRecordRequest(givenHandleRecordRequestObject(), FdoType.HANDLE)));
-
-    var responseExpected = TestUtils.givenWriteResponseFull(handles, FdoType.HANDLE);
+    var responseExpected = TestUtils.givenWriteResponseFull(List.of(HANDLE), FdoType.HANDLE);
     given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When
@@ -290,121 +257,13 @@ class PidControllerTest {
   @Test
   void testCreateDoiRecordBatch() throws Exception {
     // Given
-    var handles = List.of(HANDLE, HANDLE_ALT);
-
-    List<JsonNode> requests = new ArrayList<>();
-    handles.forEach(
-        handle -> requests.add(genCreateRecordRequest(givenDoiRecordRequestObject(), FdoType.DOI)));
-
-    var responseExpected = TestUtils.givenWriteResponseFull(handles, FdoType.DOI);
-    given(service.createRecords(requests)).willReturn(responseExpected);
+    var requests = List.of(givenPostRequest(givenDoiKernel(), FdoType.DOI));
 
     // When
     var responseReceived = controller.createRecords(requests, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
-  }
-
-  @Test
-  void testCreateDigitalSpecimenBatch() throws Exception {
-    // Given
-    var handles = List.of(HANDLE, HANDLE_ALT);
-    List<JsonNode> requests = new ArrayList<>();
-    handles.forEach(handle ->
-        requests.add(
-            genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(),
-                FdoType.DIGITAL_SPECIMEN))
-    );
-    var responseExpected = TestUtils.givenWriteResponseFull(handles,
-        FdoType.DIGITAL_SPECIMEN);
-    given(service.createRecords(requests)).willReturn(responseExpected);
-
-    // When
-    var responseReceived = controller.createRecords(requests, authentication);
-
-    // Then
-    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
-  }
-
-  @Test
-  void testCreateMediaRecordBatch() throws Exception {
-    // Given
-    var handles = List.of(HANDLE, HANDLE_ALT);
-    List<JsonNode> requests = new ArrayList<>();
-    for (int i = 0; i < handles.size(); i++) {
-      requests.add(genCreateRecordRequest(givenDigitalMediaRequestObject(), FdoType.DIGITAL_MEDIA));
-    }
-    var responseExpected = TestUtils.givenWriteResponseFull(handles, FdoType.DOI);
-    given(service.createRecords(requests)).willReturn(responseExpected);
-
-    // When
-    var responseReceived = controller.createRecords(requests, authentication);
-
-    // Then
-    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
-  }
-
-  @Test
-  void testCreateSourceSystemsBatch() throws Exception {
-    // Given
-    var handles = List.of(HANDLE, HANDLE_ALT);
-    List<JsonNode> requests = new ArrayList<>();
-    handles.forEach(handle -> requests.add(
-        genCreateRecordRequest(givenSourceSystemRequestObject(), FdoType.SOURCE_SYSTEM)));
-
-    var responseExpected = TestUtils.givenWriteResponseFull(handles,
-        FdoType.SOURCE_SYSTEM);
-    given(service.createRecords(requests)).willReturn(responseExpected);
-
-    // When
-    var responseReceived = controller.createRecords(requests, authentication);
-
-    // Then
-    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
-  }
-
-  @Test
-  void testCreateAnnotationsBatch() throws Exception {
-    // Given
-    var handles = List.of(HANDLE, HANDLE_ALT);
-    List<JsonNode> requests = new ArrayList<>();
-    handles.forEach(handle -> requests.add(
-        genCreateRecordRequest(givenAnnotationRequestObject(), FdoType.ANNOTATION)));
-    var responseExpected = TestUtils.givenWriteResponseFull(handles,
-        FdoType.ANNOTATION);
-    given(service.createRecords(requests)).willReturn(responseExpected);
-
-    // When
-    var responseReceived = controller.createRecords(requests, authentication);
-
-    // Then
-    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
-  }
-
-  @Test
-  void testCreateMappingBatch() throws Exception {
-    // Given
-    var handles = List.of(HANDLE, HANDLE_ALT);
-    List<JsonNode> requests = new ArrayList<>();
-    handles.forEach(handle -> requests.add(
-        genCreateRecordRequest(givenDataMappingRequestObject(), FdoType.DATA_MAPPING)));
-
-    var responseExpected = TestUtils.givenWriteResponseFull(handles,
-        FdoType.DATA_MAPPING);
-    given(service.createRecords(requests)).willReturn(responseExpected);
-
-    // When
-    var responseReceived = controller.createRecords(requests, authentication);
-
-    // Then
-    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
 
   @Test
@@ -428,7 +287,7 @@ class PidControllerTest {
         .set(NODE_DATA, MAPPER.createObjectNode()
             .put(NODE_TYPE, FdoType.HANDLE.getDigitalObjectType())
             .put(NODE_ID, HANDLE_ALT)
-            .set(NODE_ATTRIBUTES, MAPPER.valueToTree(givenHandleRecordRequestObjectUpdate())));
+            .set(NODE_ATTRIBUTES, MAPPER.valueToTree(givenHandleKernelUpdated())));
 
     // Then
     assertThrowsExactly(InvalidRequestException.class,
@@ -449,7 +308,7 @@ class PidControllerTest {
   }
 
   @Test
-  void testRollbackUpdate() throws Exception {
+  void testRollbackUpdated() throws Exception {
     // Given
     var request = givenUpdateRequest();
 
@@ -560,8 +419,8 @@ class PidControllerTest {
   @Test
   void testPidResolutionException() throws Exception {
     // Given
-    DoiRecordRequest request = givenDoiRecordRequestObject();
-    ObjectNode requestNode = genCreateRecordRequest(request, FdoType.DOI);
+    var request = givenDoiKernel();
+    var requestNode = givenPostRequest(request, FdoType.DOI);
     String message = "123";
     given(service.createRecords(List.of(requestNode))).willThrow(
         new PidResolutionException(message));

@@ -1,81 +1,73 @@
 package eu.dissco.core.handlemanager.service;
 
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LOC;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.API_URL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.DOC_BUILDER_FACTORY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.ISSUED_FOR_AGENT_TESTVAL;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.LINKED_DIGITAL_OBJECT_TYPE_TESTVAL;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.LINKED_DO_PID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.LOC_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.MEDIA_HOST_NAME_TESTVAL;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.MEDIA_HOST_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.ORCHESTRATION_URL;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_ISSUER_TESTVAL_OTHER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PREFIX;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_MEDIA_ID_TESTVAL;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_REFERENT_TYPE_TESTVAL;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.REFERENT_NAME_TESTVAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_NAME_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.TOMBSTONE_TEXT_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.TRANSFORMER_FACTORY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.UI_URL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.UPDATED;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalMediaAttributes;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenAttributes;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genAnnotationAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneAttributes;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotation;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationFdoRecord;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObjectNoHash;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObjectUpdate;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationUpdated;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDataMapping;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDataMappingFdoRecord;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDataMappingRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDataMappingRequestObjectUpdate;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDataMappingUpdated;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalMedia;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalMediaFdoRecord;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalMediaRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalMediaRequestObjectUpdate;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalMediaUpdated;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimen;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenFdoRecord;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectUpdate;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenUpdated;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiFdoRecord;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObjectUpdate;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiKernel;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiKernelUpdated;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleFdoRecord;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecordRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecordRequestObjectUpdate;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleKernel;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleKernelUpdated;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMas;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMasFdoRecord;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMasRecordRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMasRecordRequestObjectUpdate;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMasUpdated;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenOrganisation;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenOrganisationFdoRecord;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenOrganisationRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenOrganisationRequestObjectUpdate;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenOrganisationUpdated;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystem;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemFdoRecord;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemRequestObjectUpdate;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemUpdated;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenTombstoneFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenTombstoneRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenUpdatedFdoRecord;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.setLocations;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
 import eu.dissco.core.handlemanager.Profiles;
-import eu.dissco.core.handlemanager.domain.fdo.DigitalMediaRequest;
 import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 import eu.dissco.core.handlemanager.domain.fdo.TombstoneRecordRequest;
-import eu.dissco.core.handlemanager.domain.fdo.vocabulary.media.DcTermsType;
-import eu.dissco.core.handlemanager.domain.fdo.vocabulary.media.MediaFormat;
-import eu.dissco.core.handlemanager.domain.fdo.vocabulary.specimen.PrimarySpecimenObjectIdType;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
+import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.web.PidResolver;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -101,7 +93,7 @@ class FdoRecordServiceTest {
   void init() throws PidResolutionException {
     fdoRecordService = new FdoRecordService(TRANSFORMER_FACTORY, DOC_BUILDER_FACTORY, pidResolver,
         MAPPER, applicationProperties);
-    given(pidResolver.getObjectName(any())).willReturn(PID_ISSUER_TESTVAL_OTHER)
+    given(pidResolver.getObjectName(any())).willReturn(SPECIMEN_HOST_NAME_TESTVAL)
         .willReturn(ISSUED_FOR_AGENT_TESTVAL);
     given(applicationProperties.getPrefix()).willReturn(PREFIX);
     given(applicationProperties.getApiUrl()).willReturn(API_URL);
@@ -113,11 +105,11 @@ class FdoRecordServiceTest {
   @Test
   void testPrepareNewHandleRecord() throws Exception {
     // Given
-    var request = givenHandleRecordRequestObject();
+    var request = givenHandleKernel();
     var expected = givenHandleFdoRecord(HANDLE);
 
     // When
-    var result = fdoRecordService.prepareNewHandleRecord(request, HANDLE, FdoType.HANDLE, CREATED);
+    var result = fdoRecordService.prepareNewHandleRecord(request, HANDLE, CREATED);
 
     // Then
     assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
@@ -131,7 +123,7 @@ class FdoRecordServiceTest {
     // Given
     var previousVersion = givenHandleFdoRecord(HANDLE);
     var expected = givenUpdatedFdoRecord(FdoType.HANDLE, null);
-    var request = givenHandleRecordRequestObjectUpdate();
+    var request = givenHandleKernelUpdated();
 
     // When
     var result = fdoRecordService.prepareUpdatedHandleRecord(request, FdoType.HANDLE, UPDATED,
@@ -154,8 +146,7 @@ class FdoRecordServiceTest {
             new FdoAttribute(FdoProfile.PID_RECORD_ISSUE_NUMBER, UPDATED, "2")),
         new FdoAttribute(FdoProfile.PID_RECORD_ISSUE_NUMBER, CREATED, "1"));
     var expected = new FdoRecord(HANDLE, FdoType.HANDLE, expectedAttributes, null);
-
-    var request = givenHandleRecordRequestObjectUpdate();
+    var request = givenHandleKernelUpdated();
 
     // When
     var result = fdoRecordService.prepareUpdatedHandleRecord(request, FdoType.HANDLE, UPDATED,
@@ -171,11 +162,11 @@ class FdoRecordServiceTest {
   @Test
   void testPrepareNewDoiRecord() throws Exception {
     // Given
-    var request = givenDoiRecordRequestObject();
+    var request = givenDoiKernel();
     var expected = givenDoiFdoRecord(HANDLE);
 
     // When
-    var result = fdoRecordService.prepareNewDoiRecord(request, HANDLE, FdoType.DOI, CREATED);
+    var result = fdoRecordService.prepareNewDoiRecord(request, HANDLE, CREATED);
 
     // Then
     assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
@@ -189,7 +180,7 @@ class FdoRecordServiceTest {
     // Given
     var previousVersion = givenDoiFdoRecord(HANDLE);
     var expected = givenUpdatedFdoRecord(FdoType.DOI, null);
-    var request = givenDoiRecordRequestObjectUpdate();
+    var request = givenDoiKernelUpdated();
 
     // When
     var result = fdoRecordService.prepareUpdatedDoiRecord(request, UPDATED,
@@ -204,7 +195,7 @@ class FdoRecordServiceTest {
 
   @Test
   void testPrepareNewMediaRecordMin() throws Exception {
-    var request = givenDigitalMediaRequestObject();
+    var request = givenDigitalMedia();
     var expected = givenDigitalMediaFdoRecord(HANDLE);
 
     // When
@@ -218,24 +209,13 @@ class FdoRecordServiceTest {
   }
 
   @Test
-  void testPrepareNewMediaRecordFull() throws Exception {
-    var request = new DigitalMediaRequest(ISSUED_FOR_AGENT_TESTVAL, PID_ISSUER_TESTVAL_OTHER,
-        LOC_TESTVAL, REFERENT_NAME_TESTVAL, PRIMARY_REFERENT_TYPE_TESTVAL, MEDIA_HOST_TESTVAL,
-        MEDIA_HOST_NAME_TESTVAL, MediaFormat.TEXT, Boolean.TRUE, LINKED_DO_PID_TESTVAL,
-        LINKED_DIGITAL_OBJECT_TYPE_TESTVAL, "a", PRIMARY_MEDIA_ID_TESTVAL,
-        PrimarySpecimenObjectIdType.RESOLVABLE, "b", DcTermsType.IMAGE, "jpeg", "c", "license",
-        "license", "c", "d", null, "e");
-    var expected = new FdoRecord(HANDLE, FdoType.DIGITAL_MEDIA,
-        genDigitalMediaAttributes(HANDLE, request, CREATED), PRIMARY_MEDIA_ID_TESTVAL);
+  void testPrepareNewMediaRecordInvalidRightsholder() {
+    var request = givenDigitalMedia()
+        .withRightsholderPid(null);
 
     // When
-    var result = fdoRecordService.prepareNewDigitalMediaRecord(request, HANDLE, CREATED);
-
-    // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
-    assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
-    assertThat(result.fdoType()).isEqualTo(expected.fdoType());
-    assertThat(result.handle()).isEqualTo(expected.handle());
+    assertThrows(InvalidRequestException.class, () ->
+        fdoRecordService.prepareNewDigitalMediaRecord(request, HANDLE, CREATED));
   }
 
   @Test
@@ -243,7 +223,8 @@ class FdoRecordServiceTest {
     // Given
     var previousVersion = givenDigitalMediaFdoRecord(HANDLE);
     var expected = givenUpdatedFdoRecord(FdoType.DIGITAL_MEDIA, PRIMARY_MEDIA_ID_TESTVAL);
-    var request = givenDigitalMediaRequestObjectUpdate();
+    var request = givenDigitalMediaUpdated();
+
     // When
     var result = fdoRecordService.prepareUpdatedDigitalMediaRecord(request, UPDATED,
         previousVersion, true);
@@ -256,26 +237,9 @@ class FdoRecordServiceTest {
   }
 
   @Test
-  void testPrepareNewDigitalSpecimenRecordMin() throws Exception {
-    var request = givenDigitalSpecimenRequestObjectNullOptionals();
+  void testPrepareNewDigitalSpecimenRecord() throws Exception {
+    var request = givenDigitalSpecimen();
     var expected = givenDigitalSpecimenFdoRecord(HANDLE);
-
-    // When
-    var result = fdoRecordService.prepareNewDigitalSpecimenRecord(request, HANDLE, CREATED);
-
-    // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
-    assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
-    assertThat(result.fdoType()).isEqualTo(expected.fdoType());
-    assertThat(result.handle()).isEqualTo(expected.handle());
-  }
-
-  @Test
-  void testPrepareNewSpecimenRecordFull() throws Exception {
-    var request = givenDigitalSpecimenRequestObject();
-    var expected = new FdoRecord(HANDLE, FdoType.DIGITAL_SPECIMEN,
-        genDigitalSpecimenAttributes(HANDLE, request, CREATED),
-        NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL);
 
     // When
     var result = fdoRecordService.prepareNewDigitalSpecimenRecord(request, HANDLE, CREATED);
@@ -293,7 +257,7 @@ class FdoRecordServiceTest {
     var previousVersion = givenDigitalSpecimenFdoRecord(HANDLE);
     var expected = givenUpdatedFdoRecord(FdoType.DIGITAL_SPECIMEN,
         NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL);
-    var request = givenDigitalSpecimenRequestObjectUpdate();
+    var request = givenDigitalSpecimenUpdated();
 
     // When
     var result = fdoRecordService.prepareUpdatedDigitalSpecimenRecord(request, UPDATED,
@@ -309,8 +273,34 @@ class FdoRecordServiceTest {
   @Test
   void testPrepareNewAnnotationRecordMin() throws Exception {
     // Given
-    var request = givenAnnotationRequestObjectNoHash();
+    var request = givenAnnotation(false);
     var expected = givenAnnotationFdoRecord(HANDLE, false);
+
+    // When
+    var result = fdoRecordService.prepareNewAnnotationRecord(request, HANDLE, CREATED);
+
+    // Then
+    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
+    assertThat(result.fdoType()).isEqualTo(expected.fdoType());
+    assertThat(result.handle()).isEqualTo(expected.handle());
+  }
+
+  @Test
+  void testPrepareNewAnnotationRecordMinWithLoc() throws Exception {
+    // Given
+    var request = givenAnnotation(false)
+        .withLocations(List.of(LOC_TESTVAL));
+    var attributes = new ArrayList<>(genAnnotationAttributes(HANDLE, false));
+    attributes.set(
+        attributes.indexOf(
+            new FdoAttribute(LOC, CREATED, setLocations(HANDLE, FdoType.ANNOTATION))),
+        new FdoAttribute(LOC, CREATED, "<locations>"
+            + "<location href=\"https://sandbox.dissco.tech/api/v1/annotations/20.5000.1025/QRS-321-ABC\" id=\"0\" weight=\"1\"/>"
+            + "<location href=\"" + LOC_TESTVAL + "\" id=\"1\" weight=\"0\"/>"
+            + "</locations>")
+    );
+    var expected = new FdoRecord(HANDLE, FdoType.ANNOTATION, attributes, null);
 
     // When
     var result = fdoRecordService.prepareNewAnnotationRecord(request, HANDLE, CREATED);
@@ -325,7 +315,7 @@ class FdoRecordServiceTest {
   @Test
   void testPrepareNewAnnotationRecordFull() throws Exception {
     // Given
-    var request = givenAnnotationRequestObject();
+    var request = givenAnnotation(true);
     var expected = givenAnnotationFdoRecord(HANDLE, true);
 
     // When
@@ -343,7 +333,7 @@ class FdoRecordServiceTest {
     // Given
     var previousVersion = givenAnnotationFdoRecord(HANDLE, false);
     var expected = givenUpdatedFdoRecord(FdoType.ANNOTATION, null);
-    var request = givenAnnotationRequestObjectUpdate();
+    var request = givenAnnotationUpdated();
 
     // When
     var result = fdoRecordService.prepareUpdatedAnnotationRecord(request, UPDATED,
@@ -359,7 +349,7 @@ class FdoRecordServiceTest {
   @Test
   void testPrepareNewMasRecord() throws Exception {
     // Given
-    var request = givenMasRecordRequestObject();
+    var request = givenMas();
     var expected = givenMasFdoRecord(HANDLE);
 
     // When
@@ -377,7 +367,7 @@ class FdoRecordServiceTest {
     // Given
     var previousVersion = givenMasFdoRecord(HANDLE);
     var expected = givenUpdatedFdoRecord(FdoType.MAS, null);
-    var request = givenMasRecordRequestObjectUpdate();
+    var request = givenMasUpdated();
 
     // When
     var result = fdoRecordService.prepareUpdatedMasRecord(request, UPDATED, previousVersion, true);
@@ -392,7 +382,7 @@ class FdoRecordServiceTest {
   @Test
   void testPrepareNewDataMappingRecord() throws Exception {
     // Given
-    var request = givenDataMappingRequestObject();
+    var request = givenDataMapping();
     var expected = givenDataMappingFdoRecord(HANDLE);
 
     // When
@@ -410,7 +400,7 @@ class FdoRecordServiceTest {
     // Given
     var previousVersion = givenDataMappingFdoRecord(HANDLE);
     var expected = givenUpdatedFdoRecord(FdoType.DATA_MAPPING, null);
-    var request = givenDataMappingRequestObjectUpdate();
+    var request = givenDataMappingUpdated();
 
     // When
     var result = fdoRecordService.prepareUpdatedDataMappingRecord(request, UPDATED, previousVersion,
@@ -426,7 +416,7 @@ class FdoRecordServiceTest {
   @Test
   void testPrepareNewSourceSystemRecord() throws Exception {
     // Given
-    var request = givenSourceSystemRequestObject();
+    var request = givenSourceSystem();
     var expected = givenSourceSystemFdoRecord(HANDLE);
 
     // When
@@ -444,7 +434,7 @@ class FdoRecordServiceTest {
     // Given
     var previousVersion = givenSourceSystemFdoRecord(HANDLE);
     var expected = givenUpdatedFdoRecord(FdoType.SOURCE_SYSTEM, null);
-    var request = givenSourceSystemRequestObjectUpdate();
+    var request = givenSourceSystemUpdated();
 
     // When
     var result = fdoRecordService.prepareUpdatedSourceSystemRecord(request, UPDATED,
@@ -460,7 +450,7 @@ class FdoRecordServiceTest {
   @Test
   void testPrepareNewOrganisationRecord() throws Exception {
     // Given
-    var request = givenOrganisationRequestObject();
+    var request = givenOrganisation();
     var expected = givenOrganisationFdoRecord(HANDLE);
 
     // When
@@ -478,7 +468,7 @@ class FdoRecordServiceTest {
     // Given
     var previousVersion = givenOrganisationFdoRecord(HANDLE);
     var expected = givenUpdatedFdoRecord(FdoType.ORGANISATION, null);
-    var request = givenOrganisationRequestObjectUpdate();
+    var request = givenOrganisationUpdated();
 
     // When
     var result = fdoRecordService.prepareUpdatedOrganisationRecord(request, UPDATED,

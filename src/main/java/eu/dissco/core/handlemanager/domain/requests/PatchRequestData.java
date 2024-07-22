@@ -5,9 +5,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 
-public record PutRequestData(
+public record PatchRequestData(
     @JsonProperty(required = true) @JsonPropertyDescription("DiSSCo Identifier of object") String id,
-    @JsonProperty(required = true) JsonNode attributes,
-    FdoType type) {
+    FdoType fdoType,
+    @JsonProperty(required = true) JsonNode attributes) {
 
 }

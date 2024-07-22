@@ -5,12 +5,10 @@ import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_DAT
 import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ID;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
 import eu.dissco.core.handlemanager.domain.requests.RollbackRequest;
-import eu.dissco.core.handlemanager.domain.validation.JsonSchemaValidator;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
@@ -46,10 +44,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class PidController {
 
   private final PidService service;
-  private final JsonSchemaValidator schemaValidator;
   private final ApplicationProperties applicationProperties;
-  private final ObjectMapper mapper;
-  private static final int LOG_LIMIT = 4;
+  private static final String RECEIVED_MSG = "Received {} request from user {}";
 
 
   // Getters
@@ -96,9 +92,7 @@ public class PidController {
   @PostMapping(value = "/")
   public ResponseEntity<JsonApiWrapperWrite> createRecord(@RequestBody PostRequest request,
       Authentication authentication) throws InvalidRequestException, UnprocessableEntityException {
-    log.info("Received single POST request from user {}", authentication.getName());
-    // Todo schemaValidator.validatePostRequest(request);
-
+    log.info(RECEIVED_MSG, "single create", authentication.getName());
     return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(List.of(request)
     ));
   }
@@ -107,8 +101,7 @@ public class PidController {
   @PostMapping(value = "/batch")
   public ResponseEntity<JsonApiWrapperWrite> createRecords(@RequestBody List<PostRequest> requests,
       Authentication authentication) throws InvalidRequestException, UnprocessableEntityException {
-    log.info("Validating batch POST request from user {}", authentication.getName());
-    // Todo validate
+    log.info(RECEIVED_MSG, "batch create", authentication.getName());
     return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(requests));
   }
 
@@ -120,7 +113,6 @@ public class PidController {
       Authentication authentication) throws InvalidRequestException, UnprocessableEntityException {
     log.info("Received single update request for PID {}/{} from user {}", prefix, suffix,
         authentication.getName());
-    schemaValidator.validatePatchRequest(request);
     var handle = (prefix + "/" + suffix);
     var handleData = request.get(NODE_DATA).get(NODE_ID).asText();
     if (!handle.equals(handleData)) {
@@ -136,10 +128,7 @@ public class PidController {
   @PatchMapping(value = "/")
   public ResponseEntity<JsonApiWrapperWrite> updateRecords(@RequestBody List<JsonNode> requests,
       Authentication authentication) throws InvalidRequestException, UnprocessableEntityException {
-    log.info("Validating batch update request from user {}", authentication.getName());
-    for (JsonNode request : requests) {
-      schemaValidator.validatePatchRequest(request);
-    }
+    log.info(RECEIVED_MSG, "batch update", authentication.getName());
     log.info("Received valid batch update request for {} PIDS", requests.size());
     var result = service.updateRecords(requests, true);
     return ResponseEntity.status(HttpStatus.OK).body(result);
@@ -151,10 +140,8 @@ public class PidController {
   public ResponseEntity<JsonApiWrapperWrite> archiveRecord(@PathVariable("prefix") String prefix,
       @PathVariable("suffix") String suffix, @RequestBody JsonNode request,
       Authentication authentication) throws InvalidRequestException {
-    log.info("Received archive request for PID {}/{} from user {}", prefix, suffix,
+    log.info("Received tombstone request for PID {}/{} from user {}", prefix, suffix,
         authentication.getName());
-    schemaValidator.validatePutRequest(request);
-
     JsonNode data = request.get(NODE_DATA);
     byte[] handle = (prefix + "/" + suffix).getBytes(StandardCharsets.UTF_8);
     byte[] handleRequest = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
@@ -172,15 +159,12 @@ public class PidController {
   @DeleteMapping(value = "/rollback")
   public ResponseEntity<Void> rollbackHandleCreation(@RequestBody RollbackRequest request,
       Authentication authentication) throws InvalidRequestException {
-    log.info("validating rollback creation request from user {}", authentication.getName());
+    log.info(RECEIVED_MSG, "batch rollback create", authentication.getName());
     var ids = request.data().stream().map(d -> d.get(NODE_ID)).toList();
     if (ids.contains(null)) {
       throw new InvalidRequestException("Missing Handles (\"id\") in request");
     }
     var handles = ids.stream().map(JsonNode::asText).toList();
-
-    log.info("Recieved valid rollback creation request for {} handles : {}...", handles.size(),
-        handles.stream().limit(LOG_LIMIT).toList());
     service.rollbackHandles(handles);
     return ResponseEntity.ok().build();
   }
@@ -190,15 +174,7 @@ public class PidController {
   public ResponseEntity<JsonApiWrapperWrite> rollbackHandleUpdate(
       @RequestBody List<JsonNode> requests, Authentication authentication)
       throws InvalidRequestException, UnprocessableEntityException {
-
-    log.info("Validating rollback update request from user {}", authentication.getName());
-    for (JsonNode request : requests) {
-      schemaValidator.validatePatchRequest(request);
-    }
-    var handles = requests.stream().map(r -> r.get(NODE_DATA).get(NODE_ID).asText())
-        .limit(LOG_LIMIT).toList();
-    log.info("Received valid rollback update request for {} handles: {}...", requests.size(),
-        handles);
+    log.info(RECEIVED_MSG, "batch rollback update", authentication.getName());
     return ResponseEntity.status(HttpStatus.OK).body(service.updateRecords(requests, false));
   }
 
@@ -206,7 +182,7 @@ public class PidController {
   @DeleteMapping(value = "/rollback/physId")
   public ResponseEntity<Void> rollbackHandlePhysId(
       @RequestBody List<String> physicalIds, Authentication authentication) {
-    log.info("Validating rollback update request from user {}", authentication.getName());
+    log.info(RECEIVED_MSG, "batch rollback (physical id)", authentication.getName());
     service.rollbackHandlesFromPhysId(physicalIds);
     return ResponseEntity.ok().build();
   }
@@ -216,11 +192,7 @@ public class PidController {
   @PutMapping(value = "/")
   public ResponseEntity<JsonApiWrapperWrite> archiveRecords(@RequestBody List<JsonNode> requests,
       Authentication authentication) throws InvalidRequestException {
-    log.info("Validating archive request from user {}", authentication.getName());
-    for (JsonNode request : requests) {
-      schemaValidator.validatePutRequest(request);
-    }
-    log.info("Received valid archive request");
+    log.info(RECEIVED_MSG, "batch tombstone", authentication.getName());
     return ResponseEntity.status(HttpStatus.OK).body(service.tombstoneRecords(requests));
   }
 
