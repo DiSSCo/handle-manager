@@ -1,17 +1,15 @@
 package eu.dissco.core.handlemanager.service;
 
 
-import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_DATA;
-import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ID;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.datacite.DataCiteEvent;
 import eu.dissco.core.handlemanager.domain.datacite.EventType;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
+import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
+import eu.dissco.core.handlemanager.domain.requests.PatchRequestData;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -75,22 +73,21 @@ public class DoiService extends PidService {
   }
 
   @Override
-  public JsonApiWrapperWrite updateRecords(List<JsonNode> requests, boolean incrementVersion)
+  public JsonApiWrapperWrite updateRecords(List<PatchRequest> requests, boolean incrementVersion)
       throws InvalidRequestException, UnprocessableEntityException {
-    var updateRequests = requests.stream()
-        .map(request -> request.get(NODE_DATA)).toList();
+    var updateRequestsData = requests.stream()
+        .map(PatchRequest::data).toList();
     var fdoRecordMap = processUpdateRequest(
-        updateRequests.stream()
-            .map(request -> request.get(NODE_ID).asText()).toList());
-    var fdoType = getObjectTypeFromJsonNode(requests);
+        updateRequestsData.stream().map(PatchRequestData::id).toList());
+    var fdoType = getFdoTypeFromRequest(requests.stream().map(r -> r.data().type()).toList());
     List<FdoRecord> fdoRecords;
     List<Document> fdoDocuments;
     try {
       switch (fdoType) {
         case DIGITAL_SPECIMEN ->
-            fdoRecords = updateDigitalSpecimen(updateRequests, fdoRecordMap, incrementVersion);
+            fdoRecords = updateDigitalSpecimen(updateRequestsData, fdoRecordMap, incrementVersion);
         case DIGITAL_MEDIA ->
-            fdoRecords = updateDigitalMedia(updateRequests, fdoRecordMap, incrementVersion);
+            fdoRecords = updateDigitalMedia(updateRequestsData, fdoRecordMap, incrementVersion);
         default -> throw new UnsupportedOperationException(
             String.format(TYPE_ERROR_MESSAGE, fdoType.getDigitalObjectName()));
       }

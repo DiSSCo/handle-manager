@@ -7,7 +7,7 @@ import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 
 public record PatchRequestData(
     @JsonProperty(required = true) @JsonPropertyDescription("DiSSCo Identifier of object") String id,
-    FdoType fdoType,
+    FdoType type,
     @JsonProperty(required = true) JsonNode attributes) {
 
 }

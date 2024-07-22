@@ -1,9 +1,5 @@
 package eu.dissco.core.handlemanager.controller;
 
-import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ATTRIBUTES;
-import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_DATA;
-import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ID;
-import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_TYPE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_DOMAIN;
@@ -30,6 +26,7 @@ import static org.mockito.BDDMockito.then;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.Profiles;
+import eu.dissco.core.handlemanager.component.JsonSchemaValidatorComponent;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.requests.RollbackRequest;
@@ -56,18 +53,18 @@ class PidControllerTest {
 
   @Mock
   private PidService service;
-
   @Mock
   private Authentication authentication;
+  @Mock
+  private ApplicationProperties applicationProperties;
+  @Mock
+  private JsonSchemaValidatorComponent validatorComponent;
 
   private PidController controller;
 
-  @Mock
-  private ApplicationProperties applicationProperties;
-
   @BeforeEach
   void setup() {
-    controller = new PidController(service, applicationProperties);
+    controller = new PidController(service, applicationProperties, validatorComponent);
   }
 
   @Test
@@ -76,8 +73,7 @@ class PidControllerTest {
     String path = UI_URL + "/" + PREFIX + "/" + SUFFIX;
     MockHttpServletRequest r = new MockHttpServletRequest();
     r.setRequestURI(PREFIX + "/" + SUFFIX);
-    var responseExpected = givenReadResponse(List.of(HANDLE), path, FdoType.HANDLE,
-        HANDLE_DOMAIN);
+    var responseExpected = givenReadResponse(List.of(HANDLE), path, FdoType.HANDLE, HANDLE_DOMAIN);
 
     given(applicationProperties.getUiUrl()).willReturn(UI_URL);
     given(service.resolveSingleRecord(HANDLE, path)).willReturn(responseExpected);
@@ -94,19 +90,18 @@ class PidControllerTest {
   @Test
   void testResolvePidBadPrefix() {
     var request = new MockHttpServletRequest();
-    assertThrowsExactly(PidResolutionException.class, () ->
-        controller.resolvePid(SUFFIX, SUFFIX, request));
+    assertThrowsExactly(PidResolutionException.class,
+        () -> controller.resolvePid(SUFFIX, SUFFIX, request));
   }
 
   @Test
   void testSearchByPhysicalId() throws Exception {
     // Given
 
-    var responseExpected = TestUtils.givenWriteResponseFull(
-        List.of(HANDLE), FdoType.DIGITAL_SPECIMEN);
-    given(
-        service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL
-        )).willReturn(responseExpected);
+    var responseExpected = TestUtils.givenWriteResponseFull(List.of(HANDLE),
+        FdoType.DIGITAL_SPECIMEN);
+    given(service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL)).willReturn(
+        responseExpected);
 
     // When
     var responseReceived = controller.searchByPrimarySpecimenObjectId(
@@ -121,11 +116,9 @@ class PidControllerTest {
   void testSearchByPhysicalIdCombined() throws Exception {
     // Given
     String physicalId = PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
-    var responseExpected = TestUtils.givenWriteResponseFull(
-        List.of(HANDLE), FdoType.DIGITAL_SPECIMEN);
-    given(
-        service.searchByPhysicalSpecimenId(physicalId)).willReturn(
-        responseExpected);
+    var responseExpected = TestUtils.givenWriteResponseFull(List.of(HANDLE),
+        FdoType.DIGITAL_SPECIMEN);
+    given(service.searchByPhysicalSpecimenId(physicalId)).willReturn(responseExpected);
 
     // When
     var responseReceived = controller.searchByPrimarySpecimenObjectId(physicalId);
@@ -144,8 +137,7 @@ class PidControllerTest {
 
     List<String> handleString = List.of(HANDLE, HANDLE_ALT);
 
-    var responseExpected = givenReadResponse(handleString, path, FdoType.HANDLE,
-        HANDLE_DOMAIN);
+    var responseExpected = givenReadResponse(handleString, path, FdoType.HANDLE, HANDLE_DOMAIN);
     given(applicationProperties.getUiUrl()).willReturn(UI_URL);
     given(applicationProperties.getMaxHandles()).willReturn(1000);
     given(service.resolveBatchRecord(anyList(), eq(path))).willReturn(responseExpected);
@@ -210,8 +202,7 @@ class PidControllerTest {
     // Given
     var requestObject = givenDigitalSpecimen();
     var requestNode = givenPostRequest(requestObject, FdoType.DIGITAL_SPECIMEN);
-    JsonApiWrapperWrite responseExpected = TestUtils.givenWriteResponseFull(
-        List.of(HANDLE),
+    JsonApiWrapperWrite responseExpected = TestUtils.givenWriteResponseFull(List.of(HANDLE),
         FdoType.DIGITAL_SPECIMEN);
 
     given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
@@ -271,8 +262,7 @@ class PidControllerTest {
     var request = givenUpdateRequest();
 
     // When
-    var result = controller.updateRecord(PREFIX, SUFFIX, request.get(0),
-        authentication);
+    var result = controller.updateRecord(PREFIX, SUFFIX, request.get(0), authentication);
 
     // Then
     assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -282,11 +272,8 @@ class PidControllerTest {
   @Test
   void testUpdateRecordBadRequest() {
     // Given
-    var request = MAPPER.createObjectNode()
-        .set(NODE_DATA, MAPPER.createObjectNode()
-            .put(NODE_TYPE, FdoType.HANDLE.getDigitalObjectType())
-            .put(NODE_ID, HANDLE_ALT)
-            .set(NODE_ATTRIBUTES, MAPPER.valueToTree(givenHandleKernelUpdated())));
+    var request = givenUpdateRequest(List.of(HANDLE_ALT), FdoType.HANDLE,
+        MAPPER.valueToTree(givenHandleKernelUpdated())).get(0);
 
     // Then
     assertThrowsExactly(InvalidRequestException.class,
@@ -366,8 +353,7 @@ class PidControllerTest {
     // Given
     var responseExpected = TestUtils.givenWriteResponseFull(List.of(HANDLE), FdoType.TOMBSTONE);
     var archiveRequest = givenTombstoneRequest();
-    given(service.tombstoneRecords(List.of(archiveRequest))).willReturn(
-        responseExpected);
+    given(service.tombstoneRecords(List.of(archiveRequest))).willReturn(responseExpected);
 
     // When
     var responseReceived = controller.archiveRecord(PREFIX, SUFFIX, archiveRequest, authentication);
@@ -384,8 +370,7 @@ class PidControllerTest {
 
     // When
     assertThrowsExactly(InvalidRequestException.class,
-        () -> controller.archiveRecord(PREFIX, "123", archiveRequest,
-            authentication));
+        () -> controller.archiveRecord(PREFIX, "123", archiveRequest, authentication));
   }
 
   @Test

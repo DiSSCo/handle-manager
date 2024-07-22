@@ -1,12 +1,13 @@
 package eu.dissco.core.handlemanager.controller;
 
 
-import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_DATA;
 import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ID;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import eu.dissco.core.handlemanager.component.JsonSchemaValidatorComponent;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
+import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
 import eu.dissco.core.handlemanager.domain.requests.RollbackRequest;
 import eu.dissco.core.handlemanager.domain.requests.TombstoneRequest;
@@ -44,8 +45,8 @@ public class PidController {
 
   private final PidService service;
   private final ApplicationProperties applicationProperties;
+  private final JsonSchemaValidatorComponent validatorComponent;
   private static final String RECEIVED_MSG = "Received {} request from user {}";
-
 
   // Getters
   @Operation(summary = "Resolve single PID record")
@@ -92,8 +93,8 @@ public class PidController {
   public ResponseEntity<JsonApiWrapperWrite> createRecord(@RequestBody PostRequest request,
       Authentication authentication) throws InvalidRequestException, UnprocessableEntityException {
     log.info(RECEIVED_MSG, "single create", authentication.getName());
-    return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(List.of(request)
-    ));
+    validatorComponent.validatePost(List.of(request));
+    return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(List.of(request)));
   }
 
   @Operation(summary = "Create multiple PID Records at a time.")
@@ -101,6 +102,7 @@ public class PidController {
   public ResponseEntity<JsonApiWrapperWrite> createRecords(@RequestBody List<PostRequest> requests,
       Authentication authentication) throws InvalidRequestException, UnprocessableEntityException {
     log.info(RECEIVED_MSG, "batch create", authentication.getName());
+    validatorComponent.validatePost(requests);
     return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(requests));
   }
 
@@ -108,27 +110,29 @@ public class PidController {
   @Operation(summary = "Update existing PID Record")
   @PatchMapping(value = "/{prefix}/{suffix}")
   public ResponseEntity<JsonApiWrapperWrite> updateRecord(@PathVariable("prefix") String prefix,
-      @PathVariable("suffix") String suffix, @RequestBody JsonNode request,
+      @PathVariable("suffix") String suffix, @RequestBody PatchRequest request,
       Authentication authentication) throws InvalidRequestException, UnprocessableEntityException {
     log.info("Received single update request for PID {}/{} from user {}", prefix, suffix,
         authentication.getName());
     var handle = (prefix + "/" + suffix);
-    var handleData = request.get(NODE_DATA).get(NODE_ID).asText();
+    var handleData = request.data().id();
     if (!handle.equals(handleData)) {
       throw new InvalidRequestException(String.format(
           "Handle in request path does not match id in request body. Path: %s, Body: %s",
           handle,
           handleData));
     }
+    validatorComponent.validatePatch(List.of(request));
     return ResponseEntity.status(HttpStatus.OK).body(service.updateRecords(List.of(request), true));
   }
 
   @Operation(summary = "Update multiple PID Records")
   @PatchMapping(value = "/")
-  public ResponseEntity<JsonApiWrapperWrite> updateRecords(@RequestBody List<JsonNode> requests,
+  public ResponseEntity<JsonApiWrapperWrite> updateRecords(@RequestBody List<PatchRequest> requests,
       Authentication authentication) throws InvalidRequestException, UnprocessableEntityException {
     log.info(RECEIVED_MSG, "batch update", authentication.getName());
     log.info("Received valid batch update request for {} PIDS", requests.size());
+    validatorComponent.validatePatch(requests);
     var result = service.updateRecords(requests, true);
     return ResponseEntity.status(HttpStatus.OK).body(result);
   }
@@ -168,7 +172,7 @@ public class PidController {
   @Operation(summary = "rollback handle update")
   @DeleteMapping(value = "/rollback/update")
   public ResponseEntity<JsonApiWrapperWrite> rollbackHandleUpdate(
-      @RequestBody List<JsonNode> requests, Authentication authentication)
+      @RequestBody List<PatchRequest> requests, Authentication authentication)
       throws InvalidRequestException, UnprocessableEntityException {
     log.info(RECEIVED_MSG, "batch rollback update", authentication.getName());
     return ResponseEntity.status(HttpStatus.OK).body(service.updateRecords(requests, false));

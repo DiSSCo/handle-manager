@@ -75,10 +75,6 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_MEDIA;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_SPECIMEN;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.ORGANISATION;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.TOMBSTONE;
-import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ATTRIBUTES;
-import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_DATA;
-import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ID;
-import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_TYPE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -858,22 +854,18 @@ public class TestUtils {
     }
   }
 
-  public static List<JsonNode> givenUpdateRequest() {
+  public static List<PatchRequest> givenUpdateRequest() {
     return givenUpdateRequest(List.of(HANDLE), FdoType.HANDLE,
         MAPPER.valueToTree(givenHandleKernelUpdated()));
   }
 
-  public static List<JsonNode> givenUpdateRequest(List<String> handles, FdoType type,
+  public static List<PatchRequest> givenUpdateRequest(List<String> handles, FdoType type,
       JsonNode requestAttributes) {
-    var requestNodeList = new ArrayList<JsonNode>();
-    for (var handle : handles) {
-      requestNodeList.add(MAPPER.createObjectNode()
-          .set(NODE_DATA, MAPPER.createObjectNode()
-              .put(NODE_TYPE, type.getDigitalObjectType())
-              .put(NODE_ID, handle)
-              .set(NODE_ATTRIBUTES, requestAttributes)));
-    }
-    return requestNodeList;
+    return handles.stream().map(handle -> new PatchRequest(new PatchRequestData(
+        handle,
+        type,
+        requestAttributes
+    ))).toList();
   }
 
   public static TombstoneRequest givenTombstoneRequest() {
