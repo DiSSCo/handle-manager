@@ -1,8 +1,6 @@
 package eu.dissco.core.handlemanager.service;
 
 
-import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_MEDIA;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_SPECIMEN;
 import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ATTRIBUTES;
 import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_DATA;
 
@@ -12,20 +10,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.datacite.DataCiteEvent;
 import eu.dissco.core.handlemanager.domain.datacite.EventType;
-import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
-import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
-import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
+import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
-import eu.dissco.core.handlemanager.repository.PidRepository;
-import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.util.ArrayList;
+import eu.dissco.core.handlemanager.repository.MongoRepository;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
@@ -36,11 +30,12 @@ public class DoiService extends PidService {
 
   private final DataCiteService dataCiteService;
 
-  public DoiService(PidRepository pidRepository,
-      FdoRecordService fdoRecordService, PidNameGeneratorService pidNameGeneratorService,
+  public DoiService(FdoRecordService fdoRecordService,
+      PidNameGeneratorService pidNameGeneratorService,
       ObjectMapper mapper, ProfileProperties profileProperties,
-      DataCiteService dataCiteService) {
-    super(pidRepository, fdoRecordService, pidNameGeneratorService, mapper, profileProperties);
+      DataCiteService dataCiteService, MongoRepository mongoRepository) {
+    super(fdoRecordService, pidNameGeneratorService, mapper, profileProperties,
+        mongoRepository);
     this.dataCiteService = dataCiteService;
   }
 
@@ -49,68 +44,73 @@ public class DoiService extends PidService {
   @Override
   public JsonApiWrapperWrite createRecords(List<JsonNode> requests)
       throws InvalidRequestException, UnprocessableEntityException {
-    var handles = hf.genHandleList(requests.size()).iterator();
+    var handles = hf.generateNewHandles(requests.size()).iterator();
     var requestAttributes = requests.stream()
         .map(request -> request.get(NODE_DATA).get(NODE_ATTRIBUTES)).toList();
     var type = getObjectTypeFromJsonNode(requests);
-    List<HandleAttribute> handleAttributes;
+    List<Document> fdoDocuments;
+    List<FdoRecord> fdoRecords;
     try {
       switch (type) {
-        case DIGITAL_SPECIMEN ->
-            handleAttributes = createDigitalSpecimen(requestAttributes, handles);
-        case DIGITAL_MEDIA -> handleAttributes = createDigitalMedia(requestAttributes, handles);
+        case DIGITAL_SPECIMEN -> fdoRecords = createDigitalSpecimen(requestAttributes, handles);
+        case DIGITAL_MEDIA -> fdoRecords = createDigitalMedia(requestAttributes, handles);
         default -> throw new UnsupportedOperationException(
-            type + " is not an appropriate Type for DOI endpoint.");
+            String.format(TYPE_ERROR_MESSAGE, type.getDigitalObjectName()));
       }
+      fdoDocuments = toMongoDbDocument(fdoRecords);
     } catch (JsonProcessingException | PidResolutionException e) {
       throw new InvalidRequestException(
           "An error has occurred parsing a record in request. More information: "
               + e.getMessage());
     }
-    log.info("Persisting new dois to db");
-    pidRepository.postAttributesToDb(Instant.now().getEpochSecond(), handleAttributes);
+    log.info("Persisting new DOIs to Document Store");
+    mongoRepository.postHandleRecords(fdoDocuments);
     log.info("Publishing to DataCite");
-    publishToDataCite(handleAttributes, EventType.CREATE, type);
-    return new JsonApiWrapperWrite(formatCreateRecords(handleAttributes, type));
+    publishToDataCite(fdoRecords, EventType.CREATE);
+    return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, type));
   }
 
   @Override
   public JsonApiWrapperWrite updateRecords(List<JsonNode> requests, boolean incrementVersion)
       throws InvalidRequestException, UnprocessableEntityException {
-    var type = getObjectTypeFromJsonNode(requests);
-    if (!DIGITAL_SPECIMEN.equals(type) && !DIGITAL_MEDIA.equals(type)) {
-      throw new InvalidRequestException(TYPE_ERROR_MESSAGE);
+    var updateRequests = requests.stream()
+        .map(request -> request.get(NODE_DATA)).toList();
+    var fdoRecordMap = processUpdateRequest(updateRequests);
+    var fdoType = getObjectTypeFromJsonNode(requests);
+    List<FdoRecord> fdoRecords;
+    List<Document> fdoDocuments;
+    try {
+      switch (fdoType) {
+        case DIGITAL_SPECIMEN ->
+            fdoRecords = updateDigitalSpecimen(updateRequests, fdoRecordMap, incrementVersion);
+        case DIGITAL_MEDIA ->
+            fdoRecords = updateDigitalMedia(updateRequests, fdoRecordMap, incrementVersion);
+        default -> throw new UnsupportedOperationException(
+            String.format(TYPE_ERROR_MESSAGE, fdoType.getDigitalObjectName()));
+      }
+      fdoDocuments = toMongoDbDocument(fdoRecords);
+      mongoRepository.updateHandleRecords(fdoDocuments);
+      publishToDataCite(fdoRecords, EventType.UPDATE);
+      return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, fdoType));
+    } catch (JsonProcessingException e) {
+      log.error("An error has occurred processing JSON data", e);
+      throw new UnprocessableEntityException("Json Processing Error");
     }
-    var attributesToUpdate = getAttributesToUpdate(requests);
-    var response = updateRecords(attributesToUpdate, incrementVersion, type);
-    log.info("Publishing to datacite");
-    var flatList = attributesToUpdate.stream().flatMap(List::stream).toList();
-    publishToDataCite(flatList, EventType.UPDATE, type);
-    return response;
   }
 
-  private void publishToDataCite(List<HandleAttribute> handleAttributes, EventType eventType,
-      FdoType objectType) throws UnprocessableEntityException {
-    var handleMap = mapRecords(handleAttributes);
-    var eventList = new ArrayList<DataCiteEvent>();
-    handleMap.forEach(
-        (key, value) -> {
-          if (eventType.equals(EventType.UPDATE)) {
-            value.add(
-                new HandleAttribute(FdoProfile.PID, key.getBytes(StandardCharsets.UTF_8), key));
-          }
-          eventList.add(
-              new DataCiteEvent(jsonFormatSingleRecord(value), eventType));
-        });
-
+  private void publishToDataCite(List<FdoRecord> fdoRecords, EventType eventType)
+      throws UnprocessableEntityException {
+    var eventList = fdoRecords.stream()
+        .map(fdoRecord -> new DataCiteEvent(jsonFormatSingleRecord(fdoRecord.attributes()),
+            eventType)).toList();
     for (var event : eventList) {
       try {
-        dataCiteService.publishToDataCite(event, objectType);
+        dataCiteService.publishToDataCite(event, fdoRecords.get(0).fdoType());
       } catch (JsonProcessingException e) {
         log.error("Critical error: Unable to publish datacite event to queue", e);
-        log.info("Rolling back handles");
         if (eventType.equals(EventType.CREATE)) {
-          rollbackHandles(new ArrayList<>(handleMap.keySet()));
+          log.info("Rolling back handles");
+          rollbackHandles(fdoRecords.stream().map(FdoRecord::handle).toList());
         }
         throw new UnprocessableEntityException("Unable to publish datacite event to queue");
       }

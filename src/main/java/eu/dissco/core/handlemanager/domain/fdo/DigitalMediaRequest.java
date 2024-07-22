@@ -23,7 +23,7 @@ public class DigitalMediaRequest extends DoiRecordRequest {
   private final String mediaHostName;
   @Nullable
   @JsonProperty(value = "dcterms:format")
-  private final MediaFormat mediaFormat;
+  private final MediaFormat dctermsFormat;
   @JsonProperty(required = true)
   private final Boolean isDerivedFromSpecimen;
   @JsonProperty(required = true)
@@ -32,6 +32,7 @@ public class DigitalMediaRequest extends DoiRecordRequest {
   private final LinkedDigitalObjectType linkedDigitalObjectType;
   @Nullable
   private final String linkedAttribute;
+  @JsonProperty(required = true)
   private final String primaryMediaId;
   @Nullable
   private final PrimarySpecimenObjectIdType primaryMediaObjectIdType;
@@ -41,13 +42,14 @@ public class DigitalMediaRequest extends DoiRecordRequest {
   @JsonProperty(value = "dcterms:type")
   private final DcTermsType dcTermsType;
   @Nullable
-  private final String mediaMimeType;
+  @JsonProperty(value = "dcterms:subject")
+  private final String dctermsSubject;
   @Nullable
   private final String derivedFromEntity;
   @Nullable
   private final String licenseName;
   @Nullable
-  private final String license;
+  private final String licenseUrl;
   @Nullable
   private final String rightsholderName;
   @Nullable
@@ -68,7 +70,7 @@ public class DigitalMediaRequest extends DoiRecordRequest {
       // Media
       String mediaHost,
       String mediaHostName,
-      MediaFormat mediaFormat,
+      MediaFormat dctermsFormat,
       Boolean isDerivedFromSpecimen,
       String linkedDigitalObjectPid,
       LinkedDigitalObjectType linkedDigitalObjectType,
@@ -77,10 +79,10 @@ public class DigitalMediaRequest extends DoiRecordRequest {
       PrimarySpecimenObjectIdType primaryMediaObjectIdType,
       String primaryMediaObjectIdName,
       DcTermsType dcTermsType,
-      String mediaMimeType,
+      String dctermsSubject,
       String derivedFromEntity,
       String licenseName,
-      String license,
+      String licenseUrl,
       String rightsholderPid,
       String rightsholderName,
       PrimarySpecimenObjectIdType rightsholderPidType,
@@ -91,7 +93,7 @@ public class DigitalMediaRequest extends DoiRecordRequest {
         referentName, FdoType.DIGITAL_MEDIA.getDigitalObjectName(), primaryReferentType);
     this.mediaHost = mediaHost;
     this.mediaHostName = mediaHostName;
-    this.mediaFormat = mediaFormat;
+    this.dctermsFormat = dctermsFormat;
     this.isDerivedFromSpecimen = isDerivedFromSpecimen;
     this.linkedDigitalObjectPid = linkedDigitalObjectPid;
     this.linkedDigitalObjectType = linkedDigitalObjectType;
@@ -100,10 +102,10 @@ public class DigitalMediaRequest extends DoiRecordRequest {
     this.primaryMediaObjectIdType = primaryMediaObjectIdType;
     this.primaryMediaObjectIdName = primaryMediaObjectIdName;
     this.dcTermsType = dcTermsType;
-    this.mediaMimeType = mediaMimeType;
+    this.dctermsSubject = dctermsSubject;
     this.derivedFromEntity = derivedFromEntity;
     this.licenseName = licenseName;
-    this.license = license;
+    this.licenseUrl = licenseUrl;
     this.rightsholderPid = rightsholderPid == null ? mediaHost : rightsholderPid;
     this.rightsholderName = rightsholderName;
     this.rightsholderPidType = rightsholderPidType;

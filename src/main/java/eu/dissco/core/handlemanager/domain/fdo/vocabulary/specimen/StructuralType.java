@@ -7,11 +7,11 @@ public enum StructuralType {
   @JsonProperty("digital") DIGITAL("digital"),
   @JsonProperty("physical") PHYSICAL("physical"),
   @JsonProperty("performance") PERFORM("performance"),
-  @JsonProperty("performance") ABSTRACT("abstraction");
+  @JsonProperty("abstraction") ABSTRACT("abstraction");
 
   private final String state;
 
-  private StructuralType(String state) {
+  StructuralType(String state) {
     this.state = state;
   }
 

@@ -8,11 +8,11 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.lenient;
 
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
-import eu.dissco.core.handlemanager.repository.PidRepository;
-import java.nio.charset.StandardCharsets;
+import eu.dissco.core.handlemanager.repository.MongoRepository;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,7 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class PidNameGeneratorServiceTest {
 
   @Mock
-  private PidRepository pidRepository;
+  private MongoRepository mongoRepository;
 
   @Mock
   private Random random;
@@ -36,7 +36,8 @@ class PidNameGeneratorServiceTest {
 
   @BeforeEach
   void setup() {
-    this.pidNameGeneratorService = new PidNameGeneratorService(applicationProperties, pidRepository,
+    this.pidNameGeneratorService = new PidNameGeneratorService(applicationProperties,
+        mongoRepository,
         random);
     lenient().when(applicationProperties.getMaxHandles()).thenReturn(MAX_HANDLES);
   }
@@ -44,41 +45,35 @@ class PidNameGeneratorServiceTest {
   @Test
   void testSingleBatchGen() {
     // Given
-    String expectedHandle = PREFIX + "/AAA-AAA-AAA";
+    var expected = Set.of(PREFIX + "/AAA-AAA-AAA");
     given(random.nextInt(anyInt())).willReturn(0);
     given(applicationProperties.getPrefix()).willReturn(PREFIX);
 
     // When
-    String generatedHandle = new String(pidNameGeneratorService.genHandleList(1).get(0),
-        StandardCharsets.UTF_8);
+    var result = pidNameGeneratorService.generateNewHandles(1);
 
     // Then
-    assertThat(generatedHandle).isEqualTo(expectedHandle);
+    assertThat(result).isEqualTo(expected);
   }
 
   @Test
   void testBatchGen() {
     // Given
-    String expectedHandle1 = PREFIX + "/BBB-BBB-BBB";
-    String expectedHandle2 = PREFIX + "/ABB-BBB-BBB";
+    var expected = Set.of(PREFIX + "/ABB-BBB-BBB", PREFIX + "/BBB-BBB-BBB");
 
     given(random.nextInt(anyInt())).willReturn(0, 1);
     given(applicationProperties.getPrefix()).willReturn(PREFIX);
 
     // When
-    List<byte[]> handleList = pidNameGeneratorService.genHandleList(2);
-    String generatedHandle1 = new String(handleList.get(0));
-    String generatedHandle2 = new String(handleList.get(1));
+    var handleList = pidNameGeneratorService.generateNewHandles(2);
 
     // Then
-    assertThat(generatedHandle1).isEqualTo(expectedHandle1);
-    assertThat(generatedHandle2).isEqualTo(expectedHandle2);
+    assertThat(handleList).isEqualTo(expected);
   }
 
   @Test
   void testInternalCollision() {
-    String expectedHandle1 = PREFIX + "/BBB-BBB-BBB";
-    String expectedHandle2 = PREFIX + "/AAA-AAA-AAA";
+    var expected = Set.of(PREFIX + "/AAA-AAA-AAA", PREFIX + "/BBB-BBB-BBB");
 
     given(random.nextInt(anyInt())).willReturn(0, 0, 0, 0, 0, 0, 0, 0, 0)// First
         .willReturn(0, 0, 0, 0, 0, 0, 0, 0, 0) // Collision
@@ -86,49 +81,38 @@ class PidNameGeneratorServiceTest {
     given(applicationProperties.getPrefix()).willReturn(PREFIX);
 
     // When
-    List<byte[]> handleList = pidNameGeneratorService.genHandleList(2);
-    String generatedHandle1 = new String(handleList.get(0));
-    String generatedHandle2 = new String(handleList.get(1));
+    var result = pidNameGeneratorService.generateNewHandles(2);
 
     // Then
-    assertThat(generatedHandle1).isEqualTo(expectedHandle1);
-    assertThat(generatedHandle2).isEqualTo(expectedHandle2);
+    assertThat(expected).isEqualTo(result);
   }
 
   @Test
   void testDbCollision() {
     // Given
-    byte[] expectedHandle1 = (PREFIX + "/BBB-BBB-BBB").getBytes(StandardCharsets.UTF_8);
-    byte[] expectedHandle2 = (PREFIX + "/ABB-BBB-BBB").getBytes(StandardCharsets.UTF_8);
-
-    List<byte[]> handleListInternalDuplicate = new ArrayList<>();
-    handleListInternalDuplicate.add(expectedHandle1);
-
+    var expectedHandle1 = PREFIX + "/BBB-BBB-BBB";
+    var expectedHandle2 = PREFIX + "/ABB-BBB-BBB";
     given(random.nextInt(anyInt())).willReturn(0, 1);
-    given(pidRepository.getHandlesExist(anyList()))
-        .willReturn(handleListInternalDuplicate)
+    given(mongoRepository.getExistingHandles(anyList()))
+        .willReturn(List.of(expectedHandle1))
         .willReturn(new ArrayList<>());
     given(applicationProperties.getPrefix()).willReturn(PREFIX);
 
     // When
-    List<byte[]> generatedHandleList = pidNameGeneratorService.genHandleList(2);
-    byte[] generatedHandle1 = generatedHandleList.get(0);
-    byte[] generatedHandle2 = generatedHandleList.get(1);
+    var result = pidNameGeneratorService.generateNewHandles(2);
 
     // Then
-    assertThat(generatedHandle1).isEqualTo(expectedHandle1);
-    assertThat(generatedHandle2).isEqualTo(expectedHandle2);
+    assertThat(result).hasSameElementsAs(List.of(expectedHandle1, expectedHandle2));
   }
 
   @Test
   void testInvalidNumberOfHandles() {
     // When
-    var tooFew = pidNameGeneratorService.genHandleList(-1);
+    var tooFew = pidNameGeneratorService.generateNewHandles(-1);
 
     // Then
     assertThat(tooFew).isEmpty();
   }
-
 
 }
 

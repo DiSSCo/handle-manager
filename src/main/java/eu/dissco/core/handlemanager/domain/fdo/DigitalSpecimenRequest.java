@@ -43,7 +43,7 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
   @JsonProperty(required = true)
   private final String normalisedPrimarySpecimenObjectId;
   @Nullable
-  private final String primarySpecimenObjectIdAbsenceReason;
+  private final String specimenObjectIdAbsenceReason;
   @Nullable
   private final List<OtherSpecimenId> otherSpecimenIds;
   @Nullable
@@ -86,7 +86,7 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
       PrimarySpecimenObjectIdType primarySpecimenObjectIdType,
       String primarySpecimenObjectIdName,
       String normalisedPrimarySpecimenObjetId,
-      String primarySpecimenObjectIdAbsenceReason,
+      String specimenObjectIdAbsenceReason,
       List<OtherSpecimenId> otherSpecimenIds,
       TopicOrigin topicOrigin,
       TopicDomain topicDomain,
@@ -109,7 +109,7 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
         primarySpecimenObjectIdType == null ? LOCAL : primarySpecimenObjectIdType;
     this.primarySpecimenObjectIdName = primarySpecimenObjectIdName;
     this.normalisedPrimarySpecimenObjectId = normalisedPrimarySpecimenObjetId;
-    this.primarySpecimenObjectIdAbsenceReason = primarySpecimenObjectIdAbsenceReason;
+    this.specimenObjectIdAbsenceReason = specimenObjectIdAbsenceReason;
     this.otherSpecimenIds = otherSpecimenIds;
     this.topicOrigin = topicOrigin;
     this.topicDomain = topicDomain;
@@ -130,7 +130,7 @@ public class DigitalSpecimenRequest extends DoiRecordRequest {
   }
 
   private void idXorAbsence() throws InvalidRequestException {
-    if ((this.primarySpecimenObjectId == null) == (this.primarySpecimenObjectIdAbsenceReason
+    if ((this.primarySpecimenObjectId == null) == (this.specimenObjectIdAbsenceReason
         == null)) {
       throw new InvalidRequestException(
           "Request must contain exactly one of: [primarySpecimenObjectId, primarySpecimenObjectIdAbsenceReason]");

@@ -6,7 +6,7 @@
     <artifactId>spring-boot-starter-parent</artifactId>
     <groupId>org.springframework.boot</groupId>
     <relativePath/>
-    <version>3.2.4</version> <!-- lookup parent from repository -->
+    <version>3.3.1</version> <!-- lookup parent from repository -->
   </parent>
   <artifactId>handle-manager</artifactId>
   <version>0.0.1-SNAPSHOT</version>
@@ -18,17 +18,17 @@
   <properties>
     <java.version>17</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <testcontainers.version>1.17.6</testcontainers.version>
+    <testcontainers.version>1.19.8</testcontainers.version>
     <apache-commons.version>4.3</apache-commons.version>
     <mockito-inline.version>5.2.0</mockito-inline.version>
+    <mongodb-driver.version>5.1.1</mongodb-driver.version>
     <okhttp3.version>4.10.0</okhttp3.version>
+    <version.victools>4.35.0</version.victools>
     <sonar.coverage.jacoco.xmlReportPaths>
       ../app-it/target/site/jacoco-aggregate/jacoco.xml
     </sonar.coverage.jacoco.xmlReportPaths>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     <sonar.organization>dissco</sonar.organization>
-    <spring-security.version>6.2.3</spring-security.version> <!-- 21/03/24: CVE-2024-22257-->
-    <version.victools>4.28.0</version.victools>
   </properties>
 
   <dependencyManagement>
@@ -97,21 +97,17 @@
 
     <!--Database Dependencies -->
     <dependency>
-      <groupId>org.postgresql</groupId>
-      <artifactId>postgresql</artifactId>
-      <version>${postgresql.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.jooq</groupId>
-      <artifactId>jooq</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-jdbc</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-mongodb</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.mongodb</groupId>
+      <artifactId>mongodb-driver-sync</artifactId>
+      <version>${mongodb-driver.version}</version>
     </dependency>
 
     <!--JsonSchema  -->
@@ -175,6 +171,11 @@
     <dependency>
       <artifactId>spring-boot-starter-test</artifactId>
       <groupId>org.springframework.boot</groupId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>mongodb</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

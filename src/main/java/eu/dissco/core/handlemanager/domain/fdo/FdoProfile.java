@@ -1,6 +1,5 @@
 package eu.dissco.core.handlemanager.domain.fdo;
 
-import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -21,8 +20,9 @@ public enum FdoProfile {
   PID_STATUS("pidStatus", 13),
 
   // Tombstone
-  TOMBSTONE_TEXT("tombstoneText", 30),
-  TOMBSTONE_PIDS("tombstonePids", 31),
+  TOMBSTONED_TEXT("ods:tombstonedText", 30),
+  HAS_RELATED_PID("hasRelatedPID", 31),
+  TOMBSTONED_DATE("tombstonedDate", 32),
 
   // DOI
   REFERENT_TYPE("referentType", 40),
@@ -55,7 +55,6 @@ public enum FdoProfile {
   // Media
   MEDIA_HOST("mediaHost", 400),
   MEDIA_HOST_NAME("mediaHostName", 401),
-  MEDIA_FORMAT("mediaFormat", 402),
   IS_DERIVED_FROM_SPECIMEN("isDerivedFromSpecimen", 403),
   LINKED_DO_PID("linkedDigitalObjectPid", 404),
   LINKED_DO_TYPE("linkedDigitalObjectType", 405),
@@ -63,8 +62,9 @@ public enum FdoProfile {
   PRIMARY_MEDIA_ID("primaryMediaId", 407),
   PRIMARY_MO_ID_TYPE("primaryMediaObjectIdType", 408),
   PRIMARY_MO_ID_NAME("primaryMediaObjectIdName", 409),
-  DCTERMS_TYPE("dcterms:type", 411),
-  MEDIA_MIME_TYPE("mediaMimeType", 412),
+  DCTERMS_TYPE("dcterms:type", 410),
+  DCTERMS_SUBJECT("dcterms:subject", 411),
+  DCTERMS_FORMAT("dcterms:format", 412),
   DERIVED_FROM_ENTITY("derivedFromEntity", 413),
   LICENSE_NAME("licenseName", 414),
   LICENSE_URL("licenseUrl", 415),
@@ -109,17 +109,6 @@ public enum FdoProfile {
 
   public int index() {
     return this.index;
-  }
-
-  public static int retrieveIndex(String searchAttribute) {
-    var fdoProfile = Arrays.stream(FdoProfile.values())
-        .filter(fdoRow -> fdoRow.attribute.equals(searchAttribute))
-        .findFirst();
-    if (fdoProfile.isPresent()) {
-      return fdoProfile.get().index;
-    }
-    log.error("Unable to locate index for requested attribute {}", searchAttribute);
-    throw new IllegalStateException(searchAttribute + " not valid fdo attribute");
   }
 
 }

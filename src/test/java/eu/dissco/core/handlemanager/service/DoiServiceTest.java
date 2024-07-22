@@ -1,26 +1,29 @@
 package eu.dissco.core.handlemanager.service;
 
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LINKED_DO_PID;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_MEDIA_ID;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.DOI_DOMAIN;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_DOMAIN;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_MEDIA_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenAttributes;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genObjectNodeAttributeRecord;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRecordAttributesAltLoc;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestBatch;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalMediaFdoRecord;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalMediaRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalMediaRequestObjectUpdate;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseNullAttributes;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteSmallResponse;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectUpdate;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMongoDocument;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenUpdateRequest;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenUpdatedFdoRecord;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenWriteResponseIdsOnly;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.jsonFormatFdoRecord;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.doThrow;
@@ -28,23 +31,19 @@ import static org.mockito.Mockito.mockStatic;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.datacite.DataCiteEvent;
 import eu.dissco.core.handlemanager.domain.datacite.EventType;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
-import eu.dissco.core.handlemanager.domain.repsitoryobjects.HandleAttribute;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
-import eu.dissco.core.handlemanager.repository.PidRepository;
-import eu.dissco.core.handlemanager.testUtils.TestUtils;
-import java.nio.charset.StandardCharsets;
+import eu.dissco.core.handlemanager.repository.MongoRepository;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,8 +58,6 @@ import org.springframework.test.context.ActiveProfiles;
 class DoiServiceTest {
 
   @Mock
-  private PidRepository pidRepository;
-  @Mock
   private FdoRecordService fdoRecordService;
   @Mock
   private PidNameGeneratorService pidNameGeneratorService;
@@ -68,6 +65,8 @@ class DoiServiceTest {
   private ProfileProperties profileProperties;
   @Mock
   private DataCiteService dataCiteService;
+  @Mock
+  private MongoRepository mongoRepository;
   private PidService service;
   private MockedStatic<Instant> mockedStatic;
   private MockedStatic<Clock> mockedClock;
@@ -75,8 +74,8 @@ class DoiServiceTest {
   @BeforeEach
   void setup() {
     initTime();
-    service = new DoiService(pidRepository, fdoRecordService, pidNameGeneratorService, MAPPER,
-        profileProperties, dataCiteService);
+    service = new DoiService(fdoRecordService, pidNameGeneratorService, MAPPER, profileProperties,
+        dataCiteService, mongoRepository);
   }
 
   private void initTime() {
@@ -98,21 +97,17 @@ class DoiServiceTest {
   @Test
   void testCreateDigitalSpecimen() throws Exception {
     // Given
-    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     var request = genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(),
         FdoType.DIGITAL_SPECIMEN);
-    List<HandleAttribute> digitalSpecimen = genDigitalSpecimenAttributes(handle);
-    var digitalSpecimenSublist = digitalSpecimen.stream()
-        .filter(row -> row.getType().equals(PRIMARY_SPECIMEN_OBJECT_ID.get())).toList();
-
-    var responseExpected = givenRecordResponseWriteSmallResponse(digitalSpecimenSublist,
-        List.of(handle), FdoType.DIGITAL_SPECIMEN);
-    var dataCiteEvent = new DataCiteEvent(genObjectNodeAttributeRecord(digitalSpecimen),
+    var fdoRecord = givenDigitalSpecimenFdoRecord(HANDLE);
+    var responseExpected = givenWriteResponseIdsOnly(List.of(fdoRecord),
+        FdoType.DIGITAL_SPECIMEN, DOI_DOMAIN);
+    var dataCiteEvent = new DataCiteEvent(jsonFormatFdoRecord(fdoRecord.attributes()),
         EventType.CREATE);
-    given(pidNameGeneratorService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(any(), any())).willReturn(
-        digitalSpecimen);
-    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
+    given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
+    given(fdoRecordService.prepareNewDigitalSpecimenRecord(any(), any(), any())).willReturn(
+        fdoRecord);
+    given(profileProperties.getDomain()).willReturn(DOI_DOMAIN);
 
     // When
     var responseReceived = service.createRecords(List.of(request));
@@ -125,19 +120,16 @@ class DoiServiceTest {
   @Test
   void testCreateDigitalMedia() throws Exception {
     // Given
-    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    var request = genCreateRecordRequest(givenMediaRequestObject(), FdoType.DIGITAL_MEDIA);
-    List<HandleAttribute> digitalMedia = TestUtils.genDigitalMediaAttributes(handle);
-    var mediaSublist = digitalMedia.stream().filter(
-        row -> row.getType().equals(PRIMARY_MEDIA_ID.get()) || row.getType()
-            .equals(LINKED_DO_PID.get())).toList();
-    var responseExpected = givenRecordResponseWriteSmallResponse(mediaSublist, List.of(handle),
-        FdoType.DIGITAL_MEDIA);
-    var dataCiteEvent = new DataCiteEvent(genObjectNodeAttributeRecord(digitalMedia),
+    var request = genCreateRecordRequest(givenDigitalMediaRequestObject(), FdoType.DIGITAL_MEDIA);
+    var digitalMedia = givenDigitalMediaFdoRecord(HANDLE);
+    var responseExpected = givenWriteResponseIdsOnly(List.of(digitalMedia),
+        FdoType.DIGITAL_MEDIA, DOI_DOMAIN);
+    var dataCiteEvent = new DataCiteEvent(jsonFormatFdoRecord(digitalMedia.attributes()),
         EventType.CREATE);
-    given(pidNameGeneratorService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(fdoRecordService.prepareDigitalMediaAttributes(any(), any())).willReturn(digitalMedia);
-    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
+    given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
+    given(fdoRecordService.prepareNewDigitalMediaRecord(any(), any(), any())).willReturn(
+        digitalMedia);
+    given(profileProperties.getDomain()).willReturn(DOI_DOMAIN);
 
     // When
     var responseReceived = service.createRecords(List.of(request));
@@ -150,13 +142,12 @@ class DoiServiceTest {
   @Test
   void testCreateDigitalSpecimenDataCiteFails() throws Exception {
     // Given
-    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     var request = List.of(
         (JsonNode) genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(),
             FdoType.DIGITAL_SPECIMEN));
-    List<HandleAttribute> digitalSpecimen = genDigitalSpecimenAttributes(handle);
-    given(pidNameGeneratorService.genHandleList(1)).willReturn(new ArrayList<>(List.of(handle)));
-    given(fdoRecordService.prepareDigitalSpecimenRecordAttributes(any(), any())).willReturn(
+    var digitalSpecimen = givenDigitalSpecimenFdoRecord(HANDLE);
+    given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
+    given(fdoRecordService.prepareNewDigitalSpecimenRecord(any(), any(), any())).willReturn(
         digitalSpecimen);
     doThrow(JsonProcessingException.class).when(dataCiteService).publishToDataCite(any(), any());
 
@@ -164,59 +155,89 @@ class DoiServiceTest {
     assertThrows(UnprocessableEntityException.class, () -> service.createRecords(request));
 
     // Then
-    then(pidRepository).should().rollbackHandles(List.of(HANDLE));
+    then(mongoRepository).should().rollbackHandles(List.of(HANDLE));
   }
 
   @Test
-  void testUpdateRecordLocation() throws Exception {
+  void testUpdateDigitalSpecimen() throws Exception {
     // Given
-    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    var updateRequest = genUpdateRequestBatch(List.of(handle), FdoType.DIGITAL_SPECIMEN);
-    var updatedAttributeRecord = genUpdateRecordAttributesAltLoc(handle);
-    var responseExpected = givenRecordResponseNullAttributes(List.of(handle),
-        FdoType.DIGITAL_SPECIMEN);
+    var previousVersion = givenDigitalSpecimenFdoRecord(HANDLE);
+    var request = MAPPER.valueToTree(givenDigitalSpecimenRequestObjectUpdate());
+    var updateRequest = givenUpdateRequest(List.of(HANDLE), FdoType.DIGITAL_SPECIMEN, request);
+    var updatedAttributeRecord = givenUpdatedFdoRecord(FdoType.DIGITAL_SPECIMEN,
+        NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL);
+    var expectedDocument = givenMongoDocument(updatedAttributeRecord);
+    var responseExpected = givenWriteResponseIdsOnly(List.of(updatedAttributeRecord),
+        FdoType.DIGITAL_SPECIMEN, DOI_DOMAIN);
     var expectedEvent = new DataCiteEvent(
-        ((ObjectNode) genObjectNodeAttributeRecord(updatedAttributeRecord))
-            .put("pid", HANDLE),
+        (jsonFormatFdoRecord(updatedAttributeRecord.attributes())),
         EventType.UPDATE);
-    given(pidRepository.checkHandlesWritable(anyList())).willReturn(List.of(handle));
-    given(fdoRecordService.prepareUpdateAttributes(any(), any(), any())).willReturn(
-        updatedAttributeRecord);
-    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
+    given(mongoRepository.getHandleRecords(List.of(HANDLE))).willReturn(List.of(previousVersion));
+    given(fdoRecordService.prepareUpdatedDigitalSpecimenRecord(any(), any(), any(),
+        anyBoolean())).willReturn(updatedAttributeRecord);
+    given(profileProperties.getDomain()).willReturn(DOI_DOMAIN);
 
     // When
     var responseReceived = service.updateRecords(updateRequest, true);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
-    then(pidRepository).should()
-        .updateRecordBatch(CREATED.getEpochSecond(), List.of(updatedAttributeRecord), true);
+    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument));
     then(dataCiteService).should().publishToDataCite(expectedEvent, FdoType.DIGITAL_SPECIMEN);
   }
 
   @Test
-  void testUpdateInvalidType() {
+  void testUpdateDigitalMedia() throws Exception {
     // Given
-    var updateRequest = genUpdateRequestBatch(List.of(HANDLE.getBytes(StandardCharsets.UTF_8)),
-        FdoType.HANDLE);
+    var previousVersion = givenDigitalMediaFdoRecord(HANDLE);
+    var request = MAPPER.valueToTree(givenDigitalMediaRequestObjectUpdate());
+    var updateRequest = givenUpdateRequest(List.of(HANDLE), FdoType.DIGITAL_MEDIA, request);
+    var updatedAttributeRecord = givenUpdatedFdoRecord(FdoType.DIGITAL_MEDIA,
+        PRIMARY_MEDIA_ID_TESTVAL);
+    var expectedDocument = givenMongoDocument(updatedAttributeRecord);
+    var responseExpected = givenWriteResponseIdsOnly(List.of(updatedAttributeRecord),
+        FdoType.DIGITAL_MEDIA, DOI_DOMAIN);
+    var expectedEvent = new DataCiteEvent(
+        (jsonFormatFdoRecord(updatedAttributeRecord.attributes())),
+        EventType.UPDATE);
+    given(mongoRepository.getHandleRecords(List.of(HANDLE))).willReturn(List.of(previousVersion));
+    given(fdoRecordService.prepareUpdatedDigitalMediaRecord(any(), any(), any(),
+        anyBoolean())).willReturn(updatedAttributeRecord);
+    given(profileProperties.getDomain()).willReturn(DOI_DOMAIN);
+
+    // When
+    var responseReceived = service.updateRecords(updateRequest, true);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument));
+    then(dataCiteService).should().publishToDataCite(expectedEvent, FdoType.DIGITAL_MEDIA);
+  }
+
+  @Test
+  void testUpdateInvalidType() throws Exception {
+    // Given
+    var updateRequest = givenUpdateRequest(List.of(HANDLE), FdoType.HANDLE,
+        MAPPER.valueToTree(givenDigitalSpecimenRequestObjectUpdate()));
 
     // When Then
     assertThrowsExactly(InvalidRequestException.class,
         () -> service.updateRecords(updateRequest, true));
   }
 
-
   @Test
   void testUpdateRecordLocationDataCiteFails() throws Exception {
     // Given
-    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    var updateRequest = genUpdateRequestBatch(List.of(handle), FdoType.DIGITAL_SPECIMEN);
-    var updatedAttributeRecord = genUpdateRecordAttributesAltLoc(handle);
-
-    given(pidRepository.checkHandlesWritable(anyList())).willReturn(List.of(handle));
-    given(fdoRecordService.prepareUpdateAttributes(any(), any(), any())).willReturn(
-        updatedAttributeRecord);
-    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
+    var requestAttributes = MAPPER.valueToTree(givenDigitalSpecimenRequestObjectUpdate());
+    var updateRequest = givenUpdateRequest(List.of(HANDLE), FdoType.DIGITAL_SPECIMEN,
+        requestAttributes);
+    var updatedAttributeRecord = givenUpdatedFdoRecord(FdoType.DIGITAL_SPECIMEN,
+        NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL);
+    var previousVersion = givenDigitalSpecimenFdoRecord(HANDLE);
+    var expectedDocument = givenMongoDocument(updatedAttributeRecord);
+    given(fdoRecordService.prepareUpdatedDigitalSpecimenRecord(any(), any(), eq(previousVersion),
+        eq(true))).willReturn(updatedAttributeRecord);
+    given(mongoRepository.getHandleRecords(List.of(HANDLE))).willReturn(List.of(previousVersion));
     doThrow(JsonProcessingException.class).when(dataCiteService).publishToDataCite(any(), any());
 
     // When
@@ -224,9 +245,24 @@ class DoiServiceTest {
         () -> service.updateRecords(updateRequest, true));
 
     // Then
-    then(pidRepository).should()
-        .updateRecordBatch(CREATED.getEpochSecond(), List.of(updatedAttributeRecord), true);
-    then(pidRepository).shouldHaveNoMoreInteractions();
+    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument));
+    then(mongoRepository).shouldHaveNoMoreInteractions();
+  }
+
+  @Test
+  void testCreateInvalidType() {
+    // Given
+    var requestJson =
+        MAPPER.createObjectNode()
+            .set("data", MAPPER.createObjectNode()
+                .put("type", FdoType.HANDLE.getFdoProfile())
+                .set("attributes", MAPPER.createObjectNode()));
+    var request = List.of(requestJson);
+
+    // When Then
+    assertThrows(UnsupportedOperationException.class, () ->
+        service.createRecords(request));
+
   }
 
 }

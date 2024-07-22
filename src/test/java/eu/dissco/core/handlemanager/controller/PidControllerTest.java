@@ -6,27 +6,24 @@ import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ID;
 import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_TYPE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_DOMAIN;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PREFIX;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SUFFIX;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.UI_URL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genCreateRecordRequest;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRecordRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneRequest;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.genUpdateRequestAltLoc;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDataMappingRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalMediaRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenRequestObjectNullOptionals;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecordRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMediaRequestObject;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseRead;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseReadSingle;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWrite;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteAltLoc;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteArchive;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenRecordResponseWriteGeneric;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleRecordRequestObjectUpdate;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenReadResponse;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystemRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenTombstoneRecordRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenUpdateRequest;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -35,7 +32,6 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.fdo.DigitalSpecimenRequest;
@@ -49,7 +45,7 @@ import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.service.PidService;
-import java.nio.charset.StandardCharsets;
+import eu.dissco.core.handlemanager.testUtils.TestUtils;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -77,9 +73,6 @@ class PidControllerTest {
 
   private PidController controller;
 
-  private final String SANDBOX_URI = "https://sandbox.dissco.tech";
-
-  public ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
   @Mock
   private ApplicationProperties applicationProperties;
 
@@ -89,16 +82,16 @@ class PidControllerTest {
   }
 
   @Test
-  void testResolveSingleHandle() throws PidResolutionException {
+  void testResolveSingleHandle() throws Exception {
     // Given
-    String path = SANDBOX_URI + PREFIX + "/" + SUFFIX;
-    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
+    String path = UI_URL + "/" + PREFIX + "/" + SUFFIX;
     MockHttpServletRequest r = new MockHttpServletRequest();
     r.setRequestURI(PREFIX + "/" + SUFFIX);
-    var responseExpected = givenRecordResponseReadSingle(HANDLE, path, FdoType.HANDLE, null);
+    var responseExpected = givenReadResponse(List.of(HANDLE), path, FdoType.HANDLE,
+        HANDLE_DOMAIN);
 
-    given(applicationProperties.getUiUrl()).willReturn(SANDBOX_URI);
-    given(service.resolveSingleRecord(handle, path)).willReturn(responseExpected);
+    given(applicationProperties.getUiUrl()).willReturn(UI_URL);
+    given(service.resolveSingleRecord(HANDLE, path)).willReturn(responseExpected);
     given(applicationProperties.getPrefix()).willReturn(PREFIX);
 
     // When
@@ -120,8 +113,8 @@ class PidControllerTest {
   void testSearchByPhysicalId() throws Exception {
     // Given
 
-    var responseExpected = givenRecordResponseWriteGeneric(
-        List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), FdoType.DIGITAL_SPECIMEN);
+    var responseExpected = TestUtils.givenWriteResponseFull(
+        List.of(HANDLE), FdoType.DIGITAL_SPECIMEN);
     given(
         service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL
         )).willReturn(responseExpected);
@@ -139,8 +132,8 @@ class PidControllerTest {
   void testSearchByPhysicalIdCombined() throws Exception {
     // Given
     String physicalId = PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
-    var responseExpected = givenRecordResponseWriteGeneric(
-        List.of(HANDLE.getBytes(StandardCharsets.UTF_8)), FdoType.DIGITAL_SPECIMEN);
+    var responseExpected = TestUtils.givenWriteResponseFull(
+        List.of(HANDLE), FdoType.DIGITAL_SPECIMEN);
     given(
         service.searchByPhysicalSpecimenId(physicalId)).willReturn(
         responseExpected);
@@ -156,16 +149,15 @@ class PidControllerTest {
   @Test
   void testResolveBatchHandle() throws Exception {
     // Given
-    String path = SANDBOX_URI + "view";
+    String path = UI_URL + "/view";
     MockHttpServletRequest r = new MockHttpServletRequest();
     r.setRequestURI("view");
 
     List<String> handleString = List.of(HANDLE, HANDLE_ALT);
-    List<byte[]> handles = List.of(HANDLE.getBytes(StandardCharsets.UTF_8),
-        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
 
-    var responseExpected = givenRecordResponseRead(handles, path, FdoType.HANDLE);
-    given(applicationProperties.getUiUrl()).willReturn(SANDBOX_URI);
+    var responseExpected = givenReadResponse(handleString, path, FdoType.HANDLE,
+        HANDLE_DOMAIN);
+    given(applicationProperties.getUiUrl()).willReturn(UI_URL);
     given(applicationProperties.getMaxHandles()).willReturn(1000);
     given(service.resolveBatchRecord(anyList(), eq(path))).willReturn(responseExpected);
 
@@ -201,10 +193,10 @@ class PidControllerTest {
   @Test
   void testCreateHandleRecord() throws Exception {
     // Given
-    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     HandleRecordRequest requestObject = givenHandleRecordRequestObject();
     ObjectNode requestNode = genCreateRecordRequest(requestObject, FdoType.HANDLE);
-    JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(handle),
+    JsonApiWrapperWrite responseExpected = TestUtils.givenWriteResponseFull(
+        List.of(HANDLE),
         FdoType.HANDLE);
 
     given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
@@ -220,10 +212,10 @@ class PidControllerTest {
   @Test
   void testCreateDoiRecord() throws Exception {
     // Given
-    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     HandleRecordRequest requestObject = givenDoiRecordRequestObject();
     ObjectNode requestNode = genCreateRecordRequest(requestObject, FdoType.DOI);
-    JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(handle),
+    JsonApiWrapperWrite responseExpected = TestUtils.givenWriteResponseFull(
+        List.of(HANDLE),
         FdoType.DOI);
 
     given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
@@ -239,10 +231,10 @@ class PidControllerTest {
   @Test
   void testCreateDigitalSpecimenRecord() throws Exception {
     // Given
-    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
     DigitalSpecimenRequest requestObject = givenDigitalSpecimenRequestObjectNullOptionals();
     ObjectNode requestNode = genCreateRecordRequest(requestObject, FdoType.DIGITAL_SPECIMEN);
-    JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(handle),
+    JsonApiWrapperWrite responseExpected = TestUtils.givenWriteResponseFull(
+        List.of(HANDLE),
         FdoType.DIGITAL_SPECIMEN);
 
     given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
@@ -258,10 +250,10 @@ class PidControllerTest {
   @Test
   void testCreateDigitalMediaRecord() throws Exception {
     // Given
-    byte[] handle = HANDLE.getBytes(StandardCharsets.UTF_8);
-    HandleRecordRequest requestObject = givenMediaRequestObject();
+    HandleRecordRequest requestObject = givenDigitalMediaRequestObject();
     ObjectNode requestNode = genCreateRecordRequest(requestObject, FdoType.DIGITAL_MEDIA);
-    JsonApiWrapperWrite responseExpected = givenRecordResponseWrite(List.of(handle),
+    JsonApiWrapperWrite responseExpected = TestUtils.givenWriteResponseFull(
+        List.of(HANDLE),
         FdoType.DIGITAL_MEDIA);
 
     given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
@@ -277,16 +269,14 @@ class PidControllerTest {
   @Test
   void testCreateHandleRecordBatch() throws Exception {
     // Given
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
-        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
+    var handles = List.of(HANDLE, HANDLE_ALT);
 
     List<JsonNode> requests = new ArrayList<>();
 
     handles.forEach(handle -> requests.add(
         genCreateRecordRequest(givenHandleRecordRequestObject(), FdoType.HANDLE)));
 
-    var responseExpected = givenRecordResponseWrite(handles, FdoType.HANDLE);
+    var responseExpected = TestUtils.givenWriteResponseFull(handles, FdoType.HANDLE);
     given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When
@@ -300,15 +290,13 @@ class PidControllerTest {
   @Test
   void testCreateDoiRecordBatch() throws Exception {
     // Given
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
-        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
+    var handles = List.of(HANDLE, HANDLE_ALT);
 
     List<JsonNode> requests = new ArrayList<>();
     handles.forEach(
         handle -> requests.add(genCreateRecordRequest(givenDoiRecordRequestObject(), FdoType.DOI)));
 
-    var responseExpected = givenRecordResponseWrite(handles, FdoType.DOI);
+    var responseExpected = TestUtils.givenWriteResponseFull(handles, FdoType.DOI);
     given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When
@@ -322,18 +310,15 @@ class PidControllerTest {
   @Test
   void testCreateDigitalSpecimenBatch() throws Exception {
     // Given
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
-        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-
+    var handles = List.of(HANDLE, HANDLE_ALT);
     List<JsonNode> requests = new ArrayList<>();
-
     handles.forEach(handle ->
         requests.add(
             genCreateRecordRequest(givenDigitalSpecimenRequestObjectNullOptionals(),
                 FdoType.DIGITAL_SPECIMEN))
     );
-    var responseExpected = givenRecordResponseWrite(handles, FdoType.DIGITAL_SPECIMEN);
+    var responseExpected = TestUtils.givenWriteResponseFull(handles,
+        FdoType.DIGITAL_SPECIMEN);
     given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When
@@ -347,16 +332,12 @@ class PidControllerTest {
   @Test
   void testCreateMediaRecordBatch() throws Exception {
     // Given
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
-        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-
+    var handles = List.of(HANDLE, HANDLE_ALT);
     List<JsonNode> requests = new ArrayList<>();
     for (int i = 0; i < handles.size(); i++) {
-      requests.add(genCreateRecordRequest(givenMediaRequestObject(), FdoType.DIGITAL_MEDIA));
+      requests.add(genCreateRecordRequest(givenDigitalMediaRequestObject(), FdoType.DIGITAL_MEDIA));
     }
-
-    var responseExpected = givenRecordResponseWrite(handles, FdoType.DOI);
+    var responseExpected = TestUtils.givenWriteResponseFull(handles, FdoType.DOI);
     given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When
@@ -370,15 +351,13 @@ class PidControllerTest {
   @Test
   void testCreateSourceSystemsBatch() throws Exception {
     // Given
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
-        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-
+    var handles = List.of(HANDLE, HANDLE_ALT);
     List<JsonNode> requests = new ArrayList<>();
     handles.forEach(handle -> requests.add(
         genCreateRecordRequest(givenSourceSystemRequestObject(), FdoType.SOURCE_SYSTEM)));
 
-    var responseExpected = givenRecordResponseWrite(handles, FdoType.SOURCE_SYSTEM);
+    var responseExpected = TestUtils.givenWriteResponseFull(handles,
+        FdoType.SOURCE_SYSTEM);
     given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When
@@ -392,15 +371,12 @@ class PidControllerTest {
   @Test
   void testCreateAnnotationsBatch() throws Exception {
     // Given
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
-        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-
+    var handles = List.of(HANDLE, HANDLE_ALT);
     List<JsonNode> requests = new ArrayList<>();
     handles.forEach(handle -> requests.add(
         genCreateRecordRequest(givenAnnotationRequestObject(), FdoType.ANNOTATION)));
-
-    var responseExpected = givenRecordResponseWrite(handles, FdoType.ANNOTATION);
+    var responseExpected = TestUtils.givenWriteResponseFull(handles,
+        FdoType.ANNOTATION);
     given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When
@@ -414,15 +390,13 @@ class PidControllerTest {
   @Test
   void testCreateMappingBatch() throws Exception {
     // Given
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
-        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-
+    var handles = List.of(HANDLE, HANDLE_ALT);
     List<JsonNode> requests = new ArrayList<>();
     handles.forEach(handle -> requests.add(
         genCreateRecordRequest(givenDataMappingRequestObject(), FdoType.DATA_MAPPING)));
 
-    var responseExpected = givenRecordResponseWrite(handles, FdoType.DATA_MAPPING);
+    var responseExpected = TestUtils.givenWriteResponseFull(handles,
+        FdoType.DATA_MAPPING);
     given(service.createRecords(requests)).willReturn(responseExpected);
 
     // When
@@ -433,101 +407,58 @@ class PidControllerTest {
     assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
   }
 
-  private JsonNode givenJsonNode(String id, String type, JsonNode attributes) {
-    ObjectNode node = mapper.createObjectNode();
-    node.put(NODE_ID, id);
-    node.put(NODE_TYPE, type);
-    node.set(NODE_ATTRIBUTES, attributes);
-    return node;
-  }
-
   @Test
   void testUpdateRecord() throws Exception {
     // Given
-    byte[] handle = HANDLE.getBytes();
-    var updateAttributes = genUpdateRequestAltLoc();
-    ObjectNode updateRequestNode = mapper.createObjectNode();
-    updateRequestNode.set(NODE_DATA,
-        givenJsonNode(HANDLE, FdoType.HANDLE.getDigitalObjectType(), updateAttributes));
-
-    var responseExpected = givenRecordResponseWriteAltLoc(List.of(handle));
-    given(service.updateRecords(List.of(updateRequestNode), true)).willReturn(
-        responseExpected);
+    var request = givenUpdateRequest();
 
     // When
-    var responseReceived = controller.updateRecord(PREFIX, SUFFIX, updateRequestNode,
+    var result = controller.updateRecord(PREFIX, SUFFIX, request.get(0),
         authentication);
 
     // Then
-    assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+    assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+    then(service).should().updateRecords(request, true);
   }
 
   @Test
   void testUpdateRecordBadRequest() {
-
     // Given
-    var updateAttributes = genUpdateRequestAltLoc();
-    ObjectNode updateRequestNode = mapper.createObjectNode();
-    updateRequestNode.set("data",
-        givenJsonNode(HANDLE_ALT, FdoType.HANDLE.getDigitalObjectType(), updateAttributes));
+    var request = MAPPER.createObjectNode()
+        .set(NODE_DATA, MAPPER.createObjectNode()
+            .put(NODE_TYPE, FdoType.HANDLE.getDigitalObjectType())
+            .put(NODE_ID, HANDLE_ALT)
+            .set(NODE_ATTRIBUTES, MAPPER.valueToTree(givenHandleRecordRequestObjectUpdate())));
 
     // Then
     assertThrowsExactly(InvalidRequestException.class,
-        () -> controller.updateRecord(PREFIX, SUFFIX, updateRequestNode, authentication));
+        () -> controller.updateRecord(PREFIX, SUFFIX, request, authentication));
   }
 
   @Test
   void testUpdateRecordBatch() throws Exception {
     // Given
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
-        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-
-    List<JsonNode> updateRequestList = new ArrayList<>();
-    var responseExpected = givenRecordResponseWriteAltLoc(handles);
-    handles.forEach(h -> {
-      var updateAttributes = genUpdateRequestAltLoc();
-      ObjectNode updateRequestNode = mapper.createObjectNode();
-      updateRequestNode.set("data",
-          givenJsonNode(HANDLE, FdoType.HANDLE.getDigitalObjectType(), updateAttributes));
-      updateRequestList.add(updateRequestNode.deepCopy());
-    });
-    given(service.updateRecords(updateRequestList, true)).willReturn(responseExpected);
+    var request = givenUpdateRequest();
 
     // When
-    var responseReceived = controller.updateRecords(updateRequestList, authentication);
+    var responseReceived = controller.updateRecords(request, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+    then(service).should().updateRecords(request, true);
   }
 
   @Test
   void testRollbackUpdate() throws Exception {
     // Given
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
-        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
-
-    List<JsonNode> updateRequestList = new ArrayList<>();
-    var responseExpected = givenRecordResponseWriteAltLoc(handles);
-    handles.forEach(h -> {
-      var updateAttributes = genUpdateRequestAltLoc();
-      ObjectNode updateRequestNode = mapper.createObjectNode();
-      updateRequestNode.set("data",
-          givenJsonNode(HANDLE, FdoType.HANDLE.getDigitalObjectType(), updateAttributes));
-      updateRequestList.add(updateRequestNode.deepCopy());
-    });
-
-    given(service.updateRecords(updateRequestList, false)).willReturn(responseExpected);
+    var request = givenUpdateRequest();
 
     // When
-    var responseReceived = controller.rollbackHandleUpdate(updateRequestList, authentication);
+    var responseReceived = controller.rollbackHandleUpdate(request, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
+    then(service).should().updateRecords(request, false);
   }
 
   @Test
@@ -575,12 +506,9 @@ class PidControllerTest {
   @Test
   void testArchiveRecord() throws Exception {
     // Given
-
-    byte[] handle = HANDLE.getBytes();
-
-    var responseExpected = givenRecordResponseWriteArchive(List.of(handle));
+    var responseExpected = TestUtils.givenWriteResponseFull(List.of(HANDLE), FdoType.TOMBSTONE);
     var archiveRequest = givenArchiveRequest();
-    given(service.archiveRecordBatch(List.of(archiveRequest))).willReturn(
+    given(service.tombstoneRecords(List.of(archiveRequest))).willReturn(
         responseExpected);
 
     // When
@@ -605,13 +533,11 @@ class PidControllerTest {
   @Test
   void testArchiveRecordBatch() throws Exception {
     // Given
-    List<byte[]> handles = List.of(
-        HANDLE.getBytes(StandardCharsets.UTF_8),
-        HANDLE_ALT.getBytes(StandardCharsets.UTF_8));
+    var handles = List.of(HANDLE, HANDLE_ALT);
     List<JsonNode> archiveRequestList = new ArrayList<>();
     handles.forEach(h -> archiveRequestList.add(givenArchiveRequest()));
-    var responseExpected = givenRecordResponseWriteArchive(handles);
-    given(service.archiveRecordBatch(archiveRequestList)).willReturn(responseExpected);
+    var responseExpected = TestUtils.givenWriteResponseFull(handles, FdoType.TOMBSTONE);
+    given(service.tombstoneRecords(archiveRequestList)).willReturn(responseExpected);
 
     // When
     var responseReceived = controller.archiveRecords(archiveRequestList, authentication);
@@ -625,27 +551,14 @@ class PidControllerTest {
     ObjectNode archiveRequest = MAPPER.createObjectNode();
     ObjectNode archiveRequestData = MAPPER.createObjectNode();
     archiveRequestData.put(NODE_ID, HANDLE);
-    archiveRequestData.set(NODE_ATTRIBUTES, MAPPER.valueToTree(genTombstoneRecordRequestObject()));
+    archiveRequestData.set(NODE_ATTRIBUTES,
+        MAPPER.valueToTree(givenTombstoneRecordRequestObject()));
     archiveRequest.set(NODE_DATA, archiveRequestData);
     return archiveRequest;
   }
 
-
   @Test
-  void testArchiveRecordBadRequest() {
-    // Given
-    var archiveAttributes = genTombstoneRequest();
-    ObjectNode archiveRequestNode = mapper.createObjectNode();
-    archiveRequestNode.set("data",
-        givenJsonNode(HANDLE_ALT, FdoType.HANDLE.getDigitalObjectType(), archiveAttributes));
-
-    // Then
-    assertThrowsExactly(InvalidRequestException.class,
-        () -> controller.updateRecord(PREFIX, SUFFIX, archiveRequestNode, authentication));
-  }
-
-  @Test
-  void testPiDResolutionException() throws Exception {
+  void testPidResolutionException() throws Exception {
     // Given
     DoiRecordRequest request = givenDoiRecordRequestObject();
     ObjectNode requestNode = genCreateRecordRequest(request, FdoType.DOI);
