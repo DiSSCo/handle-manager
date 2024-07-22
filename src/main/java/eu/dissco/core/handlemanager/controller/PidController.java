@@ -4,7 +4,7 @@ package eu.dissco.core.handlemanager.controller;
 import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ID;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import eu.dissco.core.handlemanager.component.JsonSchemaValidatorComponent;
+import eu.dissco.core.handlemanager.component.SchemaValidatorComponent;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
@@ -45,7 +45,7 @@ public class PidController {
 
   private final PidService service;
   private final ApplicationProperties applicationProperties;
-  private final JsonSchemaValidatorComponent validatorComponent;
+  private final SchemaValidatorComponent validatorComponent;
   private static final String RECEIVED_MSG = "Received {} request from user {}";
 
   // Getters

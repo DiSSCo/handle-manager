@@ -26,7 +26,7 @@ import static org.mockito.BDDMockito.then;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.Profiles;
-import eu.dissco.core.handlemanager.component.JsonSchemaValidatorComponent;
+import eu.dissco.core.handlemanager.component.SchemaValidatorComponent;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.requests.RollbackRequest;
@@ -58,7 +58,7 @@ class PidControllerTest {
   @Mock
   private ApplicationProperties applicationProperties;
   @Mock
-  private JsonSchemaValidatorComponent validatorComponent;
+  private SchemaValidatorComponent validatorComponent;
 
   private PidController controller;
 
