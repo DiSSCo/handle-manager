@@ -153,7 +153,7 @@
       "type": "string",
       "description": "Other digital entity where the media was derived from, specified by its ID or PID.\n e.g. a label image extracted from an herbarium sheet image, a video with the first minute frameset of another video, a thumbnail from a larger file.",
       "example": "https://hdl.handlenet/20.5000.1025/QR2-P99-2WA",
-      "$comment": "idx = 4"
+      "$comment": "idx = 413"
     },
     "licenseName": {
       "type": "string",

@@ -1,10 +1,12 @@
 package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LOC;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.OTHER_SPECIMEN_IDS;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.API_URL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.DOC_BUILDER_FACTORY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.ISSUED_FOR_AGENT_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.LOC_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
@@ -12,12 +14,15 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.NORMALISED_PRIMAR
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.ORCHESTRATION_URL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PREFIX;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_MEDIA_ID_TESTVAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.ROR_DOMAIN;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.ROR_IDENTIFIER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_NAME_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.TOMBSTONE_TEXT_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.TRANSFORMER_FACTORY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.UI_URL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.UPDATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genAnnotationAttributes;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotation;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationFdoRecord;
@@ -54,6 +59,7 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 
 import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
@@ -64,6 +70,8 @@ import eu.dissco.core.handlemanager.domain.requests.TombstoneRequestAttributes;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
+import eu.dissco.core.handlemanager.schema.HandleRequestAttributes;
+import eu.dissco.core.handlemanager.schema.OtherspecimenIds;
 import eu.dissco.core.handlemanager.web.PidResolver;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -116,6 +124,48 @@ class FdoRecordServiceTest {
     assertThat(result.primaryLocalId()).isNull();
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
+  }
+
+  @Test
+  void testGetObjectNameRor() throws Exception {
+    // Given
+    var request = new HandleRequestAttributes()
+        .withIssuedForAgent(ROR_DOMAIN + ROR_IDENTIFIER);
+
+    // When
+    fdoRecordService.prepareNewHandleRecord(request, HANDLE, CREATED);
+
+    // Then
+    then(pidResolver).should().getObjectName("https://api.ror.org/organizations/" + ROR_IDENTIFIER);
+  }
+
+  @Test
+  void testGetObjectNameHandle() throws Exception {
+    // Given
+    var id = "https://hdl.handle.net/" + HANDLE;
+    var request = new HandleRequestAttributes()
+        .withIssuedForAgent(id);
+
+    // When
+    fdoRecordService.prepareNewHandleRecord(request, HANDLE, CREATED);
+
+    // Then
+    then(pidResolver).should().getObjectName(id);
+  }
+
+  @Test
+  void testGetObjectNameQid() throws Exception {
+    // Given
+    var id = "https://www.wikidata.org/wiki/123";
+    var request = new HandleRequestAttributes()
+        .withIssuedForAgent(id);
+    var expected = "https://wikidata.org/w/rest.php/wikibase/v0/entities/items/123";
+
+    // When
+    fdoRecordService.prepareNewHandleRecord(request, HANDLE, CREATED);
+
+    // Then
+    then(pidResolver).should().resolveQid(expected);
   }
 
   @Test
@@ -238,6 +288,7 @@ class FdoRecordServiceTest {
 
   @Test
   void testPrepareNewDigitalSpecimenRecord() throws Exception {
+    // Given
     var request = givenDigitalSpecimen();
     var expected = givenDigitalSpecimenFdoRecord(HANDLE);
 
@@ -249,6 +300,40 @@ class FdoRecordServiceTest {
     assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
+  }
+
+  @Test
+  void testPrepareNewDigitalSpecimenRecordOtherSpecimenIds() throws Exception {
+    // Given
+    var otherSpecimenId = new OtherspecimenIds(HANDLE_ALT, "Handle");
+    var request = givenDigitalSpecimen()
+        .withOtherSpecimenIds(List.of(otherSpecimenId));
+    var attributes = new ArrayList<>(genDigitalSpecimenAttributes(HANDLE, CREATED));
+    attributes.set(attributes.indexOf(new FdoAttribute(OTHER_SPECIMEN_IDS, CREATED, null)),
+        new FdoAttribute(OTHER_SPECIMEN_IDS, CREATED,
+            MAPPER.valueToTree(List.of(otherSpecimenId))));
+    var expected = new FdoRecord(HANDLE, FdoType.DIGITAL_SPECIMEN, attributes,
+        NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL);
+
+    // When
+    var result = fdoRecordService.prepareNewDigitalSpecimenRecord(request, HANDLE, CREATED);
+
+    // Then
+    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
+    assertThat(result.fdoType()).isEqualTo(expected.fdoType());
+    assertThat(result.handle()).isEqualTo(expected.handle());
+  }
+
+  @Test
+  void testPrepareNewDigitalSpecimenRecordMissingIdAndAbsence() {
+    // Given
+    var request = givenDigitalSpecimen()
+        .withPrimarySpecimenObjectId(null);
+
+    // When / Then
+    assertThrows(InvalidRequestException.class,
+        () -> fdoRecordService.prepareNewDigitalSpecimenRecord(request, HANDLE, CREATED));
   }
 
   @Test

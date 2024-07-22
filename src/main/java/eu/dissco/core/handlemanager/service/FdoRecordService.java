@@ -72,7 +72,6 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOPIC_CATEGORY;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOPIC_DISCIPLINE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOPIC_DOMAIN;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOPIC_ORIGIN;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.WAS_DERIVED_FROM_ENTITY;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.ANNOTATION;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DATA_MAPPING;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_MEDIA;
@@ -86,15 +85,6 @@ import static eu.dissco.core.handlemanager.service.ServiceUtils.getField;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import eu.dissco.core.digitalmediaprocessor.schema.AnnotationRequestAttributes;
-import eu.dissco.core.digitalmediaprocessor.schema.DataMappingRequestAttributes;
-import eu.dissco.core.digitalmediaprocessor.schema.DigitalMediaRequestAttributes;
-import eu.dissco.core.digitalmediaprocessor.schema.DigitalSpecimenRequestAttributes;
-import eu.dissco.core.digitalmediaprocessor.schema.DoiKernelRequestAttributes;
-import eu.dissco.core.digitalmediaprocessor.schema.HandleRequestAttributes;
-import eu.dissco.core.digitalmediaprocessor.schema.MasRequestAttributes;
-import eu.dissco.core.digitalmediaprocessor.schema.OrganisationRequestAttributes;
-import eu.dissco.core.digitalmediaprocessor.schema.SourceSystemRequestAttributes;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 import eu.dissco.core.handlemanager.domain.fdo.vocabulary.PidStatus;
 import eu.dissco.core.handlemanager.domain.fdo.vocabulary.specimen.StructuralType;
@@ -103,6 +93,15 @@ import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
 import eu.dissco.core.handlemanager.domain.requests.TombstoneRequestAttributes;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
+import eu.dissco.core.handlemanager.schema.AnnotationRequestAttributes;
+import eu.dissco.core.handlemanager.schema.DataMappingRequestAttributes;
+import eu.dissco.core.handlemanager.schema.DigitalMediaRequestAttributes;
+import eu.dissco.core.handlemanager.schema.DigitalSpecimenRequestAttributes;
+import eu.dissco.core.handlemanager.schema.DoiKernelRequestAttributes;
+import eu.dissco.core.handlemanager.schema.HandleRequestAttributes;
+import eu.dissco.core.handlemanager.schema.MasRequestAttributes;
+import eu.dissco.core.handlemanager.schema.OrganisationRequestAttributes;
+import eu.dissco.core.handlemanager.schema.SourceSystemRequestAttributes;
 import eu.dissco.core.handlemanager.web.PidResolver;
 import java.io.StringWriter;
 import java.time.Instant;
@@ -476,7 +475,7 @@ public class FdoRecordService {
     handleAttributeList.add(new FdoAttribute(SPECIMEN_OBJECT_ID_ABSENCE_REASON, timestamp,
         request.getSpecimenObjectIdAbsenceReason()));
     // 207 Other Specimen Ids
-    if (request.getOtherSpecimenIds() != null && !request.getOtherSpecimenIds().isEmpty()) {
+    if (!request.getOtherSpecimenIds().isEmpty()) {
       handleAttributeList.add(new FdoAttribute(OTHER_SPECIMEN_IDS, timestamp,
           mapper.writeValueAsString(request.getOtherSpecimenIds())));
     } else {
@@ -511,11 +510,9 @@ public class FdoRecordService {
         request.getMaterialOrDigitalEntity()));
     // 217 Marked as Type
     handleAttributeList.add(new FdoAttribute(MARKED_AS_TYPE, timestamp, request.getMarkedAsType()));
-    // 218 Was Derived From Entity
-    var wasDerived =
-        request.getDerivedFromEntity() != null ? false : request.getDerivedFromEntity();
+    // 218 Derived From Entity
     handleAttributeList.add(
-        new FdoAttribute(WAS_DERIVED_FROM_ENTITY, timestamp, wasDerived));
+        new FdoAttribute(DERIVED_FROM_ENTITY, timestamp, request.getDerivedFromEntity()));
     // 219 Catalog ID
     handleAttributeList.add(
         new FdoAttribute(CATALOG_IDENTIFIER, timestamp, request.getCatalogIdentifier()));
@@ -903,7 +900,6 @@ public class FdoRecordService {
     }
   }
 
-
   /* Generalized attribute Building */
 
   private FdoAttribute incrementIssueNumber(FdoAttribute previousVersion, Instant timestamp) {
@@ -978,10 +974,7 @@ public class FdoRecordService {
         (ROR_DOMAIN + ", " + HANDLE_DOMAIN + ", or " + DOI_DOMAIN)));
   }
 
-  private static String getRor(String url) throws InvalidRequestException {
-    if (!url.contains(ROR_DOMAIN)) {
-      throw new InvalidRequestException(String.format(PROXY_ERROR, url, ROR_DOMAIN));
-    }
+  private static String getRor(String url) {
     return url.replace(ROR_DOMAIN, ROR_API_DOMAIN);
   }
 
