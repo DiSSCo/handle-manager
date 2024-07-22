@@ -9,6 +9,7 @@ import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
 import eu.dissco.core.handlemanager.domain.requests.RollbackRequest;
+import eu.dissco.core.handlemanager.domain.requests.TombstoneRequest;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
@@ -16,8 +17,6 @@ import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.service.PidService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -138,18 +137,15 @@ public class PidController {
   @Operation(summary = "Archive given record")
   @PutMapping(value = "/{prefix}/{suffix}")
   public ResponseEntity<JsonApiWrapperWrite> archiveRecord(@PathVariable("prefix") String prefix,
-      @PathVariable("suffix") String suffix, @RequestBody JsonNode request,
+      @PathVariable("suffix") String suffix, @RequestBody TombstoneRequest request,
       Authentication authentication) throws InvalidRequestException {
     log.info("Received tombstone request for PID {}/{} from user {}", prefix, suffix,
         authentication.getName());
-    JsonNode data = request.get(NODE_DATA);
-    byte[] handle = (prefix + "/" + suffix).getBytes(StandardCharsets.UTF_8);
-    byte[] handleRequest = data.get(NODE_ID).asText().getBytes(StandardCharsets.UTF_8);
-    if (!Arrays.equals(handle, handleRequest)) {
+    var handle = (prefix + "/" + suffix);
+    if (!handle.equals(request.data().id())) {
       throw new InvalidRequestException(
-          "Handle in request path does not match id in request body. Path: "
-              + new String(handle, StandardCharsets.UTF_8)
-              + ". Body: " + new String(handleRequest, StandardCharsets.UTF_8));
+          "Handle in request path does not match id in request body. Path: " + handle
+              + ". Body: " + request.data().id());
     }
     return ResponseEntity.status(HttpStatus.OK)
         .body(service.tombstoneRecords(List.of(request)));
@@ -190,7 +186,8 @@ public class PidController {
 
   @Operation(summary = "Archive multiple PID records")
   @PutMapping(value = "/")
-  public ResponseEntity<JsonApiWrapperWrite> archiveRecords(@RequestBody List<JsonNode> requests,
+  public ResponseEntity<JsonApiWrapperWrite> archiveRecords(
+      @RequestBody List<TombstoneRequest> requests,
       Authentication authentication) throws InvalidRequestException {
     log.info(RECEIVED_MSG, "batch tombstone", authentication.getName());
     return ResponseEntity.status(HttpStatus.OK).body(service.tombstoneRecords(requests));

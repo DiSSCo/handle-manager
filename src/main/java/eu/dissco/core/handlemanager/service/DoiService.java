@@ -2,6 +2,7 @@ package eu.dissco.core.handlemanager.service;
 
 
 import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_DATA;
+import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ID;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -78,7 +79,9 @@ public class DoiService extends PidService {
       throws InvalidRequestException, UnprocessableEntityException {
     var updateRequests = requests.stream()
         .map(request -> request.get(NODE_DATA)).toList();
-    var fdoRecordMap = processUpdateRequest(updateRequests);
+    var fdoRecordMap = processUpdateRequest(
+        updateRequests.stream()
+            .map(request -> request.get(NODE_ID).asText()).toList());
     var fdoType = getObjectTypeFromJsonNode(requests);
     List<FdoRecord> fdoRecords;
     List<Document> fdoDocuments;

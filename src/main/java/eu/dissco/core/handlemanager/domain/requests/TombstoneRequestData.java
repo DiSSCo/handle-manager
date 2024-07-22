@@ -1,12 +1,13 @@
 package eu.dissco.core.handlemanager.domain.requests;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-import com.fasterxml.jackson.databind.JsonNode;
+import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 
 public record TombstoneRequestData(
-    @JsonProperty(required = true) @JsonPropertyDescription("DiSSCo Identifier of object") String id,
-    @JsonProperty(required = true) JsonNode attributes
+    @JsonPropertyDescription("DiSSCo Identifier of object")
+    String id,
+    FdoType type,
+    TombstoneRequestAttributes attributes
 ) {
 
 }

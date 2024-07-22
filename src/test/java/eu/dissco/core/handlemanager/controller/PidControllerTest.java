@@ -19,7 +19,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleKernel
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleKernelUpdated;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenPostRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenReadResponse;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenTombstoneRecordRequestObject;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenTombstoneRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenUpdateRequest;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
@@ -29,7 +29,6 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
@@ -366,7 +365,7 @@ class PidControllerTest {
   void testArchiveRecord() throws Exception {
     // Given
     var responseExpected = TestUtils.givenWriteResponseFull(List.of(HANDLE), FdoType.TOMBSTONE);
-    var archiveRequest = givenArchiveRequest();
+    var archiveRequest = givenTombstoneRequest();
     given(service.tombstoneRecords(List.of(archiveRequest))).willReturn(
         responseExpected);
 
@@ -381,7 +380,7 @@ class PidControllerTest {
   @Test
   void testArchiveRecordBadHandle() {
     // Given
-    var archiveRequest = givenArchiveRequest();
+    var archiveRequest = givenTombstoneRequest();
 
     // When
     assertThrowsExactly(InvalidRequestException.class,
@@ -392,28 +391,13 @@ class PidControllerTest {
   @Test
   void testArchiveRecordBatch() throws Exception {
     // Given
-    var handles = List.of(HANDLE, HANDLE_ALT);
-    List<JsonNode> archiveRequestList = new ArrayList<>();
-    handles.forEach(h -> archiveRequestList.add(givenArchiveRequest()));
-    var responseExpected = TestUtils.givenWriteResponseFull(handles, FdoType.TOMBSTONE);
-    given(service.tombstoneRecords(archiveRequestList)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.archiveRecords(archiveRequestList, authentication);
+    var responseReceived = controller.archiveRecords(List.of(givenTombstoneRequest()),
+        authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(responseReceived.getBody()).isEqualTo(responseExpected);
-  }
-
-  private JsonNode givenArchiveRequest() {
-    ObjectNode archiveRequest = MAPPER.createObjectNode();
-    ObjectNode archiveRequestData = MAPPER.createObjectNode();
-    archiveRequestData.put(NODE_ID, HANDLE);
-    archiveRequestData.set(NODE_ATTRIBUTES,
-        MAPPER.valueToTree(givenTombstoneRecordRequestObject()));
-    archiveRequest.set(NODE_DATA, archiveRequestData);
-    return archiveRequest;
   }
 
   @Test

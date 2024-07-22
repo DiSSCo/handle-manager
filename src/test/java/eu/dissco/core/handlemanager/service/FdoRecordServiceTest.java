@@ -58,9 +58,9 @@ import static org.mockito.BDDMockito.given;
 import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
-import eu.dissco.core.handlemanager.domain.fdo.TombstoneRecordRequest;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
+import eu.dissco.core.handlemanager.domain.requests.TombstoneRequestAttributes;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
@@ -484,7 +484,7 @@ class FdoRecordServiceTest {
   @Test
   void testPrepareTombstoneRecordNoRelatedIds() throws Exception {
     var previousVersion = givenHandleFdoRecord(HANDLE);
-    var request = new TombstoneRecordRequest(TOMBSTONE_TEXT_TESTVAL, null);
+    var request = new TombstoneRequestAttributes(TOMBSTONE_TEXT_TESTVAL, null);
     var expected = new FdoRecord(HANDLE, FdoType.HANDLE, genTombstoneAttributes(request),
         null);
 
@@ -501,7 +501,7 @@ class FdoRecordServiceTest {
   @Test
   void testPrepareTombstoneRecordEmptyRelatedIds() throws Exception {
     var previousVersion = givenHandleFdoRecord(HANDLE);
-    var request = new TombstoneRecordRequest(TOMBSTONE_TEXT_TESTVAL, Collections.emptyList());
+    var request = new TombstoneRequestAttributes(TOMBSTONE_TEXT_TESTVAL, Collections.emptyList());
     var expected = new FdoRecord(HANDLE, FdoType.HANDLE, genTombstoneAttributes(request),
         null);
 

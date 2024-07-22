@@ -96,11 +96,11 @@ import eu.dissco.core.digitalmediaprocessor.schema.MasRequestAttributes;
 import eu.dissco.core.digitalmediaprocessor.schema.OrganisationRequestAttributes;
 import eu.dissco.core.digitalmediaprocessor.schema.SourceSystemRequestAttributes;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
-import eu.dissco.core.handlemanager.domain.fdo.TombstoneRecordRequest;
 import eu.dissco.core.handlemanager.domain.fdo.vocabulary.PidStatus;
 import eu.dissco.core.handlemanager.domain.fdo.vocabulary.specimen.StructuralType;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
+import eu.dissco.core.handlemanager.domain.requests.TombstoneRequestAttributes;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.web.PidResolver;
@@ -852,13 +852,13 @@ public class FdoRecordService {
   }
 
   /* Tombstone Record Creation */
-  public FdoRecord prepareTombstoneRecord(TombstoneRecordRequest request, Instant timestamp,
+  public FdoRecord prepareTombstoneRecord(TombstoneRequestAttributes request, Instant timestamp,
       FdoRecord previousVersion) throws JsonProcessingException {
     var fdoAttributes = prepareTombstoneAttributes(request, timestamp, previousVersion);
     return new FdoRecord(previousVersion.handle(), previousVersion.fdoType(), fdoAttributes, null);
   }
 
-  private List<FdoAttribute> prepareTombstoneAttributes(TombstoneRecordRequest request,
+  private List<FdoAttribute> prepareTombstoneAttributes(TombstoneRequestAttributes request,
       Instant timestamp, FdoRecord previousVersion) throws JsonProcessingException {
     var handleAttributeList = new ArrayList<>(previousVersion.attributes());
     var previousIssueNum = getField(previousVersion.attributes(), PID_RECORD_ISSUE_NUMBER);

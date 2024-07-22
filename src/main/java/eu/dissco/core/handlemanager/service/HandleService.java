@@ -21,7 +21,6 @@ import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
-import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.MongoRepository;
 import java.time.Instant;
@@ -84,10 +83,11 @@ public class HandleService extends PidService {
 
   @Override
   public JsonApiWrapperWrite updateRecords(List<JsonNode> requests, boolean incrementVersion)
-      throws UnprocessableEntityException, InvalidRequestException {
+      throws InvalidRequestException {
     var updateRequests = requests.stream()
         .map(request -> request.get(NODE_DATA)).toList();
-    var fdoRecordMap = processUpdateRequest(updateRequests);
+    var fdoRecordMap = processUpdateRequest(
+        updateRequests.stream().map(request -> request.get(NODE_ID).asText()).toList());
     var fdoType = getObjectTypeFromJsonNode(requests);
     List<FdoRecord> fdoRecords;
     List<Document> fdoDocuments;

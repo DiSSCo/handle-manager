@@ -1,4 +1,4 @@
-package eu.dissco.core.handlemanager.domain.fdo;
+package eu.dissco.core.handlemanager.domain.requests;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import eu.dissco.core.handlemanager.domain.fdo.vocabulary.tombstone.HasRelatedPid;
@@ -9,7 +9,7 @@ import org.springframework.lang.Nullable;
 
 @Getter
 @ToString
-public class TombstoneRecordRequest {
+public class TombstoneRequestAttributes {
 
   @JsonProperty(required = true, value = "ods:tombstonedText")
   private final String tombstonedText;
@@ -17,7 +17,7 @@ public class TombstoneRecordRequest {
   @JsonProperty("ods:hasRelatedPID")
   private final List<HasRelatedPid> hasRelatedPID;
 
-  public TombstoneRecordRequest(String tombstoneText, List<HasRelatedPid> hasRelatedPID) {
+  public TombstoneRequestAttributes(String tombstoneText, List<HasRelatedPid> hasRelatedPID) {
     this.tombstonedText = tombstoneText;
     this.hasRelatedPID = hasRelatedPID;
   }

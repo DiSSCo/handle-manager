@@ -552,7 +552,7 @@ class HandleServiceTest {
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
-    var result = service.tombstoneRecords(request);
+    var result = service.tombstoneRecords(List.of(request));
 
     // Then
     assertThat(result).isEqualTo(expected);

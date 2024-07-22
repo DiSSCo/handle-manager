@@ -101,7 +101,6 @@ import eu.dissco.core.handlemanager.configuration.InstantDeserializer;
 import eu.dissco.core.handlemanager.configuration.InstantSerializer;
 import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
-import eu.dissco.core.handlemanager.domain.fdo.TombstoneRecordRequest;
 import eu.dissco.core.handlemanager.domain.fdo.vocabulary.PidStatus;
 import eu.dissco.core.handlemanager.domain.fdo.vocabulary.specimen.PrimarySpecimenObjectIdType;
 import eu.dissco.core.handlemanager.domain.fdo.vocabulary.specimen.StructuralType;
@@ -116,6 +115,9 @@ import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequestData;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
 import eu.dissco.core.handlemanager.domain.requests.PostRequestData;
+import eu.dissco.core.handlemanager.domain.requests.TombstoneRequest;
+import eu.dissco.core.handlemanager.domain.requests.TombstoneRequestAttributes;
+import eu.dissco.core.handlemanager.domain.requests.TombstoneRequestData;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
@@ -217,8 +219,8 @@ public class TestUtils {
     throw new IllegalStateException("Utility class");
   }
 
-  public static TombstoneRecordRequest givenTombstoneRecordRequestObject() {
-    return new TombstoneRecordRequest(TOMBSTONE_TEXT_TESTVAL,
+  public static TombstoneRequestAttributes givenTombstoneRecordRequestObject() {
+    return new TombstoneRequestAttributes(TOMBSTONE_TEXT_TESTVAL,
         List.of(new HasRelatedPid(HANDLE_ALT, "Media ID")));
   }
 
@@ -552,7 +554,7 @@ public class TestUtils {
     return fdoRecord;
   }
 
-  public static List<FdoAttribute> genTombstoneAttributes(TombstoneRecordRequest request)
+  public static List<FdoAttribute> genTombstoneAttributes(TombstoneRequestAttributes request)
       throws Exception {
     var fdoRecord = genHandleRecordAttributes(HANDLE, CREATED, FdoType.HANDLE);
     fdoRecord.add(new FdoAttribute(TOMBSTONED_TEXT, UPDATED, request.getTombstonedText()));
@@ -875,12 +877,14 @@ public class TestUtils {
     return requestNodeList;
   }
 
-  public static List<JsonNode> givenTombstoneRequest() {
-    var request = MAPPER.createObjectNode()
-        .set(NODE_DATA, MAPPER.createObjectNode()
-            .put(NODE_ID, HANDLE)
-            .set(NODE_ATTRIBUTES, MAPPER.valueToTree(givenTombstoneRecordRequestObject())));
-    return List.of(request);
+  public static TombstoneRequest givenTombstoneRequest() {
+    return new TombstoneRequest(
+        new TombstoneRequestData(
+            HANDLE,
+            FdoType.HANDLE,
+            givenTombstoneRecordRequestObject()
+        )
+    );
   }
 
   // Handle Attributes as ObjectNode
