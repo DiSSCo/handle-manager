@@ -288,55 +288,55 @@
               https://schemas.dissco.tech/schemas/fdo-profile/annotation/0.1.0/annotation.json
             </argument>
             <argument>
-              https://schemas.dissco.tech/schemas/fdo-profile/annotation/0.1.0/annotation-request.json
+              https://schemas.dissco.tech/schemas/fdo-profile/annotation/0.1.0/annotation-request-attribute.json
             </argument>
             <argument>
               https://schemas.dissco.tech/schemas/fdo-profile/data-mapping/0.1.0/data-mapping.json
             </argument>
             <argument>
-              https://schemas.dissco.tech/schemas/fdo-profile/data-mapping/0.1.0/data-mapping-request.json
+              https://schemas.dissco.tech/schemas/fdo-profile/data-mapping/0.1.0/data-mapping-request-attribute.json
             </argument>
             <argument>
               https://schemas.dissco.tech/schemas/fdo-profile/digital-media/0.1.0/digital-media.json
             </argument>
             <argument>
-              https://schemas.dissco.tech/schemas/fdo-profile/digital-media/0.1.0/digital-media-request.json
+              https://schemas.dissco.tech/schemas/fdo-profile/digital-media/0.1.0/digital-media-request-attribute.json
             </argument>
             <argument>
               https://schemas.dissco.tech/schemas/fdo-profile/digital-specimen/0.1.0/digital-specimen.json
             </argument>
             <argument>
-              https://schemas.dissco.tech/schemas/fdo-profile/digital-specimen/0.1.0/digital-specimen-request.json
+              https://schemas.dissco.tech/schemas/fdo-profile/digital-specimen/0.1.0/digital-specimen-request-attribute.json
             </argument>
             <argument>
               https://schemas.dissco.tech/schemas/fdo-profile/doi-kernel/0.1.0/doi-kernel.json
             </argument>
             <argument>
-              https://schemas.dissco.tech/schemas/fdo-profile/doi-kernel/0.1.0/doi-kernel-request.json
+              https://schemas.dissco.tech/schemas/fdo-profile/doi-kernel/0.1.0/doi-kernel-request-attribute.json
             </argument>
             <argument>
               https://schemas.dissco.tech/schemas/fdo-profile/handle-kernel/0.1.0/handle-kernel.json
             </argument>
             <argument>
-              https://schemas.dissco.tech/schemas/fdo-profile/handle-kernel/0.1.0/handle-kernel-request.json
+              https://schemas.dissco.tech/schemas/fdo-profile/handle-kernel/0.1.0/handle-kernel-request-attribute.json
             </argument>
             <argument>
               https://schemas.dissco.tech/schemas/fdo-profile/mas/0.1.0/mas.json
             </argument>
             <argument>
-              https://schemas.dissco.tech/schemas/fdo-profile/mas/0.1.0/mas-request.json
+              https://schemas.dissco.tech/schemas/fdo-profile/mas/0.1.0/mas-request-attribute.json
             </argument>
             <argument>
               https://schemas.dissco.tech/schemas/fdo-profile/source-system/0.1.0/source-system.json
             </argument>
             <argument>
-              https://schemas.dissco.tech/schemas/fdo-profile/source-system/0.1.0/source-system-request.json
+              https://schemas.dissco.tech/schemas/fdo-profile/source-system/0.1.0/source-system-request-attribute.json
             </argument>
             <argument>
               https://schemas.dissco.tech/schemas/fdo-profile/organisation/0.1.0/organisation.json
             </argument>
             <argument>
-              https://schemas.dissco.tech/schemas/fdo-profile/organisation/0.1.0/organisation-request.json
+              https://schemas.dissco.tech/schemas/fdo-profile/organisation/0.1.0/organisation-request-attribute.json
             </argument>
           </arguments>
         </configuration>
