@@ -277,6 +277,7 @@
           <useSystemClassLoader>false</useSystemClassLoader>
         </configuration>
       </plugin>
+      <!--
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
@@ -341,6 +342,7 @@
           </arguments>
         </configuration>
       </plugin>
+      -->
       <plugin>
         <groupId>org.jsonschema2pojo</groupId>
         <artifactId>jsonschema2pojo-maven-plugin</artifactId>
