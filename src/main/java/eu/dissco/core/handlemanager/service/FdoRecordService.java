@@ -86,6 +86,7 @@ import static eu.dissco.core.handlemanager.service.ServiceUtils.getField;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.component.PidResolver;
+import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 import eu.dissco.core.handlemanager.domain.fdo.PidStatus;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
@@ -149,8 +150,9 @@ public class FdoRecordService {
 
   static {
     GENERATED_KEYS = List.of(FDO_PROFILE.index(), FDO_RECORD_LICENSE.index(), PID_ISSUER.index(),
-        PID_ISSUER_NAME.index(), DIGITAL_OBJECT_TYPE.index(), DIGITAL_OBJECT_NAME.index(),
-        PID.index(), PID_RECORD_ISSUE_DATE.index(), PID_STATUS.index(), HS_ADMIN.index());
+        PID_RECORD_ISSUE_NUMBER.index(), PID_ISSUER_NAME.index(), DIGITAL_OBJECT_TYPE.index(),
+        DIGITAL_OBJECT_NAME.index(), PID.index(), PID_RECORD_ISSUE_DATE.index(), PID_STATUS.index(),
+        HS_ADMIN.index());
   }
 
   static {
@@ -847,6 +849,15 @@ public class FdoRecordService {
     return updatedAttributes;
   }
 
+  /* Rollback */
+  public FdoRecord markRecordAsFailed(FdoRecord previousVersion, Instant timestamp) {
+    var previousAttributes = new ArrayList<>(previousVersion.attributes());
+    replaceAttribute(previousAttributes, PID_STATUS,
+        new FdoAttribute(PID_STATUS, timestamp, PidStatus.FAILED));
+    return new FdoRecord(previousVersion.handle(), previousVersion.fdoType(), previousAttributes,
+        previousVersion.primaryLocalId());
+  }
+
   /* Tombstone Record Creation */
   public FdoRecord prepareTombstoneRecord(TombstoneRequestAttributes request, Instant timestamp,
       FdoRecord previousVersion) throws JsonProcessingException {
@@ -857,12 +868,9 @@ public class FdoRecordService {
   private List<FdoAttribute> prepareTombstoneAttributes(TombstoneRequestAttributes request,
       Instant timestamp, FdoRecord previousVersion) throws JsonProcessingException {
     var handleAttributeList = new ArrayList<>(previousVersion.attributes());
-    var previousIssueNum = getField(previousVersion.attributes(), PID_RECORD_ISSUE_NUMBER);
-    var newIssueNum = incrementIssueNumber(previousIssueNum, timestamp);
-    var previousStatus = getField(previousVersion.attributes(), PID_STATUS);
     var newStatus = new FdoAttribute(PID_STATUS, timestamp, PidStatus.TOMBSTONED);
-    handleAttributeList.set(handleAttributeList.indexOf(previousIssueNum), newIssueNum);
-    handleAttributeList.set(handleAttributeList.indexOf(previousStatus), newStatus);
+    replaceAttribute(handleAttributeList, PID_STATUS, newStatus);
+    incrementIssueNumber(timestamp, handleAttributeList);
     // 30: Tombstoned Text
     handleAttributeList.add(
         new FdoAttribute(TOMBSTONED_TEXT, timestamp, request.getTombstonedText()));
@@ -880,7 +888,6 @@ public class FdoRecordService {
   }
 
   /* Validation Functions */
-
   private static void idXorAbsence(DigitalSpecimenRequestAttributes request)
       throws InvalidRequestException {
     if ((request.getPrimarySpecimenObjectId() == null) == (
@@ -900,11 +907,13 @@ public class FdoRecordService {
   }
 
   /* Generalized attribute Building */
-
-  private FdoAttribute incrementIssueNumber(FdoAttribute previousVersion, Instant timestamp) {
-    var previousIssueNumber = previousVersion.getValue();
-    var incrementedIssueNumber = String.valueOf(Integer.parseInt(previousIssueNumber) + 1);
-    return new FdoAttribute(PID_RECORD_ISSUE_NUMBER, timestamp, incrementedIssueNumber);
+  private void incrementIssueNumber(Instant timestamp,
+      ArrayList<FdoAttribute> attributes) {
+    var previousIssueNumber = getField(attributes, PID_RECORD_ISSUE_NUMBER).getValue();
+    String incrementedIssueNumber;
+    incrementedIssueNumber = String.valueOf(Integer.parseInt(previousIssueNumber) + 1);
+    replaceAttribute(attributes, PID_RECORD_ISSUE_NUMBER,
+        new FdoAttribute(PID_RECORD_ISSUE_NUMBER, timestamp, incrementedIssueNumber));
   }
 
   private List<FdoAttribute> prepareGeneratedAttributes(String handle, FdoType fdoType,
@@ -948,15 +957,17 @@ public class FdoRecordService {
     updatedAttributes.addAll(previousAttributes.stream()
         .filter(previousAttribute -> GENERATED_KEYS.contains(previousAttribute.getIndex()))
         .toList());
-    var previousIssueNumber = getField(previousAttributes, PID_RECORD_ISSUE_NUMBER);
     if (incrementVersion) {
-      updatedAttributes.add(incrementIssueNumber(previousIssueNumber, timestamp));
-    } else {
-      updatedAttributes.add(previousIssueNumber);
+      incrementIssueNumber(timestamp, updatedAttributes);
     }
   }
 
   /* Helper Functions */
+  private void replaceAttribute(ArrayList<FdoAttribute> fdoAttributes, FdoProfile targetAttribute,
+      FdoAttribute replacement) {
+    fdoAttributes.set(fdoAttributes.indexOf(getField(fdoAttributes, targetAttribute)),
+        replacement);
+  }
 
   private String getObjectName(String url, String name) throws InvalidRequestException {
     if (name != null) {

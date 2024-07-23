@@ -51,6 +51,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mockStatic;
@@ -683,6 +684,21 @@ class HandleServiceTest {
 
     // Then
     assertThat(e.getMessage()).contains(HANDLE);
+  }
+
+  @Test
+  void testMarkHandlesAsFailed() throws Exception {
+    // Given
+    var fdoRecord = givenHandleFdoRecord(HANDLE);
+    var expected = givenMongoDocument(fdoRecord);
+    given(mongoRepository.getHandleRecords(List.of(HANDLE))).willReturn(List.of(fdoRecord));
+    given(fdoRecordService.markRecordAsFailed(eq(fdoRecord), any())).willReturn(fdoRecord);
+
+    // When
+    service.markHandlesAsFailed(List.of(HANDLE));
+
+    // Then
+    then(mongoRepository).should().updateHandleRecords(List.of(expected));
   }
 
 

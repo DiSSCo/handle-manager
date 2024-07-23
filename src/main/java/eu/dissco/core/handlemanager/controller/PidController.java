@@ -167,6 +167,15 @@ public class PidController {
     return ResponseEntity.ok().build();
   }
 
+  @Operation(summary = "rollback handle creation")
+  @DeleteMapping(value = "/rollback/create")
+  public ResponseEntity<Void> rollbackHandleCreation(@RequestBody List<String> handles,
+      Authentication authentication) throws InvalidRequestException {
+    log.info(RECEIVED_MSG, "batch rollback create", authentication.getName());
+    service.markHandlesAsFailed(handles);
+    return ResponseEntity.ok().build();
+  }
+
   @Operation(summary = "rollback handle update")
   @DeleteMapping(value = "/rollback/update")
   public ResponseEntity<JsonApiWrapperWrite> rollbackHandleUpdate(
@@ -176,7 +185,7 @@ public class PidController {
     return ResponseEntity.status(HttpStatus.OK).body(service.updateRecords(requests, false));
   }
 
-  @Operation(summary = "rollback handle update")
+  @Operation(summary = "rollback handle creation")
   @DeleteMapping(value = "/rollback/physId")
   public ResponseEntity<Void> rollbackHandlePhysId(
       @RequestBody List<String> physicalIds, Authentication authentication) {

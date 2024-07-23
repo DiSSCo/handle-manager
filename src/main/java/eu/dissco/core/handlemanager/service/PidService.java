@@ -243,9 +243,12 @@ public abstract class PidService {
       throws InvalidRequestException {
     for (var fdoRecord : previousVersions) {
       var pidStatus = getField(fdoRecord.attributes(), PID_STATUS).getValue();
-      if (PidStatus.TOMBSTONED.name().equals(pidStatus)) {
-        log.error("Attempting to update a FDO record that has been archived");
-        throw new InvalidRequestException("This PID has already been archived. It is read-only");
+      if (PidStatus.FAILED.name().equals(pidStatus) ||
+          PidStatus.TOMBSTONED.name().equals(pidStatus)) {
+        log.error("Attempting to update a FDO record that is no longer active with status {}",
+            pidStatus);
+        throw new InvalidRequestException(
+            "This PID has a status of " + pidStatus + " and is read-only");
       }
     }
   }
@@ -395,6 +398,23 @@ public abstract class PidService {
     }
     mongoRepository.updateHandleRecords(fdoDocuments);
     return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, TOMBSTONE));
+  }
+
+  public void markHandlesAsFailed(List<String> handles) throws InvalidRequestException {
+    var fdoRecordMap = processUpdateRequest(handles);
+    var timestamp = Instant.now();
+    List<Document> fdoDocuments;
+    var rollbackRecords = fdoRecordMap.values().stream()
+        .map(fdoRecord -> fdoRecordService.markRecordAsFailed(fdoRecord, timestamp)).toList();
+    try {
+      fdoDocuments = toMongoDbDocument(rollbackRecords);
+    } catch (JsonProcessingException e) {
+      log.error("JsonProcessingException while rolling back records", e);
+      throw new InvalidRequestException("Unable to process request");
+    }
+    mongoRepository.updateHandleRecords(fdoDocuments);
+    log.info("Successfully marked {} handles as failed", handles.size());
+    log.debug("{} marked as failed", handles);
   }
 
   public void rollbackHandles(List<String> handles) {

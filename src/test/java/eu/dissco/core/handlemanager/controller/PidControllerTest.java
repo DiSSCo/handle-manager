@@ -307,6 +307,16 @@ class PidControllerTest {
   }
 
   @Test
+  void testMarkAsFailed() throws Exception {
+    // When
+    var result = controller.rollbackHandleCreation(List.of(HANDLE), authentication);
+
+    // Then
+    assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+    then(service).should().markHandlesAsFailed(List.of(HANDLE));
+  }
+
+  @Test
   void testRollbackHandles() throws InvalidRequestException {
     // Given
     var dataNode1 = MAPPER.createObjectNode();

@@ -2,6 +2,7 @@ package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LOC;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.OTHER_SPECIMEN_IDS;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID_STATUS;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.API_URL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.DOC_BUILDER_FACTORY;
@@ -65,6 +66,7 @@ import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.component.PidResolver;
 import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
+import eu.dissco.core.handlemanager.domain.fdo.PidStatus;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
 import eu.dissco.core.handlemanager.domain.requests.TombstoneRequestAttributes;
@@ -577,10 +579,7 @@ class FdoRecordServiceTest {
     var result = fdoRecordService.prepareTombstoneRecord(request, UPDATED, previousVersion);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
-    assertThat(result.primaryLocalId()).isNull();
-    assertThat(result.fdoType()).isEqualTo(expected.fdoType());
-    assertThat(result.handle()).isEqualTo(expected.handle());
+    assertThat(result).isEqualTo(expected);
   }
 
   @Test
@@ -594,10 +593,7 @@ class FdoRecordServiceTest {
     var result = fdoRecordService.prepareTombstoneRecord(request, UPDATED, previousVersion);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
-    assertThat(result.primaryLocalId()).isNull();
-    assertThat(result.fdoType()).isEqualTo(expected.fdoType());
-    assertThat(result.handle()).isEqualTo(expected.handle());
+    assertThat(result).isEqualTo(expected);
   }
 
   @Test
@@ -610,10 +606,25 @@ class FdoRecordServiceTest {
     var result = fdoRecordService.prepareTombstoneRecord(request, UPDATED, previousVersion);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
-    assertThat(result.primaryLocalId()).isNull();
-    assertThat(result.fdoType()).isEqualTo(expected.fdoType());
-    assertThat(result.handle()).isEqualTo(expected.handle());
+    assertThat(result).isEqualTo(expected);
+  }
+
+  @Test
+  void testMarkRecordAsFailed() throws Exception {
+    // Given
+    var previousVersion = givenHandleFdoRecord(HANDLE);
+    var expectedAttributes = new ArrayList<>(previousVersion.attributes());
+    expectedAttributes.set(expectedAttributes.indexOf(
+            new FdoAttribute(PID_STATUS, CREATED, PidStatus.ACTIVE)),
+        new FdoAttribute(PID_STATUS, UPDATED, PidStatus.FAILED));
+    var expected = new FdoRecord(previousVersion.handle(), previousVersion.fdoType(),
+        expectedAttributes, previousVersion.primaryLocalId());
+
+    // When
+    var result = fdoRecordService.markRecordAsFailed(previousVersion, UPDATED);
+
+    // Then
+    assertThat(result).isEqualTo(expected);
   }
 
 }
