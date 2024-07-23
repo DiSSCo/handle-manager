@@ -167,6 +167,10 @@ public class PidController {
     return ResponseEntity.ok().build();
   }
 
+  /**
+   * @deprecated
+   */
+  @Deprecated(forRemoval = true)
   @Operation(summary = "rollback handle creation")
   @DeleteMapping(value = "/rollback/create")
   public ResponseEntity<Void> rollbackHandleCreation(@RequestBody List<String> handles,
@@ -185,6 +189,10 @@ public class PidController {
     return ResponseEntity.status(HttpStatus.OK).body(service.updateRecords(requests, false));
   }
 
+  /**
+   * @deprecated
+   */
+  @Deprecated(forRemoval = true)
   @Operation(summary = "rollback handle creation")
   @DeleteMapping(value = "/rollback/physId")
   public ResponseEntity<Void> rollbackHandlePhysId(
