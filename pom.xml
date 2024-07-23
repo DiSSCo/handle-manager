@@ -277,7 +277,6 @@
           <useSystemClassLoader>false</useSystemClassLoader>
         </configuration>
       </plugin>
-      <!--
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
@@ -286,63 +285,36 @@
           <mainClass>eu.dissco.core.handlemanager.maven.MavenRunner</mainClass>
           <arguments>
             <argument>
-              https://schemas.dissco.tech/schemas/fdo-profile/annotation/0.1.0/annotation.json
+              https://schemas.dissco.tech/schemas/fdo-profile/annotation/0.1.0/annotation-request-attributes.json
             </argument>
             <argument>
-              https://schemas.dissco.tech/schemas/fdo-profile/annotation/0.1.0/annotation-request-attribute.json
+              https://schemas.dissco.tech/schemas/fdo-profile/data-mapping/0.1.0/data-mapping-request-attributes.json
             </argument>
             <argument>
-              https://schemas.dissco.tech/schemas/fdo-profile/data-mapping/0.1.0/data-mapping.json
+              https://schemas.dissco.tech/schemas/fdo-profile/digital-specimen/0.1.0/digital-specimen-request-attributes.json
             </argument>
             <argument>
-              https://schemas.dissco.tech/schemas/fdo-profile/data-mapping/0.1.0/data-mapping-request-attribute.json
+              https://schemas.dissco.tech/schemas/fdo-profile/digital-media/0.1.0/digital-media-request-attributes.json
             </argument>
             <argument>
-              https://schemas.dissco.tech/schemas/fdo-profile/digital-media/0.1.0/digital-media.json
+              https://schemas.dissco.tech/schemas/fdo-profile/doi-kernel/0.1.0/doi-kernel-request-attributes.json
             </argument>
             <argument>
-              https://schemas.dissco.tech/schemas/fdo-profile/digital-media/0.1.0/digital-media-request-attribute.json
+              https://schemas.dissco.tech/schemas/fdo-profile/handle-kernel/0.1.0/handle-request-attributes.json
             </argument>
             <argument>
-              https://schemas.dissco.tech/schemas/fdo-profile/digital-specimen/0.1.0/digital-specimen.json
+              https://schemas.dissco.tech/schemas/fdo-profile/mas/0.1.0/mas-request-attributes.json
             </argument>
             <argument>
-              https://schemas.dissco.tech/schemas/fdo-profile/digital-specimen/0.1.0/digital-specimen-request-attribute.json
+              https://schemas.dissco.tech/schemas/fdo-profile/source-system/0.1.0/source-system-request-attributes.json
             </argument>
             <argument>
-              https://schemas.dissco.tech/schemas/fdo-profile/doi-kernel/0.1.0/doi-kernel.json
-            </argument>
-            <argument>
-              https://schemas.dissco.tech/schemas/fdo-profile/doi-kernel/0.1.0/doi-kernel-request-attribute.json
-            </argument>
-            <argument>
-              https://schemas.dissco.tech/schemas/fdo-profile/handle-kernel/0.1.0/handle-kernel.json
-            </argument>
-            <argument>
-              https://schemas.dissco.tech/schemas/fdo-profile/handle-kernel/0.1.0/handle-kernel-request-attribute.json
-            </argument>
-            <argument>
-              https://schemas.dissco.tech/schemas/fdo-profile/mas/0.1.0/mas.json
-            </argument>
-            <argument>
-              https://schemas.dissco.tech/schemas/fdo-profile/mas/0.1.0/mas-request-attribute.json
-            </argument>
-            <argument>
-              https://schemas.dissco.tech/schemas/fdo-profile/source-system/0.1.0/source-system.json
-            </argument>
-            <argument>
-              https://schemas.dissco.tech/schemas/fdo-profile/source-system/0.1.0/source-system-request-attribute.json
-            </argument>
-            <argument>
-              https://schemas.dissco.tech/schemas/fdo-profile/organisation/0.1.0/organisation.json
-            </argument>
-            <argument>
-              https://schemas.dissco.tech/schemas/fdo-profile/organisation/0.1.0/organisation-request-attribute.json
+              https://schemas.dissco.tech/schemas/fdo-profile/organisation/0.1.0/organisation-request-attributes.json
             </argument>
           </arguments>
         </configuration>
       </plugin>
-      -->
+
       <plugin>
         <groupId>org.jsonschema2pojo</groupId>
         <artifactId>jsonschema2pojo-maven-plugin</artifactId>

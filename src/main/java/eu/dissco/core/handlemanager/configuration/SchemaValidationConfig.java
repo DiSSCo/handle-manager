@@ -30,7 +30,7 @@ public class SchemaValidationConfig {
   }
 
   private JsonSchema setSchema(String schema, JsonSchemaFactory factory) throws IOException {
-    try (var input = this.getClass().getClassLoader().getResourceAsStream(schema)) {
+    try (var input = Thread.currentThread().getContextClassLoader().getResourceAsStream(schema)) {
       return factory.getSchema(input);
     }
   }

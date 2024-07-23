@@ -65,8 +65,9 @@ class SchemaValidatorTest {
     );
   }
 
-  private JsonSchema setSchema(String schema, JsonSchemaFactory factory) throws IOException {
-    try (var input = this.getClass().getClassLoader().getResourceAsStream(schema)) {
+  private JsonSchema setSchema(String schemaPath, JsonSchemaFactory factory) throws IOException {
+    try (var input = Thread.currentThread().getContextClassLoader()
+        .getResourceAsStream(schemaPath)) {
       return factory.getSchema(input);
     }
   }
