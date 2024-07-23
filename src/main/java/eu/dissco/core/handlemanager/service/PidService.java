@@ -401,11 +401,6 @@ public abstract class PidService {
     mongoRepository.rollbackHandles(handles);
   }
 
-  public void rollbackHandlesFromPhysId(List<String> physicalIds) {
-    mongoRepository.rollbackHandles(NORMALISED_SPECIMEN_OBJECT_ID.get(), physicalIds);
-  }
-
-
   protected List<Document> toMongoDbDocument(List<FdoRecord> fdoRecords)
       throws JsonProcessingException {
     var documentList = new ArrayList<Document>();

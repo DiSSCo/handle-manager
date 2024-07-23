@@ -1,11 +1,9 @@
 package eu.dissco.core.handlemanager.controller;
 
 
-import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.component.SchemaValidator;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
-import eu.dissco.core.handlemanager.domain.requests.RollbackRequest;
 import eu.dissco.core.handlemanager.domain.requests.TombstoneRequest;
 import eu.dissco.core.handlemanager.domain.responses.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.responses.JsonApiWrapperWrite;
@@ -154,15 +152,10 @@ public class PidController {
   }
 
   @Operation(summary = "rollback handle creation")
-  @DeleteMapping(value = "/rollback")
-  public ResponseEntity<Void> rollbackHandleCreation(@RequestBody RollbackRequest request,
-      Authentication authentication) throws InvalidRequestException {
+  @DeleteMapping(value = "/rollback/create")
+  public ResponseEntity<Void> rollbackHandleCreation(@RequestBody List<String> handles,
+      Authentication authentication) {
     log.info(RECEIVED_MSG, "batch rollback create", authentication.getName());
-    var ids = request.data().stream().map(d -> d.get("id")).toList();
-    if (ids.contains(null)) {
-      throw new InvalidRequestException("Missing Handles (\"id\") in request");
-    }
-    var handles = ids.stream().map(JsonNode::asText).toList();
     service.rollbackHandles(handles);
     return ResponseEntity.ok().build();
   }
@@ -174,15 +167,6 @@ public class PidController {
       throws InvalidRequestException, UnprocessableEntityException {
     log.info(RECEIVED_MSG, "batch rollback update", authentication.getName());
     return ResponseEntity.status(HttpStatus.OK).body(service.updateRecords(requests, false));
-  }
-
-  @Operation(summary = "rollback handle update")
-  @DeleteMapping(value = "/rollback/physId")
-  public ResponseEntity<Void> rollbackHandlePhysId(
-      @RequestBody List<String> physicalIds, Authentication authentication) {
-    log.info(RECEIVED_MSG, "batch rollback (physical id)", authentication.getName());
-    service.rollbackHandlesFromPhysId(physicalIds);
-    return ResponseEntity.ok().build();
   }
 
   @Operation(summary = "Archive multiple PID records")
