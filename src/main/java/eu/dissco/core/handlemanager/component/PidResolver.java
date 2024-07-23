@@ -1,4 +1,4 @@
-package eu.dissco.core.handlemanager.web;
+package eu.dissco.core.handlemanager.component;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

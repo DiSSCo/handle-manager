@@ -11,10 +11,10 @@ import org.springframework.lang.Nullable;
 @ToString
 public class TombstoneRequestAttributes {
 
-  @JsonProperty(required = true, value = "ods:tombstonedText")
+  @JsonProperty(required = true, value = "tombstonedText")
   private final String tombstonedText;
   @Nullable
-  @JsonProperty("ods:hasRelatedPID")
+  @JsonProperty("hasRelatedPID")
   private final List<HasRelatedPid> hasRelatedPID;
 
   public TombstoneRequestAttributes(String tombstoneText, List<HasRelatedPid> hasRelatedPID) {

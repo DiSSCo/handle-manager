@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class JsonSchemaValidationConfig {
+public class SchemaValidationConfig {
 
   @Bean
   SchemaLibrary schemaLibrary() throws IOException {

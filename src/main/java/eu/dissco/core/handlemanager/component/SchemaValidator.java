@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class SchemaValidatorComponent {
+public class SchemaValidator {
 
   private final SchemaLibrary library;
 

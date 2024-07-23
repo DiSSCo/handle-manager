@@ -39,14 +39,14 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class SchemaValidatorComponentTest {
+class SchemaValidatorTest {
 
-  SchemaValidatorComponent schemaValidatorComponent;
+  SchemaValidator schemaValidator;
 
   @BeforeEach
   void init() throws IOException {
     var library = schemaLibrary();
-    schemaValidatorComponent = new SchemaValidatorComponent(library);
+    schemaValidator = new SchemaValidator(library);
   }
 
   SchemaLibrary schemaLibrary() throws IOException {
@@ -75,14 +75,14 @@ class SchemaValidatorComponentTest {
   @MethodSource("validPostRequest")
   void testValidatePostSchemas(PostRequest request) {
     // When
-    assertDoesNotThrow(() -> schemaValidatorComponent.validatePost(List.of(request)));
+    assertDoesNotThrow(() -> schemaValidator.validatePost(List.of(request)));
   }
 
   @ParameterizedTest
   @MethodSource("validPatchRequest")
   void testValidatePatchSchemas(PatchRequest request) {
     // When
-    assertDoesNotThrow(() -> schemaValidatorComponent.validatePatch(List.of(request)));
+    assertDoesNotThrow(() -> schemaValidator.validatePatch(List.of(request)));
   }
 
   @Test
@@ -92,7 +92,7 @@ class SchemaValidatorComponentTest {
 
     // Then
     var e = assertThrows(InvalidRequestException.class,
-        () -> schemaValidatorComponent.validatePost(List.of(request)));
+        () -> schemaValidator.validatePost(List.of(request)));
 
     // Then
     assertThat(e.getMessage()).contains("Missing attributes");
@@ -106,7 +106,7 @@ class SchemaValidatorComponentTest {
 
     // Then
     var e = assertThrows(InvalidRequestException.class,
-        () -> schemaValidatorComponent.validatePost(List.of(request)));
+        () -> schemaValidator.validatePost(List.of(request)));
 
     // Then
     assertThat(e.getMessage()).contains("Unrecognized attributes");
@@ -121,7 +121,7 @@ class SchemaValidatorComponentTest {
 
     // Then
     var e = assertThrows(InvalidRequestException.class,
-        () -> schemaValidatorComponent.validatePost(List.of(request)));
+        () -> schemaValidator.validatePost(List.of(request)));
 
     // Then
     assertThat(e.getMessage()).contains("Enum errors");

@@ -2,7 +2,7 @@ package eu.dissco.core.handlemanager.controller;
 
 
 import com.fasterxml.jackson.databind.JsonNode;
-import eu.dissco.core.handlemanager.component.SchemaValidatorComponent;
+import eu.dissco.core.handlemanager.component.SchemaValidator;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
 import eu.dissco.core.handlemanager.domain.requests.RollbackRequest;
@@ -43,7 +43,7 @@ public class PidController {
 
   private final PidService service;
   private final ApplicationProperties applicationProperties;
-  private final SchemaValidatorComponent validatorComponent;
+  private final SchemaValidator validatorComponent;
   private static final String RECEIVED_MSG = "Received {} request from user {}";
 
   // Getters
@@ -184,7 +184,6 @@ public class PidController {
     service.rollbackHandlesFromPhysId(physicalIds);
     return ResponseEntity.ok().build();
   }
-
 
   @Operation(summary = "Archive multiple PID records")
   @PutMapping(value = "/")
