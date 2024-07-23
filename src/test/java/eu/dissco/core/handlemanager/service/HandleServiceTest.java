@@ -327,10 +327,28 @@ class HandleServiceTest {
   }
 
   @Test
-  void testUpdateHandleRecordNotWritableInternalDuplicates() throws Exception {
+  void testUpdateHandleRecordNotWritableFailed() throws Exception {
     // Given
     var request = MAPPER.valueToTree(givenHandleKernelUpdated());
     var updateRequest = givenUpdateRequest(List.of(HANDLE), FdoType.HANDLE, request);
+    given(mongoRepository.getHandleRecords(List.of(HANDLE))).willReturn(
+        List.of(new FdoRecord(HANDLE, FdoType.HANDLE, List.of(
+            new FdoAttribute(PID_STATUS, CREATED, PidStatus.FAILED)
+        ), null)));
+
+    // When / Then
+    assertThrows(InvalidRequestException.class, () -> service.updateRecords(updateRequest, true));
+  }
+
+  @Test
+  void testUpdateHandleRecordNotWritableTombstoned() throws Exception {
+    // Given
+    var request = MAPPER.valueToTree(givenHandleKernelUpdated());
+    var updateRequest = givenUpdateRequest(List.of(HANDLE), FdoType.HANDLE, request);
+    given(mongoRepository.getHandleRecords(List.of(HANDLE))).willReturn(
+        List.of(new FdoRecord(HANDLE, FdoType.HANDLE, List.of(
+            new FdoAttribute(PID_STATUS, CREATED, PidStatus.TOMBSTONED)
+        ), null)));
 
     // When / Then
     assertThrows(InvalidRequestException.class, () -> service.updateRecords(updateRequest, true));
