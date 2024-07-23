@@ -102,7 +102,7 @@ public class DoiService extends PidService {
   }
 
   private void publishToDataCite(List<FdoRecord> fdoRecords, EventType eventType)
-      throws UnprocessableEntityException {
+      throws UnprocessableEntityException, InvalidRequestException {
     var eventList = fdoRecords.stream()
         .map(fdoRecord -> new DataCiteEvent(jsonFormatSingleRecord(fdoRecord.attributes()),
             eventType)).toList();
@@ -113,7 +113,7 @@ public class DoiService extends PidService {
         log.error("Critical error: Unable to publish datacite event to queue", e);
         if (eventType.equals(EventType.CREATE)) {
           log.info("Rolling back handles");
-          rollbackHandles(fdoRecords.stream().map(FdoRecord::handle).toList());
+          markHandlesAsFailed(fdoRecords.stream().map(FdoRecord::handle).toList());
         }
         throw new UnprocessableEntityException("Unable to publish datacite event to queue");
       }

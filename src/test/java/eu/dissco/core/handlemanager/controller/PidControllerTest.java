@@ -24,11 +24,9 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.component.SchemaValidator;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
-import eu.dissco.core.handlemanager.domain.requests.RollbackRequest;
 import eu.dissco.core.handlemanager.domain.responses.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -314,48 +312,6 @@ class PidControllerTest {
     // Then
     assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
     then(service).should().markHandlesAsFailed(List.of(HANDLE));
-  }
-
-  @Test
-  void testRollbackHandles() throws InvalidRequestException {
-    // Given
-    var dataNode1 = MAPPER.createObjectNode();
-    dataNode1.put("id", HANDLE);
-    var dataNode2 = MAPPER.createObjectNode();
-    dataNode2.put("id", HANDLE_ALT);
-    List<JsonNode> dataNode = List.of(dataNode1, dataNode2);
-    var request = new RollbackRequest(dataNode);
-    given(authentication.getName()).willReturn("name");
-
-    // When
-    controller.rollbackHandleCreation(request, authentication);
-
-    // Then
-    then(service).should().rollbackHandles(List.of(HANDLE, HANDLE_ALT));
-  }
-
-  @Test
-  void testRollbackHandlesByPhysId() {
-    // Given
-    given(authentication.getName()).willReturn("name");
-    var physIds = List.of("a", "b");
-
-    // When
-    controller.rollbackHandlePhysId(physIds, authentication);
-
-    //Then
-    then(service).should().rollbackHandlesFromPhysId(physIds);
-  }
-
-  @Test
-  void testRollbackHandlesBadRequest() {
-    // Given
-    List<JsonNode> dataNode = List.of(MAPPER.createObjectNode());
-    var request = new RollbackRequest(dataNode);
-
-    // Then
-    assertThrowsExactly(InvalidRequestException.class,
-        () -> controller.rollbackHandleCreation(request, authentication));
   }
 
   @Test

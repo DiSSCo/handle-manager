@@ -2,7 +2,6 @@ package eu.dissco.core.handlemanager.repository;
 
 
 import static com.mongodb.client.model.Filters.eq;
-import static com.mongodb.client.model.Filters.in;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
@@ -196,34 +195,6 @@ class MongoRepositoryIT {
 
     // Then
     assertThat(result).isEqualTo(expected);
-  }
-
-  @Test
-  void testRollbackHandles() throws Exception {
-    // Given
-    populateMongoDB();
-    var idList = List.of(HANDLE, SPECIMEN_ID, MEDIA_ID);
-
-    // When
-    repository.rollbackHandles(idList);
-    var result = collection.find(in("_id", idList));
-
-    // Then
-    assertThat(result).isEmpty();
-  }
-
-  @Test
-  void testRollbackHandlesFromPhysicalId() throws Exception {
-    // Given
-    populateMongoDB();
-
-    // When
-    repository.rollbackHandles(FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID.get(),
-        List.of(NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL));
-    var result = collection.find(in("_id", SPECIMEN_ID));
-
-    // Then
-    assertThat(result).isEmpty();
   }
 
   @Test

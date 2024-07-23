@@ -1,6 +1,5 @@
 package eu.dissco.core.handlemanager.service;
 
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID_STATUS;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
@@ -665,29 +664,6 @@ class HandleServiceTest {
 
     // When / Then
     assertThrows(UnsupportedOperationException.class, () -> service.createRecords(requests));
-  }
-
-  @Test
-  void testRollbackHandles() {
-    // Given
-
-    // When
-    service.rollbackHandles(List.of(HANDLE));
-
-    // Then
-    then(mongoRepository).should().rollbackHandles(List.of(HANDLE));
-  }
-
-  @Test
-  void testRollbackHandlesFromPhysId() {
-    // Given
-
-    // When
-    service.rollbackHandlesFromPhysId(List.of(NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL));
-
-    // Then
-    then(mongoRepository).should().rollbackHandles(NORMALISED_SPECIMEN_OBJECT_ID.get(),
-        List.of(NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL));
   }
 
   @Test

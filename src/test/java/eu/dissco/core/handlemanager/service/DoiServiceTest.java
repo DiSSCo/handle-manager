@@ -24,6 +24,7 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -148,13 +149,16 @@ class DoiServiceTest {
     given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
     given(fdoRecordService.prepareNewDigitalSpecimenRecord(any(), any(), any())).willReturn(
         digitalSpecimen);
+    given(mongoRepository.getHandleRecords(anyList())).willReturn(List.of(digitalSpecimen));
+    given(fdoRecordService.markRecordAsFailed(any(), any())).willReturn(digitalSpecimen);
     doThrow(JsonProcessingException.class).when(dataCiteService).publishToDataCite(any(), any());
 
     // When
     assertThrows(UnprocessableEntityException.class, () -> service.createRecords(request));
 
     // Then
-    then(mongoRepository).should().rollbackHandles(List.of(HANDLE));
+    then(fdoRecordService).should().markRecordAsFailed(any(), any());
+    then(mongoRepository).should().updateHandleRecords(anyList());
   }
 
   @Test
