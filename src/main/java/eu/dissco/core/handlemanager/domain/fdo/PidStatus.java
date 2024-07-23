@@ -1,4 +1,4 @@
-package eu.dissco.core.handlemanager.domain.fdo.vocabulary;
+package eu.dissco.core.handlemanager.domain.fdo;
 
 public enum PidStatus {
   TOMBSTONED,

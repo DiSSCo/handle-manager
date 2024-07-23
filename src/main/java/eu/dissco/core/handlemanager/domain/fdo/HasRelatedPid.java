@@ -1,4 +1,4 @@
-package eu.dissco.core.handlemanager.domain.fdo.vocabulary.tombstone;
+package eu.dissco.core.handlemanager.domain.fdo;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

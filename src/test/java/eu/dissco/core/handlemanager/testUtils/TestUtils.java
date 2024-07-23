@@ -85,14 +85,8 @@ import eu.dissco.core.handlemanager.configuration.InstantDeserializer;
 import eu.dissco.core.handlemanager.configuration.InstantSerializer;
 import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
-import eu.dissco.core.handlemanager.domain.fdo.vocabulary.PidStatus;
-import eu.dissco.core.handlemanager.domain.fdo.vocabulary.specimen.PrimarySpecimenObjectIdType;
-import eu.dissco.core.handlemanager.domain.fdo.vocabulary.specimen.StructuralType;
-import eu.dissco.core.handlemanager.domain.fdo.vocabulary.tombstone.HasRelatedPid;
-import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiDataLinks;
-import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiLinks;
-import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
-import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
+import eu.dissco.core.handlemanager.domain.fdo.HasRelatedPid;
+import eu.dissco.core.handlemanager.domain.fdo.PidStatus;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
@@ -102,6 +96,10 @@ import eu.dissco.core.handlemanager.domain.requests.PostRequestData;
 import eu.dissco.core.handlemanager.domain.requests.TombstoneRequest;
 import eu.dissco.core.handlemanager.domain.requests.TombstoneRequestAttributes;
 import eu.dissco.core.handlemanager.domain.requests.TombstoneRequestData;
+import eu.dissco.core.handlemanager.domain.responses.JsonApiDataLinks;
+import eu.dissco.core.handlemanager.domain.responses.JsonApiLinks;
+import eu.dissco.core.handlemanager.domain.responses.JsonApiWrapperRead;
+import eu.dissco.core.handlemanager.domain.responses.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.schema.AnnotationRequestAttributes;
 import eu.dissco.core.handlemanager.schema.AnnotationRequestAttributes.Motivation;
 import eu.dissco.core.handlemanager.schema.DataMappingRequestAttributes;
@@ -153,8 +151,8 @@ public class TestUtils {
   public static final String ISSUED_FOR_AGENT_TESTVAL = ROR_DOMAIN + "0566bfb96";
   public static final String PID_ISSUER_TESTVAL = "https://ror.org/04wxnsj81";
   public static final String PID_ISSUER_NAME_TESTVAL = "DataCite";
-  public static final StructuralType STRUCTURAL_TYPE_TESTVAL = StructuralType.DIGITAL;
-  public static final StructuralType STRUCTURAL_TYPE_ALT = StructuralType.ABSTRACT;
+  public static final String STRUCTURAL_TYPE_TESTVAL = "digital";
+  public static final String STRUCTURAL_TYPE_ALT = "physical";
   public static final String LOC_TESTVAL = "https://dissco.eu";
 
   // DOI Request Attributes
@@ -361,7 +359,7 @@ public class TestUtils {
         PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL));
     // 203: primarySpecimenObjectIdType
     fdoRecord.add(new FdoAttribute(PRIMARY_SPECIMEN_OBJECT_ID_TYPE, timestamp,
-        PrimarySpecimenObjectIdType.GLOBAL));
+        DigitalSpecimenRequestAttributes.PrimarySpecimenObjectIdType.GLOBAL.value()));
     // 204: primarySpecimenObjectIdName
     fdoRecord.add(new FdoAttribute(PRIMARY_SPECIMEN_OBJECT_ID_NAME, timestamp,
         null));

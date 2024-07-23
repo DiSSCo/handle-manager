@@ -86,8 +86,7 @@ import static eu.dissco.core.handlemanager.service.ServiceUtils.getField;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
-import eu.dissco.core.handlemanager.domain.fdo.vocabulary.PidStatus;
-import eu.dissco.core.handlemanager.domain.fdo.vocabulary.specimen.StructuralType;
+import eu.dissco.core.handlemanager.domain.fdo.PidStatus;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
 import eu.dissco.core.handlemanager.domain.requests.TombstoneRequestAttributes;
@@ -197,7 +196,7 @@ public class FdoRecordService {
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
-            StructuralType.DIGITAL.toString()));
+            HandleRequestAttributes.StructuralType.DIGITAL.value()));
     return handleAttributeList;
   }
 
@@ -245,7 +244,7 @@ public class FdoRecordService {
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
-            StructuralType.DIGITAL.toString()));
+            HandleRequestAttributes.StructuralType.DIGITAL.value()));
     // 40: Referent Type
     handleAttributeList.add(
         new FdoAttribute(REFERENT_TYPE, timestamp, request.getReferentType()));
@@ -307,7 +306,7 @@ public class FdoRecordService {
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
-            StructuralType.DIGITAL.toString()));
+            HandleRequestAttributes.StructuralType.DIGITAL.value()));
     handleAttributeList.add(new FdoAttribute(TARGET_PID, timestamp, request.getTargetPid()));
     // 501 Target Type
     handleAttributeList.add(
@@ -367,7 +366,7 @@ public class FdoRecordService {
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
-            StructuralType.DIGITAL.toString()));
+            HandleRequestAttributes.StructuralType.DIGITAL.value()));
     // 700 Source Data Standard
     handleAttributeList.add(
         new FdoAttribute(SOURCE_DATA_STANDARD, timestamp, request.getSourceDataStandard()));
@@ -437,7 +436,7 @@ public class FdoRecordService {
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
-            StructuralType.DIGITAL.toString()));
+            HandleRequestAttributes.StructuralType.DIGITAL.value()));
     // 40: Referent Type
     handleAttributeList.add(
         new FdoAttribute(REFERENT_TYPE, timestamp, request.getReferentType()));
@@ -567,7 +566,7 @@ public class FdoRecordService {
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
-            StructuralType.DIGITAL.toString()));
+            HandleRequestAttributes.StructuralType.DIGITAL.value()));
     // 604: MAS
     handleAttributeList.add(new FdoAttribute(MAS_NAME, timestamp, request.getMasName()));
     return handleAttributeList;
@@ -624,7 +623,7 @@ public class FdoRecordService {
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
-            StructuralType.DIGITAL.toString()));
+            HandleRequestAttributes.StructuralType.DIGITAL.value()));
     // 40: Referent Type
     handleAttributeList.add(
         new FdoAttribute(REFERENT_TYPE, timestamp, request.getReferentType()));
@@ -754,7 +753,7 @@ public class FdoRecordService {
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
-            StructuralType.DIGITAL.toString()));
+            HandleRequestAttributes.StructuralType.DIGITAL.value()));
     // 40: Referent Type
     handleAttributeList.add(
         new FdoAttribute(REFERENT_TYPE, timestamp, request.getReferentType()));
@@ -829,7 +828,7 @@ public class FdoRecordService {
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
-            StructuralType.DIGITAL.toString()));
+            HandleRequestAttributes.StructuralType.DIGITAL.value()));
     handleAttributeList.add(
         new FdoAttribute(SOURCE_SYSTEM_NAME, timestamp, request.getSourceSystemName()));
 

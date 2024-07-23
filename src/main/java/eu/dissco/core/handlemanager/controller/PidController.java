@@ -1,16 +1,14 @@
 package eu.dissco.core.handlemanager.controller;
 
 
-import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ID;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.core.handlemanager.component.SchemaValidatorComponent;
-import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperRead;
-import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
 import eu.dissco.core.handlemanager.domain.requests.RollbackRequest;
 import eu.dissco.core.handlemanager.domain.requests.TombstoneRequest;
+import eu.dissco.core.handlemanager.domain.responses.JsonApiWrapperRead;
+import eu.dissco.core.handlemanager.domain.responses.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
@@ -160,7 +158,7 @@ public class PidController {
   public ResponseEntity<Void> rollbackHandleCreation(@RequestBody RollbackRequest request,
       Authentication authentication) throws InvalidRequestException {
     log.info(RECEIVED_MSG, "batch rollback create", authentication.getName());
-    var ids = request.data().stream().map(d -> d.get(NODE_ID)).toList();
+    var ids = request.data().stream().map(d -> d.get("id")).toList();
     if (ids.contains(null)) {
       throw new InvalidRequestException("Missing Handles (\"id\") in request");
     }

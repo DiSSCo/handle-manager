@@ -1,7 +1,7 @@
 package eu.dissco.core.handlemanager.domain.requests;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import eu.dissco.core.handlemanager.domain.fdo.vocabulary.tombstone.HasRelatedPid;
+import eu.dissco.core.handlemanager.domain.fdo.HasRelatedPid;
 import java.util.List;
 import lombok.Getter;
 import lombok.ToString;

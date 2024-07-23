@@ -1,4 +1,4 @@
-package eu.dissco.core.handlemanager.domain.jsonapi;
+package eu.dissco.core.handlemanager.domain.responses;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
