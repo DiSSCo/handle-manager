@@ -1,0 +1,36 @@
+{
+  "_id": "20.5000.1025/ABC",
+  "normalisedSpecimenObjectId": "06211:BIRD-COLLECTION-1:RMS-123",
+  "values": [
+    {
+      "index": 1,
+      "type": "digitalObjectType",
+      "data": {
+        "format": "string",
+        "value": "https://hdl.handle.net/21.T11148/532ce6796e2828dd2be6"
+      },
+      "ttl": 86400,
+      "timestamp": "2024-06-28 04:32:04Z"
+    },
+    {
+      "index": 2,
+      "type": "digitalObjectName",
+      "data": {
+        "format": "string",
+        "value": "DigitalSpecimen"
+      },
+      "ttl": 86400,
+      "timestamp": "2024-06-28 04:32:04Z"
+    },
+    {
+      "index": 203,
+      "type": "normalisedPrimarySpecimenObjectId",
+      "data": {
+        "format": "string",
+        "value": "06211:BIRD-COLLECTION-1:RMS-123"
+      },
+      "ttl": 86400,
+      "timestamp": "2024-06-28 04:32:04Z"
+    }
+  ]
+}
