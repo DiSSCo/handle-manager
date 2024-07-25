@@ -1,10 +1,8 @@
 package eu.dissco.core.handlemanager.properties;
 
 import lombok.Data;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @Data
-@ConfigurationProperties("schema")
 public class JsonSchemaProperties {
 
   String handleSchemaPath = "json-schema/handle-request-attributes.json";
