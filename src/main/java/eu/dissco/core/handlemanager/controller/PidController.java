@@ -170,6 +170,16 @@ public class PidController {
     return ResponseEntity.status(HttpStatus.OK).body(service.updateRecords(requests, false));
   }
 
+  @Operation(summary = "rollback handle update")
+  @DeleteMapping(value = "/rollback/physId")
+  public ResponseEntity<Void> rollbackHandlePhysId(
+      @RequestBody List<String> physicalIds, Authentication authentication) {
+    log.info(RECEIVED_MSG, "batch rollback (physical id)", authentication.getName());
+    service.rollbackHandlesFromPhysId(physicalIds);
+    return ResponseEntity.ok().build();
+  }
+
+
   @Operation(summary = "Archive multiple PID records")
   @PutMapping(value = "/")
   public ResponseEntity<JsonApiWrapperWrite> archiveRecords(

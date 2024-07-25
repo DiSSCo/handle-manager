@@ -71,6 +71,11 @@ public class MongoRepository {
     collection.deleteMany(filter);
   }
 
+  public long rollbackHandlesFromLocalId(String localIdField, List<String> localIds) {
+    var filter = in(localIdField, localIds);
+    return collection.deleteMany(filter).getDeletedCount();
+  }
+
   private List<FdoRecord> formatResults(FindIterable<Document> results)
       throws JsonProcessingException {
     var handleRecords = new ArrayList<FdoRecord>();

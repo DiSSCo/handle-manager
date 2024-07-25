@@ -317,6 +317,19 @@ class PidControllerTest {
   }
 
   @Test
+  void testRollbackHandlesByPhysId() {
+    // Given
+    given(authentication.getName()).willReturn("name");
+    var physIds = List.of("a", "b");
+
+    // When
+    controller.rollbackHandlePhysId(physIds, authentication);
+
+    //Then
+    then(service).should().rollbackHandlesFromPhysId(physIds);
+  }
+
+  @Test
   void testArchiveRecord() throws Exception {
     // Given
     var responseExpected = TestUtils.givenWriteResponseFull(List.of(HANDLE), FdoType.TOMBSTONE);
