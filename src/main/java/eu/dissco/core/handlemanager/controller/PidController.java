@@ -1,14 +1,6 @@
 package eu.dissco.core.handlemanager.controller;
 
 
-import com.fasterxml.jackson.databind.JsonNode;
-import eu.dissco.core.handlemanager.component.SchemaValidator;
-import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
-import eu.dissco.core.handlemanager.domain.requests.PostRequest;
-import eu.dissco.core.handlemanager.domain.requests.RollbackRequest;
-import eu.dissco.core.handlemanager.domain.requests.TombstoneRequest;
-import eu.dissco.core.handlemanager.domain.responses.JsonApiWrapperRead;
-import eu.dissco.core.handlemanager.domain.responses.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.component.SchemaValidator;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
