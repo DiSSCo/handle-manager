@@ -314,7 +314,6 @@
           </arguments>
         </configuration>
       </plugin>
-
       <plugin>
         <groupId>org.jsonschema2pojo</groupId>
         <artifactId>jsonschema2pojo-maven-plugin</artifactId>

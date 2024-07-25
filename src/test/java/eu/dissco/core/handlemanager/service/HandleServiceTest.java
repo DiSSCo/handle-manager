@@ -661,13 +661,11 @@ class HandleServiceTest {
 
   @Test
   void testRollbackHandlesFromPhysId() {
-    // Given
-
     // When
     service.rollbackHandlesFromPhysId(List.of(NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL));
 
     // Then
-    then(mongoRepository).should().rollbackHandles(NORMALISED_SPECIMEN_OBJECT_ID.get(),
+    then(mongoRepository).should().rollbackHandlesFromLocalId(NORMALISED_SPECIMEN_OBJECT_ID.get(),
         List.of(NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL));
   }
 

@@ -71,9 +71,9 @@ public class MongoRepository {
     collection.deleteMany(filter);
   }
 
-  public void rollbackHandles(String localIdField, List<String> localIds) {
+  public long rollbackHandlesFromLocalId(String localIdField, List<String> localIds) {
     var filter = in(localIdField, localIds);
-    collection.deleteMany(filter);
+    return collection.deleteMany(filter).getDeletedCount();
   }
 
   private List<FdoRecord> formatResults(FindIterable<Document> results)

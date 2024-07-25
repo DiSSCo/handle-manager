@@ -218,12 +218,14 @@ class MongoRepositoryIT {
     populateMongoDB();
 
     // When
-    repository.rollbackHandles(FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID.get(),
+    var rollbackCount = repository.rollbackHandlesFromLocalId(
+        FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID.get(),
         List.of(NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL));
     var result = collection.find(in("_id", SPECIMEN_ID));
 
     // Then
     assertThat(result).isEmpty();
+    assertThat(rollbackCount).isEqualTo(1);
   }
 
   @Test

@@ -399,12 +399,16 @@ public abstract class PidService {
 
   public void rollbackHandles(List<String> handles) {
     mongoRepository.rollbackHandles(handles);
+    log.info("Successfully rolled back handles");
+    log.debug("Rolled back handles: {}", handles);
   }
 
   public void rollbackHandlesFromPhysId(List<String> physicalIds) {
-    mongoRepository.rollbackHandles(NORMALISED_SPECIMEN_OBJECT_ID.get(), physicalIds);
+    var rollbackCount = mongoRepository.rollbackHandlesFromLocalId(
+        NORMALISED_SPECIMEN_OBJECT_ID.get(), physicalIds);
+    log.info("Successfully rolled back {} handles", rollbackCount);
+    log.debug("Rolled back physical ids: {}", physicalIds);
   }
-
 
   protected List<Document> toMongoDbDocument(List<FdoRecord> fdoRecords)
       throws JsonProcessingException {
