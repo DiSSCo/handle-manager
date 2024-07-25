@@ -1,17 +1,16 @@
 package eu.dissco.core.handlemanager.service;
 
 
-import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_ATTRIBUTES;
-import static eu.dissco.core.handlemanager.domain.jsonapi.JsonApiFields.NODE_DATA;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.datacite.DataCiteEvent;
 import eu.dissco.core.handlemanager.domain.datacite.EventType;
-import eu.dissco.core.handlemanager.domain.jsonapi.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
+import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
+import eu.dissco.core.handlemanager.domain.requests.PatchRequestData;
+import eu.dissco.core.handlemanager.domain.requests.PostRequest;
+import eu.dissco.core.handlemanager.domain.responses.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
@@ -42,20 +41,23 @@ public class DoiService extends PidService {
   private static final String TYPE_ERROR_MESSAGE = "Error creating DOI for object of Type %s. Only Digital Specimens and Media Objects use DOIs.";
 
   @Override
-  public JsonApiWrapperWrite createRecords(List<JsonNode> requests)
+  public JsonApiWrapperWrite createRecords(List<PostRequest> requests)
       throws InvalidRequestException, UnprocessableEntityException {
     var handles = hf.generateNewHandles(requests.size()).iterator();
     var requestAttributes = requests.stream()
-        .map(request -> request.get(NODE_DATA).get(NODE_ATTRIBUTES)).toList();
-    var type = getObjectTypeFromJsonNode(requests);
+        .map(request -> request.data().attributes())
+        .toList();
+    var fdoType = getFdoTypeFromRequest(requests.stream()
+        .map(request -> request.data().type())
+        .toList());
     List<Document> fdoDocuments;
     List<FdoRecord> fdoRecords;
     try {
-      switch (type) {
+      switch (fdoType) {
         case DIGITAL_SPECIMEN -> fdoRecords = createDigitalSpecimen(requestAttributes, handles);
         case DIGITAL_MEDIA -> fdoRecords = createDigitalMedia(requestAttributes, handles);
         default -> throw new UnsupportedOperationException(
-            String.format(TYPE_ERROR_MESSAGE, type.getDigitalObjectName()));
+            String.format(TYPE_ERROR_MESSAGE, fdoType.getDigitalObjectName()));
       }
       fdoDocuments = toMongoDbDocument(fdoRecords);
     } catch (JsonProcessingException | PidResolutionException e) {
@@ -67,24 +69,25 @@ public class DoiService extends PidService {
     mongoRepository.postHandleRecords(fdoDocuments);
     log.info("Publishing to DataCite");
     publishToDataCite(fdoRecords, EventType.CREATE);
-    return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, type));
+    return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, fdoType));
   }
 
   @Override
-  public JsonApiWrapperWrite updateRecords(List<JsonNode> requests, boolean incrementVersion)
+  public JsonApiWrapperWrite updateRecords(List<PatchRequest> requests, boolean incrementVersion)
       throws InvalidRequestException, UnprocessableEntityException {
-    var updateRequests = requests.stream()
-        .map(request -> request.get(NODE_DATA)).toList();
-    var fdoRecordMap = processUpdateRequest(updateRequests);
-    var fdoType = getObjectTypeFromJsonNode(requests);
+    var updateRequestsData = requests.stream()
+        .map(PatchRequest::data).toList();
+    var fdoRecordMap = processUpdateRequest(
+        updateRequestsData.stream().map(PatchRequestData::id).toList());
+    var fdoType = getFdoTypeFromRequest(requests.stream().map(r -> r.data().type()).toList());
     List<FdoRecord> fdoRecords;
     List<Document> fdoDocuments;
     try {
       switch (fdoType) {
         case DIGITAL_SPECIMEN ->
-            fdoRecords = updateDigitalSpecimen(updateRequests, fdoRecordMap, incrementVersion);
+            fdoRecords = updateDigitalSpecimen(updateRequestsData, fdoRecordMap, incrementVersion);
         case DIGITAL_MEDIA ->
-            fdoRecords = updateDigitalMedia(updateRequests, fdoRecordMap, incrementVersion);
+            fdoRecords = updateDigitalMedia(updateRequestsData, fdoRecordMap, incrementVersion);
         default -> throw new UnsupportedOperationException(
             String.format(TYPE_ERROR_MESSAGE, fdoType.getDigitalObjectName()));
       }

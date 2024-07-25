@@ -49,7 +49,7 @@ public enum FdoProfile {
   MATERIAL_SAMPLE_TYPE("materialSampleType", 215),
   MATERIAL_OR_DIGITAL_ENTITY("materialOrDigitalEntity", 216),
   MARKED_AS_TYPE("markedAsType", 217),
-  WAS_DERIVED_FROM_ENTITY("wasDerivedFromEntity", 218),
+  DERIVED_FROM_ENTITY("wasDerivedFromEntity", 218),
   CATALOG_IDENTIFIER("catalogIdentifier", 219),
 
   // Media
@@ -65,7 +65,7 @@ public enum FdoProfile {
   DCTERMS_TYPE("dcterms:type", 410),
   DCTERMS_SUBJECT("dcterms:subject", 411),
   DCTERMS_FORMAT("dcterms:format", 412),
-  DERIVED_FROM_ENTITY("derivedFromEntity", 413),
+  // Derived from entity -> borrowed from specimen index space
   LICENSE_NAME("licenseName", 414),
   LICENSE_URL("licenseUrl", 415),
   RIGHTSHOLDER_NAME("rightsholderName", 416),
