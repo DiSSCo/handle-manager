@@ -187,7 +187,7 @@ public abstract class PidService {
       missingHandles.removeAll(fdoRecords.stream().map(FdoRecord::handle).toList());
       log.error("Some handles do not exist: {}", missingHandles);
       throw new PidResolutionException(
-          "Attempting to resolve handles that do not exist: \n" + missingHandles);
+          "Attempting to resolve handles that do not exist: " + missingHandles);
     }
     return new JsonApiWrapperRead(new JsonApiLinks(path), formatFullRecordResponse(fdoRecords));
   }
