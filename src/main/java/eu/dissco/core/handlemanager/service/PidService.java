@@ -183,8 +183,8 @@ public abstract class PidService {
       throw new PidResolutionException("Unable to resolve handle records for handles: " + handles);
     }
     if (fdoRecords.size() < handles.size()) {
-      var hdl = new ArrayList<>(handles);
-      var missingHandles = hdl.removeAll(fdoRecords.stream().map(FdoRecord::handle).toList());
+      var missingHandles = new ArrayList<>(handles);
+      missingHandles.removeAll(fdoRecords.stream().map(FdoRecord::handle).toList());
       log.error("Some handles do not exist: {}", missingHandles);
       throw new PidResolutionException(
           "Attempting to resolve handles that do not exist: \n" + missingHandles);
