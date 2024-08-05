@@ -16,7 +16,7 @@ import org.springframework.http.HttpStatus;
 class PidControllerExceptionHandlerTest {
 
   private RestResponseEntityExceptionHandler exceptionHandler;
-  private static final String errorMessage = "Error";
+  private static final String ERROR = "Error";
 
   @BeforeEach
   void setup() {
@@ -27,11 +27,11 @@ class PidControllerExceptionHandlerTest {
   void testInvalidRecordInput() {
     // Given
     var expectedBody = new ExceptionResponse(HttpStatus.BAD_REQUEST.toString(),
-        "Invalid Request", errorMessage);
+        "Invalid Request", ERROR);
 
     // When
     var result = exceptionHandler.invalidRecordInputException(
-        new InvalidRequestException(errorMessage));
+        new InvalidRequestException(ERROR));
 
     // Then
     assertThat(result.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -42,10 +42,10 @@ class PidControllerExceptionHandlerTest {
   void testPidResolutionException() {
     // Given
     var expectedBody = new ExceptionResponse(HttpStatus.NOT_FOUND.toString(),
-        "Unable to Resolve Persistent Identifier", errorMessage);
+        "Unable to Resolve Persistent Identifier", ERROR);
 
     // When
-    var result = exceptionHandler.pidResolutionException(new PidResolutionException(errorMessage));
+    var result = exceptionHandler.pidResolutionException(new PidResolutionException(ERROR));
 
     // Then
     assertThat(result.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
@@ -56,11 +56,11 @@ class PidControllerExceptionHandlerTest {
   void testUnprocessableEntityException() {
     // Given
     var expectedBody = new ExceptionResponse(HttpStatus.UNPROCESSABLE_ENTITY.toString(),
-        "Unprocessable Entity Exception", errorMessage);
+        "Unprocessable Entity Exception", ERROR);
 
     // When
     var result = exceptionHandler.unprocessableEntityException(
-        new UnprocessableEntityException(errorMessage));
+        new UnprocessableEntityException(ERROR));
 
     // Then
     assertThat(result.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
@@ -71,11 +71,11 @@ class PidControllerExceptionHandlerTest {
   void testDatabaseCopyException() {
     // Given
     var expectedBody = new ExceptionResponse(HttpStatus.SERVICE_UNAVAILABLE.toString(),
-        "Database Exception", errorMessage);
+        "Database Exception", ERROR);
 
     // When
     var result = exceptionHandler.databaseCopyException(
-        new UnprocessableEntityException(errorMessage));
+        new UnprocessableEntityException(ERROR));
 
     // Then
     assertThat(result.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);

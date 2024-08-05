@@ -47,7 +47,8 @@ public class HandleService extends PidService {
   @Override
   public JsonApiWrapperWrite createRecords(List<PostRequest> requests)
       throws InvalidRequestException {
-    var handles = hf.generateNewHandles(requests.size()).iterator();
+    var handleList = hf.generateNewHandles(requests.size());
+    var handles = handleList.iterator();
     var requestAttributes = requests.stream()
         .map(request -> request.data().attributes())
         .toList();
@@ -75,8 +76,8 @@ public class HandleService extends PidService {
       throw new InvalidRequestException(
           "An error has occurred parsing a record in request. More information: " + e.getMessage());
     }
-    log.info("Persisting new handles to Document Store");
     mongoRepository.postHandleRecords(fdoDocuments);
+    log.info("Persisted {} new handles to Document Store", handleList.size());
     return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, fdoType));
   }
 
