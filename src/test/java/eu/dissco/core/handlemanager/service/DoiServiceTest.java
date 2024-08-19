@@ -3,6 +3,7 @@ package eu.dissco.core.handlemanager.service;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.DOI_DOMAIN;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_DOMAIN;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_MEDIA_ID_TESTVAL;
@@ -12,11 +13,16 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalMedia
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimen;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenUpdated;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleKernel;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHasRelatedPid;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMongoDocument;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenPostRequest;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenTombstoneFdoRecord;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenTombstoneRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenUpdateRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenUpdatedFdoRecord;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenWriteResponseFull;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenWriteResponseIdsOnly;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.jsonFormatFdoRecord;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,6 +30,8 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -257,6 +265,50 @@ class DoiServiceTest {
     assertThrows(UnsupportedOperationException.class, () ->
         service.createRecords(request));
 
+  }
+
+  @Test
+  void testTombstoneRecords() throws Exception {
+    // Given
+    var request = givenTombstoneRequest();
+    var previousVersion = givenHandleFdoRecord(HANDLE);
+    var fdoRecord = givenTombstoneFdoRecord();
+    var expectedDocument = givenMongoDocument(fdoRecord);
+    var expected = givenWriteResponseFull(List.of(HANDLE), FdoType.TOMBSTONE);
+    given(mongoRepository.getHandleRecords(List.of(HANDLE))).willReturn(List.of(previousVersion));
+    given(fdoRecordService.prepareTombstoneRecord(any(), any(), any())).willReturn(fdoRecord);
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
+
+    // When
+    var result = service.tombstoneRecords(List.of(request));
+
+    // Then
+    assertThat(result).isEqualTo(expected);
+    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument));
+    then(dataCiteService).should().tombstoneDataCite(HANDLE, List.of(givenHasRelatedPid()));
+  }
+
+  @Test
+  void testTombstoneRecordsDataCiteFails() throws Exception {
+    // Given
+    var request = givenTombstoneRequest();
+    var previousVersion = givenHandleFdoRecord(HANDLE);
+    var fdoRecord = givenTombstoneFdoRecord();
+    var expectedDocument = givenMongoDocument(fdoRecord);
+    var expected = givenWriteResponseFull(List.of(HANDLE), FdoType.TOMBSTONE);
+    given(mongoRepository.getHandleRecords(List.of(HANDLE))).willReturn(List.of(previousVersion));
+    given(fdoRecordService.prepareTombstoneRecord(any(), any(), any())).willReturn(fdoRecord);
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
+    doThrow(JsonProcessingException.class).when(dataCiteService)
+        .tombstoneDataCite(anyString(), anyList());
+
+    // When
+    var result = service.tombstoneRecords(List.of(request));
+
+    // Then
+    assertThat(result).isEqualTo(expected);
+    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument));
+    then(dataCiteService).should().tombstoneDataCite(HANDLE, List.of(givenHasRelatedPid()));
   }
 
 }

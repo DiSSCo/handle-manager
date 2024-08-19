@@ -10,6 +10,7 @@ import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequestData;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
+import eu.dissco.core.handlemanager.domain.requests.TombstoneRequest;
 import eu.dissco.core.handlemanager.domain.responses.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -99,6 +100,21 @@ public class DoiService extends PidService {
       log.error("An error has occurred processing JSON data", e);
       throw new UnprocessableEntityException("Json Processing Error");
     }
+  }
+
+  @Override
+  public JsonApiWrapperWrite tombstoneRecords(List<TombstoneRequest> requests)
+      throws InvalidRequestException {
+    var result = super.tombstoneRecords(requests);
+    for (var request : requests) {
+      try {
+        dataCiteService.tombstoneDataCite(request.data().id(),
+            request.data().attributes().getHasRelatedPID());
+      } catch (JsonProcessingException e) {
+        log.error("Unable to tombstone doi {} with datacite", request.data().id());
+      }
+    }
+    return result;
   }
 
   private void publishToDataCite(List<FdoRecord> fdoRecords, EventType eventType)

@@ -214,7 +214,11 @@ public class TestUtils {
 
   public static TombstoneRequestAttributes givenTombstoneRecordRequestObject() {
     return new TombstoneRequestAttributes(TOMBSTONE_TEXT_TESTVAL,
-        List.of(new HasRelatedPid(HANDLE_ALT, "Media ID")));
+        List.of(givenHasRelatedPid()));
+  }
+
+  public static HasRelatedPid givenHasRelatedPid() {
+    return new HasRelatedPid(HANDLE_ALT, "Media ID");
   }
 
 
