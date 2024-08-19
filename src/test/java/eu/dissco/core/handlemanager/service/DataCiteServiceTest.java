@@ -69,12 +69,26 @@ class DataCiteServiceTest {
     // Given
     given(kafkaProperties.getDcTombstoneTopic()).willReturn("tombstone");
     var event = new DataCiteTombstoneEvent(HANDLE, List.of(MAPPER.createObjectNode()
-        .put("relationType", "")
+        .put("relationType", "HasMetadata")
         .put("relatedIdentifier", HANDLE_ALT)));
     var expected = MAPPER.writeValueAsString(event);
 
     // When
     dataCiteService.tombstoneDataCite(HANDLE, List.of(givenHasRelatedPid()));
+
+    // Then
+    then(kafkaService).should().sendObjectToQueue("tombstone", expected);
+  }
+
+  @Test
+  void testTombstoneRecordNullRelatedPids() throws Exception {
+    // Given
+    given(kafkaProperties.getDcTombstoneTopic()).willReturn("tombstone");
+    var event = new DataCiteTombstoneEvent(HANDLE, List.of());
+    var expected = MAPPER.writeValueAsString(event);
+
+    // When
+    dataCiteService.tombstoneDataCite(HANDLE, null);
 
     // Then
     then(kafkaService).should().sendObjectToQueue("tombstone", expected);

@@ -40,7 +40,7 @@ public class DataCiteService {
     var dcRelatedIdentifiers = new ArrayList<JsonNode>();
     if (relatedPids != null) {
       relatedPids.forEach(relatedPid -> dcRelatedIdentifiers.add(mapper.createObjectNode()
-          .put("relationType", "")
+          .put("relationType", "HasMetadata")
           .put("relatedIdentifier", relatedPid.odsId())));
     }
     var message = mapper.writeValueAsString(
