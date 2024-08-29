@@ -15,11 +15,11 @@ public class KafkaPublisherProperties {
 
   @NotBlank
   private String host;
-
   @NotBlank
   private String dcMediaTopic = "media-doi";
-
   @NotBlank
   private String dcSpecimenTopic = "specimen-doi";
+  @NotBlank
+  private String dcTombstoneTopic = "tombstone";
 
 }
