@@ -109,7 +109,7 @@ public class DoiService extends PidService {
     for (var request : requests) {
       try {
         dataCiteService.tombstoneDataCite(request.data().id(),
-            request.data().attributes().getHasRelatedPID());
+            request.data().attributes().getHasRelatedPid());
       } catch (JsonProcessingException e) {
         log.error("Unable to tombstone doi {} with datacite", request.data().id());
       }
