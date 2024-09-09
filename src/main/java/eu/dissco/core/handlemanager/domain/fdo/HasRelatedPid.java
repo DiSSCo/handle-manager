@@ -3,9 +3,9 @@ package eu.dissco.core.handlemanager.domain.fdo;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record HasRelatedPid(
-    @JsonProperty("ods:ID")
+    @JsonProperty("pid")
     String odsId,
-    @JsonProperty("ods:relationshipType")
+    @JsonProperty("relationshipType")
     String odsRelationshipType
 ) {
 
