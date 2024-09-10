@@ -635,7 +635,7 @@ public class TestUtils {
     return givenDigitalSpecimen()
         .withStructuralType(
             DigitalSpecimenRequestAttributes.StructuralType.fromValue(
-                STRUCTURAL_TYPE_ALT.toString()));
+                STRUCTURAL_TYPE_ALT));
   }
 
   public static DigitalMediaRequestAttributes givenDigitalMedia() {
