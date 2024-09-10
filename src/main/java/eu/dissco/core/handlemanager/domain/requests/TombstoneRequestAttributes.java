@@ -11,15 +11,15 @@ import org.springframework.lang.Nullable;
 @ToString
 public class TombstoneRequestAttributes {
 
-  @JsonProperty(required = true, value = "tombstonedText")
-  private final String tombstonedText;
+  @JsonProperty(required = true, value = "tombstoneText")
+  private final String tombstoneText;
   @Nullable
-  @JsonProperty("hasRelatedPID")
-  private final List<HasRelatedPid> hasRelatedPID;
+  @JsonProperty("hasRelatedPid")
+  private final List<HasRelatedPid> hasRelatedPid;
 
-  public TombstoneRequestAttributes(String tombstoneText, List<HasRelatedPid> hasRelatedPID) {
-    this.tombstonedText = tombstoneText;
-    this.hasRelatedPID = hasRelatedPID;
+  public TombstoneRequestAttributes(String tombstoneText, List<HasRelatedPid> hasRelatedPid) {
+    this.tombstoneText = tombstoneText;
+    this.hasRelatedPid = hasRelatedPid;
   }
 
 }

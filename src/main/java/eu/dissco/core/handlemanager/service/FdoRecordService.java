@@ -865,11 +865,11 @@ public class FdoRecordService {
     handleAttributeList.set(handleAttributeList.indexOf(previousStatus), newStatus);
     // 30: Tombstoned Text
     handleAttributeList.add(
-        new FdoAttribute(TOMBSTONED_TEXT, timestamp, request.getTombstonedText()));
+        new FdoAttribute(TOMBSTONED_TEXT, timestamp, request.getTombstoneText()));
     // 31: hasRelatedPID
-    if (request.getHasRelatedPID() != null && !request.getHasRelatedPID().isEmpty()) {
+    if (request.getHasRelatedPid() != null && !request.getHasRelatedPid().isEmpty()) {
       handleAttributeList.add(new FdoAttribute(HAS_RELATED_PID, timestamp,
-          mapper.writeValueAsString(request.getHasRelatedPID())));
+          mapper.writeValueAsString(request.getHasRelatedPid())));
     } else {
       handleAttributeList.add(new FdoAttribute(HAS_RELATED_PID, timestamp,
           mapper.writeValueAsString(Collections.emptyList())));
