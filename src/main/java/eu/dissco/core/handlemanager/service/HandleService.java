@@ -12,7 +12,6 @@ import eu.dissco.core.handlemanager.domain.requests.PatchRequestData;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
 import eu.dissco.core.handlemanager.domain.responses.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
-import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.MongoRepository;
 import eu.dissco.core.handlemanager.schema.AnnotationRequestAttributes;
@@ -60,18 +59,17 @@ public class HandleService extends PidService {
     try {
       switch (fdoType) {
         case ANNOTATION -> fdoRecords = createAnnotation(requestAttributes, handles);
-        case DIGITAL_SPECIMEN -> fdoRecords = createDigitalSpecimen(requestAttributes, handles);
         case DOI -> fdoRecords = createDoi(requestAttributes, handles);
         case HANDLE -> fdoRecords = createHandle(requestAttributes, handles);
         case DATA_MAPPING -> fdoRecords = createDataMapping(requestAttributes, handles);
         case MAS -> fdoRecords = createMas(requestAttributes, handles);
-        case DIGITAL_MEDIA -> fdoRecords = createDigitalMedia(requestAttributes, handles);
         case ORGANISATION -> fdoRecords = createOrganisation(requestAttributes, handles);
         case SOURCE_SYSTEM -> fdoRecords = createSourceSystem(requestAttributes, handles);
-        default -> throw new UnsupportedOperationException("Unrecognized type");
+        default -> throw new UnsupportedOperationException("Type " + fdoType.getDigitalObjectName()
+            + " is not permitted for the Handle endpoint. Please use DOI endpoint");
       }
       fdoDocuments = toMongoDbDocument(fdoRecords);
-    } catch (JsonProcessingException | PidResolutionException e) {
+    } catch (JsonProcessingException e) {
       log.error("An error has occurred in processing request", e);
       throw new InvalidRequestException(
           "An error has occurred parsing a record in request. More information: " + e.getMessage());
@@ -86,30 +84,27 @@ public class HandleService extends PidService {
       throws InvalidRequestException {
     var updateRequestData = requests.stream()
         .map(PatchRequest::data).toList();
-    var fdoRecordMap = processUpdateRequest(
-        updateRequestData.stream().map(PatchRequestData::id).toList());
     var fdoType = getFdoTypeFromRequest(
         updateRequestData.stream().map(PatchRequestData::type).toList());
+    var fdoRecordMap = processUpdateRequest(
+        updateRequestData.stream().map(PatchRequestData::id).toList());
     List<FdoRecord> fdoRecords;
     List<Document> fdoDocuments;
     try {
       switch (fdoType) {
         case ANNOTATION ->
             fdoRecords = updateAnnotation(updateRequestData, fdoRecordMap, incrementVersion);
-        case DIGITAL_SPECIMEN -> fdoRecords = updateDigitalSpecimen(updateRequestData, fdoRecordMap,
-            incrementVersion);
         case DOI -> fdoRecords = updateDoi(updateRequestData, fdoRecordMap, incrementVersion);
         case HANDLE -> fdoRecords = updateHandle(updateRequestData, fdoRecordMap, incrementVersion);
         case DATA_MAPPING ->
             fdoRecords = updateDataMapping(updateRequestData, fdoRecordMap, incrementVersion);
         case MAS -> fdoRecords = updateMas(updateRequestData, fdoRecordMap, incrementVersion);
-        case DIGITAL_MEDIA -> fdoRecords = updateDigitalMedia(updateRequestData, fdoRecordMap,
-            incrementVersion);
         case ORGANISATION -> fdoRecords = updateOrganisation(updateRequestData, fdoRecordMap,
             incrementVersion);
         case SOURCE_SYSTEM -> fdoRecords = updateSourceSystem(updateRequestData, fdoRecordMap,
             incrementVersion);
-        default -> throw new UnsupportedOperationException("Unrecognized type");
+        default -> throw new UnsupportedOperationException("Type " + fdoType.getDigitalObjectName()
+            + " is not permitted for the Handle endpoint. Please use DOI endpoint");
       }
       fdoDocuments = toMongoDbDocument(fdoRecords);
       mongoRepository.updateHandleRecords(fdoDocuments);

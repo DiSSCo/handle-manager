@@ -59,6 +59,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.env.Environment;
 import org.springframework.test.context.ActiveProfiles;
 
 @ExtendWith(MockitoExtension.class)
@@ -75,6 +76,8 @@ class DoiServiceTest {
   private DataCiteService dataCiteService;
   @Mock
   private MongoRepository mongoRepository;
+  @Mock
+  private Environment environment;
   private PidService service;
   private MockedStatic<Instant> mockedStatic;
   private MockedStatic<Clock> mockedClock;
@@ -83,7 +86,7 @@ class DoiServiceTest {
   void setup() {
     initTime();
     service = new DoiService(fdoRecordService, pidNameGeneratorService, MAPPER, profileProperties,
-        dataCiteService, mongoRepository);
+        dataCiteService, mongoRepository, environment);
   }
 
   private void initTime() {

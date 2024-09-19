@@ -22,7 +22,6 @@ import eu.dissco.core.handlemanager.domain.fdo.PidStatus;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
-import eu.dissco.core.handlemanager.domain.requests.PatchRequestData;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
 import eu.dissco.core.handlemanager.domain.requests.TombstoneRequest;
 import eu.dissco.core.handlemanager.domain.requests.TombstoneRequestData;
@@ -35,13 +34,10 @@ import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.MongoRepository;
-import eu.dissco.core.handlemanager.schema.DigitalMediaRequestAttributes;
-import eu.dissco.core.handlemanager.schema.DigitalSpecimenRequestAttributes;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -239,22 +235,16 @@ public abstract class PidService {
       boolean incrementVersion)
       throws InvalidRequestException, UnprocessableEntityException;
 
-  protected void checkHandlesWritable(List<FdoRecord> previousVersions)
-      throws InvalidRequestException {
-    for (var fdoRecord : previousVersions) {
-      var pidStatus = getField(fdoRecord.attributes(), PID_STATUS).getValue();
-      if (PidStatus.TOMBSTONED.name().equals(pidStatus)) {
-        log.error("Attempting to update a FDO record that has been archived");
-        throw new InvalidRequestException("This PID has already been archived. It is read-only");
-      }
-    }
+  protected static boolean handlesAreActive(FdoRecord fdoRecord) {
+    var status = getField(fdoRecord.attributes(), PID_STATUS);
+    return !status.getValue().equals(PidStatus.TOMBSTONED.name());
   }
 
   protected Map<String, FdoRecord> processUpdateRequest(List<String> handles)
       throws InvalidRequestException {
     checkInternalDuplicates(handles);
     var previousVersions = getPreviousVersions(handles);
-    checkHandlesWritable(previousVersions);
+    previousVersions = previousVersions.stream().filter(PidService::handlesAreActive).toList();
     return previousVersions.stream()
         .collect(Collectors.toMap(FdoRecord::handle, f -> f));
   }
@@ -267,99 +257,6 @@ public abstract class PidService {
     return uniqueTypes.iterator().next();
   }
 
-  protected List<FdoRecord> createDigitalSpecimen(List<JsonNode> requestAttributes,
-      Iterator<String> handleIterator) throws JsonProcessingException, InvalidRequestException {
-    var specimenRequests = new ArrayList<DigitalSpecimenRequestAttributes>();
-    for (var request : requestAttributes) {
-      specimenRequests.add(mapper.treeToValue(request, DigitalSpecimenRequestAttributes.class));
-    }
-    if (specimenRequests.isEmpty()) {
-      return Collections.emptyList();
-    }
-    verifyObjectsAreNew(specimenRequests
-        .stream()
-        .map(DigitalSpecimenRequestAttributes::getNormalisedPrimarySpecimenObjectId)
-        .toList());
-    var fdoRecords = new ArrayList<FdoRecord>();
-    var timestamp = Instant.now();
-    for (var request : specimenRequests) {
-      fdoRecords.add(
-          fdoRecordService.prepareNewDigitalSpecimenRecord(request, handleIterator.next(),
-              timestamp));
-    }
-    return fdoRecords;
-  }
-
-  protected List<FdoRecord> updateDigitalSpecimen(List<PatchRequestData> updateRequests,
-      Map<String, FdoRecord> previousVersionMap, boolean incrementVersion)
-      throws JsonProcessingException, InvalidRequestException {
-    List<FdoRecord> fdoRecords = new ArrayList<>();
-    var timestamp = Instant.now();
-    for (var request : updateRequests) {
-      var requestObject = mapper.treeToValue(request.attributes(),
-          DigitalSpecimenRequestAttributes.class);
-      fdoRecords.add(
-          fdoRecordService.prepareUpdatedDigitalSpecimenRecord(requestObject, timestamp,
-              previousVersionMap.get(request.id()), incrementVersion));
-    }
-    return fdoRecords;
-  }
-
-  protected List<FdoRecord> createDigitalMedia(List<JsonNode> requestAttributes,
-      Iterator<String> handleIterator)
-      throws JsonProcessingException, InvalidRequestException {
-    List<FdoRecord> fdoRecords = new ArrayList<>();
-    List<DigitalMediaRequestAttributes> mediaRequests = new ArrayList<>();
-    var timestamp = Instant.now();
-    for (var request : requestAttributes) {
-      mediaRequests.add(mapper.treeToValue(request, DigitalMediaRequestAttributes.class));
-    }
-    if (mediaRequests.isEmpty()) {
-      return Collections.emptyList();
-    }
-    verifyObjectsAreNew(mediaRequests
-        .stream()
-        .map(DigitalMediaRequestAttributes::getPrimaryMediaId)
-        .toList());
-    for (var mediaRequest : mediaRequests) {
-      fdoRecords.add(
-          fdoRecordService.prepareNewDigitalMediaRecord(mediaRequest, handleIterator.next(),
-              timestamp));
-    }
-    return fdoRecords;
-  }
-
-  protected List<FdoRecord> updateDigitalMedia(List<PatchRequestData> updateRequests,
-      Map<String, FdoRecord> previousVersionMap, boolean incrementVersion)
-      throws JsonProcessingException, InvalidRequestException {
-    List<FdoRecord> fdoRecords = new ArrayList<>();
-    var timestamp = Instant.now();
-    for (var request : updateRequests) {
-      var requestObject = mapper.treeToValue(request.attributes(),
-          DigitalMediaRequestAttributes.class);
-      fdoRecords.add(
-          fdoRecordService.prepareUpdatedDigitalMediaRecord(requestObject, timestamp,
-              previousVersionMap.get(request.id()), incrementVersion));
-    }
-    return fdoRecords;
-  }
-
-  private void verifyObjectsAreNew(List<String> normalisedIds)
-      throws InvalidRequestException, JsonProcessingException {
-    var existingHandles = mongoRepository
-        .searchByPrimaryLocalId(NORMALISED_SPECIMEN_OBJECT_ID.get(), normalisedIds);
-    if (!existingHandles.isEmpty()) {
-      var handleMap = existingHandles.stream()
-          .collect(Collectors.toMap(
-              FdoRecord::handle,
-              FdoRecord::primaryLocalId));
-      log.error(
-          "Unable to create new handles, as they already exist. Verify the following identifiers: {}",
-          handleMap);
-      throw new InvalidRequestException(
-          "Attempting to create handle records for specimens already in system");
-    }
-  }
 
   protected void checkInternalDuplicates(List<String> handles) throws InvalidRequestException {
     Set<String> handlesToUpdate = new HashSet<>(handles);
@@ -433,6 +330,5 @@ public abstract class PidService {
       doc.append(ANNOTATION_HASH.get(), fdoRecord.primaryLocalId());
     }
   }
-
 
 }
