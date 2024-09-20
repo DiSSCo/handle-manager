@@ -2,6 +2,7 @@ package eu.dissco.core.handlemanager.service;
 
 
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_MEDIA;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_SPECIMEN;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -10,11 +11,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.datacite.DataCiteEvent;
 import eu.dissco.core.handlemanager.domain.datacite.EventType;
+import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequestData;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
-import eu.dissco.core.handlemanager.domain.requests.TombstoneRequest;
+import eu.dissco.core.handlemanager.domain.requests.TombstoneRequestAttributes;
 import eu.dissco.core.handlemanager.domain.responses.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.domain.upsert.UpsertMediaResult;
 import eu.dissco.core.handlemanager.domain.upsert.UpsertSpecimenResult;
@@ -25,6 +27,7 @@ import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.MongoRepository;
 import eu.dissco.core.handlemanager.schema.DigitalMediaRequestAttributes;
 import eu.dissco.core.handlemanager.schema.DigitalSpecimenRequestAttributes;
+import eu.dissco.core.handlemanager.schema.DoiKernelRequestAttributes;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -67,10 +70,13 @@ public class DoiService extends PidService {
     try {
       switch (fdoType) {
         case DIGITAL_SPECIMEN -> {
-          return processDigitalSpecimenRequests(requestAttributes, true);
+          return processDigitalSpecimenRequests(requestAttributes);
         }
         case DIGITAL_MEDIA -> {
-          return processDigitalMediaRequests(requestAttributes, true);
+          return processDigitalMediaRequests(requestAttributes);
+        }
+        case DOI -> {
+          return createDoi(requestAttributes);
         }
         default -> throw new UnsupportedOperationException(
             String.format(TYPE_ERROR_MESSAGE, fdoType.getDigitalObjectName()));
@@ -85,31 +91,27 @@ public class DoiService extends PidService {
   @Override
   public JsonApiWrapperWrite updateRecords(List<PatchRequest> requests, boolean incrementVersion)
       throws InvalidRequestException, UnprocessableEntityException {
-    var updateRequestsAttributes = requests.stream()
-        .map(PatchRequest::data)
-        .map(PatchRequestData::attributes)
-        .toList();
     var fdoType = getFdoTypeFromRequest(requests.stream().map(r -> r.data().type()).toList());
-    try {
-      switch (fdoType) {
-        case DIGITAL_SPECIMEN -> {
-          return processDigitalSpecimenRequests(updateRequestsAttributes, incrementVersion);
-        }
-        case DIGITAL_MEDIA -> {
-          return processDigitalMediaRequests(updateRequestsAttributes, incrementVersion);
-        }
-        default -> throw new UnsupportedOperationException(
-            String.format(TYPE_ERROR_MESSAGE, fdoType.getDigitalObjectName()));
+    var previousVersionMap = getPreviousVersionsMap(requests);
+    List<FdoRecord> fdoRecords;
+    switch (fdoType) {
+      case DIGITAL_SPECIMEN ->
+          fdoRecords = processSpecimenUpdateRequests(previousVersionMap, incrementVersion);
+      case DIGITAL_MEDIA ->
+          fdoRecords = processMediaUpdateRequests(previousVersionMap, incrementVersion);
+      case DOI -> {
+        return updateDoi(previousVersionMap, incrementVersion);
       }
-    } catch (JsonProcessingException e) {
-      log.error("An error has occurred processing JSON data", e);
-      throw new UnprocessableEntityException("Json Processing Error");
+      default -> throw new UnsupportedOperationException(
+          String.format(TYPE_ERROR_MESSAGE, fdoType.getDigitalObjectName()));
     }
+    log.info("Publishing to DataCite");
+    publishToDataCite(fdoRecords, EventType.UPDATE);
+    return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, fdoType));
   }
 
   // Upsert
-  private JsonApiWrapperWrite processDigitalSpecimenRequests(List<JsonNode> requestAttributes,
-      boolean incrementVersion)
+  private JsonApiWrapperWrite processDigitalSpecimenRequests(List<JsonNode> requestAttributes)
       throws JsonProcessingException, InvalidRequestException, UnprocessableEntityException {
     var specimenRequests = new ArrayList<DigitalSpecimenRequestAttributes>();
     for (var request : requestAttributes) {
@@ -118,14 +120,15 @@ public class DoiService extends PidService {
     var timestamp = Instant.now();
     var processResult = processUpsertRequestSpecimen(specimenRequests);
     var updateRecords = updateExistingSpecimenRecords(processResult.updateRequests(), timestamp,
-        incrementVersion);
+        true);
     var newRecords = createNewSpecimens(processResult.newSpecimenRequests(), timestamp);
     var fdoRecords = Stream.concat(updateRecords.stream(), newRecords.stream()).toList();
+    publishToDataCite(newRecords, EventType.CREATE);
+    publishToDataCite(updateRecords, EventType.UPDATE);
     return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, DIGITAL_SPECIMEN));
   }
 
-  protected JsonApiWrapperWrite processDigitalMediaRequests(List<JsonNode> requestAttributes,
-      boolean incrementVersion)
+  protected JsonApiWrapperWrite processDigitalMediaRequests(List<JsonNode> requestAttributes)
       throws JsonProcessingException, InvalidRequestException, UnprocessableEntityException {
     var mediaRequests = new ArrayList<DigitalMediaRequestAttributes>();
     for (var request : requestAttributes) {
@@ -137,17 +140,17 @@ public class DoiService extends PidService {
     var timestamp = Instant.now();
     var processResult = processUpsertRequestMedia(mediaRequests);
     var updateRecords = updateExistingMediaRecords(processResult.updateMediaRequests(), timestamp,
-        incrementVersion);
+        true);
     var newRecords = createNewMedia(processResult.newMediaRequests(), timestamp);
     var fdoRecords = Stream.concat(updateRecords.stream(), newRecords.stream()).toList();
     publishToDataCite(newRecords, EventType.CREATE);
     publishToDataCite(updateRecords, EventType.UPDATE);
-    return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, DIGITAL_SPECIMEN));
+    return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, DIGITAL_MEDIA));
   }
 
   private UpsertMediaResult processUpsertRequestMedia(
       List<DigitalMediaRequestAttributes> mediaRequests) throws JsonProcessingException {
-    var existingSpecimenMap = identifyExistingRecords(mediaRequests
+    var existingSpecimenMap = getExistingRecordsFromNormalisedIds(mediaRequests
         .stream()
         .map(DigitalMediaRequestAttributes::getPrimaryMediaId)
         .toList()
@@ -167,7 +170,7 @@ public class DoiService extends PidService {
 
   private UpsertSpecimenResult processUpsertRequestSpecimen(
       List<DigitalSpecimenRequestAttributes> specimenRequests) throws JsonProcessingException {
-    var existingSpecimenMap = identifyExistingRecords(specimenRequests
+    var existingSpecimenMap = getExistingRecordsFromNormalisedIds(specimenRequests
         .stream()
         .map(DigitalSpecimenRequestAttributes::getNormalisedPrimarySpecimenObjectId)
         .toList()
@@ -187,6 +190,37 @@ public class DoiService extends PidService {
   }
 
   // Create
+  private JsonApiWrapperWrite createDoi(List<JsonNode> requestAttributes)
+      throws JsonProcessingException, InvalidRequestException {
+    var handleIterator = hf.generateNewHandles(requestAttributes.size()).iterator();
+    List<FdoRecord> fdoRecords = new ArrayList<>();
+    var timestamp = Instant.now();
+    for (var request : requestAttributes) {
+      var requestObject = mapper.treeToValue(request, DoiKernelRequestAttributes.class);
+      fdoRecords.add(
+          fdoRecordService.prepareNewDoiRecord(requestObject, handleIterator.next(), timestamp));
+    }
+    updateDocuments(fdoRecords);
+    // We don't publish DOIs to DataCite
+    return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, FdoType.DOI));
+  }
+
+  private JsonApiWrapperWrite updateDoi(Map<PatchRequestData, FdoRecord> previousVersionMap,
+      boolean incrementVersion)
+      throws InvalidRequestException {
+    var updateRequests = convertPatchRequestDataToAttributesClass(previousVersionMap,
+        DoiKernelRequestAttributes.class);
+    List<FdoRecord> fdoRecords = new ArrayList<>();
+    var timestamp = Instant.now();
+    for (var request : updateRequests.entrySet()) {
+      fdoRecords.add(
+          fdoRecordService.prepareUpdatedDoiRecord(request.getKey(), timestamp,
+              request.getValue(), incrementVersion));
+    }
+    return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, FdoType.DOI));
+  }
+
+
   private List<FdoRecord> createNewSpecimens(
       List<DigitalSpecimenRequestAttributes> digitalSpecimenRequests, Instant timestamp)
       throws InvalidRequestException {
@@ -230,6 +264,25 @@ public class DoiService extends PidService {
   }
 
   // Update
+  private List<FdoRecord> processSpecimenUpdateRequests(
+      Map<PatchRequestData, FdoRecord> previousVersionMap, boolean incrementVersion)
+      throws InvalidRequestException {
+    Map<DigitalSpecimenRequestAttributes, FdoRecord> specimenVersionMap =
+        convertPatchRequestDataToAttributesClass(previousVersionMap,
+            DigitalSpecimenRequestAttributes.class);
+    var timestamp = Instant.now();
+    return updateExistingSpecimenRecords(specimenVersionMap, timestamp, incrementVersion);
+  }
+
+  private List<FdoRecord> processMediaUpdateRequests(
+      Map<PatchRequestData, FdoRecord> previousVersionMap, boolean incrementVersion)
+      throws InvalidRequestException {
+    Map<DigitalMediaRequestAttributes, FdoRecord> mediaVersionMap =
+        convertPatchRequestDataToAttributesClass(previousVersionMap,
+            DigitalMediaRequestAttributes.class);
+    var timestamp = Instant.now();
+    return updateExistingMediaRecords(mediaVersionMap, timestamp, incrementVersion);
+  }
 
   protected List<FdoRecord> updateExistingSpecimenRecords(
       Map<DigitalSpecimenRequestAttributes, FdoRecord> updateRequests, Instant timestamp,
@@ -271,10 +324,27 @@ public class DoiService extends PidService {
     }
     mongoRepository.updateHandleRecords(fdoDocuments);
     log.info("Successfully updated {} specimens fdo records to database", fdoDocuments.size());
-
   }
 
-  private Map<String, FdoRecord> identifyExistingRecords(List<String> normalisedIds)
+
+  @Override
+  public JsonApiWrapperWrite tombstoneRecords(List<PatchRequest> requests)
+      throws InvalidRequestException {
+    var result = super.tombstoneRecords(requests);
+    for (var request : requests) {
+      try {
+        var tombstoneAttributes = mapper.treeToValue(request.data().attributes(),
+            TombstoneRequestAttributes.class);
+        dataCiteService.tombstoneDataCite(request.data().id(),
+            tombstoneAttributes.getHasRelatedPid());
+      } catch (JsonProcessingException e) {
+        log.error("Unable to tombstone doi {} with datacite", request.data().id());
+      }
+    }
+    return result;
+  }
+
+  protected Map<String, FdoRecord> getExistingRecordsFromNormalisedIds(List<String> normalisedIds)
       throws JsonProcessingException {
     var existingHandles = mongoRepository
         .searchByPrimaryLocalId(NORMALISED_SPECIMEN_OBJECT_ID.get(), normalisedIds)
@@ -291,22 +361,6 @@ public class DoiService extends PidService {
       return handleMap;
     }
     return Map.of();
-  }
-
-
-  @Override
-  public JsonApiWrapperWrite tombstoneRecords(List<TombstoneRequest> requests)
-      throws InvalidRequestException {
-    var result = super.tombstoneRecords(requests);
-    for (var request : requests) {
-      try {
-        dataCiteService.tombstoneDataCite(request.data().id(),
-            request.data().attributes().getHasRelatedPid());
-      } catch (JsonProcessingException e) {
-        log.error("Unable to tombstone doi {} with datacite", request.data().id());
-      }
-    }
-    return result;
   }
 
   private void publishToDataCite(List<FdoRecord> fdoRecords, EventType eventType)

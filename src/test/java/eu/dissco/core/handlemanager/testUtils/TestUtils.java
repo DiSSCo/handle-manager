@@ -93,9 +93,7 @@ import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequestData;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
 import eu.dissco.core.handlemanager.domain.requests.PostRequestData;
-import eu.dissco.core.handlemanager.domain.requests.TombstoneRequest;
 import eu.dissco.core.handlemanager.domain.requests.TombstoneRequestAttributes;
-import eu.dissco.core.handlemanager.domain.requests.TombstoneRequestData;
 import eu.dissco.core.handlemanager.domain.responses.JsonApiDataLinks;
 import eu.dissco.core.handlemanager.domain.responses.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.responses.JsonApiWrapperRead;
@@ -870,12 +868,12 @@ public class TestUtils {
     ))).toList();
   }
 
-  public static TombstoneRequest givenTombstoneRequest() {
-    return new TombstoneRequest(
-        new TombstoneRequestData(
+  public static PatchRequest givenTombstoneRequest() {
+    return new PatchRequest(
+        new PatchRequestData(
             HANDLE,
             FdoType.HANDLE,
-            givenTombstoneRecordRequestObject()
+            MAPPER.valueToTree(givenTombstoneRecordRequestObject())
         )
     );
   }

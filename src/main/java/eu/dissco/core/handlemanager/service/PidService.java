@@ -11,6 +11,7 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_MEDIA;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_SPECIMEN;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.TOMBSTONE;
 import static eu.dissco.core.handlemanager.service.ServiceUtils.getField;
+import static eu.dissco.core.handlemanager.service.ServiceUtils.toSingleton;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -22,14 +23,15 @@ import eu.dissco.core.handlemanager.domain.fdo.PidStatus;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
+import eu.dissco.core.handlemanager.domain.requests.PatchRequestData;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
-import eu.dissco.core.handlemanager.domain.requests.TombstoneRequest;
-import eu.dissco.core.handlemanager.domain.requests.TombstoneRequestData;
+import eu.dissco.core.handlemanager.domain.requests.TombstoneRequestAttributes;
 import eu.dissco.core.handlemanager.domain.responses.JsonApiDataLinks;
 import eu.dissco.core.handlemanager.domain.responses.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.responses.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.responses.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
+import eu.dissco.core.handlemanager.exceptions.InvalidRequestRuntimeException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
@@ -41,6 +43,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -257,7 +260,6 @@ public abstract class PidService {
     return uniqueTypes.iterator().next();
   }
 
-
   protected void checkInternalDuplicates(List<String> handles) throws InvalidRequestException {
     Set<String> handlesToUpdate = new HashSet<>(handles);
     if (handlesToUpdate.size() < handles.size()) {
@@ -271,19 +273,17 @@ public abstract class PidService {
   }
 
   // Tombstone
-  public JsonApiWrapperWrite tombstoneRecords(List<TombstoneRequest> requests)
+  public JsonApiWrapperWrite tombstoneRecords(List<PatchRequest> requests)
       throws InvalidRequestException {
-    var tombstoneRequestData = requests.stream()
-        .map(TombstoneRequest::data).toList();
-    var fdoRecordMap = processUpdateRequest(
-        tombstoneRequestData.stream().map(TombstoneRequestData::id).toList());
+    var prev = getPreviousVersionsMap(requests);
+    var map = convertPatchRequestDataToAttributesClass(prev, TombstoneRequestAttributes.class);
     var fdoRecords = new ArrayList<FdoRecord>();
     var timestamp = Instant.now();
     List<Document> fdoDocuments;
     try {
-      for (var requestData : tombstoneRequestData) {
-        fdoRecords.add(fdoRecordService.prepareTombstoneRecord(requestData.attributes(), timestamp,
-            fdoRecordMap.get(requestData.id())));
+      for (var request : map.entrySet()) {
+        fdoRecords.add(fdoRecordService.prepareTombstoneRecord(request.getKey(), timestamp,
+            request.getValue()));
       }
       fdoDocuments = toMongoDbDocument(fdoRecords);
     } catch (JsonProcessingException e) {
@@ -331,4 +331,50 @@ public abstract class PidService {
     }
   }
 
+  protected Map<PatchRequestData, FdoRecord> getPreviousVersionsMap(List<PatchRequest> requests)
+      throws InvalidRequestException {
+    List<FdoRecord> previousVersions;
+    var patchRequestData = requests.stream().map(PatchRequest::data).toList();
+    var handles = patchRequestData.stream().map(PatchRequestData::id).toList();
+    try {
+      previousVersions = mongoRepository.getHandleRecords(handles);
+    } catch (JsonProcessingException e) {
+      throw new InvalidRequestException("Unable to process handles resolution");
+    }
+    if (previousVersions.size() < handles.size()) {
+      throw new InvalidRequestException("Unable to resolve all handles");
+    }
+    try {
+      return previousVersions.stream().collect(Collectors.toMap(
+          fdo -> patchRequestData.stream().filter(data -> data.id().equals(fdo.handle()))
+              .collect(toSingleton()),
+          Function.identity()
+      ));
+    } catch (RuntimeException e) {
+      throw new IllegalStateException("Unable to read request");
+    }
+  }
+
+  protected <T> Map<T, FdoRecord> convertPatchRequestDataToAttributesClass(
+      Map<PatchRequestData, FdoRecord> previousVersionMap, Class<T> targetClass)
+      throws InvalidRequestException {
+    try {
+      return previousVersionMap.entrySet().stream()
+          .collect(Collectors.toMap(
+              e -> convertKeyToAttributes(e.getKey(), targetClass),
+              Map.Entry::getValue
+          ));
+    } catch (InvalidRequestRuntimeException e) {
+      throw new InvalidRequestException("Unable to read request");
+    }
+  }
+
+  protected <T> T convertKeyToAttributes(PatchRequestData key, Class<T> targetClass) {
+    try {
+      return mapper.treeToValue(key.attributes(), targetClass);
+    } catch (JsonProcessingException e) {
+      log.error("Unable to read request", e);
+      throw new InvalidRequestRuntimeException();
+    }
+  }
 }

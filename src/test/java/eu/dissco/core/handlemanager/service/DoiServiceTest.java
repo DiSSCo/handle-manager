@@ -13,6 +13,9 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalMedia
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimen;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenUpdated;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiFdoRecord;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiKernel;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiKernelUpdated;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleKernel;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHasRelatedPid;
@@ -47,6 +50,7 @@ import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.MongoRepository;
+import eu.dissco.core.handlemanager.testUtils.TestUtils;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -59,7 +63,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.env.Environment;
 import org.springframework.test.context.ActiveProfiles;
 
 @ExtendWith(MockitoExtension.class)
@@ -77,7 +80,6 @@ class DoiServiceTest {
   @Mock
   private MongoRepository mongoRepository;
   @Mock
-  private Environment environment;
   private PidService service;
   private MockedStatic<Instant> mockedStatic;
   private MockedStatic<Clock> mockedClock;
@@ -86,7 +88,7 @@ class DoiServiceTest {
   void setup() {
     initTime();
     service = new DoiService(fdoRecordService, pidNameGeneratorService, MAPPER, profileProperties,
-        dataCiteService, mongoRepository, environment);
+        dataCiteService, mongoRepository);
   }
 
   private void initTime() {
@@ -312,6 +314,44 @@ class DoiServiceTest {
     assertThat(result).isEqualTo(expected);
     then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument));
     then(dataCiteService).should().tombstoneDataCite(HANDLE, List.of(givenHasRelatedPid()));
+  }
+
+  @Test
+  void testCreateDoi() throws Exception {
+    var request = givenPostRequest(givenDoiKernel(), FdoType.DOI);
+    var fdoRecord = givenDoiFdoRecord(HANDLE);
+    var expected = TestUtils.givenWriteResponseFull(List.of(HANDLE), FdoType.DOI);
+    given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
+    given(fdoRecordService.prepareNewDoiRecord(any(), any(), any())).willReturn(fdoRecord);
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
+
+    // When
+    var result = service.createRecords(List.of(request));
+
+    // Then
+    assertThat(result).isEqualTo(expected);
+  }
+
+  @Test
+  void testUpdateDoiRecord() throws Exception {
+    // Given
+    var previousVersion = givenDoiFdoRecord(HANDLE);
+    var request = MAPPER.valueToTree(givenDoiKernelUpdated());
+    var updateRequest = givenUpdateRequest(List.of(HANDLE), FdoType.DOI, request);
+    var updatedAttributeRecord = givenUpdatedFdoRecord(FdoType.DOI, null);
+    var expectedDocument = givenMongoDocument(updatedAttributeRecord);
+    var expected = givenWriteResponseFull(updatedAttributeRecord);
+    given(mongoRepository.getHandleRecords(List.of(HANDLE))).willReturn(List.of(previousVersion));
+    given(fdoRecordService.prepareUpdatedDoiRecord(any(), any(), any(),
+        anyBoolean())).willReturn(updatedAttributeRecord);
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
+
+    // When
+    var result = service.updateRecords(updateRequest, true);
+
+    // Then
+    assertThat(result).isEqualTo(expected);
+    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument));
   }
 
 }

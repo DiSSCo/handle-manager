@@ -4,7 +4,6 @@ package eu.dissco.core.handlemanager.controller;
 import eu.dissco.core.handlemanager.component.SchemaValidator;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
-import eu.dissco.core.handlemanager.domain.requests.TombstoneRequest;
 import eu.dissco.core.handlemanager.domain.responses.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.responses.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
@@ -138,7 +137,7 @@ public class PidController {
   @Operation(summary = "Archive given record")
   @PutMapping(value = "/{prefix}/{suffix}")
   public ResponseEntity<JsonApiWrapperWrite> archiveRecord(@PathVariable("prefix") String prefix,
-      @PathVariable("suffix") String suffix, @RequestBody TombstoneRequest request,
+      @PathVariable("suffix") String suffix, @RequestBody PatchRequest request,
       Authentication authentication) throws InvalidRequestException {
     log.info("Received tombstone request for PID {}/{} from user {}", prefix, suffix,
         authentication.getName());
@@ -183,7 +182,7 @@ public class PidController {
   @Operation(summary = "Archive multiple PID records")
   @PutMapping(value = "/")
   public ResponseEntity<JsonApiWrapperWrite> archiveRecords(
-      @RequestBody List<TombstoneRequest> requests,
+      @RequestBody List<PatchRequest> requests,
       Authentication authentication) throws InvalidRequestException {
     log.info(RECEIVED_MSG, "batch tombstone", authentication.getName());
     return ResponseEntity.status(HttpStatus.OK).body(service.tombstoneRecords(requests));
