@@ -82,9 +82,7 @@ public class DoiService extends PidService {
             String.format(TYPE_ERROR_MESSAGE, fdoType.getDigitalObjectName()));
       }
     } catch (JsonProcessingException | PidResolutionException e) {
-      throw new InvalidRequestException(
-          "An error has occurred parsing a record in request. More information: "
-              + e.getMessage());
+      throw new InvalidRequestException(REQUEST_PROCESSING_ERR);
     }
   }
 
@@ -256,9 +254,8 @@ public class DoiService extends PidService {
     try {
       fdoDocuments = toMongoDbDocument(fdoRecords);
     } catch (JsonProcessingException e) {
-      log.error("An error has occurred in processing request", e);
-      throw new InvalidRequestException(
-          "An error has occurred parsing a record in request. More information: " + e.getMessage());
+      log.error(REQUEST_PROCESSING_ERR, e);
+      throw new InvalidRequestException(REQUEST_PROCESSING_ERR);
     }
     mongoRepository.postHandleRecords(fdoDocuments);
     log.info("Successfully posted {} new specimen fdo records to database", fdoDocuments.size());
@@ -319,9 +316,9 @@ public class DoiService extends PidService {
     try {
       fdoDocuments = toMongoDbDocument(fdoRecords);
     } catch (JsonProcessingException e) {
-      log.error("An error has occurred in processing request", e);
+      log.error(REQUEST_PROCESSING_ERR, e);
       throw new InvalidRequestException(
-          "An error has occurred parsing a record in request. More information: " + e.getMessage());
+          REQUEST_PROCESSING_ERR);
     }
     mongoRepository.updateHandleRecords(fdoDocuments);
     log.info("Successfully updated {} specimens fdo records to database", fdoDocuments.size());

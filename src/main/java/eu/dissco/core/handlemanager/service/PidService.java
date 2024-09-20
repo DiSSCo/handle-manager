@@ -56,6 +56,8 @@ public abstract class PidService {
   protected final ObjectMapper mapper;
   protected final ProfileProperties profileProperties;
   protected final MongoRepository mongoRepository;
+  protected static final String REQUEST_PROCESSING_ERR = "An error has occurred parsing a record in request";
+
 
   protected JsonNode jsonFormatSingleRecord(List<FdoAttribute> fdoAttributes) {
     ObjectNode rootNode = mapper.createObjectNode();
@@ -217,20 +219,6 @@ public abstract class PidService {
   public abstract JsonApiWrapperWrite createRecords(List<PostRequest> requests)
       throws InvalidRequestException, UnprocessableEntityException;
 
-  protected List<FdoRecord> getPreviousVersions(List<String> handles)
-      throws InvalidRequestException {
-    List<FdoRecord> previousVersions;
-    try {
-      previousVersions = mongoRepository.getHandleRecords(handles);
-    } catch (JsonProcessingException e) {
-      throw new InvalidRequestException("Unable to process handles resolution");
-    }
-    if (previousVersions.size() < handles.size()) {
-      throw new InvalidRequestException("Unable to resolve all handles");
-    }
-    return previousVersions;
-  }
-
   // Update
   public abstract JsonApiWrapperWrite updateRecords(List<PatchRequest> requests,
       boolean incrementVersion)
@@ -265,7 +253,7 @@ public abstract class PidService {
       fdoDocuments = toMongoDbDocument(fdoRecords);
     } catch (JsonProcessingException e) {
       log.error("JsonProcessingException while tombstoning records", e);
-      throw new InvalidRequestException("Unable to read request");
+      throw new InvalidRequestException(REQUEST_PROCESSING_ERR);
     }
     mongoRepository.updateHandleRecords(fdoDocuments);
     return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, TOMBSTONE));
@@ -328,7 +316,7 @@ public abstract class PidService {
           Function.identity()
       ));
     } catch (RuntimeException e) {
-      throw new IllegalStateException("Unable to read request");
+      throw new IllegalStateException(REQUEST_PROCESSING_ERR);
     }
   }
 
@@ -342,7 +330,7 @@ public abstract class PidService {
               Map.Entry::getValue
           ));
     } catch (InvalidRequestRuntimeException e) {
-      throw new InvalidRequestException("Unable to read request");
+      throw new InvalidRequestException(REQUEST_PROCESSING_ERR);
     }
   }
 
@@ -350,7 +338,7 @@ public abstract class PidService {
     try {
       return mapper.treeToValue(key.attributes(), targetClass);
     } catch (JsonProcessingException e) {
-      log.error("Unable to read request", e);
+      log.error(REQUEST_PROCESSING_ERR, e);
       throw new InvalidRequestRuntimeException();
     }
   }
