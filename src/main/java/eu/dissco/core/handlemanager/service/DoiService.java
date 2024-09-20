@@ -217,6 +217,7 @@ public class DoiService extends PidService {
           fdoRecordService.prepareUpdatedDoiRecord(request.getKey(), timestamp,
               request.getValue(), incrementVersion));
     }
+    updateDocuments(fdoRecords);
     return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, FdoType.DOI));
   }
 

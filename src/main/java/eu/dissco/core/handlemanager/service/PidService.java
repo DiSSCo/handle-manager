@@ -38,11 +38,9 @@ import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.MongoRepository;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -243,33 +241,12 @@ public abstract class PidService {
     return !status.getValue().equals(PidStatus.TOMBSTONED.name());
   }
 
-  protected Map<String, FdoRecord> processUpdateRequest(List<String> handles)
-      throws InvalidRequestException {
-    checkInternalDuplicates(handles);
-    var previousVersions = getPreviousVersions(handles);
-    previousVersions = previousVersions.stream().filter(PidService::handlesAreActive).toList();
-    return previousVersions.stream()
-        .collect(Collectors.toMap(FdoRecord::handle, f -> f));
-  }
-
   protected FdoType getFdoTypeFromRequest(List<FdoType> fdoTypes) {
     var uniqueTypes = new HashSet<>(fdoTypes);
     if (uniqueTypes.size() != 1) {
       throw new UnsupportedOperationException("Requests must all be of the same type");
     }
     return uniqueTypes.iterator().next();
-  }
-
-  protected void checkInternalDuplicates(List<String> handles) throws InvalidRequestException {
-    Set<String> handlesToUpdate = new HashSet<>(handles);
-    if (handlesToUpdate.size() < handles.size()) {
-      Set<String> duplicateHandles = handles.stream()
-          .filter(i -> Collections.frequency(handles, i) > 1)
-          .collect(Collectors.toSet());
-      throw new InvalidRequestException(
-          "INVALID INPUT. Attempting to update the same record multiple times in one request. "
-              + "The following handles are duplicated in the request: " + duplicateHandles);
-    }
   }
 
   // Tombstone
