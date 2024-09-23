@@ -138,7 +138,7 @@ public class PidController {
   @PutMapping(value = "/{prefix}/{suffix}")
   public ResponseEntity<JsonApiWrapperWrite> archiveRecord(@PathVariable("prefix") String prefix,
       @PathVariable("suffix") String suffix, @RequestBody PatchRequest request,
-      Authentication authentication) throws InvalidRequestException {
+      Authentication authentication) throws InvalidRequestException, UnprocessableEntityException {
     log.info("Received tombstone request for PID {}/{} from user {}", prefix, suffix,
         authentication.getName());
     var handle = (prefix + "/" + suffix);
@@ -183,7 +183,7 @@ public class PidController {
   @PutMapping(value = "/")
   public ResponseEntity<JsonApiWrapperWrite> archiveRecords(
       @RequestBody List<PatchRequest> requests,
-      Authentication authentication) throws InvalidRequestException {
+      Authentication authentication) throws InvalidRequestException, UnprocessableEntityException {
     log.info(RECEIVED_MSG, "batch tombstone", authentication.getName());
     return ResponseEntity.status(HttpStatus.OK).body(service.tombstoneRecords(requests));
   }

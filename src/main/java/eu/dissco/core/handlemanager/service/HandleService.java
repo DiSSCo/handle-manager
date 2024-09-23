@@ -1,17 +1,24 @@
 package eu.dissco.core.handlemanager.service;
 
+import static eu.dissco.core.handlemanager.domain.fdo.FdoType.ANNOTATION;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DATA_MAPPING;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.HANDLE;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoType.MAS;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoType.ORGANISATION;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoType.SOURCE_SYSTEM;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.core.handlemanager.Profiles;
+import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequestData;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
 import eu.dissco.core.handlemanager.domain.responses.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
+import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.MongoRepository;
 import eu.dissco.core.handlemanager.schema.AnnotationRequestAttributes;
@@ -25,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.springframework.context.annotation.Profile;
@@ -34,6 +42,9 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Profile(Profiles.HANDLE)
 public class HandleService extends PidService {
+
+  private static final Set<FdoType> VALID_FDO_TYPES = Set.of(ANNOTATION, HANDLE, DATA_MAPPING, MAS,
+      ORGANISATION, SOURCE_SYSTEM);
 
   public HandleService(FdoRecordService fdoRecordService,
       PidNameGeneratorService hf, ObjectMapper mapper, ProfileProperties profileProperties,
@@ -52,7 +63,7 @@ public class HandleService extends PidService {
         .toList();
     var fdoType = getFdoTypeFromRequest(requests.stream()
         .map(request -> request.data().type())
-        .toList());
+        .toList(), VALID_FDO_TYPES);
     List<FdoRecord> fdoRecords;
     List<Document> fdoDocuments;
     try {
@@ -63,8 +74,8 @@ public class HandleService extends PidService {
         case MAS -> fdoRecords = createMas(requestAttributes, handles);
         case ORGANISATION -> fdoRecords = createOrganisation(requestAttributes, handles);
         case SOURCE_SYSTEM -> fdoRecords = createSourceSystem(requestAttributes, handles);
-        default -> throw new UnsupportedOperationException("Type " + fdoType.getDigitalObjectName()
-            + " is not permitted for the Handle endpoint. Please use DOI endpoint");
+        default ->
+            throw new IllegalStateException(); // This case is handled by the getFdoTypeFromRequest check
       }
       fdoDocuments = toMongoDbDocument(fdoRecords);
     } catch (JsonProcessingException e) {
@@ -79,9 +90,9 @@ public class HandleService extends PidService {
 
   @Override
   public JsonApiWrapperWrite updateRecords(List<PatchRequest> requests, boolean incrementVersion)
-      throws InvalidRequestException {
+      throws InvalidRequestException, UnprocessableEntityException {
     var fdoType = getFdoTypeFromRequest(
-        requests.stream().map(r -> r.data().type()).toList());
+        requests.stream().map(r -> r.data().type()).toList(), VALID_FDO_TYPES);
     List<FdoRecord> fdoRecords;
     List<Document> fdoDocuments;
     var previousVersionMap = getPreviousVersionsMap(requests);
@@ -94,8 +105,7 @@ public class HandleService extends PidService {
           incrementVersion);
       case SOURCE_SYSTEM -> fdoRecords = updateSourceSystem(previousVersionMap,
           incrementVersion);
-      default -> throw new UnsupportedOperationException("Type " + fdoType.getDigitalObjectName()
-          + " is not permitted for the Handle endpoint. Please use DOI endpoint");
+      default -> throw new IllegalStateException();
     }
     try {
       fdoDocuments = toMongoDbDocument(fdoRecords);

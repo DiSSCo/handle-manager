@@ -4,6 +4,7 @@ package eu.dissco.core.handlemanager.service;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_MEDIA;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_SPECIMEN;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DOI;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -33,6 +34,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +48,7 @@ import org.springframework.stereotype.Service;
 public class DoiService extends PidService {
 
   private final DataCiteService dataCiteService;
+  private static final Set<FdoType> VALID_FDO_TYPES = Set.of(DIGITAL_SPECIMEN, DIGITAL_MEDIA, DOI);
 
   public DoiService(FdoRecordService fdoRecordService,
       PidNameGeneratorService pidNameGeneratorService,
@@ -66,7 +69,7 @@ public class DoiService extends PidService {
         .toList();
     var fdoType = getFdoTypeFromRequest(requests.stream()
         .map(request -> request.data().type())
-        .toList());
+        .toList(), VALID_FDO_TYPES);
     try {
       switch (fdoType) {
         case DIGITAL_SPECIMEN -> {
@@ -89,7 +92,8 @@ public class DoiService extends PidService {
   @Override
   public JsonApiWrapperWrite updateRecords(List<PatchRequest> requests, boolean incrementVersion)
       throws InvalidRequestException, UnprocessableEntityException {
-    var fdoType = getFdoTypeFromRequest(requests.stream().map(r -> r.data().type()).toList());
+    var fdoType = getFdoTypeFromRequest(requests.stream().map(r -> r.data().type()).toList(),
+        VALID_FDO_TYPES);
     var previousVersionMap = getPreviousVersionsMap(requests);
     List<FdoRecord> fdoRecords;
     switch (fdoType) {
@@ -100,8 +104,8 @@ public class DoiService extends PidService {
       case DOI -> {
         return updateDoi(previousVersionMap, incrementVersion);
       }
-      default -> throw new UnsupportedOperationException(
-          String.format(TYPE_ERROR_MESSAGE, fdoType.getDigitalObjectName()));
+      default ->
+          throw new IllegalStateException(); // This case is handled by the getFdoTypeFromRequest check
     }
     log.info("Publishing to DataCite");
     publishToDataCite(fdoRecords, EventType.UPDATE);
@@ -200,7 +204,7 @@ public class DoiService extends PidService {
     }
     updateDocuments(fdoRecords);
     // We don't publish DOIs to DataCite
-    return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, FdoType.DOI));
+    return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, DOI));
   }
 
   private JsonApiWrapperWrite updateDoi(Map<PatchRequestData, FdoRecord> previousVersionMap,
@@ -216,7 +220,7 @@ public class DoiService extends PidService {
               request.getValue(), incrementVersion));
     }
     updateDocuments(fdoRecords);
-    return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, FdoType.DOI));
+    return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, DOI));
   }
 
 
@@ -327,7 +331,7 @@ public class DoiService extends PidService {
 
   @Override
   public JsonApiWrapperWrite tombstoneRecords(List<PatchRequest> requests)
-      throws InvalidRequestException {
+      throws InvalidRequestException, UnprocessableEntityException {
     var result = super.tombstoneRecords(requests);
     for (var request : requests) {
       try {

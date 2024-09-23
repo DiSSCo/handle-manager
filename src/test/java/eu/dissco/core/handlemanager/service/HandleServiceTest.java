@@ -14,6 +14,8 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationUp
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDataMapping;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDataMappingFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDataMappingUpdated;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalMediaUpdated;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimen;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiKernel;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleFdoRecord;
@@ -39,6 +41,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenWriteRespons
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenWriteResponseIdsOnly;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.BDDMockito.given;
@@ -504,6 +507,27 @@ class HandleServiceTest {
     // Then
     then(mongoRepository).should().rollbackHandlesFromLocalId(NORMALISED_SPECIMEN_OBJECT_ID.get(),
         List.of(NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL));
+  }
+
+  @Test
+  void testCreateInvalidType() {
+    // Given
+    var request = List.of(givenPostRequest(givenDigitalSpecimen(),
+        FdoType.DIGITAL_SPECIMEN));
+
+    // When / Then
+    assertThrowsExactly(UnsupportedOperationException.class, () -> service.createRecords(request));
+  }
+
+  @Test
+  void testUpdateInvalidType() {
+    // Given
+    var request = givenUpdateRequest(List.of(HANDLE), FdoType.DIGITAL_MEDIA,
+        MAPPER.valueToTree(givenDigitalMediaUpdated()));
+
+    // When / Then
+    assertThrowsExactly(UnsupportedOperationException.class,
+        () -> service.updateRecords(request, true));
   }
 
 }

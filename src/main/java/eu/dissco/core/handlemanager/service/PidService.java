@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -229,17 +230,24 @@ public abstract class PidService {
     return !status.getValue().equals(PidStatus.TOMBSTONED.name());
   }
 
-  protected FdoType getFdoTypeFromRequest(List<FdoType> fdoTypes) {
+  protected static FdoType getFdoTypeFromRequest(List<FdoType> fdoTypes,
+      Set<FdoType> validFdoTypes) {
     var uniqueTypes = new HashSet<>(fdoTypes);
     if (uniqueTypes.size() != 1) {
       throw new UnsupportedOperationException("Requests must all be of the same type");
     }
-    return uniqueTypes.iterator().next();
+    var fdoType = uniqueTypes.iterator().next();
+    if (!validFdoTypes.contains(fdoType)) {
+      log.error("Type {} is an invalid FDO type for this endpoint.", fdoType);
+      throw new UnsupportedOperationException(
+          "Type" + fdoType + " is an invalid FDO type for this endpoint.");
+    }
+    return fdoType;
   }
 
   // Tombstone
   public JsonApiWrapperWrite tombstoneRecords(List<PatchRequest> requests)
-      throws InvalidRequestException {
+      throws InvalidRequestException, UnprocessableEntityException {
     var prev = getPreviousVersionsMap(requests);
     var map = convertPatchRequestDataToAttributesClass(prev, TombstoneRequestAttributes.class);
     var fdoRecords = new ArrayList<FdoRecord>();
@@ -297,7 +305,7 @@ public abstract class PidService {
   }
 
   protected Map<PatchRequestData, FdoRecord> getPreviousVersionsMap(List<PatchRequest> requests)
-      throws InvalidRequestException {
+      throws InvalidRequestException, UnprocessableEntityException {
     List<FdoRecord> previousVersions;
     var patchRequestData = requests.stream().map(PatchRequest::data).toList();
     var handles = patchRequestData.stream().map(PatchRequestData::id).toList();
@@ -316,7 +324,7 @@ public abstract class PidService {
           Function.identity()
       ));
     } catch (RuntimeException e) {
-      throw new IllegalStateException(REQUEST_PROCESSING_ERR);
+      throw new UnprocessableEntityException(REQUEST_PROCESSING_ERR);
     }
   }
 
