@@ -2,6 +2,8 @@ package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LOC;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.OTHER_SPECIMEN_IDS;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID_RECORD_ISSUE_NUMBER;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID_STATUS;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.API_URL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.DOC_BUILDER_FACTORY;
@@ -24,6 +26,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.UPDATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genAnnotationAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneAttributes;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.getField;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotation;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationUpdated;
@@ -65,6 +68,7 @@ import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.component.PidResolver;
 import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
+import eu.dissco.core.handlemanager.domain.fdo.PidStatus;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
 import eu.dissco.core.handlemanager.domain.requests.TombstoneRequestAttributes;
@@ -173,6 +177,32 @@ class FdoRecordServiceTest {
     // Given
     var previousVersion = givenHandleFdoRecord(HANDLE);
     var expected = givenUpdatedFdoRecord(FdoType.HANDLE, null);
+    var request = givenHandleKernelUpdated();
+
+    // When
+    var result = fdoRecordService.prepareUpdatedHandleRecord(request, FdoType.HANDLE, UPDATED,
+        previousVersion, true);
+
+    // Then
+    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.primaryLocalId()).isNull();
+    assertThat(result.fdoType()).isEqualTo(expected.fdoType());
+    assertThat(result.handle()).isEqualTo(expected.handle());
+  }
+
+  @Test
+  void testPrepareUpdatedHandleRecordReviveTombstone() throws Exception {
+    // Given
+    var previousVersion = givenTombstoneFdoRecord();
+    var expectedAttributes = new ArrayList<>(
+        givenUpdatedFdoRecord(FdoType.HANDLE, null).attributes());
+    expectedAttributes.set(
+        expectedAttributes.indexOf(getField(expectedAttributes, PID_RECORD_ISSUE_NUMBER)),
+        new FdoAttribute(PID_RECORD_ISSUE_NUMBER, UPDATED, "3"));
+    expectedAttributes.set(
+        expectedAttributes.indexOf(getField(expectedAttributes, PID_STATUS)),
+        new FdoAttribute(PID_STATUS, UPDATED, PidStatus.ACTIVE));
+    var expected = new FdoRecord(HANDLE, FdoType.HANDLE, expectedAttributes, null);
     var request = givenHandleKernelUpdated();
 
     // When
