@@ -350,7 +350,7 @@ public class DoiService extends PidService {
       throws JsonProcessingException {
     var existingHandles = mongoRepository
         .searchByPrimaryLocalId(NORMALISED_SPECIMEN_OBJECT_ID.get(), normalisedIds)
-        .stream().filter(PidService::handlesAreActive)
+        .stream()
         .toList();
     if (!existingHandles.isEmpty()) {
       var handleMap = existingHandles.stream()

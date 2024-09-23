@@ -4,13 +4,11 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.ANNOTATION_HASH
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LINKED_DO_PID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_MEDIA_ID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.ANNOTATION;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_MEDIA;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_SPECIMEN;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.TOMBSTONE;
-import static eu.dissco.core.handlemanager.service.ServiceUtils.getField;
 import static eu.dissco.core.handlemanager.service.ServiceUtils.toSingleton;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -19,7 +17,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
-import eu.dissco.core.handlemanager.domain.fdo.PidStatus;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
@@ -224,11 +221,6 @@ public abstract class PidService {
   public abstract JsonApiWrapperWrite updateRecords(List<PatchRequest> requests,
       boolean incrementVersion)
       throws InvalidRequestException, UnprocessableEntityException;
-
-  protected static boolean handlesAreActive(FdoRecord fdoRecord) {
-    var status = getField(fdoRecord.attributes(), PID_STATUS);
-    return !status.getValue().equals(PidStatus.TOMBSTONED.name());
-  }
 
   protected static FdoType getFdoTypeFromRequest(List<FdoType> fdoTypes,
       Set<FdoType> validFdoTypes) {
