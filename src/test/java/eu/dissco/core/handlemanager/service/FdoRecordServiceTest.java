@@ -57,7 +57,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystem
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenTombstoneFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenTombstoneRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenUpdatedFdoRecord;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.setLocations;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -407,12 +406,12 @@ class FdoRecordServiceTest {
     var request = givenAnnotation(false)
         .withLocations(List.of(LOC_TESTVAL));
     var attributes = new ArrayList<>(genAnnotationAttributes(HANDLE, false));
+
     attributes.set(
-        attributes.indexOf(
-            new FdoAttribute(LOC, CREATED, setLocations(HANDLE, FdoType.ANNOTATION))),
+        attributes.indexOf(getField(attributes, LOC)),
         new FdoAttribute(LOC, CREATED, "<locations>"
-            + "<location href=\"https://sandbox.dissco.tech/api/v1/annotations/20.5000.1025/QRS-321-ABC\" id=\"0\" weight=\"1\"/>"
-            + "<location href=\"" + LOC_TESTVAL + "\" id=\"1\" weight=\"0\"/>"
+            + "<location href=\"https://sandbox.dissco.tech/api/v1/annotations/20.5000.1025/QRS-321-ABC\" id=\"JSON\" weight=\"1\"/>"
+            + "<location href=\"" + LOC_TESTVAL + "\" id=\"0\" weight=\"0\"/>"
             + "</locations>")
     );
     var expected = new FdoRecord(HANDLE, FdoType.ANNOTATION, attributes, null);

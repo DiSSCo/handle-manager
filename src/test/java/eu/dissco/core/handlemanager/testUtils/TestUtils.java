@@ -102,6 +102,7 @@ import eu.dissco.core.handlemanager.schema.DataMappingRequestAttributes;
 import eu.dissco.core.handlemanager.schema.DigitalMediaRequestAttributes;
 import eu.dissco.core.handlemanager.schema.DigitalMediaRequestAttributes.LinkedDigitalObjectType;
 import eu.dissco.core.handlemanager.schema.DigitalSpecimenRequestAttributes;
+import eu.dissco.core.handlemanager.schema.DigitalSpecimenRequestAttributes.PrimarySpecimenObjectIdType;
 import eu.dissco.core.handlemanager.schema.DoiKernelRequestAttributes;
 import eu.dissco.core.handlemanager.schema.HandleRequestAttributes;
 import eu.dissco.core.handlemanager.schema.HasRelatedPid;
@@ -120,7 +121,6 @@ import java.util.UUID;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
@@ -187,7 +187,7 @@ public class TestUtils {
   public static final String API_URL = "https://sandbox.dissco.tech/api/v1";
   public static final String UI_URL = "https://sandbox.dissco.tech";
   public static final String PATH = UI_URL + HANDLE;
-  public static final String ORCHESTRATION_URL = "https://orchestration.dissco.tech/api/v1";
+  public static final String ORCHESTRATION_URL = "https://orchestration.dissco.tech/";
   public static final String PTR_TYPE_DOI = "doi";
   public static final String PRIMARY_SPECIMEN_ID_TESTVAL = "BOTANICAL.QRS.123";
   public static final String PRIMARY_SPECIMEN_ID_ALT = "AVES.123";
@@ -362,7 +362,7 @@ public class TestUtils {
         PRIMARY_SPECIMEN_ID_TESTVAL));
     // 203: primarySpecimenObjectIdType
     fdoRecord.add(new FdoAttribute(PRIMARY_SPECIMEN_OBJECT_ID_TYPE, timestamp,
-        DigitalSpecimenRequestAttributes.PrimarySpecimenObjectIdType.GLOBAL.value()));
+        PrimarySpecimenObjectIdType.RESOLVABLE.value()));
     // 204: primarySpecimenObjectIdName
     fdoRecord.add(new FdoAttribute(PRIMARY_SPECIMEN_OBJECT_ID_NAME, timestamp,
         null));
@@ -626,7 +626,7 @@ public class TestUtils {
         .withSpecimenHostName(SPECIMEN_HOST_NAME_TESTVAL)
         .withPrimarySpecimenObjectId(PRIMARY_SPECIMEN_ID_TESTVAL)
         .withPrimarySpecimenObjectIdType(
-            DigitalSpecimenRequestAttributes.PrimarySpecimenObjectIdType.GLOBAL)
+            PrimarySpecimenObjectIdType.RESOLVABLE)
         .withNormalisedPrimarySpecimenObjectId(NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL);
   }
 
@@ -915,8 +915,8 @@ public class TestUtils {
     return doc;
   }
 
-  public static String setLocations(String handle, FdoType type)
-      throws TransformerException, ParserConfigurationException {
+  public static String setLocations(String handle, FdoType type, boolean addKeyLoc)
+      throws Exception {
     DOC_BUILDER_FACTORY.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
 
     DocumentBuilder documentBuilder = DOC_BUILDER_FACTORY.newDocumentBuilder();
@@ -924,53 +924,69 @@ public class TestUtils {
     var doc = documentBuilder.newDocument();
     var locations = doc.createElement("locations");
     doc.appendChild(locations);
-    var objectLocations = defaultLocations(handle, type);
-    if (objectLocations.length == 0) {
+    var xmlElements = defaultLocations(handle, type, addKeyLoc);
+    if (xmlElements.isEmpty()) {
       return "<locations></locations>";
     }
-    for (int i = 0; i < objectLocations.length; i++) {
+    xmlElements.forEach(xmlLoc -> {
       var locs = doc.createElement("location");
-      locs.setAttribute("id", String.valueOf(i));
-      locs.setAttribute("href", objectLocations[i]);
-      String weight = i < 1 ? "1" : "0";
-      locs.setAttribute("weight", weight);
+      locs.setAttribute("id", xmlLoc.id);
+      locs.setAttribute("href", xmlLoc.loc);
+      locs.setAttribute("weight", xmlLoc.weight);
       locations.appendChild(locs);
-    }
+    });
     return documentToString(doc);
   }
 
-  private static String[] defaultLocations(String handle, FdoType type) {
+  public static String setLocations(String handle, FdoType type)
+      throws Exception {
+    return setLocations(handle, type, true);
+  }
+
+  private static List<XmlElement> defaultLocations(String handle, FdoType type, boolean addKeyLoc) {
+    var locations = new ArrayList<XmlElement>();
     switch (type) {
       case DIGITAL_SPECIMEN -> {
-        String api = API_URL + "/specimens/" + handle;
-        String ui = UI_URL + "/ds/" + handle;
-        return new String[]{api, ui};
+        locations.add(new XmlElement("HTML", "1", UI_URL + "/ds/" + handle));
+        locations.add(new XmlElement("JSON", "0", API_URL + "/digital-specimen/" + handle));
+        if (addKeyLoc) {
+          locations.add(new XmlElement("CATALOG", "0", PRIMARY_SPECIMEN_ID_TESTVAL));
+        }
       }
       case DATA_MAPPING -> {
-        return new String[]{ORCHESTRATION_URL + "/mapping/" + handle};
+        locations.add(new XmlElement("HTML", "1", ORCHESTRATION_URL + "/mapping/" + handle));
+        locations.add(new XmlElement("JSON", "0", ORCHESTRATION_URL + "/api/v1/mapping/" + handle));
       }
       case SOURCE_SYSTEM -> {
-        return new String[]{ORCHESTRATION_URL + "/source-system/" + handle};
+        locations.add(new XmlElement("HTML", "1", ORCHESTRATION_URL + "/source-system/" + handle));
+        locations.add(
+            new XmlElement("JSON", "0", ORCHESTRATION_URL + "/api/v1/source-system/" + handle));
       }
       case DIGITAL_MEDIA -> {
-        String api = API_URL + "/digitalMedia/" + handle;
-        String ui = UI_URL + "/dm/" + handle;
-        return new String[]{api, ui};
+        locations.add(
+            new XmlElement("HTML", "1", UI_URL + "/dm/" + handle));
+        locations.add(new XmlElement("JSON", "0", API_URL + "/digital-media/" + handle));
+        if (addKeyLoc) {
+          locations.add(new XmlElement("MEDIA", "0", PRIMARY_MEDIA_ID_TESTVAL));
+        }
       }
       case ANNOTATION -> {
-        return new String[]{API_URL + "/annotations/" + handle};
+        locations.add(new XmlElement("JSON", "1", API_URL + "/annotations/" + handle));
       }
       case ORGANISATION -> {
-        return new String[]{SPECIMEN_HOST_TESTVAL};
+        if (addKeyLoc) {
+          locations.add(new XmlElement("ROR", "1", SPECIMEN_HOST_TESTVAL));
+        }
       }
       case MAS -> {
-        return new String[]{ORCHESTRATION_URL + "/mas/" + handle};
+        locations.add(new XmlElement("HTML", "1", ORCHESTRATION_URL + "/mas/" + handle));
+        locations.add(new XmlElement("JSON", "0", ORCHESTRATION_URL + "/api/v1/mas/" + handle));
       }
       default -> {
         // Handle, DOI, OrganisationRequestAttributes (organisation handled separately)
-        return new String[]{};
       }
     }
+    return locations;
   }
 
   private static String documentToString(org.w3c.dom.Document document)
@@ -990,5 +1006,14 @@ public class TestUtils {
     return new String(new ClassPathResource(fileName).getInputStream().readAllBytes(),
         StandardCharsets.UTF_8);
   }
+
+  private record XmlElement(
+      String id,
+      String weight,
+      String loc
+  ) {
+
+  }
+
 
 }
