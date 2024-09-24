@@ -146,6 +146,7 @@ public class HandleService extends PidService {
       var newVersion =
           fdoRecordService.prepareUpdatedAnnotationRecord(updateRequest.getKey(), timestamp,
               updateRequest.getValue(), incrementVersion);
+      fdoRecords.add(newVersion);
       if (fdoRecordsAreDifferent(newVersion, updateRequest.getValue())) {
         newFdoRecords.add(newVersion);
       }
