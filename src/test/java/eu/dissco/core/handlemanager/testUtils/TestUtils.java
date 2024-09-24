@@ -85,7 +85,6 @@ import eu.dissco.core.handlemanager.configuration.InstantDeserializer;
 import eu.dissco.core.handlemanager.configuration.InstantSerializer;
 import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
-import eu.dissco.core.handlemanager.domain.fdo.HasRelatedPid;
 import eu.dissco.core.handlemanager.domain.fdo.PidStatus;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
@@ -93,7 +92,6 @@ import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequestData;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
 import eu.dissco.core.handlemanager.domain.requests.PostRequestData;
-import eu.dissco.core.handlemanager.domain.requests.TombstoneRequestAttributes;
 import eu.dissco.core.handlemanager.domain.responses.JsonApiDataLinks;
 import eu.dissco.core.handlemanager.domain.responses.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.responses.JsonApiWrapperRead;
@@ -106,9 +104,11 @@ import eu.dissco.core.handlemanager.schema.DigitalMediaRequestAttributes.LinkedD
 import eu.dissco.core.handlemanager.schema.DigitalSpecimenRequestAttributes;
 import eu.dissco.core.handlemanager.schema.DoiKernelRequestAttributes;
 import eu.dissco.core.handlemanager.schema.HandleRequestAttributes;
+import eu.dissco.core.handlemanager.schema.HasRelatedPid;
 import eu.dissco.core.handlemanager.schema.MasRequestAttributes;
 import eu.dissco.core.handlemanager.schema.OrganisationRequestAttributes;
 import eu.dissco.core.handlemanager.schema.SourceSystemRequestAttributes;
+import eu.dissco.core.handlemanager.schema.TombstoneRequestAttributes;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
@@ -212,14 +212,14 @@ public class TestUtils {
   }
 
   public static TombstoneRequestAttributes givenTombstoneRecordRequestObject() {
-    return new TombstoneRequestAttributes(TOMBSTONE_TEXT_TESTVAL,
-        List.of(givenHasRelatedPid()));
+    return new TombstoneRequestAttributes()
+        .withTombstoneText(TOMBSTONE_TEXT_TESTVAL)
+        .withHasRelatedPid(List.of(givenHasRelatedPid()));
   }
 
   public static HasRelatedPid givenHasRelatedPid() {
-    return new HasRelatedPid(HANDLE_ALT, "Media ID");
+    return new HasRelatedPid().withPid(HANDLE_ALT).withRelationshipType("Media ID");
   }
-
 
   public static FdoRecord givenHandleFdoRecord(String handle) throws Exception {
     return new FdoRecord(handle, FdoType.HANDLE,

@@ -314,6 +314,9 @@
             <argument>
               https://schemas.dissco.tech/schemas/fdo-profile/organisation/0.1.0/organisation-request-attributes.json
             </argument>
+            <argument>
+              https://schemas.dissco.tech/schemas/fdo-profile/tombstone/1.0.0/tombstone-request-attributes.json
+            </argument>
           </arguments>
         </configuration>
       </plugin>
