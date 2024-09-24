@@ -102,7 +102,7 @@ public class DoiService extends PidService {
       case DIGITAL_MEDIA ->
           fdoRecords = processMediaUpdateRequests(previousVersionMap, incrementVersion);
       case DOI -> {
-        return updateDoi(previousVersionMap, incrementVersion);
+        return updateExistingDoiRecord(previousVersionMap, incrementVersion);
       }
       default ->
           throw new IllegalStateException(); // This case is handled by the getFdoTypeFromRequest check
@@ -207,19 +207,24 @@ public class DoiService extends PidService {
     return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, DOI));
   }
 
-  private JsonApiWrapperWrite updateDoi(Map<PatchRequestData, FdoRecord> previousVersionMap,
+  private JsonApiWrapperWrite updateExistingDoiRecord(
+      Map<PatchRequestData, FdoRecord> previousVersionMap,
       boolean incrementVersion)
       throws InvalidRequestException {
     var updateRequests = convertPatchRequestDataToAttributesClass(previousVersionMap,
         DoiKernelRequestAttributes.class);
-    List<FdoRecord> fdoRecords = new ArrayList<>();
+    var fdoRecords = new ArrayList<FdoRecord>();
+    var newFdoRecords = new ArrayList<FdoRecord>();
     var timestamp = Instant.now();
-    for (var request : updateRequests.entrySet()) {
-      fdoRecords.add(
-          fdoRecordService.prepareUpdatedDoiRecord(request.getKey(), timestamp,
-              request.getValue(), incrementVersion));
+    for (var updateRequest : updateRequests.entrySet()) {
+      var newVersion = fdoRecordService.prepareUpdatedDoiRecord(updateRequest.getKey(), timestamp,
+          updateRequest.getValue(), incrementVersion);
+      fdoRecords.add(newVersion);
+      if (fdoRecordsAreDifferent(newVersion, updateRequest.getValue())) {
+        newFdoRecords.add(newVersion);
+      }
     }
-    updateDocuments(fdoRecords);
+    updateDocuments(newFdoRecords);
     return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, DOI));
   }
 
@@ -291,12 +296,17 @@ public class DoiService extends PidService {
       boolean updateVersion)
       throws InvalidRequestException {
     var fdoRecords = new ArrayList<FdoRecord>();
+    var newFdoRecords = new ArrayList<FdoRecord>();
     for (var updateRequest : updateRequests.entrySet()) {
-      fdoRecords.add(fdoRecordService.prepareUpdatedDigitalSpecimenRecord(
+      var newVersion = fdoRecordService.prepareUpdatedDigitalSpecimenRecord(
           updateRequest.getKey(), timestamp,
-          updateRequest.getValue(), updateVersion));
+          updateRequest.getValue(), updateVersion);
+      fdoRecords.add(newVersion);
+      if (fdoRecordsAreDifferent(newVersion, updateRequest.getValue())) {
+        newFdoRecords.add(newVersion);
+      }
     }
-    updateDocuments(fdoRecords);
+    updateDocuments(newFdoRecords);
     return fdoRecords;
   }
 
@@ -305,12 +315,17 @@ public class DoiService extends PidService {
       boolean incrementVersion)
       throws InvalidRequestException {
     var fdoRecords = new ArrayList<FdoRecord>();
+    var newFdoRecords = new ArrayList<FdoRecord>();
     for (var updateRequest : updateRequests.entrySet()) {
-      fdoRecords.add(fdoRecordService.prepareUpdatedDigitalMediaRecord(
+      var newVersion = fdoRecordService.prepareUpdatedDigitalMediaRecord(
           updateRequest.getKey(), timestamp,
-          updateRequest.getValue(), incrementVersion));
+          updateRequest.getValue(), incrementVersion);
+      fdoRecords.add(newVersion);
+      if (fdoRecordsAreDifferent(newVersion, updateRequest.getValue())) {
+        newFdoRecords.add(newVersion);
+      }
     }
-    updateDocuments(fdoRecords);
+    updateDocuments(newFdoRecords);
     return fdoRecords;
   }
 

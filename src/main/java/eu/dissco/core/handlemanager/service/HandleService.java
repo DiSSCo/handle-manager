@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.bson.Document;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
@@ -93,8 +94,8 @@ public class HandleService extends PidService {
       throws InvalidRequestException, UnprocessableEntityException {
     var fdoType = getFdoTypeFromRequest(
         requests.stream().map(r -> r.data().type()).toList(), VALID_FDO_TYPES);
-    List<FdoRecord> fdoRecords;
-    List<Document> fdoDocuments;
+    Pair<List<FdoRecord>, List<FdoRecord>> fdoRecords;
+    List<Document> changedFdoDocuments;
     var previousVersionMap = getPreviousVersionsMap(requests);
     switch (fdoType) {
       case ANNOTATION -> fdoRecords = updateAnnotation(previousVersionMap, incrementVersion);
@@ -108,9 +109,11 @@ public class HandleService extends PidService {
       default -> throw new IllegalStateException();
     }
     try {
-      fdoDocuments = toMongoDbDocument(fdoRecords);
-      mongoRepository.updateHandleRecords(fdoDocuments);
-      return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, fdoType));
+      // Update repo with changed documents
+      changedFdoDocuments = toMongoDbDocument(fdoRecords.getLeft());
+      mongoRepository.updateHandleRecords(changedFdoDocuments);
+      // Return all records
+      return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords.getRight(), fdoType));
     } catch (JsonProcessingException e) {
       log.error("An error has occurred processing JSON data", e);
       throw new InvalidRequestException("Unable to parse FDO Record");
@@ -131,20 +134,24 @@ public class HandleService extends PidService {
     return fdoRecords;
   }
 
-  private List<FdoRecord> updateAnnotation(Map<PatchRequestData, FdoRecord> previousVersionMap,
+  private Pair<List<FdoRecord>, List<FdoRecord>> updateAnnotation(
+      Map<PatchRequestData, FdoRecord> previousVersionMap,
       boolean incrementVersion) throws InvalidRequestException {
     var updateRequests = convertPatchRequestDataToAttributesClass(previousVersionMap,
         AnnotationRequestAttributes.class);
     List<FdoRecord> fdoRecords = new ArrayList<>();
+    List<FdoRecord> newFdoRecords = new ArrayList<>();
     var timestamp = Instant.now();
-    for (var request : updateRequests.entrySet()) {
-      fdoRecords.add(
-          fdoRecordService.prepareUpdatedAnnotationRecord(request.getKey(), timestamp,
-              request.getValue(), incrementVersion));
+    for (var updateRequest : updateRequests.entrySet()) {
+      var newVersion =
+          fdoRecordService.prepareUpdatedAnnotationRecord(updateRequest.getKey(), timestamp,
+              updateRequest.getValue(), incrementVersion);
+      if (fdoRecordsAreDifferent(newVersion, updateRequest.getValue())) {
+        newFdoRecords.add(newVersion);
+      }
     }
-    return fdoRecords;
+    return Pair.of(newFdoRecords, fdoRecords);
   }
-
 
   private List<FdoRecord> createHandle(List<JsonNode> requestAttributes,
       Iterator<String> handleIterator)
@@ -159,19 +166,25 @@ public class HandleService extends PidService {
     return fdoRecords;
   }
 
-  private List<FdoRecord> updateHandle(Map<PatchRequestData, FdoRecord> previousVersionMap,
+  private Pair<List<FdoRecord>, List<FdoRecord>> updateHandle(
+      Map<PatchRequestData, FdoRecord> previousVersionMap,
       boolean incrementVersion)
       throws InvalidRequestException {
-    var updateRequest = convertPatchRequestDataToAttributesClass(previousVersionMap,
+    var updateRequests = convertPatchRequestDataToAttributesClass(previousVersionMap,
         HandleRequestAttributes.class);
     var fdoRecords = new ArrayList<FdoRecord>();
+    List<FdoRecord> newFdoRecords = new ArrayList<>();
     var timestamp = Instant.now();
-    for (var request : updateRequest.entrySet()) {
-      fdoRecords.add(
-          fdoRecordService.prepareUpdatedHandleRecord(request.getKey(), HANDLE, timestamp,
-              request.getValue(), incrementVersion));
+    for (var updateRequest : updateRequests.entrySet()) {
+      var newVersion =
+          fdoRecordService.prepareUpdatedHandleRecord(updateRequest.getKey(), HANDLE, timestamp,
+              updateRequest.getValue(), incrementVersion);
+      fdoRecords.add(newVersion);
+      if (fdoRecordsAreDifferent(newVersion, updateRequest.getValue())) {
+        newFdoRecords.add(newVersion);
+      }
     }
-    return fdoRecords;
+    return Pair.of(newFdoRecords, fdoRecords);
   }
 
   private List<FdoRecord> createDataMapping(List<JsonNode> requestAttributes,
@@ -187,18 +200,25 @@ public class HandleService extends PidService {
     return fdoRecords;
   }
 
-  private List<FdoRecord> updateDataMapping(Map<PatchRequestData, FdoRecord> previousVersionMap,
+  private Pair<List<FdoRecord>, List<FdoRecord>> updateDataMapping(
+      Map<PatchRequestData, FdoRecord> previousVersionMap,
       boolean incrementVersion)
       throws InvalidRequestException {
     var updateRequests = convertPatchRequestDataToAttributesClass(previousVersionMap,
         DataMappingRequestAttributes.class);
     List<FdoRecord> fdoRecords = new ArrayList<>();
+    List<FdoRecord> newFdoRecords = new ArrayList<>();
     var timestamp = Instant.now();
-    for (var request : updateRequests.entrySet()) {
-      fdoRecords.add(fdoRecordService.prepareUpdatedDataMappingRecord(request.getKey(), timestamp,
-          request.getValue(), incrementVersion));
+    for (var updateRequest : updateRequests.entrySet()) {
+      var newVersion = fdoRecordService.prepareUpdatedDataMappingRecord(updateRequest.getKey(),
+          timestamp,
+          updateRequest.getValue(), incrementVersion);
+      fdoRecords.add(newVersion);
+      if (fdoRecordsAreDifferent(newVersion, updateRequest.getValue())) {
+        newFdoRecords.add(newVersion);
+      }
     }
-    return fdoRecords;
+    return Pair.of(newFdoRecords, fdoRecords);
   }
 
   private List<FdoRecord> createMas(List<JsonNode> requestAttributes,
@@ -213,19 +233,25 @@ public class HandleService extends PidService {
     return fdoRecords;
   }
 
-  private List<FdoRecord> updateMas(Map<PatchRequestData, FdoRecord> previousVersionMap,
+  private Pair<List<FdoRecord>, List<FdoRecord>> updateMas(
+      Map<PatchRequestData, FdoRecord> previousVersionMap,
       boolean incrementVersion)
       throws InvalidRequestException {
     List<FdoRecord> fdoRecords = new ArrayList<>();
+    List<FdoRecord> newFdoRecords = new ArrayList<>();
     var timestamp = Instant.now();
     var updateRequests = convertPatchRequestDataToAttributesClass(previousVersionMap,
         MasRequestAttributes.class);
-    for (var request : updateRequests.entrySet()) {
-      fdoRecords.add(
-          fdoRecordService.prepareUpdatedMasRecord(request.getKey(), timestamp,
-              request.getValue(), incrementVersion));
+    for (var updateRequest : updateRequests.entrySet()) {
+      var newVersion =
+          fdoRecordService.prepareUpdatedMasRecord(updateRequest.getKey(), timestamp,
+              updateRequest.getValue(), incrementVersion);
+      fdoRecords.add(newVersion);
+      if (fdoRecordsAreDifferent(newVersion, updateRequest.getValue())) {
+        newFdoRecords.add(newVersion);
+      }
     }
-    return fdoRecords;
+    return Pair.of(newFdoRecords, fdoRecords);
   }
 
   private List<FdoRecord> createOrganisation(List<JsonNode> requestAttributes,
@@ -241,18 +267,23 @@ public class HandleService extends PidService {
     return fdoRecords;
   }
 
-  private List<FdoRecord> updateOrganisation(Map<PatchRequestData, FdoRecord> previousVersionMap,
+  private Pair<List<FdoRecord>, List<FdoRecord>> updateOrganisation(
+      Map<PatchRequestData, FdoRecord> previousVersionMap,
       boolean incrementVersion) throws InvalidRequestException {
     var updateRequests = convertPatchRequestDataToAttributesClass(previousVersionMap,
         OrganisationRequestAttributes.class);
     List<FdoRecord> fdoRecords = new ArrayList<>();
+    List<FdoRecord> newFdoRecords = new ArrayList<>();
     var timestamp = Instant.now();
-    for (var request : updateRequests.entrySet()) {
-      fdoRecords.add(
-          fdoRecordService.prepareUpdatedOrganisationRecord(request.getKey(), timestamp,
-              request.getValue(), incrementVersion));
+    for (var updateRequest : updateRequests.entrySet()) {
+      var newVersion = fdoRecordService.prepareUpdatedOrganisationRecord(updateRequest.getKey(),
+          timestamp, updateRequest.getValue(), incrementVersion);
+      fdoRecords.add(newVersion);
+      if (fdoRecordsAreDifferent(newVersion, updateRequest.getValue())) {
+        newFdoRecords.add(newVersion);
+      }
     }
-    return fdoRecords;
+    return Pair.of(newFdoRecords, fdoRecords);
   }
 
   private List<FdoRecord> createSourceSystem(List<JsonNode> requestAttributes,
@@ -268,19 +299,25 @@ public class HandleService extends PidService {
     return fdoRecords;
   }
 
-  private List<FdoRecord> updateSourceSystem(Map<PatchRequestData, FdoRecord> previousVersionMap,
+  private Pair<List<FdoRecord>, List<FdoRecord>> updateSourceSystem(
+      Map<PatchRequestData, FdoRecord> previousVersionMap,
       boolean incrementVersion)
       throws InvalidRequestException {
     var updateRequests = convertPatchRequestDataToAttributesClass(previousVersionMap,
         SourceSystemRequestAttributes.class);
     List<FdoRecord> fdoRecords = new ArrayList<>();
+    List<FdoRecord> newFdoRecords = new ArrayList<>();
     var timestamp = Instant.now();
-    for (var request : updateRequests.entrySet()) {
-      fdoRecords.add(
-          fdoRecordService.prepareUpdatedSourceSystemRecord(request.getKey(), timestamp,
-              request.getValue(), incrementVersion));
+    for (var updateRequest : updateRequests.entrySet()) {
+      var newVersion =
+          fdoRecordService.prepareUpdatedSourceSystemRecord(updateRequest.getKey(), timestamp,
+              updateRequest.getValue(), incrementVersion);
+      fdoRecords.add(newVersion);
+      if (fdoRecordsAreDifferent(newVersion, updateRequest.getValue())) {
+        newFdoRecords.add(newVersion);
+      }
     }
-    return fdoRecords;
+    return Pair.of(newFdoRecords, fdoRecords);
   }
 
 }

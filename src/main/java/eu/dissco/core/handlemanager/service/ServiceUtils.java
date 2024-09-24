@@ -13,6 +13,15 @@ public class ServiceUtils {
   private ServiceUtils() {
   }
 
+  public static FdoAttribute getField(List<FdoAttribute> fdoAttributes, Integer targetIndex) {
+    for (var attribute : fdoAttributes) {
+      if (attribute.getIndex() == targetIndex) {
+        return attribute;
+      }
+    }
+    return null;
+  }
+
   public static FdoAttribute getField(List<FdoAttribute> fdoAttributes, FdoProfile targetField) {
     for (var attribute : fdoAttributes) {
       if (attribute.getIndex() == targetField.index()) {
@@ -23,7 +32,7 @@ public class ServiceUtils {
     throw new IllegalStateException();
   }
 
-  public static <T> Collector<T, ?, T> toSingleton() {
+  public static <T> Collector<T, ?, T> toSingle() {
     return Collectors.collectingAndThen(
         Collectors.toList(),
         list -> {

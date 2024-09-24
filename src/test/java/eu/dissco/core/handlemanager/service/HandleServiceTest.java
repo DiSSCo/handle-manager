@@ -46,10 +46,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mockStatic;
 
 import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
+import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
@@ -61,10 +63,14 @@ import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -322,7 +328,7 @@ class HandleServiceTest {
   @Test
   void testUpdateSourceSystem() throws Exception {
     // Given
-    var previousVersion = givenMasFdoRecord(HANDLE);
+    var previousVersion = givenSourceSystemFdoRecord(HANDLE);
     var request = MAPPER.valueToTree(givenSourceSystemUpdated());
     var updateRequest = givenUpdateRequest(List.of(HANDLE), FdoType.SOURCE_SYSTEM, request);
     var updatedAttributeRecord = givenUpdatedFdoRecord(FdoType.SOURCE_SYSTEM, null);
@@ -339,6 +345,47 @@ class HandleServiceTest {
     // Then
     assertThat(result).isEqualTo(expected);
     then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument));
+  }
+
+  @ParameterizedTest
+  @MethodSource("equalArgs")
+  void testUpdateRecordIsEqual(FdoRecord previousVersion, FdoType fdoType, Object request)
+      throws Exception {
+    var updateRequest = givenUpdateRequest(List.of(HANDLE), fdoType, MAPPER.valueToTree(request));
+    var expected = givenWriteResponseFull(previousVersion);
+    fdoRecordServiceReturnsPreviousVersion(previousVersion);
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
+    given(mongoRepository.getHandleRecords(List.of(HANDLE))).willReturn(List.of(previousVersion));
+
+    // When
+    var result = service.updateRecords(updateRequest, true);
+
+    // Then
+    assertThat(result).isEqualTo(expected);
+    then(mongoRepository).should().updateHandleRecords(Collections.emptyList());
+  }
+
+  private void fdoRecordServiceReturnsPreviousVersion(FdoRecord previousVersion) throws Exception {
+    lenient().when(fdoRecordService.prepareUpdatedHandleRecord(any(), any(), any(), any(),
+        anyBoolean())).thenReturn(previousVersion);
+    lenient().when(fdoRecordService.prepareUpdatedDataMappingRecord(any(), any(), any(),
+        anyBoolean())).thenReturn(previousVersion);
+    lenient().when(fdoRecordService.prepareUpdatedMasRecord(any(), any(), any(),
+        anyBoolean())).thenReturn(previousVersion);
+    lenient().when(fdoRecordService.prepareUpdatedOrganisationRecord(any(), any(), any(),
+        anyBoolean())).thenReturn(previousVersion);
+    lenient().when(fdoRecordService.prepareUpdatedSourceSystemRecord(any(), any(), any(),
+        anyBoolean())).thenReturn(previousVersion);
+  }
+
+  private static Stream<Arguments> equalArgs() throws Exception {
+    return Stream.of(
+        Arguments.of(givenHandleFdoRecord(HANDLE), FdoType.HANDLE, givenHandleKernel()),
+        Arguments.of(givenDataMappingFdoRecord(HANDLE), FdoType.DATA_MAPPING, givenDataMapping()),
+        Arguments.of(givenMasFdoRecord(HANDLE), FdoType.MAS, givenMas()),
+        Arguments.of(givenOrganisationFdoRecord(HANDLE), FdoType.ORGANISATION, givenOrganisation()),
+        Arguments.of(givenSourceSystemFdoRecord(HANDLE), FdoType.SOURCE_SYSTEM, givenSourceSystem()
+        ));
   }
 
   @Test

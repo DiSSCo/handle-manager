@@ -9,7 +9,9 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoType.ANNOTATION;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_MEDIA;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_SPECIMEN;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.TOMBSTONE;
-import static eu.dissco.core.handlemanager.service.ServiceUtils.toSingleton;
+import static eu.dissco.core.handlemanager.service.FdoRecordService.GENERATED_KEYS;
+import static eu.dissco.core.handlemanager.service.ServiceUtils.getField;
+import static eu.dissco.core.handlemanager.service.ServiceUtils.toSingle;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -312,7 +314,7 @@ public abstract class PidService {
     try {
       return previousVersions.stream().collect(Collectors.toMap(
           fdo -> patchRequestData.stream().filter(data -> data.id().equals(fdo.handle()))
-              .collect(toSingleton()),
+              .collect(toSingle()),
           Function.identity()
       ));
     } catch (RuntimeException e) {
@@ -342,4 +344,19 @@ public abstract class PidService {
       throw new InvalidRequestRuntimeException();
     }
   }
+
+  protected static boolean fdoRecordsAreDifferent(FdoRecord newVersion, FdoRecord currentVersion) {
+    var currentAttributes = currentVersion.attributes();
+    for (var newAttribute : newVersion.attributes()) {
+      if (!GENERATED_KEYS.contains(newAttribute.getIndex())) {
+        var currentAttribute = getField(currentAttributes, newAttribute.getIndex());
+        if (currentAttribute == null || !currentAttribute.getValue()
+            .equals(newAttribute.getValue())) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
 }
