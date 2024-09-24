@@ -347,6 +347,9 @@ public abstract class PidService {
 
   protected static boolean fdoRecordsAreDifferent(FdoRecord newVersion, FdoRecord currentVersion) {
     var currentAttributes = currentVersion.attributes();
+    if (newVersion.attributes().size() != currentAttributes.size()) {
+      return true;
+    }
     for (var newAttribute : newVersion.attributes()) {
       if (!GENERATED_KEYS.contains(newAttribute.getIndex())) {
         var currentAttribute = getField(currentAttributes, newAttribute.getIndex());
@@ -358,5 +361,4 @@ public abstract class PidService {
     }
     return false;
   }
-
 }
