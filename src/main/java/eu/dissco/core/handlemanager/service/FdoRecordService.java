@@ -1036,11 +1036,7 @@ public class FdoRecordService {
         locations.add(new XmlElement("JSON", "0",
             applicationProperties.getOrchestrationUrl() + "/api/v1/mas/" + handle));
       }
-      case ORGANISATION -> {
-        if (keyLocation != null) {
-          locations.add(new XmlElement("ROR", "1", keyLocation));
-        }
-      }
+      case ORGANISATION -> locations.add(new XmlElement("ROR", "1", keyLocation));
       default -> {
         // Handle, DOI are all in user locations
       }
