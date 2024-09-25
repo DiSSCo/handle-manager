@@ -128,16 +128,38 @@ class DoiServiceTest {
     var dataCiteEvent = new DataCiteEvent(jsonFormatFdoRecord(fdoRecord.attributes()),
         EventType.CREATE);
     given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
-    given(fdoRecordService.prepareNewDigitalSpecimenRecord(any(), any(), any())).willReturn(
+    given(fdoRecordService.prepareNewDigitalSpecimenRecord(any(), any(), any(),
+        anyBoolean())).willReturn(
         fdoRecord);
     given(profileProperties.getDomain()).willReturn(DOI_DOMAIN);
 
     // When
-    var responseReceived = service.createRecords(List.of(request));
+    var responseReceived = service.createRecords(List.of(request), false);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
     then(dataCiteService).should().publishToDataCite(dataCiteEvent, FdoType.DIGITAL_SPECIMEN);
+  }
+
+  @Test
+  void testCreateDigitalSpecimenDraft() throws Exception {
+    // Given
+    var request = givenPostRequest(givenDigitalSpecimen(), FdoType.DIGITAL_SPECIMEN);
+    var fdoRecord = givenDigitalSpecimenFdoRecord(HANDLE);
+    var responseExpected = givenWriteResponseIdsOnly(List.of(fdoRecord), FdoType.DIGITAL_SPECIMEN,
+        DOI_DOMAIN);
+    given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
+    given(fdoRecordService.prepareNewDigitalSpecimenRecord(any(), any(), any(),
+        anyBoolean())).willReturn(
+        fdoRecord);
+    given(profileProperties.getDomain()).willReturn(DOI_DOMAIN);
+
+    // When
+    var responseReceived = service.createRecords(List.of(request), true);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+    then(dataCiteService).shouldHaveNoInteractions();
   }
 
   @Test
@@ -150,16 +172,38 @@ class DoiServiceTest {
     var dataCiteEvent = new DataCiteEvent(jsonFormatFdoRecord(digitalMedia.attributes()),
         EventType.CREATE);
     given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
-    given(fdoRecordService.prepareNewDigitalMediaRecord(any(), any(), any())).willReturn(
+    given(fdoRecordService.prepareNewDigitalMediaRecord(any(), any(), any(),
+        anyBoolean())).willReturn(
         digitalMedia);
     given(profileProperties.getDomain()).willReturn(DOI_DOMAIN);
 
     // When
-    var responseReceived = service.createRecords(List.of(request));
+    var responseReceived = service.createRecords(List.of(request), false);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
     then(dataCiteService).should().publishToDataCite(dataCiteEvent, FdoType.DIGITAL_MEDIA);
+  }
+
+  @Test
+  void testCreateDigitalMediaDraft() throws Exception {
+    // Given
+    var request = givenPostRequest(givenDigitalMedia(), FdoType.DIGITAL_MEDIA);
+    var digitalMedia = givenDigitalMediaFdoRecord(HANDLE);
+    var responseExpected = givenWriteResponseIdsOnly(List.of(digitalMedia), FdoType.DIGITAL_MEDIA,
+        DOI_DOMAIN);
+    given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
+    given(fdoRecordService.prepareNewDigitalMediaRecord(any(), any(), any(),
+        anyBoolean())).willReturn(
+        digitalMedia);
+    given(profileProperties.getDomain()).willReturn(DOI_DOMAIN);
+
+    // When
+    var responseReceived = service.createRecords(List.of(request), true);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+    then(dataCiteService).shouldHaveNoInteractions();
   }
 
   @Test
@@ -168,12 +212,13 @@ class DoiServiceTest {
     var request = List.of(givenPostRequest(givenDigitalSpecimen(), FdoType.DIGITAL_SPECIMEN));
     var digitalSpecimen = givenDigitalSpecimenFdoRecord(HANDLE);
     given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
-    given(fdoRecordService.prepareNewDigitalSpecimenRecord(any(), any(), any())).willReturn(
+    given(fdoRecordService.prepareNewDigitalSpecimenRecord(any(), any(), any(),
+        anyBoolean())).willReturn(
         digitalSpecimen);
     doThrow(JsonProcessingException.class).when(dataCiteService).publishToDataCite(any(), any());
 
     // When
-    assertThrows(UnprocessableEntityException.class, () -> service.createRecords(request));
+    assertThrows(UnprocessableEntityException.class, () -> service.createRecords(request, false));
 
     // Then
     then(mongoRepository).should().rollbackHandles(List.of(HANDLE));
@@ -199,14 +244,15 @@ class DoiServiceTest {
     given(mongoRepository.searchByPrimaryLocalId(any(), anyList())).willReturn(
         List.of(previousVersion));
     given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
-    given(fdoRecordService.prepareNewDigitalSpecimenRecord(any(), any(), any())).willReturn(
+    given(fdoRecordService.prepareNewDigitalSpecimenRecord(any(), any(), any(),
+        anyBoolean())).willReturn(
         fdoRecordNew);
     given(fdoRecordService.prepareUpdatedDigitalSpecimenRecord(any(), any(), any(),
         anyBoolean())).willReturn(fdoRecordUpdate);
     given(profileProperties.getDomain()).willReturn(DOI_DOMAIN);
 
     // When
-    var responseReceived = service.createRecords(requests);
+    var responseReceived = service.createRecords(requests, false);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -288,7 +334,8 @@ class DoiServiceTest {
     given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
     given(mongoRepository.searchByPrimaryLocalId(any(), any())).willReturn(
         List.of(previousVersion));
-    given(fdoRecordService.prepareNewDigitalMediaRecord(any(), any(), any())).willReturn(
+    given(fdoRecordService.prepareNewDigitalMediaRecord(any(), any(), any(),
+        anyBoolean())).willReturn(
         fdoRecordNew);
     given(fdoRecordService.prepareUpdatedDigitalMediaRecord(any(), any(), any(),
         anyBoolean())).willReturn(fdoRecordUpdate);
@@ -297,7 +344,7 @@ class DoiServiceTest {
         DIGITAL_MEDIA, DOI_DOMAIN);
 
     // When
-    var responseReceived = service.createRecords(requests);
+    var responseReceived = service.createRecords(requests, false);
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
@@ -399,7 +446,7 @@ class DoiServiceTest {
     var request = List.of(givenPostRequest(givenHandleKernel(), FdoType.HANDLE));
 
     // When Then
-    assertThrows(UnsupportedOperationException.class, () -> service.createRecords(request));
+    assertThrows(UnsupportedOperationException.class, () -> service.createRecords(request, false));
 
   }
 
@@ -453,11 +500,12 @@ class DoiServiceTest {
     var fdoRecord = givenDoiFdoRecord(HANDLE);
     var expected = TestUtils.givenWriteResponseFull(List.of(HANDLE), FdoType.DOI);
     given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
-    given(fdoRecordService.prepareNewDoiRecord(any(), any(), any())).willReturn(fdoRecord);
+    given(fdoRecordService.prepareNewDoiRecord(any(), any(), any(), anyBoolean())).willReturn(
+        fdoRecord);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
-    var result = service.createRecords(List.of(request));
+    var result = service.createRecords(List.of(request), false);
 
     // Then
     assertThat(result).isEqualTo(expected);

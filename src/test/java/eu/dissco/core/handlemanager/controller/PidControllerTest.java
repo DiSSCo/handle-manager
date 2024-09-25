@@ -35,6 +35,7 @@ import eu.dissco.core.handlemanager.service.PidService;
 import eu.dissco.core.handlemanager.testUtils.TestUtils;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -176,7 +177,7 @@ class PidControllerTest {
     var requestNode = givenPostRequest(requestObject, FdoType.HANDLE);
 
     // When
-    var responseReceived = controller.createRecord(requestNode, authentication);
+    var responseReceived = controller.createRecord(Optional.of(false), requestNode, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -189,7 +190,7 @@ class PidControllerTest {
     var requestNode = givenPostRequest(requestObject, FdoType.DOI);
 
     // When
-    var responseReceived = controller.createRecord(requestNode, authentication);
+    var responseReceived = controller.createRecord(Optional.of(false), requestNode, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -203,10 +204,10 @@ class PidControllerTest {
     JsonApiWrapperWrite responseExpected = TestUtils.givenWriteResponseFull(List.of(HANDLE),
         FdoType.DIGITAL_SPECIMEN);
 
-    given(service.createRecords(List.of(requestNode))).willReturn(responseExpected);
+    given(service.createRecords(List.of(requestNode), false)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecord(requestNode, authentication);
+    var responseReceived = controller.createRecord(Optional.of(false), requestNode, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -220,7 +221,7 @@ class PidControllerTest {
     var requestNode = givenPostRequest(requestObject, FdoType.DIGITAL_MEDIA);
 
     // When
-    var responseReceived = controller.createRecord(requestNode, authentication);
+    var responseReceived = controller.createRecord(Optional.of(false), requestNode, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -232,10 +233,10 @@ class PidControllerTest {
     var requests = List.of(givenPostRequest(givenHandleKernel(), FdoType.HANDLE));
 
     var responseExpected = TestUtils.givenWriteResponseFull(List.of(HANDLE), FdoType.HANDLE);
-    given(service.createRecords(requests)).willReturn(responseExpected);
+    given(service.createRecords(requests, false)).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.createRecords(requests, authentication);
+    var responseReceived = controller.createRecords(Optional.of(false), requests, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -248,7 +249,7 @@ class PidControllerTest {
     var requests = List.of(givenPostRequest(givenDoiKernel(), FdoType.DOI));
 
     // When
-    var responseReceived = controller.createRecords(requests, authentication);
+    var responseReceived = controller.createRecords(Optional.of(false), requests, authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -372,12 +373,12 @@ class PidControllerTest {
     var request = givenDoiKernel();
     var requestNode = givenPostRequest(request, FdoType.DOI);
     String message = "123";
-    given(service.createRecords(List.of(requestNode))).willThrow(
+    given(service.createRecords(List.of(requestNode), false)).willThrow(
         new PidResolutionException(message));
 
     // Then
     Exception exception = assertThrowsExactly(PidResolutionException.class,
-        () -> controller.createRecord(requestNode, authentication));
+        () -> controller.createRecord(Optional.of(false), requestNode, authentication));
     assertThat(exception.getMessage()).isEqualTo(message);
   }
 }

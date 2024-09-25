@@ -125,7 +125,7 @@ class FdoRecordServiceTest {
     var expected = givenHandleFdoRecord(HANDLE);
 
     // When
-    var result = fdoRecordService.prepareNewHandleRecord(request, HANDLE, CREATED);
+    var result = fdoRecordService.prepareNewHandleRecord(request, HANDLE, CREATED, false);
 
     // Then
     assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
@@ -141,7 +141,7 @@ class FdoRecordServiceTest {
         .withOrganisationIdentifier(ROR_DOMAIN + ROR_IDENTIFIER);
 
     // When
-    fdoRecordService.prepareNewOrganisationRecord(request, HANDLE, CREATED);
+    fdoRecordService.prepareNewOrganisationRecord(request, HANDLE, CREATED, false);
 
     // Then
     then(pidResolver).should().getObjectName("https://api.ror.org/organizations/" + ROR_IDENTIFIER);
@@ -155,7 +155,7 @@ class FdoRecordServiceTest {
         .withOrganisationIdentifier(id);
 
     // When
-    fdoRecordService.prepareNewOrganisationRecord(request, HANDLE, CREATED);
+    fdoRecordService.prepareNewOrganisationRecord(request, HANDLE, CREATED, false);
 
     // Then
     then(pidResolver).should().getObjectName(id);
@@ -170,7 +170,7 @@ class FdoRecordServiceTest {
     var expected = "https://wikidata.org/w/rest.php/wikibase/v0/entities/items/123";
 
     // When
-    fdoRecordService.prepareNewOrganisationRecord(request, HANDLE, CREATED);
+    fdoRecordService.prepareNewOrganisationRecord(request, HANDLE, CREATED, false);
 
     // Then
     then(pidResolver).should().resolveQid(expected);
@@ -250,7 +250,26 @@ class FdoRecordServiceTest {
     var expected = givenDoiFdoRecord(HANDLE);
 
     // When
-    var result = fdoRecordService.prepareNewDoiRecord(request, HANDLE, CREATED);
+    var result = fdoRecordService.prepareNewDoiRecord(request, HANDLE, CREATED, false);
+
+    // Then
+    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.primaryLocalId()).isNull();
+    assertThat(result.fdoType()).isEqualTo(expected.fdoType());
+    assertThat(result.handle()).isEqualTo(expected.handle());
+  }
+
+  @Test
+  void testPrepareNewDoiRecordDraft() throws Exception {
+    // Given
+    var request = givenDoiKernel();
+    var expectedAttributes = new ArrayList<>(givenDoiFdoRecord(HANDLE).attributes());
+    expectedAttributes.set(expectedAttributes.indexOf(getField(expectedAttributes, PID_STATUS)),
+        new FdoAttribute(PID_STATUS, CREATED, PidStatus.DRAFT));
+    var expected = new FdoRecord(HANDLE, FdoType.DOI, expectedAttributes, null);
+
+    // When
+    var result = fdoRecordService.prepareNewDoiRecord(request, HANDLE, CREATED, true);
 
     // Then
     assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
@@ -283,7 +302,7 @@ class FdoRecordServiceTest {
     var expected = givenDigitalMediaFdoRecord(HANDLE);
 
     // When
-    var result = fdoRecordService.prepareNewDigitalMediaRecord(request, HANDLE, CREATED);
+    var result = fdoRecordService.prepareNewDigitalMediaRecord(request, HANDLE, CREATED, false);
 
     // Then
     assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
@@ -299,7 +318,7 @@ class FdoRecordServiceTest {
 
     // When
     assertThrows(InvalidRequestException.class, () ->
-        fdoRecordService.prepareNewDigitalMediaRecord(request, HANDLE, CREATED));
+        fdoRecordService.prepareNewDigitalMediaRecord(request, HANDLE, CREATED, false));
   }
 
   @Test
@@ -327,7 +346,7 @@ class FdoRecordServiceTest {
     var expected = givenDigitalSpecimenFdoRecord(HANDLE);
 
     // When
-    var result = fdoRecordService.prepareNewDigitalSpecimenRecord(request, HANDLE, CREATED);
+    var result = fdoRecordService.prepareNewDigitalSpecimenRecord(request, HANDLE, CREATED, false);
 
     // Then
     assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
@@ -354,7 +373,7 @@ class FdoRecordServiceTest {
         request.getNormalisedPrimarySpecimenObjectId());
 
     // When
-    var result = fdoRecordService.prepareNewDigitalSpecimenRecord(request, HANDLE, CREATED);
+    var result = fdoRecordService.prepareNewDigitalSpecimenRecord(request, HANDLE, CREATED, false);
 
     // Then
     assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
@@ -377,7 +396,7 @@ class FdoRecordServiceTest {
         NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL);
 
     // When
-    var result = fdoRecordService.prepareNewDigitalSpecimenRecord(request, HANDLE, CREATED);
+    var result = fdoRecordService.prepareNewDigitalSpecimenRecord(request, HANDLE, CREATED, false);
 
     // Then
     assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
@@ -394,7 +413,7 @@ class FdoRecordServiceTest {
 
     // When / Then
     assertThrows(InvalidRequestException.class,
-        () -> fdoRecordService.prepareNewDigitalSpecimenRecord(request, HANDLE, CREATED));
+        () -> fdoRecordService.prepareNewDigitalSpecimenRecord(request, HANDLE, CREATED, false));
   }
 
   @Test
@@ -423,7 +442,7 @@ class FdoRecordServiceTest {
     var expected = givenAnnotationFdoRecord(HANDLE, false);
 
     // When
-    var result = fdoRecordService.prepareNewAnnotationRecord(request, HANDLE, CREATED);
+    var result = fdoRecordService.prepareNewAnnotationRecord(request, HANDLE, CREATED, false);
 
     // Then
     assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
@@ -449,7 +468,7 @@ class FdoRecordServiceTest {
     var expected = new FdoRecord(HANDLE, FdoType.ANNOTATION, attributes, null);
 
     // When
-    var result = fdoRecordService.prepareNewAnnotationRecord(request, HANDLE, CREATED);
+    var result = fdoRecordService.prepareNewAnnotationRecord(request, HANDLE, CREATED, false);
 
     // Then
     assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
@@ -465,7 +484,7 @@ class FdoRecordServiceTest {
     var expected = givenAnnotationFdoRecord(HANDLE, true);
 
     // When
-    var result = fdoRecordService.prepareNewAnnotationRecord(request, HANDLE, CREATED);
+    var result = fdoRecordService.prepareNewAnnotationRecord(request, HANDLE, CREATED, false);
 
     // Then
     assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
@@ -499,7 +518,7 @@ class FdoRecordServiceTest {
     var expected = givenMasFdoRecord(HANDLE);
 
     // When
-    var result = fdoRecordService.prepareNewMasRecord(request, HANDLE, CREATED);
+    var result = fdoRecordService.prepareNewMasRecord(request, HANDLE, CREATED, false);
 
     // Then
     assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
@@ -532,7 +551,7 @@ class FdoRecordServiceTest {
     var expected = givenDataMappingFdoRecord(HANDLE);
 
     // When
-    var result = fdoRecordService.prepareNewDataMappingRecord(request, HANDLE, CREATED);
+    var result = fdoRecordService.prepareNewDataMappingRecord(request, HANDLE, CREATED, false);
 
     // Then
     assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
@@ -566,7 +585,7 @@ class FdoRecordServiceTest {
     var expected = givenSourceSystemFdoRecord(HANDLE);
 
     // When
-    var result = fdoRecordService.prepareNewSourceSystemRecord(request, HANDLE, CREATED);
+    var result = fdoRecordService.prepareNewSourceSystemRecord(request, HANDLE, CREATED, false);
 
     // Then
     assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
@@ -600,7 +619,7 @@ class FdoRecordServiceTest {
     var expected = givenOrganisationFdoRecord(HANDLE);
 
     // When
-    var result = fdoRecordService.prepareNewOrganisationRecord(request, HANDLE, CREATED);
+    var result = fdoRecordService.prepareNewOrganisationRecord(request, HANDLE, CREATED, false);
 
     // Then
     assertThat(result.attributes()).hasSameElementsAs(expected.attributes());

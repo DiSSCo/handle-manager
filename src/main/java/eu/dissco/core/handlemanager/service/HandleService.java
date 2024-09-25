@@ -55,7 +55,7 @@ public class HandleService extends PidService {
 
   // Pid Record Creation
   @Override
-  public JsonApiWrapperWrite createRecords(List<PostRequest> requests)
+  public JsonApiWrapperWrite createRecords(List<PostRequest> requests, boolean isDraft)
       throws InvalidRequestException {
     var handleList = hf.generateNewHandles(requests.size());
     var handles = handleList.iterator();
@@ -69,12 +69,12 @@ public class HandleService extends PidService {
     List<Document> fdoDocuments;
     try {
       switch (fdoType) {
-        case ANNOTATION -> fdoRecords = createAnnotation(requestAttributes, handles);
-        case HANDLE -> fdoRecords = createHandle(requestAttributes, handles);
-        case DATA_MAPPING -> fdoRecords = createDataMapping(requestAttributes, handles);
-        case MAS -> fdoRecords = createMas(requestAttributes, handles);
-        case ORGANISATION -> fdoRecords = createOrganisation(requestAttributes, handles);
-        case SOURCE_SYSTEM -> fdoRecords = createSourceSystem(requestAttributes, handles);
+        case ANNOTATION -> fdoRecords = createAnnotation(requestAttributes, handles, isDraft);
+        case HANDLE -> fdoRecords = createHandle(requestAttributes, handles, isDraft);
+        case DATA_MAPPING -> fdoRecords = createDataMapping(requestAttributes, handles, isDraft);
+        case MAS -> fdoRecords = createMas(requestAttributes, handles, isDraft);
+        case ORGANISATION -> fdoRecords = createOrganisation(requestAttributes, handles, isDraft);
+        case SOURCE_SYSTEM -> fdoRecords = createSourceSystem(requestAttributes, handles, isDraft);
         default ->
             throw new IllegalStateException(); // This case is handled by the getFdoTypeFromRequest check
       }
@@ -121,7 +121,7 @@ public class HandleService extends PidService {
   }
 
   private List<FdoRecord> createAnnotation(List<JsonNode> requestAttributes,
-      Iterator<String> handleIterator)
+      Iterator<String> handleIterator, boolean isDraft)
       throws JsonProcessingException, InvalidRequestException {
     List<FdoRecord> fdoRecords = new ArrayList<>();
     var timestamp = Instant.now();
@@ -129,7 +129,7 @@ public class HandleService extends PidService {
       var requestObject = mapper.treeToValue(request, AnnotationRequestAttributes.class);
       fdoRecords.add(
           fdoRecordService.prepareNewAnnotationRecord(requestObject, handleIterator.next(),
-              timestamp));
+              timestamp, isDraft));
     }
     return fdoRecords;
   }
@@ -155,21 +155,21 @@ public class HandleService extends PidService {
   }
 
   private List<FdoRecord> createHandle(List<JsonNode> requestAttributes,
-      Iterator<String> handleIterator)
+      Iterator<String> handleIterator, boolean isDraft)
       throws JsonProcessingException, InvalidRequestException {
     List<FdoRecord> fdoRecords = new ArrayList<>();
     var timestamp = Instant.now();
     for (var request : requestAttributes) {
       var requestObject = mapper.treeToValue(request, HandleRequestAttributes.class);
       fdoRecords.add(
-          fdoRecordService.prepareNewHandleRecord(requestObject, handleIterator.next(), timestamp));
+          fdoRecordService.prepareNewHandleRecord(requestObject, handleIterator.next(), timestamp,
+              isDraft));
     }
     return fdoRecords;
   }
 
   private Pair<List<FdoRecord>, List<FdoRecord>> updateHandle(
-      Map<PatchRequestData, FdoRecord> previousVersionMap,
-      boolean incrementVersion)
+      Map<PatchRequestData, FdoRecord> previousVersionMap, boolean incrementVersion)
       throws InvalidRequestException {
     var updateRequests = convertPatchRequestDataToAttributesClass(previousVersionMap,
         HandleRequestAttributes.class);
@@ -189,14 +189,15 @@ public class HandleService extends PidService {
   }
 
   private List<FdoRecord> createDataMapping(List<JsonNode> requestAttributes,
-      Iterator<String> handleIterator) throws JsonProcessingException, InvalidRequestException {
+      Iterator<String> handleIterator, boolean isDraft)
+      throws JsonProcessingException, InvalidRequestException {
     List<FdoRecord> fdoRecords = new ArrayList<>();
     var timestamp = Instant.now();
     for (var request : requestAttributes) {
       var requestObject = mapper.treeToValue(request, DataMappingRequestAttributes.class);
       fdoRecords.add(
           fdoRecordService.prepareNewDataMappingRecord(requestObject, handleIterator.next(),
-              timestamp));
+              timestamp, isDraft));
     }
     return fdoRecords;
   }
@@ -223,13 +224,14 @@ public class HandleService extends PidService {
   }
 
   private List<FdoRecord> createMas(List<JsonNode> requestAttributes,
-      Iterator<String> handleIterator) throws JsonProcessingException, InvalidRequestException {
+      Iterator<String> handleIterator, boolean isDraft)
+      throws JsonProcessingException, InvalidRequestException {
     List<FdoRecord> fdoRecords = new ArrayList<>();
     var timestamp = Instant.now();
     for (var request : requestAttributes) {
       var requestObject = mapper.treeToValue(request, MasRequestAttributes.class);
       fdoRecords.add(fdoRecordService.prepareNewMasRecord(requestObject, handleIterator.next(),
-          timestamp));
+          timestamp, isDraft));
     }
     return fdoRecords;
   }
@@ -256,14 +258,15 @@ public class HandleService extends PidService {
   }
 
   private List<FdoRecord> createOrganisation(List<JsonNode> requestAttributes,
-      Iterator<String> handleIterator) throws JsonProcessingException, InvalidRequestException {
+      Iterator<String> handleIterator, boolean isDraft)
+      throws JsonProcessingException, InvalidRequestException {
     List<FdoRecord> fdoRecords = new ArrayList<>();
     var timestamp = Instant.now();
     for (var request : requestAttributes) {
       var requestObject = mapper.treeToValue(request, OrganisationRequestAttributes.class);
       fdoRecords.add(
           fdoRecordService.prepareNewOrganisationRecord(requestObject, handleIterator.next(),
-              timestamp));
+              timestamp, isDraft));
     }
     return fdoRecords;
   }
@@ -288,14 +291,15 @@ public class HandleService extends PidService {
   }
 
   private List<FdoRecord> createSourceSystem(List<JsonNode> requestAttributes,
-      Iterator<String> handleIterator) throws JsonProcessingException, InvalidRequestException {
+      Iterator<String> handleIterator, boolean isDraft)
+      throws JsonProcessingException, InvalidRequestException {
     List<FdoRecord> fdoRecords = new ArrayList<>();
     var timestamp = Instant.now();
     for (var request : requestAttributes) {
       var requestObject = mapper.treeToValue(request, SourceSystemRequestAttributes.class);
       fdoRecords.add(
           fdoRecordService.prepareNewSourceSystemRecord(requestObject, handleIterator.next(),
-              timestamp));
+              timestamp, isDraft));
     }
     return fdoRecords;
   }

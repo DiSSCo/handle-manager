@@ -14,6 +14,7 @@ import eu.dissco.core.handlemanager.service.PidService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -85,21 +86,28 @@ public class PidController {
   }
 
   @Operation(summary = "Create single PID Record")
-  @PostMapping(value = "/")
-  public ResponseEntity<JsonApiWrapperWrite> createRecord(@RequestBody PostRequest request,
+  @PostMapping(value = {"/", "/{draft}"})
+  public ResponseEntity<JsonApiWrapperWrite> createRecord(
+      @PathVariable Optional<Boolean> draft,
+      @RequestBody PostRequest request,
       Authentication authentication) throws InvalidRequestException, UnprocessableEntityException {
+    var isDraft = draft.orElse(false);
     log.info(RECEIVED_MSG, "single create", authentication.getName());
     validatorComponent.validatePost(List.of(request));
-    return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(List.of(request)));
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(service.createRecords(List.of(request), isDraft));
   }
 
   @Operation(summary = "Create multiple PID Records at a time.")
-  @PostMapping(value = "/batch")
-  public ResponseEntity<JsonApiWrapperWrite> createRecords(@RequestBody List<PostRequest> requests,
+  @PostMapping(value = {"/batch", "/batch/{draft}"})
+  public ResponseEntity<JsonApiWrapperWrite> createRecords(
+      @PathVariable Optional<Boolean> draft,
+      @RequestBody List<PostRequest> requests,
       Authentication authentication) throws InvalidRequestException, UnprocessableEntityException {
+    var isDraft = draft.orElse(false);
     log.info(RECEIVED_MSG, "batch create", authentication.getName());
     validatorComponent.validatePost(requests);
-    return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(requests));
+    return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(requests, isDraft));
   }
 
   // Update

@@ -62,7 +62,7 @@ public class DoiService extends PidService {
   private static final String TYPE_ERROR_MESSAGE = "Error creating DOI for object of Type %s. Only Digital Specimens and Media Objects use DOIs.";
 
   @Override
-  public JsonApiWrapperWrite createRecords(List<PostRequest> requests)
+  public JsonApiWrapperWrite createRecords(List<PostRequest> requests, boolean isDraft)
       throws InvalidRequestException, UnprocessableEntityException {
     var requestAttributes = requests.stream()
         .map(request -> request.data().attributes())
@@ -73,13 +73,13 @@ public class DoiService extends PidService {
     try {
       switch (fdoType) {
         case DIGITAL_SPECIMEN -> {
-          return processDigitalSpecimenRequests(requestAttributes);
+          return processDigitalSpecimenRequests(requestAttributes, isDraft);
         }
         case DIGITAL_MEDIA -> {
-          return processDigitalMediaRequests(requestAttributes);
+          return processDigitalMediaRequests(requestAttributes, isDraft);
         }
         case DOI -> {
-          return createDoi(requestAttributes);
+          return createDoi(requestAttributes, isDraft);
         }
         default -> throw new UnsupportedOperationException(
             String.format(TYPE_ERROR_MESSAGE, fdoType.getDigitalObjectName()));
@@ -113,7 +113,8 @@ public class DoiService extends PidService {
   }
 
   // Upsert
-  private JsonApiWrapperWrite processDigitalSpecimenRequests(List<JsonNode> requestAttributes)
+  private JsonApiWrapperWrite processDigitalSpecimenRequests(List<JsonNode> requestAttributes,
+      boolean isDraft)
       throws JsonProcessingException, InvalidRequestException, UnprocessableEntityException {
     var specimenRequests = new ArrayList<DigitalSpecimenRequestAttributes>();
     for (var request : requestAttributes) {
@@ -123,14 +124,17 @@ public class DoiService extends PidService {
     var processResult = processUpsertRequestSpecimen(specimenRequests);
     var updateRecords = updateExistingSpecimenRecords(processResult.updateRequests(), timestamp,
         true);
-    var newRecords = createNewSpecimens(processResult.newSpecimenRequests(), timestamp);
+    var newRecords = createNewSpecimens(processResult.newSpecimenRequests(), timestamp, isDraft);
     var fdoRecords = Stream.concat(updateRecords.stream(), newRecords.stream()).toList();
-    publishToDataCite(newRecords, EventType.CREATE);
-    publishToDataCite(updateRecords, EventType.UPDATE);
+    if (!isDraft) {
+      publishToDataCite(newRecords, EventType.CREATE);
+      publishToDataCite(updateRecords, EventType.UPDATE);
+    }
     return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, DIGITAL_SPECIMEN));
   }
 
-  protected JsonApiWrapperWrite processDigitalMediaRequests(List<JsonNode> requestAttributes)
+  protected JsonApiWrapperWrite processDigitalMediaRequests(List<JsonNode> requestAttributes,
+      boolean isDraft)
       throws JsonProcessingException, InvalidRequestException, UnprocessableEntityException {
     var mediaRequests = new ArrayList<DigitalMediaRequestAttributes>();
     for (var request : requestAttributes) {
@@ -143,10 +147,12 @@ public class DoiService extends PidService {
     var processResult = processUpsertRequestMedia(mediaRequests);
     var updateRecords = updateExistingMediaRecords(processResult.updateMediaRequests(), timestamp,
         true);
-    var newRecords = createNewMedia(processResult.newMediaRequests(), timestamp);
+    var newRecords = createNewMedia(processResult.newMediaRequests(), timestamp, isDraft);
     var fdoRecords = Stream.concat(updateRecords.stream(), newRecords.stream()).toList();
-    publishToDataCite(newRecords, EventType.CREATE);
-    publishToDataCite(updateRecords, EventType.UPDATE);
+    if (!isDraft) {
+      publishToDataCite(newRecords, EventType.CREATE);
+      publishToDataCite(updateRecords, EventType.UPDATE);
+    }
     return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, DIGITAL_MEDIA));
   }
 
@@ -192,7 +198,7 @@ public class DoiService extends PidService {
   }
 
   // Create
-  private JsonApiWrapperWrite createDoi(List<JsonNode> requestAttributes)
+  private JsonApiWrapperWrite createDoi(List<JsonNode> requestAttributes, boolean isDraft)
       throws JsonProcessingException, InvalidRequestException {
     var handleIterator = hf.generateNewHandles(requestAttributes.size()).iterator();
     List<FdoRecord> fdoRecords = new ArrayList<>();
@@ -200,7 +206,8 @@ public class DoiService extends PidService {
     for (var request : requestAttributes) {
       var requestObject = mapper.treeToValue(request, DoiKernelRequestAttributes.class);
       fdoRecords.add(
-          fdoRecordService.prepareNewDoiRecord(requestObject, handleIterator.next(), timestamp));
+          fdoRecordService.prepareNewDoiRecord(requestObject, handleIterator.next(), timestamp,
+              isDraft));
     }
     updateDocuments(fdoRecords);
     // We don't publish DOIs to DataCite
@@ -230,28 +237,29 @@ public class DoiService extends PidService {
 
 
   private List<FdoRecord> createNewSpecimens(
-      List<DigitalSpecimenRequestAttributes> digitalSpecimenRequests, Instant timestamp)
+      List<DigitalSpecimenRequestAttributes> digitalSpecimenRequests, Instant timestamp,
+      boolean isDraft)
       throws InvalidRequestException {
     var handleIterator = hf.generateNewHandles(digitalSpecimenRequests.size()).iterator();
     var fdoRecords = new ArrayList<FdoRecord>();
     for (var request : digitalSpecimenRequests) {
       fdoRecords.add(
           fdoRecordService.prepareNewDigitalSpecimenRecord(request, handleIterator.next(),
-              timestamp));
+              timestamp, isDraft));
     }
     createDocuments(fdoRecords);
     return fdoRecords;
   }
 
   private List<FdoRecord> createNewMedia(
-      List<DigitalMediaRequestAttributes> digitalMediaRequests, Instant timestamp)
+      List<DigitalMediaRequestAttributes> digitalMediaRequests, Instant timestamp, boolean isDraft)
       throws InvalidRequestException {
     var handleIterator = hf.generateNewHandles(digitalMediaRequests.size()).iterator();
     var fdoRecords = new ArrayList<FdoRecord>();
     for (var request : digitalMediaRequests) {
       fdoRecords.add(
           fdoRecordService.prepareNewDigitalMediaRecord(request, handleIterator.next(),
-              timestamp));
+              timestamp, isDraft));
     }
     createDocuments(fdoRecords);
     return fdoRecords;

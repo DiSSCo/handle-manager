@@ -216,7 +216,7 @@ public abstract class PidService {
   }
 
   // Create
-  public abstract JsonApiWrapperWrite createRecords(List<PostRequest> requests)
+  public abstract JsonApiWrapperWrite createRecords(List<PostRequest> requests, boolean isDraft)
       throws InvalidRequestException, UnprocessableEntityException;
 
   // Update

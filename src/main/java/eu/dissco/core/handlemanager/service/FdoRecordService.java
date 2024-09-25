@@ -159,10 +159,10 @@ public class FdoRecordService {
 
   /* Handle Record Creation */
   public FdoRecord prepareNewHandleRecord(HandleRequestAttributes request, String handle,
-      Instant timestamp)
+      Instant timestamp, boolean isDraft)
       throws InvalidRequestException {
     var fdoAttributes = prepareHandleAttributes(request, handle, timestamp);
-    fdoAttributes.addAll(prepareGeneratedAttributes(handle, HANDLE, timestamp));
+    fdoAttributes.addAll(prepareGeneratedAttributes(handle, HANDLE, timestamp, isDraft));
     return new FdoRecord(handle, HANDLE, fdoAttributes, null);
   }
 
@@ -202,10 +202,10 @@ public class FdoRecordService {
 
   /* DOI Record Creation */
   public FdoRecord prepareNewDoiRecord(DoiKernelRequestAttributes request, String handle,
-      Instant timestamp)
+      Instant timestamp, boolean isDraft)
       throws InvalidRequestException {
     var fdoAttributes = prepareDoiAttributes(request, handle, timestamp);
-    fdoAttributes.addAll(prepareGeneratedAttributes(handle, FdoType.DOI, timestamp));
+    fdoAttributes.addAll(prepareGeneratedAttributes(handle, FdoType.DOI, timestamp, isDraft));
     return new FdoRecord(handle, FdoType.DOI, fdoAttributes, null);
   }
 
@@ -255,10 +255,11 @@ public class FdoRecordService {
 
   /* Annotation Record Creation */
   public FdoRecord prepareNewAnnotationRecord(AnnotationRequestAttributes request, String handle,
-      Instant timestamp)
+      Instant timestamp, boolean isDraft)
       throws InvalidRequestException {
     var fdoAttributes = prepareAnnotationAttributes(request, handle, timestamp);
-    fdoAttributes.addAll(prepareGeneratedAttributes(handle, FdoType.ANNOTATION, timestamp));
+    fdoAttributes.addAll(
+        prepareGeneratedAttributes(handle, FdoType.ANNOTATION, timestamp, isDraft));
     return new FdoRecord(handle, FdoType.ANNOTATION, fdoAttributes, request.getAnnotationHash());
   }
 
@@ -309,10 +310,11 @@ public class FdoRecordService {
 
   /* Data Mapping Record Creation */
   public FdoRecord prepareNewDataMappingRecord(DataMappingRequestAttributes request, String handle,
-      Instant timestamp)
+      Instant timestamp, boolean isDraft)
       throws InvalidRequestException {
     var fdoAttributes = prepareDataMappingAttributes(request, handle, timestamp);
-    fdoAttributes.addAll(prepareGeneratedAttributes(handle, FdoType.DATA_MAPPING, timestamp));
+    fdoAttributes.addAll(
+        prepareGeneratedAttributes(handle, FdoType.DATA_MAPPING, timestamp, isDraft));
     return new FdoRecord(handle, FdoType.DATA_MAPPING, fdoAttributes, null);
   }
 
@@ -358,8 +360,7 @@ public class FdoRecordService {
 
   /* Digital Specimen Record Creation */
   public FdoRecord prepareNewDigitalSpecimenRecord(DigitalSpecimenRequestAttributes request,
-      String handle,
-      Instant timestamp)
+      String handle, Instant timestamp, boolean isDraft)
       throws InvalidRequestException {
     List<FdoAttribute> fdoAttributes;
     try {
@@ -368,7 +369,8 @@ public class FdoRecordService {
       log.error(JSON_ERROR_MSG, e);
       throw new InvalidRequestException(JSON_ERROR_MSG);
     }
-    fdoAttributes.addAll(prepareGeneratedAttributes(handle, FdoType.DIGITAL_SPECIMEN, timestamp));
+    fdoAttributes.addAll(
+        prepareGeneratedAttributes(handle, FdoType.DIGITAL_SPECIMEN, timestamp, isDraft));
     return new FdoRecord(handle, FdoType.DIGITAL_SPECIMEN, fdoAttributes,
         request.getNormalisedPrimarySpecimenObjectId());
   }
@@ -500,11 +502,11 @@ public class FdoRecordService {
 
   /* MAS Record Creation */
   public FdoRecord prepareNewMasRecord(MasRequestAttributes request, String handle,
-      Instant timestamp)
+      Instant timestamp, boolean isDraft)
       throws InvalidRequestException {
     List<FdoAttribute> fdoAttributes;
     fdoAttributes = prepareMasAttributes(request, handle, timestamp);
-    fdoAttributes.addAll(prepareGeneratedAttributes(handle, MAS, timestamp));
+    fdoAttributes.addAll(prepareGeneratedAttributes(handle, MAS, timestamp, isDraft));
     return new FdoRecord(handle, MAS, fdoAttributes, null);
   }
 
@@ -547,12 +549,12 @@ public class FdoRecordService {
 
   /* Media Object Record Creation */
   public FdoRecord prepareNewDigitalMediaRecord(DigitalMediaRequestAttributes request,
-      String handle,
-      Instant timestamp)
+      String handle, Instant timestamp, boolean isDraft)
       throws InvalidRequestException {
     List<FdoAttribute> fdoAttributes;
     fdoAttributes = prepareDigitalMediaAttributes(request, handle, timestamp);
-    fdoAttributes.addAll(prepareGeneratedAttributes(handle, FdoType.DIGITAL_MEDIA, timestamp));
+    fdoAttributes.addAll(
+        prepareGeneratedAttributes(handle, FdoType.DIGITAL_MEDIA, timestamp, isDraft));
     return new FdoRecord(handle, FdoType.DIGITAL_MEDIA, fdoAttributes, request.getPrimaryMediaId());
   }
 
@@ -670,12 +672,12 @@ public class FdoRecordService {
 
   /* Organisation Record Creation */
   public FdoRecord prepareNewOrganisationRecord(OrganisationRequestAttributes request,
-      String handle,
-      Instant timestamp)
+      String handle, Instant timestamp, boolean isDraft)
       throws InvalidRequestException {
     List<FdoAttribute> fdoAttributes;
     fdoAttributes = prepareOrganisationAttributes(request, handle, timestamp);
-    fdoAttributes.addAll(prepareGeneratedAttributes(handle, FdoType.ORGANISATION, timestamp));
+    fdoAttributes.addAll(
+        prepareGeneratedAttributes(handle, FdoType.ORGANISATION, timestamp, isDraft));
     return new FdoRecord(handle, FdoType.ORGANISATION, fdoAttributes, null);
   }
 
@@ -740,12 +742,11 @@ public class FdoRecordService {
 
   /* Source System Record Creation */
   public FdoRecord prepareNewSourceSystemRecord(SourceSystemRequestAttributes request,
-      String handle,
-      Instant timestamp)
+      String handle, Instant timestamp, boolean isDraft)
       throws InvalidRequestException {
     List<FdoAttribute> fdoAttributes;
     fdoAttributes = prepareSourceSystemAttributes(request, handle, timestamp);
-    fdoAttributes.addAll(prepareGeneratedAttributes(handle, SOURCE_SYSTEM, timestamp));
+    fdoAttributes.addAll(prepareGeneratedAttributes(handle, SOURCE_SYSTEM, timestamp, isDraft));
     return new FdoRecord(handle, SOURCE_SYSTEM, fdoAttributes, null);
   }
 
@@ -861,7 +862,7 @@ public class FdoRecordService {
   }
 
   private List<FdoAttribute> prepareGeneratedAttributes(String handle, FdoType fdoType,
-      Instant timestamp) {
+      Instant timestamp, boolean isDraft) {
     var handleAttributeList = new ArrayList<FdoAttribute>();
     // 1: FDO Profile
     handleAttributeList.add(
@@ -897,7 +898,8 @@ public class FdoRecordService {
         new FdoAttribute(PID_RECORD_ISSUE_NUMBER, timestamp,
             "1")); // This gets replaced on an update
     // 13: Pid Status
-    handleAttributeList.add(new FdoAttribute(PID_STATUS, timestamp, PidStatus.ACTIVE.name()));
+    var pidStatus = isDraft ? PidStatus.DRAFT : PidStatus.ACTIVE;
+    handleAttributeList.add(new FdoAttribute(PID_STATUS, timestamp, pidStatus));
     // 100 HS Admin
     handleAttributeList.add(new FdoAttribute(timestamp, applicationProperties.getPrefix()));
     return handleAttributeList;
