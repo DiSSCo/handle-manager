@@ -146,9 +146,8 @@ public class TestUtils {
   public static final String HANDLE_DOMAIN = "https://hdl.handle.net/";
   public static final String DOI_DOMAIN = "https://doi.org/";
   public static final String ROR_DOMAIN = "https://ror.org/";
-  public static final String ISSUED_FOR_AGENT_TESTVAL = ROR_DOMAIN + "0566bfb96";
-  public static final String PID_ISSUER_TESTVAL = "https://ror.org/04wxnsj81";
-  public static final String PID_ISSUER_NAME_TESTVAL = "DataCite";
+  public static final String ISSUED_FOR_AGENT_TESTVAL = "https://ror.org/02wddde16"; // DiSSCo
+  public static final String ISSUED_FOR_AGENT_NAME_TESTVAL = "Distributed System of Scientific Collections";
   public static final String STRUCTURAL_TYPE_TESTVAL = "digital";
   public static final String STRUCTURAL_TYPE_ALT = "physical";
   public static final String LOC_TESTVAL = "https://dissco.eu";
@@ -245,14 +244,14 @@ public class TestUtils {
     // 5: Pid
     fdoAttributes.add(new FdoAttribute(PID, timestamp, fdoType.getDomain() + handle));
     // 6: PidIssuer
-    fdoAttributes.add(new FdoAttribute(PID_ISSUER, timestamp, PID_ISSUER_TESTVAL));
+    fdoAttributes.add(new FdoAttribute(PID_ISSUER, timestamp, ISSUED_FOR_AGENT_TESTVAL));
     // 7: pidIssuerName
-    fdoAttributes.add(new FdoAttribute(PID_ISSUER_NAME, timestamp, PID_ISSUER_NAME_TESTVAL));
+    fdoAttributes.add(new FdoAttribute(PID_ISSUER_NAME, timestamp, ISSUED_FOR_AGENT_NAME_TESTVAL));
     // 8: issuedForAgent
     fdoAttributes.add(new FdoAttribute(ISSUED_FOR_AGENT, timestamp, ISSUED_FOR_AGENT_TESTVAL));
     // 9: issuedForAgentName
     fdoAttributes.add(
-        new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp, SPECIMEN_HOST_NAME_TESTVAL));
+        new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp, ISSUED_FOR_AGENT_NAME_TESTVAL));
     // 10: pidRecordIssueDate
     fdoAttributes.add(new FdoAttribute(PID_RECORD_ISSUE_DATE, timestamp, ISSUE_DATE_TESTVAL));
     // 11: pidRecordIssueNumber
@@ -289,6 +288,12 @@ public class TestUtils {
       }
       if (attribute.getIndex() == PID_ISSUER_NAME.index()) {
         return new FdoAttribute(PID_ISSUER_NAME, CREATED, attribute.getValue());
+      }
+      if (attribute.getIndex() == ISSUED_FOR_AGENT.index()) {
+        return new FdoAttribute(ISSUED_FOR_AGENT, CREATED, attribute.getValue());
+      }
+      if (attribute.getIndex() == ISSUED_FOR_AGENT_NAME.index()) {
+        return new FdoAttribute(ISSUED_FOR_AGENT_NAME, CREATED, attribute.getValue());
       }
       if (attribute.getIndex() == DIGITAL_OBJECT_NAME.index()) {
         return new FdoAttribute(DIGITAL_OBJECT_NAME, CREATED, attribute.getValue());
@@ -546,7 +551,7 @@ public class TestUtils {
     // 801 OrganisationIdentifier
     fdoRecord.add(new FdoAttribute(ORGANISATION_ID_TYPE, timestamp, PTR_TYPE_DOI));
     // 802 OrganisationName
-    fdoRecord.add(new FdoAttribute(ORGANISATION_NAME, timestamp, ISSUED_FOR_AGENT_TESTVAL));
+    fdoRecord.add(new FdoAttribute(ORGANISATION_NAME, timestamp, SPECIMEN_HOST_NAME_TESTVAL));
     return fdoRecord;
   }
 

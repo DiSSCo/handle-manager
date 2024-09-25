@@ -92,6 +92,7 @@ import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
+import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.schema.AnnotationRequestAttributes;
 import eu.dissco.core.handlemanager.schema.DataMappingRequestAttributes;
 import eu.dissco.core.handlemanager.schema.DigitalMediaRequestAttributes;
@@ -141,26 +142,19 @@ public class FdoRecordService {
   private static final String PROXY_ERROR = "Invalid attribute: %s must contain proxy: %s";
   private static final String JSON_ERROR_MSG = "Unable to parse json request";
   private static final String PID_KERNEL_METADATA_LICENSE = "https://creativecommons.org/publicdomain/zero/1.0/";
-  private static final String DATACITE_ROR = "https://ror.org/04wxnsj81";
-  private static final String DATACITE_NAME = "DataCite";
   private static final String PRIMARY_REFERENT_TYPE_VALUE = "creation";
   public static final List<Integer> GENERATED_KEYS;
-  public static final List<Integer> TOMBSTONE_KEYS;
 
   static {
     GENERATED_KEYS = List.of(FDO_PROFILE.index(), FDO_RECORD_LICENSE.index(), PID_ISSUER.index(),
-        PID_ISSUER_NAME.index(), DIGITAL_OBJECT_TYPE.index(), DIGITAL_OBJECT_NAME.index(),
+        PID_ISSUER_NAME.index(), ISSUED_FOR_AGENT.index(), ISSUED_FOR_AGENT_NAME.index(),
+        DIGITAL_OBJECT_TYPE.index(), DIGITAL_OBJECT_NAME.index(),
         PID.index(), PID_RECORD_ISSUE_DATE.index(), PID_STATUS.index(), HS_ADMIN.index());
-  }
-
-  static {
-    TOMBSTONE_KEYS = List.of(FDO_RECORD_LICENSE.index(), PID.index(), PID_RECORD_ISSUE_DATE.index(),
-        PID_ISSUER.index(), PID_ISSUER_NAME.index(), ISSUED_FOR_AGENT.index(),
-        ISSUED_FOR_AGENT_NAME.index(), STRUCTURAL_TYPE.index(), HS_ADMIN.index());
   }
 
   private final DateTimeFormatter dt = DateTimeFormatter.ofPattern(DATE_STRING)
       .withZone(ZoneId.of("UTC"));
+  private final ProfileProperties profileProperties;
 
 
   /* Handle Record Creation */
@@ -188,12 +182,6 @@ public class FdoRecordService {
     handleAttributeList.add(
         new FdoAttribute(LOC, timestamp,
             setLocations(handle, HANDLE, null, request.getLocations())));
-    // 8: Issued For Agent
-    handleAttributeList.add(
-        new FdoAttribute(ISSUED_FOR_AGENT, timestamp, request.getIssuedForAgent()));
-    // 9: Issued for Agent Name
-    handleAttributeList.add(new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp,
-        getObjectName(request.getIssuedForAgent(), null)));
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
@@ -236,12 +224,6 @@ public class FdoRecordService {
     // 101: 10320/Loc
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
         setLocations(handle, DOI, null, request.getLocations())));
-    // 8: Issued For Agent
-    handleAttributeList.add(
-        new FdoAttribute(ISSUED_FOR_AGENT, timestamp, request.getIssuedForAgent()));
-    // 9: Issued for Agent Name
-    handleAttributeList.add(new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp,
-        getObjectName(request.getIssuedForAgent(), null)));
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
@@ -298,12 +280,6 @@ public class FdoRecordService {
     // 101: 10320/Loc
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
         setLocations(handle, ANNOTATION, null, request.getLocations())));
-    // 8: Issued For Agent
-    handleAttributeList.add(
-        new FdoAttribute(ISSUED_FOR_AGENT, timestamp, request.getIssuedForAgent()));
-    // 9: Issued for Agent Name
-    handleAttributeList.add(new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp,
-        getObjectName(request.getIssuedForAgent(), null)));
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
@@ -358,12 +334,6 @@ public class FdoRecordService {
     // 101: 10320/Loc
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
         setLocations(handle, DATA_MAPPING, null, request.getLocations())));
-    // 8: Issued For Agent
-    handleAttributeList.add(
-        new FdoAttribute(ISSUED_FOR_AGENT, timestamp, request.getIssuedForAgent()));
-    // 9: Issued for Agent Name
-    handleAttributeList.add(new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp,
-        getObjectName(request.getIssuedForAgent(), null)));
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
@@ -431,12 +401,6 @@ public class FdoRecordService {
             request.getPrimarySpecimenObjectId() : null;
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
         setLocations(handle, DIGITAL_SPECIMEN, keyAttribute, request.getLocations())));
-    // 8: Issued For Agent
-    handleAttributeList.add(
-        new FdoAttribute(ISSUED_FOR_AGENT, timestamp, request.getIssuedForAgent()));
-    // 9: Issued for Agent Name
-    handleAttributeList.add(new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp,
-        getObjectName(request.getIssuedForAgent(), null)));
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
@@ -561,12 +525,6 @@ public class FdoRecordService {
     // 101: 10320/Loc
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
         setLocations(handle, MAS, null, request.getLocations())));
-    // 8: Issued For Agent
-    handleAttributeList.add(
-        new FdoAttribute(ISSUED_FOR_AGENT, timestamp, request.getIssuedForAgent()));
-    // 9: Issued for Agent Name
-    handleAttributeList.add(new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp,
-        getObjectName(request.getIssuedForAgent(), null)));
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
@@ -618,12 +576,6 @@ public class FdoRecordService {
     // 101: 10320/Loc
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
         setLocations(handle, DIGITAL_MEDIA, request.getPrimaryMediaId(), request.getLocations())));
-    // 8: Issued For Agent
-    handleAttributeList.add(
-        new FdoAttribute(ISSUED_FOR_AGENT, timestamp, request.getIssuedForAgent()));
-    // 9: Issued for Agent Name
-    handleAttributeList.add(new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp,
-        getObjectName(request.getIssuedForAgent(), null)));
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
@@ -747,12 +699,6 @@ public class FdoRecordService {
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
         setLocations(handle, ORGANISATION, request.getOrganisationIdentifier(),
             request.getLocations())));
-    // 8: Issued For Agent
-    handleAttributeList.add(
-        new FdoAttribute(ISSUED_FOR_AGENT, timestamp, request.getIssuedForAgent()));
-    // 9: Issued for Agent Name
-    handleAttributeList.add(new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp,
-        getObjectName(request.getIssuedForAgent(), null)));
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
@@ -822,12 +768,6 @@ public class FdoRecordService {
     // 101: 10320/Loc
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
         setLocations(handle, SOURCE_SYSTEM, null, request.getLocations())));
-    // 8: Issued For Agent
-    handleAttributeList.add(
-        new FdoAttribute(ISSUED_FOR_AGENT, timestamp, request.getIssuedForAgent()));
-    // 9: Issued for Agent Name
-    handleAttributeList.add(new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp,
-        getObjectName(request.getIssuedForAgent(), null)));
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
@@ -938,9 +878,17 @@ public class FdoRecordService {
     // 5: PID
     handleAttributeList.add(new FdoAttribute(PID, timestamp, fdoType.getDomain() + handle));
     // 6: PID Issuer
-    handleAttributeList.add(new FdoAttribute(PID_ISSUER, timestamp, DATACITE_ROR));
+    handleAttributeList.add(
+        new FdoAttribute(PID_ISSUER, timestamp, profileProperties.getPidIssuer()));
     // 7: PID Issuer Name
-    handleAttributeList.add(new FdoAttribute(PID_ISSUER_NAME, timestamp, DATACITE_NAME));
+    handleAttributeList.add(
+        new FdoAttribute(PID_ISSUER_NAME, timestamp, profileProperties.getPidIssuerName()));
+    // 8: Issued for Agent
+    handleAttributeList.add(
+        new FdoAttribute(ISSUED_FOR_AGENT, timestamp, profileProperties.getIssuedForAgent()));
+    // 9: Issued for Agent Name
+    handleAttributeList.add(new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp,
+        profileProperties.getIssuedForAgentName()));
     // 10: PID Record Issue Date
     handleAttributeList.add(
         new FdoAttribute(PID_RECORD_ISSUE_DATE, timestamp, getDate(timestamp)));

@@ -10,6 +10,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.DOC_BUILDER_FACTORY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.ISSUED_FOR_AGENT_NAME_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.ISSUED_FOR_AGENT_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.LOC_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
@@ -65,7 +66,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
-import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.component.PidResolver;
 import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
@@ -75,8 +75,9 @@ import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
+import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.schema.DigitalSpecimenRequestAttributes.PrimarySpecimenObjectIdType;
-import eu.dissco.core.handlemanager.schema.HandleRequestAttributes;
+import eu.dissco.core.handlemanager.schema.OrganisationRequestAttributes;
 import eu.dissco.core.handlemanager.schema.OtherspecimenIds;
 import eu.dissco.core.handlemanager.schema.TombstoneRequestAttributes;
 import java.util.ArrayList;
@@ -89,7 +90,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.springframework.core.env.Environment;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -101,19 +101,21 @@ class FdoRecordServiceTest {
   @Mock
   private ApplicationProperties applicationProperties;
   @Mock
-  Environment environment;
+  private ProfileProperties profileProperties;
 
   @BeforeEach
   void init() throws PidResolutionException {
     fdoRecordService = new FdoRecordService(TRANSFORMER_FACTORY, DOC_BUILDER_FACTORY, pidResolver,
-        MAPPER, applicationProperties);
-    given(pidResolver.getObjectName(any())).willReturn(SPECIMEN_HOST_NAME_TESTVAL)
-        .willReturn(ISSUED_FOR_AGENT_TESTVAL);
+        MAPPER, applicationProperties, profileProperties);
+    given(pidResolver.getObjectName(any())).willReturn(SPECIMEN_HOST_NAME_TESTVAL);
     given(applicationProperties.getPrefix()).willReturn(PREFIX);
     given(applicationProperties.getApiUrl()).willReturn(API_URL);
     given(applicationProperties.getOrchestrationUrl()).willReturn(ORCHESTRATION_URL);
     given(applicationProperties.getUiUrl()).willReturn(UI_URL);
-    given(environment.matchesProfiles(Profiles.DOI)).willReturn(false);
+    given(profileProperties.getIssuedForAgent()).willReturn(ISSUED_FOR_AGENT_TESTVAL);
+    given(profileProperties.getIssuedForAgentName()).willReturn(ISSUED_FOR_AGENT_NAME_TESTVAL);
+    given(profileProperties.getPidIssuer()).willReturn(ISSUED_FOR_AGENT_TESTVAL);
+    given(profileProperties.getPidIssuerName()).willReturn(ISSUED_FOR_AGENT_NAME_TESTVAL);
   }
 
   @Test
@@ -135,11 +137,11 @@ class FdoRecordServiceTest {
   @Test
   void testGetObjectNameRor() throws Exception {
     // Given
-    var request = new HandleRequestAttributes()
-        .withIssuedForAgent(ROR_DOMAIN + ROR_IDENTIFIER);
+    var request = new OrganisationRequestAttributes()
+        .withOrganisationIdentifier(ROR_DOMAIN + ROR_IDENTIFIER);
 
     // When
-    fdoRecordService.prepareNewHandleRecord(request, HANDLE, CREATED);
+    fdoRecordService.prepareNewOrganisationRecord(request, HANDLE, CREATED);
 
     // Then
     then(pidResolver).should().getObjectName("https://api.ror.org/organizations/" + ROR_IDENTIFIER);
@@ -149,11 +151,11 @@ class FdoRecordServiceTest {
   void testGetObjectNameHandle() throws Exception {
     // Given
     var id = "https://hdl.handle.net/" + HANDLE;
-    var request = new HandleRequestAttributes()
-        .withIssuedForAgent(id);
+    var request = new OrganisationRequestAttributes()
+        .withOrganisationIdentifier(id);
 
     // When
-    fdoRecordService.prepareNewHandleRecord(request, HANDLE, CREATED);
+    fdoRecordService.prepareNewOrganisationRecord(request, HANDLE, CREATED);
 
     // Then
     then(pidResolver).should().getObjectName(id);
@@ -163,12 +165,12 @@ class FdoRecordServiceTest {
   void testGetObjectNameQid() throws Exception {
     // Given
     var id = "https://www.wikidata.org/wiki/123";
-    var request = new HandleRequestAttributes()
-        .withIssuedForAgent(id);
+    var request = givenOrganisation()
+        .withOrganisationIdentifier(id);
     var expected = "https://wikidata.org/w/rest.php/wikibase/v0/entities/items/123";
 
     // When
-    fdoRecordService.prepareNewHandleRecord(request, HANDLE, CREATED);
+    fdoRecordService.prepareNewOrganisationRecord(request, HANDLE, CREATED);
 
     // Then
     then(pidResolver).should().resolveQid(expected);
