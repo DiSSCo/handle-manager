@@ -907,6 +907,16 @@ public class FdoRecordService {
     return new FdoAttribute(PID_RECORD_ISSUE_NUMBER, timestamp, incrementedIssueNumber);
   }
 
+  private void reviveTombstoneRecord(ArrayList<FdoAttribute> fdoAttributes, Instant timestamp) {
+    var state = getField(fdoAttributes, PID_STATUS);
+    if (PidStatus.TOMBSTONED.name().equals(state.getValue())) {
+      log.info("PID Record {} was previously tombstoned. Reviving record",
+          getField(fdoAttributes, PID).getValue());
+      fdoAttributes.set(fdoAttributes.indexOf(state),
+          new FdoAttribute(PID_STATUS, timestamp, PidStatus.ACTIVE));
+    }
+  }
+
   private List<FdoAttribute> prepareGeneratedAttributes(String handle, FdoType fdoType,
       Instant timestamp) {
     var handleAttributeList = new ArrayList<FdoAttribute>();
@@ -951,13 +961,13 @@ public class FdoRecordService {
     var previousIssueNumber = getField(previousAttributes, PID_RECORD_ISSUE_NUMBER);
     if (incrementVersion) {
       updatedAttributes.add(incrementIssueNumber(previousIssueNumber, timestamp));
+      reviveTombstoneRecord(updatedAttributes, timestamp);
     } else {
       updatedAttributes.add(previousIssueNumber);
     }
   }
 
   /* Helper Functions */
-
   private String getObjectName(String url, String name) throws InvalidRequestException {
     if (name != null) {
       return name;

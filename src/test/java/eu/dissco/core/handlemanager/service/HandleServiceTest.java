@@ -1,7 +1,6 @@
 package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID_STATUS;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
@@ -9,23 +8,16 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_DOMAIN;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PATH;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.PID_STATUS_TESTVAL;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_MEDIA_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotation;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationUpdated;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDataMapping;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDataMappingFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDataMappingUpdated;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalMedia;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalMediaFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalMediaUpdated;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimen;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenFdoRecord;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenUpdated;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiKernel;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDoiKernelUpdated;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleKernel;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleKernelUpdated;
@@ -49,16 +41,16 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenWriteRespons
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenWriteResponseIdsOnly;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mockStatic;
 
 import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
-import eu.dissco.core.handlemanager.domain.fdo.PidStatus;
-import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -68,14 +60,17 @@ import eu.dissco.core.handlemanager.testUtils.TestUtils;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -178,100 +173,6 @@ class HandleServiceTest {
   }
 
   @Test
-  void testCreateDigitalSpecimen() throws Exception {
-    var request = givenPostRequest(givenDigitalSpecimen(),
-        FdoType.DIGITAL_SPECIMEN);
-    var fdoRecord = givenDigitalSpecimenFdoRecord(HANDLE);
-    var expected = givenWriteResponseIdsOnly(List.of(fdoRecord),
-        FdoType.DIGITAL_SPECIMEN, HANDLE_DOMAIN);
-    given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
-    given(fdoRecordService.prepareNewDigitalSpecimenRecord(any(), any(), any())).willReturn(
-        fdoRecord);
-    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
-
-    // When
-    var result = service.createRecords(List.of(request));
-
-    // Then
-    assertThat(result).isEqualTo(expected);
-  }
-
-
-  @Test
-  void testCreateDigitalSpecimenObjectExists() throws Exception {
-    var request = givenPostRequest(givenDigitalSpecimen(),
-        FdoType.DIGITAL_SPECIMEN);
-    var fdoRecord = givenDigitalSpecimenFdoRecord(HANDLE);
-    given(mongoRepository.searchByPrimaryLocalId(any(), any())).willReturn(List.of(fdoRecord));
-
-    // When / Then
-    assertThrows(InvalidRequestException.class, () -> service.createRecords(List.of(request)));
-
-  }
-
-  @Test
-  void testUpdateDigitalSpecimen() throws Exception {
-    // Given
-    var previousVersion = givenDigitalSpecimenFdoRecord(HANDLE);
-    var request = MAPPER.valueToTree(givenDigitalSpecimenUpdated());
-    var updateRequest = givenUpdateRequest(List.of(HANDLE), FdoType.DIGITAL_SPECIMEN, request);
-    var updatedAttributeRecord = givenUpdatedFdoRecord(FdoType.DIGITAL_SPECIMEN,
-        NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL);
-    var expectedDocument = givenMongoDocument(updatedAttributeRecord);
-    var expected = givenWriteResponseIdsOnly(List.of(updatedAttributeRecord),
-        FdoType.DIGITAL_SPECIMEN, HANDLE_DOMAIN);
-    given(mongoRepository.getHandleRecords(List.of(HANDLE))).willReturn(List.of(previousVersion));
-    given(fdoRecordService.prepareUpdatedDigitalSpecimenRecord(any(), any(), any(),
-        anyBoolean())).willReturn(updatedAttributeRecord);
-    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
-
-    // When
-    var result = service.updateRecords(updateRequest, true);
-
-    // Then
-    assertThat(result).isEqualTo(expected);
-    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument));
-  }
-
-  @Test
-  void testCreateDoi() throws Exception {
-    var request = givenPostRequest(givenDoiKernel(), FdoType.DOI);
-    var fdoRecord = givenDoiFdoRecord(HANDLE);
-    var expected = TestUtils.givenWriteResponseFull(List.of(HANDLE), FdoType.DOI);
-    given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
-    given(fdoRecordService.prepareNewDoiRecord(any(), any(), any())).willReturn(fdoRecord);
-    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
-
-    // When
-    var result = service.createRecords(List.of(request));
-
-    // Then
-    assertThat(result).isEqualTo(expected);
-  }
-
-  @Test
-  void testUpdateDoiRecord() throws Exception {
-    // Given
-    var previousVersion = givenDoiFdoRecord(HANDLE);
-    var request = MAPPER.valueToTree(givenDoiKernelUpdated());
-    var updateRequest = givenUpdateRequest(List.of(HANDLE), FdoType.DOI, request);
-    var updatedAttributeRecord = givenUpdatedFdoRecord(FdoType.DOI, null);
-    var expectedDocument = givenMongoDocument(updatedAttributeRecord);
-    var expected = givenWriteResponseFull(updatedAttributeRecord);
-    given(mongoRepository.getHandleRecords(List.of(HANDLE))).willReturn(List.of(previousVersion));
-    given(fdoRecordService.prepareUpdatedDoiRecord(any(), any(), any(),
-        anyBoolean())).willReturn(updatedAttributeRecord);
-    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
-
-    // When
-    var result = service.updateRecords(updateRequest, true);
-
-    // Then
-    assertThat(result).isEqualTo(expected);
-    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument));
-  }
-
-  @Test
   void testCreateHandle() throws Exception {
     var request = givenPostRequest(givenHandleKernel(), FdoType.HANDLE);
     var fdoRecord = givenHandleFdoRecord(HANDLE);
@@ -308,21 +209,6 @@ class HandleServiceTest {
     // Then
     assertThat(result).isEqualTo(expected);
     then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument));
-  }
-
-  @Test
-  void testUpdateHandleRecordInternalDuplicates() throws Exception {
-    // Given
-    var attributes = new ArrayList<>(givenHandleFdoRecord(HANDLE).attributes());
-    attributes.set(attributes.indexOf(new FdoAttribute(PID_STATUS, CREATED, PID_STATUS_TESTVAL)),
-        new FdoAttribute(PID_STATUS, CREATED, PidStatus.TOMBSTONED.name()));
-    var previousVersion = new FdoRecord(HANDLE_ALT, FdoType.HANDLE, attributes, null);
-    var request = MAPPER.valueToTree(givenHandleKernelUpdated());
-    var updateRequest = givenUpdateRequest(List.of(HANDLE), FdoType.HANDLE, request);
-    given(mongoRepository.getHandleRecords(List.of(HANDLE))).willReturn(List.of(previousVersion));
-
-    // When / Then
-    assertThrows(InvalidRequestException.class, () -> service.updateRecords(updateRequest, true));
   }
 
   @Test
@@ -424,46 +310,6 @@ class HandleServiceTest {
   }
 
   @Test
-  void testCreateDigitalMedia() throws Exception {
-    var request = givenPostRequest(givenDigitalMedia(), FdoType.DIGITAL_MEDIA);
-    var fdoRecord = givenDigitalMediaFdoRecord(HANDLE);
-    var expected = givenWriteResponseIdsOnly(List.of(fdoRecord), FdoType.DIGITAL_MEDIA,
-        HANDLE_DOMAIN);
-    given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
-    given(fdoRecordService.prepareNewDigitalMediaRecord(any(), any(), any())).willReturn(fdoRecord);
-    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
-
-    // When
-    var result = service.createRecords(List.of(request));
-
-    // Then
-    assertThat(result).isEqualTo(expected);
-  }
-
-  @Test
-  void testUpdateDigitalMedia() throws Exception {
-    var previousVersion = givenDigitalMediaFdoRecord(HANDLE);
-    var request = MAPPER.valueToTree(givenDigitalMediaUpdated());
-    var updateRequest = givenUpdateRequest(List.of(HANDLE), FdoType.DIGITAL_MEDIA, request);
-    var updatedAttributeRecord = givenUpdatedFdoRecord(FdoType.DIGITAL_MEDIA,
-        PRIMARY_MEDIA_ID_TESTVAL);
-    var expectedDocument = givenMongoDocument(updatedAttributeRecord);
-    var responseExpected = givenWriteResponseIdsOnly(List.of(updatedAttributeRecord),
-        FdoType.DIGITAL_MEDIA, HANDLE_DOMAIN);
-    given(mongoRepository.getHandleRecords(List.of(HANDLE))).willReturn(List.of(previousVersion));
-    given(fdoRecordService.prepareUpdatedDigitalMediaRecord(any(), any(), any(),
-        anyBoolean())).willReturn(updatedAttributeRecord);
-    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
-
-    // When
-    var responseReceived = service.updateRecords(updateRequest, true);
-
-    // Then
-    assertThat(responseReceived).isEqualTo(responseExpected);
-    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument));
-  }
-
-  @Test
   void testCreateSourceSystem() throws Exception {
     var request = givenPostRequest(givenSourceSystem(), FdoType.SOURCE_SYSTEM);
     var fdoRecord = givenSourceSystemFdoRecord(HANDLE);
@@ -482,7 +328,7 @@ class HandleServiceTest {
   @Test
   void testUpdateSourceSystem() throws Exception {
     // Given
-    var previousVersion = givenMasFdoRecord(HANDLE);
+    var previousVersion = givenSourceSystemFdoRecord(HANDLE);
     var request = MAPPER.valueToTree(givenSourceSystemUpdated());
     var updateRequest = givenUpdateRequest(List.of(HANDLE), FdoType.SOURCE_SYSTEM, request);
     var updatedAttributeRecord = givenUpdatedFdoRecord(FdoType.SOURCE_SYSTEM, null);
@@ -499,6 +345,47 @@ class HandleServiceTest {
     // Then
     assertThat(result).isEqualTo(expected);
     then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument));
+  }
+
+  @ParameterizedTest
+  @MethodSource("equalArgs")
+  void testUpdateRecordIsEqual(FdoRecord previousVersion, FdoType fdoType, Object request)
+      throws Exception {
+    var updateRequest = givenUpdateRequest(List.of(HANDLE), fdoType, MAPPER.valueToTree(request));
+    var expected = givenWriteResponseFull(previousVersion);
+    fdoRecordServiceReturnsPreviousVersion(previousVersion);
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
+    given(mongoRepository.getHandleRecords(List.of(HANDLE))).willReturn(List.of(previousVersion));
+
+    // When
+    var result = service.updateRecords(updateRequest, true);
+
+    // Then
+    assertThat(result).isEqualTo(expected);
+    then(mongoRepository).should().updateHandleRecords(Collections.emptyList());
+  }
+
+  private void fdoRecordServiceReturnsPreviousVersion(FdoRecord previousVersion) throws Exception {
+    lenient().when(fdoRecordService.prepareUpdatedHandleRecord(any(), any(), any(), any(),
+        anyBoolean())).thenReturn(previousVersion);
+    lenient().when(fdoRecordService.prepareUpdatedDataMappingRecord(any(), any(), any(),
+        anyBoolean())).thenReturn(previousVersion);
+    lenient().when(fdoRecordService.prepareUpdatedMasRecord(any(), any(), any(),
+        anyBoolean())).thenReturn(previousVersion);
+    lenient().when(fdoRecordService.prepareUpdatedOrganisationRecord(any(), any(), any(),
+        anyBoolean())).thenReturn(previousVersion);
+    lenient().when(fdoRecordService.prepareUpdatedSourceSystemRecord(any(), any(), any(),
+        anyBoolean())).thenReturn(previousVersion);
+  }
+
+  private static Stream<Arguments> equalArgs() throws Exception {
+    return Stream.of(
+        Arguments.of(givenHandleFdoRecord(HANDLE), FdoType.HANDLE, givenHandleKernel()),
+        Arguments.of(givenDataMappingFdoRecord(HANDLE), FdoType.DATA_MAPPING, givenDataMapping()),
+        Arguments.of(givenMasFdoRecord(HANDLE), FdoType.MAS, givenMas()),
+        Arguments.of(givenOrganisationFdoRecord(HANDLE), FdoType.ORGANISATION, givenOrganisation()),
+        Arguments.of(givenSourceSystemFdoRecord(HANDLE), FdoType.SOURCE_SYSTEM, givenSourceSystem()
+        ));
   }
 
   @Test
@@ -670,18 +557,24 @@ class HandleServiceTest {
   }
 
   @Test
-  void testInternalDuplicates() {
+  void testCreateInvalidType() {
     // Given
-    var attributes = MAPPER.valueToTree(givenHandleKernel());
-    var request = givenUpdateRequest(List.of(HANDLE, HANDLE, HANDLE_ALT), FdoType.ORGANISATION,
-        attributes);
+    var request = List.of(givenPostRequest(givenDigitalSpecimen(),
+        FdoType.DIGITAL_SPECIMEN));
 
-    // When
-    var e = assertThrows(InvalidRequestException.class, () -> service.updateRecords(request, true));
-
-    // Then
-    assertThat(e.getMessage()).contains(HANDLE);
+    // When / Then
+    assertThrowsExactly(UnsupportedOperationException.class, () -> service.createRecords(request));
   }
 
+  @Test
+  void testUpdateInvalidType() {
+    // Given
+    var request = givenUpdateRequest(List.of(HANDLE), FdoType.DIGITAL_MEDIA,
+        MAPPER.valueToTree(givenDigitalMediaUpdated()));
+
+    // When / Then
+    assertThrowsExactly(UnsupportedOperationException.class,
+        () -> service.updateRecords(request, true));
+  }
 
 }

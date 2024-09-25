@@ -3,12 +3,23 @@ package eu.dissco.core.handlemanager.service;
 import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
 import java.util.List;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ServiceUtils {
 
   private ServiceUtils() {
+  }
+
+  public static FdoAttribute getField(List<FdoAttribute> fdoAttributes, Integer targetIndex) {
+    for (var attribute : fdoAttributes) {
+      if (attribute.getIndex() == targetIndex) {
+        return attribute;
+      }
+    }
+    return null;
   }
 
   public static FdoAttribute getField(List<FdoAttribute> fdoAttributes, FdoProfile targetField) {
@@ -21,5 +32,16 @@ public class ServiceUtils {
     throw new IllegalStateException();
   }
 
+  public static <T> Collector<T, ?, T> toSingle() {
+    return Collectors.collectingAndThen(
+        Collectors.toList(),
+        list -> {
+          if (list.size() != 1) {
+            throw new IllegalStateException();
+          }
+          return list.get(0);
+        }
+    );
+  }
 
 }

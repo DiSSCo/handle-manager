@@ -93,9 +93,7 @@ import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequestData;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
 import eu.dissco.core.handlemanager.domain.requests.PostRequestData;
-import eu.dissco.core.handlemanager.domain.requests.TombstoneRequest;
 import eu.dissco.core.handlemanager.domain.requests.TombstoneRequestAttributes;
-import eu.dissco.core.handlemanager.domain.requests.TombstoneRequestData;
 import eu.dissco.core.handlemanager.domain.responses.JsonApiDataLinks;
 import eu.dissco.core.handlemanager.domain.responses.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.responses.JsonApiWrapperRead;
@@ -191,9 +189,10 @@ public class TestUtils {
   public static final String PATH = UI_URL + HANDLE;
   public static final String ORCHESTRATION_URL = "https://orchestration.dissco.tech/api/v1";
   public static final String PTR_TYPE_DOI = "doi";
-  public static final String PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL = "BOTANICAL.QRS.123";
+  public static final String PRIMARY_SPECIMEN_ID_TESTVAL = "BOTANICAL.QRS.123";
+  public static final String PRIMARY_SPECIMEN_ID_ALT = "AVES.123";
   public static final String NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL =
-      PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL + ":" + ROR_IDENTIFIER;
+      PRIMARY_SPECIMEN_ID_TESTVAL + ":" + ROR_IDENTIFIER;
   public static final String EXTERNAL_PID = "21.T11148/d8de0819e144e4096645";
   public static final TransformerFactory TRANSFORMER_FACTORY = TransformerFactory.newInstance();
   public static final DocumentBuilderFactory DOC_BUILDER_FACTORY = DocumentBuilderFactory.newInstance();
@@ -360,7 +359,7 @@ public class TestUtils {
     fdoRecord.add(new FdoAttribute(SPECIMEN_HOST_NAME, timestamp, SPECIMEN_HOST_NAME_TESTVAL));
     // 202: primarySpecimenObjectId
     fdoRecord.add(new FdoAttribute(PRIMARY_SPECIMEN_OBJECT_ID, timestamp,
-        PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL));
+        PRIMARY_SPECIMEN_ID_TESTVAL));
     // 203: primarySpecimenObjectIdType
     fdoRecord.add(new FdoAttribute(PRIMARY_SPECIMEN_OBJECT_ID_TYPE, timestamp,
         DigitalSpecimenRequestAttributes.PrimarySpecimenObjectIdType.GLOBAL.value()));
@@ -625,7 +624,7 @@ public class TestUtils {
         .withPrimaryReferentType(PRIMARY_REFERENT_TYPE_TESTVAL)
         .withSpecimenHost(SPECIMEN_HOST_TESTVAL)
         .withSpecimenHostName(SPECIMEN_HOST_NAME_TESTVAL)
-        .withPrimarySpecimenObjectId(PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL)
+        .withPrimarySpecimenObjectId(PRIMARY_SPECIMEN_ID_TESTVAL)
         .withPrimarySpecimenObjectIdType(
             DigitalSpecimenRequestAttributes.PrimarySpecimenObjectIdType.GLOBAL)
         .withNormalisedPrimarySpecimenObjectId(NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL);
@@ -870,12 +869,12 @@ public class TestUtils {
     ))).toList();
   }
 
-  public static TombstoneRequest givenTombstoneRequest() {
-    return new TombstoneRequest(
-        new TombstoneRequestData(
+  public static PatchRequest givenTombstoneRequest() {
+    return new PatchRequest(
+        new PatchRequestData(
             HANDLE,
             FdoType.HANDLE,
-            givenTombstoneRecordRequestObject()
+            MAPPER.valueToTree(givenTombstoneRecordRequestObject())
         )
     );
   }
