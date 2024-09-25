@@ -35,7 +35,6 @@ import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
-import org.bson.Document;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
@@ -66,7 +65,6 @@ public class HandleService extends PidService {
         .map(request -> request.data().type())
         .toList(), VALID_FDO_TYPES);
     List<FdoRecord> fdoRecords;
-    List<Document> fdoDocuments;
     try {
       switch (fdoType) {
         case ANNOTATION -> fdoRecords = createAnnotation(requestAttributes, handles, isDraft);
@@ -78,13 +76,12 @@ public class HandleService extends PidService {
         default ->
             throw new IllegalStateException(); // This case is handled by the getFdoTypeFromRequest check
       }
-      fdoDocuments = toMongoDbDocument(fdoRecords);
     } catch (JsonProcessingException e) {
       log.error("An error has occurred in processing request", e);
       throw new InvalidRequestException(
           "An error has occurred parsing a record in request. More information: " + e.getMessage());
     }
-    mongoRepository.postHandleRecords(fdoDocuments);
+    createDocuments(fdoRecords);
     log.info("Persisted {} new handles to Document Store", handleList.size());
     return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, fdoType));
   }
@@ -95,7 +92,6 @@ public class HandleService extends PidService {
     var fdoType = getFdoTypeFromRequest(
         requests.stream().map(r -> r.data().type()).toList(), VALID_FDO_TYPES);
     Pair<List<FdoRecord>, List<FdoRecord>> fdoRecords;
-    List<Document> changedFdoDocuments;
     var previousVersionMap = getPreviousVersionsMap(requests);
     switch (fdoType) {
       case ANNOTATION -> fdoRecords = updateAnnotation(previousVersionMap, incrementVersion);
@@ -108,16 +104,8 @@ public class HandleService extends PidService {
           incrementVersion);
       default -> throw new IllegalStateException();
     }
-    try {
-      // Update repo with changed documents
-      changedFdoDocuments = toMongoDbDocument(fdoRecords.getLeft());
-      mongoRepository.updateHandleRecords(changedFdoDocuments);
-      // Return all records
-      return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords.getRight(), fdoType));
-    } catch (JsonProcessingException e) {
-      log.error("An error has occurred processing JSON data", e);
-      throw new InvalidRequestException("Unable to parse FDO Record");
-    }
+    updateDocuments(fdoRecords.getLeft());
+    return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords.getRight(), fdoType));
   }
 
   private List<FdoRecord> createAnnotation(List<JsonNode> requestAttributes,

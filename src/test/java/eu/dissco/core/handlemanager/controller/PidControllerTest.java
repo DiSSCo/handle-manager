@@ -256,6 +256,17 @@ class PidControllerTest {
   }
 
   @Test
+  void testActivateRecord() throws Exception {
+
+    // When
+    var result = controller.activateRecords(List.of(HANDLE));
+
+    // Then
+    assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+    then(service).should().activateRecords(List.of(HANDLE));
+  }
+
+  @Test
   void testUpdateRecord() throws Exception {
     // Given
     var request = givenUpdateRequest();

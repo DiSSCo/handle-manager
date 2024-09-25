@@ -1,6 +1,7 @@
 package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID_STATUS;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
@@ -8,6 +9,8 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_DOMAIN;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PATH;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributes;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.getField;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotation;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationUpdated;
@@ -51,6 +54,8 @@ import static org.mockito.Mockito.mockStatic;
 
 import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
+import eu.dissco.core.handlemanager.domain.fdo.PidStatus;
+import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -191,6 +196,22 @@ class HandleServiceTest {
 
     // Then
     assertThat(result).isEqualTo(expected);
+  }
+
+  @Test
+  void testActivateHandle() throws Exception {
+    var draftAttributes = genHandleRecordAttributes(HANDLE, CREATED, FdoType.HANDLE);
+    draftAttributes.set(draftAttributes.indexOf(getField(draftAttributes, PID_STATUS)),
+        new FdoAttribute(PID_STATUS, CREATED, PidStatus.ACTIVE));
+    var draftRecord = new FdoRecord(HANDLE, FdoType.HANDLE, draftAttributes, null);
+    var expected = givenMongoDocument(givenHandleFdoRecord(HANDLE));
+    given(mongoRepository.getHandleRecords(List.of(HANDLE))).willReturn(List.of(draftRecord));
+
+    // When
+    service.activateRecords(List.of(HANDLE));
+
+    // Then
+    then(mongoRepository).should().updateHandleRecords(List.of(expected));
   }
 
   @Test

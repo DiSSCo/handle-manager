@@ -110,6 +110,13 @@ public class PidController {
     return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(requests, isDraft));
   }
 
+  @PostMapping(value = "/activate")
+  public ResponseEntity<Void> activateRecords(@RequestBody List<String> handles)
+      throws InvalidRequestException {
+    service.activateRecords(handles);
+    return ResponseEntity.ok().build();
+  }
+
   // Update
   @Operation(summary = "Update existing PID Record")
   @PatchMapping(value = "/{prefix}/{suffix}")

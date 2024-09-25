@@ -4,6 +4,7 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.ANNOTATION_HASH
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LINKED_DO_PID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_MEDIA_ID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.ANNOTATION;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_MEDIA;
@@ -19,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
+import eu.dissco.core.handlemanager.domain.fdo.PidStatus;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
@@ -219,6 +221,28 @@ public abstract class PidService {
   public abstract JsonApiWrapperWrite createRecords(List<PostRequest> requests, boolean isDraft)
       throws InvalidRequestException, UnprocessableEntityException;
 
+  // Activate
+  public void activateRecords(List<String> handles) throws InvalidRequestException {
+    List<FdoRecord> draftRecords;
+    try {
+      draftRecords = mongoRepository.getHandleRecords(handles);
+    } catch (JsonProcessingException e) {
+      log.error("Unable to read PID record", e);
+      throw new InvalidRequestException("Unable to read PID record");
+    }
+    var activeRecords = draftRecords.stream().map(
+        draft -> {
+          var attributes = new ArrayList<>(draft.attributes());
+          attributes.set(attributes.indexOf(getField(attributes, PID_STATUS)),
+              new FdoAttribute(PID_STATUS, Instant.now(),
+                  PidStatus.ACTIVE));
+          return new FdoRecord(draft.handle(), draft.fdoType(), attributes,
+              draft.primaryLocalId());
+        }
+    ).toList();
+    updateDocuments(activeRecords);
+  }
+
   // Update
   public abstract JsonApiWrapperWrite updateRecords(List<PatchRequest> requests,
       boolean incrementVersion)
@@ -360,5 +384,32 @@ public abstract class PidService {
       }
     }
     return false;
+  }
+
+  protected void createDocuments(List<FdoRecord> fdoRecords)
+      throws InvalidRequestException {
+    List<Document> fdoDocuments;
+    try {
+      fdoDocuments = toMongoDbDocument(fdoRecords);
+    } catch (JsonProcessingException e) {
+      log.error(REQUEST_PROCESSING_ERR, e);
+      throw new InvalidRequestException(REQUEST_PROCESSING_ERR);
+    }
+    mongoRepository.postHandleRecords(fdoDocuments);
+    log.info("Successfully posted {} new specimen fdo records to database", fdoDocuments.size());
+  }
+
+  protected void updateDocuments(List<FdoRecord> fdoRecords)
+      throws InvalidRequestException {
+    List<Document> fdoDocuments;
+    try {
+      fdoDocuments = toMongoDbDocument(fdoRecords);
+    } catch (JsonProcessingException e) {
+      log.error(REQUEST_PROCESSING_ERR, e);
+      throw new InvalidRequestException(
+          REQUEST_PROCESSING_ERR);
+    }
+    mongoRepository.updateHandleRecords(fdoDocuments);
+    log.info("Successfully updated {} specimens fdo records to database", fdoDocuments.size());
   }
 }

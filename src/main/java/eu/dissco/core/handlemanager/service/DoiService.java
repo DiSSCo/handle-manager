@@ -38,7 +38,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.Document;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
@@ -265,19 +264,6 @@ public class DoiService extends PidService {
     return fdoRecords;
   }
 
-  private void createDocuments(List<FdoRecord> fdoRecords)
-      throws InvalidRequestException {
-    List<Document> fdoDocuments;
-    try {
-      fdoDocuments = toMongoDbDocument(fdoRecords);
-    } catch (JsonProcessingException e) {
-      log.error(REQUEST_PROCESSING_ERR, e);
-      throw new InvalidRequestException(REQUEST_PROCESSING_ERR);
-    }
-    mongoRepository.postHandleRecords(fdoDocuments);
-    log.info("Successfully posted {} new specimen fdo records to database", fdoDocuments.size());
-  }
-
   // Update
   private List<FdoRecord> processSpecimenUpdateRequests(
       Map<PatchRequestData, FdoRecord> previousVersionMap, boolean incrementVersion)
@@ -336,21 +322,6 @@ public class DoiService extends PidService {
     updateDocuments(newFdoRecords);
     return allFdoRecords;
   }
-
-  private void updateDocuments(List<FdoRecord> fdoRecords)
-      throws InvalidRequestException {
-    List<Document> fdoDocuments;
-    try {
-      fdoDocuments = toMongoDbDocument(fdoRecords);
-    } catch (JsonProcessingException e) {
-      log.error(REQUEST_PROCESSING_ERR, e);
-      throw new InvalidRequestException(
-          REQUEST_PROCESSING_ERR);
-    }
-    mongoRepository.updateHandleRecords(fdoDocuments);
-    log.info("Successfully updated {} specimens fdo records to database", fdoDocuments.size());
-  }
-
 
   @Override
   public JsonApiWrapperWrite tombstoneRecords(List<PatchRequest> requests)
