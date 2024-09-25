@@ -213,19 +213,19 @@ public class DoiService extends PidService {
       throws InvalidRequestException {
     var updateRequests = convertPatchRequestDataToAttributesClass(previousVersionMap,
         DoiKernelRequestAttributes.class);
-    var fdoRecords = new ArrayList<FdoRecord>();
+    var allFdoRecords = new ArrayList<FdoRecord>();
     var newFdoRecords = new ArrayList<FdoRecord>();
     var timestamp = Instant.now();
     for (var updateRequest : updateRequests.entrySet()) {
       var newVersion = fdoRecordService.prepareUpdatedDoiRecord(updateRequest.getKey(), timestamp,
           updateRequest.getValue(), incrementVersion);
-      fdoRecords.add(newVersion);
+      allFdoRecords.add(newVersion);
       if (fdoRecordsAreDifferent(newVersion, updateRequest.getValue())) {
         newFdoRecords.add(newVersion);
       }
     }
     updateDocuments(newFdoRecords);
-    return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, DOI));
+    return new JsonApiWrapperWrite(formatFdoRecord(allFdoRecords, DOI));
   }
 
 
@@ -295,38 +295,38 @@ public class DoiService extends PidService {
       Map<DigitalSpecimenRequestAttributes, FdoRecord> updateRequests, Instant timestamp,
       boolean updateVersion)
       throws InvalidRequestException {
-    var fdoRecords = new ArrayList<FdoRecord>();
+    var allFdoRecords = new ArrayList<FdoRecord>();
     var newFdoRecords = new ArrayList<FdoRecord>();
     for (var updateRequest : updateRequests.entrySet()) {
       var newVersion = fdoRecordService.prepareUpdatedDigitalSpecimenRecord(
           updateRequest.getKey(), timestamp,
           updateRequest.getValue(), updateVersion);
-      fdoRecords.add(newVersion);
+      allFdoRecords.add(newVersion);
       if (fdoRecordsAreDifferent(newVersion, updateRequest.getValue())) {
         newFdoRecords.add(newVersion);
       }
     }
     updateDocuments(newFdoRecords);
-    return fdoRecords;
+    return allFdoRecords;
   }
 
   private List<FdoRecord> updateExistingMediaRecords(
       Map<DigitalMediaRequestAttributes, FdoRecord> updateRequests, Instant timestamp,
       boolean incrementVersion)
       throws InvalidRequestException {
-    var fdoRecords = new ArrayList<FdoRecord>();
+    var allFdoRecords = new ArrayList<FdoRecord>();
     var newFdoRecords = new ArrayList<FdoRecord>();
     for (var updateRequest : updateRequests.entrySet()) {
       var newVersion = fdoRecordService.prepareUpdatedDigitalMediaRecord(
           updateRequest.getKey(), timestamp,
           updateRequest.getValue(), incrementVersion);
-      fdoRecords.add(newVersion);
+      allFdoRecords.add(newVersion);
       if (fdoRecordsAreDifferent(newVersion, updateRequest.getValue())) {
         newFdoRecords.add(newVersion);
       }
     }
     updateDocuments(newFdoRecords);
-    return fdoRecords;
+    return allFdoRecords;
   }
 
   private void updateDocuments(List<FdoRecord> fdoRecords)
