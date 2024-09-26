@@ -308,7 +308,7 @@ public class TestUtils {
         return new FdoAttribute(PID_RECORD_ISSUE_NUMBER, UPDATED, "2");
       }
       if (attribute.getIndex() == PID_STATUS.index()) {
-        return new FdoAttribute(PID_STATUS, CREATED, attribute.getValue());
+        return new FdoAttribute(PID_STATUS, UPDATED, attribute.getValue());
       }
       if (attribute.getIndex() == HS_ADMIN.index()) {
         return new FdoAttribute(CREATED, PREFIX);

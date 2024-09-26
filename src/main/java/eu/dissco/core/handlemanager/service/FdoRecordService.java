@@ -562,8 +562,7 @@ public class FdoRecordService {
       Instant timestamp,
       FdoRecord previousVersion, boolean incrementVersion)
       throws InvalidRequestException {
-    List<FdoAttribute> fdoAttributes;
-    fdoAttributes = prepareUpdatedDigitalMediaAttributes(request,
+    List<FdoAttribute> fdoAttributes = prepareUpdatedDigitalMediaAttributes(request,
         previousVersion.handle(), timestamp, previousVersion, incrementVersion);
     return new FdoRecord(previousVersion.handle(), FdoType.DIGITAL_MEDIA, fdoAttributes,
         request.getPrimaryMediaId());
@@ -803,10 +802,10 @@ public class FdoRecordService {
     var handleAttributeList = new ArrayList<>(previousVersion.attributes());
     var previousIssueNum = getField(previousVersion.attributes(), PID_RECORD_ISSUE_NUMBER);
     var newIssueNum = incrementIssueNumber(previousIssueNum, timestamp);
-    var previousStatus = getField(previousVersion.attributes(), PID_STATUS);
-    var newStatus = new FdoAttribute(PID_STATUS, timestamp, PidStatus.TOMBSTONED);
     handleAttributeList.set(handleAttributeList.indexOf(previousIssueNum), newIssueNum);
-    handleAttributeList.set(handleAttributeList.indexOf(previousStatus), newStatus);
+    handleAttributeList.set(
+        handleAttributeList.indexOf(getField(previousVersion.attributes(), PID_STATUS)),
+        new FdoAttribute(PID_STATUS, timestamp, PidStatus.TOMBSTONED));
     // 30: Tombstoned Text
     handleAttributeList.add(
         new FdoAttribute(TOMBSTONED_TEXT, timestamp, request.getTombstoneText()));
@@ -849,16 +848,6 @@ public class FdoRecordService {
     var previousIssueNumber = previousVersion.getValue();
     var incrementedIssueNumber = String.valueOf(Integer.parseInt(previousIssueNumber) + 1);
     return new FdoAttribute(PID_RECORD_ISSUE_NUMBER, timestamp, incrementedIssueNumber);
-  }
-
-  private void reviveTombstoneRecord(ArrayList<FdoAttribute> fdoAttributes, Instant timestamp) {
-    var state = getField(fdoAttributes, PID_STATUS);
-    if (PidStatus.TOMBSTONED.name().equals(state.getValue())) {
-      log.info("PID Record {} was previously tombstoned. Reviving record",
-          getField(fdoAttributes, PID).getValue());
-      fdoAttributes.set(fdoAttributes.indexOf(state),
-          new FdoAttribute(PID_STATUS, timestamp, PidStatus.ACTIVE));
-    }
   }
 
   private List<FdoAttribute> prepareGeneratedAttributes(String handle, FdoType fdoType,
@@ -910,10 +899,12 @@ public class FdoRecordService {
     updatedAttributes.addAll(previousAttributes.stream()
         .filter(previousAttribute -> GENERATED_KEYS.contains(previousAttribute.getIndex()))
         .toList());
+    updatedAttributes.set(updatedAttributes.indexOf(getField(updatedAttributes, PID_STATUS)),
+        new FdoAttribute(PID_STATUS, timestamp,
+            PidStatus.ACTIVE)); // We re-activate every updated PID
     var previousIssueNumber = getField(previousAttributes, PID_RECORD_ISSUE_NUMBER);
     if (incrementVersion) {
       updatedAttributes.add(incrementIssueNumber(previousIssueNumber, timestamp));
-      reviveTombstoneRecord(updatedAttributes, timestamp);
     } else {
       updatedAttributes.add(previousIssueNumber);
     }
