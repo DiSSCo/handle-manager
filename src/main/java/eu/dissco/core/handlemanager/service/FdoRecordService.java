@@ -90,18 +90,20 @@ import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 import eu.dissco.core.handlemanager.domain.fdo.PidStatus;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
-import eu.dissco.core.handlemanager.domain.requests.TombstoneRequestAttributes;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
+import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.schema.AnnotationRequestAttributes;
 import eu.dissco.core.handlemanager.schema.DataMappingRequestAttributes;
 import eu.dissco.core.handlemanager.schema.DigitalMediaRequestAttributes;
 import eu.dissco.core.handlemanager.schema.DigitalSpecimenRequestAttributes;
+import eu.dissco.core.handlemanager.schema.DigitalSpecimenRequestAttributes.PrimarySpecimenObjectIdType;
 import eu.dissco.core.handlemanager.schema.DoiKernelRequestAttributes;
 import eu.dissco.core.handlemanager.schema.HandleRequestAttributes;
 import eu.dissco.core.handlemanager.schema.MasRequestAttributes;
 import eu.dissco.core.handlemanager.schema.OrganisationRequestAttributes;
 import eu.dissco.core.handlemanager.schema.SourceSystemRequestAttributes;
+import eu.dissco.core.handlemanager.schema.TombstoneRequestAttributes;
 import java.io.StringWriter;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -109,7 +111,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
@@ -141,26 +142,19 @@ public class FdoRecordService {
   private static final String PROXY_ERROR = "Invalid attribute: %s must contain proxy: %s";
   private static final String JSON_ERROR_MSG = "Unable to parse json request";
   private static final String PID_KERNEL_METADATA_LICENSE = "https://creativecommons.org/publicdomain/zero/1.0/";
-  private static final String DATACITE_ROR = "https://ror.org/04wxnsj81";
-  private static final String DATACITE_NAME = "DataCite";
   private static final String PRIMARY_REFERENT_TYPE_VALUE = "creation";
   public static final List<Integer> GENERATED_KEYS;
-  public static final List<Integer> TOMBSTONE_KEYS;
 
   static {
     GENERATED_KEYS = List.of(FDO_PROFILE.index(), FDO_RECORD_LICENSE.index(), PID_ISSUER.index(),
-        PID_ISSUER_NAME.index(), DIGITAL_OBJECT_TYPE.index(), DIGITAL_OBJECT_NAME.index(),
+        PID_ISSUER_NAME.index(), ISSUED_FOR_AGENT.index(), ISSUED_FOR_AGENT_NAME.index(),
+        DIGITAL_OBJECT_TYPE.index(), DIGITAL_OBJECT_NAME.index(),
         PID.index(), PID_RECORD_ISSUE_DATE.index(), PID_STATUS.index(), HS_ADMIN.index());
-  }
-
-  static {
-    TOMBSTONE_KEYS = List.of(FDO_RECORD_LICENSE.index(), PID.index(), PID_RECORD_ISSUE_DATE.index(),
-        PID_ISSUER.index(), PID_ISSUER_NAME.index(), ISSUED_FOR_AGENT.index(),
-        ISSUED_FOR_AGENT_NAME.index(), STRUCTURAL_TYPE.index(), HS_ADMIN.index());
   }
 
   private final DateTimeFormatter dt = DateTimeFormatter.ofPattern(DATE_STRING)
       .withZone(ZoneId.of("UTC"));
+  private final ProfileProperties profileProperties;
 
 
   /* Handle Record Creation */
@@ -186,13 +180,8 @@ public class FdoRecordService {
     var handleAttributeList = new ArrayList<FdoAttribute>();
     // 101: 10320/Loc
     handleAttributeList.add(
-        new FdoAttribute(LOC, timestamp, setLocations(handle, HANDLE, request.getLocations())));
-    // 8: Issued For Agent
-    handleAttributeList.add(
-        new FdoAttribute(ISSUED_FOR_AGENT, timestamp, request.getIssuedForAgent()));
-    // 9: Issued for Agent Name
-    handleAttributeList.add(new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp,
-        getObjectName(request.getIssuedForAgent(), null)));
+        new FdoAttribute(LOC, timestamp,
+            setLocations(handle, HANDLE, null, request.getLocations())));
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
@@ -234,13 +223,7 @@ public class FdoRecordService {
     var handleAttributeList = new ArrayList<FdoAttribute>();
     // 101: 10320/Loc
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
-        setLocations(handle, DOI, request.getLocations())));
-    // 8: Issued For Agent
-    handleAttributeList.add(
-        new FdoAttribute(ISSUED_FOR_AGENT, timestamp, request.getIssuedForAgent()));
-    // 9: Issued for Agent Name
-    handleAttributeList.add(new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp,
-        getObjectName(request.getIssuedForAgent(), null)));
+        setLocations(handle, DOI, null, request.getLocations())));
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
@@ -296,13 +279,7 @@ public class FdoRecordService {
     var handleAttributeList = new ArrayList<FdoAttribute>();
     // 101: 10320/Loc
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
-        setLocations(handle, ANNOTATION, request.getLocations())));
-    // 8: Issued For Agent
-    handleAttributeList.add(
-        new FdoAttribute(ISSUED_FOR_AGENT, timestamp, request.getIssuedForAgent()));
-    // 9: Issued for Agent Name
-    handleAttributeList.add(new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp,
-        getObjectName(request.getIssuedForAgent(), null)));
+        setLocations(handle, ANNOTATION, null, request.getLocations())));
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
@@ -356,13 +333,7 @@ public class FdoRecordService {
     var handleAttributeList = new ArrayList<FdoAttribute>();
     // 101: 10320/Loc
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
-        setLocations(handle, DATA_MAPPING, request.getLocations())));
-    // 8: Issued For Agent
-    handleAttributeList.add(
-        new FdoAttribute(ISSUED_FOR_AGENT, timestamp, request.getIssuedForAgent()));
-    // 9: Issued for Agent Name
-    handleAttributeList.add(new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp,
-        getObjectName(request.getIssuedForAgent(), null)));
+        setLocations(handle, DATA_MAPPING, null, request.getLocations())));
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
@@ -425,14 +396,11 @@ public class FdoRecordService {
     idXorAbsence(request);
     var handleAttributeList = new ArrayList<FdoAttribute>();
     // 101: 10320/Loc
+    var keyAttribute =
+        request.getPrimarySpecimenObjectIdType().equals(PrimarySpecimenObjectIdType.RESOLVABLE) ?
+            request.getPrimarySpecimenObjectId() : null;
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
-        setLocations(handle, DIGITAL_SPECIMEN, request.getLocations())));
-    // 8: Issued For Agent
-    handleAttributeList.add(
-        new FdoAttribute(ISSUED_FOR_AGENT, timestamp, request.getIssuedForAgent()));
-    // 9: Issued for Agent Name
-    handleAttributeList.add(new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp,
-        getObjectName(request.getIssuedForAgent(), null)));
+        setLocations(handle, DIGITAL_SPECIMEN, keyAttribute, request.getLocations())));
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
@@ -556,13 +524,7 @@ public class FdoRecordService {
     var handleAttributeList = new ArrayList<FdoAttribute>();
     // 101: 10320/Loc
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
-        setLocations(handle, MAS, request.getLocations())));
-    // 8: Issued For Agent
-    handleAttributeList.add(
-        new FdoAttribute(ISSUED_FOR_AGENT, timestamp, request.getIssuedForAgent()));
-    // 9: Issued for Agent Name
-    handleAttributeList.add(new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp,
-        getObjectName(request.getIssuedForAgent(), null)));
+        setLocations(handle, MAS, null, request.getLocations())));
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
@@ -613,13 +575,7 @@ public class FdoRecordService {
     var handleAttributeList = new ArrayList<FdoAttribute>();
     // 101: 10320/Loc
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
-        setLocations(handle, DIGITAL_MEDIA, request.getLocations())));
-    // 8: Issued For Agent
-    handleAttributeList.add(
-        new FdoAttribute(ISSUED_FOR_AGENT, timestamp, request.getIssuedForAgent()));
-    // 9: Issued for Agent Name
-    handleAttributeList.add(new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp,
-        getObjectName(request.getIssuedForAgent(), null)));
+        setLocations(handle, DIGITAL_MEDIA, request.getPrimaryMediaId(), request.getLocations())));
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
@@ -740,16 +696,9 @@ public class FdoRecordService {
       throws InvalidRequestException {
     var handleAttributeList = new ArrayList<FdoAttribute>();
     // 101: 10320/Loc
-    var locList = request.getLocations();
-    locList.add(request.getOrganisationIdentifier());
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
-        setLocations(handle, ORGANISATION, locList)));
-    // 8: Issued For Agent
-    handleAttributeList.add(
-        new FdoAttribute(ISSUED_FOR_AGENT, timestamp, request.getIssuedForAgent()));
-    // 9: Issued for Agent Name
-    handleAttributeList.add(new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp,
-        getObjectName(request.getIssuedForAgent(), null)));
+        setLocations(handle, ORGANISATION, request.getOrganisationIdentifier(),
+            request.getLocations())));
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
@@ -818,13 +767,7 @@ public class FdoRecordService {
     var handleAttributeList = new ArrayList<FdoAttribute>();
     // 101: 10320/Loc
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
-        setLocations(handle, SOURCE_SYSTEM, request.getLocations())));
-    // 8: Issued For Agent
-    handleAttributeList.add(
-        new FdoAttribute(ISSUED_FOR_AGENT, timestamp, request.getIssuedForAgent()));
-    // 9: Issued for Agent Name
-    handleAttributeList.add(new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp,
-        getObjectName(request.getIssuedForAgent(), null)));
+        setLocations(handle, SOURCE_SYSTEM, null, request.getLocations())));
     // 12: Structural Type
     handleAttributeList.add(
         new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
@@ -935,9 +878,17 @@ public class FdoRecordService {
     // 5: PID
     handleAttributeList.add(new FdoAttribute(PID, timestamp, fdoType.getDomain() + handle));
     // 6: PID Issuer
-    handleAttributeList.add(new FdoAttribute(PID_ISSUER, timestamp, DATACITE_ROR));
+    handleAttributeList.add(
+        new FdoAttribute(PID_ISSUER, timestamp, profileProperties.getPidIssuer()));
     // 7: PID Issuer Name
-    handleAttributeList.add(new FdoAttribute(PID_ISSUER_NAME, timestamp, DATACITE_NAME));
+    handleAttributeList.add(
+        new FdoAttribute(PID_ISSUER_NAME, timestamp, profileProperties.getPidIssuerName()));
+    // 8: Issued for Agent
+    handleAttributeList.add(
+        new FdoAttribute(ISSUED_FOR_AGENT, timestamp, profileProperties.getIssuedForAgent()));
+    // 9: Issued for Agent Name
+    handleAttributeList.add(new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp,
+        profileProperties.getIssuedForAgentName()));
     // 10: PID Record Issue Date
     handleAttributeList.add(
         new FdoAttribute(PID_RECORD_ISSUE_DATE, timestamp, getDate(timestamp)));
@@ -949,7 +900,6 @@ public class FdoRecordService {
     handleAttributeList.add(new FdoAttribute(PID_STATUS, timestamp, PidStatus.ACTIVE.name()));
     // 100 HS Admin
     handleAttributeList.add(new FdoAttribute(timestamp, applicationProperties.getPrefix()));
-    // 101 10320/Loc
     return handleAttributeList;
   }
 
@@ -991,30 +941,82 @@ public class FdoRecordService {
     return dt.format(timestamp);
   }
 
-  private List<String> getURIs(String handle, FdoType fdoType, List<String> userLocations) {
-    var locations = new ArrayList<String>();
+  private List<XmlElement> getXmlElements(String handle, FdoType fdoType, String keyLocation,
+      List<String> userLocations) {
+    var locations = new ArrayList<XmlElement>();
     switch (fdoType) {
       case DIGITAL_SPECIMEN -> {
-        locations.add(applicationProperties.getApiUrl() + "/specimens/" + handle);
-        locations.add(applicationProperties.getUiUrl() + "/ds/" + handle);
+        locations.add(
+            new XmlElement("HTML", "1", applicationProperties.getUiUrl() + "/ds/" + handle));
+        locations.add(
+            new XmlElement("JSON", "0",
+                applicationProperties.getApiUrl() + "/digital-specimen/" + handle));
+        if (keyLocation != null) {
+          locations.add(new XmlElement("CATALOG", "0", keyLocation));
+        }
       }
-      case DATA_MAPPING ->
-          locations.add(applicationProperties.getOrchestrationUrl() + "/mapping/" + handle);
-      case SOURCE_SYSTEM ->
-          locations.add(applicationProperties.getOrchestrationUrl() + "/source-system/" + handle);
+      case DATA_MAPPING -> {
+        locations.add(new XmlElement("HTML", "1",
+            applicationProperties.getOrchestrationUrl() + "/mapping/" + handle));
+        locations.add(new XmlElement("JSON", "0",
+            applicationProperties.getOrchestrationUrl() + "/api/v1/mapping/" + handle));
+      }
+      case SOURCE_SYSTEM -> {
+        locations.add(new XmlElement("HTML", "1",
+            applicationProperties.getOrchestrationUrl() + "/source-system/" + handle));
+        locations.add(new XmlElement("JSON", "0",
+            applicationProperties.getOrchestrationUrl() + "/api/v1/source-system/" + handle));
+      }
       case DIGITAL_MEDIA -> {
-        locations.add(applicationProperties.getApiUrl() + "/digitalMedia/" + handle);
-        locations.add(applicationProperties.getUiUrl() + "/dm/" + handle);
+        locations.add(
+            new XmlElement("HTML", "1", applicationProperties.getUiUrl() + "/dm/" + handle));
+        locations.add(new XmlElement("JSON", "0",
+            applicationProperties.getApiUrl() + "/digital-media/" + handle));
+        if (keyLocation != null) {
+          locations.add(new XmlElement("MEDIA", "0", keyLocation));
+        }
       }
-      case ANNOTATION ->
-          locations.add(applicationProperties.getApiUrl() + "/annotations/" + handle);
-      case MAS -> locations.add(applicationProperties.getOrchestrationUrl() + "/mas/" + handle);
+      case ANNOTATION -> locations.add(new XmlElement("JSON", "1",
+          applicationProperties.getApiUrl() + "/annotations/" + handle));
+      case MAS -> {
+        locations.add(new XmlElement("HTML", "1",
+            applicationProperties.getOrchestrationUrl() + "/mas/" + handle));
+        locations.add(new XmlElement("JSON", "0",
+            applicationProperties.getOrchestrationUrl() + "/api/v1/mas/" + handle));
+      }
+      case ORGANISATION -> locations.add(new XmlElement("ROR", "1", keyLocation));
       default -> {
-        // Handle, DOI, Organisation (Org locations are all in userLocations)
+        // Handle, DOI are all in user locations
       }
     }
-    locations.addAll(userLocations);
+    userLocations.forEach(
+        loc -> locations.add(new XmlElement(String.valueOf(userLocations.indexOf(loc)), "0", loc)));
     return locations;
+  }
+
+  private String setLocations(String handle, FdoType fdoType, String keyLocation,
+      List<String> userLocations)
+      throws InvalidRequestException {
+    var xmlElements = getXmlElements(handle, fdoType, keyLocation, userLocations);
+    if (xmlElements.isEmpty()) {
+      return "<locations></locations>";
+    }
+    try {
+      var documentBuilder = dbf.newDocumentBuilder();
+      var doc = documentBuilder.newDocument();
+      var locations = doc.createElement("locations");
+      doc.appendChild(locations);
+      xmlElements.forEach(xmlLoc -> {
+        var locs = doc.createElement("location");
+        locs.setAttribute("id", xmlLoc.id);
+        locs.setAttribute("href", xmlLoc.loc);
+        locs.setAttribute("weight", xmlLoc.weight);
+        locations.appendChild(locs);
+      });
+      return documentToString(doc);
+    } catch (TransformerException | ParserConfigurationException e) {
+      throw new InvalidRequestException("An error has occurred parsing location data");
+    }
   }
 
   private String documentToString(org.w3c.dom.Document document) throws TransformerException {
@@ -1025,34 +1027,12 @@ public class FdoRecordService {
     return writer.getBuffer().toString();
   }
 
-  private String setLocations(String handle, FdoType fdoType, List<String> userLocations)
-      throws InvalidRequestException {
-    var objectLocations = getURIs(handle, fdoType, userLocations);
-    if (objectLocations.isEmpty()) {
-      return "<locations></locations>";
-    }
-    DocumentBuilder documentBuilder;
-    try {
-      documentBuilder = dbf.newDocumentBuilder();
-    } catch (ParserConfigurationException e) {
-      throw new InvalidRequestException(e.getMessage());
-    }
-    var doc = documentBuilder.newDocument();
-    var locations = doc.createElement("locations");
-    doc.appendChild(locations);
-    for (int i = 0; i < objectLocations.size(); i++) {
-      var locs = doc.createElement("location");
-      locs.setAttribute("id", String.valueOf(i));
-      locs.setAttribute("href", objectLocations.get(i));
-      String weight = i < 1 ? "1" : "0";
-      locs.setAttribute("weight", weight);
-      locations.appendChild(locs);
-    }
-    try {
-      return documentToString(doc);
-    } catch (TransformerException e) {
-      throw new InvalidRequestException("An error has occurred parsing location data");
-    }
+  private record XmlElement(
+      String id,
+      String weight,
+      String loc
+  ) {
+
   }
 
 }

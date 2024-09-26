@@ -7,8 +7,8 @@ import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.datacite.DataCiteEvent;
 import eu.dissco.core.handlemanager.domain.datacite.DataCiteTombstoneEvent;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
-import eu.dissco.core.handlemanager.domain.fdo.HasRelatedPid;
 import eu.dissco.core.handlemanager.properties.KafkaPublisherProperties;
+import eu.dissco.core.handlemanager.schema.HasRelatedPid;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +41,7 @@ public class DataCiteService {
     if (relatedPids != null) {
       relatedPids.forEach(relatedPid -> dcRelatedIdentifiers.add(mapper.createObjectNode()
           .put("relationType", "HasMetadata")
-          .put("relatedIdentifier", relatedPid.odsId())));
+          .put("relatedIdentifier", relatedPid.getPid())));
     }
     var message = mapper.writeValueAsString(
         new DataCiteTombstoneEvent(handle, dcRelatedIdentifiers));

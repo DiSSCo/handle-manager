@@ -85,7 +85,6 @@ import eu.dissco.core.handlemanager.configuration.InstantDeserializer;
 import eu.dissco.core.handlemanager.configuration.InstantSerializer;
 import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
-import eu.dissco.core.handlemanager.domain.fdo.HasRelatedPid;
 import eu.dissco.core.handlemanager.domain.fdo.PidStatus;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
@@ -93,7 +92,6 @@ import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequestData;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
 import eu.dissco.core.handlemanager.domain.requests.PostRequestData;
-import eu.dissco.core.handlemanager.domain.requests.TombstoneRequestAttributes;
 import eu.dissco.core.handlemanager.domain.responses.JsonApiDataLinks;
 import eu.dissco.core.handlemanager.domain.responses.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.responses.JsonApiWrapperRead;
@@ -104,11 +102,14 @@ import eu.dissco.core.handlemanager.schema.DataMappingRequestAttributes;
 import eu.dissco.core.handlemanager.schema.DigitalMediaRequestAttributes;
 import eu.dissco.core.handlemanager.schema.DigitalMediaRequestAttributes.LinkedDigitalObjectType;
 import eu.dissco.core.handlemanager.schema.DigitalSpecimenRequestAttributes;
+import eu.dissco.core.handlemanager.schema.DigitalSpecimenRequestAttributes.PrimarySpecimenObjectIdType;
 import eu.dissco.core.handlemanager.schema.DoiKernelRequestAttributes;
 import eu.dissco.core.handlemanager.schema.HandleRequestAttributes;
+import eu.dissco.core.handlemanager.schema.HasRelatedPid;
 import eu.dissco.core.handlemanager.schema.MasRequestAttributes;
 import eu.dissco.core.handlemanager.schema.OrganisationRequestAttributes;
 import eu.dissco.core.handlemanager.schema.SourceSystemRequestAttributes;
+import eu.dissco.core.handlemanager.schema.TombstoneRequestAttributes;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
@@ -120,7 +121,6 @@ import java.util.UUID;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
@@ -146,9 +146,8 @@ public class TestUtils {
   public static final String HANDLE_DOMAIN = "https://hdl.handle.net/";
   public static final String DOI_DOMAIN = "https://doi.org/";
   public static final String ROR_DOMAIN = "https://ror.org/";
-  public static final String ISSUED_FOR_AGENT_TESTVAL = ROR_DOMAIN + "0566bfb96";
-  public static final String PID_ISSUER_TESTVAL = "https://ror.org/04wxnsj81";
-  public static final String PID_ISSUER_NAME_TESTVAL = "DataCite";
+  public static final String ISSUED_FOR_AGENT_TESTVAL = "https://ror.org/02wddde16"; // DiSSCo
+  public static final String ISSUED_FOR_AGENT_NAME_TESTVAL = "Distributed System of Scientific Collections";
   public static final String STRUCTURAL_TYPE_TESTVAL = "digital";
   public static final String STRUCTURAL_TYPE_ALT = "physical";
   public static final String LOC_TESTVAL = "https://dissco.eu";
@@ -187,7 +186,7 @@ public class TestUtils {
   public static final String API_URL = "https://sandbox.dissco.tech/api/v1";
   public static final String UI_URL = "https://sandbox.dissco.tech";
   public static final String PATH = UI_URL + HANDLE;
-  public static final String ORCHESTRATION_URL = "https://orchestration.dissco.tech/api/v1";
+  public static final String ORCHESTRATION_URL = "https://orchestration.dissco.tech/";
   public static final String PTR_TYPE_DOI = "doi";
   public static final String PRIMARY_SPECIMEN_ID_TESTVAL = "BOTANICAL.QRS.123";
   public static final String PRIMARY_SPECIMEN_ID_ALT = "AVES.123";
@@ -212,14 +211,14 @@ public class TestUtils {
   }
 
   public static TombstoneRequestAttributes givenTombstoneRecordRequestObject() {
-    return new TombstoneRequestAttributes(TOMBSTONE_TEXT_TESTVAL,
-        List.of(givenHasRelatedPid()));
+    return new TombstoneRequestAttributes()
+        .withTombstoneText(TOMBSTONE_TEXT_TESTVAL)
+        .withHasRelatedPid(List.of(givenHasRelatedPid()));
   }
 
   public static HasRelatedPid givenHasRelatedPid() {
-    return new HasRelatedPid(HANDLE_ALT, "Media ID");
+    return new HasRelatedPid().withPid(HANDLE_ALT).withRelationshipType("Media ID");
   }
-
 
   public static FdoRecord givenHandleFdoRecord(String handle) throws Exception {
     return new FdoRecord(handle, FdoType.HANDLE,
@@ -245,14 +244,14 @@ public class TestUtils {
     // 5: Pid
     fdoAttributes.add(new FdoAttribute(PID, timestamp, fdoType.getDomain() + handle));
     // 6: PidIssuer
-    fdoAttributes.add(new FdoAttribute(PID_ISSUER, timestamp, PID_ISSUER_TESTVAL));
+    fdoAttributes.add(new FdoAttribute(PID_ISSUER, timestamp, ISSUED_FOR_AGENT_TESTVAL));
     // 7: pidIssuerName
-    fdoAttributes.add(new FdoAttribute(PID_ISSUER_NAME, timestamp, PID_ISSUER_NAME_TESTVAL));
+    fdoAttributes.add(new FdoAttribute(PID_ISSUER_NAME, timestamp, ISSUED_FOR_AGENT_NAME_TESTVAL));
     // 8: issuedForAgent
     fdoAttributes.add(new FdoAttribute(ISSUED_FOR_AGENT, timestamp, ISSUED_FOR_AGENT_TESTVAL));
     // 9: issuedForAgentName
     fdoAttributes.add(
-        new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp, SPECIMEN_HOST_NAME_TESTVAL));
+        new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp, ISSUED_FOR_AGENT_NAME_TESTVAL));
     // 10: pidRecordIssueDate
     fdoAttributes.add(new FdoAttribute(PID_RECORD_ISSUE_DATE, timestamp, ISSUE_DATE_TESTVAL));
     // 11: pidRecordIssueNumber
@@ -289,6 +288,12 @@ public class TestUtils {
       }
       if (attribute.getIndex() == PID_ISSUER_NAME.index()) {
         return new FdoAttribute(PID_ISSUER_NAME, CREATED, attribute.getValue());
+      }
+      if (attribute.getIndex() == ISSUED_FOR_AGENT.index()) {
+        return new FdoAttribute(ISSUED_FOR_AGENT, CREATED, attribute.getValue());
+      }
+      if (attribute.getIndex() == ISSUED_FOR_AGENT_NAME.index()) {
+        return new FdoAttribute(ISSUED_FOR_AGENT_NAME, CREATED, attribute.getValue());
       }
       if (attribute.getIndex() == DIGITAL_OBJECT_NAME.index()) {
         return new FdoAttribute(DIGITAL_OBJECT_NAME, CREATED, attribute.getValue());
@@ -362,7 +367,7 @@ public class TestUtils {
         PRIMARY_SPECIMEN_ID_TESTVAL));
     // 203: primarySpecimenObjectIdType
     fdoRecord.add(new FdoAttribute(PRIMARY_SPECIMEN_OBJECT_ID_TYPE, timestamp,
-        DigitalSpecimenRequestAttributes.PrimarySpecimenObjectIdType.GLOBAL.value()));
+        PrimarySpecimenObjectIdType.RESOLVABLE.value()));
     // 204: primarySpecimenObjectIdName
     fdoRecord.add(new FdoAttribute(PRIMARY_SPECIMEN_OBJECT_ID_NAME, timestamp,
         null));
@@ -546,7 +551,7 @@ public class TestUtils {
     // 801 OrganisationIdentifier
     fdoRecord.add(new FdoAttribute(ORGANISATION_ID_TYPE, timestamp, PTR_TYPE_DOI));
     // 802 OrganisationName
-    fdoRecord.add(new FdoAttribute(ORGANISATION_NAME, timestamp, ISSUED_FOR_AGENT_TESTVAL));
+    fdoRecord.add(new FdoAttribute(ORGANISATION_NAME, timestamp, SPECIMEN_HOST_NAME_TESTVAL));
     return fdoRecord;
   }
 
@@ -626,7 +631,7 @@ public class TestUtils {
         .withSpecimenHostName(SPECIMEN_HOST_NAME_TESTVAL)
         .withPrimarySpecimenObjectId(PRIMARY_SPECIMEN_ID_TESTVAL)
         .withPrimarySpecimenObjectIdType(
-            DigitalSpecimenRequestAttributes.PrimarySpecimenObjectIdType.GLOBAL)
+            PrimarySpecimenObjectIdType.RESOLVABLE)
         .withNormalisedPrimarySpecimenObjectId(NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL);
   }
 
@@ -915,8 +920,8 @@ public class TestUtils {
     return doc;
   }
 
-  public static String setLocations(String handle, FdoType type)
-      throws TransformerException, ParserConfigurationException {
+  public static String setLocations(String handle, FdoType type, boolean addKeyLoc)
+      throws Exception {
     DOC_BUILDER_FACTORY.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
 
     DocumentBuilder documentBuilder = DOC_BUILDER_FACTORY.newDocumentBuilder();
@@ -924,53 +929,69 @@ public class TestUtils {
     var doc = documentBuilder.newDocument();
     var locations = doc.createElement("locations");
     doc.appendChild(locations);
-    var objectLocations = defaultLocations(handle, type);
-    if (objectLocations.length == 0) {
+    var xmlElements = defaultLocations(handle, type, addKeyLoc);
+    if (xmlElements.isEmpty()) {
       return "<locations></locations>";
     }
-    for (int i = 0; i < objectLocations.length; i++) {
+    xmlElements.forEach(xmlLoc -> {
       var locs = doc.createElement("location");
-      locs.setAttribute("id", String.valueOf(i));
-      locs.setAttribute("href", objectLocations[i]);
-      String weight = i < 1 ? "1" : "0";
-      locs.setAttribute("weight", weight);
+      locs.setAttribute("id", xmlLoc.id);
+      locs.setAttribute("href", xmlLoc.loc);
+      locs.setAttribute("weight", xmlLoc.weight);
       locations.appendChild(locs);
-    }
+    });
     return documentToString(doc);
   }
 
-  private static String[] defaultLocations(String handle, FdoType type) {
+  public static String setLocations(String handle, FdoType type)
+      throws Exception {
+    return setLocations(handle, type, true);
+  }
+
+  private static List<XmlElement> defaultLocations(String handle, FdoType type, boolean addKeyLoc) {
+    var locations = new ArrayList<XmlElement>();
     switch (type) {
       case DIGITAL_SPECIMEN -> {
-        String api = API_URL + "/specimens/" + handle;
-        String ui = UI_URL + "/ds/" + handle;
-        return new String[]{api, ui};
+        locations.add(new XmlElement("HTML", "1", UI_URL + "/ds/" + handle));
+        locations.add(new XmlElement("JSON", "0", API_URL + "/digital-specimen/" + handle));
+        if (addKeyLoc) {
+          locations.add(new XmlElement("CATALOG", "0", PRIMARY_SPECIMEN_ID_TESTVAL));
+        }
       }
       case DATA_MAPPING -> {
-        return new String[]{ORCHESTRATION_URL + "/mapping/" + handle};
+        locations.add(new XmlElement("HTML", "1", ORCHESTRATION_URL + "/mapping/" + handle));
+        locations.add(new XmlElement("JSON", "0", ORCHESTRATION_URL + "/api/v1/mapping/" + handle));
       }
       case SOURCE_SYSTEM -> {
-        return new String[]{ORCHESTRATION_URL + "/source-system/" + handle};
+        locations.add(new XmlElement("HTML", "1", ORCHESTRATION_URL + "/source-system/" + handle));
+        locations.add(
+            new XmlElement("JSON", "0", ORCHESTRATION_URL + "/api/v1/source-system/" + handle));
       }
       case DIGITAL_MEDIA -> {
-        String api = API_URL + "/digitalMedia/" + handle;
-        String ui = UI_URL + "/dm/" + handle;
-        return new String[]{api, ui};
+        locations.add(
+            new XmlElement("HTML", "1", UI_URL + "/dm/" + handle));
+        locations.add(new XmlElement("JSON", "0", API_URL + "/digital-media/" + handle));
+        if (addKeyLoc) {
+          locations.add(new XmlElement("MEDIA", "0", PRIMARY_MEDIA_ID_TESTVAL));
+        }
       }
       case ANNOTATION -> {
-        return new String[]{API_URL + "/annotations/" + handle};
+        locations.add(new XmlElement("JSON", "1", API_URL + "/annotations/" + handle));
       }
       case ORGANISATION -> {
-        return new String[]{SPECIMEN_HOST_TESTVAL};
+        if (addKeyLoc) {
+          locations.add(new XmlElement("ROR", "1", SPECIMEN_HOST_TESTVAL));
+        }
       }
       case MAS -> {
-        return new String[]{ORCHESTRATION_URL + "/mas/" + handle};
+        locations.add(new XmlElement("HTML", "1", ORCHESTRATION_URL + "/mas/" + handle));
+        locations.add(new XmlElement("JSON", "0", ORCHESTRATION_URL + "/api/v1/mas/" + handle));
       }
       default -> {
         // Handle, DOI, OrganisationRequestAttributes (organisation handled separately)
-        return new String[]{};
       }
     }
+    return locations;
   }
 
   private static String documentToString(org.w3c.dom.Document document)
@@ -990,5 +1011,14 @@ public class TestUtils {
     return new String(new ClassPathResource(fileName).getInputStream().readAllBytes(),
         StandardCharsets.UTF_8);
   }
+
+  private record XmlElement(
+      String id,
+      String weight,
+      String loc
+  ) {
+
+  }
+
 
 }
