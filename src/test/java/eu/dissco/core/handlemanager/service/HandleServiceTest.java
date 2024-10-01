@@ -1,6 +1,8 @@
 package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID_RECORD_ISSUE_NUMBER;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID_STATUS;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
@@ -8,6 +10,8 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_DOMAIN;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PATH;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributes;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.getField;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotation;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationUpdated;
@@ -44,6 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.lenient;
@@ -51,6 +56,8 @@ import static org.mockito.Mockito.mockStatic;
 
 import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
+import eu.dissco.core.handlemanager.domain.fdo.PidStatus;
+import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -121,11 +128,13 @@ class HandleServiceTest {
     var fdoRecord = givenAnnotationFdoRecord(HANDLE, false);
     var expected = TestUtils.givenWriteResponseFull(List.of(HANDLE), FdoType.ANNOTATION);
     given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
-    given(fdoRecordService.prepareNewAnnotationRecord(any(), any(), any())).willReturn(fdoRecord);
+    given(
+        fdoRecordService.prepareNewAnnotationRecord(any(), any(), any(), anyBoolean())).willReturn(
+        fdoRecord);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
-    var result = service.createRecords(List.of(request));
+    var result = service.createRecords(List.of(request), false);
 
     // Then
     assertThat(result).isEqualTo(expected);
@@ -138,11 +147,13 @@ class HandleServiceTest {
     var expected = givenWriteResponseIdsOnly(List.of(fdoRecord), FdoType.ANNOTATION,
         HANDLE_DOMAIN);
     given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
-    given(fdoRecordService.prepareNewAnnotationRecord(any(), any(), any())).willReturn(fdoRecord);
+    given(
+        fdoRecordService.prepareNewAnnotationRecord(any(), any(), any(), anyBoolean())).willReturn(
+        fdoRecord);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
-    var result = service.createRecords(List.of(request));
+    var result = service.createRecords(List.of(request), false);
 
     // Then
     assertThat(result).isEqualTo(expected);
@@ -178,15 +189,39 @@ class HandleServiceTest {
     var fdoRecord = givenHandleFdoRecord(HANDLE);
     var expected = TestUtils.givenWriteResponseFull(List.of(HANDLE), FdoType.HANDLE);
     given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
-    given(fdoRecordService.prepareNewHandleRecord(any(), any(), any())).willReturn(
+    given(fdoRecordService.prepareNewHandleRecord(any(), any(), any(), anyBoolean())).willReturn(
         fdoRecord);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
-    var result = service.createRecords(List.of(request));
+    var result = service.createRecords(List.of(request), false);
 
     // Then
     assertThat(result).isEqualTo(expected);
+  }
+
+  @Test
+  void testActivateHandle() throws Exception {
+    // Given
+    var draftAttributes = genHandleRecordAttributes(HANDLE, CREATED, FdoType.HANDLE);
+    draftAttributes.set(draftAttributes.indexOf(getField(draftAttributes, PID_STATUS)),
+        new FdoAttribute(PID_STATUS, CREATED, PidStatus.DRAFT));
+    var draftRecord = new FdoRecord(HANDLE, FdoType.HANDLE, draftAttributes, null);
+    var expectedAttributes = givenHandleFdoRecord(HANDLE).attributes();
+    expectedAttributes.set(
+        expectedAttributes.indexOf(getField(expectedAttributes, PID_RECORD_ISSUE_NUMBER)),
+        new FdoAttribute(PID_RECORD_ISSUE_NUMBER, CREATED, 2));
+    var activeRecord = new FdoRecord(HANDLE, FdoType.HANDLE, expectedAttributes, null);
+    var expected = givenMongoDocument(activeRecord);
+    given(mongoRepository.getHandleRecords(List.of(HANDLE))).willReturn(List.of(draftRecord));
+    given(fdoRecordService.activatePidRecord(any(), eq(CREATED)))
+        .willReturn(activeRecord);
+
+    // When
+    service.activateRecords(List.of(HANDLE));
+
+    // Then
+    then(mongoRepository).should().updateHandleRecords(List.of(expected));
   }
 
   @Test
@@ -239,11 +274,13 @@ class HandleServiceTest {
     var fdoRecord = givenDataMappingFdoRecord(HANDLE);
     var expected = TestUtils.givenWriteResponseFull(List.of(HANDLE), FdoType.DATA_MAPPING);
     given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
-    given(fdoRecordService.prepareNewDataMappingRecord(any(), any(), any())).willReturn(fdoRecord);
+    given(
+        fdoRecordService.prepareNewDataMappingRecord(any(), any(), any(), anyBoolean())).willReturn(
+        fdoRecord);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
-    var result = service.createRecords(List.of(request));
+    var result = service.createRecords(List.of(request), false);
 
     // Then
     assertThat(result).isEqualTo(expected);
@@ -277,11 +314,12 @@ class HandleServiceTest {
     var fdoRecord = givenMasFdoRecord(HANDLE);
     var expected = TestUtils.givenWriteResponseFull(List.of(HANDLE), FdoType.MAS);
     given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
-    given(fdoRecordService.prepareNewMasRecord(any(), any(), any())).willReturn(fdoRecord);
+    given(fdoRecordService.prepareNewMasRecord(any(), any(), any(), anyBoolean())).willReturn(
+        fdoRecord);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
-    var result = service.createRecords(List.of(request));
+    var result = service.createRecords(List.of(request), false);
 
     // Then
     assertThat(result).isEqualTo(expected);
@@ -315,11 +353,13 @@ class HandleServiceTest {
     var fdoRecord = givenSourceSystemFdoRecord(HANDLE);
     var expected = TestUtils.givenWriteResponseFull(List.of(HANDLE), FdoType.SOURCE_SYSTEM);
     given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
-    given(fdoRecordService.prepareNewSourceSystemRecord(any(), any(), any())).willReturn(fdoRecord);
+    given(fdoRecordService.prepareNewSourceSystemRecord(any(), any(), any(),
+        anyBoolean())).willReturn(
+        fdoRecord);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
-    var result = service.createRecords(List.of(request));
+    var result = service.createRecords(List.of(request), false);
 
     // Then
     assertThat(result).isEqualTo(expected);
@@ -394,11 +434,13 @@ class HandleServiceTest {
     var fdoRecord = givenOrganisationFdoRecord(HANDLE);
     var expected = TestUtils.givenWriteResponseFull(List.of(HANDLE), FdoType.ORGANISATION);
     given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
-    given(fdoRecordService.prepareNewOrganisationRecord(any(), any(), any())).willReturn(fdoRecord);
+    given(fdoRecordService.prepareNewOrganisationRecord(any(), any(), any(),
+        anyBoolean())).willReturn(
+        fdoRecord);
     given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
 
     // When
-    var result = service.createRecords(List.of(request));
+    var result = service.createRecords(List.of(request), false);
 
     // Then
     assertThat(result).isEqualTo(expected);
@@ -532,7 +574,7 @@ class HandleServiceTest {
     );
 
     // When / Then
-    assertThrows(UnsupportedOperationException.class, () -> service.createRecords(requests));
+    assertThrows(UnsupportedOperationException.class, () -> service.createRecords(requests, false));
   }
 
   @Test
@@ -563,7 +605,8 @@ class HandleServiceTest {
         FdoType.DIGITAL_SPECIMEN));
 
     // When / Then
-    assertThrowsExactly(UnsupportedOperationException.class, () -> service.createRecords(request));
+    assertThrowsExactly(UnsupportedOperationException.class, () -> service.createRecords(request,
+        false));
   }
 
   @Test

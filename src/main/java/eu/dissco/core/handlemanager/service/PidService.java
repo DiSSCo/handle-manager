@@ -216,8 +216,25 @@ public abstract class PidService {
   }
 
   // Create
-  public abstract JsonApiWrapperWrite createRecords(List<PostRequest> requests)
+  public abstract JsonApiWrapperWrite createRecords(List<PostRequest> requests, boolean isDraft)
       throws InvalidRequestException, UnprocessableEntityException;
+
+  // Activate
+  public void activateRecords(List<String> handles) throws InvalidRequestException {
+    List<FdoRecord> draftRecords;
+    try {
+      draftRecords = mongoRepository.getHandleRecords(handles);
+    } catch (JsonProcessingException e) {
+      log.error("Unable to read PID record", e);
+      throw new InvalidRequestException("Unable to read PID record");
+    }
+    var timestamp = Instant.now();
+    var activeRecords = new ArrayList<FdoRecord>();
+    for (var draftRecord : draftRecords) {
+      activeRecords.add(fdoRecordService.activatePidRecord(draftRecord, timestamp));
+    }
+    updateDocuments(activeRecords);
+  }
 
   // Update
   public abstract JsonApiWrapperWrite updateRecords(List<PatchRequest> requests,
@@ -360,5 +377,32 @@ public abstract class PidService {
       }
     }
     return false;
+  }
+
+  protected void createDocuments(List<FdoRecord> fdoRecords)
+      throws InvalidRequestException {
+    List<Document> fdoDocuments;
+    try {
+      fdoDocuments = toMongoDbDocument(fdoRecords);
+    } catch (JsonProcessingException e) {
+      log.error(REQUEST_PROCESSING_ERR, e);
+      throw new InvalidRequestException(REQUEST_PROCESSING_ERR);
+    }
+    mongoRepository.postHandleRecords(fdoDocuments);
+    log.info("Successfully posted {} new specimen fdo records to database", fdoDocuments.size());
+  }
+
+  protected void updateDocuments(List<FdoRecord> fdoRecords)
+      throws InvalidRequestException {
+    List<Document> fdoDocuments;
+    try {
+      fdoDocuments = toMongoDbDocument(fdoRecords);
+    } catch (JsonProcessingException e) {
+      log.error(REQUEST_PROCESSING_ERR, e);
+      throw new InvalidRequestException(
+          REQUEST_PROCESSING_ERR);
+    }
+    mongoRepository.updateHandleRecords(fdoDocuments);
+    log.info("Successfully updated {} specimens fdo records to database", fdoDocuments.size());
   }
 }
