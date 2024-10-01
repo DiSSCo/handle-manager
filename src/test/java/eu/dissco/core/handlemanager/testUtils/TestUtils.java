@@ -151,6 +151,9 @@ public class TestUtils {
   public static final String STRUCTURAL_TYPE_TESTVAL = "digital";
   public static final String STRUCTURAL_TYPE_ALT = "physical";
   public static final String LOC_TESTVAL = "https://dissco.eu";
+  public static final String LOC_XML = "<locations>"
+      + "<location href=\"" + LOC_TESTVAL + "\" id=\"0\" weight=\"0\"/>"
+      + "</locations>";
 
   // DOI Request Attributes
   public static final String REFERENT_NAME_TESTVAL = "Bird nest";
@@ -265,6 +268,17 @@ public class TestUtils {
     fdoAttributes.add(new FdoAttribute(timestamp, PREFIX));
 
     return fdoAttributes;
+  }
+
+  public static FdoRecord givenDraftFdoRecord(FdoType fdoType, String primaryLocalId,
+      String userLocations)
+      throws Exception {
+    var attributes = genAttributes(fdoType, HANDLE);
+    attributes.set(attributes.indexOf(getField(attributes, PID_STATUS)),
+        new FdoAttribute(PID_STATUS, CREATED, PidStatus.DRAFT));
+    attributes.set(attributes.indexOf(getField(attributes, LOC)),
+        new FdoAttribute(LOC, CREATED, userLocations));
+    return new FdoRecord(HANDLE, fdoType, attributes, primaryLocalId);
   }
 
   public static FdoRecord givenUpdatedFdoRecord(FdoType fdoType, String primaryLocalId)

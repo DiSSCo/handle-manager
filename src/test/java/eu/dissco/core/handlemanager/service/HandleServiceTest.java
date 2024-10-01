@@ -48,6 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.lenient;
@@ -210,9 +211,11 @@ class HandleServiceTest {
     expectedAttributes.set(
         expectedAttributes.indexOf(getField(expectedAttributes, PID_RECORD_ISSUE_NUMBER)),
         new FdoAttribute(PID_RECORD_ISSUE_NUMBER, CREATED, 2));
-    var expected = givenMongoDocument(
-        new FdoRecord(HANDLE, FdoType.HANDLE, expectedAttributes, null));
+    var activeRecord = new FdoRecord(HANDLE, FdoType.HANDLE, expectedAttributes, null);
+    var expected = givenMongoDocument(activeRecord);
     given(mongoRepository.getHandleRecords(List.of(HANDLE))).willReturn(List.of(draftRecord));
+    given(fdoRecordService.activatePidRecord(any(), eq(CREATED)))
+        .willReturn(activeRecord);
 
     // When
     service.activateRecords(List.of(HANDLE));

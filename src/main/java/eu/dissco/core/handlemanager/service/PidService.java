@@ -4,8 +4,6 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.ANNOTATION_HASH
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LINKED_DO_PID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID_RECORD_ISSUE_NUMBER;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_MEDIA_ID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.ANNOTATION;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_MEDIA;
@@ -21,7 +19,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
-import eu.dissco.core.handlemanager.domain.fdo.PidStatus;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
@@ -232,20 +229,10 @@ public abstract class PidService {
       throw new InvalidRequestException("Unable to read PID record");
     }
     var timestamp = Instant.now();
-    var activeRecords = draftRecords.stream().map(
-        draft -> {
-          var attributes = new ArrayList<>(draft.attributes());
-          var previousVersionIdx = attributes.indexOf(
-              getField(attributes, PID_RECORD_ISSUE_NUMBER));
-          var previousVersion = Integer.parseInt(attributes.get(previousVersionIdx).getValue());
-          attributes.set(attributes.indexOf(getField(attributes, PID_STATUS)),
-              new FdoAttribute(PID_STATUS, timestamp, PidStatus.ACTIVE));
-          attributes.set(previousVersionIdx,
-              new FdoAttribute(PID_RECORD_ISSUE_NUMBER, timestamp, previousVersion + 1));
-          return new FdoRecord(draft.handle(), draft.fdoType(), attributes,
-              draft.primaryLocalId());
-        }
-    ).toList();
+    var activeRecords = new ArrayList<FdoRecord>();
+    for (var draftRecord : draftRecords) {
+      activeRecords.add(fdoRecordService.activatePidRecord(draftRecord, timestamp));
+    }
     updateDocuments(activeRecords);
   }
 
