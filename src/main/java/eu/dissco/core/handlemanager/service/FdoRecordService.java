@@ -947,7 +947,6 @@ public class FdoRecordService {
                 .equals(PrimarySpecimenObjectIdType.RESOLVABLE.toString())
                 ? getField(fdoAttributes, PRIMARY_SPECIMEN_OBJECT_ID).getValue() : null;
         case DIGITAL_MEDIA -> keyLocation = getField(fdoAttributes, PRIMARY_MEDIA_ID).getValue();
-        case ORGANISATION -> keyLocation = getField(fdoAttributes, ORGANISATION_ID).getValue();
         default -> {
           return null;
         }

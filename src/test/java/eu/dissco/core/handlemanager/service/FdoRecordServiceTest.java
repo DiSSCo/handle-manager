@@ -484,7 +484,7 @@ class FdoRecordServiceTest {
   }
 
   @Test
-  void testActivateRecordWithLoc() throws Exception {
+  void testActivateDigitalSpecimenRecordWithUserLocations() throws Exception {
     // Given
     var attributes = new ArrayList<>(
         givenDigitalSpecimenFdoRecord(HANDLE).attributes());
@@ -496,11 +496,7 @@ class FdoRecordServiceTest {
             + "<location href=\"https://sandbox.dissco.tech/api/v1/digital-specimen/20.5000.1025/QRS-321-ABC\" id=\"JSON\" weight=\"0\"/>"
             + "<location href=\"BOTANICAL.QRS.123\" id=\"CATALOG\" weight=\"0\"/>"
             + "</locations>"));
-
-    attributes.set(attributes.indexOf(getField(attributes, PID_STATUS)),
-        new FdoAttribute(PID_STATUS, UPDATED, PidStatus.ACTIVE));
-    attributes.set(attributes.indexOf(getField(attributes, PID_RECORD_ISSUE_NUMBER)),
-        new FdoAttribute(PID_RECORD_ISSUE_NUMBER, UPDATED, "2"));
+    activateRecord(attributes);
 
     var expected = new FdoRecord(HANDLE, FdoType.DIGITAL_SPECIMEN, attributes,
         NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL);
@@ -509,6 +505,45 @@ class FdoRecordServiceTest {
     var result = fdoRecordService.activatePidRecord(
         givenDraftFdoRecord(FdoType.DIGITAL_SPECIMEN, NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
             LOC_XML), UPDATED);
+
+    // Then
+    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
+    assertThat(result.fdoType()).isEqualTo(expected.fdoType());
+    assertThat(result.handle()).isEqualTo(expected.handle());
+  }
+
+  @Test
+  void testActivateDoi() throws Exception {
+    // Given
+    var attributes = new ArrayList<>(
+        givenDoiFdoRecord(HANDLE).attributes());
+    activateRecord(attributes);
+
+    var expected = new FdoRecord(HANDLE, FdoType.DOI, attributes, null);
+
+    // When
+    var result = fdoRecordService.activatePidRecord(
+        givenDraftFdoRecord(FdoType.DOI, null, null), UPDATED);
+
+    // Then
+    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
+    assertThat(result.fdoType()).isEqualTo(expected.fdoType());
+    assertThat(result.handle()).isEqualTo(expected.handle());
+  }
+
+  @Test
+  void testActivateDigitalMedia() throws Exception {
+    // Given
+    var attributes = new ArrayList<>(givenDigitalMediaFdoRecord(HANDLE).attributes());
+    activateRecord(attributes);
+
+    var expected = new FdoRecord(HANDLE, FdoType.DIGITAL_MEDIA, attributes, null);
+
+    // When
+    var result = fdoRecordService.activatePidRecord(
+        givenDraftFdoRecord(FdoType.DIGITAL_MEDIA, null, null), UPDATED);
 
     // Then
     assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
@@ -732,6 +767,17 @@ class FdoRecordServiceTest {
     assertThat(result.primaryLocalId()).isNull();
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
+  }
+
+  private static void activateRecord(ArrayList<FdoAttribute> attributes) {
+    attributes.set(attributes.indexOf(getField(attributes, PID_STATUS)),
+        new FdoAttribute(PID_STATUS, UPDATED, PidStatus.ACTIVE));
+    attributes.set(attributes.indexOf(getField(attributes, PID_RECORD_ISSUE_NUMBER)),
+        new FdoAttribute(PID_RECORD_ISSUE_NUMBER, UPDATED, "2"));
+    var locAttribute = getField(attributes, LOC);
+    attributes.set(attributes.indexOf(locAttribute), new FdoAttribute(
+        LOC, UPDATED, locAttribute.getValue()
+    ));
   }
 
 }
