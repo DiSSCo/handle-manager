@@ -1,6 +1,7 @@
 package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID_RECORD_ISSUE_NUMBER;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID_STATUS;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
@@ -200,11 +201,17 @@ class HandleServiceTest {
 
   @Test
   void testActivateHandle() throws Exception {
+    // Given
     var draftAttributes = genHandleRecordAttributes(HANDLE, CREATED, FdoType.HANDLE);
     draftAttributes.set(draftAttributes.indexOf(getField(draftAttributes, PID_STATUS)),
-        new FdoAttribute(PID_STATUS, CREATED, PidStatus.ACTIVE));
+        new FdoAttribute(PID_STATUS, CREATED, PidStatus.DRAFT));
     var draftRecord = new FdoRecord(HANDLE, FdoType.HANDLE, draftAttributes, null);
-    var expected = givenMongoDocument(givenHandleFdoRecord(HANDLE));
+    var expectedAttributes = givenHandleFdoRecord(HANDLE).attributes();
+    expectedAttributes.set(
+        expectedAttributes.indexOf(getField(expectedAttributes, PID_RECORD_ISSUE_NUMBER)),
+        new FdoAttribute(PID_RECORD_ISSUE_NUMBER, CREATED, 2));
+    var expected = givenMongoDocument(
+        new FdoRecord(HANDLE, FdoType.HANDLE, expectedAttributes, null));
     given(mongoRepository.getHandleRecords(List.of(HANDLE))).willReturn(List.of(draftRecord));
 
     // When
