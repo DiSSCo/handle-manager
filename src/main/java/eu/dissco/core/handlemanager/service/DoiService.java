@@ -159,7 +159,7 @@ public class DoiService extends PidService {
 
   private UpsertMediaResult processUpsertRequestMedia(
       List<DigitalMediaRequestAttributes> mediaRequests) throws JsonProcessingException {
-    var existingSpecimenMap = getExistingRecordsFromNormalisedIds(mediaRequests
+    var existingMediaMap = getExistingRecordsFromNormalisedIds(mediaRequests
         .stream()
         .map(DigitalMediaRequestAttributes::getPrimaryMediaId)
         .toList(), PRIMARY_MEDIA_ID.get()
@@ -167,8 +167,8 @@ public class DoiService extends PidService {
     var newMedia = new ArrayList<DigitalMediaRequestAttributes>();
     var updateMedia = new HashMap<DigitalMediaRequestAttributes, FdoRecord>();
     mediaRequests.forEach(media -> {
-          if (existingSpecimenMap.containsKey(media.getPrimaryMediaId())) {
-            updateMedia.put(media, existingSpecimenMap.get(media.getPrimaryMediaId()));
+          if (existingMediaMap.containsKey(media.getPrimaryMediaId())) {
+            updateMedia.put(media, existingMediaMap.get(media.getPrimaryMediaId()));
           } else {
             newMedia.add(media);
           }
