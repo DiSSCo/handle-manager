@@ -2,6 +2,7 @@ package eu.dissco.core.handlemanager.service;
 
 
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_MEDIA_ID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_MEDIA;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_SPECIMEN;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DOI;
@@ -31,6 +32,7 @@ import eu.dissco.core.handlemanager.schema.DoiKernelRequestAttributes;
 import eu.dissco.core.handlemanager.schema.TombstoneRequestAttributes;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -157,16 +159,16 @@ public class DoiService extends PidService {
 
   private UpsertMediaResult processUpsertRequestMedia(
       List<DigitalMediaRequestAttributes> mediaRequests) throws JsonProcessingException {
-    var existingSpecimenMap = getExistingRecordsFromNormalisedIds(mediaRequests
+    var existingMediaMap = getExistingRecordsFromNormalisedIds(mediaRequests
         .stream()
         .map(DigitalMediaRequestAttributes::getPrimaryMediaId)
-        .toList()
+        .toList(), PRIMARY_MEDIA_ID.get()
     );
     var newMedia = new ArrayList<DigitalMediaRequestAttributes>();
     var updateMedia = new HashMap<DigitalMediaRequestAttributes, FdoRecord>();
     mediaRequests.forEach(media -> {
-          if (existingSpecimenMap.containsKey(media.getPrimaryMediaId())) {
-            updateMedia.put(media, existingSpecimenMap.get(media.getPrimaryMediaId()));
+          if (existingMediaMap.containsKey(media.getPrimaryMediaId())) {
+            updateMedia.put(media, existingMediaMap.get(media.getPrimaryMediaId()));
           } else {
             newMedia.add(media);
           }
@@ -180,7 +182,7 @@ public class DoiService extends PidService {
     var existingSpecimenMap = getExistingRecordsFromNormalisedIds(specimenRequests
         .stream()
         .map(DigitalSpecimenRequestAttributes::getNormalisedPrimarySpecimenObjectId)
-        .toList()
+        .toList(), NORMALISED_SPECIMEN_OBJECT_ID.get()
     );
     var newSpecimens = new ArrayList<DigitalSpecimenRequestAttributes>();
     var updateSpecimens = new HashMap<DigitalSpecimenRequestAttributes, FdoRecord>();
@@ -308,6 +310,9 @@ public class DoiService extends PidService {
       Map<DigitalMediaRequestAttributes, FdoRecord> updateRequests, Instant timestamp,
       boolean incrementVersion)
       throws InvalidRequestException {
+    if (updateRequests.isEmpty()) {
+      return Collections.emptyList();
+    }
     var allFdoRecords = new ArrayList<FdoRecord>();
     var newFdoRecords = new ArrayList<FdoRecord>();
     for (var updateRequest : updateRequests.entrySet()) {
@@ -340,10 +345,11 @@ public class DoiService extends PidService {
     return result;
   }
 
-  protected Map<String, FdoRecord> getExistingRecordsFromNormalisedIds(List<String> normalisedIds)
+  protected Map<String, FdoRecord> getExistingRecordsFromNormalisedIds(List<String> normalisedIds,
+      String localIdName)
       throws JsonProcessingException {
     var existingHandles = mongoRepository
-        .searchByPrimaryLocalId(NORMALISED_SPECIMEN_OBJECT_ID.get(), normalisedIds)
+        .searchByPrimaryLocalId(localIdName, normalisedIds)
         .stream()
         .toList();
     if (!existingHandles.isEmpty()) {

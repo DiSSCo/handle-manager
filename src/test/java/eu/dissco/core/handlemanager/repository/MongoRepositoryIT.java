@@ -17,6 +17,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMongoDocumen
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenUpdatedFdoRecord;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
@@ -63,6 +64,18 @@ class MongoRepositoryIT {
   void disposeDocumentStore() {
     database.drop();
     client.close();
+  }
+
+  @Test
+  void testPostEmptyList() {
+    // When / Then
+    assertDoesNotThrow(() -> repository.postHandleRecords(List.of()));
+  }
+
+  @Test
+  void testUpdateEmptyList() {
+    // When / Then
+    assertDoesNotThrow(() -> repository.updateHandleRecords(List.of()));
   }
 
   @Test

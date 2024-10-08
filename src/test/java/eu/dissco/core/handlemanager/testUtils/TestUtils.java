@@ -753,28 +753,42 @@ public class TestUtils {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
     List<FdoAttribute> fdoSublist;
     for (var fdoRecord : fdoRecords) {
+      var pidLink = new JsonApiLinks(domain + fdoRecord.handle());
+      JsonNode recordAttributes;
       switch (fdoType) {
         case ANNOTATION -> {
           if (fdoRecord.primaryLocalId() == null) {
             fdoSublist = fdoRecord.attributes();
+            recordAttributes = jsonFormatFdoRecord(fdoSublist);
           } else {
             fdoSublist = List.of(getField(fdoRecord.attributes(), ANNOTATION_HASH));
+            recordAttributes = jsonFormatFdoRecord(fdoSublist);
           }
         }
-        case DIGITAL_SPECIMEN ->
-            fdoSublist = List.of(getField(fdoRecord.attributes(), NORMALISED_SPECIMEN_OBJECT_ID));
-        case DIGITAL_MEDIA ->
-            fdoSublist = List.of(getField(fdoRecord.attributes(), PRIMARY_MEDIA_ID),
-                getField(fdoRecord.attributes(), LINKED_DO_PID));
-        default -> fdoSublist = fdoRecord.attributes();
+        case DIGITAL_SPECIMEN -> {
+          fdoSublist = List.of(getField(fdoRecord.attributes(), NORMALISED_SPECIMEN_OBJECT_ID));
+          recordAttributes = jsonFormatFdoRecord(fdoSublist);
+        }
+        case DIGITAL_MEDIA -> {
+          recordAttributes = buildMediaWriteResponseJsonNode(fdoRecord);
+        }
+        default -> {
+          fdoSublist = fdoRecord.attributes();
+          recordAttributes = jsonFormatFdoRecord(fdoSublist);
+        }
       }
-      var recordAttributes = jsonFormatFdoRecord(fdoSublist);
-      var pidLink = new JsonApiLinks(domain + fdoRecord.handle());
       dataNodes.add(
           new JsonApiDataLinks(fdoRecord.handle(), fdoType.getDigitalObjectType(), recordAttributes,
               pidLink));
     }
     return new JsonApiWrapperWrite(dataNodes);
+  }
+
+  public static JsonNode buildMediaWriteResponseJsonNode(FdoRecord fdoRecord) {
+    return MAPPER.createObjectNode()
+        .set("digitalMediaKey", MAPPER.createObjectNode()
+            .put("digitalSpecimenId", getField(fdoRecord.attributes(), LINKED_DO_PID).getValue())
+            .put("mediaUrl", getField(fdoRecord.attributes(), PRIMARY_MEDIA_ID).getValue()));
   }
 
   public static List<FdoAttribute> genAttributes(FdoType fdoType, String handle) throws Exception {
