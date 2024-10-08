@@ -63,7 +63,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenTombstoneRec
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenUpdatedFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.setLocations;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -74,7 +73,6 @@ import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 import eu.dissco.core.handlemanager.domain.fdo.PidStatus;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
-import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
@@ -303,15 +301,6 @@ class FdoRecordServiceTest {
     assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
-  }
-
-  @Test
-  void testPrepareNewMediaRecordInvalidRightsholder() {
-    var request = givenDigitalMedia().withRightsholderPid(null);
-
-    // When
-    assertThrows(InvalidRequestException.class,
-        () -> fdoRecordService.prepareNewDigitalMediaRecord(request, HANDLE, CREATED, false));
   }
 
   @Test

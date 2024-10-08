@@ -4,11 +4,6 @@ package eu.dissco.core.handlemanager.service;
 import static eu.dissco.core.handlemanager.configuration.AppConfig.DATE_STRING;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.ANNOTATION_HASH;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.CATALOG_IDENTIFIER;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DCTERMS_FORMAT;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DCTERMS_SUBJECT;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DCTERMS_TYPE;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DC_TERMS_CONFORMS;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DERIVED_FROM_ENTITY;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DIGITAL_OBJECT_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DIGITAL_OBJECT_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.FDO_PROFILE;
@@ -18,10 +13,8 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.HAS_RELATED_PID
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.ISSUED_FOR_AGENT;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.ISSUED_FOR_AGENT_NAME;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.IS_DERIVED_FROM_SPECIMEN;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LICENSE_ID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LICENSE_NAME;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LICENSE_URL;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LINKED_ATTRIBUTE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LINKED_DO_PID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LINKED_DO_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LIVING_OR_PRESERVED;
@@ -30,6 +23,8 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MARKED_AS_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MAS_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MEDIA_HOST;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MEDIA_HOST_NAME;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MEDIA_TYPE;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MIME_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MOTIVATION;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.ORGANISATION_ID;
@@ -43,12 +38,11 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID_RECORD_ISSU
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID_RECORD_ISSUE_NUMBER;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_MEDIA_ID;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_MO_ID_NAME;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_MO_ID_TYPE;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_MEDIA_ID_NAME;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_MEDIA_ID_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.REFERENT_NAME;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.RIGHTSHOLDER_NAME;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.RIGHTSHOLDER_PID;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.RIGHTSHOLDER_PID_TYPE;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.RIGHTS_HOLDER_NAME;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.RIGHTS_HOLDER_PID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SOURCE_DATA_STANDARD;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SOURCE_SYSTEM_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SPECIMEN_HOST;
@@ -473,68 +467,55 @@ public class FdoRecordService {
 
   public List<FdoAttribute> prepareDigitalMediaAttributes(DigitalMediaRequestAttributes request,
       String handle, Instant timestamp, boolean isDraft) throws InvalidRequestException {
-    validateRightsholder(request);
     var handleAttributeList = new ArrayList<FdoAttribute>();
     // 101: 10320/Loc
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
         setLocations(handle, DIGITAL_MEDIA, request.getPrimaryMediaId(), request.getLocations(),
             isDraft)));
-    // 42: Referent Name
-    handleAttributeList.add(new FdoAttribute(REFERENT_NAME, timestamp, request.getReferentName()));
+    // Referent Name
+    var referentName = request.getReferentName() == null ?
+        request.getPrimaryMediaId().replaceAll("http(s)://", "") :
+        request.getReferentName();
+    handleAttributeList.add(new FdoAttribute(REFERENT_NAME, timestamp, referentName));
     // 400 Media Host
     handleAttributeList.add(new FdoAttribute(MEDIA_HOST, timestamp, request.getMediaHost()));
     // 401 MediaHostName
+    var mediaHostName = getObjectName(request.getMediaHost(), request.getMediaHostName());
     handleAttributeList.add(new FdoAttribute(MEDIA_HOST_NAME, timestamp,
         getObjectName(request.getMediaHost(), request.getMediaHostName())));
-    // 403 Is Derived From Specimen
-    handleAttributeList.add(new FdoAttribute(IS_DERIVED_FROM_SPECIMEN, timestamp,
-        String.valueOf(request.getIsDerivedFromSpecimen())));
-    // 404 Linked Digital Object PID
+    // 402 Linked Digital Object PID
     handleAttributeList.add(
         new FdoAttribute(LINKED_DO_PID, timestamp, request.getLinkedDigitalObjectPid()));
-    // 405 Linked Digital Object Type
+    // 403 Linked Digital Object Type
     handleAttributeList.add(
         new FdoAttribute(LINKED_DO_TYPE, timestamp, request.getLinkedDigitalObjectType()));
-    // 406 Linked Attribute
-    handleAttributeList.add(
-        new FdoAttribute(LINKED_ATTRIBUTE, timestamp, request.getLinkedAttribute()));
-    // 407 Primary Media ID
+    // 404 Primary Media ID
     handleAttributeList.add(
         new FdoAttribute(PRIMARY_MEDIA_ID, timestamp, request.getPrimaryMediaId()));
-    // 408 Primary Media Object Id Type
+    // 405 Primary Media Id Type
     handleAttributeList.add(
-        new FdoAttribute(PRIMARY_MO_ID_TYPE, timestamp, request.getPrimaryMediaObjectIdType()));
-    // 409 Primary Media Object Id Name
+        new FdoAttribute(PRIMARY_MEDIA_ID_TYPE, timestamp, request.getPrimaryMediaIdType()));
+    // 406 Primary Media Id Name
     handleAttributeList.add(
-        new FdoAttribute(PRIMARY_MO_ID_NAME, timestamp, request.getPrimaryMediaObjectIdName()));
-    // 410 dcterms:type
-    handleAttributeList.add(new FdoAttribute(DCTERMS_TYPE, timestamp, request.getDctermsType()));
-    // 411 dcterms:subject
-    handleAttributeList.add(
-        new FdoAttribute(DCTERMS_SUBJECT, timestamp, request.getDctermsSubject()));
-    // 412 dcterms:format
-    handleAttributeList.add(
-        new FdoAttribute(DCTERMS_FORMAT, timestamp, request.getDctermsFormat()));
-    // 413 Derived from Entity
-    handleAttributeList.add(
-        new FdoAttribute(DERIVED_FROM_ENTITY, timestamp, request.getDerivedFromEntity()));
-    // 414 License Name
+        new FdoAttribute(PRIMARY_MEDIA_ID_NAME, timestamp, request.getPrimaryMediaIdName()));
+    // 407 media type
+    handleAttributeList.add(new FdoAttribute(MEDIA_TYPE, timestamp, request.getMediaType()));
+    // 408 mime type
+    handleAttributeList.add(new FdoAttribute(MIME_TYPE, timestamp, request.getMimeType()));
+    // 409 License Name
     handleAttributeList.add(new FdoAttribute(LICENSE_NAME, timestamp, request.getLicenseName()));
-    // 415 License URL
-    handleAttributeList.add(new FdoAttribute(LICENSE_URL, timestamp, request.getLicenseName()));
-    // 416 RightsholderName
+    // 410 License Id
+    handleAttributeList.add(new FdoAttribute(LICENSE_ID, timestamp, request.getLicenseId()));
+    // 411 Rights Holder Id
+    var rightsHolder =
+        request.getRightsHolderId() == null ? request.getMediaHost() : request.getRightsHolderId();
     handleAttributeList.add(
-        new FdoAttribute(RIGHTSHOLDER_NAME, timestamp, request.getRightsholderName()));
-    // 417 Rightsholder PID
+        new FdoAttribute(RIGHTS_HOLDER_PID, timestamp, rightsHolder));
+    String rightsHolderName = request.getRightsHolderName() != null ?
+        getObjectName(request.getRightsHolderId(), request.getRightsHolderName()) : mediaHostName;
+    // 412 Rights Holder Name
     handleAttributeList.add(
-        new FdoAttribute(RIGHTSHOLDER_PID, timestamp, request.getRightsholderPid()));
-    // 418 RightsholderPidType
-    handleAttributeList.add(
-        new FdoAttribute(RIGHTSHOLDER_PID_TYPE, timestamp, request.getRightsholderPidType()));
-    // 419 dcterms:conformsTo
-    handleAttributeList.add(
-        new FdoAttribute(DC_TERMS_CONFORMS, timestamp, request.getDctermsConformsTo()));
-
+        new FdoAttribute(RIGHTS_HOLDER_NAME, timestamp, rightsHolderName));
     return handleAttributeList;
   }
 
@@ -669,16 +650,6 @@ public class FdoRecordService {
     // 32: tombstonedDate
     handleAttributeList.add(new FdoAttribute(TOMBSTONED_DATE, timestamp, getDate(timestamp)));
     return handleAttributeList;
-  }
-
-  /* Validation Functions */
-
-  private static void validateRightsholder(DigitalMediaRequestAttributes request)
-      throws InvalidRequestException {
-    if (request.getRightsholderName() != null && request.getRightsholderPid() == null) {
-      throw new InvalidRequestException(
-          "Invalid media request. Rightsholder name provided without an identifier");
-    }
   }
 
   /* Generalized attribute Building */
