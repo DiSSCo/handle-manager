@@ -4,8 +4,8 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LOC;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.OTHER_SPECIMEN_IDS;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID_RECORD_ISSUE_NUMBER;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID_STATUS;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID_TYPE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.API_URL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.CATALOG_ID_TEST;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.DOC_BUILDER_FACTORY;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
@@ -78,7 +78,6 @@ import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
-import eu.dissco.core.handlemanager.schema.DigitalSpecimenRequestAttributes.PrimarySpecimenObjectIdType;
 import eu.dissco.core.handlemanager.schema.OrganisationRequestAttributes;
 import eu.dissco.core.handlemanager.schema.OtherspecimenIds;
 import eu.dissco.core.handlemanager.schema.TombstoneRequestAttributes;
@@ -352,33 +351,24 @@ class FdoRecordServiceTest {
   @Test
   void testPrepareNewDigitalSpecimenRecordNoKeyLoc() throws Exception {
     // Given
-    var request = givenDigitalSpecimen().withPrimarySpecimenObjectIdType(
-        PrimarySpecimenObjectIdType.GLOBAL);
-    var expectedAttributes = new ArrayList<>(givenDigitalSpecimenFdoRecord(HANDLE).attributes());
-    var targetLoc = setLocations(HANDLE, FdoType.DIGITAL_SPECIMEN, false);
-    expectedAttributes.set(expectedAttributes.indexOf(getField(expectedAttributes, LOC)),
-        new FdoAttribute(LOC, CREATED, targetLoc));
-    expectedAttributes.set(
-        expectedAttributes.indexOf(getField(expectedAttributes, PRIMARY_SPECIMEN_OBJECT_ID_TYPE)),
-        new FdoAttribute(PRIMARY_SPECIMEN_OBJECT_ID_TYPE, CREATED,
-            PrimarySpecimenObjectIdType.GLOBAL));
-    var expected = new FdoRecord(HANDLE, FdoType.DIGITAL_SPECIMEN, expectedAttributes,
-        request.getNormalisedPrimarySpecimenObjectId());
+    var request = givenDigitalSpecimen()
+        .withOtherSpecimenIds(List.of(
+            new OtherspecimenIds("CMS-123", "catalog id", false),
+            new OtherspecimenIds(CATALOG_ID_TEST, "catalog web page", true)));
+    var expected = new FdoAttribute(LOC, CREATED,
+        setLocations(HANDLE, FdoType.DIGITAL_SPECIMEN, true));
 
     // When
     var result = fdoRecordService.prepareNewDigitalSpecimenRecord(request, HANDLE, CREATED, false);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
-    assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
-    assertThat(result.fdoType()).isEqualTo(expected.fdoType());
-    assertThat(result.handle()).isEqualTo(expected.handle());
+    assertThat(result.attributes()).contains(expected);
   }
 
   @Test
   void testPrepareNewDigitalSpecimenRecordOtherSpecimenIds() throws Exception {
     // Given
-    var otherSpecimenId = new OtherspecimenIds(HANDLE_ALT, "Handle");
+    var otherSpecimenId = new OtherspecimenIds(HANDLE_ALT, "Handle", false);
     var request = givenDigitalSpecimen().withOtherSpecimenIds(List.of(otherSpecimenId));
     var attributes = new ArrayList<>(genDigitalSpecimenAttributes(HANDLE, CREATED));
     attributes.set(attributes.indexOf(new FdoAttribute(OTHER_SPECIMEN_IDS, CREATED, null)),
@@ -395,16 +385,6 @@ class FdoRecordServiceTest {
     assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
-  }
-
-  @Test
-  void testPrepareNewDigitalSpecimenRecordMissingIdAndAbsence() {
-    // Given
-    var request = givenDigitalSpecimen().withPrimarySpecimenObjectId(null);
-
-    // When / Then
-    assertThrows(InvalidRequestException.class,
-        () -> fdoRecordService.prepareNewDigitalSpecimenRecord(request, HANDLE, CREATED, false));
   }
 
   @Test
@@ -493,7 +473,7 @@ class FdoRecordServiceTest {
             + "<location href=\"" + LOC_TESTVAL + "\" id=\"0\" weight=\"0\"/>"
             + "<location href=\"https://sandbox.dissco.tech/ds/20.5000.1025/QRS-321-ABC\" id=\"HTML\" weight=\"1\"/>"
             + "<location href=\"https://sandbox.dissco.tech/api/v1/digital-specimen/20.5000.1025/QRS-321-ABC\" id=\"JSON\" weight=\"0\"/>"
-            + "<location href=\"BOTANICAL.QRS.123\" id=\"CATALOG\" weight=\"0\"/>"
+            + "<location href=\"" + CATALOG_ID_TEST + "\" id=\"CATALOG\" weight=\"0\"/>"
             + "</locations>"));
     activateRecord(attributes);
 

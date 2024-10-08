@@ -291,7 +291,7 @@
               https://schemas.dissco.tech/schemas/fdo-profile/data-mapping/1.0.0/data-mapping-request-attributes.json
             </argument>
             <argument>
-              https://schemas.dissco.tech/schemas/fdo-profile/digital-specimen/0.1.0/digital-specimen-request-attributes.json
+              https://schemas.dissco.tech/schemas/fdo-profile/digital-specimen/1.0.0/digital-specimen-request-attributes.json
             </argument>
             <argument>
               https://schemas.dissco.tech/schemas/fdo-profile/digital-media/0.1.0/digital-media-request-attributes.json

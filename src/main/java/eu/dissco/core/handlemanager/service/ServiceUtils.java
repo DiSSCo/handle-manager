@@ -32,6 +32,17 @@ public class ServiceUtils {
     throw new IllegalStateException();
   }
 
+  public static FdoAttribute getFieldOptional(List<FdoAttribute> fdoAttributes,
+      FdoProfile targetField) {
+    for (var attribute : fdoAttributes) {
+      if (attribute.getIndex() == targetField.index()) {
+        return attribute;
+      }
+    }
+    log.warn("Unable to find field {} in record {}", targetField, fdoAttributes);
+    return null;
+  }
+
   public static <T> Collector<T, ?, T> toSingle() {
     return Collectors.collectingAndThen(
         Collectors.toList(),
