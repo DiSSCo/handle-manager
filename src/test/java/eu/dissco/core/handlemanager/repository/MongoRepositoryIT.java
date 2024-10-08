@@ -232,7 +232,7 @@ class MongoRepositoryIT {
   void testFdoTypeNotFound() throws Exception {
     // Given
     var fdoRecord = new FdoRecord(HANDLE, FdoType.HANDLE,
-        List.of(new FdoAttribute(FdoProfile.FDO_RECORD_LICENSE, CREATED, "License")), null);
+        List.of(new FdoAttribute(FdoProfile.FDO_RECORD_LICENSE_NAME, CREATED, "License")), null);
     collection.insertOne(givenMongoDocument(fdoRecord));
     var handleList = List.of(HANDLE);
 

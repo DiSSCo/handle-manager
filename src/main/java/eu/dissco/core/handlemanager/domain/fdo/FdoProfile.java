@@ -6,18 +6,16 @@ import lombok.extern.slf4j.Slf4j;
 public enum FdoProfile {
   // Kernel
   FDO_PROFILE("fdoProfile", 1),
-  FDO_RECORD_LICENSE("fdoRecordLicense", 2),
-  DIGITAL_OBJECT_TYPE("digitalObjectType", 3),
-  DIGITAL_OBJECT_NAME("digitalObjectName", 4),
-  PID("pid", 5),
-  PID_ISSUER("pidIssuer", 6),
-  PID_ISSUER_NAME("pidIssuerName", 7),
-  ISSUED_FOR_AGENT("issuedForAgent", 8),
-  ISSUED_FOR_AGENT_NAME("issuedForAgentName", 9),
-  PID_RECORD_ISSUE_DATE("pidRecordIssueDate", 10),
-  PID_RECORD_ISSUE_NUMBER("pidRecordIssueNumber", 11),
-  STRUCTURAL_TYPE("structuralType", 12),
-  PID_STATUS("pidStatus", 13),
+  FDO_RECORD_LICENSE_ID("fdoRecordLicenseId", 2),
+  FDO_RECORD_LICENSE_NAME("fdoRecordLicenseName", 3),
+  DIGITAL_OBJECT_TYPE("digitalObjectType", 4),
+  DIGITAL_OBJECT_NAME("digitalObjectName", 5),
+  PID("pid", 6),
+  PID_ISSUER("pidIssuer", 7),
+  PID_ISSUER_NAME("pidIssuerName", 8),
+  PID_RECORD_ISSUE_DATE("pidRecordIssueDate", 9),
+  PID_RECORD_ISSUE_NUMBER("pidRecordIssueNumber", 10),
+  PID_STATUS("pidStatus", 11),
 
   // Tombstone
   TOMBSTONED_TEXT("ods:tombstonedText", 30),
@@ -25,10 +23,9 @@ public enum FdoProfile {
   TOMBSTONED_DATE("tombstonedDate", 32),
 
   // DOI
-  REFERENT_TYPE("referentType", 40),
-  REFERENT_DOI_NAME("referentDoiName", 41),
+  ISSUED_FOR_AGENT("issuedForAgent", 40),
+  ISSUED_FOR_AGENT_NAME("issuedForAgentName", 41),
   REFERENT_NAME("referentName", 42),
-  PRIMARY_REFERENT_TYPE("primaryReferentType", 43),
 
   // Digital Specimen
   SPECIMEN_HOST("specimenHost", 200),
@@ -79,7 +76,7 @@ public enum FdoProfile {
   MOTIVATION("motivation", 502),
   ANNOTATION_HASH("annotationHash", 505),
 
-  // Agent
+  // Agent (Organisation, Source System, or MAS)
   SOURCE_SYSTEM_NAME("sourceSystemName", 600),
   ORGANISATION_ID("organisationIdentifier", 601),
   ORGANISATION_ID_TYPE("organisationIdentifierType", 602),

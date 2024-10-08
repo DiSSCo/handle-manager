@@ -13,7 +13,8 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DERIVED_FROM_EN
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DIGITAL_OBJECT_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DIGITAL_OBJECT_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.FDO_PROFILE;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.FDO_RECORD_LICENSE;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.FDO_RECORD_LICENSE_ID;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.FDO_RECORD_LICENSE_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.HAS_RELATED_PID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.INFORMATION_ARTEFACT_TYPE;
@@ -48,13 +49,10 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_MEDIA_ID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_MO_ID_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_MO_ID_TYPE;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_REFERENT_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID_TYPE;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.REFERENT_DOI_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.REFERENT_NAME;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.REFERENT_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.RIGHTSHOLDER_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.RIGHTSHOLDER_PID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.RIGHTSHOLDER_PID_TYPE;
@@ -63,7 +61,6 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SOURCE_SYSTEM_N
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SPECIMEN_HOST_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SPECIMEN_OBJECT_ID_ABSENCE_REASON;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.STRUCTURAL_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TARGET_PID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TARGET_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOMBSTONED_DATE;
@@ -100,7 +97,7 @@ import eu.dissco.core.handlemanager.schema.DigitalSpecimenRequestAttributes;
 import eu.dissco.core.handlemanager.schema.DigitalSpecimenRequestAttributes.PrimarySpecimenObjectIdType;
 import eu.dissco.core.handlemanager.schema.DoiKernelRequestAttributes;
 import eu.dissco.core.handlemanager.schema.HandleRequestAttributes;
-import eu.dissco.core.handlemanager.schema.MasRequestAttributes;
+import eu.dissco.core.handlemanager.schema.MachineAnnotationServiceRequestAttributes;
 import eu.dissco.core.handlemanager.schema.OrganisationRequestAttributes;
 import eu.dissco.core.handlemanager.schema.SourceSystemRequestAttributes;
 import eu.dissco.core.handlemanager.schema.TombstoneRequestAttributes;
@@ -143,15 +140,16 @@ public class FdoRecordService {
   private static final String WIKIDATA_API = "https://wikidata.org/w/rest.php/wikibase/v0/entities/items/";
   private static final String PROXY_ERROR = "Invalid attribute: %s must contain proxy: %s";
   private static final String JSON_ERROR_MSG = "Unable to parse json request";
-  private static final String PID_KERNEL_METADATA_LICENSE = "https://creativecommons.org/publicdomain/zero/1.0/";
-  private static final String PRIMARY_REFERENT_TYPE_VALUE = "creation";
+  private static final String FDO_LICENSE_VALUE = "https://spdx.org/licenses/CC0-1.0.json";
+  private static final String FDO_LICENSE_NAME_VALUE = "CC0 1.0 Universal";
   public static final List<Integer> GENERATED_KEYS;
 
   static {
-    GENERATED_KEYS = List.of(FDO_PROFILE.index(), FDO_RECORD_LICENSE.index(), PID_ISSUER.index(),
-        PID_ISSUER_NAME.index(), ISSUED_FOR_AGENT.index(), ISSUED_FOR_AGENT_NAME.index(),
-        DIGITAL_OBJECT_TYPE.index(), DIGITAL_OBJECT_NAME.index(),
-        PID.index(), PID_RECORD_ISSUE_DATE.index(), PID_STATUS.index(), HS_ADMIN.index());
+    GENERATED_KEYS = List.of(FDO_PROFILE.index(), FDO_RECORD_LICENSE_ID.index(),
+        FDO_RECORD_LICENSE_NAME.index(), PID_ISSUER.index(), PID_ISSUER_NAME.index(),
+        ISSUED_FOR_AGENT.index(), ISSUED_FOR_AGENT_NAME.index(), DIGITAL_OBJECT_TYPE.index(),
+        DIGITAL_OBJECT_NAME.index(), PID.index(), PID_RECORD_ISSUE_DATE.index(), PID_STATUS.index(),
+        HS_ADMIN.index());
   }
 
   private final DateTimeFormatter dt = DateTimeFormatter.ofPattern(DATE_STRING)
@@ -176,21 +174,6 @@ public class FdoRecordService {
     return new FdoRecord(previousVersion.handle(), fdoType, fdoAttributes, null);
   }
 
-  public List<FdoAttribute> prepareHandleAttributes(HandleRequestAttributes request, String handle,
-      Instant timestamp)
-      throws InvalidRequestException {
-    var handleAttributeList = new ArrayList<FdoAttribute>();
-    // 101: 10320/Loc
-    handleAttributeList.add(
-        new FdoAttribute(LOC, timestamp,
-            setLocations(handle, HANDLE, null, request.getLocations(), false)));
-    // 12: Structural Type
-    handleAttributeList.add(
-        new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
-            HandleRequestAttributes.StructuralType.DIGITAL.value()));
-    return handleAttributeList;
-  }
-
   private List<FdoAttribute> prepareUpdatedHandleAttributes(HandleRequestAttributes request,
       String handle, Instant timestamp, FdoRecord previousVersion,
       boolean incrementVersion)
@@ -201,6 +184,16 @@ public class FdoRecordService {
     return updatedAttributes;
   }
 
+  public List<FdoAttribute> prepareHandleAttributes(HandleRequestAttributes request, String handle,
+      Instant timestamp)
+      throws InvalidRequestException {
+    var handleAttributeList = new ArrayList<FdoAttribute>();
+    // 101: 10320/Loc
+    handleAttributeList.add(
+        new FdoAttribute(LOC, timestamp,
+            setLocations(handle, HANDLE, null, request.getLocations(), false)));
+    return handleAttributeList;
+  }
 
   /* DOI Record Creation */
   public FdoRecord prepareNewDoiRecord(DoiKernelRequestAttributes request, String handle,
@@ -208,14 +201,15 @@ public class FdoRecordService {
       throws InvalidRequestException {
     var fdoAttributes = prepareDoiAttributes(request, handle, timestamp, isDraft);
     fdoAttributes.addAll(prepareGeneratedAttributes(handle, FdoType.DOI, timestamp, isDraft));
+    fdoAttributes.addAll(prepareGeneratedAttributesDoi(timestamp));
     return new FdoRecord(handle, FdoType.DOI, fdoAttributes, null);
   }
 
   public FdoRecord prepareUpdatedDoiRecord(DoiKernelRequestAttributes request, Instant timestamp,
       FdoRecord previousVersion, boolean incrementVersion)
       throws InvalidRequestException {
-    var fdoAttributes = prepareUpdatedDoiAttributes(request,
-        previousVersion.handle(), timestamp, previousVersion, incrementVersion);
+    var fdoAttributes = prepareUpdatedDoiAttributes(request, previousVersion.handle(), timestamp,
+        previousVersion, incrementVersion);
     return new FdoRecord(previousVersion.handle(), FdoType.DOI, fdoAttributes, null);
   }
 
@@ -226,22 +220,9 @@ public class FdoRecordService {
     // 101: 10320/Loc
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
         setLocations(handle, DOI, null, request.getLocations(), isDraft)));
-    // 12: Structural Type
-    handleAttributeList.add(
-        new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
-            HandleRequestAttributes.StructuralType.DIGITAL.value()));
-    // 40: Referent Type
-    handleAttributeList.add(
-        new FdoAttribute(REFERENT_TYPE, timestamp, request.getReferentType()));
-    // 41: Referent DOI Name
-    handleAttributeList.add(new FdoAttribute(REFERENT_DOI_NAME, timestamp, handle));
     // 42: Referent Name
     handleAttributeList.add(
         new FdoAttribute(REFERENT_NAME, timestamp, request.getReferentName()));
-    // 43: Primary Referent Type
-    handleAttributeList.add(new FdoAttribute(PRIMARY_REFERENT_TYPE, timestamp,
-        request.getPrimaryReferentType(), PRIMARY_REFERENT_TYPE_VALUE));
-
     return handleAttributeList;
   }
 
@@ -284,10 +265,6 @@ public class FdoRecordService {
     // 101: 10320/Loc
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
         setLocations(handle, ANNOTATION, null, request.getLocations(), false)));
-    // 12: Structural Type
-    handleAttributeList.add(
-        new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
-            HandleRequestAttributes.StructuralType.DIGITAL.value()));
     handleAttributeList.add(new FdoAttribute(TARGET_PID, timestamp, request.getTargetPid()));
     // 501 Target Type
     handleAttributeList.add(
@@ -339,10 +316,6 @@ public class FdoRecordService {
     // 101: 10320/Loc
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
         setLocations(handle, DATA_MAPPING, null, request.getLocations(), false)));
-    // 12: Structural Type
-    handleAttributeList.add(
-        new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
-            HandleRequestAttributes.StructuralType.DIGITAL.value()));
     // 700 Source Data Standard
     handleAttributeList.add(
         new FdoAttribute(SOURCE_DATA_STANDARD, timestamp, request.getSourceDataStandard()));
@@ -374,6 +347,7 @@ public class FdoRecordService {
     }
     fdoAttributes.addAll(
         prepareGeneratedAttributes(handle, FdoType.DIGITAL_SPECIMEN, timestamp, isDraft));
+    fdoAttributes.addAll(prepareGeneratedAttributesDoi(timestamp));
     return new FdoRecord(handle, FdoType.DIGITAL_SPECIMEN, fdoAttributes,
         request.getNormalisedPrimarySpecimenObjectId());
   }
@@ -406,21 +380,9 @@ public class FdoRecordService {
             request.getPrimarySpecimenObjectId() : null;
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
         setLocations(handle, DIGITAL_SPECIMEN, keyAttribute, request.getLocations(), isDraft)));
-    // 12: Structural Type
-    handleAttributeList.add(
-        new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
-            HandleRequestAttributes.StructuralType.DIGITAL.value()));
-    // 40: Referent Type
-    handleAttributeList.add(
-        new FdoAttribute(REFERENT_TYPE, timestamp, request.getReferentType()));
-    // 41: Referent DOI Name
-    handleAttributeList.add(new FdoAttribute(REFERENT_DOI_NAME, timestamp, handle));
     // 42: Referent Name
     handleAttributeList.add(
         new FdoAttribute(REFERENT_NAME, timestamp, request.getReferentName()));
-    // 43: Primary Referent Type
-    handleAttributeList.add(new FdoAttribute(PRIMARY_REFERENT_TYPE, timestamp,
-        request.getPrimaryReferentType(), PRIMARY_REFERENT_TYPE_VALUE));
     // 200 Specimen Host
     handleAttributeList.add(
         new FdoAttribute(SPECIMEN_HOST, timestamp, request.getSpecimenHost()));
@@ -504,7 +466,8 @@ public class FdoRecordService {
   }
 
   /* MAS Record Creation */
-  public FdoRecord prepareNewMasRecord(MasRequestAttributes request, String handle,
+  public FdoRecord prepareNewMasRecord(MachineAnnotationServiceRequestAttributes request,
+      String handle,
       Instant timestamp, boolean isDraft)
       throws InvalidRequestException {
     List<FdoAttribute> fdoAttributes;
@@ -513,7 +476,8 @@ public class FdoRecordService {
     return new FdoRecord(handle, MAS, fdoAttributes, null);
   }
 
-  public FdoRecord prepareUpdatedMasRecord(MasRequestAttributes request, Instant timestamp,
+  public FdoRecord prepareUpdatedMasRecord(MachineAnnotationServiceRequestAttributes request,
+      Instant timestamp,
       FdoRecord previousVersion, boolean incrementVersion)
       throws InvalidRequestException {
     List<FdoAttribute> fdoAttributes;
@@ -523,23 +487,22 @@ public class FdoRecordService {
         null);
   }
 
-  public List<FdoAttribute> prepareMasAttributes(MasRequestAttributes request, String handle,
+  public List<FdoAttribute> prepareMasAttributes(MachineAnnotationServiceRequestAttributes request,
+      String handle,
       Instant timestamp)
       throws InvalidRequestException {
     var handleAttributeList = new ArrayList<FdoAttribute>();
     // 101: 10320/Loc
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
         setLocations(handle, MAS, null, request.getLocations(), false)));
-    // 12: Structural Type
-    handleAttributeList.add(
-        new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
-            HandleRequestAttributes.StructuralType.DIGITAL.value()));
     // 604: MAS
-    handleAttributeList.add(new FdoAttribute(MAS_NAME, timestamp, request.getMasName()));
+    handleAttributeList.add(
+        new FdoAttribute(MAS_NAME, timestamp, request.getMachineAnnotationServiceName()));
     return handleAttributeList;
   }
 
-  private List<FdoAttribute> prepareUpdatedMasAttributes(MasRequestAttributes request,
+  private List<FdoAttribute> prepareUpdatedMasAttributes(
+      MachineAnnotationServiceRequestAttributes request,
       String handle, Instant timestamp, FdoRecord previousVersion,
       boolean incrementVersion)
       throws InvalidRequestException {
@@ -558,6 +521,7 @@ public class FdoRecordService {
     fdoAttributes = prepareDigitalMediaAttributes(request, handle, timestamp, isDraft);
     fdoAttributes.addAll(
         prepareGeneratedAttributes(handle, FdoType.DIGITAL_MEDIA, timestamp, isDraft));
+    fdoAttributes.addAll(prepareGeneratedAttributesDoi(timestamp));
     return new FdoRecord(handle, FdoType.DIGITAL_MEDIA, fdoAttributes, request.getPrimaryMediaId());
   }
 
@@ -580,21 +544,9 @@ public class FdoRecordService {
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
         setLocations(handle, DIGITAL_MEDIA, request.getPrimaryMediaId(),
             request.getLocations(), isDraft)));
-    // 12: Structural Type
-    handleAttributeList.add(
-        new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
-            HandleRequestAttributes.StructuralType.DIGITAL.value()));
-    // 40: Referent Type
-    handleAttributeList.add(
-        new FdoAttribute(REFERENT_TYPE, timestamp, request.getReferentType()));
-    // 41: Referent DOI Name
-    handleAttributeList.add(new FdoAttribute(REFERENT_DOI_NAME, timestamp, handle));
     // 42: Referent Name
     handleAttributeList.add(
         new FdoAttribute(REFERENT_NAME, timestamp, request.getReferentName()));
-    // 43: Primary Referent Type
-    handleAttributeList.add(new FdoAttribute(PRIMARY_REFERENT_TYPE, timestamp,
-        request.getPrimaryReferentType(), PRIMARY_REFERENT_TYPE_VALUE));
     // 400 Media Host
     handleAttributeList.add(
         new FdoAttribute(MEDIA_HOST, timestamp, request.getMediaHost()));
@@ -680,6 +632,7 @@ public class FdoRecordService {
     fdoAttributes = prepareOrganisationAttributes(request, handle, timestamp);
     fdoAttributes.addAll(
         prepareGeneratedAttributes(handle, FdoType.ORGANISATION, timestamp, isDraft));
+    fdoAttributes.addAll(prepareGeneratedAttributesDoi(timestamp));
     return new FdoRecord(handle, FdoType.ORGANISATION, fdoAttributes, null);
   }
 
@@ -703,21 +656,9 @@ public class FdoRecordService {
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
         setLocations(handle, ORGANISATION, request.getOrganisationIdentifier(),
             request.getLocations(), false)));
-    // 12: Structural Type
-    handleAttributeList.add(
-        new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
-            HandleRequestAttributes.StructuralType.DIGITAL.value()));
-    // 40: Referent Type
-    handleAttributeList.add(
-        new FdoAttribute(REFERENT_TYPE, timestamp, request.getReferentType()));
-    // 41: Referent DOI Name
-    handleAttributeList.add(new FdoAttribute(REFERENT_DOI_NAME, timestamp, handle));
     // 42: Referent Name
     handleAttributeList.add(
         new FdoAttribute(REFERENT_NAME, timestamp, request.getReferentName()));
-    // 43: Primary Referent Type
-    handleAttributeList.add(new FdoAttribute(PRIMARY_REFERENT_TYPE, timestamp,
-        request.getPrimaryReferentType(), PRIMARY_REFERENT_TYPE_VALUE));
     // 601 Organisation Identifier
     handleAttributeList.add(
         new FdoAttribute(ORGANISATION_ID, timestamp, request.getOrganisationIdentifier()));
@@ -771,13 +712,9 @@ public class FdoRecordService {
     // 101: 10320/Loc
     handleAttributeList.add(new FdoAttribute(LOC, timestamp,
         setLocations(handle, SOURCE_SYSTEM, null, request.getLocations(), false)));
-    // 12: Structural Type
-    handleAttributeList.add(
-        new FdoAttribute(STRUCTURAL_TYPE, timestamp, request.getStructuralType(),
-            HandleRequestAttributes.StructuralType.DIGITAL.value()));
+    // 600: source system
     handleAttributeList.add(
         new FdoAttribute(SOURCE_SYSTEM_NAME, timestamp, request.getSourceSystemName()));
-
     return handleAttributeList;
   }
 
@@ -859,41 +796,49 @@ public class FdoRecordService {
     // 1: FDO Profile
     handleAttributeList.add(
         new FdoAttribute(FDO_PROFILE, timestamp, fdoType.getFdoProfile()));
-    // 2: FDO Record License
+    // 2: FDO Record LicenseId
     handleAttributeList.add(
-        new FdoAttribute(FDO_RECORD_LICENSE, timestamp, PID_KERNEL_METADATA_LICENSE));
-    // 3: Digital Object Type
+        new FdoAttribute(FDO_RECORD_LICENSE_ID, timestamp, FDO_LICENSE_VALUE));
+    // 3: FDO Record LicenseName
+    handleAttributeList.add(
+        new FdoAttribute(FDO_RECORD_LICENSE_NAME, timestamp, FDO_LICENSE_NAME_VALUE));
+    // 4: Digital Object Type
     handleAttributeList.add(
         new FdoAttribute(DIGITAL_OBJECT_TYPE, timestamp, fdoType.getDigitalObjectType()));
-    // 4: Digital ObjectName
+    // 5: Digital ObjectName
     handleAttributeList.add(
         new FdoAttribute(DIGITAL_OBJECT_NAME, timestamp, fdoType.getDigitalObjectName()));
-    // 5: PID
+    // 6: PID
     handleAttributeList.add(new FdoAttribute(PID, timestamp, fdoType.getDomain() + handle));
-    // 6: PID Issuer
+    // 7: PID Issuer
     handleAttributeList.add(
         new FdoAttribute(PID_ISSUER, timestamp, profileProperties.getPidIssuer()));
-    // 7: PID Issuer Name
+    // 8: PID Issuer Name
     handleAttributeList.add(
         new FdoAttribute(PID_ISSUER_NAME, timestamp, profileProperties.getPidIssuerName()));
-    // 8: Issued for Agent
-    handleAttributeList.add(
-        new FdoAttribute(ISSUED_FOR_AGENT, timestamp, profileProperties.getIssuedForAgent()));
-    // 9: Issued for Agent Name
-    handleAttributeList.add(new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp,
-        profileProperties.getIssuedForAgentName()));
-    // 10: PID Record Issue Date
+    // 9: PID Record Issue Date
     handleAttributeList.add(
         new FdoAttribute(PID_RECORD_ISSUE_DATE, timestamp, getDate(timestamp)));
-    // 11: Pid Record Issue Number
+    // 10: Pid Record Issue Number
     handleAttributeList.add(
         new FdoAttribute(PID_RECORD_ISSUE_NUMBER, timestamp,
             "1")); // This gets replaced on an update
-    // 13: Pid Status
+    // 11: Pid Status
     var pidStatus = isDraft ? PidStatus.DRAFT : PidStatus.ACTIVE;
     handleAttributeList.add(new FdoAttribute(PID_STATUS, timestamp, pidStatus));
     // 100 HS Admin
     handleAttributeList.add(new FdoAttribute(timestamp, applicationProperties.getPrefix()));
+    return handleAttributeList;
+  }
+
+  private List<FdoAttribute> prepareGeneratedAttributesDoi(Instant timestamp) {
+    var handleAttributeList = new ArrayList<FdoAttribute>();
+    // 40: Issued for Agent
+    handleAttributeList.add(
+        new FdoAttribute(ISSUED_FOR_AGENT, timestamp, profileProperties.getIssuedForAgent()));
+    // 41: Issued for Agent Name
+    handleAttributeList.add(new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp,
+        profileProperties.getIssuedForAgentName()));
     return handleAttributeList;
   }
 

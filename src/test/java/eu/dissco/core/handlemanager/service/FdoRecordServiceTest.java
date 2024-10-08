@@ -464,7 +464,6 @@ class FdoRecordServiceTest {
     assertThat(result.handle()).isEqualTo(expected.handle());
   }
 
-
   @Test
   void testPrepareDraftRecordWithLoc() throws Exception {
     // Given

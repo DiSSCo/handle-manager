@@ -11,7 +11,8 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DERIVED_FROM_EN
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DIGITAL_OBJECT_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DIGITAL_OBJECT_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.FDO_PROFILE;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.FDO_RECORD_LICENSE;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.FDO_RECORD_LICENSE_ID;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.FDO_RECORD_LICENSE_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.HAS_RELATED_PID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.INFORMATION_ARTEFACT_TYPE;
@@ -46,13 +47,10 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_MEDIA_ID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_MO_ID_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_MO_ID_TYPE;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_REFERENT_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_SPECIMEN_OBJECT_ID_TYPE;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.REFERENT_DOI_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.REFERENT_NAME;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.REFERENT_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.RIGHTSHOLDER_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.RIGHTSHOLDER_PID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.RIGHTSHOLDER_PID_TYPE;
@@ -61,7 +59,6 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SOURCE_SYSTEM_N
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SPECIMEN_HOST_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SPECIMEN_OBJECT_ID_ABSENCE_REASON;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.STRUCTURAL_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TARGET_PID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TARGET_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOMBSTONED_DATE;
@@ -73,7 +70,6 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOPIC_ORIGIN;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.ANNOTATION;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_MEDIA;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_SPECIMEN;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoType.ORGANISATION;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.TOMBSTONE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -106,7 +102,7 @@ import eu.dissco.core.handlemanager.schema.DigitalSpecimenRequestAttributes.Prim
 import eu.dissco.core.handlemanager.schema.DoiKernelRequestAttributes;
 import eu.dissco.core.handlemanager.schema.HandleRequestAttributes;
 import eu.dissco.core.handlemanager.schema.HasRelatedPid;
-import eu.dissco.core.handlemanager.schema.MasRequestAttributes;
+import eu.dissco.core.handlemanager.schema.MachineAnnotationServiceRequestAttributes;
 import eu.dissco.core.handlemanager.schema.OrganisationRequestAttributes;
 import eu.dissco.core.handlemanager.schema.SourceSystemRequestAttributes;
 import eu.dissco.core.handlemanager.schema.TombstoneRequestAttributes;
@@ -148,8 +144,7 @@ public class TestUtils {
   public static final String ROR_DOMAIN = "https://ror.org/";
   public static final String ISSUED_FOR_AGENT_TESTVAL = "https://ror.org/02wddde16"; // DiSSCo
   public static final String ISSUED_FOR_AGENT_NAME_TESTVAL = "Distributed System of Scientific Collections";
-  public static final String STRUCTURAL_TYPE_TESTVAL = "digital";
-  public static final String STRUCTURAL_TYPE_ALT = "physical";
+  public static final String UPDATED_VALUE = "_v2";
   public static final String LOC_TESTVAL = "https://dissco.eu";
   public static final String LOC_XML = "<locations>"
       + "<location href=\"" + LOC_TESTVAL + "\" id=\"0\" weight=\"0\"/>"
@@ -161,7 +156,6 @@ public class TestUtils {
 
   // Generated Attributes
   public static final String PID_STATUS_TESTVAL = PidStatus.ACTIVE.name();
-  public static final String REFERENT_DOI_NAME_TESTVAL = PREFIX + "/" + SUFFIX;
 
   //Digital Specimens
   public static final String ROR_IDENTIFIER = "0x123";
@@ -236,33 +230,27 @@ public class TestUtils {
     // 1: FDO Profile
     fdoAttributes.add(new FdoAttribute(FDO_PROFILE, timestamp, fdoType.getFdoProfile()));
     // 2: FDO Record License
-    fdoAttributes.add(new FdoAttribute(FDO_RECORD_LICENSE, timestamp,
-        "https://creativecommons.org/publicdomain/zero/1.0/"));
-    // 3: DigitalObjectType
+    fdoAttributes.add(new FdoAttribute(FDO_RECORD_LICENSE_ID, timestamp,
+        "https://spdx.org/licenses/CC0-1.0.json"));
+    // 3: Fdo Record License Name
+    fdoAttributes.add(new FdoAttribute(FDO_RECORD_LICENSE_NAME, timestamp, "CC0 1.0 Universal"));
+    // 4: DigitalObjectType
     fdoAttributes.add(
         new FdoAttribute(DIGITAL_OBJECT_TYPE, timestamp, fdoType.getDigitalObjectType()));
-    // 4: DigitalObjectName
+    // 5: DigitalObjectName
     fdoAttributes.add(
         new FdoAttribute(DIGITAL_OBJECT_NAME, timestamp, fdoType.getDigitalObjectName()));
-    // 5: Pid
+    // 6: Pid
     fdoAttributes.add(new FdoAttribute(PID, timestamp, fdoType.getDomain() + handle));
-    // 6: PidIssuer
+    // 7: PidIssuer
     fdoAttributes.add(new FdoAttribute(PID_ISSUER, timestamp, ISSUED_FOR_AGENT_TESTVAL));
-    // 7: pidIssuerName
+    // 8: pidIssuerName
     fdoAttributes.add(new FdoAttribute(PID_ISSUER_NAME, timestamp, ISSUED_FOR_AGENT_NAME_TESTVAL));
-    // 8: issuedForAgent
-    fdoAttributes.add(new FdoAttribute(ISSUED_FOR_AGENT, timestamp, ISSUED_FOR_AGENT_TESTVAL));
-    // 9: issuedForAgentName
-    fdoAttributes.add(
-        new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp, ISSUED_FOR_AGENT_NAME_TESTVAL));
-    // 10: pidRecordIssueDate
+    // 9: pidRecordIssueDate
     fdoAttributes.add(new FdoAttribute(PID_RECORD_ISSUE_DATE, timestamp, ISSUE_DATE_TESTVAL));
-    // 11: pidRecordIssueNumber
+    // 10: pidRecordIssueNumber
     fdoAttributes.add(new FdoAttribute(PID_RECORD_ISSUE_NUMBER, timestamp, "1"));
-    // 12: structuralType
-    fdoAttributes.add(
-        new FdoAttribute(STRUCTURAL_TYPE, timestamp, STRUCTURAL_TYPE_TESTVAL));
-    // 13: PidStatus
+    // 11: PidStatus
     fdoAttributes.add(new FdoAttribute(PID_STATUS, timestamp, PID_STATUS_TESTVAL));
     // 100 ADMIN
     fdoAttributes.add(new FdoAttribute(timestamp, PREFIX));
@@ -285,14 +273,23 @@ public class TestUtils {
       throws Exception {
     var attributes = new ArrayList<>(genAttributes(fdoType, HANDLE, UPDATED));
     var attributesWithUpdatedTimeStamp = attributes.stream().map(attribute -> {
-      if (attribute.getIndex() == STRUCTURAL_TYPE.index()) { // Updated value
-        return new FdoAttribute(STRUCTURAL_TYPE, UPDATED, STRUCTURAL_TYPE_ALT);
+      var updatedAttribute = getUpdatedAttribute(fdoType);
+      if (attribute.getIndex()
+          == updatedAttribute.index()) { // Updated value needs updated timestamp
+        if (updatedAttribute.equals(LOC)) {
+          var updatedLoc = LOC_XML.replace(LOC_TESTVAL, UPDATED_VALUE);
+          return new FdoAttribute(updatedAttribute, UPDATED, updatedLoc);
+        }
+        return new FdoAttribute(updatedAttribute, UPDATED, UPDATED_VALUE);
       }
       if (attribute.getIndex() == FDO_PROFILE.index()) {
         return new FdoAttribute(FDO_PROFILE, CREATED, attribute.getValue());
       }
-      if (attribute.getIndex() == FDO_RECORD_LICENSE.index()) {
-        return new FdoAttribute(FDO_RECORD_LICENSE, CREATED, attribute.getValue());
+      if (attribute.getIndex() == FDO_RECORD_LICENSE_ID.index()) {
+        return new FdoAttribute(FDO_RECORD_LICENSE_ID, CREATED, attribute.getValue());
+      }
+      if (attribute.getIndex() == FDO_RECORD_LICENSE_NAME.index()) {
+        return new FdoAttribute(FDO_RECORD_LICENSE_NAME, CREATED, attribute.getValue());
       }
       if (attribute.getIndex() == DIGITAL_OBJECT_TYPE.index()) {
         return new FdoAttribute(DIGITAL_OBJECT_TYPE, CREATED, attribute.getValue());
@@ -332,6 +329,31 @@ public class TestUtils {
     return new FdoRecord(HANDLE, fdoType, attributesWithUpdatedTimeStamp, primaryLocalId);
   }
 
+  private static FdoProfile getUpdatedAttribute(FdoType fdoType) {
+    switch (fdoType) {
+      case HANDLE -> {
+        return LOC;
+      }
+      case DOI, DIGITAL_MEDIA, DIGITAL_SPECIMEN, ORGANISATION -> {
+        return REFERENT_NAME;
+      }
+      case ANNOTATION -> {
+        return TARGET_TYPE;
+      }
+      case DATA_MAPPING -> {
+        return SOURCE_DATA_STANDARD;
+      }
+      case MAS -> {
+        return MAS_NAME;
+      }
+      case SOURCE_SYSTEM -> {
+        return SOURCE_SYSTEM_NAME;
+      }
+      default -> throw new IllegalStateException();
+    }
+
+  }
+
   public static FdoRecord givenDoiFdoRecord(String handle) throws Exception {
     return new FdoRecord(handle, FdoType.DOI,
         genDoiRecordAttributes(handle, CREATED, FdoType.DOI), null);
@@ -340,15 +362,13 @@ public class TestUtils {
   public static List<FdoAttribute> genDoiRecordAttributes(String handle, Instant timestamp,
       FdoType type) throws Exception {
     var fdoRecord = genHandleRecordAttributes(handle, timestamp, type);
-    // 40: referentType
-    fdoRecord.add(new FdoAttribute(REFERENT_TYPE, timestamp, type.getDigitalObjectName()));
-    // 41: referentDoiName
-    fdoRecord.add(new FdoAttribute(REFERENT_DOI_NAME, timestamp, REFERENT_DOI_NAME_TESTVAL));
+    // 40: issuedForAgent
+    fdoRecord.add(new FdoAttribute(ISSUED_FOR_AGENT, timestamp, ISSUED_FOR_AGENT_TESTVAL));
+    // 41: issuedForAgentName
+    fdoRecord.add(
+        new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp, ISSUED_FOR_AGENT_NAME_TESTVAL));
     // 42: referentName
     fdoRecord.add(new FdoAttribute(REFERENT_NAME, timestamp, REFERENT_NAME_TESTVAL));
-    // 43: primaryReferentType
-    fdoRecord.add(
-        new FdoAttribute(PRIMARY_REFERENT_TYPE, timestamp, PRIMARY_REFERENT_TYPE_TESTVAL));
     return fdoRecord;
   }
 
@@ -362,16 +382,13 @@ public class TestUtils {
       throws Exception {
     List<FdoAttribute> fdoRecord = genHandleRecordAttributes(handle, timestamp,
         FdoType.DIGITAL_SPECIMEN);
-    // 40: referentType
+    // 40: issuedForAgent
+    fdoRecord.add(new FdoAttribute(ISSUED_FOR_AGENT, timestamp, ISSUED_FOR_AGENT_TESTVAL));
+    // 41: issuedForAgentName
     fdoRecord.add(
-        new FdoAttribute(REFERENT_TYPE, timestamp, DIGITAL_SPECIMEN.getDigitalObjectName()));
-    // 41: referentDoiName
-    fdoRecord.add(new FdoAttribute(REFERENT_DOI_NAME, timestamp, REFERENT_DOI_NAME_TESTVAL));
+        new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp, ISSUED_FOR_AGENT_NAME_TESTVAL));
     // 42: referentName
     fdoRecord.add(new FdoAttribute(REFERENT_NAME, timestamp, REFERENT_NAME_TESTVAL));
-    // 43: primaryReferentType
-    fdoRecord.add(
-        new FdoAttribute(PRIMARY_REFERENT_TYPE, timestamp, PRIMARY_REFERENT_TYPE_TESTVAL));
     // 200: Specimen Host
     fdoRecord.add(new FdoAttribute(SPECIMEN_HOST, timestamp, SPECIMEN_HOST_TESTVAL));
     // 201: Specimen Host name
@@ -436,15 +453,13 @@ public class TestUtils {
   public static List<FdoAttribute> genDigitalMediaAttributes(String handle,
       Instant timestamp) throws Exception {
     var fdoRecord = genHandleRecordAttributes(handle, timestamp, FdoType.DIGITAL_MEDIA);
-    // 40: referentType
-    fdoRecord.add(new FdoAttribute(REFERENT_TYPE, timestamp, DIGITAL_MEDIA.getDigitalObjectName()));
-    // 41: referentDoiName
-    fdoRecord.add(new FdoAttribute(REFERENT_DOI_NAME, timestamp, REFERENT_DOI_NAME_TESTVAL));
-    // 42: referentName
+    // 40: issuedForAgent
+    fdoRecord.add(new FdoAttribute(ISSUED_FOR_AGENT, timestamp, ISSUED_FOR_AGENT_TESTVAL));
+    // 41: issuedForAgentName
+    fdoRecord.add(
+        new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp, ISSUED_FOR_AGENT_NAME_TESTVAL));
     fdoRecord.add(new FdoAttribute(REFERENT_NAME, timestamp, REFERENT_NAME_TESTVAL));
     // 43: primaryReferentType
-    fdoRecord.add(
-        new FdoAttribute(PRIMARY_REFERENT_TYPE, timestamp, PRIMARY_REFERENT_TYPE_TESTVAL));
     fdoRecord.add(new FdoAttribute(MEDIA_HOST, timestamp, MEDIA_HOST_TESTVAL));
     fdoRecord.add(new FdoAttribute(MEDIA_HOST_NAME, timestamp, MEDIA_HOST_NAME_TESTVAL));
     fdoRecord.add(
@@ -551,15 +566,13 @@ public class TestUtils {
   public static List<FdoAttribute> genOrganisationAttributes(String handle, Instant timestamp)
       throws Exception {
     var fdoRecord = genHandleRecordAttributes(handle, timestamp, FdoType.ORGANISATION);
-    // 40: referentType
-    fdoRecord.add(new FdoAttribute(REFERENT_TYPE, timestamp, ORGANISATION.getDigitalObjectName()));
-    // 41: referentDoiName
-    fdoRecord.add(new FdoAttribute(REFERENT_DOI_NAME, timestamp, REFERENT_DOI_NAME_TESTVAL));
+    // 40: issuedForAgent
+    fdoRecord.add(new FdoAttribute(ISSUED_FOR_AGENT, timestamp, ISSUED_FOR_AGENT_TESTVAL));
+    // 41: issuedForAgentName
+    fdoRecord.add(
+        new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp, ISSUED_FOR_AGENT_NAME_TESTVAL));
     // 42: referentName
     fdoRecord.add(new FdoAttribute(REFERENT_NAME, timestamp, REFERENT_NAME_TESTVAL));
-    // 43: primaryReferentType
-    fdoRecord.add(
-        new FdoAttribute(PRIMARY_REFERENT_TYPE, timestamp, PRIMARY_REFERENT_TYPE_TESTVAL));
     // 800 OrganisationIdentifier
     fdoRecord.add(new FdoAttribute(ORGANISATION_ID, timestamp, SPECIMEN_HOST_TESTVAL));
     // 801 OrganisationIdentifier
@@ -617,8 +630,7 @@ public class TestUtils {
 
   public static HandleRequestAttributes givenHandleKernelUpdated() {
     return givenHandleKernel()
-        .withStructuralType(
-            HandleRequestAttributes.StructuralType.fromValue(STRUCTURAL_TYPE_ALT.toString()));
+        .withLocations(List.of(UPDATED_VALUE));
   }
 
   public static DoiKernelRequestAttributes givenDoiKernel() {
@@ -631,8 +643,7 @@ public class TestUtils {
 
   public static DoiKernelRequestAttributes givenDoiKernelUpdated() {
     return givenDoiKernel()
-        .withStructuralType(
-            DoiKernelRequestAttributes.StructuralType.fromValue(STRUCTURAL_TYPE_ALT.toString()));
+        .withReferentName(UPDATED_VALUE);
   }
 
   public static DigitalSpecimenRequestAttributes givenDigitalSpecimen() {
@@ -651,9 +662,7 @@ public class TestUtils {
 
   public static DigitalSpecimenRequestAttributes givenDigitalSpecimenUpdated() {
     return givenDigitalSpecimen()
-        .withStructuralType(
-            DigitalSpecimenRequestAttributes.StructuralType.fromValue(
-                STRUCTURAL_TYPE_ALT));
+        .withReferentName(UPDATED_VALUE);
   }
 
   public static DigitalMediaRequestAttributes givenDigitalMedia() {
@@ -674,8 +683,7 @@ public class TestUtils {
 
   public static DigitalMediaRequestAttributes givenDigitalMediaUpdated() {
     return givenDigitalMedia()
-        .withStructuralType(
-            DigitalMediaRequestAttributes.StructuralType.fromValue(STRUCTURAL_TYPE_ALT.toString()));
+        .withReferentName(UPDATED_VALUE);
   }
 
   public static OrganisationRequestAttributes givenOrganisation() {
@@ -690,64 +698,54 @@ public class TestUtils {
 
   public static OrganisationRequestAttributes givenOrganisationUpdated() {
     return givenOrganisation()
-        .withStructuralType(
-            OrganisationRequestAttributes.StructuralType.fromValue(STRUCTURAL_TYPE_ALT.toString()));
+        .withReferentName(UPDATED_VALUE);
   }
 
-  public static MasRequestAttributes givenMas() {
-    return new MasRequestAttributes()
-        .withIssuedForAgent(ISSUED_FOR_AGENT_TESTVAL)
-        .withMasName(MAS_NAME_TESTVAL);
+  public static MachineAnnotationServiceRequestAttributes givenMas() {
+    return new MachineAnnotationServiceRequestAttributes()
+        .withMachineAnnotationServiceName(MAS_NAME_TESTVAL);
   }
 
-  public static MasRequestAttributes givenMasUpdated() {
+  public static MachineAnnotationServiceRequestAttributes givenMasUpdated() {
     return givenMas()
-        .withStructuralType(
-            MasRequestAttributes.StructuralType.fromValue(STRUCTURAL_TYPE_ALT.toString()));
+        .withMachineAnnotationServiceName(UPDATED_VALUE);
   }
 
   public static SourceSystemRequestAttributes givenSourceSystem() {
     return new SourceSystemRequestAttributes()
-        .withIssuedForAgent(ISSUED_FOR_AGENT_TESTVAL)
         .withSourceSystemName(SPECIMEN_HOST_TESTVAL);
   }
 
   public static SourceSystemRequestAttributes givenSourceSystemUpdated() {
     return givenSourceSystem()
-        .withStructuralType(
-            SourceSystemRequestAttributes.StructuralType.fromValue(STRUCTURAL_TYPE_ALT.toString()));
+        .withSourceSystemName(UPDATED_VALUE);
   }
 
   public static DataMappingRequestAttributes givenDataMapping() {
     return new DataMappingRequestAttributes()
-        .withIssuedForAgent(ISSUED_FOR_AGENT_TESTVAL)
         .withSourceDataStandard(SOURCE_DATA_STANDARD_TESTVAL);
   }
 
   public static DataMappingRequestAttributes givenDataMappingUpdated() {
     return givenDataMapping()
-        .withStructuralType(
-            DataMappingRequestAttributes.StructuralType.fromValue(STRUCTURAL_TYPE_ALT.toString()));
+        .withSourceDataStandard(UPDATED_VALUE);
   }
 
-  // cursor
-
   public static AnnotationRequestAttributes givenAnnotation(boolean includeHash) {
-    var anntotation = new AnnotationRequestAttributes()
+    var annotation = new AnnotationRequestAttributes()
         .withIssuedForAgent(ISSUED_FOR_AGENT_TESTVAL)
         .withTargetPid(TARGET_DOI_TESTVAL)
         .withTargetType(TARGET_TYPE_TESTVAL)
         .withMotivation(MOTIVATION_TESTVAL);
     if (includeHash) {
-      anntotation.withAnnotationHash(ANNOTATION_HASH_TESTVAL.toString());
+      annotation.withAnnotationHash(ANNOTATION_HASH_TESTVAL.toString());
     }
-    return anntotation;
+    return annotation;
   }
 
   public static AnnotationRequestAttributes givenAnnotationUpdated() {
     return givenAnnotation(false)
-        .withStructuralType(
-            AnnotationRequestAttributes.StructuralType.fromValue(STRUCTURAL_TYPE_ALT.toString()));
+        .withTargetType(UPDATED_VALUE);
   }
 
   // Misc
