@@ -98,6 +98,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -247,8 +248,13 @@ public class TestUtils {
     var attributes = genAttributes(fdoType, HANDLE);
     attributes.set(attributes.indexOf(getField(attributes, PID_STATUS)),
         new FdoAttribute(PID_STATUS, CREATED, PidStatus.DRAFT));
-    attributes.set(attributes.indexOf(getField(attributes, LOC)),
-        new FdoAttribute(LOC, CREATED, userLocations));
+    if (userLocations != null) {
+      attributes.set(attributes.indexOf(getField(attributes, LOC)),
+          new FdoAttribute(LOC, CREATED, userLocations));
+    } else {
+      attributes.set(attributes.indexOf(getField(attributes, LOC)),
+          new FdoAttribute(LOC, CREATED, "<locations></locations>"));
+    }
     return new FdoRecord(HANDLE, fdoType, attributes, primaryLocalId);
   }
 
@@ -887,9 +893,12 @@ public class TestUtils {
     }
     xmlElements.forEach(xmlLoc -> {
       var locs = doc.createElement("location");
-      locs.setAttribute("id", xmlLoc.id);
+      locs.setAttribute("id", String.valueOf(xmlLoc.id));
       locs.setAttribute("href", xmlLoc.loc);
       locs.setAttribute("weight", xmlLoc.weight);
+      if (xmlLoc.view != null) {
+        locs.setAttribute("view", xmlLoc.view);
+      }
       locations.appendChild(locs);
     });
     return documentToString(doc);
@@ -902,42 +911,58 @@ public class TestUtils {
 
   private static List<XmlElement> defaultLocations(String handle, FdoType type, boolean addKeyLoc) {
     var locations = new ArrayList<XmlElement>();
+    var i = new AtomicInteger();
     switch (type) {
       case DIGITAL_SPECIMEN -> {
-        locations.add(new XmlElement("HTML", "1", UI_URL + "/ds/" + handle));
-        locations.add(new XmlElement("JSON", "0", API_URL + "/digital-specimen/" + handle));
+        locations.add(new XmlElement(i.getAndIncrement(), "1", UI_URL + "/ds/" + handle, "HTML"));
+        locations.add(
+            new XmlElement(i.getAndIncrement(), "0", API_URL + "/digital-specimen/" + handle,
+                "JSON"));
         if (addKeyLoc) {
-          locations.add(new XmlElement("CATALOG", "0", CATALOG_ID_TEST));
+          locations.add(new XmlElement(i.getAndIncrement(), "0", CATALOG_ID_TEST, "CATALOG"));
         }
       }
       case DATA_MAPPING -> {
-        locations.add(new XmlElement("HTML", "1", ORCHESTRATION_URL + "/mapping/" + handle));
-        locations.add(new XmlElement("JSON", "0", ORCHESTRATION_URL + "/api/v1/mapping/" + handle));
+        locations.add(
+            new XmlElement(i.getAndIncrement(), "1", ORCHESTRATION_URL + "/mapping/" + handle,
+                "HTML"));
+        locations.add(new XmlElement(i.getAndIncrement(), "0",
+            ORCHESTRATION_URL + "/api/v1/mapping/" + handle,
+            "JSON"));
       }
       case SOURCE_SYSTEM -> {
-        locations.add(new XmlElement("HTML", "1", ORCHESTRATION_URL + "/source-system/" + handle));
         locations.add(
-            new XmlElement("JSON", "0", ORCHESTRATION_URL + "/api/v1/source-system/" + handle));
+            new XmlElement(i.getAndIncrement(), "1", ORCHESTRATION_URL + "/source-system/" + handle,
+                "HTML"));
+        locations.add(
+            new XmlElement(i.getAndIncrement(), "0",
+                ORCHESTRATION_URL + "/api/v1/source-system/" + handle, "JSON"));
       }
       case DIGITAL_MEDIA -> {
         locations.add(
-            new XmlElement("HTML", "1", UI_URL + "/dm/" + handle));
-        locations.add(new XmlElement("JSON", "0", API_URL + "/digital-media/" + handle));
+            new XmlElement(i.getAndIncrement(), "1", UI_URL + "/dm/" + handle, "HTML"));
+        locations.add(
+            new XmlElement(i.getAndIncrement(), "0", API_URL + "/digital-media/" + handle, "JSON"));
         if (addKeyLoc) {
-          locations.add(new XmlElement("MEDIA", "0", PRIMARY_MEDIA_ID_TESTVAL));
+          locations.add(
+              new XmlElement(i.getAndIncrement(), "0", PRIMARY_MEDIA_ID_TESTVAL, "MEDIA"));
         }
       }
       case ANNOTATION -> {
-        locations.add(new XmlElement("JSON", "1", API_URL + "/annotations/" + handle));
+        locations.add(
+            new XmlElement(i.getAndIncrement(), "1", API_URL + "/annotations/" + handle, "JSON"));
       }
       case ORGANISATION -> {
         if (addKeyLoc) {
-          locations.add(new XmlElement("ROR", "1", SPECIMEN_HOST_TESTVAL));
+          locations.add(new XmlElement(i.getAndIncrement(), "1", SPECIMEN_HOST_TESTVAL, "ROR"));
         }
       }
       case MAS -> {
-        locations.add(new XmlElement("HTML", "1", ORCHESTRATION_URL + "/mas/" + handle));
-        locations.add(new XmlElement("JSON", "0", ORCHESTRATION_URL + "/api/v1/mas/" + handle));
+        locations.add(
+            new XmlElement(i.getAndIncrement(), "1", ORCHESTRATION_URL + "/mas/" + handle, "HTML"));
+        locations.add(
+            new XmlElement(i.getAndIncrement(), "0", ORCHESTRATION_URL + "/api/v1/mas/" + handle,
+                "JSON"));
       }
       default -> {
         // Handle, DOI, OrganisationRequestAttributes (organisation handled separately)
@@ -965,10 +990,10 @@ public class TestUtils {
   }
 
   private record XmlElement(
-      String id,
+      int id,
       String weight,
-      String loc
-  ) {
+      String loc,
+      String view) {
 
   }
 

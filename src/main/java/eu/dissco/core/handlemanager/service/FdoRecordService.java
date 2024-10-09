@@ -96,6 +96,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -802,55 +803,61 @@ public class FdoRecordService {
   private List<XmlElement> getXmlElements(String handle, FdoType fdoType, String keyLocation,
       List<String> userLocations, boolean isDraft) {
     var locations = new ArrayList<XmlElement>();
+    AtomicInteger i = new AtomicInteger();
+    if (!isDraft) {
+      switch (fdoType) {
+        case DIGITAL_SPECIMEN -> {
+          locations.add(
+              new XmlElement(i.getAndIncrement(), "1",
+                  applicationProperties.getUiUrl() + "/ds/" + handle,
+                  "HTML"));
+          locations.add(new XmlElement(i.getAndIncrement(), "0",
+              applicationProperties.getApiUrl() + "/digital-specimen/" + handle, "JSON"));
+          if (keyLocation != null) {
+            locations.add(new XmlElement(i.getAndIncrement(), "0", keyLocation, "CATALOG"));
+          }
+        }
+        case DATA_MAPPING -> {
+          locations.add(new XmlElement(i.getAndIncrement(), "1",
+              applicationProperties.getOrchestrationUrl() + "/mapping/" + handle, "HTML"));
+          locations.add(new XmlElement(i.getAndIncrement(), "0",
+              applicationProperties.getOrchestrationUrl() + "/api/v1/mapping/" + handle, "JSON"));
+        }
+        case SOURCE_SYSTEM -> {
+          locations.add(new XmlElement(i.getAndIncrement(), "1",
+              applicationProperties.getOrchestrationUrl() + "/source-system/" + handle, "HTML"));
+          locations.add(new XmlElement(i.getAndIncrement(), "0",
+              applicationProperties.getOrchestrationUrl() + "/api/v1/source-system/" + handle,
+              "JSON"));
+        }
+        case DIGITAL_MEDIA -> {
+          locations.add(
+              new XmlElement(i.getAndIncrement(), "1",
+                  applicationProperties.getUiUrl() + "/dm/" + handle,
+                  "HTML"));
+          locations.add(new XmlElement(i.getAndIncrement(), "0",
+              applicationProperties.getApiUrl() + "/digital-media/" + handle, "JSON"));
+          if (keyLocation != null) {
+            locations.add(new XmlElement(i.getAndIncrement(), "0", keyLocation, "MEDIA"));
+          }
+        }
+        case ANNOTATION -> locations.add(new XmlElement(i.getAndIncrement(), "1",
+            applicationProperties.getApiUrl() + "/annotations/" + handle, "JSON"));
+        case MAS -> {
+          locations.add(new XmlElement(i.getAndIncrement(), "1",
+              applicationProperties.getOrchestrationUrl() + "/mas/" + handle, "HTML"));
+          locations.add(new XmlElement(i.getAndIncrement(), "0",
+              applicationProperties.getOrchestrationUrl() + "/api/v1/mas/" + handle, "JSON"));
+        }
+        case ORGANISATION ->
+            locations.add(new XmlElement(i.getAndIncrement(), "1", keyLocation, "ROR"));
+        default -> {
+          // Handle, DOI are all in user locations
+        }
+      }
+    }
     userLocations.forEach(
-        loc -> locations.add(new XmlElement(String.valueOf(userLocations.indexOf(loc)), "0", loc)));
-    if (isDraft) {
-      return locations;
-    }
-    switch (fdoType) {
-      case DIGITAL_SPECIMEN -> {
-        locations.add(
-            new XmlElement("HTML", "1", applicationProperties.getUiUrl() + "/ds/" + handle));
-        locations.add(new XmlElement("JSON", "0",
-            applicationProperties.getApiUrl() + "/digital-specimen/" + handle));
-        if (keyLocation != null) {
-          locations.add(new XmlElement("CATALOG", "0", keyLocation));
-        }
-      }
-      case DATA_MAPPING -> {
-        locations.add(new XmlElement("HTML", "1",
-            applicationProperties.getOrchestrationUrl() + "/mapping/" + handle));
-        locations.add(new XmlElement("JSON", "0",
-            applicationProperties.getOrchestrationUrl() + "/api/v1/mapping/" + handle));
-      }
-      case SOURCE_SYSTEM -> {
-        locations.add(new XmlElement("HTML", "1",
-            applicationProperties.getOrchestrationUrl() + "/source-system/" + handle));
-        locations.add(new XmlElement("JSON", "0",
-            applicationProperties.getOrchestrationUrl() + "/api/v1/source-system/" + handle));
-      }
-      case DIGITAL_MEDIA -> {
-        locations.add(
-            new XmlElement("HTML", "1", applicationProperties.getUiUrl() + "/dm/" + handle));
-        locations.add(new XmlElement("JSON", "0",
-            applicationProperties.getApiUrl() + "/digital-media/" + handle));
-        if (keyLocation != null) {
-          locations.add(new XmlElement("MEDIA", "0", keyLocation));
-        }
-      }
-      case ANNOTATION -> locations.add(new XmlElement("JSON", "1",
-          applicationProperties.getApiUrl() + "/annotations/" + handle));
-      case MAS -> {
-        locations.add(new XmlElement("HTML", "1",
-            applicationProperties.getOrchestrationUrl() + "/mas/" + handle));
-        locations.add(new XmlElement("JSON", "0",
-            applicationProperties.getOrchestrationUrl() + "/api/v1/mas/" + handle));
-      }
-      case ORGANISATION -> locations.add(new XmlElement("ROR", "1", keyLocation));
-      default -> {
-        // Handle, DOI are all in user locations
-      }
-    }
+        loc -> locations.add(new XmlElement(i.getAndIncrement(), "0", loc, null)));
     return locations;
   }
 
@@ -878,9 +885,12 @@ public class FdoRecordService {
       doc.appendChild(locations);
       xmlElements.forEach(xmlLoc -> {
         var locs = doc.createElement("location");
-        locs.setAttribute("id", xmlLoc.id);
+        locs.setAttribute("id", String.valueOf(xmlLoc.id));
         locs.setAttribute("href", xmlLoc.loc);
         locs.setAttribute("weight", xmlLoc.weight);
+        if (xmlLoc.view != null) {
+          locs.setAttribute("view", xmlLoc.view);
+        }
         locations.appendChild(locs);
       });
       return documentToString(doc);
@@ -897,7 +907,7 @@ public class FdoRecordService {
     return writer.getBuffer().toString();
   }
 
-  private record XmlElement(String id, String weight, String loc) {
+  private record XmlElement(int id, String weight, String loc, String view) {
 
   }
 
