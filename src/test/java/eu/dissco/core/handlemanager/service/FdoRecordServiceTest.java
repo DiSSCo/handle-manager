@@ -85,6 +85,9 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -335,6 +338,33 @@ class FdoRecordServiceTest {
     assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"CATALOG"})
+  @NullSource
+  void testGetSpecimenResolvableIdOtherId(String catalogId) throws Exception {
+    // Given
+    var keyLoc = CATALOG_ID_TEST + "A";
+    var request = givenDigitalSpecimen()
+        .withCatalogIdentifier(catalogId)
+        .withOtherSpecimenIds(List.of(
+            new OtherspecimenIds()
+                .withIdentifierType("Local id")
+                .withIdentifierValue("ABC")
+                .withResolvable(false),
+            new OtherspecimenIds()
+                .withIdentifierType("Resolvable id")
+                .withIdentifierValue(keyLoc)
+                .withResolvable(true)
+        ));
+    // When
+    var resultRecord = fdoRecordService.prepareNewDigitalSpecimenRecord(request, HANDLE, CREATED,
+        false);
+    var result = getField(resultRecord.attributes(), LOC).getValue();
+
+    // Then
+    assertThat(result).contains(keyLoc);
   }
 
   @Test
