@@ -397,7 +397,7 @@ public abstract class PidService {
       throw new InvalidRequestException(REQUEST_PROCESSING_ERR);
     }
     mongoRepository.postHandleRecords(fdoDocuments);
-    log.info("Successfully posted {} new specimen fdo records to database", fdoDocuments.size());
+    log.info("Successfully posted {} fdo records to database", fdoDocuments.size());
   }
 
   protected void updateDocuments(List<FdoRecord> fdoRecords)

@@ -86,6 +86,7 @@ public class DoiService extends PidService {
             String.format(TYPE_ERROR_MESSAGE, fdoType.getDigitalObjectName()));
       }
     } catch (JsonProcessingException | PidResolutionException e) {
+      log.error(REQUEST_PROCESSING_ERR, e);
       throw new InvalidRequestException(REQUEST_PROCESSING_ERR);
     }
   }

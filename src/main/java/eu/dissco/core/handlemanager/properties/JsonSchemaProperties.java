@@ -11,7 +11,7 @@ public class JsonSchemaProperties {
   String dataMappingSchemaPath = "json-schema/data-mapping-request-attributes.json";
   String digitalMediaSchemaPath = "json-schema/digital-media-request-attributes.json";
   String digitalSpecimenSchemaPath = "json-schema/digital-specimen-request-attributes.json";
-  String masSchemaPath = "json-schema/mas-request-attributes.json";
+  String masSchemaPath = "json-schema/machine-annotation-service-request-attributes.json";
   String organisationSchemaPath = "json-schema/organisation-request-attributes.json";
   String sourceSystemPath = "json-schema/source-system-request-attributes.json";
 }
