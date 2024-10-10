@@ -1,5 +1,6 @@
 package eu.dissco.core.handlemanager.service;
 
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.CATALOG_IDENTIFIER;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LOC;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.OTHER_SPECIMEN_IDS;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID_RECORD_ISSUE_NUMBER;
@@ -340,6 +341,30 @@ class FdoRecordServiceTest {
     assertThat(result.handle()).isEqualTo(expected.handle());
   }
 
+  @Test
+  void testPrepareNewDigitalSpecimenRecordNoOtherSpecimen() throws Exception {
+    // Given
+    var request = givenDigitalSpecimen().withCatalogIdentifier(null);
+    var expectedAttributes = new ArrayList<>(givenDigitalSpecimenFdoRecord(HANDLE).attributes());
+    expectedAttributes.set(
+        expectedAttributes.indexOf(getField(expectedAttributes, CATALOG_IDENTIFIER)),
+        new FdoAttribute(CATALOG_IDENTIFIER, CREATED, null));
+    expectedAttributes.set(expectedAttributes.indexOf(getField(expectedAttributes, LOC)),
+        new FdoAttribute(LOC, CREATED, setLocations(HANDLE, FdoType.DIGITAL_SPECIMEN, false)));
+
+    var expected = new FdoRecord(HANDLE, FdoType.DIGITAL_SPECIMEN, expectedAttributes,
+        NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL);
+
+    // When
+    var result = fdoRecordService.prepareNewDigitalSpecimenRecord(request, HANDLE, CREATED, false);
+
+    // Then
+    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
+    assertThat(result.fdoType()).isEqualTo(expected.fdoType());
+    assertThat(result.handle()).isEqualTo(expected.handle());
+  }
+
   @ParameterizedTest
   @ValueSource(strings = {"CATALOG"})
   @NullSource
@@ -442,8 +467,7 @@ class FdoRecordServiceTest {
     attributes.set(attributes.indexOf(getField(attributes, LOC)), new FdoAttribute(LOC, CREATED,
         "<locations>"
             + "<location href=\"https://sandbox.dissco.tech/api/v1/annotations/20.5000.1025/QRS-321-ABC\" id=\"0\" view=\"JSON\" weight=\"1\"/>"
-            + "<location href=\"" + LOC_TESTVAL + "\" id=\"1\" weight=\"0\"/>"
-            + "</locations>"));
+            + "<location href=\"" + LOC_TESTVAL + "\" id=\"1\" weight=\"0\"/>" + "</locations>"));
     var expected = new FdoRecord(HANDLE, FdoType.ANNOTATION, attributes, null);
 
     // When
@@ -483,8 +507,7 @@ class FdoRecordServiceTest {
             + "<location href=\"https://sandbox.dissco.tech/ds/20.5000.1025/QRS-321-ABC\" id=\"0\" view=\"HTML\" weight=\"1\"/>"
             + "<location href=\"https://sandbox.dissco.tech/api/v1/digital-specimen/20.5000.1025/QRS-321-ABC\" id=\"1\" view=\"JSON\" weight=\"0\"/>"
             + "<location href=\"" + CATALOG_ID_TEST + "\" id=\"2\" view=\"CATALOG\" weight=\"0\"/>"
-            + "<location href=\"" + LOC_TESTVAL + "\" id=\"3\" weight=\"0\"/>"
-            + "</locations>"));
+            + "<location href=\"" + LOC_TESTVAL + "\" id=\"3\" weight=\"0\"/>" + "</locations>"));
     activateRecord(attributes);
 
     var expected = new FdoRecord(HANDLE, FdoType.DIGITAL_SPECIMEN, attributes,

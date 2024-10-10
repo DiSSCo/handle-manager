@@ -800,7 +800,7 @@ public class FdoRecordService {
     return dt.format(timestamp);
   }
 
-  private List<XmlElement> getXmlElements(String handle, FdoType fdoType, String keyLocation,
+  private List<XmlElement> getXmlElements(String handle, FdoType fdoType, String keyAttribute,
       List<String> userLocations, boolean isDraft) {
     var locations = new ArrayList<XmlElement>();
     AtomicInteger i = new AtomicInteger();
@@ -813,8 +813,8 @@ public class FdoRecordService {
                   "HTML"));
           locations.add(new XmlElement(i.getAndIncrement(), "0",
               applicationProperties.getApiUrl() + "/digital-specimen/" + handle, "JSON"));
-          if (keyLocation != null) {
-            locations.add(new XmlElement(i.getAndIncrement(), "0", keyLocation, "CATALOG"));
+          if (keyAttribute != null) {
+            locations.add(new XmlElement(i.getAndIncrement(), "0", keyAttribute, "CATALOG"));
           }
         }
         case DATA_MAPPING -> {
@@ -837,8 +837,8 @@ public class FdoRecordService {
                   "HTML"));
           locations.add(new XmlElement(i.getAndIncrement(), "0",
               applicationProperties.getApiUrl() + "/digital-media/" + handle, "JSON"));
-          if (keyLocation != null) {
-            locations.add(new XmlElement(i.getAndIncrement(), "0", keyLocation, "MEDIA"));
+          if (keyAttribute != null) {
+            locations.add(new XmlElement(i.getAndIncrement(), "0", keyAttribute, "MEDIA"));
           }
         }
         case ANNOTATION -> locations.add(new XmlElement(i.getAndIncrement(), "1",
@@ -850,7 +850,7 @@ public class FdoRecordService {
               applicationProperties.getOrchestrationUrl() + "/api/v1/mas/" + handle, "JSON"));
         }
         case ORGANISATION ->
-            locations.add(new XmlElement(i.getAndIncrement(), "1", keyLocation, "ROR"));
+            locations.add(new XmlElement(i.getAndIncrement(), "1", keyAttribute, "ROR"));
         default -> {
           // Handle, DOI are all in user locations
         }
