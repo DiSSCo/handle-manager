@@ -23,7 +23,6 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MEDIA_HOST;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MEDIA_HOST_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MEDIA_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MIME_TYPE;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MOTIVATION;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.ORGANISATION_ID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.ORGANISATION_ID_TYPE;
@@ -47,6 +46,7 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SPECIMEN_HOST_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TARGET_PID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TARGET_TYPE;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TARGET_TYPE_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOMBSTONED_DATE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOMBSTONED_TEXT;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOPIC_CATEGORY;
@@ -79,7 +79,6 @@ import eu.dissco.core.handlemanager.domain.responses.JsonApiLinks;
 import eu.dissco.core.handlemanager.domain.responses.JsonApiWrapperRead;
 import eu.dissco.core.handlemanager.domain.responses.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.schema.AnnotationRequestAttributes;
-import eu.dissco.core.handlemanager.schema.AnnotationRequestAttributes.Motivation;
 import eu.dissco.core.handlemanager.schema.DataMappingRequestAttributes;
 import eu.dissco.core.handlemanager.schema.DigitalMediaRequestAttributes;
 import eu.dissco.core.handlemanager.schema.DigitalSpecimenRequestAttributes;
@@ -148,8 +147,6 @@ public class TestUtils {
   public static final String SPECIMEN_HOST_NAME_TESTVAL = "Naturalis";
   // Annotations
   public static final String TARGET_DOI_TESTVAL = HANDLE_DOMAIN + PREFIX + "/111";
-  public static final String TARGET_TYPE_TESTVAL = "digitalSpecimen";
-  public static final Motivation MOTIVATION_TESTVAL = Motivation.OA_EDITING;
   public static final UUID ANNOTATION_HASH_TESTVAL = UUID.fromString(
       "550e8400-e29b-41d4-a716-446655440000");
   // Media Objects
@@ -327,7 +324,7 @@ public class TestUtils {
         return REFERENT_NAME;
       }
       case ANNOTATION -> {
-        return TARGET_TYPE;
+        return TARGET_PID;
       }
       case DATA_MAPPING -> {
         return SOURCE_DATA_STANDARD;
@@ -468,9 +465,11 @@ public class TestUtils {
     // 500 TargetPid
     fdoRecord.add(new FdoAttribute(TARGET_PID, timestamp, TARGET_DOI_TESTVAL));
     // 501 TargetType
-    fdoRecord.add(new FdoAttribute(TARGET_TYPE, timestamp, TARGET_TYPE_TESTVAL));
+    fdoRecord.add(
+        new FdoAttribute(TARGET_TYPE, timestamp, DIGITAL_SPECIMEN.getDigitalObjectType()));
     // 502 motivation
-    fdoRecord.add(new FdoAttribute(MOTIVATION, timestamp, MOTIVATION_TESTVAL));
+    fdoRecord.add(
+        new FdoAttribute(TARGET_TYPE_NAME, timestamp, DIGITAL_SPECIMEN.getDigitalObjectName()));
     // 503 AnnotationHash
     if (includeHash) {
       fdoRecord.add(
@@ -665,23 +664,20 @@ public class TestUtils {
 
   public static AnnotationRequestAttributes givenAnnotation(boolean includeHash) {
     var annotation = new AnnotationRequestAttributes()
-        .withIssuedForAgent(ISSUED_FOR_AGENT_TESTVAL)
         .withTargetPid(TARGET_DOI_TESTVAL)
-        .withTargetType(TARGET_TYPE_TESTVAL)
-        .withMotivation(MOTIVATION_TESTVAL);
+        .withTargetType(DIGITAL_SPECIMEN.getDigitalObjectType());
     if (includeHash) {
-      annotation.withAnnotationHash(ANNOTATION_HASH_TESTVAL.toString());
+      annotation.withAnnotationHash(ANNOTATION_HASH_TESTVAL);
     }
     return annotation;
   }
 
   public static AnnotationRequestAttributes givenAnnotationUpdated() {
     return givenAnnotation(false)
-        .withTargetType(UPDATED_VALUE);
+        .withTargetPid(UPDATED_VALUE);
   }
 
   // Misc
-
   public static FdoAttribute getField(List<FdoAttribute> fdoAttributes, FdoProfile targetField) {
     for (var attribute : fdoAttributes) {
       if (attribute.getIndex() == targetField.index()) {

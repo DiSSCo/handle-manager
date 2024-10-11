@@ -59,7 +59,7 @@ public enum FdoProfile {
   // Annotation
   TARGET_PID("targetPid", 500),
   TARGET_TYPE("targetType", 501),
-  MOTIVATION("motivation", 502),
+  TARGET_TYPE_NAME("targetTypeName", 502),
   ANNOTATION_HASH("annotationHash", 505),
 
   // Agent (Organisation, Source System, or MAS)
