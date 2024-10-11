@@ -19,6 +19,7 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LIVING_OR_PRESE
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LOC;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MARKED_AS_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MAS_NAME;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MATERIAL_SAMPLE_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MEDIA_HOST;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MEDIA_HOST_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MEDIA_TYPE;
@@ -95,10 +96,16 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -177,6 +184,15 @@ public class TestUtils {
   public static final TransformerFactory TRANSFORMER_FACTORY = TransformerFactory.newInstance();
   public static final DocumentBuilderFactory DOC_BUILDER_FACTORY = DocumentBuilderFactory.newInstance();
   public static final ObjectMapper MAPPER;
+  public static final Set<FdoProfile> GENERATED_KEYS;
+
+  static {
+    GENERATED_KEYS = Set.of(FDO_PROFILE, FDO_RECORD_LICENSE_ID,
+        FDO_RECORD_LICENSE_NAME, PID_ISSUER, PID_ISSUER_NAME,
+        ISSUED_FOR_AGENT, ISSUED_FOR_AGENT_NAME, DIGITAL_OBJECT_TYPE,
+        DIGITAL_OBJECT_NAME, PID, PID_RECORD_ISSUE_DATE,
+        HS_ADMIN);
+  }
 
   static {
     var mapper = new ObjectMapper().findAndRegisterModules();
@@ -202,42 +218,50 @@ public class TestUtils {
   }
 
   public static FdoRecord givenHandleFdoRecord(String handle) throws Exception {
-    return new FdoRecord(handle, FdoType.HANDLE,
-        genHandleRecordAttributes(handle, CREATED, FdoType.HANDLE), null);
+    var attributes = genHandleRecordAttributes(handle, CREATED, FdoType.HANDLE);
+    return new FdoRecord(handle, FdoType.HANDLE, attributes, null, attributes.values());
   }
 
-  public static List<FdoAttribute> genHandleRecordAttributes(String handle, Instant timestamp,
+  public static Map<FdoProfile, FdoAttribute> genHandleRecordAttributes(String handle,
+      Instant timestamp,
       FdoType fdoType) throws Exception {
-    List<FdoAttribute> fdoAttributes = new ArrayList<>();
+    var fdoAttributes = new EnumMap<FdoProfile, FdoAttribute>(FdoProfile.class);
     var loc = setLocations(handle, fdoType);
-    fdoAttributes.add(new FdoAttribute(LOC, timestamp, loc));
+    fdoAttributes.put(LOC, new FdoAttribute(LOC, timestamp, loc));
     // 1: FDO Profile
-    fdoAttributes.add(new FdoAttribute(FDO_PROFILE, timestamp, fdoType.getFdoProfile()));
+    fdoAttributes.put(FDO_PROFILE,
+        new FdoAttribute(FDO_PROFILE, timestamp, fdoType.getFdoProfile()));
     // 2: FDO Record License
-    fdoAttributes.add(new FdoAttribute(FDO_RECORD_LICENSE_ID, timestamp,
+    fdoAttributes.put(FDO_RECORD_LICENSE_ID, new FdoAttribute(FDO_RECORD_LICENSE_ID, timestamp,
         "https://spdx.org/licenses/CC0-1.0.json"));
     // 3: Fdo Record License Name
-    fdoAttributes.add(new FdoAttribute(FDO_RECORD_LICENSE_NAME, timestamp, "CC0 1.0 Universal"));
+    fdoAttributes.put(FDO_RECORD_LICENSE_NAME,
+        new FdoAttribute(FDO_RECORD_LICENSE_NAME, timestamp, "CC0 1.0 Universal"));
     // 4: DigitalObjectType
-    fdoAttributes.add(
+    fdoAttributes.put(DIGITAL_OBJECT_TYPE,
         new FdoAttribute(DIGITAL_OBJECT_TYPE, timestamp, fdoType.getDigitalObjectType()));
     // 5: DigitalObjectName
-    fdoAttributes.add(
+    fdoAttributes.put(DIGITAL_OBJECT_NAME,
         new FdoAttribute(DIGITAL_OBJECT_NAME, timestamp, fdoType.getDigitalObjectName()));
     // 6: Pid
-    fdoAttributes.add(new FdoAttribute(PID, timestamp, fdoType.getDomain() + handle));
+    fdoAttributes.put(PID,
+        new FdoAttribute(PID, timestamp, fdoType.getDomain() + handle));
     // 7: PidIssuer
-    fdoAttributes.add(new FdoAttribute(PID_ISSUER, timestamp, ISSUED_FOR_AGENT_TESTVAL));
+    fdoAttributes.put(PID_ISSUER,
+        new FdoAttribute(PID_ISSUER, timestamp, ISSUED_FOR_AGENT_TESTVAL));
     // 8: pidIssuerName
-    fdoAttributes.add(new FdoAttribute(PID_ISSUER_NAME, timestamp, ISSUED_FOR_AGENT_NAME_TESTVAL));
+    fdoAttributes.put(PID_ISSUER_NAME,
+        new FdoAttribute(PID_ISSUER_NAME, timestamp, ISSUED_FOR_AGENT_NAME_TESTVAL));
     // 9: pidRecordIssueDate
-    fdoAttributes.add(new FdoAttribute(PID_RECORD_ISSUE_DATE, timestamp, ISSUE_DATE_TESTVAL));
+    fdoAttributes.put(PID_RECORD_ISSUE_DATE,
+        new FdoAttribute(PID_RECORD_ISSUE_DATE, timestamp, ISSUE_DATE_TESTVAL));
     // 10: pidRecordIssueNumber
-    fdoAttributes.add(new FdoAttribute(PID_RECORD_ISSUE_NUMBER, timestamp, "1"));
+    fdoAttributes.put(PID_RECORD_ISSUE_NUMBER,
+        new FdoAttribute(PID_RECORD_ISSUE_NUMBER, timestamp, "1"));
     // 11: PidStatus
-    fdoAttributes.add(new FdoAttribute(PID_STATUS, timestamp, PID_STATUS_TESTVAL));
+    fdoAttributes.put(PID_STATUS, new FdoAttribute(PID_STATUS, timestamp, PID_STATUS_TESTVAL));
     // 100 ADMIN
-    fdoAttributes.add(new FdoAttribute(timestamp, PREFIX));
+    fdoAttributes.put(HS_ADMIN, new FdoAttribute(timestamp, PREFIX));
 
     return fdoAttributes;
   }
@@ -246,76 +270,42 @@ public class TestUtils {
       String userLocations)
       throws Exception {
     var attributes = genAttributes(fdoType, HANDLE);
-    attributes.set(attributes.indexOf(getField(attributes, PID_STATUS)),
-        new FdoAttribute(PID_STATUS, CREATED, PidStatus.DRAFT));
-    if (userLocations != null) {
-      attributes.set(attributes.indexOf(getField(attributes, LOC)),
-          new FdoAttribute(LOC, CREATED, userLocations));
-    } else {
-      attributes.set(attributes.indexOf(getField(attributes, LOC)),
-          new FdoAttribute(LOC, CREATED, "<locations></locations>"));
-    }
-    return new FdoRecord(HANDLE, fdoType, attributes, primaryLocalId);
+    attributes.replace(PID_STATUS, new FdoAttribute(PID_STATUS, CREATED, PidStatus.DRAFT));
+    attributes.replace(LOC, new FdoAttribute(LOC, CREATED,
+        Objects.requireNonNullElse(userLocations, "<locations></locations>")));
+    return new FdoRecord(HANDLE, fdoType, attributes, primaryLocalId, attributes.values());
   }
 
   public static FdoRecord givenUpdatedFdoRecord(FdoType fdoType, String primaryLocalId)
       throws Exception {
-    var attributes = new ArrayList<>(genAttributes(fdoType, HANDLE, UPDATED));
-    var attributesWithUpdatedTimeStamp = attributes.stream().map(attribute -> {
-      var updatedAttribute = getUpdatedAttribute(fdoType);
-      if (attribute.getIndex()
-          == updatedAttribute.index()) { // Updated value needs updated timestamp
-        if (updatedAttribute.equals(LOC)) {
-          var updatedLoc = LOC_XML.replace(LOC_TESTVAL, UPDATED_VALUE);
-          return new FdoAttribute(updatedAttribute, UPDATED, updatedLoc);
-        }
-        return new FdoAttribute(updatedAttribute, UPDATED, UPDATED_VALUE);
-      }
-      if (attribute.getIndex() == FDO_PROFILE.index()) {
-        return new FdoAttribute(FDO_PROFILE, CREATED, attribute.getValue());
-      }
-      if (attribute.getIndex() == FDO_RECORD_LICENSE_ID.index()) {
-        return new FdoAttribute(FDO_RECORD_LICENSE_ID, CREATED, attribute.getValue());
-      }
-      if (attribute.getIndex() == FDO_RECORD_LICENSE_NAME.index()) {
-        return new FdoAttribute(FDO_RECORD_LICENSE_NAME, CREATED, attribute.getValue());
-      }
-      if (attribute.getIndex() == DIGITAL_OBJECT_TYPE.index()) {
-        return new FdoAttribute(DIGITAL_OBJECT_TYPE, CREATED, attribute.getValue());
-      }
-      if (attribute.getIndex() == PID_ISSUER.index()) {
-        return new FdoAttribute(PID_ISSUER, CREATED, attribute.getValue());
-      }
-      if (attribute.getIndex() == PID_ISSUER_NAME.index()) {
-        return new FdoAttribute(PID_ISSUER_NAME, CREATED, attribute.getValue());
-      }
-      if (attribute.getIndex() == ISSUED_FOR_AGENT.index()) {
-        return new FdoAttribute(ISSUED_FOR_AGENT, CREATED, attribute.getValue());
-      }
-      if (attribute.getIndex() == ISSUED_FOR_AGENT_NAME.index()) {
-        return new FdoAttribute(ISSUED_FOR_AGENT_NAME, CREATED, attribute.getValue());
-      }
-      if (attribute.getIndex() == DIGITAL_OBJECT_NAME.index()) {
-        return new FdoAttribute(DIGITAL_OBJECT_NAME, CREATED, attribute.getValue());
-      }
-      if (attribute.getIndex() == PID.index()) {
-        return new FdoAttribute(PID, CREATED, attribute.getValue());
-      }
-      if (attribute.getIndex() == PID_RECORD_ISSUE_DATE.index()) {
-        return new FdoAttribute(PID_RECORD_ISSUE_DATE, CREATED, attribute.getValue());
-      }
-      if (attribute.getIndex() == PID_RECORD_ISSUE_NUMBER.index()) {
-        return new FdoAttribute(PID_RECORD_ISSUE_NUMBER, UPDATED, "2");
-      }
-      if (attribute.getIndex() == PID_STATUS.index()) {
-        return new FdoAttribute(PID_STATUS, UPDATED, attribute.getValue());
-      }
-      if (attribute.getIndex() == HS_ADMIN.index()) {
-        return new FdoAttribute(CREATED, PREFIX);
-      }
-      return attribute;
-    }).toList();
-    return new FdoRecord(HANDLE, fdoType, attributesWithUpdatedTimeStamp, primaryLocalId);
+    var attributes = new EnumMap<>(genAttributes(fdoType, HANDLE, CREATED));
+    var updatedAttribute = getUpdatedAttribute(fdoType);
+    var result = attributes.entrySet().stream()
+        .map(attribute -> {
+          if (GENERATED_KEYS.contains(attribute.getKey())) {
+            return Map.entry(attribute.getKey(), attribute.getValue());
+          }
+          if (attribute.getKey().equals(updatedAttribute)) {
+            if (updatedAttribute.equals(LOC)) {
+              var updatedLoc = LOC_XML.replace(LOC_TESTVAL, UPDATED_VALUE);
+              return Map.entry(LOC, new FdoAttribute(updatedAttribute, UPDATED, updatedLoc));
+            }
+            return Map.entry(updatedAttribute,
+                new FdoAttribute(updatedAttribute, UPDATED, UPDATED_VALUE));
+          }
+          if (attribute.getKey().equals(PID_RECORD_ISSUE_NUMBER)) {
+            return Map.entry(PID_RECORD_ISSUE_NUMBER,
+                new FdoAttribute(PID_RECORD_ISSUE_NUMBER, UPDATED, "2"));
+          }
+          return Map.entry(attribute.getKey(),
+              new FdoAttribute(attribute.getKey(), UPDATED, attribute.getValue().getValue()));
+        })
+        .collect(Collectors.toMap(
+            Map.Entry::getKey,
+            Map.Entry::getValue
+        ));
+
+    return new FdoRecord(HANDLE, fdoType, result, primaryLocalId, result.values());
   }
 
   private static FdoProfile getUpdatedAttribute(FdoType fdoType) {
@@ -340,207 +330,238 @@ public class TestUtils {
       }
       default -> throw new IllegalStateException();
     }
-
   }
 
   public static FdoRecord givenDoiFdoRecord(String handle) throws Exception {
-    return new FdoRecord(handle, FdoType.DOI,
-        genDoiRecordAttributes(handle, CREATED, FdoType.DOI), null);
+    var attributes = genDoiRecordAttributes(handle, CREATED, FdoType.DOI);
+    return new FdoRecord(handle, FdoType.DOI, attributes, null, attributes.values());
   }
 
-  public static List<FdoAttribute> genDoiRecordAttributes(String handle, Instant timestamp,
+  public static Map<FdoProfile, FdoAttribute> genDoiRecordAttributes(String handle,
+      Instant timestamp,
       FdoType type) throws Exception {
     var fdoRecord = genHandleRecordAttributes(handle, timestamp, type);
     // 40: issuedForAgent
-    fdoRecord.add(new FdoAttribute(ISSUED_FOR_AGENT, timestamp, ISSUED_FOR_AGENT_TESTVAL));
+    fdoRecord.put(ISSUED_FOR_AGENT,
+        new FdoAttribute(ISSUED_FOR_AGENT, timestamp, ISSUED_FOR_AGENT_TESTVAL));
     // 41: issuedForAgentName
-    fdoRecord.add(
+    fdoRecord.put(ISSUED_FOR_AGENT_NAME,
         new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp, ISSUED_FOR_AGENT_NAME_TESTVAL));
     // 42: referentName
-    fdoRecord.add(new FdoAttribute(REFERENT_NAME, timestamp, REFERENT_NAME_TESTVAL));
+    fdoRecord.put(REFERENT_NAME, new FdoAttribute(REFERENT_NAME, timestamp, REFERENT_NAME_TESTVAL));
     return fdoRecord;
   }
 
   public static FdoRecord givenDigitalSpecimenFdoRecord(String handle) throws Exception {
-    return new FdoRecord(handle, FdoType.DIGITAL_SPECIMEN,
-        genDigitalSpecimenAttributes(handle, CREATED),
-        NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL);
+    var attributes = genDigitalSpecimenAttributes(handle, CREATED);
+    return new FdoRecord(handle, FdoType.DIGITAL_SPECIMEN, attributes,
+        NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, attributes.values());
   }
 
-  public static List<FdoAttribute> genDigitalSpecimenAttributes(String handle, Instant timestamp)
+  public static Map<FdoProfile, FdoAttribute> genDigitalSpecimenAttributes(String handle,
+      Instant timestamp)
       throws Exception {
-    List<FdoAttribute> fdoRecord = genHandleRecordAttributes(handle, timestamp,
+    var fdoRecord = genHandleRecordAttributes(handle, timestamp,
         FdoType.DIGITAL_SPECIMEN);
-    fdoRecord.add(new FdoAttribute(ISSUED_FOR_AGENT, timestamp, ISSUED_FOR_AGENT_TESTVAL));
-    fdoRecord.add(
+    fdoRecord.put(ISSUED_FOR_AGENT,
+        new FdoAttribute(ISSUED_FOR_AGENT, timestamp, ISSUED_FOR_AGENT_TESTVAL));
+    fdoRecord.put(ISSUED_FOR_AGENT_NAME,
         new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp, ISSUED_FOR_AGENT_NAME_TESTVAL));
-    fdoRecord.add(new FdoAttribute(REFERENT_NAME, timestamp, REFERENT_NAME_TESTVAL));
-    fdoRecord.add(new FdoAttribute(SPECIMEN_HOST, timestamp, SPECIMEN_HOST_TESTVAL));
-    fdoRecord.add(new FdoAttribute(SPECIMEN_HOST_NAME, timestamp, SPECIMEN_HOST_NAME_TESTVAL));
-    fdoRecord.add(new FdoAttribute(NORMALISED_SPECIMEN_OBJECT_ID, timestamp,
-        NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL));
-    fdoRecord.add(new FdoAttribute(OTHER_SPECIMEN_IDS, timestamp, null));
-    fdoRecord.add(new FdoAttribute(TOPIC_ORIGIN, timestamp, null));
-    fdoRecord.add(new FdoAttribute(TOPIC_DOMAIN, timestamp, null));
-    fdoRecord.add(
+    fdoRecord.put(REFERENT_NAME, new FdoAttribute(REFERENT_NAME, timestamp, REFERENT_NAME_TESTVAL));
+    fdoRecord.put(SPECIMEN_HOST, new FdoAttribute(SPECIMEN_HOST, timestamp, SPECIMEN_HOST_TESTVAL));
+    fdoRecord.put(SPECIMEN_HOST_NAME,
+        new FdoAttribute(SPECIMEN_HOST_NAME, timestamp, SPECIMEN_HOST_NAME_TESTVAL));
+    fdoRecord.put(NORMALISED_SPECIMEN_OBJECT_ID,
+        new FdoAttribute(NORMALISED_SPECIMEN_OBJECT_ID, timestamp,
+            NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL));
+    fdoRecord.put(OTHER_SPECIMEN_IDS, new FdoAttribute(OTHER_SPECIMEN_IDS, timestamp, null));
+    fdoRecord.put(TOPIC_ORIGIN, new FdoAttribute(TOPIC_ORIGIN, timestamp, null));
+    fdoRecord.put(TOPIC_DOMAIN, new FdoAttribute(TOPIC_DOMAIN, timestamp, null));
+    fdoRecord.put(TOPIC_DISCIPLINE,
         new FdoAttribute(TOPIC_DISCIPLINE, timestamp, null));
-    fdoRecord.add(
+    fdoRecord.put(TOPIC_CATEGORY,
         new FdoAttribute(TOPIC_CATEGORY, timestamp, null));
-    fdoRecord.add(new FdoAttribute(LIVING_OR_PRESERVED, timestamp, null));
-    fdoRecord.add(
+    fdoRecord.put(LIVING_OR_PRESERVED, new FdoAttribute(LIVING_OR_PRESERVED, timestamp, null));
+    fdoRecord.put(MATERIAL_SAMPLE_TYPE, new FdoAttribute(MATERIAL_SAMPLE_TYPE, timestamp, null));
+    fdoRecord.put(MARKED_AS_TYPE,
         new FdoAttribute(MARKED_AS_TYPE, timestamp, null));
-    fdoRecord.add(new FdoAttribute(CATALOG_IDENTIFIER, timestamp, CATALOG_ID_TEST));
+    fdoRecord.put(CATALOG_IDENTIFIER,
+        new FdoAttribute(CATALOG_IDENTIFIER, timestamp, CATALOG_ID_TEST));
     return fdoRecord;
   }
 
-  public static FdoRecord givenDigitalMediaFdoRecord(String handle) throws Exception {
-    return new FdoRecord(handle, DIGITAL_MEDIA,
-        genDigitalMediaAttributes(handle, CREATED),
-        PRIMARY_MEDIA_ID_TESTVAL);
+  public static FdoRecord givenMongoResponse(String handle, FdoType fdoType, String primaryLocalId)
+      throws Exception {
+    var attributes = genAttributes(fdoType, handle);
+    return new FdoRecord(handle, fdoType, Collections.emptyMap(), primaryLocalId,
+        new ArrayList<>(attributes.values()));
   }
 
-  public static List<FdoAttribute> genDigitalMediaAttributes(String handle,
+
+  public static FdoRecord givenDigitalMediaFdoRecord(String handle) throws Exception {
+    var attributes = genDigitalMediaAttributes(handle, CREATED);
+    return new FdoRecord(handle, DIGITAL_MEDIA, attributes, PRIMARY_MEDIA_ID_TESTVAL,
+        attributes.values());
+  }
+
+  public static Map<FdoProfile, FdoAttribute> genDigitalMediaAttributes(String handle,
       Instant timestamp) throws Exception {
     var fdoRecord = genHandleRecordAttributes(handle, timestamp, FdoType.DIGITAL_MEDIA);
     // 40: issuedForAgent
-    fdoRecord.add(new FdoAttribute(ISSUED_FOR_AGENT, timestamp, ISSUED_FOR_AGENT_TESTVAL));
+    fdoRecord.put(ISSUED_FOR_AGENT,
+        new FdoAttribute(ISSUED_FOR_AGENT, timestamp, ISSUED_FOR_AGENT_TESTVAL));
     // 41: issuedForAgentName
-    fdoRecord.add(
+    fdoRecord.put(ISSUED_FOR_AGENT_NAME,
         new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp, ISSUED_FOR_AGENT_NAME_TESTVAL));
-    fdoRecord.add(new FdoAttribute(REFERENT_NAME, timestamp, REFERENT_NAME_TESTVAL));
+    fdoRecord.put(REFERENT_NAME, new FdoAttribute(REFERENT_NAME, timestamp, REFERENT_NAME_TESTVAL));
     // 43: primaryReferentType
-    fdoRecord.add(new FdoAttribute(MEDIA_HOST, timestamp, MEDIA_HOST_TESTVAL));
-    fdoRecord.add(new FdoAttribute(MEDIA_HOST_NAME, timestamp, MEDIA_HOST_NAME_TESTVAL));
-    fdoRecord.add(new FdoAttribute(LINKED_DO_PID, timestamp, LINKED_DO_PID_TESTVAL));
-    fdoRecord.add(new FdoAttribute(LINKED_DO_TYPE, timestamp, DIGITAL_SPECIMEN));
-    fdoRecord.add(new FdoAttribute(PRIMARY_MEDIA_ID, timestamp, PRIMARY_MEDIA_ID_TESTVAL));
-    fdoRecord.add(
+    fdoRecord.put(MEDIA_HOST, new FdoAttribute(MEDIA_HOST, timestamp, MEDIA_HOST_TESTVAL));
+    fdoRecord.put(MEDIA_HOST_NAME,
+        new FdoAttribute(MEDIA_HOST_NAME, timestamp, MEDIA_HOST_NAME_TESTVAL));
+    fdoRecord.put(LINKED_DO_PID, new FdoAttribute(LINKED_DO_PID, timestamp, LINKED_DO_PID_TESTVAL));
+    fdoRecord.put(LINKED_DO_TYPE, new FdoAttribute(LINKED_DO_TYPE, timestamp, DIGITAL_SPECIMEN));
+    fdoRecord.put(PRIMARY_MEDIA_ID,
+        new FdoAttribute(PRIMARY_MEDIA_ID, timestamp, PRIMARY_MEDIA_ID_TESTVAL));
+    fdoRecord.put(PRIMARY_MEDIA_ID_TYPE,
         new FdoAttribute(PRIMARY_MEDIA_ID_TYPE, timestamp, null));
-    fdoRecord.add(
+    fdoRecord.put(PRIMARY_MEDIA_ID_NAME,
         new FdoAttribute(PRIMARY_MEDIA_ID_NAME, timestamp, null));
-    fdoRecord.add(new FdoAttribute(MEDIA_TYPE, timestamp, null));
-    fdoRecord.add(new FdoAttribute(MIME_TYPE, timestamp, null));
-    fdoRecord.add(new FdoAttribute(LICENSE_NAME, timestamp, null));
-    fdoRecord.add(new FdoAttribute(LICENSE_ID, timestamp, null));
-    fdoRecord.add(new FdoAttribute(RIGHTS_HOLDER_NAME, timestamp, SPECIMEN_HOST_NAME_TESTVAL));
-    fdoRecord.add(new FdoAttribute(RIGHTS_HOLDER_PID, timestamp, SPECIMEN_HOST_TESTVAL));
+    fdoRecord.put(MEDIA_TYPE, new FdoAttribute(MEDIA_TYPE, timestamp, null));
+    fdoRecord.put(MIME_TYPE, new FdoAttribute(MIME_TYPE, timestamp, null));
+    fdoRecord.put(LICENSE_NAME, new FdoAttribute(LICENSE_NAME, timestamp, null));
+    fdoRecord.put(LICENSE_ID, new FdoAttribute(LICENSE_ID, timestamp, null));
+    fdoRecord.put(RIGHTS_HOLDER_NAME,
+        new FdoAttribute(RIGHTS_HOLDER_NAME, timestamp, SPECIMEN_HOST_NAME_TESTVAL));
+    fdoRecord.put(RIGHTS_HOLDER_PID,
+        new FdoAttribute(RIGHTS_HOLDER_PID, timestamp, SPECIMEN_HOST_TESTVAL));
     return fdoRecord;
   }
 
   public static FdoRecord givenAnnotationFdoRecord(String handle, boolean includeHash)
       throws Exception {
+    var attributes = genAnnotationAttributes(handle, includeHash);
     var localId = includeHash ? ANNOTATION_HASH_TESTVAL.toString() : null;
-    return new FdoRecord(handle, FdoType.ANNOTATION, genAnnotationAttributes(handle, includeHash),
-        localId);
+    return new FdoRecord(handle, FdoType.ANNOTATION, attributes, localId, attributes.values());
   }
 
   public static FdoRecord givenMasFdoRecord(String handle) throws Exception {
-    return new FdoRecord(handle, FdoType.MAS, genMasAttributes(handle, CREATED), null);
+    var attributes = genMasAttributes(handle, CREATED);
+    return new FdoRecord(handle, FdoType.MAS, attributes, null, attributes.values());
   }
 
   public static FdoRecord givenSourceSystemFdoRecord(String handle) throws Exception {
-    return new FdoRecord(handle, FdoType.SOURCE_SYSTEM, genSourceSystemAttributes(handle, CREATED),
-        null);
+    var attributes = genSourceSystemAttributes(handle, CREATED);
+    return new FdoRecord(handle, FdoType.SOURCE_SYSTEM, attributes, null, attributes.values());
   }
 
   public static FdoRecord givenOrganisationFdoRecord(String handle) throws Exception {
-    return new FdoRecord(handle, FdoType.ORGANISATION,
-        genOrganisationAttributes(handle, CREATED), null);
+    var attributes = genOrganisationAttributes(handle, CREATED);
+    return new FdoRecord(handle, FdoType.ORGANISATION, attributes, null, attributes.values());
   }
 
   public static FdoRecord givenDataMappingFdoRecord(String handle) throws Exception {
-    return new FdoRecord(handle, FdoType.DATA_MAPPING, genMappingAttributes(handle, CREATED), null);
+    var attributes = genMappingAttributes(handle, CREATED);
+    return new FdoRecord(handle, FdoType.DATA_MAPPING, attributes, null, attributes.values());
   }
 
   public static FdoRecord givenTombstoneFdoRecord() throws Exception {
-    return new FdoRecord(HANDLE, FdoType.HANDLE,
-        genTombstoneAttributes(givenTombstoneRecordRequestObject()), null);
+    var attributes = genTombstoneAttributes(givenTombstoneRecordRequestObject());
+    return new FdoRecord(HANDLE, FdoType.HANDLE, attributes, null, attributes.values());
   }
 
-  public static List<FdoAttribute> genAnnotationAttributes(String handle, boolean includeHash)
+  public static Map<FdoProfile, FdoAttribute> genAnnotationAttributes(String handle,
+      boolean includeHash)
       throws Exception {
     return genAnnotationAttributes(handle, CREATED, includeHash);
   }
 
-  public static List<FdoAttribute> genAnnotationAttributes(String handle, Instant timestamp,
+  public static Map<FdoProfile, FdoAttribute> genAnnotationAttributes(String handle,
+      Instant timestamp,
       boolean includeHash) throws Exception {
     var fdoRecord = genHandleRecordAttributes(handle, timestamp, FdoType.ANNOTATION);
     // 500 TargetPid
-    fdoRecord.add(new FdoAttribute(TARGET_PID, timestamp, TARGET_DOI_TESTVAL));
+    fdoRecord.put(TARGET_PID, new FdoAttribute(TARGET_PID, timestamp, TARGET_DOI_TESTVAL));
     // 501 TargetType
-    fdoRecord.add(new FdoAttribute(TARGET_TYPE, timestamp, TARGET_TYPE_TESTVAL));
+    fdoRecord.put(TARGET_TYPE, new FdoAttribute(TARGET_TYPE, timestamp, TARGET_TYPE_TESTVAL));
     // 502 motivation
-    fdoRecord.add(new FdoAttribute(MOTIVATION, timestamp, MOTIVATION_TESTVAL));
+    fdoRecord.put(MOTIVATION, new FdoAttribute(MOTIVATION, timestamp, MOTIVATION_TESTVAL));
     // 503 AnnotationHash
     if (includeHash) {
-      fdoRecord.add(
+      fdoRecord.put(ANNOTATION_HASH,
           new FdoAttribute(ANNOTATION_HASH, timestamp, ANNOTATION_HASH_TESTVAL));
     } else {
-      fdoRecord.add(new FdoAttribute(ANNOTATION_HASH, timestamp, null));
+      fdoRecord.put(ANNOTATION_HASH, new FdoAttribute(ANNOTATION_HASH, timestamp, null));
     }
     return fdoRecord;
   }
 
-  public static List<FdoAttribute> genMasAttributes(String handle, Instant timestamp)
+  public static Map<FdoProfile, FdoAttribute> genMasAttributes(String handle, Instant timestamp)
       throws Exception {
     var fdoRecord = genHandleRecordAttributes(handle, timestamp, FdoType.MAS);
-    fdoRecord.add(new FdoAttribute(MAS_NAME, timestamp, MAS_NAME_TESTVAL));
+    fdoRecord.put(MAS_NAME, new FdoAttribute(MAS_NAME, timestamp, MAS_NAME_TESTVAL));
     return fdoRecord;
   }
 
-  public static List<FdoAttribute> genMappingAttributes(String handle, Instant timestamp)
+  public static Map<FdoProfile, FdoAttribute> genMappingAttributes(String handle, Instant timestamp)
       throws Exception {
     var fdoRecord = genHandleRecordAttributes(handle, timestamp, FdoType.DATA_MAPPING);
     // 500 subjectDigitalObjectId
-    fdoRecord.add(new FdoAttribute(SOURCE_DATA_STANDARD, timestamp, SOURCE_DATA_STANDARD_TESTVAL));
+    fdoRecord.put(SOURCE_DATA_STANDARD,
+        new FdoAttribute(SOURCE_DATA_STANDARD, timestamp, SOURCE_DATA_STANDARD_TESTVAL));
     return fdoRecord;
   }
 
-  public static List<FdoAttribute> genSourceSystemAttributes(String handle, Instant timestamp)
+  public static Map<FdoProfile, FdoAttribute> genSourceSystemAttributes(String handle,
+      Instant timestamp)
       throws Exception {
     var fdoRecord = genHandleRecordAttributes(handle, timestamp, FdoType.SOURCE_SYSTEM);
     // 600 hostInstitution
-    fdoRecord.add(new FdoAttribute(SOURCE_SYSTEM_NAME, timestamp, SPECIMEN_HOST_TESTVAL));
+    fdoRecord.put(SOURCE_SYSTEM_NAME,
+        new FdoAttribute(SOURCE_SYSTEM_NAME, timestamp, SPECIMEN_HOST_TESTVAL));
     return fdoRecord;
   }
 
-  public static List<FdoAttribute> genOrganisationAttributes(String handle, Instant timestamp)
+  public static Map<FdoProfile, FdoAttribute> genOrganisationAttributes(String handle,
+      Instant timestamp)
       throws Exception {
     var fdoRecord = genHandleRecordAttributes(handle, timestamp, FdoType.ORGANISATION);
     // 40: issuedForAgent
-    fdoRecord.add(new FdoAttribute(ISSUED_FOR_AGENT, timestamp, ISSUED_FOR_AGENT_TESTVAL));
+    fdoRecord.put(ISSUED_FOR_AGENT,
+        new FdoAttribute(ISSUED_FOR_AGENT, timestamp, ISSUED_FOR_AGENT_TESTVAL));
     // 41: issuedForAgentName
-    fdoRecord.add(
+    fdoRecord.put(ISSUED_FOR_AGENT_NAME,
         new FdoAttribute(ISSUED_FOR_AGENT_NAME, timestamp, ISSUED_FOR_AGENT_NAME_TESTVAL));
     // 42: referentName
-    fdoRecord.add(new FdoAttribute(REFERENT_NAME, timestamp, REFERENT_NAME_TESTVAL));
+    fdoRecord.put(REFERENT_NAME, new FdoAttribute(REFERENT_NAME, timestamp, REFERENT_NAME_TESTVAL));
     // 800 OrganisationIdentifier
-    fdoRecord.add(new FdoAttribute(ORGANISATION_ID, timestamp, SPECIMEN_HOST_TESTVAL));
+    fdoRecord.put(ORGANISATION_ID,
+        new FdoAttribute(ORGANISATION_ID, timestamp, SPECIMEN_HOST_TESTVAL));
     // 801 OrganisationIdentifier
-    fdoRecord.add(new FdoAttribute(ORGANISATION_ID_TYPE, timestamp, PTR_TYPE_DOI));
+    fdoRecord.put(ORGANISATION_ID_TYPE,
+        new FdoAttribute(ORGANISATION_ID_TYPE, timestamp, PTR_TYPE_DOI));
     // 802 OrganisationName
-    fdoRecord.add(new FdoAttribute(ORGANISATION_NAME, timestamp, SPECIMEN_HOST_NAME_TESTVAL));
+    fdoRecord.put(ORGANISATION_NAME,
+        new FdoAttribute(ORGANISATION_NAME, timestamp, SPECIMEN_HOST_NAME_TESTVAL));
     return fdoRecord;
   }
 
-  public static List<FdoAttribute> genTombstoneAttributes(TombstoneRequestAttributes request)
+  public static Map<FdoProfile, FdoAttribute> genTombstoneAttributes(
+      TombstoneRequestAttributes request)
       throws Exception {
     var fdoRecord = genHandleRecordAttributes(HANDLE, CREATED, FdoType.HANDLE);
-    fdoRecord.add(new FdoAttribute(TOMBSTONED_TEXT, UPDATED, request.getTombstoneText()));
-    fdoRecord.set(fdoRecord.indexOf(new FdoAttribute(PID_RECORD_ISSUE_NUMBER, CREATED, "1")),
+    fdoRecord.put(TOMBSTONED_TEXT,
+        new FdoAttribute(TOMBSTONED_TEXT, UPDATED, request.getTombstoneText()));
+    fdoRecord.replace(PID_RECORD_ISSUE_NUMBER,
         new FdoAttribute(PID_RECORD_ISSUE_NUMBER, UPDATED, "2"));
-    fdoRecord.set(fdoRecord.indexOf(new FdoAttribute(PID_STATUS, CREATED, PidStatus.ACTIVE)),
-        new FdoAttribute(PID_STATUS, UPDATED, PidStatus.TOMBSTONED));
-    // 31: hasRelatedPID
+    fdoRecord.replace(PID_STATUS, new FdoAttribute(PID_STATUS, UPDATED, PidStatus.TOMBSTONED));
     if (request.getHasRelatedPid() != null && !request.getHasRelatedPid().isEmpty()) {
-      fdoRecord.add(new FdoAttribute(HAS_RELATED_PID, UPDATED,
+      fdoRecord.put(HAS_RELATED_PID, new FdoAttribute(HAS_RELATED_PID, UPDATED,
           MAPPER.writeValueAsString(request.getHasRelatedPid())));
     } else {
-      fdoRecord.add(new FdoAttribute(HAS_RELATED_PID, UPDATED,
+      fdoRecord.put(HAS_RELATED_PID, new FdoAttribute(HAS_RELATED_PID, UPDATED,
           MAPPER.writeValueAsString(Collections.emptyList())));
     }
-    // 32: tombstonedDate
-    fdoRecord.add(new FdoAttribute(TOMBSTONED_DATE, UPDATED, UPDATE_DATE_TESTVAL));
+    fdoRecord.put(TOMBSTONED_DATE, new FdoAttribute(TOMBSTONED_DATE, UPDATED, UPDATE_DATE_TESTVAL));
     return fdoRecord;
   }
 
@@ -699,7 +720,7 @@ public class TestUtils {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
     for (String handle : handles) {
       var testDbRecord = genAttributes(recordType, handle);
-      JsonNode recordAttributes = jsonFormatFdoRecord(testDbRecord);
+      JsonNode recordAttributes = jsonFormatFdoRecord(testDbRecord.values());
       var pidLink = new JsonApiLinks(domain + handle);
       dataNodes.add(
           new JsonApiDataLinks(handle, recordType.getDigitalObjectType(), recordAttributes,
@@ -714,7 +735,7 @@ public class TestUtils {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
     for (var handle : handles) {
       var testDbRecord = genAttributes(fdoType, handle);
-      JsonNode recordAttributes = jsonFormatFdoRecord(testDbRecord);
+      JsonNode recordAttributes = jsonFormatFdoRecord(testDbRecord.values());
       var pidLink = new JsonApiLinks(HANDLE_DOMAIN + handle);
       fdoType = fdoType == TOMBSTONE ? FdoType.HANDLE : fdoType;
       dataNodes.add(
@@ -726,7 +747,7 @@ public class TestUtils {
 
   public static JsonApiWrapperWrite givenWriteResponseFull(
       FdoRecord fdoRecord) {
-    JsonNode recordAttributes = jsonFormatFdoRecord(fdoRecord.attributes());
+    JsonNode recordAttributes = jsonFormatFdoRecord(fdoRecord.values());
     var pidLink = new JsonApiLinks(HANDLE_DOMAIN + HANDLE);
     var dataNodes = List.of(
         new JsonApiDataLinks(HANDLE, fdoRecord.fdoType().getDigitalObjectType(), recordAttributes,
@@ -737,29 +758,29 @@ public class TestUtils {
   public static JsonApiWrapperWrite givenWriteResponseIdsOnly(
       List<FdoRecord> fdoRecords, FdoType fdoType, String domain) {
     List<JsonApiDataLinks> dataNodes = new ArrayList<>();
-    List<FdoAttribute> fdoSublist;
+    Collection<FdoAttribute> fdoSublist;
     for (var fdoRecord : fdoRecords) {
       var pidLink = new JsonApiLinks(domain + fdoRecord.handle());
       JsonNode recordAttributes;
       switch (fdoType) {
         case ANNOTATION -> {
           if (fdoRecord.primaryLocalId() == null) {
-            fdoSublist = fdoRecord.attributes();
+            fdoSublist = fdoRecord.values();
             recordAttributes = jsonFormatFdoRecord(fdoSublist);
           } else {
-            fdoSublist = List.of(getField(fdoRecord.attributes(), ANNOTATION_HASH));
+            fdoSublist = List.of(fdoRecord.attributes().get(ANNOTATION_HASH));
             recordAttributes = jsonFormatFdoRecord(fdoSublist);
           }
         }
         case DIGITAL_SPECIMEN -> {
-          fdoSublist = List.of(getField(fdoRecord.attributes(), NORMALISED_SPECIMEN_OBJECT_ID));
+          fdoSublist = List.of(fdoRecord.attributes().get(NORMALISED_SPECIMEN_OBJECT_ID));
           recordAttributes = jsonFormatFdoRecord(fdoSublist);
         }
         case DIGITAL_MEDIA -> {
           recordAttributes = buildMediaWriteResponseJsonNode(fdoRecord);
         }
         default -> {
-          fdoSublist = fdoRecord.attributes();
+          fdoSublist = fdoRecord.values();
           recordAttributes = jsonFormatFdoRecord(fdoSublist);
         }
       }
@@ -773,15 +794,17 @@ public class TestUtils {
   public static JsonNode buildMediaWriteResponseJsonNode(FdoRecord fdoRecord) {
     return MAPPER.createObjectNode()
         .set("digitalMediaKey", MAPPER.createObjectNode()
-            .put("digitalSpecimenId", getField(fdoRecord.attributes(), LINKED_DO_PID).getValue())
-            .put("mediaUrl", getField(fdoRecord.attributes(), PRIMARY_MEDIA_ID).getValue()));
+            .put("digitalSpecimenId", (fdoRecord.attributes().get(LINKED_DO_PID).getValue()))
+            .put("mediaUrl", fdoRecord.attributes().get(PRIMARY_MEDIA_ID).getValue()));
   }
 
-  public static List<FdoAttribute> genAttributes(FdoType fdoType, String handle) throws Exception {
+  public static Map<FdoProfile, FdoAttribute> genAttributes(FdoType fdoType, String handle)
+      throws Exception {
     return genAttributes(fdoType, handle, CREATED);
   }
 
-  public static List<FdoAttribute> genAttributes(FdoType fdoType, String handle, Instant timestamp)
+  public static Map<FdoProfile, FdoAttribute> genAttributes(FdoType fdoType, String handle,
+      Instant timestamp)
       throws Exception {
     switch (fdoType) {
       case DOI -> {
@@ -843,7 +866,7 @@ public class TestUtils {
   }
 
   // Handle Attributes as ObjectNode
-  public static JsonNode jsonFormatFdoRecord(List<FdoAttribute> dbRecord) {
+  public static JsonNode jsonFormatFdoRecord(Collection<FdoAttribute> dbRecord) {
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode rootNode = mapper.createObjectNode();
     for (var row : dbRecord) {

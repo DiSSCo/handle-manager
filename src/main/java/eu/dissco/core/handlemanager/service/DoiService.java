@@ -369,7 +369,7 @@ public class DoiService extends PidService {
   private void publishToDataCite(List<FdoRecord> fdoRecords, EventType eventType)
       throws UnprocessableEntityException {
     var eventList = fdoRecords.stream()
-        .map(fdoRecord -> new DataCiteEvent(jsonFormatSingleRecord(fdoRecord.attributes()),
+        .map(fdoRecord -> new DataCiteEvent(jsonFormatSingleRecord(fdoRecord.values()),
             eventType)).toList();
     for (var event : eventList) {
       try {

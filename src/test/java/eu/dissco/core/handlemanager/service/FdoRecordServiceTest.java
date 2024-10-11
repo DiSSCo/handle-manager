@@ -30,7 +30,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.UPDATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genAnnotationAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneAttributes;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.getField;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotation;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationUpdated;
@@ -80,9 +79,10 @@ import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.schema.OrganisationRequestAttributes;
 import eu.dissco.core.handlemanager.schema.OtherspecimenIds;
 import eu.dissco.core.handlemanager.schema.TombstoneRequestAttributes;
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -131,7 +131,7 @@ class FdoRecordServiceTest {
     var result = fdoRecordService.prepareNewHandleRecord(request, HANDLE, CREATED, false);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isNull();
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -189,7 +189,7 @@ class FdoRecordServiceTest {
         previousVersion, true);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isNull();
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -199,14 +199,14 @@ class FdoRecordServiceTest {
   void testPrepareUpdatedHandleRecordReviveTombstone() throws Exception {
     // Given
     var previousVersion = givenTombstoneFdoRecord();
-    var expectedAttributes = new ArrayList<>(
+    var expectedAttributes = new EnumMap<>(
         givenUpdatedFdoRecord(FdoType.HANDLE, null).attributes());
-    expectedAttributes.set(
-        expectedAttributes.indexOf(getField(expectedAttributes, PID_RECORD_ISSUE_NUMBER)),
+    expectedAttributes.replace(PID_RECORD_ISSUE_NUMBER,
         new FdoAttribute(PID_RECORD_ISSUE_NUMBER, UPDATED, "3"));
-    expectedAttributes.set(expectedAttributes.indexOf(getField(expectedAttributes, PID_STATUS)),
+    expectedAttributes.replace(PID_STATUS,
         new FdoAttribute(PID_STATUS, UPDATED, PidStatus.ACTIVE));
-    var expected = new FdoRecord(HANDLE, FdoType.HANDLE, expectedAttributes, null);
+    var expected = new FdoRecord(HANDLE, FdoType.HANDLE, expectedAttributes, null,
+        expectedAttributes.values());
     var request = givenHandleKernelUpdated();
 
     // When
@@ -214,7 +214,7 @@ class FdoRecordServiceTest {
         previousVersion, true);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isNull();
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -224,12 +224,12 @@ class FdoRecordServiceTest {
   void testPrepareUpdatedHandleRecordNoIncrement() throws Exception {
     // Given
     var previousVersion = givenHandleFdoRecord(HANDLE);
-    var expectedAttributes = new ArrayList<>(
+    var expectedAttributes = new EnumMap<>(
         givenUpdatedFdoRecord(FdoType.HANDLE, null).attributes());
-    expectedAttributes.set(expectedAttributes.indexOf(
-            new FdoAttribute(FdoProfile.PID_RECORD_ISSUE_NUMBER, UPDATED, "2")),
+    expectedAttributes.replace(PID_RECORD_ISSUE_NUMBER,
         new FdoAttribute(FdoProfile.PID_RECORD_ISSUE_NUMBER, CREATED, "1"));
-    var expected = new FdoRecord(HANDLE, FdoType.HANDLE, expectedAttributes, null);
+    var expected = new FdoRecord(HANDLE, FdoType.HANDLE, expectedAttributes, null,
+        expectedAttributes.values());
     var request = givenHandleKernelUpdated();
 
     // When
@@ -237,7 +237,7 @@ class FdoRecordServiceTest {
         previousVersion, false);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isNull();
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -253,7 +253,7 @@ class FdoRecordServiceTest {
     var result = fdoRecordService.prepareNewDoiRecord(request, HANDLE, CREATED, false);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isNull();
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -269,7 +269,7 @@ class FdoRecordServiceTest {
     var result = fdoRecordService.prepareNewDoiRecord(request, HANDLE, CREATED, true);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isNull();
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -286,7 +286,7 @@ class FdoRecordServiceTest {
     var result = fdoRecordService.prepareUpdatedDoiRecord(request, UPDATED, previousVersion, true);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isNull();
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -301,7 +301,7 @@ class FdoRecordServiceTest {
     var result = fdoRecordService.prepareNewDigitalMediaRecord(request, HANDLE, CREATED, false);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -319,7 +319,7 @@ class FdoRecordServiceTest {
         previousVersion, true);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -335,7 +335,7 @@ class FdoRecordServiceTest {
     var result = fdoRecordService.prepareNewDigitalSpecimenRecord(request, HANDLE, CREATED, false);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -345,21 +345,20 @@ class FdoRecordServiceTest {
   void testPrepareNewDigitalSpecimenRecordNoOtherSpecimen() throws Exception {
     // Given
     var request = givenDigitalSpecimen().withCatalogIdentifier(null);
-    var expectedAttributes = new ArrayList<>(givenDigitalSpecimenFdoRecord(HANDLE).attributes());
-    expectedAttributes.set(
-        expectedAttributes.indexOf(getField(expectedAttributes, CATALOG_IDENTIFIER)),
+    var expectedAttributes = new EnumMap<>(givenDigitalSpecimenFdoRecord(HANDLE).attributes());
+    expectedAttributes.replace(CATALOG_IDENTIFIER,
         new FdoAttribute(CATALOG_IDENTIFIER, CREATED, null));
-    expectedAttributes.set(expectedAttributes.indexOf(getField(expectedAttributes, LOC)),
+    expectedAttributes.replace(LOC,
         new FdoAttribute(LOC, CREATED, setLocations(HANDLE, FdoType.DIGITAL_SPECIMEN, false)));
 
     var expected = new FdoRecord(HANDLE, FdoType.DIGITAL_SPECIMEN, expectedAttributes,
-        NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL);
+        NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, expectedAttributes.values());
 
     // When
     var result = fdoRecordService.prepareNewDigitalSpecimenRecord(request, HANDLE, CREATED, false);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -379,7 +378,7 @@ class FdoRecordServiceTest {
     // When
     var resultRecord = fdoRecordService.prepareNewDigitalSpecimenRecord(request, HANDLE, CREATED,
         false);
-    var result = getField(resultRecord.attributes(), LOC).getValue();
+    var result = resultRecord.attributes().get(LOC).getValue();
 
     // Then
     assertThat(result).contains(keyLoc);
@@ -398,7 +397,7 @@ class FdoRecordServiceTest {
     var result = fdoRecordService.prepareNewDigitalSpecimenRecord(request, HANDLE, CREATED, false);
 
     // Then
-    assertThat(result.attributes()).contains(expected);
+    assertThat(result.values()).contains(expected);
   }
 
   @Test
@@ -406,18 +405,18 @@ class FdoRecordServiceTest {
     // Given
     var otherSpecimenId = new OtherspecimenIds(HANDLE_ALT, "Handle", false);
     var request = givenDigitalSpecimen().withOtherSpecimenIds(List.of(otherSpecimenId));
-    var attributes = new ArrayList<>(genDigitalSpecimenAttributes(HANDLE, CREATED));
-    attributes.set(attributes.indexOf(new FdoAttribute(OTHER_SPECIMEN_IDS, CREATED, null)),
+    var attributes = new EnumMap<>(genDigitalSpecimenAttributes(HANDLE, CREATED));
+    attributes.replace(OTHER_SPECIMEN_IDS,
         new FdoAttribute(OTHER_SPECIMEN_IDS, CREATED,
             MAPPER.valueToTree(List.of(otherSpecimenId))));
     var expected = new FdoRecord(HANDLE, FdoType.DIGITAL_SPECIMEN, attributes,
-        NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL);
+        NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, attributes.values());
 
     // When
     var result = fdoRecordService.prepareNewDigitalSpecimenRecord(request, HANDLE, CREATED, false);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -436,7 +435,7 @@ class FdoRecordServiceTest {
         previousVersion, true);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -452,7 +451,7 @@ class FdoRecordServiceTest {
     var result = fdoRecordService.prepareNewAnnotationRecord(request, HANDLE, CREATED, false);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -462,19 +461,19 @@ class FdoRecordServiceTest {
   void testPrepareNewAnnotationRecordMinWithLoc() throws Exception {
     // Given
     var request = givenAnnotation(false).withLocations(List.of(LOC_TESTVAL));
-    var attributes = new ArrayList<>(genAnnotationAttributes(HANDLE, false));
+    var attributes = new EnumMap<>(genAnnotationAttributes(HANDLE, false));
 
-    attributes.set(attributes.indexOf(getField(attributes, LOC)), new FdoAttribute(LOC, CREATED,
+    attributes.replace(LOC, new FdoAttribute(LOC, CREATED,
         "<locations>"
             + "<location href=\"https://sandbox.dissco.tech/api/v1/annotations/20.5000.1025/QRS-321-ABC\" id=\"0\" view=\"JSON\" weight=\"1\"/>"
             + "<location href=\"" + LOC_TESTVAL + "\" id=\"1\" weight=\"0\"/>" + "</locations>"));
-    var expected = new FdoRecord(HANDLE, FdoType.ANNOTATION, attributes, null);
+    var expected = new FdoRecord(HANDLE, FdoType.ANNOTATION, attributes, null, attributes.values());
 
     // When
     var result = fdoRecordService.prepareNewAnnotationRecord(request, HANDLE, CREATED, false);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -491,7 +490,7 @@ class FdoRecordServiceTest {
     var result = fdoRecordService.prepareNewDigitalSpecimenRecord(request, HANDLE, CREATED, true);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -500,9 +499,9 @@ class FdoRecordServiceTest {
   @Test
   void testActivateDigitalSpecimenRecordWithUserLocations() throws Exception {
     // Given
-    var attributes = new ArrayList<>(givenDigitalSpecimenFdoRecord(HANDLE).attributes());
+    var attributes = new EnumMap<>(givenDigitalSpecimenFdoRecord(HANDLE).attributes());
 
-    attributes.set(attributes.indexOf(getField(attributes, LOC)), new FdoAttribute(LOC, UPDATED,
+    attributes.replace(LOC, new FdoAttribute(LOC, UPDATED,
         "<locations>"
             + "<location href=\"https://sandbox.dissco.tech/ds/20.5000.1025/QRS-321-ABC\" id=\"0\" view=\"HTML\" weight=\"1\"/>"
             + "<location href=\"https://sandbox.dissco.tech/api/v1/digital-specimen/20.5000.1025/QRS-321-ABC\" id=\"1\" view=\"JSON\" weight=\"0\"/>"
@@ -511,7 +510,7 @@ class FdoRecordServiceTest {
     activateRecord(attributes);
 
     var expected = new FdoRecord(HANDLE, FdoType.DIGITAL_SPECIMEN, attributes,
-        NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL);
+        NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, attributes.values());
 
     // When
     var result = fdoRecordService.activatePidRecord(
@@ -519,7 +518,7 @@ class FdoRecordServiceTest {
             LOC_XML), UPDATED);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -528,12 +527,12 @@ class FdoRecordServiceTest {
   @Test
   void testActivateDigitalSpecimenRecordWithoutOtherSpecimenIds() throws Exception {
     // Given
-    var draftAttributes = new ArrayList<>(
+    var draftAttributes = new EnumMap<>(
         givenDraftFdoRecord(FdoType.DIGITAL_SPECIMEN, NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL,
             null).attributes());
-    draftAttributes.remove(getField(draftAttributes, OTHER_SPECIMEN_IDS));
+    draftAttributes.remove(OTHER_SPECIMEN_IDS);
     var draft = new FdoRecord(HANDLE, FdoType.DIGITAL_SPECIMEN, draftAttributes,
-        NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL);
+        NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL, draftAttributes.values());
 
     var expected = new FdoAttribute(LOC, UPDATED,
         setLocations(HANDLE, FdoType.DIGITAL_SPECIMEN, true));
@@ -543,23 +542,23 @@ class FdoRecordServiceTest {
     var result = fdoRecordService.activatePidRecord(draft, UPDATED);
 
     // Then
-    assertThat(result.attributes()).contains(expected);
+    assertThat(result.values()).contains(expected);
   }
 
   @Test
   void testActivateDoi() throws Exception {
     // Given
-    var attributes = new ArrayList<>(givenDoiFdoRecord(HANDLE).attributes());
+    var attributes = new EnumMap<>(givenDoiFdoRecord(HANDLE).attributes());
     activateRecord(attributes);
 
-    var expected = new FdoRecord(HANDLE, FdoType.DOI, attributes, null);
+    var expected = new FdoRecord(HANDLE, FdoType.DOI, attributes, null, attributes.values());
 
     // When
     var result = fdoRecordService.activatePidRecord(givenDraftFdoRecord(FdoType.DOI, null, null),
         UPDATED);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -568,17 +567,18 @@ class FdoRecordServiceTest {
   @Test
   void testActivateDigitalMedia() throws Exception {
     // Given
-    var attributes = new ArrayList<>(givenDigitalMediaFdoRecord(HANDLE).attributes());
+    var attributes = new EnumMap<>(givenDigitalMediaFdoRecord(HANDLE).attributes());
     activateRecord(attributes);
 
-    var expected = new FdoRecord(HANDLE, FdoType.DIGITAL_MEDIA, attributes, null);
+    var expected = new FdoRecord(HANDLE, FdoType.DIGITAL_MEDIA, attributes, null,
+        attributes.values());
 
     // When
     var result = fdoRecordService.activatePidRecord(
         givenDraftFdoRecord(FdoType.DIGITAL_MEDIA, null, null), UPDATED);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -594,7 +594,7 @@ class FdoRecordServiceTest {
     var result = fdoRecordService.prepareNewAnnotationRecord(request, HANDLE, CREATED, false);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -612,7 +612,7 @@ class FdoRecordServiceTest {
         true);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isNull();
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -628,7 +628,7 @@ class FdoRecordServiceTest {
     var result = fdoRecordService.prepareNewMasRecord(request, HANDLE, CREATED, false);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -645,7 +645,7 @@ class FdoRecordServiceTest {
     var result = fdoRecordService.prepareUpdatedMasRecord(request, UPDATED, previousVersion, true);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isNull();
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -661,7 +661,7 @@ class FdoRecordServiceTest {
     var result = fdoRecordService.prepareNewDataMappingRecord(request, HANDLE, CREATED, false);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -679,7 +679,7 @@ class FdoRecordServiceTest {
         true);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isNull();
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -695,7 +695,7 @@ class FdoRecordServiceTest {
     var result = fdoRecordService.prepareNewSourceSystemRecord(request, HANDLE, CREATED, false);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -713,7 +713,7 @@ class FdoRecordServiceTest {
         previousVersion, true);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isNull();
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -729,7 +729,7 @@ class FdoRecordServiceTest {
     var result = fdoRecordService.prepareNewOrganisationRecord(request, HANDLE, CREATED, false);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -747,7 +747,7 @@ class FdoRecordServiceTest {
         previousVersion, true);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isNull();
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -757,13 +757,14 @@ class FdoRecordServiceTest {
   void testPrepareTombstoneRecordNoRelatedIds() throws Exception {
     var previousVersion = givenHandleFdoRecord(HANDLE);
     var request = new TombstoneRequestAttributes(TOMBSTONE_TEXT_TESTVAL, null);
-    var expected = new FdoRecord(HANDLE, FdoType.HANDLE, genTombstoneAttributes(request), null);
+    var attributes = genTombstoneAttributes(request);
+    var expected = new FdoRecord(HANDLE, FdoType.HANDLE, attributes, null, attributes.values());
 
     // When
     var result = fdoRecordService.prepareTombstoneRecord(request, UPDATED, previousVersion);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isNull();
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -773,13 +774,14 @@ class FdoRecordServiceTest {
   void testPrepareTombstoneRecordEmptyRelatedIds() throws Exception {
     var previousVersion = givenHandleFdoRecord(HANDLE);
     var request = new TombstoneRequestAttributes(TOMBSTONE_TEXT_TESTVAL, Collections.emptyList());
-    var expected = new FdoRecord(HANDLE, FdoType.HANDLE, genTombstoneAttributes(request), null);
+    var attributes = genTombstoneAttributes(request);
+    var expected = new FdoRecord(HANDLE, FdoType.HANDLE, attributes, null, attributes.values());
 
     // When
     var result = fdoRecordService.prepareTombstoneRecord(request, UPDATED, previousVersion);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isNull();
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -795,19 +797,18 @@ class FdoRecordServiceTest {
     var result = fdoRecordService.prepareTombstoneRecord(request, UPDATED, previousVersion);
 
     // Then
-    assertThat(result.attributes()).hasSameElementsAs(expected.attributes());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.primaryLocalId()).isNull();
     assertThat(result.fdoType()).isEqualTo(expected.fdoType());
     assertThat(result.handle()).isEqualTo(expected.handle());
   }
 
-  private static void activateRecord(ArrayList<FdoAttribute> attributes) {
-    attributes.set(attributes.indexOf(getField(attributes, PID_STATUS)),
-        new FdoAttribute(PID_STATUS, UPDATED, PidStatus.ACTIVE));
-    attributes.set(attributes.indexOf(getField(attributes, PID_RECORD_ISSUE_NUMBER)),
+  private static void activateRecord(Map<FdoProfile, FdoAttribute> attributes) {
+    attributes.replace(PID_STATUS, new FdoAttribute(PID_STATUS, UPDATED, PidStatus.ACTIVE));
+    attributes.replace(PID_RECORD_ISSUE_NUMBER,
         new FdoAttribute(PID_RECORD_ISSUE_NUMBER, UPDATED, "2"));
-    var locAttribute = getField(attributes, LOC);
-    attributes.set(attributes.indexOf(locAttribute),
+    var locAttribute = attributes.get(LOC);
+    attributes.replace(LOC,
         new FdoAttribute(LOC, UPDATED, locAttribute.getValue()));
   }
 
