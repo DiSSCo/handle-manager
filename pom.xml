@@ -285,7 +285,7 @@
           <mainClass>eu.dissco.core.handlemanager.maven.MavenRunner</mainClass>
           <arguments>
             <argument>
-              https://schemas.dissco.tech/schemas/fdo-profile/annotation/0.1.0/annotation-request-attributes.json
+              https://schemas.dissco.tech/schemas/fdo-profile/annotation/1.0.0/annotation-request-attributes.json
             </argument>
             <argument>
               https://schemas.dissco.tech/schemas/fdo-profile/data-mapping/1.0.0/data-mapping-request-attributes.json

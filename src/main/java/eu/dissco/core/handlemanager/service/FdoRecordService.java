@@ -26,7 +26,6 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MEDIA_HOST;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MEDIA_HOST_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MEDIA_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MIME_TYPE;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MOTIVATION;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.ORGANISATION_ID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.ORGANISATION_ID_TYPE;
@@ -50,6 +49,7 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SPECIMEN_HOST;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.SPECIMEN_HOST_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TARGET_PID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TARGET_TYPE;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TARGET_TYPE_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOMBSTONED_DATE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOMBSTONED_TEXT;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOPIC_CATEGORY;
@@ -169,8 +169,7 @@ public class FdoRecordService {
         fdoAttributes.values());
   }
 
-  private Map<FdoProfile, FdoAttribute> prepareUpdatedHandleAttributes(
-      HandleRequestAttributes request,
+  private List<FdoAttribute> prepareUpdatedHandleAttributes(HandleRequestAttributes request,
       String handle, Instant timestamp, FdoRecord previousVersion, boolean incrementVersion)
       throws InvalidRequestException {
     var updatedAttributes = new EnumMap<>(prepareHandleAttributes(request, handle, timestamp));
@@ -235,8 +234,8 @@ public class FdoRecordService {
     var fdoAttributes = prepareAnnotationAttributes(request, handle, timestamp);
     fdoAttributes.putAll(
         prepareGeneratedAttributes(handle, FdoType.ANNOTATION, timestamp, isDraft));
-    return new FdoRecord(handle, FdoType.ANNOTATION, fdoAttributes, request.getAnnotationHash(),
-        fdoAttributes.values());
+    var hash = request.getAnnotationHash() == null ? null : request.getAnnotationHash().toString();
+    return new FdoRecord(handle, FdoType.ANNOTATION, fdoAttributes, hash, fdoAttributes.values());
   }
 
   public FdoRecord prepareUpdatedAnnotationRecord(AnnotationRequestAttributes request,
@@ -244,8 +243,9 @@ public class FdoRecordService {
       throws InvalidRequestException {
     var fdoAttributes = prepareUpdatedAnnotationAttributes(request, previousVersion.handle(),
         timestamp, previousVersion, incrementVersion);
+    var hash = request.getAnnotationHash() == null ? null : request.getAnnotationHash().toString();
     return new FdoRecord(previousVersion.handle(), FdoType.ANNOTATION, fdoAttributes,
-        request.getAnnotationHash(), fdoAttributes.values());
+        hash, fdoAttributes.values());
   }
 
   public Map<FdoProfile, FdoAttribute> prepareAnnotationAttributes(
@@ -261,8 +261,15 @@ public class FdoRecordService {
     handleAttributeList.put(TARGET_TYPE,
         new FdoAttribute(TARGET_TYPE, timestamp, request.getTargetType()));
     // 502 Motivation
-    handleAttributeList.put(MOTIVATION,
-        new FdoAttribute(MOTIVATION, timestamp, request.getMotivation()));
+    String targetTypeName = null;
+    try {
+      targetTypeName = FdoType.fromString(request.getTargetType()).getDigitalObjectName();
+    } catch (IllegalArgumentException ignored) {
+      log.warn("Target type {} for pid {} is not a valid target type", request.getTargetType(),
+          handle);
+    }
+    handleAttributeList.put(TARGET_TYPE_NAME,
+        new FdoAttribute(TARGET_TYPE_NAME, timestamp, request.getMotivation()));
     // 503 Annotation Hash
     handleAttributeList.put(ANNOTATION_HASH,
         new FdoAttribute(ANNOTATION_HASH, timestamp, request.getAnnotationHash()));
