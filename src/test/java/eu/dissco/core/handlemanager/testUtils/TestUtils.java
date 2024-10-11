@@ -82,6 +82,7 @@ import eu.dissco.core.handlemanager.domain.responses.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.schema.AnnotationRequestAttributes;
 import eu.dissco.core.handlemanager.schema.DataMappingRequestAttributes;
 import eu.dissco.core.handlemanager.schema.DigitalMediaRequestAttributes;
+import eu.dissco.core.handlemanager.schema.DigitalMediaRequestAttributes.LinkedDigitalObjectType;
 import eu.dissco.core.handlemanager.schema.DigitalSpecimenRequestAttributes;
 import eu.dissco.core.handlemanager.schema.DoiKernelRequestAttributes;
 import eu.dissco.core.handlemanager.schema.HandleRequestAttributes;
@@ -479,9 +480,11 @@ public class TestUtils {
     // 500 TargetPid
     fdoRecord.put(TARGET_PID, new FdoAttribute(TARGET_PID, timestamp, TARGET_DOI_TESTVAL));
     // 501 TargetType
-    fdoRecord.put(TARGET_TYPE, new FdoAttribute(TARGET_TYPE, timestamp, DIGITAL_SPECIMEN.getDigitalObjectType()));
+    fdoRecord.put(TARGET_TYPE,
+        new FdoAttribute(TARGET_TYPE, timestamp, DIGITAL_SPECIMEN.getDigitalObjectType()));
     // 502 motivation
-    fdoRecord.put(TARGET_TYPE_NAME, new FdoAttribute(TARGET_TYPE_NAME, timestamp, DIGITAL_SPECIMEN.getDigitalObjectName()));
+    fdoRecord.put(TARGET_TYPE_NAME,
+        new FdoAttribute(TARGET_TYPE_NAME, timestamp, DIGITAL_SPECIMEN.getDigitalObjectName()));
     // 503 AnnotationHash
     if (includeHash) {
       fdoRecord.put(ANNOTATION_HASH,
@@ -625,10 +628,10 @@ public class TestUtils {
         .withMediaHost(MEDIA_HOST_TESTVAL)
         .withMediaHostName(MEDIA_HOST_NAME_TESTVAL)
         .withLinkedDigitalObjectPid(LINKED_DO_PID_TESTVAL)
-        .withLinkedDigitalObjectType(DIGITAL_SPECIMEN.toString())
-        .withRightsHolderId(SPECIMEN_HOST_TESTVAL)
+        .withLinkedDigitalObjectType(LinkedDigitalObjectType.DIGITAL_SPECIMEN)
+        .withRightsholderPid(SPECIMEN_HOST_TESTVAL)
         .withPrimaryMediaId(PRIMARY_MEDIA_ID_TESTVAL)
-        .withRightsHolderName(SPECIMEN_HOST_NAME_TESTVAL);
+        .withRightsholderName(SPECIMEN_HOST_NAME_TESTVAL);
   }
 
   public static DigitalMediaRequestAttributes givenDigitalMediaUpdated() {
@@ -686,7 +689,7 @@ public class TestUtils {
         .withTargetPid(TARGET_DOI_TESTVAL)
         .withTargetType(DIGITAL_SPECIMEN.getDigitalObjectType());
     if (includeHash) {
-      annotation.withAnnotationHash(ANNOTATION_HASH_TESTVAL);
+      annotation.withAnnotationHash(ANNOTATION_HASH_TESTVAL.toString());
     }
     return annotation;
   }
