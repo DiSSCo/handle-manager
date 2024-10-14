@@ -297,10 +297,10 @@
               https://schemas.dissco.tech/schemas/fdo-profile/digital-media/1.0.0/digital-media-request-attributes.json
             </argument>
             <argument>
-              https://schemas.dissco.tech/schemas/fdo-profile/doi-kernel/0.1.0/doi-kernel-request-attributes.json
+              https://schemas.dissco.tech/schemas/fdo-profile/doi-kernel/1.0.0/doi-kernel-request-attributes.json
             </argument>
             <argument>
-              https://schemas.dissco.tech/schemas/fdo-profile/handle-kernel/0.1.0/handle-request-attributes.json
+              https://schemas.dissco.tech/schemas/fdo-profile/handle-kernel/1.0.0/handle-request-attributes.json
             </argument>
             <argument>
               https://schemas.dissco.tech/schemas/fdo-profile/machine-annotation-service/1.0.0/machine-annotation-service-request-attributes.json

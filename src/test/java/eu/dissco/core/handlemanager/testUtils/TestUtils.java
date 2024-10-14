@@ -586,8 +586,7 @@ public class TestUtils {
 
   // Single Requests
   public static HandleRequestAttributes givenHandleKernel() {
-    return new HandleRequestAttributes()
-        .withIssuedForAgent(ISSUED_FOR_AGENT_TESTVAL);
+    return new HandleRequestAttributes();
   }
 
   public static HandleRequestAttributes givenHandleKernelUpdated() {
@@ -597,10 +596,7 @@ public class TestUtils {
 
   public static DoiKernelRequestAttributes givenDoiKernel() {
     return new DoiKernelRequestAttributes()
-        .withIssuedForAgent(ISSUED_FOR_AGENT_TESTVAL)
-        .withReferentType(FdoType.DOI.getDigitalObjectName())
-        .withReferentName(REFERENT_NAME_TESTVAL)
-        .withPrimaryReferentType(PRIMARY_REFERENT_TYPE_TESTVAL);
+        .withReferentName(REFERENT_NAME_TESTVAL);
   }
 
   public static DoiKernelRequestAttributes givenDoiKernelUpdated() {
