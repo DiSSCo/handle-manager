@@ -169,7 +169,8 @@ public class FdoRecordService {
         fdoAttributes.values());
   }
 
-  private List<FdoAttribute> prepareUpdatedHandleAttributes(HandleRequestAttributes request,
+  private Map<FdoProfile, FdoAttribute> prepareUpdatedHandleAttributes(
+      HandleRequestAttributes request,
       String handle, Instant timestamp, FdoRecord previousVersion, boolean incrementVersion)
       throws InvalidRequestException {
     var updatedAttributes = new EnumMap<>(prepareHandleAttributes(request, handle, timestamp));
@@ -269,7 +270,7 @@ public class FdoRecordService {
           handle);
     }
     handleAttributeList.put(TARGET_TYPE_NAME,
-        new FdoAttribute(TARGET_TYPE_NAME, timestamp, request.getMotivation()));
+        new FdoAttribute(TARGET_TYPE_NAME, timestamp, targetTypeName));
     // 503 Annotation Hash
     handleAttributeList.put(ANNOTATION_HASH,
         new FdoAttribute(ANNOTATION_HASH, timestamp, request.getAnnotationHash()));

@@ -82,7 +82,6 @@ import eu.dissco.core.handlemanager.domain.responses.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.schema.AnnotationRequestAttributes;
 import eu.dissco.core.handlemanager.schema.DataMappingRequestAttributes;
 import eu.dissco.core.handlemanager.schema.DigitalMediaRequestAttributes;
-import eu.dissco.core.handlemanager.schema.DigitalMediaRequestAttributes.LinkedDigitalObjectType;
 import eu.dissco.core.handlemanager.schema.DigitalSpecimenRequestAttributes;
 import eu.dissco.core.handlemanager.schema.DoiKernelRequestAttributes;
 import eu.dissco.core.handlemanager.schema.HandleRequestAttributes;
@@ -624,10 +623,10 @@ public class TestUtils {
         .withMediaHost(MEDIA_HOST_TESTVAL)
         .withMediaHostName(MEDIA_HOST_NAME_TESTVAL)
         .withLinkedDigitalObjectPid(LINKED_DO_PID_TESTVAL)
-        .withLinkedDigitalObjectType(LinkedDigitalObjectType.DIGITAL_SPECIMEN)
-        .withRightsholderPid(SPECIMEN_HOST_TESTVAL)
+        .withLinkedDigitalObjectType(DIGITAL_SPECIMEN.getDigitalObjectType())
+        .withRightsHolderId(SPECIMEN_HOST_TESTVAL)
         .withPrimaryMediaId(PRIMARY_MEDIA_ID_TESTVAL)
-        .withRightsholderName(SPECIMEN_HOST_NAME_TESTVAL);
+        .withRightsHolderName(SPECIMEN_HOST_NAME_TESTVAL);
   }
 
   public static DigitalMediaRequestAttributes givenDigitalMediaUpdated() {
@@ -685,7 +684,7 @@ public class TestUtils {
         .withTargetPid(TARGET_DOI_TESTVAL)
         .withTargetType(DIGITAL_SPECIMEN.getDigitalObjectType());
     if (includeHash) {
-      annotation.withAnnotationHash(ANNOTATION_HASH_TESTVAL.toString());
+      annotation.withAnnotationHash(ANNOTATION_HASH_TESTVAL);
     }
     return annotation;
   }
