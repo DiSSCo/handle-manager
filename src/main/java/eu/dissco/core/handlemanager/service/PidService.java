@@ -150,9 +150,9 @@ public abstract class PidService {
         log.error("Missing key attributes for media record");
         throw new IllegalStateException();
       }
-      var key = mapper.createObjectNode().set("digitalMediaKey",
-          mapper.valueToTree(
-              new DigitalMediaKey(digitalSpecimenId.getValue(), mediaUrl.getValue())));
+      var key = mapper.createObjectNode().set("digitalMediaKey", mapper.createObjectNode()
+          .put("digitalSpecimenId", digitalSpecimenId.getValue())
+          .put("mediaUrl", mediaUrl.getValue()));
       String pidLink = profileProperties.getDomain() + fdoRecord.handle();
       dataLinksList.add(
           new JsonApiDataLinks(fdoRecord.handle(), DIGITAL_MEDIA.getDigitalObjectType(),
@@ -414,10 +414,5 @@ public abstract class PidService {
     log.info("Successfully updated {} specimens fdo records to database", fdoDocuments.size());
   }
 
-  private record DigitalMediaKey(
-      String digitalSpecimenId, String mediaUrl
-  ) {
-
-  }
 
 }
