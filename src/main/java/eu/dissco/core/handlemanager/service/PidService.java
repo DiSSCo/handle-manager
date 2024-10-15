@@ -57,7 +57,8 @@ public abstract class PidService {
   protected final ProfileProperties profileProperties;
   protected final MongoRepository mongoRepository;
   protected static final String REQUEST_PROCESSING_ERR = "An error has occurred parsing a record in request";
-
+  private static final Set<String> MEDIA_KEY_SET = Set.of(PRIMARY_MEDIA_ID.name(),
+      LINKED_DO_PID.name());
 
   protected JsonNode jsonFormatSingleRecord(List<FdoAttribute> fdoAttributes) {
     ObjectNode rootNode = mapper.createObjectNode();
@@ -142,13 +143,20 @@ public abstract class PidService {
 
   private List<JsonApiDataLinks> formatMediaResponse(List<FdoRecord> fdoRecords) {
     List<JsonApiDataLinks> dataLinksList = new ArrayList<>();
-    for (var handleRecord : fdoRecords) {
-      var attributeNode = jsonFormatSingleRecord(handleRecord.attributes(),
-          List.of(PRIMARY_MEDIA_ID, LINKED_DO_PID));
-      String pidLink = profileProperties.getDomain() + handleRecord.handle();
+    for (var fdoRecord : fdoRecords) {
+      var mediaUrl = getField(fdoRecord.attributes(), PRIMARY_MEDIA_ID.index());
+      var digitalSpecimenId = getField(fdoRecord.attributes(), LINKED_DO_PID.index());
+      if (mediaUrl == null || digitalSpecimenId == null) {
+        log.error("Missing key attributes for media record");
+        throw new IllegalStateException();
+      }
+      var key = mapper.createObjectNode().set("digitalMediaKey", mapper.createObjectNode()
+          .put("digitalSpecimenId", digitalSpecimenId.getValue())
+          .put("mediaUrl", mediaUrl.getValue()));
+      String pidLink = profileProperties.getDomain() + fdoRecord.handle();
       dataLinksList.add(
-          new JsonApiDataLinks(handleRecord.handle(), DIGITAL_MEDIA.getDigitalObjectType(),
-              attributeNode, new JsonApiLinks(pidLink)));
+          new JsonApiDataLinks(fdoRecord.handle(), DIGITAL_MEDIA.getDigitalObjectType(),
+              key, new JsonApiLinks(pidLink)));
     }
     return dataLinksList;
   }
@@ -405,4 +413,6 @@ public abstract class PidService {
     mongoRepository.updateHandleRecords(fdoDocuments);
     log.info("Successfully updated {} specimens fdo records to database", fdoDocuments.size());
   }
+
+
 }

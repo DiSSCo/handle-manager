@@ -49,7 +49,9 @@ public class MongoRepository {
   }
 
   public void postHandleRecords(List<Document> handleRecords) {
-    collection.insertMany(handleRecords);
+    if (!handleRecords.isEmpty()) {
+      collection.insertMany(handleRecords);
+    }
   }
 
   public void updateHandleRecords(List<Document> handleRecords) {
@@ -57,7 +59,9 @@ public class MongoRepository {
       var filter = eq(doc.get(ID));
       return new ReplaceOneModel<>(filter, doc);
     }).toList();
-    collection.bulkWrite(queryList);
+    if (!queryList.isEmpty()) {
+      collection.bulkWrite(queryList);
+    }
   }
 
   public List<FdoRecord> searchByPrimaryLocalId(String localIdField, List<String> localIds)
