@@ -145,9 +145,9 @@ public abstract class PidService {
       var mediaUrl = fdoRecord.attributes().get(PRIMARY_MEDIA_ID);
       var digitalSpecimenId = fdoRecord.attributes().get(LINKED_DO_PID);
       var key = mapper.createObjectNode()
-          .set("digitalMediaKey",
-              mapper.valueToTree(
-                  new DigitalMediaKey(digitalSpecimenId.getValue(), mediaUrl.getValue())));
+          .set("digitalMediaKey", mapper.createObjectNode()
+              .put("digitalSpecimenId", digitalSpecimenId.getValue())
+              .put("mediaUrl", mediaUrl.getValue()));
       String pidLink = profileProperties.getDomain() + fdoRecord.handle();
       dataLinksList.add(
           new JsonApiDataLinks(fdoRecord.handle(), DIGITAL_MEDIA.getDigitalObjectType(),
@@ -407,11 +407,4 @@ public abstract class PidService {
     mongoRepository.updateHandleRecords(fdoDocuments);
     log.info("Successfully updated {} specimens fdo records to database", fdoDocuments.size());
   }
-
-  private record DigitalMediaKey(
-      String digitalSpecimenId, String mediaUrl
-  ) {
-
-  }
-
 }
