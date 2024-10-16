@@ -537,7 +537,6 @@ class FdoRecordServiceTest {
 
     var expected = new FdoAttribute(LOC, UPDATED,
         setLocations(HANDLE, FdoType.DIGITAL_SPECIMEN, true));
-    //<locations><location href="https://sandbox.dissco.tech/ds/20.5000.1025/QRS-321-ABC" id="0" weight="0"/><location href="https://sandbox.dissco.tech/api/v1/digital-specimen/20.5000.1025/QRS-321-ABC" id="1" weight="0"/><location href="https://botanical.nl/-qrs-123" id="2" weight="0"/><location href="https://sandbox.dissco.tech/ds/20.5000.1025/QRS-321-ABC" id="HTML" weight="1"/><location href="https://sandbox.dissco.tech/api/v1/digital-specimen/20.5000.1025/QRS-321-ABC" id="JSON" weight="0"/><location href="https://botanical.nl/-qrs-123" id="CATALOG" weight="0"/></locations>), ttl=86400, timestamp=2023-11-01T09:59:24Z),
 
     // When
     var result = fdoRecordService.activatePidRecord(draft, UPDATED);
