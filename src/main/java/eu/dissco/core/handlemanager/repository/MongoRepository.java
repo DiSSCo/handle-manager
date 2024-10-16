@@ -17,6 +17,7 @@ import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -90,17 +91,17 @@ public class MongoRepository {
             mapper.writeValueAsString(jsonRecord));
       } else {
         var attributes = mapper.convertValue(jsonRecord.get("values"),
-            new TypeReference<ArrayList<FdoAttribute>>() {
+            new TypeReference<Collection<FdoAttribute>>() {
             });
         var fdoType = getFdoType(attributes, jsonRecord.get("_id").asText());
         handleRecords.add(new FdoRecord(jsonRecord.get("_id").asText(),
-            fdoType, attributes, getLocalId(jsonRecord, fdoType)));
+            fdoType, Collections.emptyMap(), getLocalId(jsonRecord, fdoType), attributes));
       }
     }
     return handleRecords;
   }
 
-  private FdoType getFdoType(List<FdoAttribute> fdoAttributes, String id) {
+  private FdoType getFdoType(Collection<FdoAttribute> fdoAttributes, String id) {
     for (var fdoAttribute : fdoAttributes) {
       if (DIGITAL_OBJECT_TYPE.index() == fdoAttribute.getIndex()) {
         return FdoType.fromString(fdoAttribute.getValue());

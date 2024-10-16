@@ -14,6 +14,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalMedia
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMongoDocument;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMongoResponse;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenUpdatedFdoRecord;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertThrows;
@@ -28,6 +29,7 @@ import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -82,7 +84,7 @@ class MongoRepositoryIT {
   void testGetHandleRecordsHandle() throws Exception {
     // Given
     populateMongoDB();
-    var expected = List.of(givenHandleFdoRecord(HANDLE));
+    var expected = List.of(givenMongoResponse(HANDLE, FdoType.HANDLE, null));
 
     // When
     var result = repository.getHandleRecords(List.of(HANDLE));
@@ -95,7 +97,8 @@ class MongoRepositoryIT {
   void testGetHandleRecordsSpecimen() throws Exception {
     // Given
     populateMongoDB();
-    var expected = List.of(givenDigitalSpecimenFdoRecord(SPECIMEN_ID));
+    var expected = List.of(givenMongoResponse(SPECIMEN_ID, FdoType.DIGITAL_SPECIMEN,
+        NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL));
 
     // When
     var result = repository.getHandleRecords(List.of(SPECIMEN_ID));
@@ -108,13 +111,13 @@ class MongoRepositoryIT {
   void testGetHandleRecordsMedia() throws Exception {
     // Given
     populateMongoDB();
-    var expected = List.of(givenDigitalMediaFdoRecord(MEDIA_ID));
+    var expected = givenMongoResponse(MEDIA_ID, FdoType.DIGITAL_MEDIA, PRIMARY_MEDIA_ID_TESTVAL);
 
     // When
     var result = repository.getHandleRecords(List.of(MEDIA_ID));
 
     // Then
-    assertThat(result).isEqualTo(expected);
+    assertThat(result.get(0)).isEqualTo(expected);
   }
 
   @Test
@@ -187,7 +190,8 @@ class MongoRepositoryIT {
   void testSearchByPrimaryLocalIdSpecimen() throws Exception {
     // Given
     populateMongoDB();
-    var expected = List.of(givenDigitalSpecimenFdoRecord(SPECIMEN_ID));
+    var expected = List.of(givenMongoResponse(SPECIMEN_ID, FdoType.DIGITAL_SPECIMEN,
+        NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL));
 
     // When
     var result = repository.searchByPrimaryLocalId(FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID.get(),
@@ -201,7 +205,8 @@ class MongoRepositoryIT {
   void testSearchByPrimaryLocalIdMedia() throws Exception {
     // Given
     populateMongoDB();
-    var expected = List.of(givenDigitalMediaFdoRecord(MEDIA_ID));
+    var expected = List.of(
+        givenMongoResponse(MEDIA_ID, FdoType.DIGITAL_MEDIA, PRIMARY_MEDIA_ID_TESTVAL));
 
     // When
     var result = repository.searchByPrimaryLocalId(FdoProfile.PRIMARY_MEDIA_ID.get(),
@@ -244,8 +249,9 @@ class MongoRepositoryIT {
   @Test
   void testFdoTypeNotFound() throws Exception {
     // Given
+    var attribute = new FdoAttribute(FdoProfile.FDO_RECORD_LICENSE_NAME, CREATED, "License");
     var fdoRecord = new FdoRecord(HANDLE, FdoType.HANDLE,
-        List.of(new FdoAttribute(FdoProfile.FDO_RECORD_LICENSE_NAME, CREATED, "License")), null);
+        Map.of(FdoProfile.LICENSE_NAME, attribute), null, List.of(attribute));
     collection.insertOne(givenMongoDocument(fdoRecord));
     var handleList = List.of(HANDLE);
 
@@ -261,6 +267,5 @@ class MongoRepositoryIT {
     collection.insertOne(specimenDoc);
     collection.insertOne(mediaDoc);
   }
-
 
 }

@@ -11,7 +11,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PATH;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genHandleRecordAttributes;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.getField;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotation;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenAnnotationUpdated;
@@ -204,14 +203,15 @@ class HandleServiceTest {
   void testActivateHandle() throws Exception {
     // Given
     var draftAttributes = genHandleRecordAttributes(HANDLE, CREATED, FdoType.HANDLE);
-    draftAttributes.set(draftAttributes.indexOf(getField(draftAttributes, PID_STATUS)),
+    draftAttributes.replace(PID_STATUS,
         new FdoAttribute(PID_STATUS, CREATED, PidStatus.DRAFT));
-    var draftRecord = new FdoRecord(HANDLE, FdoType.HANDLE, draftAttributes, null);
+    var draftRecord = new FdoRecord(HANDLE, FdoType.HANDLE, draftAttributes, null,
+        draftAttributes.values());
     var expectedAttributes = givenHandleFdoRecord(HANDLE).attributes();
-    expectedAttributes.set(
-        expectedAttributes.indexOf(getField(expectedAttributes, PID_RECORD_ISSUE_NUMBER)),
+    expectedAttributes.replace(PID_RECORD_ISSUE_NUMBER,
         new FdoAttribute(PID_RECORD_ISSUE_NUMBER, CREATED, 2));
-    var activeRecord = new FdoRecord(HANDLE, FdoType.HANDLE, expectedAttributes, null);
+    var activeRecord = new FdoRecord(HANDLE, FdoType.HANDLE, expectedAttributes, null,
+        expectedAttributes.values());
     var expected = givenMongoDocument(activeRecord);
     given(mongoRepository.getHandleRecords(List.of(HANDLE))).willReturn(List.of(draftRecord));
     given(fdoRecordService.activatePidRecord(any(), eq(CREATED)))

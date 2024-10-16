@@ -125,7 +125,7 @@ class DoiServiceTest {
     var fdoRecord = givenDigitalSpecimenFdoRecord(HANDLE);
     var responseExpected = givenWriteResponseIdsOnly(List.of(fdoRecord), FdoType.DIGITAL_SPECIMEN,
         DOI_DOMAIN);
-    var dataCiteEvent = new DataCiteEvent(jsonFormatFdoRecord(fdoRecord.attributes()),
+    var dataCiteEvent = new DataCiteEvent(jsonFormatFdoRecord(fdoRecord.values()),
         EventType.CREATE);
     given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
     given(fdoRecordService.prepareNewDigitalSpecimenRecord(any(), any(), any(),
@@ -169,7 +169,7 @@ class DoiServiceTest {
     var digitalMedia = givenDigitalMediaFdoRecord(HANDLE);
     var responseExpected = givenWriteResponseIdsOnly(List.of(digitalMedia), FdoType.DIGITAL_MEDIA,
         DOI_DOMAIN);
-    var dataCiteEvent = new DataCiteEvent(jsonFormatFdoRecord(digitalMedia.attributes()),
+    var dataCiteEvent = new DataCiteEvent(jsonFormatFdoRecord(digitalMedia.values()),
         EventType.CREATE);
     given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
     given(fdoRecordService.prepareNewDigitalMediaRecord(any(), any(), any(),
@@ -232,13 +232,14 @@ class DoiServiceTest {
             givenDigitalSpecimen().withNormalisedPrimarySpecimenObjectId(PRIMARY_SPECIMEN_ID_ALT),
             FdoType.DIGITAL_SPECIMEN));
     var fdoRecordNew = givenDigitalSpecimenFdoRecord(HANDLE);
+    var attriubtes = genDigitalSpecimenAttributes(HANDLE_ALT, CREATED);
     var fdoRecordUpdate = new FdoRecord(HANDLE_ALT, FdoType.DIGITAL_SPECIMEN,
-        genDigitalSpecimenAttributes(HANDLE_ALT, CREATED), PRIMARY_SPECIMEN_ID_ALT);
+        attriubtes, PRIMARY_SPECIMEN_ID_ALT, attriubtes.values());
     var responseExpected = givenWriteResponseIdsOnly(List.of(fdoRecordUpdate, fdoRecordNew),
         FdoType.DIGITAL_SPECIMEN, DOI_DOMAIN);
-    var dataCiteEventCreate = new DataCiteEvent(jsonFormatFdoRecord(fdoRecordNew.attributes()),
+    var dataCiteEventCreate = new DataCiteEvent(jsonFormatFdoRecord(fdoRecordNew.values()),
         EventType.CREATE);
-    var dataCiteEventUpdate = new DataCiteEvent(jsonFormatFdoRecord(fdoRecordUpdate.attributes()),
+    var dataCiteEventUpdate = new DataCiteEvent(jsonFormatFdoRecord(fdoRecordUpdate.values()),
         EventType.UPDATE);
     var previousVersion = givenDigitalSpecimenFdoRecord(HANDLE_ALT);
     given(mongoRepository.searchByPrimaryLocalId(any(), anyList())).willReturn(
@@ -274,7 +275,7 @@ class DoiServiceTest {
     var responseExpected = givenWriteResponseIdsOnly(List.of(updatedAttributeRecord),
         FdoType.DIGITAL_SPECIMEN, DOI_DOMAIN);
     var expectedEvent = new DataCiteEvent(
-        (jsonFormatFdoRecord(updatedAttributeRecord.attributes())), EventType.UPDATE);
+        (jsonFormatFdoRecord(updatedAttributeRecord.values())), EventType.UPDATE);
     given(mongoRepository.getHandleRecords(List.of(HANDLE))).willReturn(List.of(previousVersion));
     given(fdoRecordService.prepareUpdatedDigitalSpecimenRecord(any(), any(), any(),
         anyBoolean())).willReturn(updatedAttributeRecord);
@@ -301,7 +302,7 @@ class DoiServiceTest {
     var responseExpected = givenWriteResponseIdsOnly(List.of(updatedAttributeRecord),
         FdoType.DIGITAL_MEDIA, DOI_DOMAIN);
     var expectedEvent = new DataCiteEvent(
-        (jsonFormatFdoRecord(updatedAttributeRecord.attributes())), EventType.UPDATE);
+        (jsonFormatFdoRecord(updatedAttributeRecord.values())), EventType.UPDATE);
     given(mongoRepository.getHandleRecords(List.of(HANDLE))).willReturn(List.of(previousVersion));
     given(fdoRecordService.prepareUpdatedDigitalMediaRecord(any(), any(), any(),
         anyBoolean())).willReturn(updatedAttributeRecord);
@@ -322,14 +323,16 @@ class DoiServiceTest {
     var altMedia = "https://123";
     var requests = List.of(givenPostRequest(givenDigitalMedia(), FdoType.DIGITAL_MEDIA),
         givenPostRequest(givenDigitalMedia().withPrimaryMediaId(altMedia), DIGITAL_MEDIA));
-    var previousVersion = new FdoRecord(HANDLE_ALT, DIGITAL_MEDIA,
-        genDigitalMediaAttributes(HANDLE_ALT, CREATED), altMedia);
-    var fdoRecordUpdate = new FdoRecord(HANDLE_ALT, DIGITAL_MEDIA,
-        genDigitalMediaAttributes(HANDLE_ALT, CREATED), altMedia);
+    var prevAttributes = genDigitalMediaAttributes(HANDLE_ALT, CREATED);
+    var updatedAttributes = genDigitalMediaAttributes(HANDLE_ALT, CREATED);
+    var previousVersion = new FdoRecord(HANDLE_ALT, DIGITAL_MEDIA, prevAttributes, altMedia,
+        prevAttributes.values());
+    var fdoRecordUpdate = new FdoRecord(HANDLE_ALT, DIGITAL_MEDIA, updatedAttributes, altMedia,
+        updatedAttributes.values());
     var fdoRecordNew = givenDigitalMediaFdoRecord(HANDLE);
-    var dataCiteEventNew = new DataCiteEvent(jsonFormatFdoRecord(fdoRecordNew.attributes()),
+    var dataCiteEventNew = new DataCiteEvent(jsonFormatFdoRecord(fdoRecordNew.values()),
         EventType.CREATE);
-    var dataCiteEventUpdate = new DataCiteEvent((jsonFormatFdoRecord(fdoRecordUpdate.attributes())),
+    var dataCiteEventUpdate = new DataCiteEvent((jsonFormatFdoRecord(fdoRecordUpdate.values())),
         EventType.UPDATE);
     given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
     given(mongoRepository.searchByPrimaryLocalId(any(), any())).willReturn(

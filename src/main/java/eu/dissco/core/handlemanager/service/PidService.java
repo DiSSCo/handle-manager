@@ -10,7 +10,6 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_MEDIA;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_SPECIMEN;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.TOMBSTONE;
 import static eu.dissco.core.handlemanager.service.FdoRecordService.GENERATED_KEYS;
-import static eu.dissco.core.handlemanager.service.ServiceUtils.getField;
 import static eu.dissco.core.handlemanager.service.ServiceUtils.toSingle;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -37,6 +36,7 @@ import eu.dissco.core.handlemanager.repository.MongoRepository;
 import eu.dissco.core.handlemanager.schema.TombstoneRequestAttributes;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -57,10 +57,8 @@ public abstract class PidService {
   protected final ProfileProperties profileProperties;
   protected final MongoRepository mongoRepository;
   protected static final String REQUEST_PROCESSING_ERR = "An error has occurred parsing a record in request";
-  private static final Set<String> MEDIA_KEY_SET = Set.of(PRIMARY_MEDIA_ID.name(),
-      LINKED_DO_PID.name());
 
-  protected JsonNode jsonFormatSingleRecord(List<FdoAttribute> fdoAttributes) {
+  protected JsonNode jsonFormatSingleRecord(Collection<FdoAttribute> fdoAttributes) {
     ObjectNode rootNode = mapper.createObjectNode();
     fdoAttributes.stream()
         .filter(attribute -> attribute.getIndex() != HS_ADMIN.index())
@@ -68,7 +66,7 @@ public abstract class PidService {
     return rootNode;
   }
 
-  protected JsonNode jsonFormatSingleRecord(List<FdoAttribute> fdoAttributes,
+  protected JsonNode jsonFormatSingleRecord(Collection<FdoAttribute> fdoAttributes,
       List<FdoProfile> keyAttributes) {
     ObjectNode rootNode = mapper.createObjectNode();
     var indexList = keyAttributes.stream().map(FdoProfile::index).toList();
@@ -114,9 +112,9 @@ public abstract class PidService {
     for (var handleRecord : fdoRecords) {
       JsonNode attributeNode;
       if (handleRecord.primaryLocalId() == null) {
-        attributeNode = jsonFormatSingleRecord(handleRecord.attributes());
+        attributeNode = jsonFormatSingleRecord(handleRecord.values());
       } else {
-        attributeNode = jsonFormatSingleRecord(handleRecord.attributes(),
+        attributeNode = jsonFormatSingleRecord(handleRecord.values(),
             List.of(ANNOTATION_HASH));
       }
       String pidLink = profileProperties.getDomain() + handleRecord.handle();
@@ -131,7 +129,7 @@ public abstract class PidService {
   private List<JsonApiDataLinks> formatSpecimenResponse(List<FdoRecord> fdoRecords) {
     List<JsonApiDataLinks> dataLinksList = new ArrayList<>();
     for (var handleRecord : fdoRecords) {
-      var attributeNode = jsonFormatSingleRecord(handleRecord.attributes(),
+      var attributeNode = jsonFormatSingleRecord(handleRecord.values(),
           List.of(NORMALISED_SPECIMEN_OBJECT_ID));
       String pidLink = profileProperties.getDomain() + handleRecord.handle();
       dataLinksList.add(
@@ -144,15 +142,12 @@ public abstract class PidService {
   private List<JsonApiDataLinks> formatMediaResponse(List<FdoRecord> fdoRecords) {
     List<JsonApiDataLinks> dataLinksList = new ArrayList<>();
     for (var fdoRecord : fdoRecords) {
-      var mediaUrl = getField(fdoRecord.attributes(), PRIMARY_MEDIA_ID.index());
-      var digitalSpecimenId = getField(fdoRecord.attributes(), LINKED_DO_PID.index());
-      if (mediaUrl == null || digitalSpecimenId == null) {
-        log.error("Missing key attributes for media record");
-        throw new IllegalStateException();
-      }
-      var key = mapper.createObjectNode().set("digitalMediaKey", mapper.createObjectNode()
-          .put("digitalSpecimenId", digitalSpecimenId.getValue())
-          .put("mediaUrl", mediaUrl.getValue()));
+      var mediaUrl = fdoRecord.attributes().get(PRIMARY_MEDIA_ID);
+      var digitalSpecimenId = fdoRecord.attributes().get(LINKED_DO_PID);
+      var key = mapper.createObjectNode()
+          .set("digitalMediaKey", mapper.createObjectNode()
+              .put("digitalSpecimenId", digitalSpecimenId.getValue())
+              .put("mediaUrl", mediaUrl.getValue()));
       String pidLink = profileProperties.getDomain() + fdoRecord.handle();
       dataLinksList.add(
           new JsonApiDataLinks(fdoRecord.handle(), DIGITAL_MEDIA.getDigitalObjectType(),
@@ -164,7 +159,7 @@ public abstract class PidService {
   private List<JsonApiDataLinks> formatFullRecordResponse(List<FdoRecord> fdoRecords) {
     List<JsonApiDataLinks> dataLinksList = new ArrayList<>();
     for (var fdoRecord : fdoRecords) {
-      var rootNode = jsonFormatSingleRecord(fdoRecord.attributes());
+      var rootNode = jsonFormatSingleRecord(fdoRecord.values());
       String pidLink = profileProperties.getDomain() + fdoRecord.handle();
       dataLinksList.add(
           new JsonApiDataLinks(fdoRecord.handle(), fdoRecord.fdoType().getDigitalObjectType(),
@@ -375,11 +370,10 @@ public abstract class PidService {
     if (newVersion.attributes().size() != currentAttributes.size()) {
       return true;
     }
-    for (var newAttribute : newVersion.attributes()) {
-      if (!GENERATED_KEYS.contains(newAttribute.getIndex())) {
-        var currentAttribute = getField(currentAttributes, newAttribute.getIndex());
-        if (currentAttribute == null || !currentAttribute.getValue()
-            .equals(newAttribute.getValue())) {
+    for (var newAttribute : newVersion.attributes().entrySet()) {
+      if (!GENERATED_KEYS.contains(newAttribute.getKey())) {
+        var currentAttribute = currentAttributes.get(newAttribute.getKey());
+        if (!newAttribute.getValue().getValue().equals(currentAttribute.getValue())) {
           return true;
         }
       }
