@@ -1,11 +1,11 @@
 package eu.dissco.core.handlemanager.controller;
 
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.CATALOG_ID_TEST;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_DOMAIN;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PREFIX;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SUFFIX;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.UI_URL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalMedia;
@@ -99,12 +99,12 @@ class PidControllerTest {
 
     var responseExpected = TestUtils.givenWriteResponseFull(List.of(HANDLE),
         FdoType.DIGITAL_SPECIMEN);
-    given(service.searchByPhysicalSpecimenId(PRIMARY_SPECIMEN_ID_TESTVAL)).willReturn(
+    given(service.searchByPhysicalSpecimenId(CATALOG_ID_TEST)).willReturn(
         responseExpected);
 
     // When
     var responseReceived = controller.searchByPrimarySpecimenObjectId(
-        PRIMARY_SPECIMEN_ID_TESTVAL);
+        CATALOG_ID_TEST);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -114,7 +114,7 @@ class PidControllerTest {
   @Test
   void testSearchByPhysicalIdCombined() throws Exception {
     // Given
-    String physicalId = PRIMARY_SPECIMEN_ID_TESTVAL;
+    String physicalId = CATALOG_ID_TEST;
     var responseExpected = TestUtils.givenWriteResponseFull(List.of(HANDLE),
         FdoType.DIGITAL_SPECIMEN);
     given(service.searchByPhysicalSpecimenId(physicalId)).willReturn(responseExpected);
