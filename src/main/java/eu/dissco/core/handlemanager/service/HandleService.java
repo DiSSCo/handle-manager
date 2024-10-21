@@ -24,7 +24,7 @@ import eu.dissco.core.handlemanager.repository.MongoRepository;
 import eu.dissco.core.handlemanager.schema.AnnotationRequestAttributes;
 import eu.dissco.core.handlemanager.schema.DataMappingRequestAttributes;
 import eu.dissco.core.handlemanager.schema.HandleRequestAttributes;
-import eu.dissco.core.handlemanager.schema.MasRequestAttributes;
+import eu.dissco.core.handlemanager.schema.MachineAnnotationServiceRequestAttributes;
 import eu.dissco.core.handlemanager.schema.OrganisationRequestAttributes;
 import eu.dissco.core.handlemanager.schema.SourceSystemRequestAttributes;
 import java.time.Instant;
@@ -217,7 +217,8 @@ public class HandleService extends PidService {
     List<FdoRecord> fdoRecords = new ArrayList<>();
     var timestamp = Instant.now();
     for (var request : requestAttributes) {
-      var requestObject = mapper.treeToValue(request, MasRequestAttributes.class);
+      var requestObject = mapper.treeToValue(request,
+          MachineAnnotationServiceRequestAttributes.class);
       fdoRecords.add(fdoRecordService.prepareNewMasRecord(requestObject, handleIterator.next(),
           timestamp, isDraft));
     }
@@ -232,7 +233,7 @@ public class HandleService extends PidService {
     List<FdoRecord> newFdoRecords = new ArrayList<>();
     var timestamp = Instant.now();
     var updateRequests = convertPatchRequestDataToAttributesClass(previousVersionMap,
-        MasRequestAttributes.class);
+        MachineAnnotationServiceRequestAttributes.class);
     for (var updateRequest : updateRequests.entrySet()) {
       var newVersion =
           fdoRecordService.prepareUpdatedMasRecord(updateRequest.getKey(), timestamp,

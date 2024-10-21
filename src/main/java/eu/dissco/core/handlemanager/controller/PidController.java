@@ -93,7 +93,6 @@ public class PidController {
       Authentication authentication) throws InvalidRequestException, UnprocessableEntityException {
     var isDraft = draft.orElse(false);
     log.info(RECEIVED_MSG, "single create", authentication.getName());
-    validatorComponent.validatePost(List.of(request));
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(service.createRecords(List.of(request), isDraft));
   }
@@ -106,7 +105,6 @@ public class PidController {
       Authentication authentication) throws InvalidRequestException, UnprocessableEntityException {
     var isDraft = draft.orElse(false);
     log.info(RECEIVED_MSG, "batch create", authentication.getName());
-    validatorComponent.validatePost(requests);
     return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(requests, isDraft));
   }
 
@@ -133,7 +131,6 @@ public class PidController {
           handle,
           handleData));
     }
-    validatorComponent.validatePatch(List.of(request));
     return ResponseEntity.status(HttpStatus.OK).body(service.updateRecords(List.of(request), true));
   }
 
@@ -143,7 +140,6 @@ public class PidController {
       Authentication authentication) throws InvalidRequestException, UnprocessableEntityException {
     log.info(RECEIVED_MSG, "batch update", authentication.getName());
     log.info("Received valid batch update request for {} PIDS", requests.size());
-    validatorComponent.validatePatch(requests);
     var result = service.updateRecords(requests, true);
     return ResponseEntity.status(HttpStatus.OK).body(result);
   }

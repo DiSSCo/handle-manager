@@ -2,30 +2,8 @@
   "$id": "https://schemas.dissco.tech/schemas/fdo-profile/digital-specimen/0.1.0/digital-specimen-request-attributes.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "description": "Attributes of a request to the DiSSCo PID API to create a FDO Record for a digital specimen",
-  "$comment": "FDO Profile Version 0.1.0",
+  "$comment": "FDO Profile Version 1.0.0",
   "properties": {
-    "pidIssuer": {
-      "type": "string",
-      "description": "In case of a DOI this is a PID for the DOI Registration Agency",
-      "example": "https://hdl.handle.net/10.17183",
-      "$comment": "idx = 6"
-    },
-    "issuedForAgent": {
-      "type": "string",
-      "description": "In the case of a digital specimen, this is a PID for DiSSCo as the agent responsible for serving the digital specimen object",
-      "example": "https://hdl.handle.net/10.22",
-      "$comment": "idx = 8"
-    },
-    "structuralType": {
-      "enum": [
-        "digital",
-        "physical",
-        "performance",
-        "abstraction"
-      ],
-      "description": "Nature of the digital object, compatible with DOI schema requirements. The nature of a digital specimen object is always \"digital\". Other digital objects (outside DiSSCo) could be of physical, performance or abstraction nature.",
-      "$comment": "idx = 12"
-    },
     "locations": {
       "type": "array",
       "items": {
@@ -33,68 +11,24 @@
       },
       "description": "Additional URLs to be appended to the 10320/loc field"
     },
-    "referentType": {
-      "type": "string",
-      "description": "A generic name for the type of object that the DOI refers to. This is different from digitalObjectType that points to a specific type, e.g. there can be different types of digital specimens that each have a slightly different metadata schema because they describe a different kind of specimen, like a botanical versus a geological specimen.",
-      "example": "digital specimen",
-      "$comment": "idx = 40"
-    },
     "referentName": {
       "type": "string",
-      "description": "In the case of a digital specimen this is the name for the object in the collection, which can be anything from a taxon name to a collection number.",
-      "example": "Mus musculus type 1",
-      "$comment": "idx = 42"
-    },
-    "primaryReferentType": {
-      "type": "string",
-      "description": "The primary type of the referent in the DOI Kernel XML Schema (e.g. creation, party, event). This is an open list. For digital specimens and media it will always be creation.",
-      "example": "creation",
-      "$comment": "idx = 43"
+      "description": "In the case of a digital specimen this is the name for the object in the collection, which can be anything from a taxon name to a collection number."
     },
     "specimenHost": {
       "type": "string",
       "description": "ROR or, in absence of a ROR, Wikidata Qnumber for the administrative organisation hosting the specimen. Same as: Latimer Core identifierSource.",
-      "example": "https://ror.org/0566bfb96",
-      "$comment": "idx = 200"
+      "example": "https://ror.org/0566bfb96"
     },
     "specimenHostName": {
       "type": "string",
       "description": "Name for the administrative organisation as derived from ROR or Wikidata at the point of creating the FDO record.",
-      "example": "Naturalis Biodiversity Center",
-      "$comment": "idx = 201"
-    },
-    "primarySpecimenObjectId": {
-      "type": "string",
-      "description": "Primary local identifier used to identify the physical specimen, which is a preserved material entity. This identifier is usually physically attached to the specimen, e.g. as barcode. It is recommended to use a global and resolvable identifier if available. The host of the physical specimen should be able to find the physical specimen with only this ID plus, if that is not globally unique, the primarySpecimenObjectIdName",
-      "example": "RMNH.1.2b",
-      "$comment": "idx = 202"
-    },
-    "primarySpecimenObjectIdType": {
-      "enum": [
-        "Global",
-        "Resolvable",
-        "Local"
-      ],
-      "description": "Nature of institutional identifier",
-      "$comment": "idx = 203"
-    },
-    "primarySpecimenObjectIdName": {
-      "type": "string",
-      "description": "Locally used name for the identifier, to distinguish it from other locally used identifiers, max 30 characters.",
-      "example": "Registration number",
-      "$comment": "idx = 204"
+      "example": "Naturalis Biodiversity Center"
     },
     "normalisedPrimarySpecimenObjectId": {
       "type": "string",
       "description": "For internal processing purposes only to make a local identifier globally unique. This is the primarySpecimenObjectId if it is globally unique or a combination of ROR ID string, source system ID string, primarySpecimenObjectId if it is a proprietary identifier.",
-      "example": "0566bfb96:20.5000.1025/GEE-W3J-HL2:RMNH.1.2b",
-      "$comment": "idx = 205"
-    },
-    "specimenObjectIdAbsenceReason": {
-      "type": "string",
-      "description": "*Not currently supported.* Either this attribute or primarySpecimenObjectId needs to be filled, if both are filled the FDO record is invalid. Max 255 chars. Note that absence of the ID poses a challenge on avoiding duplicate digital specimen IDs.",
-      "example": "Not yet accessioned",
-      "$comment": "idx = 206"
+      "example": "0566bfb96:20.5000.1025/GEE-W3J-HL2:RMNH.1.2b"
     },
     "otherSpecimenIds": {
       "type": "array",
@@ -107,8 +41,16 @@
           },
           "identifierType": {
             "type": "string"
+          },
+          "resolvable": {
+            "type": "boolean",
+            "description": "whether or not the identifier is resolvable"
           }
-        }
+        },
+        "required": [
+          "identifierValue",
+          "identifierType"
+        ]
       }
     },
     "topicOrigin": {
@@ -118,8 +60,7 @@
         "Mixed origin",
         "Unclassified"
       ],
-      "description": "Highest-level terms identifying the fundamentals of the activities, in which context the objects in the collection were collected.",
-      "$comment": "idx = 208"
+      "description": "Highest-level terms identifying the fundamentals of the activities, in which context the objects in the collection were collected."
     },
     "topicDomain": {
       "enum": [
@@ -131,8 +72,7 @@
         "Archive Material",
         "Unclassified"
       ],
-      "description": "High-level terms providing general domain information with which the objects are associated.",
-      "$comment": "idx = 209"
+      "description": "High-level terms providing general domain information with which the objects are associated."
     },
     "topicDiscipline": {
       "enum": [
@@ -148,14 +88,13 @@
         "Other Geodiversity",
         "Unclassified"
       ],
-      "description": "Overarching classification of the scientific discipline to which the objects within the collection belong or are related.",
-      "$comment": "idx = 210"
+      "description": "Overarching classification of the scientific discipline to which the objects within the collection belong or are related."
     },
     "topicCategory": {
       "enum": [
         "Human remains",
         "Hominid remains",
-        "Mycology",
+        "Macrofungi, Lichens & Myxomycetes",
         "Algae",
         "Bryophytes",
         "Pteridophytes",
@@ -181,7 +120,7 @@
         "Protozoa",
         "Eukaryotic microorganisms",
         "Viruses",
-        "Mircofungi",
+        "Microfungi",
         "Other Microbiology Objects",
         "Botany Fossils",
         "Invertebrate Fossils",
@@ -189,44 +128,28 @@
         "Other Palaeontology Objects",
         "Minerals and Gems",
         "Loose Sediment Sample",
-        "Mixed Solid Mater Sample",
+        "Mixed Solid Matter Sample",
         "Water-Ice Sample",
         "Liquid or Gaseous Matter Sample",
         "Mixed Geology Objects",
         "Terrestrial Finds/Falls",
         "Terrestrial Impacta",
         "Sample Returns",
+        "Sedimentary Rock",
+        "Metamorphic or Igneous Rock",
+        "Plant Genetic Resource",
+        "Floral and Faunal remains",
+        "Other Anthropology Objects",
         "Unclassified"
       ],
-      "description": "Countable things (objects) served as a more detailed classification of each of the disciplines.",
-      "$comment": "idx = 211"
+      "description": "Countable things (objects) served as a more detailed classification of each of the disciplines."
     },
     "livingOrPreserved": {
       "enum": [
         "Living",
         "Preserved"
       ],
-      "description": "State of specimen",
-      "$comment": "idx = 212"
-    },
-    "baseTypeOfSpecimen": {
-      "enum": [
-        "DCMI:Image",
-        "DCMI:MovingImage",
-        "DCMI:PhysicalObject",
-        "DCMI:Sound",
-        "DCMI:3DResourceType"
-      ],
-      "description": "Describes origin of specimen",
-      "$comment": "idx = 213"
-    },
-    "informationArtefactType": {
-      "enum": [
-        "Material entity",
-        "Information artefact"
-      ],
-      "description": "May be left blank if baseTypeOfSpecimen is not an informationArtefact",
-      "$comment": "idx = 214"
+      "description": "State of specimen"
     },
     "materialSampleType": {
       "enum": [
@@ -245,37 +168,19 @@
         "Artefact",
         "Any aggregation specimen"
       ],
-      "description": "https://isamplesorg.github.io/models/generated/vocabularies/specimenType.html",
-      "$comment": "idx = 215"
-    },
-    "materialOrDigitalEntity": {
-      "enum": [
-        "Material entity",
-        "Digital entity"
-      ],
-      "$comment": "idx = 216"
+      "description": "https://isamplesorg.github.io/models/generated/vocabularies/specimenType.html"
     },
     "markedAsType": {
       "type": "boolean",
-      "description": "TRUE if the specimen is marked as type with a stamp or label.\n",
-      "$comment": "idx = 217"
-    },
-    "derivedFromEntity": {
-      "type": "string",
-      "description": "Other material or digital entity where the specimen was derived from, specified by its ID or PID.",
-      "example": "RMNH.1.2",
-      "$comment": "idx = 218"
+      "description": "TRUE if the specimen is marked as type with a stamp or label."
     },
     "catalogIdentifier": {
       "type": "string",
-      "description": "Identifier of source system catalog",
-      "$comment": "idx = 219"
+      "description": "Identifier of source system catalog"
     }
   },
   "required": [
-    "issuedForAgent",
     "specimenHost",
-    "primarySpecimenObjectId",
     "normalisedPrimarySpecimenObjectId"
   ],
   "additionalProperties": false

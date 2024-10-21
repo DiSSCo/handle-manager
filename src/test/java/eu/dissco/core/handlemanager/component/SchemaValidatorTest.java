@@ -85,20 +85,7 @@ class SchemaValidatorTest {
     // When
     assertDoesNotThrow(() -> schemaValidator.validatePatch(List.of(request)));
   }
-
-  @Test
-  void testMissingRequiredAttribute() {
-    // Given
-    var request = new PostRequest(new PostRequestData(FdoType.HANDLE, MAPPER.createObjectNode()));
-
-    // Then
-    var e = assertThrows(InvalidRequestException.class,
-        () -> schemaValidator.validatePost(List.of(request)));
-
-    // Then
-    assertThat(e.getMessage()).contains("Missing attributes");
-  }
-
+  
   @Test
   void testUnknownAttribute() {
     // Given
