@@ -1,5 +1,7 @@
 package eu.dissco.core.handlemanager.domain.fdo;
 
+import java.util.HashMap;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -76,6 +78,18 @@ public enum FdoProfile {
   HS_ADMIN("HS_ADMIN", 100),
   LOC("10320/loc", 101);
 
+  private static final Map<String, FdoProfile> LOOKUP;
+
+  static {
+    LOOKUP = new HashMap<>();
+    for (var fdoProfileAttribute : FdoProfile.values()) {
+      LOOKUP.put(fdoProfileAttribute.attribute, fdoProfileAttribute);
+    }
+  }
+
+  public static FdoProfile fromString(String attributeName) {
+    return LOOKUP.get(attributeName);
+  }
 
   private final String attribute;
   private final int index;

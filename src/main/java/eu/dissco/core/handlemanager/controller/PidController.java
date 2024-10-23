@@ -103,6 +103,9 @@ public class PidController {
       @PathVariable Optional<Boolean> draft,
       @RequestBody List<PostRequest> requests,
       Authentication authentication) throws InvalidRequestException, UnprocessableEntityException {
+    if (requests.isEmpty()) {
+      return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+    }
     var isDraft = draft.orElse(false);
     log.info(RECEIVED_MSG, "batch create", authentication.getName());
     return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecords(requests, isDraft));

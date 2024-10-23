@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.ReplaceOneModel;
+import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
@@ -20,6 +21,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
@@ -46,10 +50,12 @@ public class MongoRepository {
     }
     var existingHandles = new ArrayList<String>();
     results.forEach(r -> existingHandles.add(r.get(ID).toString()));
+    log.info("Collision of size {} occurred in generating new handles", existingHandles.size());
     return existingHandles;
   }
 
   public void postHandleRecords(List<Document> handleRecords) {
+    log.info("Posting {} new records to database", handleRecords.size());
     if (!handleRecords.isEmpty()) {
       collection.insertMany(handleRecords);
     }
@@ -60,6 +66,7 @@ public class MongoRepository {
       var filter = eq(doc.get(ID));
       return new ReplaceOneModel<>(filter, doc);
     }).toList();
+    log.info("Updating {} records to database", handleRecords.size());
     if (!queryList.isEmpty()) {
       collection.bulkWrite(queryList);
     }
@@ -93,22 +100,21 @@ public class MongoRepository {
         var attributes = mapper.convertValue(jsonRecord.get("values"),
             new TypeReference<Collection<FdoAttribute>>() {
             });
-        var fdoType = getFdoType(attributes, jsonRecord.get("_id").asText());
+        var attributeMap = buildAttributeMap(attributes);
+        var fdoType = FdoType.fromString(attributeMap.get(DIGITAL_OBJECT_TYPE).getValue());
         handleRecords.add(new FdoRecord(jsonRecord.get("_id").asText(),
-            fdoType, Collections.emptyMap(), getLocalId(jsonRecord, fdoType), attributes));
+            fdoType, attributeMap, getLocalId(jsonRecord, fdoType), attributes));
       }
     }
     return handleRecords;
   }
 
-  private FdoType getFdoType(Collection<FdoAttribute> fdoAttributes, String id) {
-    for (var fdoAttribute : fdoAttributes) {
-      if (DIGITAL_OBJECT_TYPE.index() == fdoAttribute.getIndex()) {
-        return FdoType.fromString(fdoAttribute.getValue());
-      }
-    }
-    log.error("Unable to determine Fdo Type for record of handle {}", id);
-    throw new IllegalStateException();
+  private static Map<FdoProfile, FdoAttribute> buildAttributeMap(
+      Collection<FdoAttribute> attributeList) {
+    return attributeList.stream().collect(Collectors.toMap(
+        a -> FdoProfile.fromString(a.getType()),
+        Function.identity()
+    ));
   }
 
   private String getLocalId(JsonNode jsonRecord, FdoType fdoType) {
