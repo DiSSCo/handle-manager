@@ -64,6 +64,7 @@ public class HandleService extends PidService {
     var fdoType = getFdoTypeFromRequest(requests.stream()
         .map(request -> request.data().type())
         .toList(), VALID_FDO_TYPES);
+    log.info("Processing {} {} requests", requestAttributes.size(), fdoType.getDigitalObjectName());
     List<FdoRecord> fdoRecords;
     try {
       switch (fdoType) {
@@ -93,6 +94,7 @@ public class HandleService extends PidService {
         requests.stream().map(r -> r.data().type()).toList(), VALID_FDO_TYPES);
     Pair<List<FdoRecord>, List<FdoRecord>> fdoRecords;
     var previousVersionMap = getPreviousVersionsMap(requests);
+    log.info("Processing {} {} update requests", requests.size(), fdoType.getDigitalObjectName());
     switch (fdoType) {
       case ANNOTATION -> fdoRecords = updateAnnotation(previousVersionMap, incrementVersion);
       case HANDLE -> fdoRecords = updateHandle(previousVersionMap, incrementVersion);

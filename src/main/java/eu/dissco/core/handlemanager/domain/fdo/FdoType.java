@@ -5,6 +5,8 @@ import static eu.dissco.core.handlemanager.service.FdoRecordService.HANDLE_DOMAI
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -95,19 +97,22 @@ public enum FdoType {
     this.domain = domain;
   }
 
+  private static final Map<String, FdoType> LOOKUP;
+
+  static {
+    LOOKUP = new HashMap<>();
+    for (var fdoType : FdoType.values()) {
+      LOOKUP.put(fdoType.digitalObjectType, fdoType);
+    }
+  }
+
+  public static FdoType fromString(String attributeName) {
+    return LOOKUP.get(attributeName);
+  }
+
   @Override
   public String toString() {
     return digitalObjectType;
   }
 
-  public static FdoType fromString(String fdoTypePid) {
-    fdoTypePid = fdoTypePid.replace("hdl.handle.net/", "doi.org/");
-    for (FdoType type : FdoType.values()) {
-      if (type.digitalObjectType.equalsIgnoreCase(fdoTypePid)) {
-        return type;
-      }
-    }
-    log.error("Unable to determine fdo type from {}, is it a PID?", fdoTypePid);
-    throw new IllegalArgumentException("No object type exists for " + fdoTypePid);
-  }
 }

@@ -184,6 +184,16 @@ class PidControllerTest {
   }
 
   @Test
+  void testCreateHandleRecordEmptyRequest() throws Exception {
+    // When
+    var result = controller.createRecords(Optional.of(false), List.of(), authentication);
+
+    // Then
+    assertThat(result.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+    then(service).shouldHaveNoInteractions();
+  }
+
+  @Test
   void testCreateDoiRecord() throws Exception {
     // Given
     var requestObject = givenDoiKernel();

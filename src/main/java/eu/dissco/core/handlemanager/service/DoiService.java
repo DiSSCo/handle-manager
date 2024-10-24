@@ -71,6 +71,7 @@ public class DoiService extends PidService {
     var fdoType = getFdoTypeFromRequest(requests.stream()
         .map(request -> request.data().type())
         .toList(), VALID_FDO_TYPES);
+    log.info("Processing {} {} requests", requestAttributes.size(), fdoType.getDigitalObjectName());
     try {
       switch (fdoType) {
         case DIGITAL_SPECIMEN -> {
@@ -98,6 +99,7 @@ public class DoiService extends PidService {
         VALID_FDO_TYPES);
     var previousVersionMap = getPreviousVersionsMap(requests);
     List<FdoRecord> fdoRecords;
+    log.info("Processing {} {} update requests", requests.size(), fdoType.getDigitalObjectName());
     switch (fdoType) {
       case DIGITAL_SPECIMEN ->
           fdoRecords = processSpecimenUpdateRequests(previousVersionMap, incrementVersion);
