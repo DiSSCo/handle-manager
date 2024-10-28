@@ -247,8 +247,9 @@ public abstract class PidService {
   protected static FdoType getFdoTypeFromRequest(List<FdoType> fdoTypes,
       Set<FdoType> validFdoTypes) {
     var uniqueTypes = new HashSet<>(fdoTypes);
-    if (uniqueTypes.size() != 1) {
-      throw new UnsupportedOperationException("Requests must all be of the same type");
+    if (uniqueTypes.size() > 1) {
+      throw new UnsupportedOperationException(
+          "Requests must all be of the same type. Provided types: " + uniqueTypes);
     }
     var fdoType = uniqueTypes.iterator().next();
     if (!validFdoTypes.contains(fdoType)) {

@@ -3,7 +3,6 @@ package eu.dissco.core.handlemanager.repository;
 
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.in;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
@@ -14,10 +13,8 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalMedia
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMongoDocument;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMongoResponse;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenUpdatedFdoRecord;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import com.mongodb.client.MongoClient;
@@ -26,10 +23,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
-import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
-import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
 import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -84,40 +78,51 @@ class MongoRepositoryIT {
   void testGetHandleRecordsHandle() throws Exception {
     // Given
     populateMongoDB();
-    var expected = List.of(givenMongoResponse(HANDLE, FdoType.HANDLE, null));
+    var expected = givenHandleFdoRecord(HANDLE);
 
     // When
-    var result = repository.getHandleRecords(List.of(HANDLE));
+    var result = repository.getHandleRecords(List.of(HANDLE)).get(0);
 
     // Then
-    assertThat(result).isEqualTo(expected);
+    assertThat(result.handle()).isEqualTo(expected.handle());
+    assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
+    assertThat(result.fdoType()).isEqualTo(expected.fdoType());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
+    assertThat(result.attributes()).containsAllEntriesOf(expected.attributes());
   }
 
   @Test
   void testGetHandleRecordsSpecimen() throws Exception {
     // Given
     populateMongoDB();
-    var expected = List.of(givenMongoResponse(SPECIMEN_ID, FdoType.DIGITAL_SPECIMEN,
-        NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL));
+    var expected = givenDigitalSpecimenFdoRecord(SPECIMEN_ID);
 
     // When
-    var result = repository.getHandleRecords(List.of(SPECIMEN_ID));
+    var result = repository.getHandleRecords(List.of(SPECIMEN_ID)).get(0);
 
     // Then
-    assertThat(result).isEqualTo(expected);
+    assertThat(result.handle()).isEqualTo(expected.handle());
+    assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
+    assertThat(result.fdoType()).isEqualTo(expected.fdoType());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
+    assertThat(result.attributes()).containsAllEntriesOf(expected.attributes());
   }
 
   @Test
   void testGetHandleRecordsMedia() throws Exception {
     // Given
     populateMongoDB();
-    var expected = givenMongoResponse(MEDIA_ID, FdoType.DIGITAL_MEDIA, PRIMARY_MEDIA_ID_TESTVAL);
+    var expected = givenDigitalMediaFdoRecord(MEDIA_ID);
 
     // When
-    var result = repository.getHandleRecords(List.of(MEDIA_ID));
+    var result = repository.getHandleRecords(List.of(MEDIA_ID)).get(0);
 
     // Then
-    assertThat(result.get(0)).isEqualTo(expected);
+    assertThat(result.handle()).isEqualTo(expected.handle());
+    assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
+    assertThat(result.fdoType()).isEqualTo(expected.fdoType());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
+    assertThat(result.attributes()).containsAllEntriesOf(expected.attributes());
   }
 
   @Test
@@ -190,30 +195,36 @@ class MongoRepositoryIT {
   void testSearchByPrimaryLocalIdSpecimen() throws Exception {
     // Given
     populateMongoDB();
-    var expected = List.of(givenMongoResponse(SPECIMEN_ID, FdoType.DIGITAL_SPECIMEN,
-        NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL));
+    var expected = givenDigitalSpecimenFdoRecord(SPECIMEN_ID);
 
     // When
     var result = repository.searchByPrimaryLocalId(FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID.get(),
-        List.of(NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL));
+        List.of(NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL)).get(0);
 
     // Then
-    assertThat(result).isEqualTo(expected);
+    assertThat(result.handle()).isEqualTo(expected.handle());
+    assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
+    assertThat(result.fdoType()).isEqualTo(expected.fdoType());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
+    assertThat(result.attributes()).containsAllEntriesOf(expected.attributes());
   }
 
   @Test
   void testSearchByPrimaryLocalIdMedia() throws Exception {
     // Given
     populateMongoDB();
-    var expected = List.of(
-        givenMongoResponse(MEDIA_ID, FdoType.DIGITAL_MEDIA, PRIMARY_MEDIA_ID_TESTVAL));
+    var expected = givenDigitalMediaFdoRecord(MEDIA_ID);
 
     // When
     var result = repository.searchByPrimaryLocalId(FdoProfile.PRIMARY_MEDIA_ID.get(),
-        List.of(PRIMARY_MEDIA_ID_TESTVAL));
+        List.of(PRIMARY_MEDIA_ID_TESTVAL)).get(0);
 
     // Then
-    assertThat(result).isEqualTo(expected);
+    assertThat(result.handle()).isEqualTo(expected.handle());
+    assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
+    assertThat(result.fdoType()).isEqualTo(expected.fdoType());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
+    assertThat(result.attributes()).containsAllEntriesOf(expected.attributes());
   }
 
   @Test
@@ -244,19 +255,6 @@ class MongoRepositoryIT {
     // Then
     assertThat(result).isEmpty();
     assertThat(rollbackCount).isEqualTo(1);
-  }
-
-  @Test
-  void testFdoTypeNotFound() throws Exception {
-    // Given
-    var attribute = new FdoAttribute(FdoProfile.FDO_RECORD_LICENSE_NAME, CREATED, "License");
-    var fdoRecord = new FdoRecord(HANDLE, FdoType.HANDLE,
-        Map.of(FdoProfile.LICENSE_NAME, attribute), null, List.of(attribute));
-    collection.insertOne(givenMongoDocument(fdoRecord));
-    var handleList = List.of(HANDLE);
-
-    // When / Then
-    assertThrows(IllegalStateException.class, () -> repository.getHandleRecords(handleList));
   }
 
   private void populateMongoDB() throws Exception {

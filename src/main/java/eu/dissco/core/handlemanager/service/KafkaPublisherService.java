@@ -16,7 +16,7 @@ public class KafkaPublisherService {
   private final KafkaTemplate<String, String> kafkaTemplate;
 
   public void sendObjectToQueue(String topicName, String message) {
-    log.info("Sending to topic: {} with object: {}", topicName, message);
+    log.debug("Sending to topic: {} with object: {}", topicName, message);
     kafkaTemplate.send(topicName, message);
   }
 
