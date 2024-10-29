@@ -261,11 +261,11 @@ public class FdoRecordService {
     // 501 Target Type
     handleAttributeList.put(TARGET_TYPE,
         new FdoAttribute(TARGET_TYPE, timestamp, request.getTargetType()));
-    // 502 Motivation
+    // 502 Target Type Name
     String targetTypeName = null;
     try {
       targetTypeName = FdoType.fromString(request.getTargetType()).getDigitalObjectName();
-    } catch (IllegalArgumentException ignored) {
+    } catch (IllegalArgumentException | NullPointerException ignored) {
       log.warn("Target type {} for pid {} is not a valid target type", request.getTargetType(),
           handle);
     }
