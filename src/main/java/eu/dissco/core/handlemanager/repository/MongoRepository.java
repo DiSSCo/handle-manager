@@ -113,7 +113,8 @@ public class MongoRepository {
       Collection<FdoAttribute> attributeList) {
     return attributeList.stream().collect(Collectors.toMap(
         a -> FdoProfile.fromString(a.getType()),
-        Function.identity()
+        Function.identity(),
+        (oldVal, newVal) -> oldVal
     ));
   }
 
