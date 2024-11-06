@@ -128,7 +128,7 @@ public class FdoRecordService {
   private final Pattern xmlLocPattern = Pattern.compile("href=\"[^\"]+\"");
   public static final String HANDLE_DOMAIN = "https://hdl.handle.net/";
   public static final String DOI_DOMAIN = "https://doi.org/";
-  private static final String ROR_API_DOMAIN = "https://api.ror.org/organizations/";
+  private static final String ROR_API_DOMAIN = "https://api.ror.org/v2/organizations/";
   private static final String ROR_DOMAIN = "https://ror.org/";
   private static final String WIKIDATA_DOMAIN = "https://www.wikidata.org/wiki/";
   private static final String WIKIDATA_API = "https://wikidata.org/w/rest.php/wikibase/v0/entities/items/";
@@ -840,9 +840,9 @@ public class FdoRecordService {
       return name;
     }
     if (url.contains(ROR_DOMAIN)) {
-      return pidResolver.getObjectName(getRor(url));
+      return pidResolver.getObjectName(getRor(url), true);
     } else if (url.contains(HANDLE_DOMAIN) || url.contains(DOI_DOMAIN)) {
-      return pidResolver.getObjectName(url);
+      return pidResolver.getObjectName(url, false);
     } else if (url.contains(WIKIDATA_DOMAIN)) {
       return pidResolver.resolveQid(url.replace(WIKIDATA_DOMAIN, WIKIDATA_API));
     }

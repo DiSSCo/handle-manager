@@ -64,6 +64,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenUpdatedFdoRe
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.setLocations;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
@@ -110,7 +111,7 @@ class FdoRecordServiceTest {
   void init() throws PidResolutionException {
     fdoRecordService = new FdoRecordService(TRANSFORMER_FACTORY, DOC_BUILDER_FACTORY, pidResolver,
         MAPPER, applicationProperties, profileProperties);
-    given(pidResolver.getObjectName(any())).willReturn(SPECIMEN_HOST_NAME_TESTVAL);
+    given(pidResolver.getObjectName(any(), anyBoolean())).willReturn(SPECIMEN_HOST_NAME_TESTVAL);
     given(applicationProperties.getPrefix()).willReturn(PREFIX);
     given(applicationProperties.getApiUrl()).willReturn(API_URL);
     given(applicationProperties.getOrchestrationUrl()).willReturn(ORCHESTRATION_URL);
@@ -147,7 +148,9 @@ class FdoRecordServiceTest {
     fdoRecordService.prepareNewOrganisationRecord(request, HANDLE, CREATED, false);
 
     // Then
-    then(pidResolver).should().getObjectName("https://api.ror.org/organizations/" + ROR_IDENTIFIER);
+    then(pidResolver).should()
+        .getObjectName("https://api.ror.org/v2/organizations/" + ROR_IDENTIFIER,
+            true);
   }
 
   @Test
@@ -160,7 +163,7 @@ class FdoRecordServiceTest {
     fdoRecordService.prepareNewOrganisationRecord(request, HANDLE, CREATED, false);
 
     // Then
-    then(pidResolver).should().getObjectName(id);
+    then(pidResolver).should().getObjectName(id, false);
   }
 
   @Test

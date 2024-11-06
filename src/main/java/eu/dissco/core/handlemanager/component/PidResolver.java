@@ -24,13 +24,16 @@ public class PidResolver {
 
   private final WebClient webClient;
   private final ObjectMapper mapper;
+  private static final String NAMES = "names";
 
   @Cacheable("pidName")
-  public String getObjectName(String pid)
+  public String getObjectName(String pid, boolean isRor)
       throws PidResolutionException {
     log.info("getting Pid name for: {}", pid);
     var pidRecord = resolveExternalPid(pid);
-    if (pidRecord.get("name") != null) {
+    if (isRor) {
+      return getRorInstitutionName(pidRecord);
+    } else if (pidRecord.get("name") != null) {
       return pidRecord.get("name").asText();
     }
     log.warn("Given pid {} resolves, but does not include a name attribute", pid);
@@ -88,6 +91,25 @@ public class PidResolver {
   public boolean is5xxServerError(Throwable throwable) {
     return throwable instanceof WebClientResponseException webClientResponseException
         && webClientResponseException.getStatusCode().is5xxServerError();
+  }
+
+  private static String getRorInstitutionName(JsonNode rorResult) {
+    try {
+      if (rorResult.get(NAMES).isArray() && !rorResult.get(NAMES).isEmpty()) {
+        for (var name : rorResult.get(NAMES)) {
+          if ("en".equals(name.get("lang").asText())) {
+            return name.get("value").asText();
+          }
+        }
+        log.warn("No English names provided in ROR record. Using first name");
+        return rorResult.get(NAMES).get(0).get("value").asText();
+      }
+      log.warn("Unable to parse ROR result {}", rorResult);
+      return null;
+    } catch (NullPointerException e) {
+      log.warn("Unexpected ROR result {}", rorResult);
+      return null;
+    }
   }
 
 }
