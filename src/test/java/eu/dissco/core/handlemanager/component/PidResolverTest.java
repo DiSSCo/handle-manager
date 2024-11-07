@@ -102,7 +102,7 @@ class PidResolverTest {
   }
 
   @Test
-  void testResolveRorNoEnglish() throws Exception {
+  void testResolveRorNoRorDisplay() throws Exception {
     var expected = "Nederlands Centrum voor Biodiversiteit Naturalis";
     var response = MAPPER.readTree("""
         {
@@ -135,8 +135,8 @@ class PidResolverTest {
         {
          "names": [
             {
-              "language": "nl",
-              "types": [
+              "lang": "nl",
+              "type": [
                 "label"
               ],
               "value": "Nederlands Centrum voor Biodiversiteit Naturalis"

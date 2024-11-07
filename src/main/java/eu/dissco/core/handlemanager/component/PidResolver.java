@@ -97,8 +97,10 @@ public class PidResolver {
     try {
       if (rorResult.get(NAMES).isArray() && !rorResult.get(NAMES).isEmpty()) {
         for (var name : rorResult.get(NAMES)) {
-          if ("en".equals(name.get("lang").asText())) {
-            return name.get("value").asText();
+          for (var type : name.get("types")) {
+            if ("ror_display".equals(type.asText())) {
+              return name.get("value").asText();
+            }
           }
         }
         log.warn("No English names provided in ROR record. Using first name");
