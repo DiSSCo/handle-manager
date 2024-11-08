@@ -1,6 +1,7 @@
 package eu.dissco.core.handlemanager.component;
 
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.EXTERNAL_PID;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.loadResourceFile;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,7 +49,7 @@ class PidResolverTest {
   }
 
   @Test
-  void testResolveExternalPid() throws Exception {
+  void testResolveExternalPidHandle() throws Exception {
     // Given
     var expectedResponse = MAPPER.readTree(loadResourceFile("pidrecord/pidRecord.json"));
     var expected = expectedResponse.get("name").asText();
@@ -58,10 +59,101 @@ class PidResolverTest {
         .addHeader("Content-Type", "application/json"));
 
     // When
-    var response = pidResolver.getObjectName(EXTERNAL_PID);
+    var response = pidResolver.getObjectName(EXTERNAL_PID, false);
 
     // Then
     assertThat(response).isEqualTo(expected);
+  }
+
+  @Test
+  void testResolveRor() throws Exception {
+    var expected = "Naturalis Biodiversity Center";
+    var response = MAPPER.readTree("""
+        {
+         "names": [
+            {
+              "lang": "nl",
+              "types": [
+                "label"
+              ],
+              "value": "Nederlands Centrum voor Biodiversiteit Naturalis"
+            },
+            {
+              "lang": "en",
+              "types": [
+                "ror_display",
+                "label"
+              ],
+              "value": "Naturalis Biodiversity Center"
+            }
+            ]
+        }
+        """);
+    mockServer.enqueue(new MockResponse()
+        .setBody(MAPPER.writeValueAsString(response))
+        .setResponseCode(HttpStatus.OK.value())
+        .addHeader("Content-Type", "application/json"));
+
+    // When
+    var result = pidResolver.getObjectName(HANDLE, true);
+
+    // Then
+    assertThat(result).isEqualTo(expected);
+  }
+
+  @Test
+  void testResolveRorNoRorDisplay() throws Exception {
+    var expected = "Nederlands Centrum voor Biodiversiteit Naturalis";
+    var response = MAPPER.readTree("""
+        {
+         "names": [
+            {
+              "lang": "nl",
+              "types": [
+                "label"
+              ],
+              "value": "Nederlands Centrum voor Biodiversiteit Naturalis"
+            }
+            ]
+        }
+        """);
+    mockServer.enqueue(new MockResponse()
+        .setBody(MAPPER.writeValueAsString(response))
+        .setResponseCode(HttpStatus.OK.value())
+        .addHeader("Content-Type", "application/json"));
+
+    // When
+    var result = pidResolver.getObjectName(HANDLE, true);
+
+    // Then
+    assertThat(result).isEqualTo(expected);
+  }
+
+  @Test
+  void testResolveRorUnexpected() throws Exception {
+    var response = MAPPER.readTree("""
+        {
+         "names": [
+            {
+              "lang": "nl",
+              "type": [
+                "label"
+              ],
+              "value": "Nederlands Centrum voor Biodiversiteit Naturalis"
+            }
+            ]
+        }
+        """);
+    mockServer.enqueue(new MockResponse()
+        .setBody(MAPPER.writeValueAsString(response))
+        .setResponseCode(HttpStatus.OK.value())
+        .addHeader("Content-Type", "application/json"));
+
+    // When
+    var result = pidResolver.getObjectName(HANDLE, true);
+
+    // Then
+    assertThat(result).isNull();
   }
 
   @Test
@@ -124,7 +216,7 @@ class PidResolverTest {
   }
 
   @Test
-  void testResolveExternalPidNoName() throws Exception {
+  void testResolveExternalPidNoNameHandle() throws Exception {
     // Given
     var expectedResponse = MAPPER.readTree(loadResourceFile("pidrecord/pidRecordNoName.json"));
     var expected = "";
@@ -134,21 +226,21 @@ class PidResolverTest {
         .addHeader("Content-Type", "application/json"));
 
     // When
-    var response = pidResolver.getObjectName(EXTERNAL_PID);
+    var response = pidResolver.getObjectName(EXTERNAL_PID, false);
 
     // Then
     assertThat(response).isEqualTo(expected);
   }
 
   @Test
-  void testResolveExternalPidNotFound() throws Exception {
+  void testResolveExternalPidNotFoundHandle() throws Exception {
     // Given
     mockServer.enqueue(new MockResponse()
         .setResponseCode(HttpStatus.NOT_FOUND.value())
         .addHeader("Content-Type", "application/json"));
 
     // When
-    var response = pidResolver.getObjectName(EXTERNAL_PID);
+    var response = pidResolver.getObjectName(EXTERNAL_PID, false);
 
     // Then
     assertThat(response).isEqualTo("NOT FOUND");
@@ -162,12 +254,12 @@ class PidResolverTest {
         .addHeader("Content-Type", "application/json"));
 
     // Then
-    assertThrowsExactly(PidResolutionException.class, () -> pidResolver.getObjectName(EXTERNAL_PID
-    ));
+    assertThrowsExactly(PidResolutionException.class, () -> pidResolver.getObjectName(EXTERNAL_PID,
+        true));
   }
 
   @Test
-  void testRetriesSuccess() throws Exception {
+  void testRetriesSuccessHandle() throws Exception {
     // Given
     int requestCount = mockServer.getRequestCount();
     var expectedResponse = MAPPER.readTree(loadResourceFile("pidrecord/pidRecord.json"));
@@ -179,7 +271,7 @@ class PidResolverTest {
         .addHeader("Content-Type", "application/json"));
 
     // When
-    var response = pidResolver.getObjectName(EXTERNAL_PID);
+    var response = pidResolver.getObjectName(EXTERNAL_PID, false);
 
     // Then
     assertThat(response).isEqualTo(expected);
@@ -197,13 +289,13 @@ class PidResolverTest {
 
     // Then
     assertThrowsExactly(PidResolutionException.class,
-        () -> pidResolver.getObjectName(EXTERNAL_PID));
+        () -> pidResolver.getObjectName(EXTERNAL_PID, true));
     assertThat(mockServer.getRequestCount() - requestCount).isEqualTo(4);
   }
 
 
   @Test
-  void testRedirect() throws Exception {
+  void testRedirectHandle() throws Exception {
     // Given
     var expectedResponse = MAPPER.readTree(loadResourceFile("pidrecord/pidRecord.json"));
     var expected = expectedResponse.get("name").asText();
@@ -218,7 +310,7 @@ class PidResolverTest {
         .addHeader("Content-Type", "application/json"));
 
     // When
-    var response = pidResolver.getObjectName(EXTERNAL_PID);
+    var response = pidResolver.getObjectName(EXTERNAL_PID, false);
 
     // Then
     assertThat(response).isEqualTo(expected);
