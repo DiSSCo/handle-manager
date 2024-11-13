@@ -29,6 +29,7 @@
     </sonar.coverage.jacoco.xmlReportPaths>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     <sonar.organization>dissco</sonar.organization>
+    <springdoc.version>2.6.0</springdoc.version>
   </properties>
 
   <dependencyManagement>
@@ -139,8 +140,8 @@
     </dependency>
     <dependency>
       <groupId>org.springdoc</groupId>
-      <artifactId>springdoc-openapi-ui</artifactId>
-      <version>1.6.13</version>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+      <version>${springdoc.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
