@@ -35,7 +35,7 @@ public enum FdoType {
       "https://doi.org/21.T11148/894b1e6cad57e921764e",
       DOI_DOMAIN),
   @JsonProperty("https://doi.org/21.T11148/bbad8c4e101e8af01115")
-  @JsonAlias("https://hdl.handle.net/21.T11148/894b1e6cad57e921764e")
+  @JsonAlias("https://hdl.handle.net/21.T11148/bbad8c4e101e8af01115")
   DIGITAL_MEDIA(
       "MediaObject",
       "https://doi.org/21.T11148/bbad8c4e101e8af01115",
