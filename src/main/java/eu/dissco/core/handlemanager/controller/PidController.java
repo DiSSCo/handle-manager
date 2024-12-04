@@ -33,7 +33,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/pids")
+@RequestMapping
 @RequiredArgsConstructor
 @ControllerAdvice
 @Slf4j
@@ -41,7 +41,6 @@ public class PidController {
 
   private final PidService service;
   private final ApplicationProperties applicationProperties;
-  private final SchemaValidator validatorComponent;
   private static final String RECEIVED_MSG = "Received {} request from user {}";
 
   // Getters
@@ -51,7 +50,6 @@ public class PidController {
       @PathVariable("suffix") String suffix, HttpServletRequest r) throws PidResolutionException {
     String link = applicationProperties.getUiUrl() + "/" + r.getRequestURI();
     String handle = prefix + "/" + suffix;
-
     if (prefix.equals(applicationProperties.getPrefix())) {
       var node = service.resolveSingleRecord(handle, link);
       return ResponseEntity.status(HttpStatus.OK).body(node);

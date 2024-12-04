@@ -32,27 +32,27 @@ public enum FdoType {
   DIGITAL_SPECIMEN(
       "DigitalSpecimen",
       "https://doi.org/21.T11148/894b1e6cad57e921764e",
-      "https://doi.org/21.T11148/894b1e6cad57e921764e",
+      "https://doi.org/21.T11148/d8de0819e144e4096645",
       DOI_DOMAIN),
   @JsonProperty("https://doi.org/21.T11148/bbad8c4e101e8af01115")
   @JsonAlias("https://hdl.handle.net/21.T11148/bbad8c4e101e8af01115")
   DIGITAL_MEDIA(
       "MediaObject",
       "https://doi.org/21.T11148/bbad8c4e101e8af01115",
-      "https://doi.org/21.T11148/bbad8c4e101e8af01115",
+      "https://doi.org/21.T11148/306452d0867adb910803",
       DOI_DOMAIN),
   @JsonProperty("https://doi.org/21.T11148/cf458ca9ee1d44a5608f")
   @JsonAlias("https://hdl.handle.net/21.T11148/cf458ca9ee1d44a5608f")
   ANNOTATION(
       "Annotation",
       "https://doi.org/21.T11148/cf458ca9ee1d44a5608f",
-      "https://doi.org/21.T11148/cf458ca9ee1d44a5608f",
+      "https://doi.org/21.T11148/2e76f544229901c5a942",
       HANDLE_DOMAIN),
-  @JsonProperty("https://doi.org/21.T11148/417a4f472f60f7974c12")
-  @JsonAlias("https://hdl.handle.net/21.T11148/417a4f472f60f7974c12")
+  @JsonProperty("https://doi.org/21.T11148/23a63913d0c800609a50")
+  @JsonAlias("https://hdl.handle.net/21.T11148/23a63913d0c800609a50")
   SOURCE_SYSTEM(
       "sourceSystem",
-      "https://doi.org/21.T11148/417a4f472f60f7974c12",
+      "https://doi.org/21.T11148/23a63913d0c800609a50",
       "https://doi.org/21.T11148/417a4f472f60f7974c12",
       HANDLE_DOMAIN),
   @JsonProperty("https://doi.org/21.T11148/ce794a6f4df42eb7e77e")
@@ -60,7 +60,7 @@ public enum FdoType {
   DATA_MAPPING(
       "Mapping",
       "https://doi.org/21.T11148/ce794a6f4df42eb7e77e",
-      "https://doi.org/21.T11148/ce794a6f4df42eb7e77e",
+      "https://doi.org/21.T11148/def2eba59562958fa4a0",
       HANDLE_DOMAIN),
   @JsonProperty("https://doi.org/21.T11148/413c00cbd83ae33d1ac0")
   @JsonAlias("https://hdl.handle.net/21.T11148/413c00cbd83ae33d1ac0")
@@ -76,11 +76,11 @@ public enum FdoType {
       "https://doi.org/21.T11148/d7570227982f70256af3",
       "https://doi.org/21.T11148/d7570227982f70256af3",
       HANDLE_DOMAIN),
-  @JsonProperty("https://doi.org/21.T11148/22e71a0015cbcfba8ffa")
-  @JsonAlias("https://hdl.handle.net/21.T11148/22e71a0015cbcfba8ffa")
+  @JsonProperty("https://doi.org/21.T11148/a369e128df5ef31044d4")
+  @JsonAlias("https://hdl.handle.net/21.T11148/a369e128df5ef31044d4")
   MAS(
       "Machine Annotation Service",
-      "https://doi.org/21.T11148/22e71a0015cbcfba8ffa",
+      "https://doi.org/21.T11148/a369e128df5ef31044d4",
       "https://doi.org/21.T11148/22e71a0015cbcfba8ffa",
       HANDLE_DOMAIN);
 
