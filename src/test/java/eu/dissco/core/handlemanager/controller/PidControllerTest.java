@@ -63,7 +63,7 @@ class PidControllerTest {
 
   @BeforeEach
   void setup() {
-    controller = new PidController(service, applicationProperties, validatorComponent);
+    controller = new PidController(service, applicationProperties);
   }
 
   @Test
