@@ -18,6 +18,6 @@ public class MongoConfig {
   public MongoCollection<Document> getHandleCollection() {
     var client = MongoClients.create(properties.getConnectionString());
     var database = client.getDatabase(properties.getDatabase());
-    return database.getCollection("handles");
+    return database.getCollection(properties.getCollection());
   }
 }
