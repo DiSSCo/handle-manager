@@ -16,7 +16,4 @@ public class MongoProperties {
   @NotBlank
   private String database;
 
-  @NotBlank
-  private String collection;
-
 }
