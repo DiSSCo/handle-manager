@@ -2,7 +2,7 @@
   "$id": "https://schemas.dissco.tech/schemas/fdo-profile/digital-specimen/0.1.0/digital-specimen-request-attributes.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "description": "Attributes of a request to the DiSSCo PID API to create a FDO Record for a digital specimen",
-  "$comment": "FDO Profile Version 1.0.0",
+  "$comment": "FDO Profile Version 0.1.0",
   "properties": {
     "locations": {
       "type": "array",
@@ -94,7 +94,7 @@
       "enum": [
         "Human remains",
         "Hominid remains",
-        "Macrofungi, Lichens & Myxomycetes",
+        "Mycology",
         "Algae",
         "Bryophytes",
         "Pteridophytes",
@@ -128,18 +128,13 @@
         "Other Palaeontology Objects",
         "Minerals and Gems",
         "Loose Sediment Sample",
-        "Mixed Solid Matter Sample",
+        "Mixed Solid Mater Sample",
         "Water-Ice Sample",
         "Liquid or Gaseous Matter Sample",
         "Mixed Geology Objects",
         "Terrestrial Finds/Falls",
         "Terrestrial Impacta",
         "Sample Returns",
-        "Sedimentary Rock",
-        "Metamorphic or Igneous Rock",
-        "Plant Genetic Resource",
-        "Floral and Faunal remains",
-        "Other Anthropology Objects",
         "Unclassified"
       ],
       "description": "Countable things (objects) served as a more detailed classification of each of the disciplines."
@@ -153,20 +148,12 @@
     },
     "materialSampleType": {
       "enum": [
-        "Whole organism specimen",
-        "Organism part",
-        "Organism product",
-        "Biome aggregation",
-        "Bundle biome aggregation",
-        "Fossil",
         "Any biological specimen",
-        "Aggregation",
-        "Slurry biome aggregation",
-        "Other solid object",
+        "Biological material sample",
         "Fluid in container",
-        "Anthropogenic aggregation",
-        "Artefact",
-        "Any aggregation specimen"
+        "Fluid in container",
+        "Non biologic solid object",
+        "Research product"
       ],
       "description": "https://isamplesorg.github.io/models/generated/vocabularies/specimenType.html"
     },
@@ -174,9 +161,9 @@
       "type": "boolean",
       "description": "TRUE if the specimen is marked as type with a stamp or label."
     },
-    "catalogIdentifier": {
+    "catalogNumber": {
       "type": "string",
-      "description": "Identifier of source system catalog"
+      "description": "Number of the specimen in the source system catalog"
     }
   },
   "required": [

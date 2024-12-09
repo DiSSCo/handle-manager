@@ -111,11 +111,12 @@ public class MongoRepository {
 
   private static Map<FdoProfile, FdoAttribute> buildAttributeMap(
       Collection<FdoAttribute> attributeList) {
-    return attributeList.stream().collect(Collectors.toMap(
-        a -> FdoProfile.fromString(a.getType()),
-        Function.identity(),
-        (oldVal, newVal) -> oldVal
-    ));
+    return attributeList.stream()
+        .collect(Collectors.toMap(
+            a -> FdoProfile.fromString(a.getType()),
+            Function.identity(),
+            (oldVal, newVal) -> oldVal
+        ));
   }
 
   private String getLocalId(JsonNode jsonRecord, FdoType fdoType) {
