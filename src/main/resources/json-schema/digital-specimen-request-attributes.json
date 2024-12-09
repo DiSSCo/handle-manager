@@ -163,7 +163,7 @@
     },
     "catalogNumber": {
       "type": "string",
-      "description": "Number of the specimen in the source system catalog"
+      "description": "Identifier of source system catalog"
     }
   },
   "required": [
