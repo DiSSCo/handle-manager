@@ -41,7 +41,7 @@ public enum FdoProfile {
   LIVING_OR_PRESERVED("livingOrPreserved", 208),
   MATERIAL_SAMPLE_TYPE("materialSampleType", 209),
   MARKED_AS_TYPE("markedAsType", 210),
-  CATALOG_IDENTIFIER("catalogIdentifier", 211),
+  CATALOG_NUMBER("catalogNumber", 211),
 
   // Media
   MEDIA_HOST("mediaHost", 400),
@@ -54,9 +54,9 @@ public enum FdoProfile {
   MEDIA_TYPE("mediaType", 408),
   MIME_TYPE("mimeType", 409),
   LICENSE_NAME("licenseName", 410),
-  LICENSE_ID("licenseId", 411),
-  RIGHTS_HOLDER_NAME("rightsHolderName", 412),
-  RIGHTS_HOLDER_PID("rightsHolderId", 413),
+  LICENSE_URL("licenseUrl", 411),
+  RIGHTS_HOLDER_NAME("rightsHolder", 412),
+  RIGHTS_HOLDER_PID("rightsHolderPid", 413),
 
   // Annotation
   TARGET_PID("targetPid", 500),
@@ -76,7 +76,9 @@ public enum FdoProfile {
 
   // Administration
   HS_ADMIN("HS_ADMIN", 100),
-  LOC("10320/loc", 101);
+  LOC("10320/loc", 101),
+  UNRECOGNIZED("Unrecognized", 900);
+
 
   private static final Map<String, FdoProfile> LOOKUP;
 
@@ -88,7 +90,7 @@ public enum FdoProfile {
   }
 
   public static FdoProfile fromString(String attributeName) {
-    return LOOKUP.get(attributeName);
+    return LOOKUP.getOrDefault(attributeName, UNRECOGNIZED);
   }
 
   private final String attribute;
