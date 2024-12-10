@@ -67,29 +67,31 @@
       "example": "CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",
       "$comment": "idx = 409"
     },
-    "licenseId": {
+    "licenseUrl": {
       "type": "string",
       "description": "Machine-actionable licensing information. Uses SPDX Identifiers.",
       "example": "https://spdx.org/licenses/CC0-1.0",
       "$comment": "idx = 410"
     },
-    "rightsHolderName": {
+    "rightsHolder": {
       "type": "string",
       "description": "If not present, defaults to mediaHost, https://purl.org/dc/terms/rightsHolder",
       "example": "https://ror.org/0566bfb96"
     },
-    "rightsHolderId": {
+    "rightsHolderPid": {
       "type": "string",
       "description": "Resolvable identifier of the rights holder",
       "example": "https://ror.org/0566bfb96"
     }
   },
   "required": [
+    "referentName",
     "mediaHost",
     "mediaHostName",
     "linkedDigitalObjectPid",
     "linkedDigitalObjectType",
-    "primaryMediaId"
+    "primaryMediaId",
+    "rightsHolder"
   ],
   "additionalProperties": false
 }

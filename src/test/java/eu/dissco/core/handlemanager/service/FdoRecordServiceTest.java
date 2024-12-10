@@ -1,6 +1,6 @@
 package eu.dissco.core.handlemanager.service;
 
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.CATALOG_IDENTIFIER;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.CATALOG_NUMBER;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LOC;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.OTHER_SPECIMEN_IDS;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID_RECORD_ISSUE_NUMBER;
@@ -347,10 +347,10 @@ class FdoRecordServiceTest {
   @Test
   void testPrepareNewDigitalSpecimenRecordNoOtherSpecimen() throws Exception {
     // Given
-    var request = givenDigitalSpecimen().withCatalogIdentifier(null);
+    var request = givenDigitalSpecimen().withCatalogNumber(null);
     var expectedAttributes = new EnumMap<>(givenDigitalSpecimenFdoRecord(HANDLE).attributes());
-    expectedAttributes.replace(CATALOG_IDENTIFIER,
-        new FdoAttribute(CATALOG_IDENTIFIER, CREATED, null));
+    expectedAttributes.replace(CATALOG_NUMBER,
+        new FdoAttribute(CATALOG_NUMBER, CREATED, null));
     expectedAttributes.replace(LOC,
         new FdoAttribute(LOC, CREATED, setLocations(HANDLE, FdoType.DIGITAL_SPECIMEN, false)));
 
@@ -373,7 +373,7 @@ class FdoRecordServiceTest {
   void testGetSpecimenResolvableIdOtherId(String catalogId) throws Exception {
     // Given
     var keyLoc = CATALOG_ID_TEST + "A";
-    var request = givenDigitalSpecimen().withCatalogIdentifier(catalogId).withOtherSpecimenIds(
+    var request = givenDigitalSpecimen().withCatalogNumber(catalogId).withOtherSpecimenIds(
         List.of(new OtherspecimenIds().withIdentifierType("Local id").withIdentifierValue("ABC")
                 .withResolvable(false),
             new OtherspecimenIds().withIdentifierType("Resolvable id").withIdentifierValue(keyLoc)

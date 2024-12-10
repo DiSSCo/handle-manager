@@ -3,7 +3,7 @@ package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.configuration.AppConfig.DATE_STRING;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.ANNOTATION_HASH;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.CATALOG_IDENTIFIER;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.CATALOG_NUMBER;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DIGITAL_OBJECT_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DIGITAL_OBJECT_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.FDO_PROFILE;
@@ -13,8 +13,8 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.HAS_RELATED_PID
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.ISSUED_FOR_AGENT;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.ISSUED_FOR_AGENT_NAME;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LICENSE_ID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LICENSE_NAME;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LICENSE_URL;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LINKED_DO_PID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LINKED_DO_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LIVING_OR_PRESERVED;
@@ -366,7 +366,7 @@ public class FdoRecordService {
       throws InvalidRequestException, JsonProcessingException {
     var handleAttributeList = new EnumMap<FdoProfile, FdoAttribute>(FdoProfile.class);
     // 101: 10320/Loc
-    var keyAttribute = getSpecimenResolvableId(request.getCatalogIdentifier(),
+    var keyAttribute = getSpecimenResolvableId(request.getCatalogNumber(),
         request.getOtherSpecimenIds());
     handleAttributeList.put(LOC,
         new FdoAttribute(LOC, timestamp,
@@ -416,8 +416,8 @@ public class FdoRecordService {
     handleAttributeList.put(MARKED_AS_TYPE,
         new FdoAttribute(MARKED_AS_TYPE, timestamp, request.getMarkedAsType()));
     // 211 Catalog Number
-    handleAttributeList.put(CATALOG_IDENTIFIER,
-        new FdoAttribute(CATALOG_IDENTIFIER, timestamp, request.getCatalogIdentifier()));
+    handleAttributeList.put(CATALOG_NUMBER,
+        new FdoAttribute(CATALOG_NUMBER, timestamp, request.getCatalogNumber()));
     return handleAttributeList;
   }
 
@@ -552,15 +552,16 @@ public class FdoRecordService {
     handleAttributeList.put(LICENSE_NAME,
         new FdoAttribute(LICENSE_NAME, timestamp, request.getLicenseName()));
     // 410 License Id
-    handleAttributeList.put(LICENSE_ID,
-        new FdoAttribute(LICENSE_ID, timestamp, request.getLicenseId()));
-    // 411 Rights Holder Id
+    handleAttributeList.put(LICENSE_URL,
+        new FdoAttribute(LICENSE_URL, timestamp, request.getLicenseUrl()));
+    // 411 Rights Holder Pid
     var rightsHolder =
-        request.getRightsHolderId() == null ? request.getMediaHost() : request.getRightsHolderId();
+        request.getRightsHolderPid() == null ? request.getMediaHost()
+            : request.getRightsHolderPid();
     handleAttributeList.put(RIGHTS_HOLDER_PID,
         new FdoAttribute(RIGHTS_HOLDER_PID, timestamp, rightsHolder));
-    String rightsHolderName = request.getRightsHolderName() != null ?
-        getObjectName(request.getRightsHolderId(), request.getRightsHolderName()) : mediaHostName;
+    String rightsHolderName = request.getRightsHolder() != null ?
+        getObjectName(request.getRightsHolderPid(), request.getRightsHolder()) : mediaHostName;
     // 412 Rights Holder Name
     handleAttributeList.put(RIGHTS_HOLDER_NAME,
         new FdoAttribute(RIGHTS_HOLDER_NAME, timestamp, rightsHolderName));
@@ -812,7 +813,7 @@ public class FdoRecordService {
     try {
       switch (fdoType) {
         case DIGITAL_SPECIMEN -> {
-          var catalogIdValue = fdoAttributes.get(CATALOG_IDENTIFIER);
+          var catalogIdValue = fdoAttributes.get(CATALOG_NUMBER);
           var catalogId = catalogIdValue == null ? null : catalogIdValue.getValue();
           var otherSpecimenIdsField = fdoAttributes.get(OTHER_SPECIMEN_IDS);
           var otherSpecimenIds =

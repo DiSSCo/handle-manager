@@ -1,7 +1,7 @@
 package eu.dissco.core.handlemanager.testUtils;
 
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.ANNOTATION_HASH;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.CATALOG_IDENTIFIER;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.CATALOG_NUMBER;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DIGITAL_OBJECT_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.DIGITAL_OBJECT_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.FDO_PROFILE;
@@ -11,8 +11,8 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.HAS_RELATED_PID
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.ISSUED_FOR_AGENT;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.ISSUED_FOR_AGENT_NAME;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LICENSE_ID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LICENSE_NAME;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LICENSE_URL;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LINKED_DO_PID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LINKED_DO_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LIVING_OR_PRESERVED;
@@ -182,6 +182,7 @@ public class TestUtils {
   public static final DocumentBuilderFactory DOC_BUILDER_FACTORY = DocumentBuilderFactory.newInstance();
   public static final ObjectMapper MAPPER;
   public static final Set<FdoProfile> GENERATED_KEYS;
+  public static final String LICENSE = "https://spdx.org/licenses/CC0-1.0.json";
 
   static {
     GENERATED_KEYS = Set.of(FDO_PROFILE, FDO_RECORD_LICENSE_ID,
@@ -230,7 +231,7 @@ public class TestUtils {
         new FdoAttribute(FDO_PROFILE, timestamp, fdoType.getFdoProfile()));
     // 2: FDO Record License
     fdoAttributes.put(FDO_RECORD_LICENSE_ID, new FdoAttribute(FDO_RECORD_LICENSE_ID, timestamp,
-        "https://spdx.org/licenses/CC0-1.0.json"));
+        LICENSE));
     // 3: Fdo Record License Name
     fdoAttributes.put(FDO_RECORD_LICENSE_NAME,
         new FdoAttribute(FDO_RECORD_LICENSE_NAME, timestamp, "CC0 1.0 Universal"));
@@ -382,8 +383,8 @@ public class TestUtils {
     fdoRecord.put(MATERIAL_SAMPLE_TYPE, new FdoAttribute(MATERIAL_SAMPLE_TYPE, timestamp, null));
     fdoRecord.put(MARKED_AS_TYPE,
         new FdoAttribute(MARKED_AS_TYPE, timestamp, null));
-    fdoRecord.put(CATALOG_IDENTIFIER,
-        new FdoAttribute(CATALOG_IDENTIFIER, timestamp, CATALOG_ID_TEST));
+    fdoRecord.put(CATALOG_NUMBER,
+        new FdoAttribute(CATALOG_NUMBER, timestamp, CATALOG_ID_TEST));
     return fdoRecord;
   }
 
@@ -426,7 +427,7 @@ public class TestUtils {
     fdoRecord.put(MEDIA_TYPE, new FdoAttribute(MEDIA_TYPE, timestamp, null));
     fdoRecord.put(MIME_TYPE, new FdoAttribute(MIME_TYPE, timestamp, null));
     fdoRecord.put(LICENSE_NAME, new FdoAttribute(LICENSE_NAME, timestamp, null));
-    fdoRecord.put(LICENSE_ID, new FdoAttribute(LICENSE_ID, timestamp, null));
+    fdoRecord.put(LICENSE_URL, new FdoAttribute(LICENSE_URL, timestamp, LICENSE));
     fdoRecord.put(RIGHTS_HOLDER_NAME,
         new FdoAttribute(RIGHTS_HOLDER_NAME, timestamp, SPECIMEN_HOST_NAME_TESTVAL));
     fdoRecord.put(RIGHTS_HOLDER_PID,
@@ -605,7 +606,7 @@ public class TestUtils {
 
   public static DigitalSpecimenRequestAttributes givenDigitalSpecimen() {
     return new DigitalSpecimenRequestAttributes()
-        .withCatalogIdentifier(CATALOG_ID_TEST)
+        .withCatalogNumber(CATALOG_ID_TEST)
         .withReferentName(REFERENT_NAME_TESTVAL)
         .withSpecimenHost(SPECIMEN_HOST_TESTVAL)
         .withSpecimenHostName(SPECIMEN_HOST_NAME_TESTVAL)
@@ -624,9 +625,10 @@ public class TestUtils {
         .withMediaHostName(MEDIA_HOST_NAME_TESTVAL)
         .withLinkedDigitalObjectPid(LINKED_DO_PID_TESTVAL)
         .withLinkedDigitalObjectType(DIGITAL_SPECIMEN.getDigitalObjectType())
-        .withRightsHolderId(SPECIMEN_HOST_TESTVAL)
+        .withRightsHolderPid(SPECIMEN_HOST_TESTVAL)
         .withPrimaryMediaId(PRIMARY_MEDIA_ID_TESTVAL)
-        .withRightsHolderName(SPECIMEN_HOST_NAME_TESTVAL);
+        .withRightsHolder(SPECIMEN_HOST_NAME_TESTVAL)
+        .withLicenseUrl(LICENSE);
   }
 
   public static DigitalMediaRequestAttributes givenDigitalMediaUpdated() {
