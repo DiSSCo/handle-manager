@@ -168,7 +168,7 @@ public class TestUtils {
   // Tombstone Record vals
   public static final String TOMBSTONE_TEXT_TESTVAL = "pid was deleted";
   // Misc
-  public static final String API_URL = "https://sandbox.dissco.tech/api/v1";
+  public static final String API_URL = "https://sandbox.dissco.tech";
   public static final String UI_URL = "https://sandbox.dissco.tech";
   public static final String PATH = UI_URL + HANDLE;
   public static final String ORCHESTRATION_URL = "https://orchestration.dissco.tech/";
@@ -933,7 +933,7 @@ public class TestUtils {
       case DIGITAL_SPECIMEN -> {
         locations.add(new XmlElement(i.getAndIncrement(), "1", UI_URL + "/ds/" + handle, "HTML"));
         locations.add(
-            new XmlElement(i.getAndIncrement(), "0", API_URL + "/digital-specimen/" + handle,
+            new XmlElement(i.getAndIncrement(), "0", API_URL + "/digital-specimen/v1/" + handle,
                 "JSON"));
         if (addKeyLoc) {
           locations.add(new XmlElement(i.getAndIncrement(), "0", CATALOG_ID_TEST, "CATALOG"));
@@ -941,10 +941,10 @@ public class TestUtils {
       }
       case DATA_MAPPING -> {
         locations.add(
-            new XmlElement(i.getAndIncrement(), "1", ORCHESTRATION_URL + "/mapping/" + handle,
+            new XmlElement(i.getAndIncrement(), "1", ORCHESTRATION_URL + "/data-mapping/" + handle,
                 "HTML"));
         locations.add(new XmlElement(i.getAndIncrement(), "0",
-            ORCHESTRATION_URL + "/api/v1/mapping/" + handle,
+            ORCHESTRATION_URL + "/data-mapping/v1/" + handle,
             "JSON"));
       }
       case SOURCE_SYSTEM -> {
@@ -953,13 +953,13 @@ public class TestUtils {
                 "HTML"));
         locations.add(
             new XmlElement(i.getAndIncrement(), "0",
-                ORCHESTRATION_URL + "/api/v1/source-system/" + handle, "JSON"));
+                ORCHESTRATION_URL + "/source-system/v1/" + handle, "JSON"));
       }
       case DIGITAL_MEDIA -> {
         locations.add(
             new XmlElement(i.getAndIncrement(), "1", UI_URL + "/dm/" + handle, "HTML"));
         locations.add(
-            new XmlElement(i.getAndIncrement(), "0", API_URL + "/digital-media/" + handle, "JSON"));
+            new XmlElement(i.getAndIncrement(), "0", API_URL + "/digital-media/v1/" + handle, "JSON"));
         if (addKeyLoc) {
           locations.add(
               new XmlElement(i.getAndIncrement(), "0", PRIMARY_MEDIA_ID_TESTVAL, "MEDIA"));
@@ -967,7 +967,7 @@ public class TestUtils {
       }
       case ANNOTATION -> {
         locations.add(
-            new XmlElement(i.getAndIncrement(), "1", API_URL + "/annotations/" + handle, "JSON"));
+            new XmlElement(i.getAndIncrement(), "1", API_URL + "/annotations/v1/" + handle, "JSON"));
       }
       case ORGANISATION -> {
         if (addKeyLoc) {
@@ -978,7 +978,7 @@ public class TestUtils {
         locations.add(
             new XmlElement(i.getAndIncrement(), "1", ORCHESTRATION_URL + "/mas/" + handle, "HTML"));
         locations.add(
-            new XmlElement(i.getAndIncrement(), "0", ORCHESTRATION_URL + "/api/v1/mas/" + handle,
+            new XmlElement(i.getAndIncrement(), "0", ORCHESTRATION_URL + "/mas/v1/" + handle,
                 "JSON"));
       }
       default -> {
