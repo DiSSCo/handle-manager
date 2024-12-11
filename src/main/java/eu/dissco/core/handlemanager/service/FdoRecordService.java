@@ -871,22 +871,22 @@ public class FdoRecordService {
                   applicationProperties.getUiUrl() + "/ds/" + handle,
                   "HTML"));
           locations.add(new XmlElement(i.getAndIncrement(), "0",
-              applicationProperties.getApiUrl() + "/digital-specimen/" + handle, "JSON"));
+              applicationProperties.getApiUrl() + "/digital-specimen/v1/" + handle, "JSON"));
           if (keyAttribute != null) {
             locations.add(new XmlElement(i.getAndIncrement(), "0", keyAttribute, "CATALOG"));
           }
         }
         case DATA_MAPPING -> {
           locations.add(new XmlElement(i.getAndIncrement(), "1",
-              applicationProperties.getOrchestrationUrl() + "/mapping/" + handle, "HTML"));
+              applicationProperties.getOrchestrationUrl() + "/data-mapping/" + handle, "HTML"));
           locations.add(new XmlElement(i.getAndIncrement(), "0",
-              applicationProperties.getOrchestrationUrl() + "/api/v1/mapping/" + handle, "JSON"));
+              applicationProperties.getOrchestrationUrl() + "/data-mapping/v1/" + handle, "JSON"));
         }
         case SOURCE_SYSTEM -> {
           locations.add(new XmlElement(i.getAndIncrement(), "1",
               applicationProperties.getOrchestrationUrl() + "/source-system/" + handle, "HTML"));
           locations.add(new XmlElement(i.getAndIncrement(), "0",
-              applicationProperties.getOrchestrationUrl() + "/api/v1/source-system/" + handle,
+              applicationProperties.getOrchestrationUrl() + "/source-system/v1/" + handle,
               "JSON"));
         }
         case DIGITAL_MEDIA -> {
@@ -895,18 +895,18 @@ public class FdoRecordService {
                   applicationProperties.getUiUrl() + "/dm/" + handle,
                   "HTML"));
           locations.add(new XmlElement(i.getAndIncrement(), "0",
-              applicationProperties.getApiUrl() + "/digital-media/" + handle, "JSON"));
+              applicationProperties.getApiUrl() + "/digital-media/v1/" + handle, "JSON"));
           if (keyAttribute != null) {
             locations.add(new XmlElement(i.getAndIncrement(), "0", keyAttribute, "MEDIA"));
           }
         }
         case ANNOTATION -> locations.add(new XmlElement(i.getAndIncrement(), "1",
-            applicationProperties.getApiUrl() + "/annotations/" + handle, "JSON"));
+            applicationProperties.getApiUrl() + "/annotations/v1/" + handle, "JSON"));
         case MAS -> {
           locations.add(new XmlElement(i.getAndIncrement(), "1",
               applicationProperties.getOrchestrationUrl() + "/mas/" + handle, "HTML"));
           locations.add(new XmlElement(i.getAndIncrement(), "0",
-              applicationProperties.getOrchestrationUrl() + "/api/v1/mas/" + handle, "JSON"));
+              applicationProperties.getOrchestrationUrl() + "/mas/v1/" + handle, "JSON"));
         }
         case ORGANISATION ->
             locations.add(new XmlElement(i.getAndIncrement(), "1", keyAttribute, "ROR"));
