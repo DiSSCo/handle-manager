@@ -878,15 +878,15 @@ public class FdoRecordService {
         }
         case DATA_MAPPING -> {
           locations.add(new XmlElement(i.getAndIncrement(), "1",
-              applicationProperties.getOrchestrationUrl() + "/data-mapping/" + handle, "HTML"));
+              applicationProperties.getOrchestrationUi() + "/data-mapping/" + handle, "HTML"));
           locations.add(new XmlElement(i.getAndIncrement(), "0",
-              applicationProperties.getOrchestrationUrl() + "/data-mapping/v1/" + handle, "JSON"));
+              applicationProperties.getOrchestrationApi() + "/data-mapping/v1/" + handle, "JSON"));
         }
         case SOURCE_SYSTEM -> {
           locations.add(new XmlElement(i.getAndIncrement(), "1",
-              applicationProperties.getOrchestrationUrl() + "/source-system/" + handle, "HTML"));
+              applicationProperties.getOrchestrationUi() + "/source-system/" + handle, "HTML"));
           locations.add(new XmlElement(i.getAndIncrement(), "0",
-              applicationProperties.getOrchestrationUrl() + "/source-system/v1/" + handle,
+              applicationProperties.getOrchestrationApi() + "/source-system/v1/" + handle,
               "JSON"));
         }
         case DIGITAL_MEDIA -> {
@@ -904,9 +904,9 @@ public class FdoRecordService {
             applicationProperties.getApiUrl() + "/annotations/v1/" + handle, "JSON"));
         case MAS -> {
           locations.add(new XmlElement(i.getAndIncrement(), "1",
-              applicationProperties.getOrchestrationUrl() + "/mas/" + handle, "HTML"));
+              applicationProperties.getOrchestrationUi() + "/mas/" + handle, "HTML"));
           locations.add(new XmlElement(i.getAndIncrement(), "0",
-              applicationProperties.getOrchestrationUrl() + "/mas/v1/" + handle, "JSON"));
+              applicationProperties.getOrchestrationApi() + "/mas/v1/" + handle, "JSON"));
         }
         case ORGANISATION ->
             locations.add(new XmlElement(i.getAndIncrement(), "1", keyAttribute, "ROR"));

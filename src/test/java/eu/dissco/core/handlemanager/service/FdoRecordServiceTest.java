@@ -114,7 +114,8 @@ class FdoRecordServiceTest {
     given(pidResolver.getObjectName(any(), anyBoolean())).willReturn(SPECIMEN_HOST_NAME_TESTVAL);
     given(applicationProperties.getPrefix()).willReturn(PREFIX);
     given(applicationProperties.getApiUrl()).willReturn(API_URL);
-    given(applicationProperties.getOrchestrationUrl()).willReturn(ORCHESTRATION_URL);
+    given(applicationProperties.getOrchestrationApi()).willReturn(ORCHESTRATION_URL);
+    given(applicationProperties.getOrchestrationUi()).willReturn(ORCHESTRATION_URL);
     given(applicationProperties.getUiUrl()).willReturn(UI_URL);
     given(profileProperties.getIssuedForAgent()).willReturn(ISSUED_FOR_AGENT_TESTVAL);
     given(profileProperties.getIssuedForAgentName()).willReturn(ISSUED_FOR_AGENT_NAME_TESTVAL);
