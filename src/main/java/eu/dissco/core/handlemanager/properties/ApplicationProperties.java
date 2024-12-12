@@ -20,7 +20,10 @@ public class ApplicationProperties {
   private String uiUrl;
 
   @NotBlank
-  private String orchestrationUrl;
+  private String orchestrationUi;
+
+  @NotBlank
+  private String orchestrationApi;
 
   @NotNull
   private Integer maxHandles;
