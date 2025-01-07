@@ -65,6 +65,7 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoType.HANDLE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.MAS;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.ORGANISATION;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.SOURCE_SYSTEM;
+import static eu.dissco.core.handlemanager.service.ServiceUtils.normalizeMediaId;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -494,10 +495,6 @@ public class FdoRecordService {
     fdoAttributes.putAll(prepareGeneratedAttributesDoi(timestamp));
     return new FdoRecord(handle, FdoType.DIGITAL_MEDIA, fdoAttributes, normalizeMediaId(request),
         fdoAttributes.values());
-  }
-
-  public static String normalizeMediaId(DigitalMediaRequestAttributes request) {
-    return request.getLinkedDigitalObjectPid() + ":" + request.getPrimaryMediaId();
   }
 
   public FdoRecord prepareUpdatedDigitalMediaRecord(DigitalMediaRequestAttributes request,
