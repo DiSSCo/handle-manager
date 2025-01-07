@@ -492,8 +492,12 @@ public class FdoRecordService {
     fdoAttributes.putAll(
         prepareGeneratedAttributes(handle, FdoType.DIGITAL_MEDIA, timestamp, isDraft));
     fdoAttributes.putAll(prepareGeneratedAttributesDoi(timestamp));
-    return new FdoRecord(handle, FdoType.DIGITAL_MEDIA, fdoAttributes, request.getPrimaryMediaId(),
+    return new FdoRecord(handle, FdoType.DIGITAL_MEDIA, fdoAttributes, normalizeMediaId(request),
         fdoAttributes.values());
+  }
+
+  public static String normalizeMediaId(DigitalMediaRequestAttributes request) {
+    return request.getLinkedDigitalObjectPid() + ":" + request.getPrimaryMediaId();
   }
 
   public FdoRecord prepareUpdatedDigitalMediaRecord(DigitalMediaRequestAttributes request,
@@ -502,7 +506,7 @@ public class FdoRecordService {
     var fdoAttributes = prepareUpdatedDigitalMediaAttributes(request,
         previousVersion.handle(), timestamp, previousVersion, incrementVersion);
     return new FdoRecord(previousVersion.handle(), FdoType.DIGITAL_MEDIA, fdoAttributes,
-        request.getPrimaryMediaId(), fdoAttributes.values());
+        normalizeMediaId(request), fdoAttributes.values());
   }
 
   public Map<FdoProfile, FdoAttribute> prepareDigitalMediaAttributes(

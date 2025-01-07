@@ -161,6 +161,7 @@ public class TestUtils {
   public static final String MEDIA_HOST_NAME_TESTVAL = SPECIMEN_HOST_NAME_TESTVAL;
   public static final String LINKED_DO_PID_TESTVAL = HANDLE;
   public static final String PRIMARY_MEDIA_ID_TESTVAL = "https://images.com/ABC";
+  public static final String FDO_LOCAL_ID_MEDIA = HANDLE + ":" + PRIMARY_MEDIA_ID_TESTVAL;
   // Mappings
   public static final String SOURCE_DATA_STANDARD_TESTVAL = "dwc";
   // MAS
@@ -398,7 +399,7 @@ public class TestUtils {
 
   public static FdoRecord givenDigitalMediaFdoRecord(String handle) throws Exception {
     var attributes = genDigitalMediaAttributes(handle, CREATED);
-    return new FdoRecord(handle, DIGITAL_MEDIA, attributes, PRIMARY_MEDIA_ID_TESTVAL,
+    return new FdoRecord(handle, DIGITAL_MEDIA, attributes, FDO_LOCAL_ID_MEDIA,
         attributes.values());
   }
 
@@ -959,7 +960,8 @@ public class TestUtils {
         locations.add(
             new XmlElement(i.getAndIncrement(), "1", UI_URL + "/dm/" + handle, "HTML"));
         locations.add(
-            new XmlElement(i.getAndIncrement(), "0", API_URL + "/digital-media/v1/" + handle, "JSON"));
+            new XmlElement(i.getAndIncrement(), "0", API_URL + "/digital-media/v1/" + handle,
+                "JSON"));
         if (addKeyLoc) {
           locations.add(
               new XmlElement(i.getAndIncrement(), "0", PRIMARY_MEDIA_ID_TESTVAL, "MEDIA"));
@@ -967,7 +969,8 @@ public class TestUtils {
       }
       case ANNOTATION -> {
         locations.add(
-            new XmlElement(i.getAndIncrement(), "1", API_URL + "/annotations/v1/" + handle, "JSON"));
+            new XmlElement(i.getAndIncrement(), "1", API_URL + "/annotations/v1/" + handle,
+                "JSON"));
       }
       case ORGANISATION -> {
         if (addKeyLoc) {
