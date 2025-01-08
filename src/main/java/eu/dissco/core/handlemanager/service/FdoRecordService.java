@@ -65,6 +65,7 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoType.HANDLE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.MAS;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.ORGANISATION;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.SOURCE_SYSTEM;
+import static eu.dissco.core.handlemanager.service.ServiceUtils.normalizeMediaId;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -492,7 +493,7 @@ public class FdoRecordService {
     fdoAttributes.putAll(
         prepareGeneratedAttributes(handle, FdoType.DIGITAL_MEDIA, timestamp, isDraft));
     fdoAttributes.putAll(prepareGeneratedAttributesDoi(timestamp));
-    return new FdoRecord(handle, FdoType.DIGITAL_MEDIA, fdoAttributes, request.getPrimaryMediaId(),
+    return new FdoRecord(handle, FdoType.DIGITAL_MEDIA, fdoAttributes, normalizeMediaId(request),
         fdoAttributes.values());
   }
 
@@ -502,7 +503,7 @@ public class FdoRecordService {
     var fdoAttributes = prepareUpdatedDigitalMediaAttributes(request,
         previousVersion.handle(), timestamp, previousVersion, incrementVersion);
     return new FdoRecord(previousVersion.handle(), FdoType.DIGITAL_MEDIA, fdoAttributes,
-        request.getPrimaryMediaId(), fdoAttributes.values());
+        normalizeMediaId(request), fdoAttributes.values());
   }
 
   public Map<FdoProfile, FdoAttribute> prepareDigitalMediaAttributes(

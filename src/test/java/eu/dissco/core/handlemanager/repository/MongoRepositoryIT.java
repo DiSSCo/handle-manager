@@ -3,12 +3,12 @@ package eu.dissco.core.handlemanager.repository;
 
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.in;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.FDO_LOCAL_ID_MEDIA;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PREFIX;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_MEDIA_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalMediaFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleFdoRecord;
@@ -217,7 +217,7 @@ class MongoRepositoryIT {
 
     // When
     var result = repository.searchByPrimaryLocalId(FdoProfile.PRIMARY_MEDIA_ID.get(),
-        List.of(PRIMARY_MEDIA_ID_TESTVAL)).get(0);
+        List.of(FDO_LOCAL_ID_MEDIA)).get(0);
 
     // Then
     assertThat(result.handle()).isEqualTo(expected.handle());
