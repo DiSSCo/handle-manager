@@ -161,7 +161,6 @@ public class TestUtils {
   public static final String MEDIA_HOST_NAME_TESTVAL = SPECIMEN_HOST_NAME_TESTVAL;
   public static final String LINKED_DO_PID_TESTVAL = HANDLE;
   public static final String PRIMARY_MEDIA_ID_TESTVAL = "https://images.com/ABC";
-  public static final String FDO_LOCAL_ID_MEDIA = HANDLE + ":" + PRIMARY_MEDIA_ID_TESTVAL;
   // Mappings
   public static final String SOURCE_DATA_STANDARD_TESTVAL = "dwc";
   // MAS
@@ -399,7 +398,7 @@ public class TestUtils {
 
   public static FdoRecord givenDigitalMediaFdoRecord(String handle) throws Exception {
     var attributes = genDigitalMediaAttributes(handle, CREATED);
-    return new FdoRecord(handle, DIGITAL_MEDIA, attributes, FDO_LOCAL_ID_MEDIA,
+    return new FdoRecord(handle, DIGITAL_MEDIA, attributes, PRIMARY_MEDIA_ID_TESTVAL,
         attributes.values());
   }
 
