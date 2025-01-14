@@ -6,7 +6,7 @@
     <artifactId>spring-boot-starter-parent</artifactId>
     <groupId>org.springframework.boot</groupId>
     <relativePath/>
-    <version>3.3.5</version> <!-- lookup parent from repository -->
+    <version>3.4.1</version> <!-- lookup parent from repository -->
   </parent>
   <artifactId>handle-manager</artifactId>
   <version>0.0.1-SNAPSHOT</version>
@@ -21,8 +21,8 @@
     <testcontainers.version>1.19.8</testcontainers.version>
     <apache-commons.version>4.3</apache-commons.version>
     <mockito-inline.version>5.2.0</mockito-inline.version>
-    <mongodb-driver.version>5.1.1</mongodb-driver.version>
-    <okhttp3.version>4.10.0</okhttp3.version>
+    <mongodb-driver.version>5.2.1</mongodb-driver.version>
+    <okhttp3.version>4.12.0</okhttp3.version>
     <version.victools>4.35.0</version.victools>
     <sonar.coverage.jacoco.xmlReportPaths>
       ../app-it/target/site/jacoco-aggregate/jacoco.xml
@@ -251,26 +251,6 @@
         </executions>
         <groupId>org.jacoco</groupId>
         <version>0.8.7</version>
-      </plugin>
-      <plugin>
-        <groupId>org.jooq</groupId>
-        <artifactId>jooq-codegen-maven</artifactId>
-        <version>${jooq.version}</version>
-        <configuration>
-          <configurationFile>src/main/resources/jooq-configuration.xml</configurationFile>
-        </configuration>
-        <dependencies>
-          <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>${postgresql.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.glassfish.jaxb</groupId>
-            <artifactId>jaxb-runtime</artifactId>
-            <version>${glassfish-jaxb.version}</version>
-          </dependency>
-        </dependencies>
       </plugin>
       <plugin>
         <artifactId>maven-failsafe-plugin</artifactId>
