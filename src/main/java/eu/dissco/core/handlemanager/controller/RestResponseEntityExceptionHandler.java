@@ -51,4 +51,13 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
     return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(exceptionResponse);
   }
 
+  @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
+  @ExceptionHandler(UnsupportedOperationException.class)
+  public ResponseEntity<ExceptionResponse> unsupportedOperationException(
+      UnsupportedOperationException e) {
+    var exceptionResponse = new ExceptionResponse(String.valueOf(HttpStatus.METHOD_NOT_ALLOWED),
+        "Unsupported Operation", e.getMessage());
+    return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(exceptionResponse);
+  }
+
 }
