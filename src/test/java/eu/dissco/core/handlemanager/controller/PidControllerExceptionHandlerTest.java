@@ -81,4 +81,14 @@ class PidControllerExceptionHandlerTest {
     assertThat(result.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
     assertThat(result.getBody()).isEqualTo(expectedBody);
   }
+
+  @Test
+  void testUnsupportedOperationException() {
+    // When
+    var result = exceptionHandler.unsupportedOperationException(
+        new UnsupportedOperationException());
+
+    // Then
+    assertThat(result.getStatusCode()).isEqualTo(HttpStatus.METHOD_NOT_ALLOWED);
+  }
 }

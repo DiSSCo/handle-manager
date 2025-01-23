@@ -352,14 +352,15 @@ class PidControllerTest {
   }
 
   @Test
-  void testArchiveRecord() throws Exception {
+  void testTombstoneRecord() throws Exception {
     // Given
     var responseExpected = TestUtils.givenWriteResponseFull(List.of(HANDLE), FdoType.TOMBSTONE);
     var archiveRequest = givenTombstoneRequest();
     given(service.tombstoneRecords(List.of(archiveRequest))).willReturn(responseExpected);
 
     // When
-    var responseReceived = controller.archiveRecord(PREFIX, SUFFIX, archiveRequest, authentication);
+    var responseReceived = controller.tombstoneRecord(PREFIX, SUFFIX, archiveRequest,
+        authentication);
 
     // Then
     assertThat(responseReceived.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -367,17 +368,17 @@ class PidControllerTest {
   }
 
   @Test
-  void testArchiveRecordBadHandle() {
+  void testTombstoneRecordBadHandle() {
     // Given
     var archiveRequest = givenTombstoneRequest();
 
     // When
     assertThrowsExactly(InvalidRequestException.class,
-        () -> controller.archiveRecord(PREFIX, "123", archiveRequest, authentication));
+        () -> controller.tombstoneRecord(PREFIX, "123", archiveRequest, authentication));
   }
 
   @Test
-  void testArchiveRecordBatch() throws Exception {
+  void testTombstoneRecordBatch() throws Exception {
     // Given
 
     // When

@@ -1,6 +1,5 @@
 package eu.dissco.core.handlemanager.service;
 
-import eu.dissco.core.handlemanager.schema.DigitalMediaRequestAttributes;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -21,10 +20,6 @@ public class ServiceUtils {
           return list.get(0);
         }
     );
-  }
-
-  public static String normalizeMediaId(DigitalMediaRequestAttributes request) {
-    return request.getLinkedDigitalObjectPid() + ":" + request.getPrimaryMediaId();
   }
 
 }

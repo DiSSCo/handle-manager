@@ -9,7 +9,6 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.API_URL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CATALOG_ID_TEST;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.DOC_BUILDER_FACTORY;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.FDO_LOCAL_ID_MEDIA;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.ISSUED_FOR_AGENT_NAME_TESTVAL;
@@ -20,6 +19,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.ORCHESTRATION_URL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PREFIX;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_MEDIA_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.ROR_DOMAIN;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.ROR_IDENTIFIER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.SPECIMEN_HOST_NAME_TESTVAL;
@@ -315,7 +315,7 @@ class FdoRecordServiceTest {
   void testPrepareUpdatedMediaRecord() throws Exception {
     // Given
     var previousVersion = givenDigitalMediaFdoRecord(HANDLE);
-    var expected = givenUpdatedFdoRecord(FdoType.DIGITAL_MEDIA, FDO_LOCAL_ID_MEDIA);
+    var expected = givenUpdatedFdoRecord(FdoType.DIGITAL_MEDIA, PRIMARY_MEDIA_ID_TESTVAL);
     var request = givenDigitalMediaUpdated();
 
     // When

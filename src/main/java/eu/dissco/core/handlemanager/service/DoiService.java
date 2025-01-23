@@ -164,7 +164,7 @@ public class DoiService extends PidService {
       List<DigitalMediaRequestAttributes> mediaRequests) throws JsonProcessingException {
     var existingMediaMap = getExistingRecordsFromNormalisedIds(mediaRequests
         .stream()
-        .map(ServiceUtils::normalizeMediaId)
+        .map(DigitalMediaRequestAttributes::getPrimaryMediaId)
         .toList(), PRIMARY_MEDIA_ID.get()
     );
     var newMedia = new ArrayList<DigitalMediaRequestAttributes>();
