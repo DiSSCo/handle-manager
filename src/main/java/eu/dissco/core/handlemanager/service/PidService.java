@@ -5,6 +5,7 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.HS_ADMIN;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LINKED_DO_PID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_MEDIA_ID;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TARGET_PID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.ANNOTATION;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_MEDIA;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_SPECIMEN;
@@ -112,7 +113,8 @@ public abstract class PidService {
     for (var handleRecord : fdoRecords) {
       JsonNode attributeNode;
       if (handleRecord.primaryLocalId() == null) {
-        attributeNode = jsonFormatSingleRecord(handleRecord.values());
+        attributeNode = jsonFormatSingleRecord(handleRecord.values(),
+            List.of(TARGET_PID));
       } else {
         attributeNode = jsonFormatSingleRecord(handleRecord.values(),
             List.of(ANNOTATION_HASH));

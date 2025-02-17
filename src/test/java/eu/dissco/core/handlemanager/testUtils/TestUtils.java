@@ -759,7 +759,7 @@ public class TestUtils {
       switch (fdoType) {
         case ANNOTATION -> {
           if (fdoRecord.primaryLocalId() == null) {
-            fdoSublist = fdoRecord.values();
+            fdoSublist = List.of(fdoRecord.attributes().get(TARGET_PID));
             recordAttributes = jsonFormatFdoRecord(fdoSublist);
           } else {
             fdoSublist = List.of(fdoRecord.attributes().get(ANNOTATION_HASH));
