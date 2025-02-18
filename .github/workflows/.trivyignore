@@ -1,3 +1,5 @@
-# Nov 13
-# Issue with spring-starter-webflux
-CVE-2024-47535
+# Feb 18
+# Issue with Netty and json-smart, these are spring issues
+
+CVE-2025-24970
+CVE-2024-57699
