@@ -103,6 +103,8 @@ public enum FdoType {
     LOOKUP = new HashMap<>();
     for (var fdoType : FdoType.values()) {
       LOOKUP.put(fdoType.digitalObjectType, fdoType);
+      LOOKUP.put(fdoType.digitalObjectName, fdoType);
+      LOOKUP.put(fdoType.fdoProfile, fdoType);
     }
   }
 
