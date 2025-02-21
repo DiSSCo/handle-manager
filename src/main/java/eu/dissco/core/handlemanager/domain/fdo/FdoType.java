@@ -1,7 +1,7 @@
 package eu.dissco.core.handlemanager.domain.fdo;
 
-import static eu.dissco.core.handlemanager.service.FdoRecordService.DOI_DOMAIN;
-import static eu.dissco.core.handlemanager.service.FdoRecordService.HANDLE_DOMAIN;
+import static eu.dissco.core.handlemanager.properties.ProfileProperties.DOI_DOMAIN;
+import static eu.dissco.core.handlemanager.properties.ProfileProperties.HANDLE_DOMAIN;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
