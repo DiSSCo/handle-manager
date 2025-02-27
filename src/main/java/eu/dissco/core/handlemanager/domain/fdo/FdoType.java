@@ -1,7 +1,7 @@
 package eu.dissco.core.handlemanager.domain.fdo;
 
-import static eu.dissco.core.handlemanager.service.FdoRecordService.DOI_DOMAIN;
-import static eu.dissco.core.handlemanager.service.FdoRecordService.HANDLE_DOMAIN;
+import static eu.dissco.core.handlemanager.properties.ProfileProperties.DOI_DOMAIN;
+import static eu.dissco.core.handlemanager.properties.ProfileProperties.HANDLE_DOMAIN;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -103,6 +103,8 @@ public enum FdoType {
     LOOKUP = new HashMap<>();
     for (var fdoType : FdoType.values()) {
       LOOKUP.put(fdoType.digitalObjectType, fdoType);
+      LOOKUP.put(fdoType.digitalObjectName, fdoType);
+      LOOKUP.put(fdoType.fdoProfile, fdoType);
     }
   }
 

@@ -65,6 +65,8 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoType.HANDLE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.MAS;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.ORGANISATION;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.SOURCE_SYSTEM;
+import static eu.dissco.core.handlemanager.properties.ProfileProperties.DOI_DOMAIN;
+import static eu.dissco.core.handlemanager.properties.ProfileProperties.HANDLE_DOMAIN;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -126,8 +128,6 @@ public class FdoRecordService {
   private final ObjectMapper mapper;
   private final ApplicationProperties applicationProperties;
   private final Pattern xmlLocPattern = Pattern.compile("href=\"[^\"]+\"");
-  public static final String HANDLE_DOMAIN = "https://hdl.handle.net/";
-  public static final String DOI_DOMAIN = "https://doi.org/";
   private static final String ROR_API_DOMAIN = "https://api.ror.org/v2/organizations/";
   private static final String ROR_DOMAIN = "https://ror.org/";
   private static final String WIKIDATA_DOMAIN = "https://www.wikidata.org/wiki/";
