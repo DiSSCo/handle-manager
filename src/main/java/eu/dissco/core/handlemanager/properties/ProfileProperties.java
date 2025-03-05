@@ -22,20 +22,23 @@ public class ProfileProperties {
   private String issuedForAgent;
   @Getter
   private String issuedForAgentName;
+  public static final String HANDLE_DOMAIN = "https://hdl.handle.net/";
+  public static final String DOI_DOMAIN = "https://doi.org/";
 
   private static final String DATACITE_ROR = "https://ror.org/04wxnsj81";
   private static final String DISSCO_ROR = "https://ror.org/02wddde16";
   private static final String DATACITE_NAME = "DataCite";
   private static final String DISSCO_NAME = "Distributed System of Scientific Collections";
 
+
   @PostConstruct
   void setDomain() {
     if (environment.matchesProfiles(Profiles.DOI)) {
-      domain = "https://doi.org/";
+      domain = DOI_DOMAIN;
       pidIssuer = DATACITE_ROR;
       pidIssuerName = DATACITE_NAME;
     } else {
-      domain = "https://hdl.handle.net/";
+      domain = HANDLE_DOMAIN;
       pidIssuer = DISSCO_ROR;
       pidIssuerName = DISSCO_NAME;
     }

@@ -81,6 +81,7 @@ public class PidController {
       @Parameter(description = PREFIX_OAS) @PathVariable("prefix") String prefix,
       @Parameter(description = SUFFIX_OAS) @PathVariable("suffix") String suffix,
       HttpServletRequest r) throws PidResolutionException {
+    log.info("received get request");
     String link = applicationProperties.getUiUrl() + "/" + r.getRequestURI();
     String handle = prefix + "/" + suffix;
     if (prefix.equals(applicationProperties.getPrefix())) {
