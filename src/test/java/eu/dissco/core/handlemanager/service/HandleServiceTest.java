@@ -125,7 +125,8 @@ class HandleServiceTest {
   void testCreateAnnotationNoHash() throws Exception {
     var request = givenPostRequest(givenAnnotation(false), FdoType.ANNOTATION);
     var fdoRecord = givenAnnotationFdoRecord(HANDLE, false);
-    var expected = TestUtils.givenWriteResponseFull(List.of(HANDLE), FdoType.ANNOTATION);
+    var expected = TestUtils.givenWriteResponseIdsOnly(List.of(fdoRecord), FdoType.ANNOTATION,
+        HANDLE_DOMAIN);
     given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
     given(
         fdoRecordService.prepareNewAnnotationRecord(any(), any(), any(), anyBoolean())).willReturn(
