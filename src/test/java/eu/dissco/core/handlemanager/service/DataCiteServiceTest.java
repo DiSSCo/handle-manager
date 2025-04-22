@@ -27,12 +27,12 @@ class DataCiteServiceTest {
   private static final String SPECIMEN_DOI_ROUTING_KEY = "specimen-doi-routing-key";
   private static final String TOMBSTONE_DOI_ROUTING_KEY = "tombstone-doi-routing-key";
   @Mock
-  private RabbitMqPublisherService kafkaService;
+  private RabbitMqPublisherService rabbitMqPublisherService;
   private DataCiteService dataCiteService;
 
   @BeforeEach
   void setup() {
-    dataCiteService = new DataCiteService(kafkaService, new RabbitMqProperties(), MAPPER);
+    dataCiteService = new DataCiteService(rabbitMqPublisherService, new RabbitMqProperties(), MAPPER);
   }
 
   @Test
@@ -44,7 +44,7 @@ class DataCiteServiceTest {
     dataCiteService.publishToDataCite(event, FdoType.DIGITAL_MEDIA);
 
     // Then
-    then(kafkaService).should().sendObjectToQueue(eq(MEDIA_ROUTING_KEY), any());
+    then(rabbitMqPublisherService).should().sendObjectToQueue(eq(MEDIA_ROUTING_KEY), any());
   }
 
   @Test
@@ -56,7 +56,7 @@ class DataCiteServiceTest {
     dataCiteService.publishToDataCite(event, FdoType.DIGITAL_SPECIMEN);
 
     // Then
-    then(kafkaService).should().sendObjectToQueue(eq(SPECIMEN_DOI_ROUTING_KEY), any());
+    then(rabbitMqPublisherService).should().sendObjectToQueue(eq(SPECIMEN_DOI_ROUTING_KEY), any());
   }
 
   @Test
@@ -71,7 +71,7 @@ class DataCiteServiceTest {
     dataCiteService.tombstoneDataCite(HANDLE, List.of(givenHasRelatedPid()));
 
     // Then
-    then(kafkaService).should().sendObjectToQueue(TOMBSTONE_DOI_ROUTING_KEY, expected);
+    then(rabbitMqPublisherService).should().sendObjectToQueue(TOMBSTONE_DOI_ROUTING_KEY, expected);
   }
 
   @Test
@@ -84,7 +84,7 @@ class DataCiteServiceTest {
     dataCiteService.tombstoneDataCite(HANDLE, null);
 
     // Then
-    then(kafkaService).should().sendObjectToQueue(TOMBSTONE_DOI_ROUTING_KEY, expected);
+    then(rabbitMqPublisherService).should().sendObjectToQueue(TOMBSTONE_DOI_ROUTING_KEY, expected);
   }
 
 }

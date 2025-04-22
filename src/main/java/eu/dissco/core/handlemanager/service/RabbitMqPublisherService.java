@@ -18,7 +18,7 @@ public class RabbitMqPublisherService {
   private final RabbitMqProperties rabbitMqProperties;
 
   public void sendObjectToQueue(String topicName, String message) {
-    log.debug("Sending to topic: {} with object: {}", topicName, message);
+    log.debug("Sending to exchange with routing key: {} and with object: {}", topicName, message);
     rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchangeName(),
         topicName, message);
   }
