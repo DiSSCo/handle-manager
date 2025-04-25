@@ -7,7 +7,7 @@ import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.datacite.DataCiteEvent;
 import eu.dissco.core.handlemanager.domain.datacite.DataCiteTombstoneEvent;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
-import eu.dissco.core.handlemanager.properties.KafkaPublisherProperties;
+import eu.dissco.core.handlemanager.properties.RabbitMqProperties;
 import eu.dissco.core.handlemanager.schema.HasRelatedPid;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,15 +22,15 @@ import org.springframework.stereotype.Service;
 @Profile(Profiles.DOI)
 public class DataCiteService {
 
-  private final KafkaPublisherService kafkaService;
-  private final KafkaPublisherProperties kafkaProperties;
+  private final RabbitMqPublisherService kafkaService;
+  private final RabbitMqProperties rabbitMqProperties;
   private final ObjectMapper mapper;
 
   public void publishToDataCite(DataCiteEvent event, FdoType objectType)
       throws JsonProcessingException {
     var topic =
-        objectType.equals(FdoType.DIGITAL_SPECIMEN) ? kafkaProperties.getDcSpecimenTopic()
-            : kafkaProperties.getDcMediaTopic();
+        objectType.equals(FdoType.DIGITAL_SPECIMEN) ? rabbitMqProperties.getDcSpecimenRoutingKey()
+            : rabbitMqProperties.getDcMediaRoutingKey();
     var message = mapper.writeValueAsString(event);
     kafkaService.sendObjectToQueue(topic, message);
   }
@@ -45,7 +45,7 @@ public class DataCiteService {
     }
     var message = mapper.writeValueAsString(
         new DataCiteTombstoneEvent(handle, dcRelatedIdentifiers));
-    kafkaService.sendObjectToQueue(kafkaProperties.getDcTombstoneTopic(), message);
+    kafkaService.sendObjectToQueue(rabbitMqProperties.getDcTombstoneRoutingKey(), message);
   }
 
 }
