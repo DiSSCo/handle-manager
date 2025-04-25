@@ -1,5 +1,6 @@
 package eu.dissco.core.handlemanager.component;
 
+import eu.dissco.core.handlemanager.Profiles;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -15,10 +16,12 @@ import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.support.converter.MessageConversionException;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.amqp.support.converter.SimpleMessageConverter;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
+@Profile(Profiles.DOI)
 public class MessageCompressionComponent implements MessageConverter {
 
   final MessageConverter simpleConverter = new SimpleMessageConverter();
