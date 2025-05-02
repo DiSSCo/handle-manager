@@ -22,7 +22,7 @@ import org.springframework.stereotype.Service;
 @Profile(Profiles.DOI)
 public class DataCiteService {
 
-  private final RabbitMqPublisherService kafkaService;
+  private final RabbitMqPublisherService rabbitMqService;
   private final RabbitMqProperties rabbitMqProperties;
   private final ObjectMapper mapper;
 
@@ -32,7 +32,7 @@ public class DataCiteService {
         objectType.equals(FdoType.DIGITAL_SPECIMEN) ? rabbitMqProperties.getDcSpecimenRoutingKey()
             : rabbitMqProperties.getDcMediaRoutingKey();
     var message = mapper.writeValueAsString(event);
-    kafkaService.sendObjectToQueue(topic, message);
+    rabbitMqService.sendObjectToQueue(topic, message);
   }
 
   public void tombstoneDataCite(String handle, List<HasRelatedPid> relatedPids)
@@ -45,7 +45,7 @@ public class DataCiteService {
     }
     var message = mapper.writeValueAsString(
         new DataCiteTombstoneEvent(handle, dcRelatedIdentifiers));
-    kafkaService.sendObjectToQueue(rabbitMqProperties.getDcTombstoneRoutingKey(), message);
+    rabbitMqService.sendObjectToQueue(rabbitMqProperties.getDcTombstoneRoutingKey(), message);
   }
 
 }

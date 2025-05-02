@@ -13,8 +13,6 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.ISSUED_FOR_AGEN
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.ISSUED_FOR_AGENT_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LICENSE_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LICENSE_URL;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LINKED_DO_PID;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LINKED_DO_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LIVING_OR_PRESERVED;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LOC;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MARKED_AS_TYPE;
@@ -416,8 +414,6 @@ public class TestUtils {
     fdoRecord.put(MEDIA_HOST, new FdoAttribute(MEDIA_HOST, timestamp, MEDIA_HOST_TESTVAL));
     fdoRecord.put(MEDIA_HOST_NAME,
         new FdoAttribute(MEDIA_HOST_NAME, timestamp, MEDIA_HOST_NAME_TESTVAL));
-    fdoRecord.put(LINKED_DO_PID, new FdoAttribute(LINKED_DO_PID, timestamp, LINKED_DO_PID_TESTVAL));
-    fdoRecord.put(LINKED_DO_TYPE, new FdoAttribute(LINKED_DO_TYPE, timestamp, DIGITAL_SPECIMEN));
     fdoRecord.put(PRIMARY_MEDIA_ID,
         new FdoAttribute(PRIMARY_MEDIA_ID, timestamp, PRIMARY_MEDIA_ID_TESTVAL));
     fdoRecord.put(PRIMARY_MEDIA_ID_TYPE,
@@ -623,8 +619,6 @@ public class TestUtils {
         .withReferentName(REFERENT_NAME_TESTVAL)
         .withMediaHost(MEDIA_HOST_TESTVAL)
         .withMediaHostName(MEDIA_HOST_NAME_TESTVAL)
-        .withLinkedDigitalObjectPid(LINKED_DO_PID_TESTVAL)
-        .withLinkedDigitalObjectType(DIGITAL_SPECIMEN.getDigitalObjectType())
         .withRightsHolderPid(SPECIMEN_HOST_TESTVAL)
         .withPrimaryMediaId(PRIMARY_MEDIA_ID_TESTVAL)
         .withRightsHolder(SPECIMEN_HOST_NAME_TESTVAL)
@@ -787,9 +781,7 @@ public class TestUtils {
 
   public static JsonNode buildMediaWriteResponseJsonNode(FdoRecord fdoRecord) {
     return MAPPER.createObjectNode()
-        .set("digitalMediaKey", MAPPER.createObjectNode()
-            .put("digitalSpecimenId", (fdoRecord.attributes().get(LINKED_DO_PID).getValue()))
-            .put("mediaUrl", fdoRecord.attributes().get(PRIMARY_MEDIA_ID).getValue()));
+        .put(PRIMARY_MEDIA_ID.getAttribute(), fdoRecord.attributes().get(PRIMARY_MEDIA_ID).getValue());
   }
 
   public static Map<FdoProfile, FdoAttribute> genAttributes(FdoType fdoType, String handle)

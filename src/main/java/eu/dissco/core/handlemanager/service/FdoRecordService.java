@@ -15,8 +15,6 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.ISSUED_FOR_AGEN
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.ISSUED_FOR_AGENT_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LICENSE_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LICENSE_URL;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LINKED_DO_PID;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LINKED_DO_TYPE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LIVING_OR_PRESERVED;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LOC;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.MARKED_AS_TYPE;
@@ -527,12 +525,6 @@ public class FdoRecordService {
     var mediaHostName = getObjectName(request.getMediaHost(), request.getMediaHostName());
     handleAttributeList.put(MEDIA_HOST_NAME, new FdoAttribute(MEDIA_HOST_NAME, timestamp,
         getObjectName(request.getMediaHost(), request.getMediaHostName())));
-    // 402 Linked Digital Object PID
-    handleAttributeList.put(LINKED_DO_PID,
-        new FdoAttribute(LINKED_DO_PID, timestamp, request.getLinkedDigitalObjectPid()));
-    // 403 Linked Digital Object Type
-    handleAttributeList.put(LINKED_DO_TYPE,
-        new FdoAttribute(LINKED_DO_TYPE, timestamp, request.getLinkedDigitalObjectType()));
     // 404 Primary Media ID
     handleAttributeList.put(PRIMARY_MEDIA_ID,
         new FdoAttribute(PRIMARY_MEDIA_ID, timestamp, request.getPrimaryMediaId()));
