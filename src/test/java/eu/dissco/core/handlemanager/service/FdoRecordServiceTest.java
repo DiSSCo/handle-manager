@@ -469,7 +469,7 @@ class FdoRecordServiceTest {
 
     attributes.replace(LOC, new FdoAttribute(LOC, CREATED,
         "<locations>"
-            + "<location href=\"https://sandbox.dissco.tech/annotations/v1/20.5000.1025/QRS-321-ABC\" id=\"0\" view=\"JSON\" weight=\"1\"/>"
+            + "<location href=\"https://sandbox.dissco.tech/annotation/v1/20.5000.1025/QRS-321-ABC\" id=\"0\" view=\"JSON\" weight=\"1\"/>"
             + "<location href=\"" + LOC_TESTVAL + "\" id=\"1\" weight=\"0\"/>" + "</locations>"));
     var expected = new FdoRecord(HANDLE, FdoType.ANNOTATION, attributes, null, attributes.values());
 

@@ -901,7 +901,7 @@ public class FdoRecordService {
           }
         }
         case ANNOTATION -> locations.add(new XmlElement(i.getAndIncrement(), "1",
-            applicationProperties.getApiUrl() + "/annotations/v1/" + handle, "JSON"));
+            applicationProperties.getApiUrl() + "/annotation/v1/" + handle, "JSON"));
         case MAS -> {
           locations.add(new XmlElement(i.getAndIncrement(), "1",
               applicationProperties.getOrchestrationUi() + "/mas/" + handle, "HTML"));
