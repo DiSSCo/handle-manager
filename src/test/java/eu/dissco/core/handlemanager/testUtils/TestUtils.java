@@ -960,7 +960,7 @@ public class TestUtils {
       }
       case ANNOTATION -> {
         locations.add(
-            new XmlElement(i.getAndIncrement(), "1", API_URL + "/annotations/v1/" + handle,
+            new XmlElement(i.getAndIncrement(), "1", API_URL + "/annotation/v1/" + handle,
                 "JSON"));
       }
       case ORGANISATION -> {
