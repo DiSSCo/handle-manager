@@ -2,7 +2,6 @@ package eu.dissco.core.handlemanager.service;
 
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.ANNOTATION_HASH;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.HS_ADMIN;
-import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.LINKED_DO_PID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_MEDIA_ID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TARGET_PID;
@@ -97,10 +96,10 @@ public abstract class PidService {
         return formatAnnotationResponse(fdoRecords);
       }
       case DIGITAL_SPECIMEN -> {
-        return formatSpecimenResponse(fdoRecords);
+        return formatSingleKeyResponse(fdoRecords, DIGITAL_SPECIMEN, NORMALISED_SPECIMEN_OBJECT_ID);
       }
       case DIGITAL_MEDIA -> {
-        return formatMediaResponse(fdoRecords);
+        return formatSingleKeyResponse(fdoRecords, DIGITAL_MEDIA, PRIMARY_MEDIA_ID);
       }
       default -> {
         return formatFullRecordResponse(fdoRecords);
@@ -128,34 +127,17 @@ public abstract class PidService {
     return dataLinksList;
   }
 
-  private List<JsonApiDataLinks> formatSpecimenResponse(List<FdoRecord> fdoRecords) {
-    List<JsonApiDataLinks> dataLinksList = new ArrayList<>();
-    for (var handleRecord : fdoRecords) {
-      var attributeNode = jsonFormatSingleRecord(handleRecord.values(),
-          List.of(NORMALISED_SPECIMEN_OBJECT_ID));
-      String pidLink = profileProperties.getDomain() + handleRecord.handle();
-      dataLinksList.add(
-          new JsonApiDataLinks(handleRecord.handle(), DIGITAL_SPECIMEN.getDigitalObjectType(),
-              attributeNode, new JsonApiLinks(pidLink)));
-    }
-    return dataLinksList;
-  }
-
-  private List<JsonApiDataLinks> formatMediaResponse(List<FdoRecord> fdoRecords) {
-    List<JsonApiDataLinks> dataLinksList = new ArrayList<>();
-    for (var fdoRecord : fdoRecords) {
-      var mediaUrl = fdoRecord.attributes().get(PRIMARY_MEDIA_ID);
-      var digitalSpecimenId = fdoRecord.attributes().get(LINKED_DO_PID);
-      var key = mapper.createObjectNode()
-          .set("digitalMediaKey", mapper.createObjectNode()
-              .put("digitalSpecimenId", digitalSpecimenId.getValue())
-              .put("mediaUrl", mediaUrl.getValue()));
-      String pidLink = profileProperties.getDomain() + fdoRecord.handle();
-      dataLinksList.add(
-          new JsonApiDataLinks(fdoRecord.handle(), DIGITAL_MEDIA.getDigitalObjectType(),
-              key, new JsonApiLinks(pidLink)));
-    }
-    return dataLinksList;
+  private List<JsonApiDataLinks> formatSingleKeyResponse(List<FdoRecord> fdoRecords, FdoType fdoType, FdoProfile keyAttribute) {
+    return fdoRecords.stream().map(fdoRecord -> {
+          String pidLink = profileProperties.getDomain() + fdoRecord.handle();
+          return new JsonApiDataLinks(
+              fdoRecord.handle(),
+              fdoType.getDigitalObjectType(),
+              mapper.createObjectNode()
+                  .put(keyAttribute.getAttribute(), fdoRecord.attributes().get(keyAttribute).getValue()),
+              new JsonApiLinks(pidLink));
+        }
+    ).toList();
   }
 
   private List<JsonApiDataLinks> formatFullRecordResponse(List<FdoRecord> fdoRecords) {

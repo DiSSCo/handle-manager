@@ -2,6 +2,7 @@ package eu.dissco.core.handlemanager.domain.fdo;
 
 import java.util.HashMap;
 import java.util.Map;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -46,8 +47,6 @@ public enum FdoProfile {
   // Media
   MEDIA_HOST("mediaHost", 400),
   MEDIA_HOST_NAME("mediaHostName", 401),
-  LINKED_DO_PID("linkedDigitalObjectPid", 403),
-  LINKED_DO_TYPE("linkedDigitalObjectType", 404),
   PRIMARY_MEDIA_ID("primaryMediaId", 405),
   PRIMARY_MEDIA_ID_TYPE("primaryMediaIdType", 406),
   PRIMARY_MEDIA_ID_NAME("primaryMediaIdName", 407),
@@ -92,7 +91,7 @@ public enum FdoProfile {
   public static FdoProfile fromString(String attributeName) {
     return LOOKUP.getOrDefault(attributeName, UNRECOGNIZED);
   }
-
+  @Getter
   private final String attribute;
   private final int index;
 
