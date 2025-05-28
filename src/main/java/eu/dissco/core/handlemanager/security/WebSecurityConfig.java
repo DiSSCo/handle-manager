@@ -23,7 +23,7 @@ public class WebSecurityConfig {
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http.authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests
         .requestMatchers(EndpointRequest.to(HealthEndpoint.class)).permitAll()
-        .requestMatchers(HttpMethod.GET, "**").permitAll()
+        .requestMatchers(HttpMethod.GET, "/**").permitAll()
         .anyRequest().authenticated());
 
     http.oauth2ResourceServer(jwtoauth2ResourceServer -> jwtoauth2ResourceServer.jwt((
