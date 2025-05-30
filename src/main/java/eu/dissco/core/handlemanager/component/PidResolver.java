@@ -75,15 +75,18 @@ public class PidResolver {
 
     try {
       return response.toFuture().get();
-    } catch (InterruptedException | ExecutionException e) {
+    } catch (ExecutionException e) {
       log.warn("Interrupted connection. Unable to resolve the following: {}", url);
-      Thread.currentThread().interrupt();
       if (e.getCause().getClass().equals(PidResolutionException.class)) {
         log.error("Unable to resolve pid. Putting placeholder", e);
         return mapper.createObjectNode()
             .put("name", "NOT FOUND")
             .set("labels", mapper.createObjectNode().put("en", "NOT FOUND"));
       }
+      throw new PidResolutionException(e.getMessage());
+    } catch (InterruptedException e) {
+      log.error("Critical error: interrupted exception has occurred", e);
+      Thread.currentThread().interrupt();
       throw new PidResolutionException(e.getMessage());
     }
   }

@@ -129,7 +129,7 @@ public class FdoRecordService {
   private static final String ROR_API_DOMAIN = "https://api.ror.org/v2/organizations/";
   private static final String ROR_DOMAIN = "https://ror.org/";
   private static final String WIKIDATA_DOMAIN = "https://www.wikidata.org/wiki/";
-  private static final String WIKIDATA_API = "https://wikidata.org/w/rest.php/wikibase/v0/entities/items/";
+  private static final String WIKIDATA_API = "https://wikidata.org/w/rest.php/wikibase/v1/entities/items/";
   private static final String PROXY_ERROR = "Invalid attribute: %s must contain proxy: %s";
   private static final String JSON_ERROR_MSG = "Unable to parse json request";
   private static final String FDO_LICENSE_VALUE = "https://spdx.org/licenses/CC0-1.0.json";
