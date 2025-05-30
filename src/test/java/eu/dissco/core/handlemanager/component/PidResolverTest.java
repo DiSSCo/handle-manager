@@ -5,6 +5,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.loadResourceFile;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
@@ -181,6 +182,30 @@ class PidResolverTest {
 
     // Then
     assertThat(response).isEqualTo(expected);
+  }
+
+  @Test
+  void testResolveQidInterrupted() throws Exception {
+    // Given
+    var expectedResponse = MAPPER.readTree("""
+        {
+          "type": "item",
+          "labels": {
+            "la": "Museum Historiae Naturalis Lugduno-Batavum",
+            "ca": "Naturalis",
+            "de": "Naturalis",
+            "en": "Naturalis Biodiversity Center"
+          }
+        }
+        """);
+    mockServer.enqueue(new MockResponse()
+        .setBody(MAPPER.writeValueAsString(expectedResponse))
+        .setResponseCode(HttpStatus.OK.value())
+        .addHeader("Content-Type", "application/json"));
+    Thread.currentThread().interrupt();
+
+    // When / Then
+    assertThrows(PidResolutionException.class, () -> pidResolver.resolveQid("Q641676"));
   }
 
   @Test
