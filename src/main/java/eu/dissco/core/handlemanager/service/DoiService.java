@@ -2,6 +2,7 @@ package eu.dissco.core.handlemanager.service;
 
 
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.NORMALISED_SPECIMEN_OBJECT_ID;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PID_STATUS;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.PRIMARY_MEDIA_ID;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_MEDIA;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_SPECIMEN;
@@ -14,6 +15,7 @@ import eu.dissco.core.handlemanager.Profiles;
 import eu.dissco.core.handlemanager.domain.datacite.DataCiteEvent;
 import eu.dissco.core.handlemanager.domain.datacite.EventType;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
+import eu.dissco.core.handlemanager.domain.fdo.PidStatus;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequestData;
@@ -354,6 +356,7 @@ public class DoiService extends PidService {
     var existingHandles = mongoRepository
         .searchByPrimaryLocalId(localIdName, normalisedIds)
         .stream()
+        .filter(fdoRecord -> PidStatus.ACTIVE.name().equals(fdoRecord.attributes().get(PID_STATUS).getValue()))
         .toList();
     if (!existingHandles.isEmpty()) {
       var handleMap = existingHandles.stream()

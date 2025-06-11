@@ -3,12 +3,15 @@ package eu.dissco.core.handlemanager.repository;
 
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.in;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.CREATED;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.MAPPER;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PREFIX;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_MEDIA_ID_TESTVAL;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalMediaAttributes;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalMediaFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalSpecimenFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHandleFdoRecord;
@@ -23,6 +26,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
+import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -107,6 +111,49 @@ class MongoRepositoryIT {
     assertThat(result.values()).hasSameElementsAs(expected.values());
     assertThat(result.attributes()).containsAllEntriesOf(expected.attributes());
   }
+
+  @Test
+  void testGetHandleRecordsSearchForSpecimenLocalId() throws Exception {
+    // Given
+    var attributes =  genDigitalSpecimenAttributes(HANDLE, CREATED);
+    var postRecord = new FdoRecord(HANDLE, FdoType.DIGITAL_SPECIMEN, attributes,
+        null, attributes.values());
+    collection.insertOne(givenMongoDocument(postRecord));
+    var expected = givenDigitalSpecimenFdoRecord(HANDLE);
+
+    // When
+    var result = repository.getHandleRecords(List.of(HANDLE)).get(0);
+
+    // Then
+    assertThat(result.handle()).isEqualTo(expected.handle());
+    assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
+    assertThat(result.fdoType()).isEqualTo(expected.fdoType());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
+    assertThat(result.attributes()).containsAllEntriesOf(expected.attributes());
+  }
+
+
+  @Test
+  void testGetHandleRecordsSearchForMediaLocalId() throws Exception {
+    // Given
+    var attributes =  genDigitalMediaAttributes(HANDLE, CREATED);
+    var postRecord = new FdoRecord(HANDLE, FdoType.DIGITAL_MEDIA, attributes,
+        null, attributes.values());
+    collection.insertOne(givenMongoDocument(postRecord));
+    var expected = givenDigitalMediaFdoRecord(HANDLE);
+
+    // When
+    var result = repository.getHandleRecords(List.of(HANDLE )).get(0);
+
+    // Then
+    assertThat(result.handle()).isEqualTo(expected.handle());
+    assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
+    assertThat(result.fdoType()).isEqualTo(expected.fdoType());
+    assertThat(result.values()).hasSameElementsAs(expected.values());
+    assertThat(result.attributes()).containsAllEntriesOf(expected.attributes());
+  }
+
+
 
   @Test
   void testGetHandleRecordsMedia() throws Exception {
