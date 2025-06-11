@@ -171,7 +171,7 @@ public abstract class PidService {
     if (fdoRecords.size() < handles.size()) {
       var missingHandles = new ArrayList<>(handles);
       missingHandles.removeAll(fdoRecords.stream().map(FdoRecord::handle).toList());
-      log.error("Some handles do not exist: {}", missingHandles);
+      log.warn("Some handles do not exist: {}", missingHandles);
       throw new PidResolutionException(
           "Attempting to resolve handles that do not exist: " + missingHandles);
     }

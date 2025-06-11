@@ -37,6 +37,7 @@ public class MongoRepository {
   private final MongoCollection<Document> collection;
   private final ObjectMapper mapper;
   private static final String ID = "_id";
+  private static final String VALUES = "values";
 
   public List<FdoRecord> getHandleRecords(List<String> ids) throws JsonProcessingException {
     var results = collection.find(in(ID, ids));
@@ -93,11 +94,11 @@ public class MongoRepository {
     var handleRecords = new ArrayList<FdoRecord>();
     for (var result : results) {
       var jsonRecord = mapper.readValue(result.toJson(), JsonNode.class);
-      if (jsonRecord.get("values") == null) {
+      if (jsonRecord.get(VALUES) == null) {
         log.warn("Unable to read handle record values \n {}",
             mapper.writeValueAsString(jsonRecord));
       } else {
-        var attributes = mapper.convertValue(jsonRecord.get("values"),
+        var attributes = mapper.convertValue(jsonRecord.get(VALUES),
             new TypeReference<Collection<FdoAttribute>>() {
             });
         var attributeMap = buildAttributeMap(attributes);
@@ -121,10 +122,28 @@ public class MongoRepository {
 
   private String getLocalId(JsonNode jsonRecord, FdoType fdoType) {
     if (FdoType.DIGITAL_SPECIMEN.equals(fdoType)) {
-      return jsonRecord.get(NORMALISED_SPECIMEN_OBJECT_ID.get()).asText();
+      if (jsonRecord.get(NORMALISED_SPECIMEN_OBJECT_ID.get()) != null) {
+        return jsonRecord.get(NORMALISED_SPECIMEN_OBJECT_ID.get()).asText();
+      } else return getLocalIdSearchJson(jsonRecord, NORMALISED_SPECIMEN_OBJECT_ID);
+
     }
     if (FdoType.DIGITAL_MEDIA.equals(fdoType)) {
-      return jsonRecord.get(PRIMARY_MEDIA_ID.get()).asText();
+      if (jsonRecord.get(PRIMARY_MEDIA_ID.get())!=null) {
+        return jsonRecord.get(PRIMARY_MEDIA_ID.get()).asText();
+      } else return getLocalIdSearchJson(jsonRecord, PRIMARY_MEDIA_ID);
+    }
+    return null;
+  }
+
+  private String getLocalIdSearchJson(JsonNode jsonRecord, FdoProfile targetTerm) {
+    try {
+      for (var value : jsonRecord.get(VALUES)) {
+        if (targetTerm.get().equals(value.get("type").asText())) {
+          return value.get("data").get("value").asText();
+        }
+      }
+    } catch (NullPointerException e) {
+      log.warn("Invalid FDO record {}", jsonRecord.get(ID).asText());
     }
     return null;
   }
