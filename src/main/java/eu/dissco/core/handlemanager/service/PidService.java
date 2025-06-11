@@ -306,8 +306,12 @@ public abstract class PidService {
   protected Map<PatchRequestData, FdoRecord> getPreviousVersionsMap(List<PatchRequest> requests)
       throws InvalidRequestException, UnprocessableEntityException {
     List<FdoRecord> previousVersions;
-    var patchRequestData = requests.stream().map(PatchRequest::data).toList();
-    var handles = patchRequestData.stream().map(PatchRequestData::id).toList();
+    var patchRequestData = requests.stream()
+        .collect(Collectors.toMap(
+            request -> request.data().id(),
+            PatchRequest::data
+        ));
+    var handles = patchRequestData.keySet().stream().toList();
     try {
       previousVersions = mongoRepository.getHandleRecords(handles);
     } catch (JsonProcessingException e) {
@@ -318,8 +322,7 @@ public abstract class PidService {
     }
     try {
       return previousVersions.stream().collect(Collectors.toMap(
-          fdo -> patchRequestData.stream().filter(data -> data.id().equals(fdo.handle()))
-              .collect(toSingle()),
+          fdo -> patchRequestData.get(fdo.handle()),
           Function.identity()
       ));
     } catch (RuntimeException e) {
