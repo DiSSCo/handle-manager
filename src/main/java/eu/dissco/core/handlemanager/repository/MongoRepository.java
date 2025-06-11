@@ -103,7 +103,7 @@ public class MongoRepository {
             });
         var attributeMap = buildAttributeMap(attributes);
         var fdoType = FdoType.fromString(attributeMap.get(DIGITAL_OBJECT_TYPE).getValue());
-        handleRecords.add(new FdoRecord(jsonRecord.get("_id").asText(),
+        handleRecords.add(new FdoRecord(jsonRecord.get(ID).asText(),
             fdoType, attributeMap, getLocalId(jsonRecord, fdoType), attributes));
       }
     }
