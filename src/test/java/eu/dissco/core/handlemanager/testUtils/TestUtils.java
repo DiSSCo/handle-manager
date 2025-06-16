@@ -883,7 +883,7 @@ public class TestUtils {
         doc.append(NORMALISED_SPECIMEN_OBJECT_ID.get(), fdoRecord.primaryLocalId());
       } else if (DIGITAL_MEDIA.equals(fdoRecord.fdoType())) {
         doc.append(PRIMARY_MEDIA_ID.get(), fdoRecord.primaryLocalId());
-      } else if (ANNOTATION.equals(fdoRecord.fdoType()) && fdoRecord.primaryLocalId() != null) {
+      } else if (ANNOTATION.equals(fdoRecord.fdoType())) {
         doc.append(ANNOTATION_HASH.get(), fdoRecord.primaryLocalId());
       }
     }
