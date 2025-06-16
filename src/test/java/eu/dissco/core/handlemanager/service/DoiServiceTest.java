@@ -12,6 +12,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_MEDIA_ID_
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PRIMARY_SPECIMEN_ID_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalMediaAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.genDigitalSpecimenAttributes;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.genTombstoneAttributes;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalMedia;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalMediaFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenDigitalMediaUpdated;
@@ -27,6 +28,7 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenHasRelatedPi
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenMongoDocument;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenPostRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenTombstoneFdoRecord;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenTombstoneRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenTombstoneRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenUpdateRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenUpdatedFdoRecord;
@@ -262,6 +264,49 @@ class DoiServiceTest {
     then(mongoRepository).should().postHandleRecords(any());
     then(mongoRepository).should().updateHandleRecords(any());
   }
+
+  @Test
+  void testUpsertDigitalSpecimenDuplicate() throws Exception {
+    // Given
+    var requests = List.of(givenPostRequest(givenDigitalSpecimen(), FdoType.DIGITAL_SPECIMEN),
+        givenPostRequest(
+            givenDigitalSpecimen().withNormalisedPrimarySpecimenObjectId(PRIMARY_SPECIMEN_ID_ALT),
+            FdoType.DIGITAL_SPECIMEN));
+    var fdoRecordNew = givenDigitalSpecimenFdoRecord(HANDLE);
+    var attriubtes = genDigitalSpecimenAttributes(HANDLE_ALT, CREATED);
+    var fdoRecordUpdate = new FdoRecord(HANDLE_ALT, FdoType.DIGITAL_SPECIMEN,
+        attriubtes, PRIMARY_SPECIMEN_ID_ALT, attriubtes.values());
+    var responseExpected = givenWriteResponseIdsOnly(List.of(fdoRecordUpdate, fdoRecordNew),
+        FdoType.DIGITAL_SPECIMEN, DOI_DOMAIN);
+    var dataCiteEventCreate = new DataCiteEvent(jsonFormatFdoRecord(fdoRecordNew.values()),
+        EventType.CREATE);
+    var dataCiteEventUpdate = new DataCiteEvent(jsonFormatFdoRecord(fdoRecordUpdate.values()),
+        EventType.UPDATE);
+    var previousVersion = givenDigitalSpecimenFdoRecord(HANDLE_ALT);
+    var tombstoneAttributes = genTombstoneAttributes(givenTombstoneRecordRequestObject());
+    var tombstoneRecord = new FdoRecord("anotherHandle", FdoType.DIGITAL_SPECIMEN,
+        tombstoneAttributes, "anotherPhysId", tombstoneAttributes.values());
+    given(mongoRepository.searchByPrimaryLocalId(any(), anyList())).willReturn(
+        List.of(previousVersion, tombstoneRecord));
+    given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
+    given(fdoRecordService.prepareNewDigitalSpecimenRecord(any(), any(), any(),
+        anyBoolean())).willReturn(
+        fdoRecordNew);
+    given(fdoRecordService.prepareUpdatedDigitalSpecimenRecord(any(), any(), any(),
+        anyBoolean())).willReturn(fdoRecordUpdate);
+    given(profileProperties.getDomain()).willReturn(DOI_DOMAIN);
+
+    // When
+    var responseReceived = service.createRecords(requests, false);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+    then(dataCiteService).should().publishToDataCite(dataCiteEventCreate, FdoType.DIGITAL_SPECIMEN);
+    then(dataCiteService).should().publishToDataCite(dataCiteEventUpdate, FdoType.DIGITAL_SPECIMEN);
+    then(mongoRepository).should().postHandleRecords(any());
+    then(mongoRepository).should().updateHandleRecords(any());
+  }
+
 
   @Test
   void testUpdateDigitalSpecimen() throws Exception {

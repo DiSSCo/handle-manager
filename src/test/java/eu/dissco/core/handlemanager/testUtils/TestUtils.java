@@ -781,7 +781,8 @@ public class TestUtils {
 
   public static JsonNode buildMediaWriteResponseJsonNode(FdoRecord fdoRecord) {
     return MAPPER.createObjectNode()
-        .put(PRIMARY_MEDIA_ID.getAttribute(), fdoRecord.attributes().get(PRIMARY_MEDIA_ID).getValue());
+        .put(PRIMARY_MEDIA_ID.getAttribute(),
+            fdoRecord.attributes().get(PRIMARY_MEDIA_ID).getValue());
   }
 
   public static Map<FdoProfile, FdoAttribute> genAttributes(FdoType fdoType, String handle)
@@ -877,12 +878,14 @@ public class TestUtils {
   public static Document givenMongoDocument(FdoRecord fdoRecord) throws Exception {
     var doc = org.bson.Document.parse(MAPPER.writeValueAsString(fdoRecord))
         .append("_id", fdoRecord.handle());
-    if (DIGITAL_SPECIMEN.equals(fdoRecord.fdoType())) {
-      doc.append(NORMALISED_SPECIMEN_OBJECT_ID.get(), fdoRecord.primaryLocalId());
-    } else if (DIGITAL_MEDIA.equals(fdoRecord.fdoType())) {
-      doc.append(PRIMARY_MEDIA_ID.get(), fdoRecord.primaryLocalId());
-    } else if (ANNOTATION.equals(fdoRecord.fdoType()) && fdoRecord.primaryLocalId() != null) {
-      doc.append(ANNOTATION_HASH.get(), fdoRecord.primaryLocalId());
+    if (fdoRecord.primaryLocalId() != null) {
+      if (DIGITAL_SPECIMEN.equals(fdoRecord.fdoType())) {
+        doc.append(NORMALISED_SPECIMEN_OBJECT_ID.get(), fdoRecord.primaryLocalId());
+      } else if (DIGITAL_MEDIA.equals(fdoRecord.fdoType())) {
+        doc.append(PRIMARY_MEDIA_ID.get(), fdoRecord.primaryLocalId());
+      } else if (ANNOTATION.equals(fdoRecord.fdoType())) {
+        doc.append(ANNOTATION_HASH.get(), fdoRecord.primaryLocalId());
+      }
     }
     return doc;
   }
