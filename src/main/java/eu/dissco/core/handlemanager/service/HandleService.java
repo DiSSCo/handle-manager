@@ -104,7 +104,8 @@ public class HandleService extends PidService {
           incrementVersion);
       case SOURCE_SYSTEM -> fdoRecords = updateSourceSystem(previousVersionMap,
           incrementVersion);
-      default -> throw new IllegalStateException();
+      default -> throw new UnsupportedOperationException(
+          String.format(TYPE_ERROR_MESSAGE, fdoType.getDigitalObjectName()));
     }
     updateDocuments(fdoRecords.getLeft());
     return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords.getRight(), fdoType));

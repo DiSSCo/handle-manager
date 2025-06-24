@@ -62,8 +62,6 @@ public class DoiService extends PidService {
     this.dataCiteService = dataCiteService;
   }
 
-  private static final String TYPE_ERROR_MESSAGE = "Error creating DOI for object of Type %s. Only Digital Specimens and Media Objects use DOIs.";
-
   @Override
   public JsonApiWrapperWrite createRecords(List<PostRequest> requests, boolean isDraft)
       throws InvalidRequestException, UnprocessableEntityException {
@@ -378,7 +376,7 @@ public class DoiService extends PidService {
             eventType)).toList();
     for (var event : eventList) {
       try {
-        dataCiteService.publishToDataCite(event, fdoRecords.get(0).fdoType());
+        dataCiteService.publishToDataCite(event, fdoRecords.getFirst().fdoType());
       } catch (JsonProcessingException e) {
         log.error("Critical error: Unable to publish datacite event to queue", e);
         if (eventType.equals(EventType.CREATE)) {
