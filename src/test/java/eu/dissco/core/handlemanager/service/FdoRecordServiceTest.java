@@ -172,7 +172,7 @@ class FdoRecordServiceTest {
     // Given
     var id = "https://www.wikidata.org/wiki/123";
     var request = givenOrganisation().withOrganisationIdentifier(id);
-    var expected = "https://wikidata.org/w/rest.php/wikibase/v0/entities/items/123";
+    var expected = "https://wikidata.org/w/rest.php/wikibase/v1/entities/items/123";
 
     // When
     fdoRecordService.prepareNewOrganisationRecord(request, HANDLE, CREATED, false);
