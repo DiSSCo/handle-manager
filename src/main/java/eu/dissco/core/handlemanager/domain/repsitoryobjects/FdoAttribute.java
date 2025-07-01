@@ -45,6 +45,8 @@ public class FdoAttribute {
       this.data = new StringHandleData(valueString);
     } else if (value == null) {
       this.data = new StringHandleData(null);
+    } else if (value instanceof Boolean valueBoolean) {
+      this.data = new StringHandleData(String.valueOf(valueBoolean));
     } else {
       var map = data.get("value", LinkedHashMap.class);
       var prefix = map.get("handle").toString().replace("0.NA/", "");

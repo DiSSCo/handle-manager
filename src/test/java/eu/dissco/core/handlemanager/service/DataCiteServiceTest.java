@@ -63,8 +63,9 @@ class DataCiteServiceTest {
   void testTombstoneRecord() throws Exception {
     // Given
     var event = new DataCiteTombstoneEvent(HANDLE, List.of(MAPPER.createObjectNode()
-        .put("relationType", "HasMetadata")
-        .put("relatedIdentifier", HANDLE_ALT)));
+        .put("relationType", "IsObsoletedBy")
+        .put("relatedIdentifier", HANDLE_ALT)
+        .put("relatedIdentifierType", "DOI")));
     var expected = MAPPER.writeValueAsString(event);
 
     // When
