@@ -40,8 +40,9 @@ public class DataCiteService {
     var dcRelatedIdentifiers = new ArrayList<JsonNode>();
     if (relatedPids != null) {
       relatedPids.forEach(relatedPid -> dcRelatedIdentifiers.add(mapper.createObjectNode()
-          .put("relationType", "HasMetadata")
-          .put("relatedIdentifier", relatedPid.getPid())));
+          .put("relationType", "IsObsoletedBy")
+          .put("relatedIdentifier", relatedPid.getPid())
+          .put("relatedIdentifierType", "DOI")));
     }
     var message = mapper.writeValueAsString(
         new DataCiteTombstoneEvent(handle, dcRelatedIdentifiers));
