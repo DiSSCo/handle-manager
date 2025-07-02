@@ -85,7 +85,7 @@ class MongoRepositoryIT {
     var expected = givenHandleFdoRecord(HANDLE);
 
     // When
-    var result = repository.getHandleRecords(List.of(HANDLE)).get(0);
+    var result = repository.getHandleRecords(List.of(HANDLE)).getFirst();
 
     // Then
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -102,7 +102,7 @@ class MongoRepositoryIT {
     var expected = givenDigitalSpecimenFdoRecord(SPECIMEN_ID);
 
     // When
-    var result = repository.getHandleRecords(List.of(SPECIMEN_ID)).get(0);
+    var result = repository.getHandleRecords(List.of(SPECIMEN_ID)).getFirst();
 
     // Then
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -122,7 +122,7 @@ class MongoRepositoryIT {
     var expected = givenDigitalSpecimenFdoRecord(HANDLE);
 
     // When
-    var result = repository.getHandleRecords(List.of(HANDLE)).get(0);
+    var result = repository.getHandleRecords(List.of(HANDLE)).getFirst();
 
     // Then
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -143,7 +143,7 @@ class MongoRepositoryIT {
     var expected = givenDigitalMediaFdoRecord(HANDLE);
 
     // When
-    var result = repository.getHandleRecords(List.of(HANDLE )).get(0);
+    var result = repository.getHandleRecords(List.of(HANDLE )).getFirst();
 
     // Then
     assertThat(result.handle()).isEqualTo(expected.handle());
@@ -162,7 +162,7 @@ class MongoRepositoryIT {
     var expected = givenDigitalMediaFdoRecord(MEDIA_ID);
 
     // When
-    var result = repository.getHandleRecords(List.of(MEDIA_ID)).get(0);
+    var result = repository.getHandleRecords(List.of(MEDIA_ID)).getFirst();
 
     // Then
     assertThat(result.handle()).isEqualTo(expected.handle());

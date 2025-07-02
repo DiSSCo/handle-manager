@@ -282,7 +282,7 @@ class PidControllerTest {
     var request = givenUpdateRequest();
 
     // When
-    var result = controller.updateRecord(PREFIX, SUFFIX, request.get(0), authentication);
+    var result = controller.updateRecord(PREFIX, SUFFIX, request.getFirst(), authentication);
 
     // Then
     assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -293,7 +293,7 @@ class PidControllerTest {
   void testUpdateRecordBadRequest() {
     // Given
     var request = givenUpdateRequest(List.of(HANDLE_ALT), FdoType.HANDLE,
-        MAPPER.valueToTree(givenHandleKernelUpdated())).get(0);
+        MAPPER.valueToTree(givenHandleKernelUpdated())).getFirst();
 
     // Then
     assertThrowsExactly(InvalidRequestException.class,

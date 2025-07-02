@@ -1,11 +1,11 @@
-FROM eclipse-temurin:17-alpine AS builder
+FROM eclipse-temurin:21-jdk-alpine AS builder
 RUN apk update --no-cache && apk upgrade openssl
 WORKDIR application
 ARG JAR_FILE=target/*spring-boot.jar
 COPY ${JAR_FILE} application.jar
 RUN java -Djarmode=layertools -jar application.jar extract
-FROM eclipse-temurin:17-alpine
-RUN adduser -D -u 1000 java
+FROM eclipse-temurin:21-jre-jammy
+RUN adduser --disabled-password -u 1000 java
 WORKDIR application
 COPY --chown=java:java --from=builder application/dependencies/ ./
 RUN true

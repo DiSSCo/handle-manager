@@ -10,7 +10,6 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_MEDIA;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_SPECIMEN;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.TOMBSTONE;
 import static eu.dissco.core.handlemanager.service.FdoRecordService.GENERATED_KEYS;
-import static eu.dissco.core.handlemanager.service.ServiceUtils.toSingle;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -57,6 +56,7 @@ public abstract class PidService {
   protected final ProfileProperties profileProperties;
   protected final MongoRepository mongoRepository;
   protected static final String REQUEST_PROCESSING_ERR = "An error has occurred parsing a record in request";
+  protected static final String TYPE_ERROR_MESSAGE = "Error creating PID for object of Type %s. Only Digital Specimens and Media Objects use DOIs. Other objects use handles.";
 
   protected JsonNode jsonFormatSingleRecord(Collection<FdoAttribute> fdoAttributes) {
     ObjectNode rootNode = mapper.createObjectNode();

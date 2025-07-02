@@ -7,7 +7,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,15 +28,15 @@ public class MavenRunner {
         String schema = downloadSchema(schemaUrl);
         saveSchemaToFile(schema, outputFilePath);
         LOGGER.info("JSON schema downloaded and saved to: {} ", outputFilePath);
-      } catch (IOException e) {
+      } catch (IOException | URISyntaxException e) {
         LOGGER.error("Error downloading or saving the JSON schema", e);
       }
     }
   }
 
-  private static String downloadSchema(String schemaUrl) throws IOException {
+  private static String downloadSchema(String schemaUrl) throws IOException, URISyntaxException {
     StringBuilder result = new StringBuilder();
-    URL url = new URL(schemaUrl);
+    var url = new URI(schemaUrl).toURL();
     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
     conn.setRequestMethod(RequestMethod.GET.name());
     try (BufferedReader reader = new BufferedReader(
