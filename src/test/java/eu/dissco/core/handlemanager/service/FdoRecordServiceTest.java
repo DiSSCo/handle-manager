@@ -61,6 +61,9 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenSourceSystem
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenTombstoneFdoRecord;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenTombstoneRecordRequestObject;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenUpdatedFdoRecord;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenVirtualCollection;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenVirtualCollectionFdoRecord;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenVirtualCollectionUpdated;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.setLocations;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -714,6 +717,40 @@ class FdoRecordServiceTest {
 
     // When
     var result = fdoRecordService.prepareUpdatedSourceSystemRecord(request, UPDATED,
+        previousVersion, true);
+
+    // Then
+    assertThat(result.values()).hasSameElementsAs(expected.values());
+    assertThat(result.primaryLocalId()).isNull();
+    assertThat(result.fdoType()).isEqualTo(expected.fdoType());
+    assertThat(result.handle()).isEqualTo(expected.handle());
+  }
+
+  @Test
+  void testPrepareNewVirtualCollectionRecord() throws Exception {
+    // Given
+    var request = givenVirtualCollection();
+    var expected = givenVirtualCollectionFdoRecord(HANDLE);
+
+    // When
+    var result = fdoRecordService.prepareNewVirtualCollection(request, HANDLE, CREATED, false);
+
+    // Then
+    assertThat(result.values()).hasSameElementsAs(expected.values());
+    assertThat(result.primaryLocalId()).isEqualTo(expected.primaryLocalId());
+    assertThat(result.fdoType()).isEqualTo(expected.fdoType());
+    assertThat(result.handle()).isEqualTo(expected.handle());
+  }
+
+  @Test
+  void testPrepareUpdatedVirtualCollectionRecord() throws Exception {
+    // Given
+    var previousVersion = givenVirtualCollectionFdoRecord(HANDLE);
+    var expected = givenUpdatedFdoRecord(FdoType.VIRTUAL_COLLECTION, null);
+    var request = givenVirtualCollectionUpdated();
+
+    // When
+    var result = fdoRecordService.prepareUpdatedVirtualCollection(request, UPDATED,
         previousVersion, true);
 
     // Then
