@@ -83,6 +83,7 @@ public enum FdoType {
       "https://doi.org/21.T11148/a369e128df5ef31044d4",
       "https://doi.org/21.T11148/22e71a0015cbcfba8ffa",
       HANDLE_DOMAIN),
+  @JsonProperty("https://doi.org/21.T11148/2ac65a933b7a0361b651")
   @JsonAlias("https://hdl.handle.net/21.T11148/2ac65a933b7a0361b651")
   VIRTUAL_COLLECTION(
       "Virtual Collection",

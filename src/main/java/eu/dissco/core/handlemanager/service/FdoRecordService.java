@@ -925,6 +925,12 @@ public class FdoRecordService {
           locations.add(new XmlElement(i.getAndIncrement(), "0",
               applicationProperties.getOrchestrationApi() + "/data-mapping/v1/" + handle, "JSON"));
         }
+        case VIRTUAL_COLLECTION -> {
+          locations.add(new XmlElement(i.getAndIncrement(), "1",
+              applicationProperties.getUiUrl() + "/virtual-collection/" + handle, "HTML"));
+          locations.add(new XmlElement(i.getAndIncrement(), "0",
+              applicationProperties.getApiUrl() + "/virtual-collection/v1/" + handle, "JSON"));
+        }
         case SOURCE_SYSTEM -> {
           locations.add(new XmlElement(i.getAndIncrement(), "1",
               applicationProperties.getOrchestrationUi() + "/source-system/" + handle, "HTML"));

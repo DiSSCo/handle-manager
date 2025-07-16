@@ -226,8 +226,7 @@ public class TestUtils {
   }
 
   public static Map<FdoProfile, FdoAttribute> genHandleRecordAttributes(String handle,
-      Instant timestamp,
-      FdoType fdoType) throws Exception {
+      Instant timestamp, FdoType fdoType) throws Exception {
     var fdoAttributes = new EnumMap<FdoProfile, FdoAttribute>(FdoProfile.class);
     var loc = setLocations(handle, fdoType);
     fdoAttributes.put(LOC, new FdoAttribute(LOC, timestamp, loc));
@@ -999,6 +998,14 @@ public class TestUtils {
           locations.add(
               new XmlElement(i.getAndIncrement(), "0", PRIMARY_MEDIA_ID_TESTVAL, "MEDIA"));
         }
+      }
+      case VIRTUAL_COLLECTION -> {
+        locations.add(
+            new XmlElement(i.getAndIncrement(), "1", UI_URL + "/virtual-collection/" + handle,
+                "HTML"));
+        locations.add(
+            new XmlElement(i.getAndIncrement(), "0",
+                API_URL + "/virtual-collection/v1/" + handle, "JSON"));
       }
       case ANNOTATION -> {
         locations.add(
