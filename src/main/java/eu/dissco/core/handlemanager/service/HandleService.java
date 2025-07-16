@@ -6,6 +6,7 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoType.HANDLE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.MAS;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.ORGANISATION;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.SOURCE_SYSTEM;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoType.VIRTUAL_COLLECTION;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -27,6 +28,7 @@ import eu.dissco.core.handlemanager.schema.HandleRequestAttributes;
 import eu.dissco.core.handlemanager.schema.MachineAnnotationServiceRequestAttributes;
 import eu.dissco.core.handlemanager.schema.OrganisationRequestAttributes;
 import eu.dissco.core.handlemanager.schema.SourceSystemRequestAttributes;
+import eu.dissco.core.handlemanager.schema.VirtualCollectionRequestAttributes;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -44,7 +46,7 @@ import org.springframework.stereotype.Service;
 public class HandleService extends PidService {
 
   private static final Set<FdoType> VALID_FDO_TYPES = Set.of(ANNOTATION, HANDLE, DATA_MAPPING, MAS,
-      ORGANISATION, SOURCE_SYSTEM);
+      ORGANISATION, SOURCE_SYSTEM, VIRTUAL_COLLECTION);
 
   public HandleService(FdoRecordService fdoRecordService,
       PidNameGeneratorService hf, ObjectMapper mapper, ProfileProperties profileProperties,
@@ -74,6 +76,8 @@ public class HandleService extends PidService {
         case MAS -> fdoRecords = createMas(requestAttributes, handles, isDraft);
         case ORGANISATION -> fdoRecords = createOrganisation(requestAttributes, handles, isDraft);
         case SOURCE_SYSTEM -> fdoRecords = createSourceSystem(requestAttributes, handles, isDraft);
+        case VIRTUAL_COLLECTION ->
+            fdoRecords = createVirtualCollection(requestAttributes, handles, isDraft);
         default ->
             throw new IllegalStateException(); // This case is handled by the getFdoTypeFromRequest check
       }
@@ -86,6 +90,7 @@ public class HandleService extends PidService {
     log.info("Persisted {} new handles to Document Store", handleList.size());
     return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, fdoType));
   }
+
 
   @Override
   public JsonApiWrapperWrite updateRecords(List<PatchRequest> requests, boolean incrementVersion)
@@ -103,6 +108,8 @@ public class HandleService extends PidService {
       case ORGANISATION -> fdoRecords = updateOrganisation(previousVersionMap,
           incrementVersion);
       case SOURCE_SYSTEM -> fdoRecords = updateSourceSystem(previousVersionMap,
+          incrementVersion);
+      case VIRTUAL_COLLECTION -> fdoRecords = updateVirtualCollection(previousVersionMap,
           incrementVersion);
       default -> throw new UnsupportedOperationException(
           String.format(TYPE_ERROR_MESSAGE, fdoType.getDigitalObjectName()));
@@ -316,6 +323,42 @@ public class HandleService extends PidService {
     }
     return Pair.of(newFdoRecords, allFdoRecords);
   }
+
+  private List<FdoRecord> createVirtualCollection(List<JsonNode> requestAttributes,
+      Iterator<String> handleIterator, boolean isDraft)
+      throws JsonProcessingException, InvalidRequestException {
+    List<FdoRecord> fdoRecords = new ArrayList<>();
+    var timestamp = Instant.now();
+    for (var request : requestAttributes) {
+      var requestObject = mapper.treeToValue(request,
+          VirtualCollectionRequestAttributes.class);
+      fdoRecords.add(
+          fdoRecordService.prepareNewVirtualCollection(requestObject, handleIterator.next(),
+              timestamp, isDraft));
+    }
+    return fdoRecords;
+  }
+
+  private Pair<List<FdoRecord>, List<FdoRecord>> updateVirtualCollection(
+      Map<PatchRequestData, FdoRecord> previousVersionMap, boolean incrementVersion)
+      throws InvalidRequestException {
+    List<FdoRecord> allFdoRecords = new ArrayList<>();
+    List<FdoRecord> newFdoRecords = new ArrayList<>();
+    var timestamp = Instant.now();
+    var updateRequests = convertPatchRequestDataToAttributesClass(previousVersionMap,
+        VirtualCollectionRequestAttributes.class);
+    for (var updateRequest : updateRequests.entrySet()) {
+      var newVersion =
+          fdoRecordService.prepareUpdatedVirtualCollection(updateRequest.getKey(), timestamp,
+              updateRequest.getValue(), incrementVersion);
+      allFdoRecords.add(newVersion);
+      if (fdoRecordsAreDifferent(newVersion, updateRequest.getValue())) {
+        newFdoRecords.add(newVersion);
+      }
+    }
+    return Pair.of(newFdoRecords, allFdoRecords);
+  }
+
 
 }
 

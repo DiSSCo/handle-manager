@@ -73,6 +73,10 @@ public enum FdoProfile {
   // Mapping
   SOURCE_DATA_STANDARD("sourceDataStandard", 700),
 
+  // Virtual Collection
+  VIRTUAL_COLLECTION_NAME("collectionName", 900),
+  VIRTUAL_COLLECTION_BASIS_OF_SCHEME("basisOfScheme", 901),
+
   // Administration
   HS_ADMIN("HS_ADMIN", 100),
   LOC("10320/loc", 101),

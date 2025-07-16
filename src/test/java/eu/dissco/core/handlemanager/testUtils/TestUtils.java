@@ -52,6 +52,8 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOPIC_CATEGORY;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOPIC_DISCIPLINE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOPIC_DOMAIN;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOPIC_ORIGIN;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.VIRTUAL_COLLECTION_BASIS_OF_SCHEME;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.VIRTUAL_COLLECTION_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.ANNOTATION;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_MEDIA;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_SPECIMEN;
@@ -88,6 +90,8 @@ import eu.dissco.core.handlemanager.schema.MachineAnnotationServiceRequestAttrib
 import eu.dissco.core.handlemanager.schema.OrganisationRequestAttributes;
 import eu.dissco.core.handlemanager.schema.SourceSystemRequestAttributes;
 import eu.dissco.core.handlemanager.schema.TombstoneRequestAttributes;
+import eu.dissco.core.handlemanager.schema.VirtualCollectionRequestAttributes;
+import eu.dissco.core.handlemanager.schema.VirtualCollectionRequestAttributes.BasisOfScheme;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
@@ -163,6 +167,9 @@ public class TestUtils {
   public static final String SOURCE_DATA_STANDARD_TESTVAL = "dwc";
   // MAS
   public static final String MAS_NAME_TESTVAL = "Plant Organ detection";
+  // Virtual Collection
+  public static final String VIRTUAL_COLLECTION_NAME_TESTVAL = "Butterfly reference collection";
+  public static final BasisOfScheme BASIS_OF_SCHEME_TESTVAL = BasisOfScheme.REFERENCE_COLLECTION;
   // Tombstone Record vals
   public static final String TOMBSTONE_TEXT_TESTVAL = "pid was deleted";
   // Misc
@@ -219,8 +226,7 @@ public class TestUtils {
   }
 
   public static Map<FdoProfile, FdoAttribute> genHandleRecordAttributes(String handle,
-      Instant timestamp,
-      FdoType fdoType) throws Exception {
+      Instant timestamp, FdoType fdoType) throws Exception {
     var fdoAttributes = new EnumMap<FdoProfile, FdoAttribute>(FdoProfile.class);
     var loc = setLocations(handle, fdoType);
     fdoAttributes.put(LOC, new FdoAttribute(LOC, timestamp, loc));
@@ -323,6 +329,9 @@ public class TestUtils {
       }
       case SOURCE_SYSTEM -> {
         return SOURCE_SYSTEM_NAME;
+      }
+      case VIRTUAL_COLLECTION -> {
+        return VIRTUAL_COLLECTION_NAME;
       }
       default -> throw new IllegalStateException();
     }
@@ -448,6 +457,11 @@ public class TestUtils {
     return new FdoRecord(handle, FdoType.SOURCE_SYSTEM, attributes, null, attributes.values());
   }
 
+  public static FdoRecord givenVirtualCollectionFdoRecord(String handle) throws Exception {
+    var attributes = genVirtualCollectionAttributes(handle, CREATED);
+    return new FdoRecord(handle, FdoType.VIRTUAL_COLLECTION, attributes, null, attributes.values());
+  }
+
   public static FdoRecord givenOrganisationFdoRecord(String handle) throws Exception {
     var attributes = genOrganisationAttributes(handle, CREATED);
     return new FdoRecord(handle, FdoType.ORGANISATION, attributes, null, attributes.values());
@@ -508,12 +522,22 @@ public class TestUtils {
   }
 
   public static Map<FdoProfile, FdoAttribute> genSourceSystemAttributes(String handle,
-      Instant timestamp)
-      throws Exception {
+      Instant timestamp) throws Exception {
     var fdoRecord = genHandleRecordAttributes(handle, timestamp, FdoType.SOURCE_SYSTEM);
     // 600 hostInstitution
     fdoRecord.put(SOURCE_SYSTEM_NAME,
         new FdoAttribute(SOURCE_SYSTEM_NAME, timestamp, SPECIMEN_HOST_TESTVAL));
+    return fdoRecord;
+  }
+
+  public static Map<FdoProfile, FdoAttribute> genVirtualCollectionAttributes(String handle,
+      Instant timestamp) throws Exception {
+    var fdoRecord = genHandleRecordAttributes(handle, timestamp, FdoType.VIRTUAL_COLLECTION);
+    // 900 virtual collection
+    fdoRecord.put(VIRTUAL_COLLECTION_NAME,
+        new FdoAttribute(VIRTUAL_COLLECTION_NAME, timestamp, VIRTUAL_COLLECTION_NAME_TESTVAL));
+    fdoRecord.put(VIRTUAL_COLLECTION_BASIS_OF_SCHEME,
+        new FdoAttribute(VIRTUAL_COLLECTION_BASIS_OF_SCHEME, timestamp, BASIS_OF_SCHEME_TESTVAL));
     return fdoRecord;
   }
 
@@ -675,6 +699,17 @@ public class TestUtils {
         .withSourceDataStandard(UPDATED_VALUE);
   }
 
+  public static VirtualCollectionRequestAttributes givenVirtualCollection() {
+    return new VirtualCollectionRequestAttributes()
+        .withCollectionName(VIRTUAL_COLLECTION_NAME_TESTVAL)
+        .withBasisOfScheme(BASIS_OF_SCHEME_TESTVAL);
+  }
+
+  public static VirtualCollectionRequestAttributes givenVirtualCollectionUpdated() {
+    return givenVirtualCollection()
+        .withCollectionName(UPDATED_VALUE);
+  }
+
   public static AnnotationRequestAttributes givenAnnotation(boolean includeHash) {
     var annotation = new AnnotationRequestAttributes()
         .withTargetPid(TARGET_DOI_TESTVAL)
@@ -818,6 +853,9 @@ public class TestUtils {
       case MAS -> {
         return genMasAttributes(handle, timestamp);
       }
+      case VIRTUAL_COLLECTION -> {
+        return genVirtualCollectionAttributes(handle, timestamp);
+      }
       case TOMBSTONE -> {
         return genTombstoneAttributes(givenTombstoneRecordRequestObject());
       }
@@ -960,6 +998,14 @@ public class TestUtils {
           locations.add(
               new XmlElement(i.getAndIncrement(), "0", PRIMARY_MEDIA_ID_TESTVAL, "MEDIA"));
         }
+      }
+      case VIRTUAL_COLLECTION -> {
+        locations.add(
+            new XmlElement(i.getAndIncrement(), "1", UI_URL + "/virtual-collection/" + handle,
+                "HTML"));
+        locations.add(
+            new XmlElement(i.getAndIncrement(), "0",
+                API_URL + "/virtual-collection/v1/" + handle, "JSON"));
       }
       case ANNOTATION -> {
         locations.add(

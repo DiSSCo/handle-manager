@@ -10,6 +10,7 @@ import eu.dissco.core.handlemanager.domain.openapi.patch.HandlePatchRequest;
 import eu.dissco.core.handlemanager.domain.openapi.patch.MasPatchRequest;
 import eu.dissco.core.handlemanager.domain.openapi.patch.OrganisationPatchRequest;
 import eu.dissco.core.handlemanager.domain.openapi.patch.SourceSystemPatchRequest;
+import eu.dissco.core.handlemanager.domain.openapi.patch.VirtualCollectionPatchRequest;
 import eu.dissco.core.handlemanager.domain.openapi.post.AnnotationPostRequest;
 import eu.dissco.core.handlemanager.domain.openapi.post.DataMappingPostRequest;
 import eu.dissco.core.handlemanager.domain.openapi.post.DigitalMediaPostRequest;
@@ -19,6 +20,7 @@ import eu.dissco.core.handlemanager.domain.openapi.post.HandlePostRequest;
 import eu.dissco.core.handlemanager.domain.openapi.post.MasPostRequest;
 import eu.dissco.core.handlemanager.domain.openapi.post.OrganisationPostRequest;
 import eu.dissco.core.handlemanager.domain.openapi.post.SourceSystemPostRequest;
+import eu.dissco.core.handlemanager.domain.openapi.post.VirtualCollectionPostRequest;
 import eu.dissco.core.handlemanager.domain.openapi.tombstone.TombstoneRequest;
 import eu.dissco.core.handlemanager.domain.requests.PatchRequest;
 import eu.dissco.core.handlemanager.domain.requests.PostRequest;
@@ -139,7 +141,8 @@ public class PidController {
               HandlePostRequest.class,
               MasPostRequest.class,
               OrganisationPostRequest.class,
-              SourceSystemPostRequest.class
+              SourceSystemPostRequest.class,
+              VirtualCollectionPostRequest.class
           })))
   @ApiResponses(value = {
       @ApiResponse(responseCode = "201", description = "PID successfully Created", content = {
@@ -185,7 +188,8 @@ public class PidController {
                   HandlePostRequest.class,
                   MasPostRequest.class,
                   OrganisationPostRequest.class,
-                  SourceSystemPostRequest.class
+                  SourceSystemPostRequest.class,
+                  VirtualCollectionPostRequest.class
               }
           ))))
   @ApiResponses(value = {
@@ -221,7 +225,8 @@ public class PidController {
                   HandlePatchRequest.class,
                   MasPatchRequest.class,
                   OrganisationPatchRequest.class,
-                  SourceSystemPatchRequest.class
+                  SourceSystemPatchRequest.class,
+                  VirtualCollectionPatchRequest.class
               }
           )))
   @ApiResponses(value = {
@@ -263,7 +268,8 @@ public class PidController {
                       HandlePatchRequest.class,
                       MasPatchRequest.class,
                       OrganisationPatchRequest.class,
-                      SourceSystemPatchRequest.class
+                      SourceSystemPatchRequest.class,
+                      VirtualCollectionPatchRequest.class
                   }
               ))))
   @ApiResponses(value = {

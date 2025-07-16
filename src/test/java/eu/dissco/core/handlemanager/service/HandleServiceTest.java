@@ -40,6 +40,9 @@ import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenTombstoneFdo
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenTombstoneRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenUpdateRequest;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenUpdatedFdoRecord;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenVirtualCollection;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenVirtualCollectionFdoRecord;
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenVirtualCollectionUpdated;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenWriteResponseFull;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.givenWriteResponseIdsOnly;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -388,6 +391,45 @@ class HandleServiceTest {
     then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument));
   }
 
+  @Test
+  void testCreateVirtualCollection() throws Exception {
+    var request = givenPostRequest(givenVirtualCollection(), FdoType.VIRTUAL_COLLECTION);
+    var fdoRecord = givenVirtualCollectionFdoRecord(HANDLE);
+    var expected = TestUtils.givenWriteResponseFull(List.of(HANDLE), FdoType.VIRTUAL_COLLECTION);
+    given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
+    given(fdoRecordService.prepareNewVirtualCollection(any(), any(), any(),
+        anyBoolean())).willReturn(fdoRecord);
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
+
+    // When
+    var result = service.createRecords(List.of(request), false);
+
+    // Then
+    assertThat(result).isEqualTo(expected);
+  }
+
+  @Test
+  void testUpdateVirtualCollection() throws Exception {
+    // Given
+    var previousVersion = givenVirtualCollectionFdoRecord(HANDLE);
+    var request = MAPPER.valueToTree(givenVirtualCollectionUpdated());
+    var updateRequest = givenUpdateRequest(List.of(HANDLE), FdoType.VIRTUAL_COLLECTION, request);
+    var updatedAttributeRecord = givenUpdatedFdoRecord(FdoType.VIRTUAL_COLLECTION, null);
+    var expectedDocument = givenMongoDocument(updatedAttributeRecord);
+    var expected = givenWriteResponseFull(updatedAttributeRecord);
+    given(mongoRepository.getHandleRecords(List.of(HANDLE))).willReturn(List.of(previousVersion));
+    given(fdoRecordService.prepareUpdatedVirtualCollection(any(), any(), any(),
+        anyBoolean())).willReturn(updatedAttributeRecord);
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
+
+    // When
+    var result = service.updateRecords(updateRequest, true);
+
+    // Then
+    assertThat(result).isEqualTo(expected);
+    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument));
+  }
+
   @ParameterizedTest
   @MethodSource("equalArgs")
   void testUpdateRecordIsEqual(FdoRecord previousVersion, FdoType fdoType, Object request)
@@ -417,6 +459,8 @@ class HandleServiceTest {
         anyBoolean())).thenReturn(previousVersion);
     lenient().when(fdoRecordService.prepareUpdatedSourceSystemRecord(any(), any(), any(),
         anyBoolean())).thenReturn(previousVersion);
+    lenient().when(fdoRecordService.prepareUpdatedVirtualCollection(any(), any(), any(),
+        anyBoolean())).thenReturn(previousVersion);
   }
 
   private static Stream<Arguments> equalArgs() throws Exception {
@@ -425,8 +469,11 @@ class HandleServiceTest {
         Arguments.of(givenDataMappingFdoRecord(HANDLE), FdoType.DATA_MAPPING, givenDataMapping()),
         Arguments.of(givenMasFdoRecord(HANDLE), FdoType.MAS, givenMas()),
         Arguments.of(givenOrganisationFdoRecord(HANDLE), FdoType.ORGANISATION, givenOrganisation()),
-        Arguments.of(givenSourceSystemFdoRecord(HANDLE), FdoType.SOURCE_SYSTEM, givenSourceSystem()
-        ));
+        Arguments.of(givenSourceSystemFdoRecord(HANDLE), FdoType.SOURCE_SYSTEM,
+            givenSourceSystem()),
+        Arguments.of(givenVirtualCollectionFdoRecord(HANDLE), FdoType.VIRTUAL_COLLECTION,
+            givenVirtualCollection())
+    );
   }
 
   @Test

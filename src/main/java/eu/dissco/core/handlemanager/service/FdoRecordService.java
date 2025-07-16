@@ -54,6 +54,8 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOPIC_CATEGORY;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOPIC_DISCIPLINE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOPIC_DOMAIN;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.TOPIC_ORIGIN;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.VIRTUAL_COLLECTION_BASIS_OF_SCHEME;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoProfile.VIRTUAL_COLLECTION_NAME;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.ANNOTATION;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DATA_MAPPING;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.DIGITAL_MEDIA;
@@ -63,6 +65,7 @@ import static eu.dissco.core.handlemanager.domain.fdo.FdoType.HANDLE;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.MAS;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.ORGANISATION;
 import static eu.dissco.core.handlemanager.domain.fdo.FdoType.SOURCE_SYSTEM;
+import static eu.dissco.core.handlemanager.domain.fdo.FdoType.VIRTUAL_COLLECTION;
 import static eu.dissco.core.handlemanager.properties.ProfileProperties.DOI_DOMAIN;
 import static eu.dissco.core.handlemanager.properties.ProfileProperties.HANDLE_DOMAIN;
 
@@ -89,6 +92,7 @@ import eu.dissco.core.handlemanager.schema.OrganisationRequestAttributes;
 import eu.dissco.core.handlemanager.schema.OtherspecimenIds;
 import eu.dissco.core.handlemanager.schema.SourceSystemRequestAttributes;
 import eu.dissco.core.handlemanager.schema.TombstoneRequestAttributes;
+import eu.dissco.core.handlemanager.schema.VirtualCollectionRequestAttributes;
 import java.io.StringWriter;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -120,12 +124,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class FdoRecordService {
 
-  private final TransformerFactory tf;
-  private final DocumentBuilderFactory dbf;
-  private final PidResolver pidResolver;
-  private final ObjectMapper mapper;
-  private final ApplicationProperties applicationProperties;
-  private final Pattern xmlLocPattern = Pattern.compile("href=\"[^\"]+\"");
+  public static final Set<FdoProfile> GENERATED_KEYS;
   private static final String ROR_API_DOMAIN = "https://api.ror.org/v2/organizations/";
   private static final String ROR_DOMAIN = "https://ror.org/";
   private static final String WIKIDATA_DOMAIN = "https://www.wikidata.org/wiki/";
@@ -134,7 +133,6 @@ public class FdoRecordService {
   private static final String JSON_ERROR_MSG = "Unable to parse json request";
   private static final String FDO_LICENSE_VALUE = "https://spdx.org/licenses/CC0-1.0.json";
   private static final String FDO_LICENSE_NAME_VALUE = "CC0 1.0 Universal";
-  public static final Set<FdoProfile> GENERATED_KEYS;
 
   static {
     GENERATED_KEYS = Set.of(FDO_PROFILE, FDO_RECORD_LICENSE_ID,
@@ -144,10 +142,32 @@ public class FdoRecordService {
         HS_ADMIN);
   }
 
+  private final TransformerFactory tf;
+  private final DocumentBuilderFactory dbf;
+  private final PidResolver pidResolver;
+  private final ObjectMapper mapper;
+  private final ApplicationProperties applicationProperties;
+  private final Pattern xmlLocPattern = Pattern.compile("href=\"[^\"]+\"");
   private final DateTimeFormatter dt = DateTimeFormatter.ofPattern(DATE_STRING)
       .withZone(ZoneId.of("UTC"));
   private final ProfileProperties profileProperties;
 
+  private static String getSpecimenResolvableId(String catalogId,
+      List<OtherspecimenIds> otherSpecimenIds) {
+    if (catalogId != null && catalogId.matches("http(s)://.+")) {
+      return catalogId;
+    }
+    for (var otherId : otherSpecimenIds) {
+      if (Boolean.TRUE.equals(otherId.getResolvable())) {
+        return otherId.getIdentifierValue();
+      }
+    }
+    return null;
+  }
+
+  private static String getRor(String url) {
+    return url.replace(ROR_DOMAIN, ROR_API_DOMAIN);
+  }
 
   /* Handle Record Creation */
   public FdoRecord prepareNewHandleRecord(HandleRequestAttributes request, String handle,
@@ -419,19 +439,6 @@ public class FdoRecordService {
     return handleAttributeList;
   }
 
-  private static String getSpecimenResolvableId(String catalogId,
-      List<OtherspecimenIds> otherSpecimenIds) {
-    if (catalogId != null && catalogId.matches("http(s)://.+")) {
-      return catalogId;
-    }
-    for (var otherId : otherSpecimenIds) {
-      if (Boolean.TRUE.equals(otherId.getResolvable())) {
-        return otherId.getIdentifierValue();
-      }
-    }
-    return null;
-  }
-
   private Map<FdoProfile, FdoAttribute> prepareUpdatedDigitalSpecimenAttributes(
       DigitalSpecimenRequestAttributes request, String handle, Instant timestamp,
       FdoRecord previousVersion, boolean incrementVersion)
@@ -665,6 +672,54 @@ public class FdoRecordService {
     return updatedAttributes;
   }
 
+  /* Virtual Collection Creation */
+  public FdoRecord prepareNewVirtualCollection(VirtualCollectionRequestAttributes request,
+      String handle, Instant timestamp, boolean isDraft)
+      throws InvalidRequestException {
+    var fdoAttributes = new EnumMap<>(
+        prepareVirtualCollectionAttributes(request, handle, timestamp));
+    fdoAttributes.putAll(
+        prepareGeneratedAttributes(handle, VIRTUAL_COLLECTION, timestamp, isDraft));
+    return new FdoRecord(handle, VIRTUAL_COLLECTION, fdoAttributes, null, fdoAttributes.values());
+  }
+
+  public FdoRecord prepareUpdatedVirtualCollection(VirtualCollectionRequestAttributes request,
+      Instant timestamp, FdoRecord previousVersion, boolean incrementVersion)
+      throws InvalidRequestException {
+    var fdoAttributes = prepareUpdatedVirtualCollectionAttributes(request, previousVersion.handle(),
+        timestamp, previousVersion, incrementVersion);
+    return new FdoRecord(previousVersion.handle(), VIRTUAL_COLLECTION, fdoAttributes, null,
+        fdoAttributes.values());
+  }
+
+  private Map<FdoProfile, FdoAttribute> prepareVirtualCollectionAttributes(
+      VirtualCollectionRequestAttributes request, String handle, Instant timestamp)
+      throws InvalidRequestException {
+    var handleAttributeList = new EnumMap<FdoProfile, FdoAttribute>(FdoProfile.class);
+    // 101: 10320/Loc
+    handleAttributeList.put(LOC,
+        new FdoAttribute(LOC, timestamp,
+            setLocations(handle, VIRTUAL_COLLECTION, null, request.getLocations(), false)));
+    // 900: virtual collection name
+    handleAttributeList.put(VIRTUAL_COLLECTION_NAME,
+        new FdoAttribute(VIRTUAL_COLLECTION_NAME, timestamp, request.getCollectionName()));
+    // 901: virtual collection basis of scheme
+    handleAttributeList.put(VIRTUAL_COLLECTION_BASIS_OF_SCHEME,
+        new FdoAttribute(VIRTUAL_COLLECTION_BASIS_OF_SCHEME, timestamp,
+            request.getBasisOfScheme()));
+    return handleAttributeList;
+  }
+
+  private Map<FdoProfile, FdoAttribute> prepareUpdatedVirtualCollectionAttributes(
+      VirtualCollectionRequestAttributes request, String handle, Instant timestamp,
+      FdoRecord previousVersion, boolean incrementVersion) throws InvalidRequestException {
+    var updatedAttributes = new EnumMap<>(
+        prepareVirtualCollectionAttributes(request, handle, timestamp));
+    prepareUpdateAttributes(updatedAttributes, previousVersion.attributes(), timestamp,
+        incrementVersion);
+    return updatedAttributes;
+  }
+
   /* Tombstone Record Creation */
   public FdoRecord prepareTombstoneRecord(TombstoneRequestAttributes request, Instant timestamp,
       FdoRecord previousVersion) throws JsonProcessingException {
@@ -672,6 +727,8 @@ public class FdoRecordService {
     return new FdoRecord(previousVersion.handle(), previousVersion.fdoType(), fdoAttributes,
         null, fdoAttributes.values());
   }
+
+  /* Generalized attribute Building */
 
   private Map<FdoProfile, FdoAttribute> prepareTombstoneAttributes(
       TombstoneRequestAttributes request,
@@ -698,8 +755,6 @@ public class FdoRecordService {
         new FdoAttribute(TOMBSTONED_DATE, timestamp, getDate(timestamp)));
     return fdoAttributes;
   }
-
-  /* Generalized attribute Building */
 
   private FdoAttribute incrementIssueNumber(FdoAttribute previousVersion, Instant timestamp) {
     var previousIssueNumber = previousVersion.getValue();
@@ -843,10 +898,6 @@ public class FdoRecordService {
         (ROR_DOMAIN + ", " + HANDLE_DOMAIN + ", or " + DOI_DOMAIN)));
   }
 
-  private static String getRor(String url) {
-    return url.replace(ROR_DOMAIN, ROR_API_DOMAIN);
-  }
-
   private String getDate(Instant timestamp) {
     return dt.format(timestamp);
   }
@@ -873,6 +924,12 @@ public class FdoRecordService {
               applicationProperties.getOrchestrationUi() + "/data-mapping/" + handle, "HTML"));
           locations.add(new XmlElement(i.getAndIncrement(), "0",
               applicationProperties.getOrchestrationApi() + "/data-mapping/v1/" + handle, "JSON"));
+        }
+        case VIRTUAL_COLLECTION -> {
+          locations.add(new XmlElement(i.getAndIncrement(), "1",
+              applicationProperties.getUiUrl() + "/virtual-collection/" + handle, "HTML"));
+          locations.add(new XmlElement(i.getAndIncrement(), "0",
+              applicationProperties.getApiUrl() + "/virtual-collection/v1/" + handle, "JSON"));
         }
         case SOURCE_SYSTEM -> {
           locations.add(new XmlElement(i.getAndIncrement(), "1",
