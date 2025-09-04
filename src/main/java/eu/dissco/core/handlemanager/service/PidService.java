@@ -30,6 +30,7 @@ import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestRuntimeException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
+import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.MongoRepository;
 import eu.dissco.core.handlemanager.schema.TombstoneRequestAttributes;
@@ -55,6 +56,7 @@ public abstract class PidService {
   protected final ObjectMapper mapper;
   protected final ProfileProperties profileProperties;
   protected final MongoRepository mongoRepository;
+  protected final ApplicationProperties applicationProperties;
   protected static final String REQUEST_PROCESSING_ERR = "An error has occurred parsing a record in request";
   protected static final String TYPE_ERROR_MESSAGE = "Error creating PID for object of Type %s. Only Digital Specimens and Media Objects use DOIs. Other objects use handles.";
 
@@ -127,14 +129,16 @@ public abstract class PidService {
     return dataLinksList;
   }
 
-  private List<JsonApiDataLinks> formatSingleKeyResponse(List<FdoRecord> fdoRecords, FdoType fdoType, FdoProfile keyAttribute) {
+  private List<JsonApiDataLinks> formatSingleKeyResponse(List<FdoRecord> fdoRecords,
+      FdoType fdoType, FdoProfile keyAttribute) {
     return fdoRecords.stream().map(fdoRecord -> {
           String pidLink = profileProperties.getDomain() + fdoRecord.handle();
           return new JsonApiDataLinks(
               fdoRecord.handle(),
               fdoType.getDigitalObjectType(),
               mapper.createObjectNode()
-                  .put(keyAttribute.getAttribute(), fdoRecord.attributes().get(keyAttribute).getValue()),
+                  .put(keyAttribute.getAttribute(),
+                      fdoRecord.attributes().get(keyAttribute).getValue()),
               new JsonApiLinks(pidLink));
         }
     ).toList();
@@ -378,7 +382,11 @@ public abstract class PidService {
       log.error(REQUEST_PROCESSING_ERR, e);
       throw new InvalidRequestException(REQUEST_PROCESSING_ERR);
     }
-    mongoRepository.postHandleRecords(fdoDocuments);
+    if (applicationProperties.isOverwritePidRecords()) {
+      mongoRepository.updateHandleRecords(fdoDocuments);
+    } else {
+      mongoRepository.postHandleRecords(fdoDocuments);
+    }
     log.info("Successfully posted {} fdo records to database", fdoDocuments.size());
   }
 
