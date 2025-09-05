@@ -11,11 +11,9 @@ import static org.mockito.Mockito.lenient;
 
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.repository.MongoRepository;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -23,6 +21,7 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -38,7 +37,10 @@ class PidNameGeneratorServiceTest {
   @Mock
   ApplicationProperties applicationProperties;
 
-  private static final String FILE_NAME = "reserved-pids/dois.txt";
+  @TempDir
+  Path tempDir;
+
+  private static final String FILE_NAME = "dois.txt";
   private static final String LAST_PID = PREFIX + "/" + "111-111-111";
   private static final int MAX_HANDLES = 1000;
 
@@ -52,18 +54,11 @@ class PidNameGeneratorServiceTest {
     lenient().when(applicationProperties.getMaxHandles()).thenReturn(MAX_HANDLES);
   }
 
-  private static void writeFile() throws IOException {
-    var f = new File(FILE_NAME);
-    f.createNewFile();
-    try (var writer = new FileWriter(FILE_NAME)) {
-      writer.write(HANDLE + "\n");
-      writer.write(HANDLE_ALT + "\n");
-      writer.write(LAST_PID + "\n");
-    }
-  }
-
-  private static void cleanupFile() throws IOException {
-    Files.delete(Paths.get(FILE_NAME));
+  private Path writeFile() throws IOException {
+    var path = tempDir.resolve(FILE_NAME);
+    given(applicationProperties.getManualPidFile()).willReturn(path.toString());
+    Files.write(path, List.of(HANDLE, HANDLE_ALT, LAST_PID));
+    return path;
   }
 
   @Test
@@ -83,25 +78,22 @@ class PidNameGeneratorServiceTest {
   @Test
   void testGenerateManualPids() throws IOException {
     // Given
-    writeFile();
+    var path = writeFile();
     var expected = Set.of(HANDLE, HANDLE_ALT);
-    given(applicationProperties.getManualPidFile()).willReturn(FILE_NAME);
 
     // When
     var result = pidNameGeneratorService.generateNewHandles(2);
 
     // Then
     assertThat(result).isEqualTo(expected);
-    assertThat(fileHasExpectedSize(1)).isTrue();
-    cleanupFile();
+    assertThat(fileHasExpectedSize(1, path)).isTrue();
   }
 
   @Test
   void testGenerateManualPidsAndRandom() throws IOException {
     // Given
-    writeFile();
+    var path = writeFile();
     var expected = Set.of(HANDLE, HANDLE_ALT, LAST_PID, PREFIX + "/AAA-AAA-AAA");
-    given(applicationProperties.getManualPidFile()).willReturn(FILE_NAME);
     given(random.nextInt(anyInt())).willReturn(0);
     given(applicationProperties.getPrefix()).willReturn(PREFIX);
 
@@ -110,12 +102,11 @@ class PidNameGeneratorServiceTest {
 
     // Then
     assertThat(result).isEqualTo(expected);
-    assertThat(fileHasExpectedSize(0)).isTrue();
-    cleanupFile();
+    assertThat(fileHasExpectedSize(0, path)).isTrue();
   }
 
-  private static boolean fileHasExpectedSize(int size) throws IOException {
-    try (var fileStream = Files.lines(Paths.get(FILE_NAME))) {
+  private static boolean fileHasExpectedSize(int size, Path path) throws IOException {
+    try (var fileStream = Files.lines(path)) {
       return (int) fileStream.count() == size;
     }
   }
