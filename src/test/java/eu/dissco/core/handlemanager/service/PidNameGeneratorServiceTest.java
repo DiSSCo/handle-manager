@@ -46,6 +46,12 @@ class PidNameGeneratorServiceTest {
 
   private PidNameGeneratorService pidNameGeneratorService;
 
+  private static boolean fileHasExpectedSize(int size, Path path) throws IOException {
+    try (var fileStream = Files.lines(path)) {
+      return (int) fileStream.count() == size;
+    }
+  }
+
   @BeforeEach
   void setup() {
     this.pidNameGeneratorService = new PidNameGeneratorService(applicationProperties,
@@ -88,6 +94,29 @@ class PidNameGeneratorServiceTest {
     // Then
     assertThat(result).isEqualTo(expected);
     assertThat(fileHasExpectedSize(1, path)).isTrue();
+  }
+
+  @Test
+  void testGenerateManualPidsBuffer() throws IOException{
+    // Given
+    var path = tempDir.resolve(FILE_NAME);
+    int fileSize = 10001;
+    try (var writer = Files.newBufferedWriter(path)) {
+      for (int i = 0; i < fileSize; i++) {
+        writer.write(PREFIX + "/" + i);
+        writer.newLine();
+      }
+    }
+    given(applicationProperties.getManualPidFile()).willReturn(path.toString());
+    given(applicationProperties.getPrefix()).willReturn(PREFIX);
+    var expected = Set.of("20.5000.1025/1", "20.5000.1025/0");
+
+    // When
+    var result = pidNameGeneratorService.generateNewHandles(2);
+
+    // Then
+    assertThat(result).isEqualTo(expected);
+    assertThat(fileHasExpectedSize(fileSize - 2, path)).isTrue();
   }
 
   @Test
@@ -139,12 +168,6 @@ class PidNameGeneratorServiceTest {
     // Then
     assertThat(result).isEqualTo(expected);
     assertThat(fileHasExpectedSize(0, path)).isTrue();
-  }
-
-  private static boolean fileHasExpectedSize(int size, Path path) throws IOException {
-    try (var fileStream = Files.lines(path)) {
-      return (int) fileStream.count() == size;
-    }
   }
 
   @Test

@@ -5,19 +5,20 @@ import static eu.dissco.core.handlemanager.properties.ProfileProperties.HANDLE_D
 
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.repository.MongoRepository;
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,7 @@ public class PidNameGeneratorService {
   private final char[] buf = new char[LENGTH];
   private final MongoRepository mongoRepository;
   private final Random random;
+  private static final int BATCH_SIZE = 10000;
 
 
   public Set<String> generateNewHandles(int h) {
@@ -53,24 +55,36 @@ public class PidNameGeneratorService {
   private Set<String> generateManualPids(int h) {
     var pids = new HashSet<String>();
     try (
-        BufferedReader br = new BufferedReader(
-            new FileReader(applicationProperties.getManualPidFile()));
-        BufferedWriter bw = new BufferedWriter(new FileWriter(getWriteFileName()))
+        var fileStream = Files.lines(Paths.get(applicationProperties.getManualPidFile()));
+        BufferedWriter bw = new BufferedWriter(new FileWriter(getTempFileName()))
     ) {
-      String line;
-      while ((line = br.readLine()) != null) {
-        if (pids.size() < h){
-          if (line.contains(applicationProperties.getPrefix())) {
-            pids.add(line.replace(DOI_DOMAIN, "").replace(HANDLE_DOMAIN, ""));
+      var buffer = new StringBuilder();
+      var counter = new AtomicInteger();
+      fileStream.forEachOrdered(line -> {
+        try {
+          if (pids.size() < h) {
+            var pid = line.replace(DOI_DOMAIN, "").replace(HANDLE_DOMAIN, "");
+            if (pid.startsWith(applicationProperties.getPrefix())) {
+              pids.add(pid);
+            } else {
+              buffer.append(line).append(System.lineSeparator());
+              log.warn("Manual pid file contains invalid prefix. Ignoring pid {}", line);
+            }
           } else {
-            log.warn("Manual pid file contains invalid prefix. Ignoring pid {}", line);
-            bw.write(line + "\n");
+            buffer.append(line).append(System.lineSeparator());
           }
-        } else {
-          bw.write(line + "\n");
+          if (counter.incrementAndGet() % BATCH_SIZE == 0) {
+            bw.write(buffer.toString());
+            buffer.setLength(0);
+          }
+        } catch (IOException e) {
+          throw new UncheckedIOException(e);
         }
+      });
+      if (!buffer.isEmpty()) {
+        bw.write(buffer.toString());
       }
-    } catch (IOException e) {
+    } catch (IOException | UncheckedIOException e) {
       log.error("Error while reading manual pid file. Generating random PIDs", e);
       return genHandleHashSet(h);
     }
@@ -84,27 +98,20 @@ public class PidNameGeneratorService {
   }
 
   private void overwriteManualPidFile() {
-    var oldFile = new File(applicationProperties.getManualPidFile());
-    var writeFile = (new File(getWriteFileName()));
-    boolean delete = false;
-    boolean rename = false;
+    var oldFile = Paths.get(applicationProperties.getManualPidFile());
+    var tempFile = Paths.get(getTempFileName());
     try {
-      delete = Files.deleteIfExists(oldFile.toPath());
-      rename = writeFile.renameTo(new File(applicationProperties.getManualPidFile()));
+      Files.move(tempFile, oldFile, StandardCopyOption.REPLACE_EXISTING,
+          StandardCopyOption.ATOMIC_MOVE);
     } catch (IOException e) {
       log.error("Error while deleting old manual pid file. ", e);
       applicationProperties.setManualPidFile(null);
     }
-    if (!(delete || rename)) {
-      log.error("Unable to delete the used pids from the manual file. ");
-      applicationProperties.setManualPidFile(null);
-    }
   }
 
-  private String getWriteFileName() {
-    return applicationProperties.getManualPidFile().replace(".txt", "-write.txt");
+  private String getTempFileName() {
+    return applicationProperties.getManualPidFile()+".tmp";
   }
-
 
   private Set<String> genHandleHashSet(int h) {
 
