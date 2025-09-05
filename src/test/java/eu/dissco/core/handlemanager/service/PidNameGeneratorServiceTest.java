@@ -79,6 +79,7 @@ class PidNameGeneratorServiceTest {
     // Given
     var path = writeFile();
     given(applicationProperties.getManualPidFile()).willReturn(path.toString());
+    given(applicationProperties.getPrefix()).willReturn(PREFIX);
     var expected = Set.of(HANDLE, HANDLE_ALT);
 
     // When
@@ -112,6 +113,7 @@ class PidNameGeneratorServiceTest {
     given(applicationProperties.getManualPidFile()).willReturn(path.toString())
         .willReturn(path.toString())
         .willReturn("not-a-file.txt");
+    given(applicationProperties.getPrefix()).willReturn(PREFIX);
     var expected = Set.of(HANDLE);
 
     // When
@@ -121,7 +123,6 @@ class PidNameGeneratorServiceTest {
     assertThat(result).isEqualTo(expected);
     assertThat(fileHasExpectedSize(3, path)).isTrue();
   }
-
 
   @Test
   void testGenerateManualPidsAndRandom() throws IOException {
