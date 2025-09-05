@@ -375,6 +375,9 @@ public abstract class PidService {
 
   protected void createDocuments(List<FdoRecord> fdoRecords)
       throws InvalidRequestException {
+    if (fdoRecords.isEmpty()) {
+      return;
+    }
     List<Document> fdoDocuments;
     try {
       fdoDocuments = toMongoDbDocument(fdoRecords);
@@ -392,6 +395,9 @@ public abstract class PidService {
 
   protected void updateDocuments(List<FdoRecord> fdoRecords)
       throws InvalidRequestException {
+    if (fdoRecords.isEmpty()) {
+      return;
+    }
     List<Document> fdoDocuments;
     try {
       fdoDocuments = toMongoDbDocument(fdoRecords);

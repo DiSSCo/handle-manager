@@ -56,6 +56,7 @@ import eu.dissco.core.handlemanager.domain.datacite.EventType;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
+import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.MongoRepository;
 import eu.dissco.core.handlemanager.testUtils.TestUtils;
@@ -94,6 +95,8 @@ class DoiServiceTest {
   private MongoRepository mongoRepository;
   @Mock
   private PidService service;
+  @Mock
+  private ApplicationProperties applicationProperties;
   private MockedStatic<Instant> mockedStatic;
   private MockedStatic<Clock> mockedClock;
 
@@ -101,7 +104,7 @@ class DoiServiceTest {
   void setup() {
     initTime();
     service = new DoiService(fdoRecordService, pidNameGeneratorService, MAPPER, profileProperties,
-        dataCiteService, mongoRepository);
+        dataCiteService, mongoRepository, applicationProperties);
   }
 
   private void initTime() {
@@ -140,6 +143,34 @@ class DoiServiceTest {
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
+    then(dataCiteService).should().publishToDataCite(dataCiteEvent, FdoType.DIGITAL_SPECIMEN);
+  }
+
+  @Test
+  void testOverwriteCreateDigitalSpecimen() throws Exception {
+    // Given
+    var request = givenPostRequest(givenDigitalSpecimen(), FdoType.DIGITAL_SPECIMEN);
+    var fdoRecord = givenDigitalSpecimenFdoRecord(HANDLE);
+    var responseExpected = givenWriteResponseIdsOnly(List.of(fdoRecord), FdoType.DIGITAL_SPECIMEN,
+        DOI_DOMAIN);
+    var dataCiteEvent = new DataCiteEvent(jsonFormatFdoRecord(fdoRecord.values()),
+        EventType.UPDATE);
+    given(mongoRepository.getHandleRecords(List.of(HANDLE))).willReturn(List.of(fdoRecord));
+    given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
+    given(fdoRecordService.prepareNewDigitalSpecimenRecord(any(), any(), any(),
+        anyBoolean())).willReturn(
+        fdoRecord);
+    given(profileProperties.getDomain()).willReturn(DOI_DOMAIN);
+    given(applicationProperties.isOverwritePidRecords()).willReturn(true);
+
+    // When
+    var responseReceived = service.createRecords(List.of(request), false);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+    then(mongoRepository).should().updateHandleRecords(any());
+    then(mongoRepository).should().searchByPrimaryLocalId(any(), any());
+    then(mongoRepository).shouldHaveNoMoreInteractions();
     then(dataCiteService).should().publishToDataCite(dataCiteEvent, FdoType.DIGITAL_SPECIMEN);
   }
 
