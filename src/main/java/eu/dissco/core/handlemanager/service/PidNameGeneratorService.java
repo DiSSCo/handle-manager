@@ -60,7 +60,12 @@ public class PidNameGeneratorService {
       String line;
       while ((line = br.readLine()) != null) {
         if (pids.size() < h){
-          pids.add(line.replace(DOI_DOMAIN, "").replace(HANDLE_DOMAIN, ""));
+          if (line.contains(applicationProperties.getPrefix())) {
+            pids.add(line.replace(DOI_DOMAIN, "").replace(HANDLE_DOMAIN, ""));
+          } else {
+            log.warn("Manual pid file contains invalid prefix. Ignoring pid {}", line);
+            bw.write(line + "\n");
+          }
         } else {
           bw.write(line + "\n");
         }

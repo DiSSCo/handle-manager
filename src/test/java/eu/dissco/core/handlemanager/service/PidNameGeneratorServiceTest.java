@@ -90,6 +90,22 @@ class PidNameGeneratorServiceTest {
   }
 
   @Test
+  void testGenerateManualPidsWrongPrefix() throws IOException {
+    // Given
+    var path = writeFile();
+    given(applicationProperties.getManualPidFile()).willReturn(path.toString());
+    given(applicationProperties.getPrefix()).willReturn("10.3535");
+    var expected = Set.of("10.3535/AAA-AAA-AAA");
+
+    // When
+    var result = pidNameGeneratorService.generateNewHandles(1);
+
+    // Then
+    assertThat(result).isEqualTo(expected);
+    assertThat(fileHasExpectedSize(3, path)).isTrue();
+  }
+
+  @Test
   void testGenerateManualPidsDeleteFails() throws IOException {
     // Given
     var path = writeFile();
