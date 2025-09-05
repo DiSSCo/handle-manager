@@ -56,7 +56,6 @@ class PidNameGeneratorServiceTest {
 
   private Path writeFile() throws IOException {
     var path = tempDir.resolve(FILE_NAME);
-    given(applicationProperties.getManualPidFile()).willReturn(path.toString());
     Files.write(path, List.of(HANDLE, HANDLE_ALT, LAST_PID));
     return path;
   }
@@ -79,6 +78,7 @@ class PidNameGeneratorServiceTest {
   void testGenerateManualPids() throws IOException {
     // Given
     var path = writeFile();
+    given(applicationProperties.getManualPidFile()).willReturn(path.toString());
     var expected = Set.of(HANDLE, HANDLE_ALT);
 
     // When
@@ -90,9 +90,28 @@ class PidNameGeneratorServiceTest {
   }
 
   @Test
+  void testGenerateManualPidsDeleteFails() throws IOException {
+    // Given
+    var path = writeFile();
+    given(applicationProperties.getManualPidFile()).willReturn(path.toString())
+        .willReturn(path.toString())
+        .willReturn("not-a-file.txt");
+    var expected = Set.of(HANDLE);
+
+    // When
+    var result = pidNameGeneratorService.generateNewHandles(1);
+
+    // Then
+    assertThat(result).isEqualTo(expected);
+    assertThat(fileHasExpectedSize(3, path)).isTrue();
+  }
+
+
+  @Test
   void testGenerateManualPidsAndRandom() throws IOException {
     // Given
     var path = writeFile();
+    given(applicationProperties.getManualPidFile()).willReturn(path.toString());
     var expected = Set.of(HANDLE, HANDLE_ALT, LAST_PID, PREFIX + "/AAA-AAA-AAA");
     given(random.nextInt(anyInt())).willReturn(0);
     given(applicationProperties.getPrefix()).willReturn(PREFIX);
