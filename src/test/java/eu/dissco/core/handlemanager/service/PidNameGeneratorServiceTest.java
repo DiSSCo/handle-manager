@@ -112,6 +112,21 @@ class PidNameGeneratorServiceTest {
   }
 
   @Test
+  void testSingleBatchGenIOFailed() {
+    // Given
+    var expected = Set.of(PREFIX + "/AAA-AAA-AAA");
+    given(random.nextInt(anyInt())).willReturn(0);
+    given(applicationProperties.getPrefix()).willReturn(PREFIX);
+    given(applicationProperties.getManualPidFile()).willReturn(FILE_NAME);
+
+    // When
+    var result = pidNameGeneratorService.generateNewHandles(1);
+
+    // Then
+    assertThat(result).isEqualTo(expected);
+  }
+
+  @Test
   void testBatchGen() {
     // Given
     var expected = Set.of(PREFIX + "/ABB-BBB-BBB", PREFIX + "/BBB-BBB-BBB");
