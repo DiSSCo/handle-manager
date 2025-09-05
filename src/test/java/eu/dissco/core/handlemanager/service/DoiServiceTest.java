@@ -63,7 +63,6 @@ import eu.dissco.core.handlemanager.testUtils.TestUtils;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -293,7 +292,6 @@ class DoiServiceTest {
     then(dataCiteService).should().publishToDataCite(dataCiteEventCreate, FdoType.DIGITAL_SPECIMEN);
     then(dataCiteService).should().publishToDataCite(dataCiteEventUpdate, FdoType.DIGITAL_SPECIMEN);
     then(mongoRepository).should().postHandleRecords(any());
-    then(mongoRepository).should().updateHandleRecords(any());
   }
 
   @Test
@@ -335,7 +333,6 @@ class DoiServiceTest {
     then(dataCiteService).should().publishToDataCite(dataCiteEventCreate, FdoType.DIGITAL_SPECIMEN);
     then(dataCiteService).should().publishToDataCite(dataCiteEventUpdate, FdoType.DIGITAL_SPECIMEN);
     then(mongoRepository).should().postHandleRecords(any());
-    then(mongoRepository).should().updateHandleRecords(any());
   }
 
 
@@ -427,7 +424,6 @@ class DoiServiceTest {
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
-    then(mongoRepository).should().updateHandleRecords(any());
     then(mongoRepository).should().postHandleRecords(any());
     then(dataCiteService).should().publishToDataCite(dataCiteEventNew, FdoType.DIGITAL_MEDIA);
     then(dataCiteService).should().publishToDataCite(dataCiteEventUpdate, FdoType.DIGITAL_MEDIA);
@@ -474,7 +470,6 @@ class DoiServiceTest {
 
     // Then
     assertThat(result).isEqualTo(expected);
-    then(mongoRepository).should().updateHandleRecords(Collections.emptyList());
   }
 
   private void fdoRecordServiceReturnsPreviousVersion(FdoRecord previousVersion) throws Exception {

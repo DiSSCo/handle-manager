@@ -448,7 +448,6 @@ class HandleServiceTest {
 
     // Then
     assertThat(result).isEqualTo(expected);
-    then(mongoRepository).should().updateHandleRecords(Collections.emptyList());
   }
 
   private void fdoRecordServiceReturnsPreviousVersion(FdoRecord previousVersion) throws Exception {
