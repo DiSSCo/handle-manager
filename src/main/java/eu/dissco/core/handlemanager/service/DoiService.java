@@ -26,6 +26,7 @@ import eu.dissco.core.handlemanager.domain.upsert.UpsertSpecimenResult;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
+import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.MongoRepository;
 import eu.dissco.core.handlemanager.schema.DigitalMediaRequestAttributes;
@@ -56,9 +57,9 @@ public class DoiService extends PidService {
   public DoiService(FdoRecordService fdoRecordService,
       PidNameGeneratorService pidNameGeneratorService,
       ObjectMapper mapper, ProfileProperties profileProperties,
-      DataCiteService dataCiteService, MongoRepository mongoRepository) {
+      DataCiteService dataCiteService, MongoRepository mongoRepository, ApplicationProperties applicationProperties) {
     super(fdoRecordService, pidNameGeneratorService, mapper, profileProperties,
-        mongoRepository);
+        mongoRepository, applicationProperties);
     this.dataCiteService = dataCiteService;
   }
 
@@ -131,10 +132,25 @@ public class DoiService extends PidService {
     var newRecords = createNewSpecimens(processResult.newSpecimenRequests(), timestamp, isDraft);
     var fdoRecords = Stream.concat(updateRecords.stream(), newRecords.stream()).toList();
     if (!isDraft) {
-      publishToDataCite(newRecords, EventType.CREATE);
-      publishToDataCite(updateRecords, EventType.UPDATE);
+      determineDataCiteEventTypeAndPublish(newRecords, updateRecords);
     }
     return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, DIGITAL_SPECIMEN));
+  }
+
+  private void determineDataCiteEventTypeAndPublish(List<FdoRecord> newRecords, List<FdoRecord> updateRecords)
+      throws UnprocessableEntityException, JsonProcessingException {
+    if (!applicationProperties.isOverwritePidRecords()) {
+        publishToDataCite(newRecords, EventType.CREATE);
+    } else {
+      var newIds = newRecords.stream().map(FdoRecord::handle).toList();
+      var overwriteIds = mongoRepository.getHandleRecords(newIds)
+          .stream().map(FdoRecord::handle).collect(Collectors.toSet());
+      var overwriteRecords = newRecords.stream().filter(r -> overwriteIds.contains(r.handle())).toList();
+      var remainingRecords = newRecords.stream().filter(r -> !overwriteIds.contains(r.handle())).toList();
+      publishToDataCite(remainingRecords, EventType.CREATE);
+      publishToDataCite(overwriteRecords, EventType.UPDATE);
+    }
+    publishToDataCite(updateRecords, EventType.UPDATE);
   }
 
   protected JsonApiWrapperWrite processDigitalMediaRequests(List<JsonNode> requestAttributes,
@@ -154,8 +170,7 @@ public class DoiService extends PidService {
     var newRecords = createNewMedia(processResult.newMediaRequests(), timestamp, isDraft);
     var fdoRecords = Stream.concat(updateRecords.stream(), newRecords.stream()).toList();
     if (!isDraft) {
-      publishToDataCite(newRecords, EventType.CREATE);
-      publishToDataCite(updateRecords, EventType.UPDATE);
+      determineDataCiteEventTypeAndPublish(newRecords, updateRecords);
     }
     return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, DIGITAL_MEDIA));
   }
@@ -371,6 +386,9 @@ public class DoiService extends PidService {
 
   private void publishToDataCite(List<FdoRecord> fdoRecords, EventType eventType)
       throws UnprocessableEntityException {
+    if (fdoRecords.isEmpty()) {
+      return;
+    }
     var eventList = fdoRecords.stream()
         .map(fdoRecord -> new DataCiteEvent(jsonFormatSingleRecord(fdoRecord.values()),
             eventType)).toList();

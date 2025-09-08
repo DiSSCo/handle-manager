@@ -1,13 +1,24 @@
 package eu.dissco.core.handlemanager.service;
 
+import static eu.dissco.core.handlemanager.properties.ProfileProperties.DOI_DOMAIN;
+import static eu.dissco.core.handlemanager.properties.ProfileProperties.HANDLE_DOMAIN;
+
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.repository.MongoRepository;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,6 +37,7 @@ public class PidNameGeneratorService {
   private final char[] buf = new char[LENGTH];
   private final MongoRepository mongoRepository;
   private final Random random;
+  private static final int BATCH_SIZE = 10000;
 
 
   public Set<String> generateNewHandles(int h) {
@@ -34,7 +46,71 @@ public class PidNameGeneratorService {
           applicationProperties.getMaxHandles());
       h = applicationProperties.getMaxHandles();
     }
+    if (applicationProperties.getManualPidFile() != null) {
+      return generateManualPids(h);
+    }
     return genHandleHashSet(h);
+  }
+
+  private Set<String> generateManualPids(int h) {
+    var pids = new HashSet<String>();
+    try (
+        var fileStream = Files.lines(Paths.get(applicationProperties.getManualPidFile()));
+        BufferedWriter bw = new BufferedWriter(new FileWriter(getTempFileName()))
+    ) {
+      var buffer = new StringBuilder();
+      var counter = new AtomicInteger();
+      fileStream.forEachOrdered(line -> {
+        try {
+          if (pids.size() < h) {
+            var pid = line.replace(DOI_DOMAIN, "").replace(HANDLE_DOMAIN, "");
+            if (pid.startsWith(applicationProperties.getPrefix())) {
+              pids.add(pid);
+            } else {
+              buffer.append(line).append(System.lineSeparator());
+              log.warn("Manual pid file contains invalid prefix. Ignoring pid {}", line);
+            }
+          } else {
+            buffer.append(line).append(System.lineSeparator());
+          }
+          if (counter.incrementAndGet() % BATCH_SIZE == 0) {
+            bw.write(buffer.toString());
+            buffer.setLength(0);
+          }
+        } catch (IOException e) {
+          throw new UncheckedIOException(e);
+        }
+      });
+      if (!buffer.isEmpty()) {
+        bw.write(buffer.toString());
+      }
+    } catch (IOException | UncheckedIOException e) {
+      log.error("Error while reading manual pid file. Generating random PIDs", e);
+      return genHandleHashSet(h);
+    }
+    overwriteManualPidFile();
+    if (pids.size() < h) {
+      log.info("Manual pids are depleted. Generating {} random pids", h - pids.size());
+      pids.addAll(genHandleHashSet(h - pids.size()));
+      applicationProperties.setManualPidFile(null);
+    }
+    return pids;
+  }
+
+  private void overwriteManualPidFile() {
+    var oldFile = Paths.get(applicationProperties.getManualPidFile());
+    var tempFile = Paths.get(getTempFileName());
+    try {
+      Files.move(tempFile, oldFile, StandardCopyOption.REPLACE_EXISTING,
+          StandardCopyOption.ATOMIC_MOVE);
+    } catch (IOException e) {
+      log.error("Error while deleting old manual pid file. ", e);
+      applicationProperties.setManualPidFile(null);
+    }
+  }
+
+  private String getTempFileName() {
+    return applicationProperties.getManualPidFile()+".tmp";
   }
 
   private Set<String> genHandleHashSet(int h) {
