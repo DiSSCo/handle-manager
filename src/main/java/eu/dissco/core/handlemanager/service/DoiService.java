@@ -139,7 +139,7 @@ public class DoiService extends PidService {
 
   private void determineDataCiteEventTypeAndPublish(List<FdoRecord> newRecords, List<FdoRecord> updateRecords)
       throws UnprocessableEntityException, JsonProcessingException {
-    if (!applicationProperties.isOverwritePidRecords()) {
+    if (!applicationProperties.isUseManualPids()) {
         publishToDataCite(newRecords, EventType.CREATE);
     } else {
       var newIds = newRecords.stream().map(FdoRecord::handle).toList();

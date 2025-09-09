@@ -4,14 +4,25 @@ import static eu.dissco.core.handlemanager.properties.ProfileProperties.DOI_DOMA
 import static eu.dissco.core.handlemanager.properties.ProfileProperties.HANDLE_DOMAIN;
 
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
+import eu.dissco.core.handlemanager.repository.ManualPidRepository;
 import eu.dissco.core.handlemanager.repository.MongoRepository;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -31,6 +42,7 @@ import org.springframework.stereotype.Service;
 public class PidNameGeneratorService {
 
   private final ApplicationProperties applicationProperties;
+  ManualPidRepository manualPidRepository;
 
   private static final int LENGTH = 11;
   private static final char[] SYMBOLS = "ABCDEFGHJKLMNPQRSTVWXYZ1234567890".toCharArray();
@@ -46,71 +58,19 @@ public class PidNameGeneratorService {
           applicationProperties.getMaxHandles());
       h = applicationProperties.getMaxHandles();
     }
-    if (applicationProperties.getManualPidFile() != null) {
+    if (applicationProperties.isUseManualPids()) {
       return generateManualPids(h);
     }
     return genHandleHashSet(h);
   }
 
   private Set<String> generateManualPids(int h) {
-    var pids = new HashSet<String>();
-    try (
-        var fileStream = Files.lines(Paths.get(applicationProperties.getManualPidFile()));
-        BufferedWriter bw = new BufferedWriter(new FileWriter(getTempFileName()))
-    ) {
-      var buffer = new StringBuilder();
-      var counter = new AtomicInteger();
-      fileStream.forEachOrdered(line -> {
-        try {
-          if (pids.size() < h) {
-            var pid = line.replace(DOI_DOMAIN, "").replace(HANDLE_DOMAIN, "");
-            if (pid.startsWith(applicationProperties.getPrefix())) {
-              pids.add(pid);
-            } else {
-              buffer.append(line).append(System.lineSeparator());
-              log.warn("Manual pid file contains invalid prefix. Ignoring pid {}", line);
-            }
-          } else {
-            buffer.append(line).append(System.lineSeparator());
-          }
-          if (counter.incrementAndGet() % BATCH_SIZE == 0) {
-            bw.write(buffer.toString());
-            buffer.setLength(0);
-          }
-        } catch (IOException e) {
-          throw new UncheckedIOException(e);
-        }
-      });
-      if (!buffer.isEmpty()) {
-        bw.write(buffer.toString());
-      }
-    } catch (IOException | UncheckedIOException e) {
-      log.error("Error while reading manual pid file. Generating random PIDs", e);
-      return genHandleHashSet(h);
-    }
-    overwriteManualPidFile();
+    var pids = manualPidRepository.getPids(h);
     if (pids.size() < h) {
-      log.info("Manual pids are depleted. Generating {} random pids", h - pids.size());
+      log.warn("Manual pids depleted. Generating manual pids");
       pids.addAll(genHandleHashSet(h - pids.size()));
-      applicationProperties.setManualPidFile(null);
     }
     return pids;
-  }
-
-  private void overwriteManualPidFile() {
-    var oldFile = Paths.get(applicationProperties.getManualPidFile());
-    var tempFile = Paths.get(getTempFileName());
-    try {
-      Files.move(tempFile, oldFile, StandardCopyOption.REPLACE_EXISTING,
-          StandardCopyOption.ATOMIC_MOVE);
-    } catch (IOException e) {
-      log.error("Error while deleting old manual pid file. ", e);
-      applicationProperties.setManualPidFile(null);
-    }
-  }
-
-  private String getTempFileName() {
-    return applicationProperties.getManualPidFile()+".tmp";
   }
 
   private Set<String> genHandleHashSet(int h) {

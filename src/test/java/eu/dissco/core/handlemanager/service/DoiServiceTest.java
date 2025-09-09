@@ -160,7 +160,7 @@ class DoiServiceTest {
         anyBoolean())).willReturn(
         fdoRecord);
     given(profileProperties.getDomain()).willReturn(DOI_DOMAIN);
-    given(applicationProperties.isOverwritePidRecords()).willReturn(true);
+    given(applicationProperties.isUseManualPids()).willReturn(true);
 
     // When
     var responseReceived = service.createRecords(List.of(request), false);

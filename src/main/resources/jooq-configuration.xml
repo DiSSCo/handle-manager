@@ -13,14 +13,8 @@
     <database>
       <name>org.jooq.meta.postgres.PostgresDatabase</name>
       <inputSchema>public</inputSchema>
-      <includes>handles
+      <includes>manual_pid
       </includes>
-      <forcedTypes>
-        <forcedType>
-          <name>INSTANT</name>
-          <includeTypes>TIMESTAMPTZ</includeTypes>
-        </forcedType>
-      </forcedTypes>
     </database>
     <target>
       <packageName>eu.dissco.core.handlemanager.jooqobjects</packageName>

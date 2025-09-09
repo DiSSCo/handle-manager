@@ -385,7 +385,7 @@ public abstract class PidService {
       log.error(REQUEST_PROCESSING_ERR, e);
       throw new InvalidRequestException(REQUEST_PROCESSING_ERR);
     }
-    if (applicationProperties.isOverwritePidRecords()) {
+    if (applicationProperties.isUseManualPids()) {
       mongoRepository.updateHandleRecords(fdoDocuments);
     } else {
       mongoRepository.postHandleRecords(fdoDocuments);

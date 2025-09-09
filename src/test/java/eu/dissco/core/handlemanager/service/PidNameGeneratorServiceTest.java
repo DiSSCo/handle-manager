@@ -1,7 +1,5 @@
 package eu.dissco.core.handlemanager.service;
 
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
-import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE_ALT;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PREFIX;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -11,9 +9,6 @@ import static org.mockito.Mockito.lenient;
 
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.repository.MongoRepository;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -21,7 +16,6 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -37,20 +31,9 @@ class PidNameGeneratorServiceTest {
   @Mock
   ApplicationProperties applicationProperties;
 
-  @TempDir
-  Path tempDir;
-
-  private static final String FILE_NAME = "dois.txt";
-  private static final String LAST_PID = PREFIX + "/" + "111-111-111";
   private static final int MAX_HANDLES = 1000;
 
   private PidNameGeneratorService pidNameGeneratorService;
-
-  private static boolean fileHasExpectedSize(int size, Path path) throws IOException {
-    try (var fileStream = Files.lines(path)) {
-      return (int) fileStream.count() == size;
-    }
-  }
 
   @BeforeEach
   void setup() {
@@ -60,123 +43,12 @@ class PidNameGeneratorServiceTest {
     lenient().when(applicationProperties.getMaxHandles()).thenReturn(MAX_HANDLES);
   }
 
-  private Path writeFile() throws IOException {
-    var path = tempDir.resolve(FILE_NAME);
-    Files.write(path, List.of(HANDLE, HANDLE_ALT, LAST_PID));
-    return path;
-  }
-
   @Test
   void testSingleBatchGen() {
     // Given
     var expected = Set.of(PREFIX + "/AAA-AAA-AAA");
     given(random.nextInt(anyInt())).willReturn(0);
     given(applicationProperties.getPrefix()).willReturn(PREFIX);
-
-    // When
-    var result = pidNameGeneratorService.generateNewHandles(1);
-
-    // Then
-    assertThat(result).isEqualTo(expected);
-  }
-
-  @Test
-  void testGenerateManualPids() throws IOException {
-    // Given
-    var path = writeFile();
-    given(applicationProperties.getManualPidFile()).willReturn(path.toString());
-    given(applicationProperties.getPrefix()).willReturn(PREFIX);
-    var expected = Set.of(HANDLE, HANDLE_ALT);
-
-    // When
-    var result = pidNameGeneratorService.generateNewHandles(2);
-
-    // Then
-    assertThat(result).isEqualTo(expected);
-    assertThat(fileHasExpectedSize(1, path)).isTrue();
-  }
-
-  @Test
-  void testGenerateManualPidsBuffer() throws IOException{
-    // Given
-    var path = tempDir.resolve(FILE_NAME);
-    int fileSize = 10001;
-    try (var writer = Files.newBufferedWriter(path)) {
-      for (int i = 0; i < fileSize; i++) {
-        writer.write(PREFIX + "/" + i);
-        writer.newLine();
-      }
-    }
-    given(applicationProperties.getManualPidFile()).willReturn(path.toString());
-    given(applicationProperties.getPrefix()).willReturn(PREFIX);
-    var expected = Set.of("20.5000.1025/1", "20.5000.1025/0");
-
-    // When
-    var result = pidNameGeneratorService.generateNewHandles(2);
-
-    // Then
-    assertThat(result).isEqualTo(expected);
-    assertThat(fileHasExpectedSize(fileSize - 2, path)).isTrue();
-  }
-
-  @Test
-  void testGenerateManualPidsWrongPrefix() throws IOException {
-    // Given
-    var path = writeFile();
-    given(applicationProperties.getManualPidFile()).willReturn(path.toString());
-    given(applicationProperties.getPrefix()).willReturn("10.3535");
-    var expected = Set.of("10.3535/AAA-AAA-AAA");
-
-    // When
-    var result = pidNameGeneratorService.generateNewHandles(1);
-
-    // Then
-    assertThat(result).isEqualTo(expected);
-    assertThat(fileHasExpectedSize(3, path)).isTrue();
-  }
-
-  @Test
-  void testGenerateManualPidsDeleteFails() throws IOException {
-    // Given
-    var path = writeFile();
-    given(applicationProperties.getManualPidFile()).willReturn(path.toString())
-        .willReturn(path.toString())
-        .willReturn("not-a-file.txt");
-    given(applicationProperties.getPrefix()).willReturn(PREFIX);
-    var expected = Set.of(HANDLE);
-
-    // When
-    var result = pidNameGeneratorService.generateNewHandles(1);
-
-    // Then
-    assertThat(result).isEqualTo(expected);
-    assertThat(fileHasExpectedSize(3, path)).isTrue();
-  }
-
-  @Test
-  void testGenerateManualPidsAndRandom() throws IOException {
-    // Given
-    var path = writeFile();
-    given(applicationProperties.getManualPidFile()).willReturn(path.toString());
-    var expected = Set.of(HANDLE, HANDLE_ALT, LAST_PID, PREFIX + "/AAA-AAA-AAA");
-    given(random.nextInt(anyInt())).willReturn(0);
-    given(applicationProperties.getPrefix()).willReturn(PREFIX);
-
-    // When
-    var result = pidNameGeneratorService.generateNewHandles(4);
-
-    // Then
-    assertThat(result).isEqualTo(expected);
-    assertThat(fileHasExpectedSize(0, path)).isTrue();
-  }
-
-  @Test
-  void testSingleBatchGenIOFailed() {
-    // Given
-    var expected = Set.of(PREFIX + "/AAA-AAA-AAA");
-    given(random.nextInt(anyInt())).willReturn(0);
-    given(applicationProperties.getPrefix()).willReturn(PREFIX);
-    given(applicationProperties.getManualPidFile()).willReturn(FILE_NAME);
 
     // When
     var result = pidNameGeneratorService.generateNewHandles(1);

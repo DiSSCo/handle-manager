@@ -31,9 +31,7 @@ public class ApplicationProperties {
   @NotBlank
   private String prefix;
 
-  private String manualPidFile;
-
   @NotNull
-  private boolean overwritePidRecords = false;
+  private boolean useManualPids = false;
 
 }
