@@ -4,9 +4,7 @@ import static eu.dissco.core.handlemanager.jooqobjects.Tables.MANUAL_PID;
 
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.springframework.stereotype.Repository;
@@ -26,9 +24,9 @@ public class ManualPidRepository {
         .fetchInto(String.class));
   }
 
-  public void deleteTakenPids(List<String> pids){
+  public void deleteTakenPids(Set<String> pids) {
     context.deleteFrom(MANUAL_PID)
-        .where(MANUAL_PID.PREFIX.in(pids))
+        .where(MANUAL_PID.PID.in(pids))
         .execute();
   }
 

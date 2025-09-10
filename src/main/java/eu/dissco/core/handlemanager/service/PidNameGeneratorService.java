@@ -1,35 +1,15 @@
 package eu.dissco.core.handlemanager.service;
 
-import static eu.dissco.core.handlemanager.properties.ProfileProperties.DOI_DOMAIN;
-import static eu.dissco.core.handlemanager.properties.ProfileProperties.HANDLE_DOMAIN;
 
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.repository.ManualPidRepository;
 import eu.dissco.core.handlemanager.repository.MongoRepository;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UncheckedIOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -42,14 +22,13 @@ import org.springframework.stereotype.Service;
 public class PidNameGeneratorService {
 
   private final ApplicationProperties applicationProperties;
-  ManualPidRepository manualPidRepository;
+  private final ManualPidRepository manualPidRepository;
 
   private static final int LENGTH = 11;
   private static final char[] SYMBOLS = "ABCDEFGHJKLMNPQRSTVWXYZ1234567890".toCharArray();
   private final char[] buf = new char[LENGTH];
   private final MongoRepository mongoRepository;
   private final Random random;
-  private static final int BATCH_SIZE = 10000;
 
 
   public Set<String> generateNewHandles(int h) {
@@ -65,11 +44,13 @@ public class PidNameGeneratorService {
   }
 
   private Set<String> generateManualPids(int h) {
-    var pids = manualPidRepository.getPids(h);
-    if (pids.size() < h) {
+    var pids = new HashSet<>(manualPidRepository.getPids(h));
+    var manualPids = new HashSet<>(pids);
+    while (pids.size() < h) {
       log.warn("Manual pids depleted. Generating manual pids");
       pids.addAll(genHandleHashSet(h - pids.size()));
     }
+    manualPidRepository.deleteTakenPids(manualPids);
     return pids;
   }
 

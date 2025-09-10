@@ -1,13 +1,16 @@
 package eu.dissco.core.handlemanager.service;
 
+import static eu.dissco.core.handlemanager.testUtils.TestUtils.HANDLE;
 import static eu.dissco.core.handlemanager.testUtils.TestUtils.PREFIX;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.lenient;
 
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
+import eu.dissco.core.handlemanager.repository.ManualPidRepository;
 import eu.dissco.core.handlemanager.repository.MongoRepository;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +32,9 @@ class PidNameGeneratorServiceTest {
   private Random random;
 
   @Mock
+  private ManualPidRepository manualPidRepository;
+
+  @Mock
   ApplicationProperties applicationProperties;
 
   private static final int MAX_HANDLES = 1000;
@@ -38,8 +44,7 @@ class PidNameGeneratorServiceTest {
   @BeforeEach
   void setup() {
     this.pidNameGeneratorService = new PidNameGeneratorService(applicationProperties,
-        mongoRepository,
-        random);
+        manualPidRepository, mongoRepository, random);
     lenient().when(applicationProperties.getMaxHandles()).thenReturn(MAX_HANDLES);
   }
 
@@ -113,6 +118,38 @@ class PidNameGeneratorServiceTest {
 
     // Then
     assertThat(tooFew).isEmpty();
+  }
+
+  @Test
+  void testManualPids() {
+    // Given
+    given(applicationProperties.isUseManualPids()).willReturn(true);
+    given(manualPidRepository.getPids(anyInt())).willReturn(Set.of(HANDLE));
+
+    // When
+    var result = pidNameGeneratorService.generateNewHandles(1);
+
+    // Then
+    assertThat(result).isEqualTo(Set.of(HANDLE));
+    then(manualPidRepository).should().deleteTakenPids(Set.of(HANDLE));
+
+  }
+
+  @Test
+  void testManualPidsAndRandom() {
+    // Given
+    given(applicationProperties.isUseManualPids()).willReturn(true);
+    given(applicationProperties.getPrefix()).willReturn(PREFIX);
+    given(manualPidRepository.getPids(2)).willReturn(Set.of(HANDLE));
+    given(random.nextInt(anyInt())).willReturn(0);
+    var expected = Set.of(HANDLE, PREFIX + "/AAA-AAA-AAA");
+
+    // When
+    var result = pidNameGeneratorService.generateNewHandles(2);
+
+    // Then
+    assertThat(result).isEqualTo(expected);
+    then(manualPidRepository).should().deleteTakenPids(Set.of(HANDLE));
   }
 
 }
