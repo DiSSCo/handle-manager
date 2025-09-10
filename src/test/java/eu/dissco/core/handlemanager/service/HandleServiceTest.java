@@ -63,7 +63,6 @@ import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoRecord;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
-import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.MongoRepository;
 import eu.dissco.core.handlemanager.testUtils.TestUtils;
@@ -98,8 +97,6 @@ class HandleServiceTest {
   private ProfileProperties profileProperties;
   @Mock
   MongoRepository mongoRepository;
-  @Mock
-  ApplicationProperties applicationProperties;
   private PidService service;
   private MockedStatic<Instant> mockedStatic;
   private MockedStatic<Clock> mockedClock;
@@ -108,7 +105,7 @@ class HandleServiceTest {
   void setup() {
     initTime();
     service = new HandleService(fdoRecordService, pidNameGeneratorService, MAPPER,
-        profileProperties, mongoRepository, applicationProperties);
+        profileProperties, mongoRepository);
   }
 
   private void initTime() {
@@ -448,6 +445,7 @@ class HandleServiceTest {
 
     // Then
     assertThat(result).isEqualTo(expected);
+    then(mongoRepository).should().updateHandleRecords(Collections.emptyList());
   }
 
   private void fdoRecordServiceReturnsPreviousVersion(FdoRecord previousVersion) throws Exception {

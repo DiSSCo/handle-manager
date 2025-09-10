@@ -20,7 +20,6 @@ import eu.dissco.core.handlemanager.domain.requests.PostRequest;
 import eu.dissco.core.handlemanager.domain.responses.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
-import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.MongoRepository;
 import eu.dissco.core.handlemanager.schema.AnnotationRequestAttributes;
@@ -38,7 +37,6 @@ import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
@@ -52,8 +50,8 @@ public class HandleService extends PidService {
 
   public HandleService(FdoRecordService fdoRecordService,
       PidNameGeneratorService hf, ObjectMapper mapper, ProfileProperties profileProperties,
-      MongoRepository mongoRepository, ApplicationProperties applicationProperties) {
-    super(fdoRecordService, hf, mapper, profileProperties, mongoRepository, applicationProperties);
+      MongoRepository mongoRepository) {
+    super(fdoRecordService, hf, mapper, profileProperties, mongoRepository);
   }
 
   // Pid Record Creation
