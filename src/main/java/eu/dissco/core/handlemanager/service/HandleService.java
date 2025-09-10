@@ -173,7 +173,7 @@ public class HandleService extends PidService {
     var updateRequests = convertPatchRequestDataToAttributesClass(previousVersionMap,
         HandleRequestAttributes.class);
     var allFdoRecords = new ArrayList<FdoRecord>();
-    List<FdoRecord> newFdoRecords = new ArrayList<>();
+    List<FdoRecord> updatedRecords = new ArrayList<>();
     var timestamp = Instant.now();
     for (var updateRequest : updateRequests.entrySet()) {
       var newVersion =
@@ -181,10 +181,10 @@ public class HandleService extends PidService {
               updateRequest.getValue(), incrementVersion);
       allFdoRecords.add(newVersion);
       if (fdoRecordsAreDifferent(newVersion, updateRequest.getValue())) {
-        newFdoRecords.add(newVersion);
+        updatedRecords.add(newVersion);
       }
     }
-    return Pair.of(newFdoRecords, allFdoRecords);
+    return Pair.of(updatedRecords, allFdoRecords);
   }
 
   private List<FdoRecord> createDataMapping(List<JsonNode> requestAttributes,

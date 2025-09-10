@@ -448,7 +448,7 @@ class HandleServiceTest {
 
     // Then
     assertThat(result).isEqualTo(expected);
-    then(mongoRepository).should().updateHandleRecords(Collections.emptyList());
+    then(mongoRepository).shouldHaveNoMoreInteractions();
   }
 
   private void fdoRecordServiceReturnsPreviousVersion(FdoRecord previousVersion) throws Exception {
