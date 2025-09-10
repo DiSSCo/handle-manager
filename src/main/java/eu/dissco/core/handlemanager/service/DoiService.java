@@ -26,7 +26,6 @@ import eu.dissco.core.handlemanager.domain.upsert.UpsertSpecimenResult;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
-import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
 import eu.dissco.core.handlemanager.repository.MongoRepository;
 import eu.dissco.core.handlemanager.schema.DigitalMediaRequestAttributes;
@@ -57,9 +56,9 @@ public class DoiService extends PidService {
   public DoiService(FdoRecordService fdoRecordService,
       PidNameGeneratorService pidNameGeneratorService,
       ObjectMapper mapper, ProfileProperties profileProperties,
-      DataCiteService dataCiteService, MongoRepository mongoRepository, ApplicationProperties applicationProperties) {
+      DataCiteService dataCiteService, MongoRepository mongoRepository) {
     super(fdoRecordService, pidNameGeneratorService, mapper, profileProperties,
-        mongoRepository, applicationProperties);
+        mongoRepository);
     this.dataCiteService = dataCiteService;
   }
 
@@ -170,7 +169,8 @@ public class DoiService extends PidService {
     var newRecords = createNewMedia(processResult.newMediaRequests(), timestamp, isDraft);
     var fdoRecords = Stream.concat(updateRecords.stream(), newRecords.stream()).toList();
     if (!isDraft) {
-      determineDataCiteEventTypeAndPublish(newRecords, updateRecords);
+      publishToDataCite(newRecords, EventType.CREATE);
+      publishToDataCite(updateRecords, EventType.UPDATE);
     }
     return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, DIGITAL_MEDIA));
   }
@@ -386,9 +386,6 @@ public class DoiService extends PidService {
 
   private void publishToDataCite(List<FdoRecord> fdoRecords, EventType eventType)
       throws UnprocessableEntityException {
-    if (fdoRecords.isEmpty()) {
-      return;
-    }
     var eventList = fdoRecords.stream()
         .map(fdoRecord -> new DataCiteEvent(jsonFormatSingleRecord(fdoRecord.values()),
             eventType)).toList();
