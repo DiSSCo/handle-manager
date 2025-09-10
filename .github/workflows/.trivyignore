@@ -1,0 +1,7 @@
+# Sep 5
+# Issue with netty - wait for spring boot update
+CVE-2025-58056
+
+# Sep 10
+# Issue with tomcat - wait for spring boot update
+CVE-2025-48989
