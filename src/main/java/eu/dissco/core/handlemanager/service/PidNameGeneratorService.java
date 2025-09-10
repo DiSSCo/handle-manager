@@ -45,12 +45,10 @@ public class PidNameGeneratorService {
 
   private Set<String> generateManualPids(int h) {
     var pids = new HashSet<>(manualPidRepository.getPids(h));
-    var manualPids = new HashSet<>(pids);
     while (pids.size() < h) {
       log.warn("Manual pids depleted. Generating manual pids");
       pids.addAll(genHandleHashSet(h - pids.size()));
     }
-    manualPidRepository.deleteTakenPids(manualPids);
     return pids;
   }
 

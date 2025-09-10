@@ -65,6 +65,7 @@ import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
+import eu.dissco.core.handlemanager.repository.ManualPidRepository;
 import eu.dissco.core.handlemanager.repository.MongoRepository;
 import eu.dissco.core.handlemanager.testUtils.TestUtils;
 import java.time.Clock;
@@ -100,6 +101,8 @@ class HandleServiceTest {
   MongoRepository mongoRepository;
   @Mock
   ApplicationProperties applicationProperties;
+  @Mock
+  ManualPidRepository manualPidRepository;
   private PidService service;
   private MockedStatic<Instant> mockedStatic;
   private MockedStatic<Clock> mockedClock;
@@ -108,7 +111,7 @@ class HandleServiceTest {
   void setup() {
     initTime();
     service = new HandleService(fdoRecordService, pidNameGeneratorService, MAPPER,
-        profileProperties, mongoRepository, applicationProperties);
+        profileProperties, mongoRepository, manualPidRepository, applicationProperties);
   }
 
   private void initTime() {
@@ -204,6 +207,25 @@ class HandleServiceTest {
 
     // Then
     assertThat(result).isEqualTo(expected);
+  }
+
+  @Test
+  void testCreateHandleManual() throws Exception {
+    var request = givenPostRequest(givenHandleKernel(), FdoType.HANDLE);
+    var fdoRecord = givenHandleFdoRecord(HANDLE);
+    var expected = TestUtils.givenWriteResponseFull(List.of(HANDLE), FdoType.HANDLE);
+    given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
+    given(fdoRecordService.prepareNewHandleRecord(any(), any(), any(), anyBoolean())).willReturn(
+        fdoRecord);
+    given(profileProperties.getDomain()).willReturn(HANDLE_DOMAIN);
+    given(applicationProperties.isUseManualPids()).willReturn(true);
+
+    // When
+    var result = service.createRecords(List.of(request), false);
+
+    // Then
+    assertThat(result).isEqualTo(expected);
+    then(manualPidRepository).should().deleteTakenPids(Set.of(HANDLE));
   }
 
   @Test

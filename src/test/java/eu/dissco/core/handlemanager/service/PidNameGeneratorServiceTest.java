@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.lenient;
 
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
@@ -131,8 +130,6 @@ class PidNameGeneratorServiceTest {
 
     // Then
     assertThat(result).isEqualTo(Set.of(HANDLE));
-    then(manualPidRepository).should().deleteTakenPids(Set.of(HANDLE));
-
   }
 
   @Test
@@ -149,7 +146,6 @@ class PidNameGeneratorServiceTest {
 
     // Then
     assertThat(result).isEqualTo(expected);
-    then(manualPidRepository).should().deleteTakenPids(Set.of(HANDLE));
   }
 
 }

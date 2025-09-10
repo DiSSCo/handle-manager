@@ -22,6 +22,7 @@ import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
+import eu.dissco.core.handlemanager.repository.ManualPidRepository;
 import eu.dissco.core.handlemanager.repository.MongoRepository;
 import eu.dissco.core.handlemanager.schema.AnnotationRequestAttributes;
 import eu.dissco.core.handlemanager.schema.DataMappingRequestAttributes;
@@ -51,8 +52,8 @@ public class HandleService extends PidService {
 
   public HandleService(FdoRecordService fdoRecordService,
       PidNameGeneratorService hf, ObjectMapper mapper, ProfileProperties profileProperties,
-      MongoRepository mongoRepository, ApplicationProperties applicationProperties) {
-    super(fdoRecordService, hf, mapper, profileProperties, mongoRepository, applicationProperties);
+      MongoRepository mongoRepository, ManualPidRepository manualPidRepository, ApplicationProperties applicationProperties) {
+    super(fdoRecordService, hf, mapper, profileProperties, mongoRepository, manualPidRepository, applicationProperties);
   }
 
   // Pid Record Creation

@@ -32,6 +32,7 @@ import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
+import eu.dissco.core.handlemanager.repository.ManualPidRepository;
 import eu.dissco.core.handlemanager.repository.MongoRepository;
 import eu.dissco.core.handlemanager.schema.TombstoneRequestAttributes;
 import java.time.Instant;
@@ -56,6 +57,7 @@ public abstract class PidService {
   protected final ObjectMapper mapper;
   protected final ProfileProperties profileProperties;
   protected final MongoRepository mongoRepository;
+  private final ManualPidRepository manualPidRepository;
   protected final ApplicationProperties applicationProperties;
   protected static final String REQUEST_PROCESSING_ERR = "An error has occurred parsing a record in request";
   protected static final String TYPE_ERROR_MESSAGE = "Error creating PID for object of Type %s. Only Digital Specimens and Media Objects use DOIs. Other objects use handles.";
@@ -390,6 +392,7 @@ public abstract class PidService {
     } else {
       mongoRepository.postHandleRecords(fdoDocuments);
     }
+    deleteManualPids(fdoRecords);
     log.info("Successfully posted {} fdo records to database", fdoDocuments.size());
   }
 
@@ -409,4 +412,12 @@ public abstract class PidService {
     mongoRepository.updateHandleRecords(fdoDocuments);
     log.info("Successfully updated {} specimens fdo records to database", fdoDocuments.size());
   }
+
+  protected void deleteManualPids(List<FdoRecord> fdoRecords) {
+    if (applicationProperties.isUseManualPids()) {
+      var pids = fdoRecords.stream().map(FdoRecord::handle).collect(Collectors.toSet());
+      manualPidRepository.deleteTakenPids(pids);
+    }
+  }
+
 }

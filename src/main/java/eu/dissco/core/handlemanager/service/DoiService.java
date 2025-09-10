@@ -28,6 +28,7 @@ import eu.dissco.core.handlemanager.exceptions.PidResolutionException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
+import eu.dissco.core.handlemanager.repository.ManualPidRepository;
 import eu.dissco.core.handlemanager.repository.MongoRepository;
 import eu.dissco.core.handlemanager.schema.DigitalMediaRequestAttributes;
 import eu.dissco.core.handlemanager.schema.DigitalSpecimenRequestAttributes;
@@ -57,10 +58,10 @@ public class DoiService extends PidService {
   public DoiService(FdoRecordService fdoRecordService,
       PidNameGeneratorService pidNameGeneratorService,
       ObjectMapper mapper, ProfileProperties profileProperties,
-      DataCiteService dataCiteService, MongoRepository mongoRepository,
+      DataCiteService dataCiteService, MongoRepository mongoRepository, ManualPidRepository manualPidRepository,
       ApplicationProperties applicationProperties) {
     super(fdoRecordService, pidNameGeneratorService, mapper, profileProperties,
-        mongoRepository, applicationProperties);
+        mongoRepository, manualPidRepository, applicationProperties);
     this.dataCiteService = dataCiteService;
   }
 
