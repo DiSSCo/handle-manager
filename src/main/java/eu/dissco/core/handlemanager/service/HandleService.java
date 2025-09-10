@@ -20,7 +20,9 @@ import eu.dissco.core.handlemanager.domain.requests.PostRequest;
 import eu.dissco.core.handlemanager.domain.responses.JsonApiWrapperWrite;
 import eu.dissco.core.handlemanager.exceptions.InvalidRequestException;
 import eu.dissco.core.handlemanager.exceptions.UnprocessableEntityException;
+import eu.dissco.core.handlemanager.properties.ApplicationProperties;
 import eu.dissco.core.handlemanager.properties.ProfileProperties;
+import eu.dissco.core.handlemanager.repository.ManualPidRepository;
 import eu.dissco.core.handlemanager.repository.MongoRepository;
 import eu.dissco.core.handlemanager.schema.AnnotationRequestAttributes;
 import eu.dissco.core.handlemanager.schema.DataMappingRequestAttributes;
@@ -50,8 +52,8 @@ public class HandleService extends PidService {
 
   public HandleService(FdoRecordService fdoRecordService,
       PidNameGeneratorService hf, ObjectMapper mapper, ProfileProperties profileProperties,
-      MongoRepository mongoRepository) {
-    super(fdoRecordService, hf, mapper, profileProperties, mongoRepository);
+      MongoRepository mongoRepository, ManualPidRepository manualPidRepository, ApplicationProperties applicationProperties) {
+    super(fdoRecordService, hf, mapper, profileProperties, mongoRepository, manualPidRepository, applicationProperties);
   }
 
   // Pid Record Creation
@@ -172,7 +174,7 @@ public class HandleService extends PidService {
     var updateRequests = convertPatchRequestDataToAttributesClass(previousVersionMap,
         HandleRequestAttributes.class);
     var allFdoRecords = new ArrayList<FdoRecord>();
-    List<FdoRecord> newFdoRecords = new ArrayList<>();
+    List<FdoRecord> updatedRecords = new ArrayList<>();
     var timestamp = Instant.now();
     for (var updateRequest : updateRequests.entrySet()) {
       var newVersion =
@@ -180,10 +182,10 @@ public class HandleService extends PidService {
               updateRequest.getValue(), incrementVersion);
       allFdoRecords.add(newVersion);
       if (fdoRecordsAreDifferent(newVersion, updateRequest.getValue())) {
-        newFdoRecords.add(newVersion);
+        updatedRecords.add(newVersion);
       }
     }
-    return Pair.of(newFdoRecords, allFdoRecords);
+    return Pair.of(updatedRecords, allFdoRecords);
   }
 
   private List<FdoRecord> createDataMapping(List<JsonNode> requestAttributes,

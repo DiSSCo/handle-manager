@@ -31,4 +31,7 @@ public class ApplicationProperties {
   @NotBlank
   private String prefix;
 
+  @NotNull
+  private boolean useManualPids = false;
+
 }

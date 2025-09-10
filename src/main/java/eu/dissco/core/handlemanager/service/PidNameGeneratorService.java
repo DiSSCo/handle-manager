@@ -1,6 +1,8 @@
 package eu.dissco.core.handlemanager.service;
 
+
 import eu.dissco.core.handlemanager.properties.ApplicationProperties;
+import eu.dissco.core.handlemanager.repository.ManualPidRepository;
 import eu.dissco.core.handlemanager.repository.MongoRepository;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,6 +22,7 @@ import org.springframework.stereotype.Service;
 public class PidNameGeneratorService {
 
   private final ApplicationProperties applicationProperties;
+  private final ManualPidRepository manualPidRepository;
 
   private static final int LENGTH = 11;
   private static final char[] SYMBOLS = "ABCDEFGHJKLMNPQRSTVWXYZ1234567890".toCharArray();
@@ -34,7 +37,19 @@ public class PidNameGeneratorService {
           applicationProperties.getMaxHandles());
       h = applicationProperties.getMaxHandles();
     }
+    if (applicationProperties.isUseManualPids()) {
+      return generateManualPids(h);
+    }
     return genHandleHashSet(h);
+  }
+
+  private Set<String> generateManualPids(int h) {
+    var pids = new HashSet<>(manualPidRepository.getPids(h));
+    while (pids.size() < h) {
+      log.warn("Manual pids depleted. Generating manual pids");
+      pids.addAll(genHandleHashSet(h - pids.size()));
+    }
+    return pids;
   }
 
   private Set<String> genHandleHashSet(int h) {
