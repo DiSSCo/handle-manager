@@ -46,6 +46,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -150,6 +151,7 @@ public class PidController {
       }),
       @ApiResponse(responseCode = "204", description = "Received empty request")
   })
+  @PreAuthorize("hasRole('dissco-handle-manager')")
   @PostMapping(value = {"/", "/{draft}"})
   public ResponseEntity<JsonApiWrapperWrite> createRecord(
       @PathVariable Optional<Boolean> draft,
@@ -163,6 +165,7 @@ public class PidController {
 
   @Operation(summary = "Activate draft handles")
   @PostMapping(value = "/activate")
+  @PreAuthorize("hasRole('dissco-handle-manager')")
   public ResponseEntity<Void> activateRecords(
       @Parameter(description = "Draft handles to activate") @RequestBody List<String> handles)
       throws InvalidRequestException {
@@ -198,6 +201,7 @@ public class PidController {
       }),
       @ApiResponse(responseCode = "204", description = "Received empty request")
   })
+  @PreAuthorize("hasRole('dissco-handle-manager')")
   @PostMapping(value = {"/batch", "/batch/{draft}"})
   public ResponseEntity<JsonApiWrapperWrite> createRecords(
       @PathVariable Optional<Boolean> draft,
@@ -235,6 +239,7 @@ public class PidController {
       }),
       @ApiResponse(responseCode = "204", description = "Received empty request")
   })
+  @PreAuthorize("hasRole('dissco-handle-manager')")
   @PatchMapping(value = "/{prefix}/{suffix}")
   public ResponseEntity<JsonApiWrapperWrite> updateRecord(
       @Parameter(description = PREFIX_OAS) @PathVariable("prefix") String prefix,
@@ -279,6 +284,7 @@ public class PidController {
       @ApiResponse(responseCode = "204", description = "Received empty request")
   })
   @PatchMapping(value = "/")
+  @PreAuthorize("hasRole('dissco-handle-manager')")
   public ResponseEntity<JsonApiWrapperWrite> updateRecords(@RequestBody List<PatchRequest> requests,
       Authentication authentication) throws InvalidRequestException, UnprocessableEntityException {
     log.info(RECEIVED_MSG, "batch update", authentication.getName());
@@ -296,6 +302,7 @@ public class PidController {
           array = @ArraySchema(
               schema = @Schema(implementation = TombstoneRequest.class))))
   @PutMapping(value = "/{prefix}/{suffix}")
+  @PreAuthorize("hasRole('dissco-handle-manager')")
   public ResponseEntity<JsonApiWrapperWrite> tombstoneRecord(
       @Parameter(description = PREFIX_OAS) @PathVariable("prefix") String prefix,
       @Parameter(description = SUFFIX_OAS) @PathVariable("suffix") String suffix,
@@ -322,6 +329,7 @@ public class PidController {
           array = @ArraySchema(
               schema = @Schema(implementation = TombstoneRequest.class))))
   @PutMapping(value = "/")
+  @PreAuthorize("hasRole('dissco-handle-manager')")
   public ResponseEntity<JsonApiWrapperWrite> archiveRecords(
       @RequestBody List<PatchRequest> requests,
       Authentication authentication) throws InvalidRequestException, UnprocessableEntityException {
@@ -332,6 +340,7 @@ public class PidController {
   @Hidden
   @Operation(summary = "rollback handle creation", description = "Internal use only")
   @DeleteMapping(value = "/rollback/create")
+  @PreAuthorize("hasRole('dissco-handle-manager')")
   public ResponseEntity<Void> rollbackHandleCreation(@RequestBody List<String> handles,
       Authentication authentication) {
     log.info(RECEIVED_MSG, "batch rollback create", authentication.getName());
@@ -342,6 +351,7 @@ public class PidController {
   @Hidden
   @Operation(summary = "rollback handle update")
   @DeleteMapping(value = "/rollback/update")
+  @PreAuthorize("hasRole('dissco-handle-manager')")
   public ResponseEntity<JsonApiWrapperWrite> rollbackHandleUpdate(
       @RequestBody List<PatchRequest> requests, Authentication authentication)
       throws InvalidRequestException, UnprocessableEntityException {
@@ -352,6 +362,7 @@ public class PidController {
   @Hidden
   @Operation(summary = "rollback handle update by physical identifier")
   @DeleteMapping(value = "/rollback/physId")
+  @PreAuthorize("hasRole('dissco-handle-manager')")
   public ResponseEntity<Void> rollbackHandlePhysId(
       @RequestBody List<String> physicalIds, Authentication authentication) {
     log.info(RECEIVED_MSG, "batch rollback (physical id)", authentication.getName());
