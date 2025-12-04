@@ -4,6 +4,7 @@ WORKDIR application
 ARG JAR_FILE=target/*spring-boot.jar
 COPY ${JAR_FILE} application.jar
 RUN java -Djarmode=layertools -jar application.jar extract
+
 FROM eclipse-temurin:21-jre-jammy
 RUN adduser --disabled-password -u 1000 java
 WORKDIR application
