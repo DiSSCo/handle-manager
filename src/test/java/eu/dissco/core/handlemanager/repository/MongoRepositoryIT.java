@@ -75,7 +75,7 @@ class MongoRepositoryIT {
   @Test
   void testUpdateEmptyList() {
     // When / Then
-    assertDoesNotThrow(() -> repository.updateHandleRecords(List.of()));
+    assertDoesNotThrow(() -> repository.updateHandleRecords(List.of(), false));
   }
 
   @Test
@@ -231,7 +231,7 @@ class MongoRepositoryIT {
         NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL));
 
     // When
-    repository.updateHandleRecords(List.of(expected));
+    repository.updateHandleRecords(List.of(expected), false);
     var result = collection.find(eq("_id", HANDLE)).first();
 
     // Then

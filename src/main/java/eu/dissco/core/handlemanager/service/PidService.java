@@ -268,7 +268,7 @@ public abstract class PidService {
       log.error("JsonProcessingException while tombstoning records", e);
       throw new InvalidRequestException(REQUEST_PROCESSING_ERR);
     }
-    mongoRepository.updateHandleRecords(fdoDocuments);
+    mongoRepository.updateHandleRecords(fdoDocuments, false);
     return new JsonApiWrapperWrite(formatFdoRecord(fdoRecords, TOMBSTONE));
   }
 
@@ -388,11 +388,11 @@ public abstract class PidService {
       throw new InvalidRequestException(REQUEST_PROCESSING_ERR);
     }
     if (applicationProperties.isUseManualPids()) {
-      mongoRepository.updateHandleRecords(fdoDocuments);
+      mongoRepository.updateHandleRecords(fdoDocuments, true);
+      deleteManualPids(fdoRecords);
     } else {
       mongoRepository.postHandleRecords(fdoDocuments);
     }
-    deleteManualPids(fdoRecords);
     log.info("Successfully posted {} fdo records to database", fdoDocuments.size());
   }
 
@@ -409,7 +409,7 @@ public abstract class PidService {
       throw new InvalidRequestException(
           REQUEST_PROCESSING_ERR);
     }
-    mongoRepository.updateHandleRecords(fdoDocuments);
+    mongoRepository.updateHandleRecords(fdoDocuments, false);
     log.info("Successfully updated {} specimens fdo records to database", fdoDocuments.size());
   }
 

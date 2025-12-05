@@ -170,7 +170,35 @@ class DoiServiceTest {
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
-    then(mongoRepository).should().updateHandleRecords(any());
+    then(mongoRepository).should().updateHandleRecords(any(), eq(true));
+    then(mongoRepository).should().searchByPrimaryLocalId(any(), any());
+    then(mongoRepository).shouldHaveNoMoreInteractions();
+    then(dataCiteService).should().publishToDataCite(dataCiteEvent, FdoType.DIGITAL_SPECIMEN);
+  }
+
+  @Test
+  void testOverwriteCreateDigitalSpecimenPidsDepleted() throws Exception {
+    // Given
+    var request = givenPostRequest(givenDigitalSpecimen(), FdoType.DIGITAL_SPECIMEN);
+    var fdoRecord = givenDigitalSpecimenFdoRecord(HANDLE);
+    var responseExpected = givenWriteResponseIdsOnly(List.of(fdoRecord), FdoType.DIGITAL_SPECIMEN,
+        DOI_DOMAIN);
+    var dataCiteEvent = new DataCiteEvent(jsonFormatFdoRecord(fdoRecord.values()),
+        EventType.CREATE);
+    given(mongoRepository.getHandleRecords(List.of(HANDLE))).willReturn(List.of());
+    given(pidNameGeneratorService.generateNewHandles(1)).willReturn(Set.of(HANDLE));
+    given(fdoRecordService.prepareNewDigitalSpecimenRecord(any(), any(), any(),
+        anyBoolean())).willReturn(
+        fdoRecord);
+    given(profileProperties.getDomain()).willReturn(DOI_DOMAIN);
+    given(applicationProperties.isUseManualPids()).willReturn(true);
+
+    // When
+    var responseReceived = service.createRecords(List.of(request), false);
+
+    // Then
+    assertThat(responseReceived).isEqualTo(responseExpected);
+    then(mongoRepository).should().updateHandleRecords(any(), eq(true));
     then(mongoRepository).should().searchByPrimaryLocalId(any(), any());
     then(mongoRepository).shouldHaveNoMoreInteractions();
     then(dataCiteService).should().publishToDataCite(dataCiteEvent, FdoType.DIGITAL_SPECIMEN);
@@ -362,7 +390,7 @@ class DoiServiceTest {
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
-    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument));
+    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument), false);
     then(dataCiteService).should().publishToDataCite(expectedEvent, FdoType.DIGITAL_SPECIMEN);
   }
 
@@ -389,7 +417,7 @@ class DoiServiceTest {
 
     // Then
     assertThat(responseReceived).isEqualTo(responseExpected);
-    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument));
+    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument), false);
     then(dataCiteService).should().publishToDataCite(expectedEvent, FdoType.DIGITAL_MEDIA);
   }
 
@@ -513,7 +541,7 @@ class DoiServiceTest {
         () -> service.updateRecords(updateRequest, true));
 
     // Then
-    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument));
+    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument), false);
     then(mongoRepository).shouldHaveNoMoreInteractions();
   }
 
@@ -544,7 +572,7 @@ class DoiServiceTest {
 
     // Then
     assertThat(result).isEqualTo(expected);
-    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument));
+    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument), false);
     then(dataCiteService).should().tombstoneDataCite(HANDLE, List.of(givenHasRelatedPid()));
   }
 
@@ -567,7 +595,7 @@ class DoiServiceTest {
 
     // Then
     assertThat(result).isEqualTo(expected);
-    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument));
+    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument), false);
     then(dataCiteService).should().tombstoneDataCite(HANDLE, List.of(givenHasRelatedPid()));
   }
 
@@ -607,7 +635,7 @@ class DoiServiceTest {
 
     // Then
     assertThat(result).isEqualTo(expected);
-    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument));
+    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument), false);
   }
 
 }

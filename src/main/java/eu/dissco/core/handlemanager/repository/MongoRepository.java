@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.ReplaceOneModel;
+import com.mongodb.client.model.ReplaceOptions;
 import eu.dissco.core.handlemanager.domain.fdo.FdoProfile;
 import eu.dissco.core.handlemanager.domain.fdo.FdoType;
 import eu.dissco.core.handlemanager.domain.repsitoryobjects.FdoAttribute;
@@ -62,10 +63,11 @@ public class MongoRepository {
     }
   }
 
-  public void updateHandleRecords(List<Document> handleRecords) {
+  public void updateHandleRecords(List<Document> handleRecords, boolean upsert) {
+    var options = new ReplaceOptions().upsert(upsert);
     var queryList = handleRecords.stream().map(doc -> {
       var filter = eq(doc.get(ID));
-      return new ReplaceOneModel<>(filter, doc);
+      return new ReplaceOneModel<>(filter, doc, options);
     }).toList();
     log.info("Updating {} records to database", handleRecords.size());
     if (!queryList.isEmpty()) {
