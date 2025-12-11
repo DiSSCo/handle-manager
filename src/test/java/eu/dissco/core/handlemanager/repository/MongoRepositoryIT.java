@@ -239,6 +239,36 @@ class MongoRepositoryIT {
   }
 
   @Test
+  void testUpdateHandleRecordsUpsertNotPresent() throws Exception {
+    // Given
+    var expected = givenMongoDocument(givenUpdatedFdoRecord(FdoType.DIGITAL_SPECIMEN,
+        NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL));
+
+    // When
+    repository.updateHandleRecords(List.of(expected), true);
+    var result = collection.find(eq("_id", HANDLE)).first();
+
+    // Then
+    assertThat(result).isEqualTo(expected);
+  }
+
+  @Test
+  void testUpdateHandleRecordsUpsertPresentAndUpdated() throws Exception {
+    // Given
+    var specimenDoc = givenMongoDocument(givenDigitalSpecimenFdoRecord(HANDLE));
+    collection.insertOne(specimenDoc);
+    var expected = givenMongoDocument(givenUpdatedFdoRecord(FdoType.DIGITAL_SPECIMEN,
+        NORMALISED_PRIMARY_SPECIMEN_OBJECT_ID_TESTVAL));
+
+    // When
+    repository.updateHandleRecords(List.of(expected), true);
+    var result = collection.find(eq("_id", HANDLE)).first();
+
+    // Then
+    assertThat(result).isEqualTo(expected);
+  }
+
+  @Test
   void testSearchByPrimaryLocalIdSpecimen() throws Exception {
     // Given
     populateMongoDB();
