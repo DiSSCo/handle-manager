@@ -189,7 +189,7 @@ class HandleServiceTest {
 
     // Then
     assertThat(result).isEqualTo(expected);
-    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument));
+    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument), false);
   }
 
   @Test
@@ -250,7 +250,7 @@ class HandleServiceTest {
     service.activateRecords(List.of(HANDLE));
 
     // Then
-    then(mongoRepository).should().updateHandleRecords(List.of(expected));
+    then(mongoRepository).should().updateHandleRecords(List.of(expected), false);
   }
 
   @Test
@@ -272,7 +272,7 @@ class HandleServiceTest {
 
     // Then
     assertThat(result).isEqualTo(expected);
-    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument));
+    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument), false);
   }
 
   @Test
@@ -334,7 +334,7 @@ class HandleServiceTest {
 
     // Then
     assertThat(result).isEqualTo(expected);
-    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument));
+    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument), false);
   }
 
   @Test
@@ -373,7 +373,7 @@ class HandleServiceTest {
 
     // Then
     assertThat(result).isEqualTo(expected);
-    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument));
+    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument), false);
   }
 
   @Test
@@ -413,7 +413,7 @@ class HandleServiceTest {
 
     // Then
     assertThat(result).isEqualTo(expected);
-    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument));
+    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument), false);
   }
 
   @Test
@@ -452,7 +452,7 @@ class HandleServiceTest {
 
     // Then
     assertThat(result).isEqualTo(expected);
-    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument));
+    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument), false);
   }
 
   @ParameterizedTest
@@ -538,7 +538,7 @@ class HandleServiceTest {
 
     // Then
     assertThat(result).isEqualTo(expected);
-    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument));
+    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument), false);
   }
 
   @Test
@@ -558,7 +558,7 @@ class HandleServiceTest {
 
     // Then
     assertThat(result).isEqualTo(expected);
-    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument));
+    then(mongoRepository).should().updateHandleRecords(List.of(expectedDocument), false);
   }
 
   @Test
