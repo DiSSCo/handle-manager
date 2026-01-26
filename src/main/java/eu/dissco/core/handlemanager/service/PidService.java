@@ -321,10 +321,12 @@ public abstract class PidService {
     try {
       previousVersions = mongoRepository.getHandleRecords(handles);
     } catch (JsonProcessingException e) {
-      throw new InvalidRequestException("Unable to process handles resolution");
+      log.error("Unable to read existing PID records", e);
+      throw new InvalidRequestException("Unable to process PID resolution");
     }
     if (previousVersions.size() < handles.size()) {
-      throw new InvalidRequestException("Unable to resolve all handles");
+      log.error("Unable to resolve all PIDs. Not proceeding with update");
+      throw new InvalidRequestException("Unable to resolve all PIDs");
     }
     try {
       return previousVersions.stream().collect(Collectors.toMap(
@@ -332,6 +334,7 @@ public abstract class PidService {
           Function.identity()
       ));
     } catch (RuntimeException e) {
+      log.error("Processing request failed", e);
       throw new UnprocessableEntityException(REQUEST_PROCESSING_ERR);
     }
   }
